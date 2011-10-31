@@ -1,0 +1,1106 @@
+/* 
+ * Annotated solution to POPLMark Challenge 2a
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines System F_sub and proves type safety as specified in POPLMark
+ * challenge problem 2a.
+ */
+
+
+/** The package declaration is currently a placeholder, but
+ * will eventually support a module system for SASyLF
+ */
+package edu.cmu.cs.sasylf.poplmark;
+
+/** SASyLF programs explicitly declare terminals that are
+ * used to parse expressions.  This helps the SASyLF parser
+ * detect problems in the input grammar--anything that is not
+ * a declared terminal, non-terminal, or variable must be an error.
+ * The user should declare all identifiers used in syntax and judgment
+ * that do not themselves denote syntactic classes.  Symbols like
+ * + or |- do not need to be declared, even if they are terminals.
+ */
+terminals lambda all Top value stepsorvalue
+
+
+/************************ SYNTAX **************************************/
+
+/** The syntax section declares the syntax of the formal
+ * system, in this case of the lambda calculus.  Syntax is
+ * given using an ordinary BNF grammar.
+ */
+syntax
+
+/** This declaration declares e as a nonterminal.  t and variants of t
+ * (t', t'', t1, t2, etc.--you can add primes or numbers) are used as
+ * metavariables for this syntactic category, as commonly used in the
+ * PL research literature.
+ *
+ * We use the notation t[x] to denote that the variable x is bound in t.
+ * Any uses of the same variable in a binding, such as lam "x" : ... are
+ * treated as the binding occurence where the name of the variable is
+ * defined.
+ */
+t ::= lambda x:T => t[x]
+
+/** To what syntactic class does the variable x refer?  We specify that
+ * by including a case "x" in the grammar for t.
+ */
+
+ | x
+ | t t
+ | lambda X <: T => t[X]
+
+ /** Brackets are special in SASyLF, so we use quotes to turn them into
+  * terminals.
+  */
+ | t "[" T "]" 
+
+
+/** Here we define the syntax of types */
+
+T ::= X
+ | Top
+ | T -> T
+ | all X <: T => T[X]
+
+
+/** The form of contexts.  Judgments that use this as a variable
+ * context will say "assumes Gamma."  SASyLF uses built-in semantics for
+ * these contexts, allowing properties like substitution, weakening, and
+ * exchange.  We require that contexts that are understood using these
+ * built-in semantics have a recursive structure that binds exactly one
+ * variable at each level.
+ */ 
+
+Gamma ::= *
+      |   Gamma, x : T
+      |   Gamma, X <: T
+
+
+/************************ JUDGMENTS **************************************/
+
+/** We declare a judgment with a name ("value") and a form ("t value").
+ * The judgment is then followed by a series of inference rules that define
+ * the judgment's semantics.
+ *
+ * With respect to POPLMark, this is not quite as syntactically nice as
+ * defining values using a grammar that happens to be a subset of the term
+ * grammar.  We hope this can be implemented as syntactic sugar in the
+ * future.
+ */
+
+judgment value: t value
+
+----------------------- V-Abs
+lambda x:T => t[x] value
+
+-------------------------- V-Tabs
+lambda X <: T => t[X] value
+
+
+
+/** The evaluation judgment.  Rules are defined with the premises above the line
+ * and the conclusion below the line.
+ *
+ * With respect to POPLMark, we are using context evaluation rules rather than
+ * explicit evaluation contexts.  I'm guessing it would be possible to encode
+ * things using explicit evaluation contexts, but unless we "built in" contexts
+ * I think the metatheory would be extremely complicated.  The best solution in
+ * SASyLF is thus probably the one below, but investigating better support for
+ * the "explicit context style" could be useful future work.
+ */
+
+judgment reduce: t -> t
+
+t1 -> t1'
+------------------- E-CtxApp1
+t1 t2 -> t1' t2
+
+t1 -> t1'
+------------------------------- E-CtxTapp
+t1 "[" T2 "]" -> t1' "[" T2 "]"
+
+t1 value
+t2 -> t2'
+------------------- E-CtxApp2
+(t1 t2) -> (t1 t2')			// the parentheses are not necessary here, but can be used to disambiguate
+							// expressions that otherwise can be parsed more than one way 
+
+/** Substitution is built into SASyLF.  Here, we see that t has the variable x bound in it.
+ * We substitute t2 for x in t12 using the notation t12[t2].
+ */
+
+t2 value
+------------------------------------- E-AppAbs
+(lambda x:T11 => t12[x]) t2 -> t12[t2]
+
+------------------------------------------------ E-TappTabs
+(lambda X <: T11 => t12[X]) "[" T2 "]" -> t12[T2]
+
+
+/** The typing judgment uses a list of assumptions for variable types.
+ * This is just like the LF context in Twelf.  More details on how this works will
+ * come later, but the gist is that it gives us a bunch of theorems for free,
+ * including substitution, weakening, contraction, and exchange.
+ */
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+
+/** This rule shows how to use an assumption in Gamma to determine that a variable
+ * is well-typed.  These assumption-using rules have a special form: no premises are
+ * allowed, exactly one variable must be free in Gamma, and one variable free in the
+ * main judgment.
+ */
+
+------------------- T-Var
+Gamma, x:T |- x : T
+
+
+Gamma, x:T1 |- t2[x] : T2
+--------------------------------------- T-Abs
+Gamma |- lambda x:T1 => t2[x] : T1 -> T2
+
+
+Gamma |- t1 : T11 -> T12
+Gamma |- t2 : T11
+---------------------------------- T-App
+Gamma |- t1 t2 : T12
+
+
+Gamma, X <: T1 |- t2[X] : T2[X]
+------------------------------------------------------- T-Tabs
+Gamma |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
+
+
+Gamma |- t1 : all X <: T11 => T12[X]
+Gamma |- T2 <: T11
+----------------------------------- T-Tapp
+Gamma |- t1 "[" T2 "]" : T12[T2]
+
+
+// In this rule we use T' rather than S as SASyLF doesn't currently support
+// more than one metavariable per syntactic category.
+
+Gamma |- t : T'
+Gamma |- T' <: T
+---------------- T-Sub
+Gamma |- t : T
+
+
+
+/** The subtyping judgment
+ */
+
+judgment subtyping: Gamma |- T <: T'
+assumes Gamma
+
+
+----------------- SA-Top
+Gamma |- T <: Top
+
+
+/** As in the Twelf solution, we provide standard variable, reflexivity, and
+ * transitivity rules rather than their algorithmic variants.  I believe
+ * the algorithmic rules could be encoded at some cost to the metatheory,
+ * but it would be awkward because we wouldn't be able to use the built-in
+ * variable rule, and would instead have to have the variable use come from
+ * a different judgment.
+ */
+
+----------------------- SA-Var
+Gamma, X <: T |- X <: T
+
+
+----------------------- SA-Refl
+Gamma |- T <: T
+
+
+Gamma |- T1 <: T2
+Gamma |- T2 <: T3
+----------------------- SA-Trans
+Gamma |- T1 <: T3
+
+
+Gamma |- T1 <: T1'
+Gamma |- T2' <: T2
+------------------------------- SA-Arrow
+Gamma |- T1' -> T2' <: T1 -> T2
+
+
+Gamma |- T1 <: T1'
+Gamma, X <: T1 |- T2'[X] <: T2[X]
+------------------------------------------------------- SA-All
+Gamma |- all X' <: T1' => T2'[X'] <: all X <: T1 => T2[X] 
+
+
+
+/** We don't have logical and or or operators built-in, so we define the logical
+ * or used in progress (steps OR is a value) using its own judgment, with one
+ * rule for each disjunct.  Twelf uses the same trick for encoding "or."
+ */
+
+judgment stepsorvalue: t stepsorvalue
+
+t value
+--------------- stepsorvalue-value
+t stepsorvalue
+
+t -> t'
+--------------- stepsorvalue-steps
+t stepsorvalue
+
+
+/** equality judgment, used in canonical forms lemma */
+
+judgment equality: t == t
+
+------ equality
+t == t
+
+
+judgment type-equality: T == T
+
+------ type-equality
+T == T
+
+
+judgment arrow-sub: T == T1' -> T2 <: T1 -> T2
+
+* |- T1 <: T1'
+* |- T2' <: T2
+-------------------------------------- arrow-sub
+(T1' -> T2') == T1' -> T2' <: T1 -> T2
+
+
+judgment Tarrow-sub: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
+
+* |- T11'' <: T11'
+*, X <: T11'' |- T12'[X] <: T12[X]
+---------------------------------------------------------------------------------- Tarrow-sub
+(all X <: T11' => T12'[X]) == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
+
+
+judgment app-sub: t : T t : T -> T <: T
+
+* |- t2 : T2
+* |- t1 : T2 -> T1
+* |- T1 <: T
+-------------------------- app-sub
+t2 : T2 t1 : T2 -> T1 <: T
+
+
+
+/************************ THEOREMS **************************************/
+
+/** Warm-up theorem: the identity function really is the identity.
+ *
+ * Theorems consist of the keyword theorem (or lemma), a name, a :,
+ * a list of foralls, and a single exists.  The foralls may be syntax
+ * like "e" or judgments like "e1 -> e2" -- in the latter case, the
+ * derivation of the judgment itself must be named ("dv" below).
+ * We can assume derivations are available for all the facts in the forall
+ * part; we are trying to construct a derivation for the exists part.
+ */ 
+
+theorem identity-behavior : forall dv : t value exists (lambda x : T => x) t -> t.
+
+
+/** The actual proof is a series of statements of the form:
+ *
+ * name : judge			by justification
+ *
+ * Here name is an identifier that is used to refer to each fact, in case we need it
+ * later.  judge is the judgment we've proved.  And the justification is the reason
+ * we believe it's true (SASyLF will make sure we're right by checking that the
+ * justification actually proves the judgment).
+ *
+ * The most common justification is "by rule <rule-name> on <name1>, <name2>, ..., <name_k>"
+ * This means that we conclude the judgment on the left by applying rule <rule-name> to the
+ * (ordered) list of premises <name1>, <name2>, ..., <name_k>.  Each <name> must be either
+ * one of the foralls (we don't have any for this theorem) or one of the earlier things we
+ * concluded.  If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..."
+ * part.
+ */
+
+d1 : (lambda x : T => x) t -> t by rule E-AppAbs on dv
+
+end theorem
+
+
+/** Note: we'd usually define substitution here, and maybe weakening and other basic
+ * properties.  But in this case, we don't need to, because the underlying LF type theory
+ * gives us substitution for free!
+ */
+
+/************************ PROGRESS **************************************/
+
+lemma arrow-sub-arrow: forall dsub: * |- T <: T1 -> T2
+								exists T == T1' -> T2'' <: T1 -> T2.	// T == T1' -> T2', T1 <: T1', and T2' <: T2								
+
+deq: T == T1' -> T2'' <: T1 -> T2 by induction on dsub:
+
+case rule
+	------------------- SA-Refl
+	d1: Gamma |- T <: T
+is
+	dsub1: * |- T1 <: T1 by rule SA-Refl
+	dsub2: * |- T2 <: T2 by rule SA-Refl
+	deq: T == T1 -> T2 <: T1 -> T2 by rule arrow-sub on dsub1, dsub2
+end case
+	
+case rule
+	d1: Gamma |- T <: T2'
+	d2: Gamma |- T2' <: T1 -> T2
+	---------------------------- SA-Trans
+	d3: Gamma |- T <: T1 -> T2
+is
+	d4: T2' == T21' -> T22' <: T1 -> T2 by induction hypothesis on d2
+	deq: T == T1' -> T2'' <: T1 -> T2 by case analysis on d4:
+	case rule
+		d5: * |- T1 <: T21'
+		d6: * |- T22' <: T2
+		----------------------------------- arrow-sub
+		d7: T21' -> T22' == T21' -> T22' <: T1 -> T2
+	is
+		d8: T == T1'' -> T3 <: T21' -> T22' by induction hypothesis on d1
+		deq: T == T1' -> T2'' <: T1 -> T2 by case analysis on d8:
+		case rule
+			d9: * |- T21' <: T1''
+			d10: * |- T3 <: T22'
+			----------------------------------------------- arrow-sub
+			d11: (T1'' -> T3) == T1'' -> T3 <: T21' -> T22'
+		is
+			d12: * |- T1 <: T1'' by rule SA-Trans on d5, d9
+			d13: * |- T3 <: T2 by rule SA-Trans on d10, d6
+			deq: T == T1'' -> T3 <: T1 -> T2 by rule arrow-sub on d12, d13
+		end case
+		end case analysis
+	end case
+	end case analysis
+end case
+	
+case rule
+	d1: Gamma |- T1 <: T1'
+	d2: Gamma |- T2' <: T2
+	----------------------------------- SA-Arrow
+	d3: Gamma |- T1' -> T2' <: T1 -> T2
+is
+	deq: T == T1' -> T2' <: T1 -> T2 by rule arrow-sub on d1, d2
+end case
+
+end induction
+end lemma
+
+theorem canonical-form-lambda : forall dtv : t value forall dtt: * |- t : T1 -> T2
+								exists t == lambda x : T1' => t'[x].
+
+deq : t == lambda x : T1' => t'[x] by induction on dtt :
+	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
+	 * we built case analysis in to induction.  TODO: revisit this decision!
+	 */
+	case rule
+	
+		dtt'' : *, x:T1 |- t'[x] : T2
+		--------------------------------------------- T-Abs
+		dtt' : * |- lambda x : T1 => t'[x] : T1 -> T2
+	
+	is
+	
+		deq : t == lambda x : T1 => t'[x] by rule equality
+		
+	end case
+	
+	case rule
+	
+		dtt1' : (*) |- t1 : T'' -> (T1 -> T2)
+		dtt2' : (*) |- t2 : T''
+		--------------------------------------------- T-App
+		dtt' : (*) |- t1 t2 : T1 -> T2
+	
+	is
+
+		deq : t == lambda x : T1' => t'[x] by case analysis on dtv :
+		
+		end case analysis
+						
+	end case
+	case rule
+	
+		dp1t1': * |- t'' : all X <: T'' => T'''[X]
+		dp1t2': * |- T' <: T''
+		---------------------------------------- T-Tapp
+		dp1t': * |- t'' "[" T' "]" : T'''[T']
+	
+	is
+
+		deq : t == lambda x : T1' => t'[x] by case analysis on dtv :
+		
+		end case analysis
+						
+	end case
+
+	case rule
+
+		d1': * |- t : T'
+		d2': * |- T' <: T1 -> T2
+		------------------------ T-Sub
+		d3': * |- t : T1 -> T2
+
+	is
+		d4: T' == T1'' -> T2' <: T1 -> T2 by lemma arrow-sub-arrow on d2'
+		deq : t == lambda x : T1' => t'[x] by case analysis on d4:
+		
+		case rule
+			d5: * |- T1 <: T1''
+			d6: * |- T2' <: T2
+			------------------------------------------- arrow-sub
+			d7: (T1'' -> T2') == T1'' -> T2' <: T1 -> T2
+		is
+			d8: t == lambda x : T1''' => t''[x] by induction hypothesis on dtv, d1'
+		end case
+		
+		end case analysis	
+	end case
+
+	// other cases don't unify with conclusion
+
+end induction
+end theorem
+
+
+
+lemma narrow-subtype:	forall dsub: Gamma, X <: T |- T1[X] <: T2[X]
+						forall dsub': Gamma |- T' <: T
+						exists Gamma, X <: T' |- T1[X] <: T2[X].
+
+dres: Gamma, X <: T' |- T1[X] <: T2[X] by induction on dsub:
+
+case rule
+	----------------------------- SA-Top
+	d1: Gamma, X <: T |- T1[X] <: Top
+is
+	d2: Gamma, X <: T' |- T1[X] <: Top by rule SA-Top	
+end case
+
+case rule
+	----------------------- SA-Var
+	d1: Gamma, X <: T |- X <: T
+is
+	d2: Gamma, X <: T' |- X <: T' by rule SA-Var
+	d3: Gamma, X <: T' |- T' <: T by weakening on dsub'
+	d4: Gamma, X <: T' |- X <: T by rule SA-Trans on d2, d3
+end case
+
+case rule
+	----------------------------------------- SA-Var
+	d1: Gamma', X' <: T'', X <: T |- X' <: T''
+is
+	d2: Gamma', X' <: T'' |- X' <: T'' by rule SA-Var
+	d3: Gamma', X' <: T'', X <: T' |- X' <: T'' by weakening on d2
+end case
+
+case rule
+	----------------------------------- SA-Refl
+	d1: Gamma, X <: T |- T1[X] <: T1[X]
+is
+	d2: Gamma, X <: T' |- T1[X] <: T1[X] by rule SA-Refl
+end case
+
+case rule
+	d1: Gamma, X <: T |- T1[X] <: T3[X]
+	d2: Gamma, X <: T |- T3[X] <: T2[X]
+	----------------------------------- SA-Trans
+	d3: Gamma, X <: T |- T1[X] <: T2[X]
+is
+	d4: Gamma, X <: T' |- T1[X] <: T3[X] by induction hypothesis on d1, dsub'
+	d5: Gamma, X <: T' |- T3[X] <: T2[X] by induction hypothesis on d2, dsub'
+	d6: Gamma, X <: T' |- T1[X] <: T2[X] by rule SA-Trans on d4, d5 
+end case
+
+case rule
+	d1: Gamma, X <: T |- T2'[X] <: T1'[X]
+	d2: Gamma, X <: T |- T1''[X] <: T2''[X]
+	----------------------------------------------------------- SA-Arrow
+	d3: Gamma, X <: T |- T1'[X] -> T1''[X] <: T2'[X] -> T2''[X]
+is
+	d4: Gamma, X <: T' |- T2'[X] <: T1'[X] by induction hypothesis on d1, dsub'
+	d5: Gamma, X <: T' |- T1''[X] <: T2''[X] by induction hypothesis on d2, dsub'
+	d6: Gamma, X <: T' |- T1'[X] -> T1''[X] <: T2'[X] -> T2''[X] by rule SA-Arrow on d4, d5
+end case
+
+case rule
+	d1: Gamma, X <: T |- T2'[X] <: T1'[X]
+	d2: Gamma, X <: T, X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X']
+	--------------------------------------------------------------------------------------- SA-All
+	d3: Gamma, X <: T |- all X' <: T1'[X] => T1''[X][X'] <: all X' <: T2'[X] => T2''[X][X'] 
+is
+	d4: Gamma, X <: T' |- T2'[X] <: T1'[X] by induction hypothesis on d1, dsub'
+	//d8: Gamma, X <: T', X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X'] by induction hypothesis on d2, dsub' // limitation: not yet supported
+	d9: Gamma, X <: T', X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X'] by unproved // should be the text above!
+	d10: Gamma, X <: T' |- T1[X] <: T2[X] by rule SA-All on d4, d9
+end case
+
+end induction
+end lemma
+
+
+
+
+
+lemma Tarrow-sub-Tarrow: forall dsub: * |- T'' <: all X <: T11'' => T12[X]
+								exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
+
+deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by induction on dsub:
+
+case rule
+	----------------------------------------------------------------- SA-Refl
+	d1: * |- all X <: T11'' => T12[X] <: all X <: T11'' => T12[X]
+is
+	dsub1: * |- T11'' <: T11'' by rule SA-Refl
+	dsub2: *, X <: T11'' |- T12[X] <: T12[X] by rule SA-Refl
+	deq: all X <: T11'' => T12[X] == all X <: T11'' => T12[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on dsub1, dsub2
+end case
+
+case rule
+	d1: * |- T'' <: T2'
+	d2: * |- T2' <: all X <: T11'' => T12[X]
+	---------------------------------------- SA-Trans
+	d3: * |- T'' <: all X <: T11'' => T12[X]
+is
+	d4: T2' == all X <: T21' => T22[X] <: all X <: T11'' => T12[X] by induction hypothesis on d2
+	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by case analysis on d4:
+
+	case rule
+		d5: * |- T11'' <: T21'
+		d6: *, X <: T11'' |- T22[X] <: T12[X]
+		---------------------------------------------------------------------------------- Tarrow-sub
+		d7: all X <: T21' => T22[X] == all X <: T21' => T22[X] <: all X <: T11'' => T12[X]
+	is
+		d8: T'' == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X] by induction hypothesis on d1
+		deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by case analysis on d8:
+
+		case rule
+			d9: * |- T21' <: T11'''
+			d10: *, X <: T21' |- T12''[X] <: T22[X]
+			------------------------------------------------------------------------------------- Tarrow-sub
+			d11: all X <: T11''' => T12''[X] == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X]
+		is
+			d12: * |- T11'' <: T11''' by rule SA-Trans on d5, d9
+			d13: *, X <: T11'' |- T12''[X] <: T22[X] by lemma narrow-subtype on d10, d5
+			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule SA-Trans on d13, d6
+			deq: T'' == all X <: T11''' => T12''[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d12, d14
+		end case
+
+		end case analysis
+	end case
+
+	end case analysis
+end case
+
+case rule
+	d1: * |- T11'' <: T11'
+	d2: *, X <: T11'' |- T12'[X] <: T12[X]
+	----------------------------------------------------------------- SA-All
+	d3: * |- all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] 
+is
+	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d1, d2
+end case
+
+end induction
+end lemma
+
+
+
+theorem canonical-form-Lambda : forall dtv : t value forall dtt: * |- t : all X <: T1 => T2[X]
+								exists t == lambda X <: T1' => t2[X].
+
+deq : t == lambda X <: T1' => t2[X] by induction on dtt :
+	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
+	 * we built case analysis in to induction.  TODO: revisit this decision!
+	 */
+	case rule
+	
+		d1: *, X <: T1 |- t2[X] : T2[X]
+		--------------------------------------------------- T-Tabs
+		d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
+	
+	is
+	
+		deq : t == lambda X <: T1 => t2[X] by rule equality
+		
+	end case
+	
+	case rule
+	
+		dtt1' : (*) |- t1 : T'' -> (all X <: T1 => T2[X])
+		dtt2' : (*) |- t2' : T''
+		--------------------------------------------- T-App
+		dtt' : (*) |- t1 t2' : all X <: T1 => T2[X]
+	
+	is
+
+		deq : t == lambda X <: T1' => t2[X] by case analysis on dtv :
+		
+		end case analysis
+						
+	end case
+	case rule
+	
+		dp1t1': * |- t' : all X <: T'' => T'''[X]
+		dp1t2': * |- T' <: T''
+		---------------------------------------- T-Tapp
+		dp1t': * |- t' "[" T' "]" : T'''[T']
+	
+	is
+
+		deq : t == lambda X <: T1' => t2[X] by case analysis on dtv :
+		
+		end case analysis
+						
+	end case
+
+	case rule
+
+		d1': * |- t : T'
+		d2': * |- T' <: all X <: T1 => T2[X]
+		------------------------------------ T-Sub
+		d3': * |- t : all X <: T1 => T2[X]
+
+	is
+		d4: T' == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X] by lemma Tarrow-sub-Tarrow on d2'
+		deq : t == lambda X <: T1' => t2[X] by case analysis on d4:
+
+		case rule
+			d5: * |- T1 <: T1''
+			d6: *, X <: T1 |- T2'[X] <: T2[X]
+			------------------------------------------------------------------------------------- Tarrow-sub
+			d7: all X <: T1'' => T2'[X] == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X]
+		is
+			deq : t == lambda X <: T1''' => t2'[X] by induction hypothesis on dtv, d1'
+		end case
+		
+		end case analysis	
+	end case
+
+	// other cases don't unify with conclusion
+
+end induction
+end theorem
+
+
+theorem progress : forall dt : * |- t : T exists t stepsorvalue.
+
+/** Now the real fun begins--a proof by induction.  We use a "by induction on X :"
+ * justification, where X is the derivation or syntax that we are doing induction
+ * over.
+ */
+
+dsv : t stepsorvalue by induction on dt :
+
+/** Inside the induction proof, we do a case analysis, with one case for each rule
+ * that could have been used to produce the indicated judgment.  If we are doing
+ * induction over syntax, then we will have cases for each case in the BNF
+ * definition.
+ *
+ * A rule case is of the form "case rule <rule> is <derivation>"
+ * Here <rule> is a rule defined above, but instantiated with actual
+ * expressions as appropriate for the judgment we are doing case analysis over.
+ * Any fresh variables in <rule> are bound for the derivation and can be used there.
+ * SASyLF checks to make sure you don't get the case analysis wrong, for example, by
+ * assuming more than is justified about the premises of the rule.
+ */
+
+
+// variable case is impossible since Gamma must be *
+
+case rule
+
+	d1: *, x:T1 |- t2[x] : T2
+	--------------------------------------- T-Abs
+	d2: * |- lambda x:T1 => t2[x] : T1 -> T2
+
+is
+
+	d3 : lambda x:T1 => t2[x] value by rule V-Abs
+	d4 : lambda x:T1 => t2[x] stepsorvalue by rule stepsorvalue-value on d3
+	
+end case
+
+
+case rule
+
+	dp1t: * |- t1 : T11 -> T12
+	dp2t: * |- t2 : T11
+	---------------------------------- T-App
+	d3: * |- t1 t2 : T12
+
+is
+
+	/** This example shows how we can use the induction hypothesis.
+	 * Note that this is only legal because dp1t is a subderivation of dt.
+	 */
+
+	dp1sv: t1 stepsorvalue by induction hypothesis on dp1t
+	dp2sv: t2 stepsorvalue by induction hypothesis on dp2t
+	
+	dsv : t stepsorvalue by case analysis on dp1sv :
+
+	case rule
+
+		dp1s : t1 -> t1'
+		---------------------- stepsorvalue-steps
+		dp1sv' : t1 stepsorvalue
+
+	is
+	
+		ds : t1 t2 -> t1' t2 by rule E-CtxApp1 on dp1s
+		dsv : t1 t2 stepsorvalue by rule stepsorvalue-steps on ds
+	
+	end case
+	case rule
+
+		dp1v : t1 value
+		---------------------- stepsorvalue-value
+		dp1sv' : t1 stepsorvalue
+
+	is
+	
+		dsv : t stepsorvalue by case analysis on dp2sv :
+	
+		case rule
+		
+			dp2v : t2 value
+			---------------------- stepsorvalue-value
+			dp2sv' : t2 stepsorvalue
+		
+		is
+			deq : t1 == lambda x : T11' => t1'[x] by lemma canonical-form-lambda on dp1v, dp1t
+		
+			dsv : t stepsorvalue by case analysis on deq :
+			
+			case rule
+			
+				------------------------------------- equality
+				deq' : lambda x : T11' => t1'[x] == lambda x : T11' => t1'[x]
+				
+			is
+
+				dsteps : t1 t2 -> t1'[t2] by rule E-AppAbs on dp2v				
+				dsv : t stepsorvalue by rule stepsorvalue-steps on dsteps
+				
+			end case
+			
+			end case analysis
+
+		end case
+		
+		case rule
+		
+			dp2s : t2 -> t2'
+			------------------------- stepsorvalue-steps
+			dp2sv' :  t2 stepsorvalue
+		
+		is
+		
+			ds : t1 t2 -> t1 t2' by rule E-CtxApp2 on dp1v, dp2s
+			dsv : t1 t2 stepsorvalue by rule stepsorvalue-steps on ds
+		
+		end case
+		end case analysis
+	end case
+	end case analysis
+end case
+
+case rule
+
+	d1: *, X <: T1 |- t2[X] : T2[X]
+	------------------------------------------------------- T-Tabs
+	d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
+
+is
+
+	d3 : lambda X <: T1 => t2[X] value by rule V-Tabs
+	d4 : lambda X <: T1 => t2[X] stepsorvalue by rule stepsorvalue-value on d3
+
+end case
+
+case rule
+
+	d1: * |- t1 : all X <: T11 => T12[X]
+	d2: * |- T2 <: T11
+	----------------------------------- T-Tapp
+	d3: * |- t1 "[" T2 "]" : T12[T2]
+is
+	d1sv: t1 stepsorvalue by induction hypothesis on d1
+	
+	dsv : t stepsorvalue by case analysis on d1sv :
+
+	case rule
+
+		d1s : t1 -> t1'
+		----------------------- stepsorvalue-steps
+		d1sv' : t1 stepsorvalue
+
+	is
+	
+		ds : t1 "[" T2 "]" -> t1' "[" T2 "]" by rule E-CtxTapp on d1s
+		dsv : t1 "[" T2 "]" stepsorvalue by rule stepsorvalue-steps on ds
+	
+	end case
+	case rule
+
+		d1v : t1 value
+		----------------------- stepsorvalue-value
+		d1sv' : t1 stepsorvalue
+
+	is
+	
+		deq : t1 == lambda X <: T11' => t1'[X] by lemma canonical-form-Lambda on d1v, d1
+	
+		dsv : t stepsorvalue by case analysis on deq :
+		
+		case rule
+		
+			------------------------------------------------------------- equality
+			deq' : lambda X <: T11' => t1'[X] == lambda X <: T11' => t1'[X]
+			
+		is
+
+			dsteps : t1 "[" T2 "]" -> t1'[T2] by rule E-TappTabs
+			dsv : t stepsorvalue by rule stepsorvalue-steps on dsteps
+			
+		end case
+		end case analysis
+
+	end case
+	end case analysis
+end case
+
+
+case rule
+	d1: * |- t : T'
+	d2: * |- T' <: T
+	---------------- T-Sub
+	d3: * |- t : T
+is
+
+	dsv : t stepsorvalue by induction hypothesis on d1
+
+end case
+end induction
+end theorem
+
+
+
+
+/************************ PRESERVATION **************************************/
+
+
+
+lemma invert-lambda: forall dt: * |- lambda x:T11 => t12[x] : T1 -> T
+					forall dt2: * |- t2 : T2
+					forall dsub: * |- T2 <: T1
+					exists * |- t12[t2] : T.
+
+dt12: * |- t12[t2] : T by induction on dt:
+
+case rule
+	d1: *, x:T1 |- t12[x] : T
+	--------------------------------------- T-Abs
+	d2: * |- lambda x:T1 => t12[x] : T1 -> T
+is
+	dt2': * |- t2 : T1 by rule T-Sub on dt2, dsub
+	dt12: * |- t12[t2] : T by substitution on dt2, d1 // BUG: should use dt2' here
+end case
+
+case rule
+	d1: * |- lambda x:T11 => t12[x] : T''
+	d2: * |- T'' <: T1 -> T
+	----------------------------------------- T-Sub
+	d3: * |- lambda x:T11 => t12[x] : T1 -> T
+is
+	d4: T'' == T1' -> T' <: T1 -> T by lemma arrow-sub-arrow on d2
+	dt12: * |- t12[t2] : T by case analysis on d4:
+	case rule
+		d5: * |- T1 <: T1'
+		d6: * |- T' <: T
+		-------------------------------- arrow-sub
+		d7: T1' -> T' == T1' -> T' <: T1 -> T
+		
+	is
+		d8: * |- T2 <: T1' by rule SA-Trans on dsub, d5
+		d9: * |- t12[t2] : T' by induction hypothesis on d1, dt2, d8
+		dt12: * |- t12[t2] : T by rule T-Sub on d9, d6
+	end case
+	end case analysis
+end case
+
+end induction
+end lemma
+
+
+
+
+
+lemma invert-lambda2: forall dt: * |- lambda X <: T11 => t12[X] : all X <: T11'' => T12[X]
+					forall dsub1: * |- T2 <: T11''
+					exists * |- t12[T2] : T12[T2].
+
+dt2: * |- t12[T2] : T12[T2] by induction on dt:
+
+case rule
+	d1: *, X <: T11 |- t12[X] : T12[X]
+	----------------------------------------------------------- T-Tabs
+	d2: * |- lambda X <: T11 => t12[X] : all X <: T11 => T12[X]
+is
+	d3: * |- t12[T2] : T12[T2] by substitution on d1, dsub1
+end case
+
+
+case rule
+	d1: * |- lambda X <: T11 => t12[X] : T''
+	d2: * |- T'' <: all X <: T11'' => T12[X]
+	----------------------------------------------------------- T-Sub
+	d3: * |- lambda X <: T11 => t12[X] : all X <: T11'' => T12[X]
+is
+	d4: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by lemma Tarrow-sub-Tarrow on d2
+	dt12: * |- t12[T2] : T12[T2] by case analysis on d4:
+	case rule
+
+		d5: * |- T11'' <: T11'
+		d6: *, X <: T11'' |- T12'[X] <: T12[X]
+		--------------------------------------------------------------- Tarrow-sub
+		d7: all X <: T11' => T12'[X] == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
+		
+	is
+		d8: * |- T2 <: T11' by rule SA-Trans on dsub1, d5
+		d9: * |- t12[T2] : T12'[T2] by induction hypothesis on d1, d8
+		d11: * |- T12'[T2] <: T12[T2] by substitution on d6, dsub1
+		dt12: * |- t12[T2] : T12[T2] by rule T-Sub on d9, d11
+	end case
+	end case analysis
+end case
+
+end induction
+end lemma
+
+
+
+
+// Note: we prove preservation, as usual, with an empty Gamma.
+// Was the non-empty Gamma in the POPLMark challenge a mistake?
+
+theorem preservation: forall dt: * |- t : T forall ds: t -> t' exists * |- t' : T.
+
+dt' : * |- t' : T by induction on dt:
+
+// variable case is impossible since Gamma must be *
+
+case rule
+
+	d1: *, x:T1 |- t2[x] : T2
+	--------------------------------------- T-Abs
+	d2: * |- lambda x:T1 => t2[x] : T1 -> T2
+
+is
+	dt' : * |- t' : T by case analysis on ds:
+	end case analysis
+end case
+
+
+case rule
+
+	d1: * |- t1 : T1 -> T
+	d2: * |- t2 : T1
+	---------------------------------- T-App
+	d3: * |- t1 t2 : T
+
+is
+	dt' : * |- t' : T by case analysis on ds:
+	case rule
+		d4: t1 -> t1'
+		------------------- E-CtxApp1
+		d5: t1 t2 -> t1' t2
+	is
+		d6: * |- t1' : T1 -> T by induction hypothesis on d1, d4
+		d7: * |- t' : T by rule T-App on d6, d2
+	end case
+	case rule
+		d4: t1 value
+		d5: t2 -> t2'
+		------------------- E-CtxApp2
+		d6: t1 t2 -> t1 t2'
+	is
+		d7: * |- t2' : T1 by induction hypothesis on d2, d5
+		d8: * |- t' : T by rule T-App on d1, d7
+	end case
+	case rule
+		d4: t2 value
+		------------------------------------- E-AppAbs
+		d5: (lambda x:T11 => t12[x]) t2 -> t12[t2]
+	is
+		//d6: *, x:T1 |- t12[x] : T by lemma invert-lambda on d1
+		d6: * |- T1 <: T1 by rule SA-Refl
+		d7: * |- t12[t2] : T by lemma invert-lambda on d1, d2, d6
+	end case
+	end case analysis
+end case
+
+case rule
+
+	d1: *, X <: T1 |- t2[X] : T2[X]
+	------------------------------------------------------- T-Tabs
+	d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
+
+is
+	dt' : * |- t' : T by case analysis on ds:
+	end case analysis
+end case
+
+case rule
+
+	d1: * |- t1 : all X <: T11'' => T12[X]
+	d2: * |- T2 <: T11''
+	----------------------------------- T-Tapp
+	d3: * |- t1 "[" T2 "]" : T12[T2]
+	
+is
+	dt' : * |- t' : T by case analysis on ds:
+	case rule
+		d4: t1 -> t1'
+		----------------------------------- E-CtxTapp
+		d5: t1 "[" T2 "]" -> t1' "[" T2 "]"
+	is
+		d6: * |- t1' : all X <: T11'' => T12[X] by induction hypothesis on d1, d4
+		d7: * |- t' : T by rule T-Tapp on d6, d2
+	end case
+
+	case rule
+
+		----------------------------------------------------- E-TappTabs
+		d5: (lambda X <: T11 => t12[X]) "[" T2 "]" -> t12[T2]
+
+	is
+		d7: * |- t12[T2] : T12[T2] by lemma invert-lambda2 on d1, d2
+	end case
+	end case analysis
+end case
+
+case rule
+	d1: * |- t : T'
+	d2: * |- T' <: T
+	---------------- T-Sub
+	d3: * |- t : T
+is
+
+	dtT' : * |- t' : T' by induction hypothesis on d1, ds
+	dt' : * |- t' : T by rule T-Sub on dtT', d2
+
+end case
+end induction
+end theorem
+

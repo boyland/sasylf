@@ -1,0 +1,284 @@
+/* 
+ * Formalization of integers, addition, and a proof that addition commutes
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines natural numbers in terms of zero (z) and successor s n,
+ * defines judgments for sums and less than, proves a few simple theorems,
+ * and then inductively proves that addition commutes.  As we go along,
+ * we illustrate the SASyLF language in tutorial style.
+ *
+ */
+
+
+/** The package declaration is currently a placeholder, but
+ * will eventually support a module system for SASyLF
+ */
+package edu.cmu.cs.sum;
+
+/** SASyLF programs explicitly declare terminals that are
+ * used to parse expressions.  This helps the SASyLF parser
+ * detect problems in the input grammar--anything that is not
+ * a declared terminal, non-terminal, or variable must be an error.
+ * The user should declare all identifiers used in syntax and judgment
+ * that do not themselves denote syntactic classes.  Symbols like
+ * + or |- do not need to be declared, even if they are terminals.
+ */
+terminals z s
+
+
+/************************ SYNTAX **************************************/
+
+/** The syntax section declares the syntax of the formal
+ * system, in this case of the lambda calculus.  Syntax is
+ * given using an ordinary BNF grammar.
+ */
+syntax
+
+/** This declaration declares n as a nonterminal, representing a natural
+ * number.  n and variants of n (n', n'', n1, n2, etc.--you can add
+ * primes or numbers) are used as metavariables for this syntactic
+ * category, as commonly used in the PL research literature.
+ */
+n ::= z
+  | s n
+
+
+/************************ JUDGMENTS **************************************/
+
+/** We declare a judgment with a name ("sum") and a form ("n + n = n").
+ * The judgment is then followed by a series of inference rules that define
+ * the judgment's semantics.
+ *
+ * Rules are defined with the premises above the line and the conclusion
+ * below the line.
+ */
+
+judgment sum: n + n = n
+
+--------- sum-z
+z + n = n
+
+n1 + n2 = n3
+-------------------- sum-s
+(s n1) + n2 = (s n3)
+
+
+judgment less: n < n
+
+------- less-one
+n < s n
+
+n1 < n3
+n3 < n2
+------- less-transitive
+n1 < n2
+
+
+
+/************************ THEOREMS **************************************/
+
+/** Warm-up theorem: 1 + n = s n
+ *
+ * Theorems consist of the keyword theorem (or lemma), a name, a :,
+ * a list of foralls, and a single exists.  The foralls may be syntax
+ * like "n" or judgments like "n1 + n2 = n3" -- in the latter case, the
+ * derivation of the judgment itself must be named (see further below).
+ * We can assume derivations are available for all the facts in the forall
+ * part; we are trying to construct a derivation for the exists part.
+ */ 
+
+theorem n_plus_1_equals_s_n : forall n exists (s (z)) + n = (s n).
+
+/** The actual proof is a series of statements of the form:
+ *
+ * name : judge			by justification
+ *
+ * Here name is an identifier that is used to refer to each fact, in case we need it
+ * later.  judge is the judgment we've proved.  And the justification is the reason
+ * we believe it's true (SASyLF will make sure we're right by checking that the
+ * justification actually proves the judgment).
+ *
+ * The most common justification is "by rule <rule-name> on <name1>, <name2>, ..., <name_k>"
+ * This means that we conclude the judgment on the left by applying rule <rule-name> to the
+ * (ordered) list of premises <name1>, <name2>, ..., <name_k>.  Each <name> must be either
+ * one of the foralls (we don't have any for this theorem) or one of the earlier things we
+ * concluded.  If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..."
+ * part.
+ */
+
+d1: (z) + n = n		by rule sum-z
+d2: (s (z)) + n = (s n)	by rule sum-s on d1
+
+end theorem
+
+
+theorem n_plus_3_equals_s_s_s_n_autosolve : forall n exists (s (s (s (z)))) + n = (s (s (s n))).
+
+dsolve: (s (s (s (z)))) + n = (s (s (s n)))	by solve	// demonstrates use of the automatic solver
+														// WARNING: the automatic solver is VERY buggy right now
+end theorem
+
+theorem z_less_s_z_autosolve : exists z < s z.
+
+dsolve: z < s z	by solve
+
+end theorem
+
+
+theorem z_less_s_s_z_autosolve : exists z < s s z.
+
+dsolve: z < s s z	by solve
+
+end theorem
+
+
+theorem n_less_s_s_n_autosolve : forall n exists n < s s n.
+
+dsolve: n < s s n	by solve
+
+end theorem
+
+
+theorem one_plus_1_equals_s_n : exists (s (z)) + (s (z)) = (s s z).
+
+d1: (s (z)) + (s (z)) = (s s z) by lemma n_plus_1_equals_s_n on (s z)	// test calling a theorem with literal syntax
+
+end theorem
+
+
+theorem sn_plus_1_equals_ss_n : forall n exists (s (z)) + (s (n)) = (s s n).
+
+d1: (s (z)) + (s (n)) = (s s n) by lemma n_plus_1_equals_s_n on (s n)
+
+end theorem
+
+
+
+/** Now the real fun begins--a proof by induction.  We use a "by induction on X :"
+ * justification, where X is the derivation or syntax that we are doing induction
+ * over.
+ */
+
+theorem sum-z-rh: forall n exists n + (z) = n.
+
+d1: n + (z) = n by induction on n:
+
+/** Inside the induction proof, we do a case analysis, with one case for each rule
+ * that could have been used to produce the indicated judgment.  If we are doing
+ * induction over syntax, then we will have cases for each case in the BNF
+ * definition.
+ *
+ * A syntax case is of the form "case <syntax> is <derivation> end case"
+ * Here <syntax> is a case of the syntax defined above, but instantiated
+ * appropriately for the syntax we are doing case analysis over.  For example,
+ * here we assume that n = z.
+ *
+ * SASyLF checks to make sure you don't get the case analysis wrong,
+ * for example, by forgetting a case.
+ */
+
+case z is
+	d2: (z) + (z) = (z)	by rule sum-z
+end case
+
+/* Any fresh variables in <syntax> are bound for the derivation and can be
+ * used there.  For example, here we are assuming n = s n', where n' is a
+ * fresh variable.
+ *
+ * This example shows how we can use the induction hypothesis.
+ * Note that this is only legal because n' is part of the n.
+ */
+
+case s n' is
+	d3: n' + (z) = n'	by induction hypothesis on n'
+	d4: (s n') + (z) = (s n')	by rule sum-s on d3
+end case
+
+end induction
+
+end theorem
+
+
+
+/*************************
+ * Test richer induction *
+ *************************/
+
+theorem sum-s-rh: forall d1: n1 + n2 = n3 exists n1 + (s n2) = (s n3).
+
+d2: n1 + (s n2) = s n3 by induction on d1:
+
+/* A rule case is of the form "case rule <rule> is <derivation> end case"
+ * Here <rule> is a rule defined above, but instantiated with actual
+ * expressions as appropriate for the judgment we are doing case analysis over.
+ */
+
+case rule
+
+----------------- sum-z
+dzc: (z) + n = n
+
+is
+
+dz1: (z) + (s n) = (s n) by rule sum-z
+
+end case
+
+
+case rule
+
+dsp: n1' + n2 = n3'
+---------------------------- sum-s
+dsc: (s n1') + n2 = (s n3')
+
+is
+
+ds1: n1' + (s n2) = (s n3') by induction hypothesis on dsp
+ds2: (s n1') + (s n2) = (s s n3') by rule sum-s on ds1
+
+end case
+end induction
+end theorem
+
+
+
+/***********************
+ * Test a real theorem *
+ ***********************/
+
+theorem sum-commutes: forall d1: n1 + n2 = n3 exists n2 + n1 = n3.
+
+d2: n2 + n1 = n3 by induction on d1:
+
+case rule
+
+----------------- sum-z
+dzc: (z) + n = n
+
+is
+
+/* We can use a theorem or lemma previously defined, just like a rule,
+ * by giving a syntax or a judgment for each of the "forall" clauses
+ * of the theorem.
+ */
+
+dz1: n + (z) = n by theorem sum-z-rh on n
+
+end case
+
+
+case rule
+
+dsp: n1' + n2 = n3'
+---------------------------- sum-s
+dsc: (s n1') + n2 = (s n3')
+
+is
+
+ds1: n2 + n1' = n3' by induction hypothesis on dsp
+ds2: n2 + (s n1') = (s n3') by theorem sum-s-rh on ds1
+
+end case
+end induction
+end theorem

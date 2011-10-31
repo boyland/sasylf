@@ -1,0 +1,389 @@
+/* 
+ * Untyped Lambda Calculus with locations
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines the untyped lambda calculus with locations
+ * and proves preservation of well-formed stores.
+ *
+ * This file is not yet extensively commented; see while1.slf or lambda.slf
+ * for more of a "tutorial" introduction.
+ */
+
+package edu.cmu.cs.lambda;
+
+terminals fn s z cons var
+
+
+/************************ SYNTAX **************************************/
+
+
+syntax
+
+e ::= fn x => e[x]
+  |   x
+  |   e e
+  |   loc
+ 
+loc ::= z
+    |   s loc
+
+st ::= *
+   |   cons {loc, e, st}
+
+Gamma ::= *
+      |   Gamma, var x
+
+
+/************************ JUDGMENTS **************************************/
+
+
+judgment lookup: Gamma |- st { loc } = e
+assumes Gamma
+
+------------------------------------ lookup-1
+Gamma |- (cons{loc, e, st}) {loc} = e
+
+Gamma |- st{loc'} = e'
+--------------------------------------- lookup-2
+Gamma |- (cons{loc, e'', st}) {loc'} = e'
+
+
+
+judgment isvar: Gamma |- var e
+assumes Gamma
+
+------------------------- t-var
+(Gamma, var x) |- var x
+
+
+
+
+judgment well-formed: Gamma, st |- e
+assumes Gamma
+
+Gamma |- var e
+------------------- wf-var
+Gamma, st |- e
+
+Gamma |- st{loc} = e
+Gamma, st |- e
+-------------------- wf-loc
+Gamma, st |- (loc)
+
+
+(Gamma, var x), st |- e[x]
+---------------------------------- wf-fn
+Gamma, st |- (fn x => e[x])
+
+Gamma, st |- e1
+Gamma, st |- e2
+----------------------- wf-app
+Gamma, st |- (e1 e2)
+
+
+
+judgment reduce: e -> e
+
+-------------- r-loc
+(loc) -> (loc)
+
+-------------------------------- r-lam
+(fn x => e[x]) -> (fn x => e[x])
+
+e1 -> (fn x => e[x])
+e[e2] -> e'
+---------------------------- r-app
+(e1 e2) -> e'
+
+
+judgment equality: Gamma |- e == e
+assumes Gamma
+
+--------------- equality
+Gamma |- e == e
+
+
+judgment lookup-eq: Gamma |- st{loc} = e1 == e2
+assumes Gamma
+
+Gamma |- st{loc} = e
+Gamma, var x |- e == e'[x]
+------------------------------------ lookup-eq
+Gamma, var x |- st{loc} = e == e'[x]
+
+
+/************************ THEOREMS **************************************/
+
+lemma strengthen-lookup: forall dl: (Gamma, var x) |- st{loc} = e[x] exists (Gamma, var x) |- st{loc} = e' == e[x].
+
+deq: (Gamma, var x) |- st{loc} = e' == e[x] by induction on dl:
+
+case rule
+	----------------------------------------------------- lookup-1
+	d1: (Gamma, var x) |- (cons{loc, e', st'}) {loc} = e'
+is
+	d2: Gamma |- (cons{loc, e', st'}) {loc} = e' by rule lookup-1
+	d3: Gamma, var x |- e' == e[x] by rule equality
+	d4: (Gamma, var x) |- st{loc} = e' == e[x] by rule lookup-eq on d2, d3 
+end case
+
+case rule
+	d1: (Gamma, var x) |- st'{loc} = e[x]
+	------------------------------------------------------------ lookup-2
+	d2: (Gamma, var x) |- (cons{loc', e''', st'}) {loc} = e[x]
+is
+	d3: (Gamma, var x) |- st'{loc} = e1 == e[x] by induction hypothesis on d1
+	deq: (Gamma, var x) |- st{loc} = e' == e[x] by case analysis on d3:
+	case rule
+		d4: Gamma |- st'{loc} = e1
+		d5: Gamma, var x |- e1 == e[x]
+		------------------------------------------- lookup-eq
+		d6: Gamma, var x |- st'{loc} = e1 == e[x]
+	is
+		d7: Gamma |- st {loc} = e1 by rule lookup-2 on d4
+		deq: (Gamma, var x) |- st{loc} = e1 == e[x] by rule lookup-eq on d7, d5
+	end case
+	end case analysis
+end case
+
+end induction
+end lemma
+
+
+lemma strengthen-wf: forall dwf: (Gamma, var x), st |- e /*forall deq: (Gamma, var x) |- e' == e[x]*/ exists Gamma, st |- e.
+
+de: Gamma, st |- e by induction on dwf:
+case rule
+
+	d1: (Gamma, var x) |- var e
+	------------------------------ wf-var
+	d2: (Gamma, var x), st |- e
+		
+is
+	d3: Gamma, st |- e by case analysis on d1:
+	
+	case rule
+		------------------------------------- t-var
+		d4: (Gamma', var x1, var x) |- var x1
+	is
+		d5: Gamma', var x1 |- var x1 by rule t-var
+		d6: Gamma', var x1, st |- x1 by rule wf-var on d5
+	end case
+	
+	end case analysis
+end case
+	
+case rule
+
+	d1: (Gamma, var x) |- st{loc} = e'[x]
+	d2: (Gamma, var x), st |- e'[x]
+	------------------------------------- wf-loc
+	d3: (Gamma, var x), st |- loc
+	
+is
+	d4: (Gamma, var x) |- st{loc} = e'' == e'[x] by lemma strengthen-lookup on d1
+	d5: Gamma, st |- loc by case analysis on d4:
+	
+	case rule
+		d6: Gamma |- st{loc} = e''
+		d7: Gamma, var x |- e'' == e'[x]
+		------------------------------------------ lookup-eq
+		d8: Gamma, var x |- st{loc} = e'' == e'[x]
+	is
+		d9: Gamma, st |- loc by case analysis on d7:
+		case rule
+			------------------------------- equality
+			d10: Gamma, var x |- e'' == e''
+		is
+			d11: Gamma, st |- e'' by induction hypothesis on d2
+			d12: Gamma, st |- loc by rule wf-loc on d6, d11
+		end case
+		end case analysis
+	end case
+	
+	end case analysis
+end case
+	
+case rule
+
+	d1: ((Gamma, var x), var x1), st |- e'[x1]
+	------------------------------------------- wf-fn
+	d2: (Gamma, var x), st |- (fn x1 => e'[x1])
+	
+is
+	d3: (Gamma, var x1, var x), st |- e'[x1]		by exchange on d1
+	d4: (Gamma, var x1), st |- e'[x1]				by induction hypothesis on d3
+	d5: Gamma, st |- (fn x1 => e'[x1])				by rule wf-fn on d4
+end case
+	
+case rule
+
+	d1: (Gamma, var x), st |- e1
+	d2: (Gamma, var x), st |- e2
+	--------------------------------- wf-app
+	d3: (Gamma, var x), st |- (e1 e2)
+
+is
+	d4: Gamma, st |- e1				by induction hypothesis on d1
+	d5: Gamma, st |- e2				by induction hypothesis on d2
+	d6: Gamma, st |- e1 e2			by rule wf-app on d4, d5
+end case
+
+end induction
+end lemma
+
+
+lemma wf-subst: forall dwf1: (Gamma, var x), st |- e1[x]
+				forall dwf2: Gamma, st |- e2
+				exists 		 Gamma, st |- e1[e2].
+
+dwf' : Gamma, st |- e1[e2] by induction on dwf1:
+
+	case rule
+
+		d1: (Gamma, var x), st |- e1'[x]
+		d2: (Gamma, var x), st |- e2'[x]
+		------------------------------------------ wf-app
+		d3: (Gamma, var x), st |- (e1'[x] e2'[x])
+		
+	is
+	
+		d4 : Gamma, st |- e1'[e2]		by induction hypothesis on d1, dwf2
+		d5 : Gamma, st |- e2'[e2]		by induction hypothesis on d2, dwf2
+		d6 : Gamma, st |- (e1'[e2] e2'[e2]) by rule wf-app on d4, d5
+
+	end case
+
+	case rule
+
+		d1: (Gamma, var x) |- st{loc} = e[x] 
+		d2: (Gamma, var x), st |- e[x]
+		------------------------------------ wf-loc
+		d3: (Gamma, var x), st |- loc
+		
+	is
+	
+		d4: (Gamma, var x) |- st{loc} = e' == e[x] by lemma strengthen-lookup on d1
+		d5: Gamma, st |- loc by case analysis on d4:
+		
+		case rule
+			d6: Gamma |- st{loc} = e'
+			d7: (Gamma, var x) |- e' == e[x]
+			------------------------------------------ lookup-eq
+			d8: (Gamma, var x) |- st{loc} = e' == e[x]
+		is
+			d9: Gamma, st |- loc by case analysis on d7:
+			case rule
+				--------------------------------- equality
+				d10: Gamma, var x |- e' == e'
+			is
+				d11: Gamma, st |- e' by lemma strengthen-wf on d2
+				d12: Gamma, st |- loc by rule wf-loc on d6, d11
+			end case
+			end case analysis
+		end case
+		end case analysis
+
+	end case
+
+	case rule
+
+		d2: (Gamma, var x, var x1), st |- e[x][x1]
+		------------------------------------------ wf-fn
+		d3: (Gamma, var x), st |- (fn x1 => e[x][x1])
+		
+	is
+		d4: (Gamma, var x1, var x), st |- e[x][x1]	by exchange on d2
+		d4': (Gamma, var x1), st |- e2 by weakening on dwf2
+		d5: (Gamma, var x1), st |- e[e2][x1]		by induction hypothesis on d4, d4'
+		d6: Gamma, st |- (fn x1 => e[e2][x1])		by rule wf-fn on d5
+
+	end case
+
+	case rule
+
+		d1: (Gamma, var x) |- var e1[x]
+		------------------------------- wf-var
+		d2: (Gamma, var x), st |- e1[x]
+		
+	is
+
+		d3: Gamma, st |- e1[e2]			by case analysis on d1:
+		
+		case rule
+	
+			------------------------- t-var
+			d4: (Gamma, var x) |- var x
+			
+		is
+		
+			d5: Gamma, st |- e2			by dwf2
+				
+		end case
+		
+
+		case rule
+	
+			------------------------------------ t-var
+			d4: (Gamma', var x1, var x) |- var x1
+			
+		is
+			d5: (Gamma', var x1, var x), st |- x1	by rule wf-var on d4
+			d6: (Gamma', var x1), st |- x1			by lemma strengthen-wf on d5
+				
+		end case
+
+		end case analysis	
+
+	end case
+
+end induction
+end lemma
+
+theorem preservation: forall dwf: (*), st |- e  forall de: e -> e' exists (*), st |- e'.
+
+dwf' : (*), st |- e' by induction on de:
+
+	case rule
+
+		-------------- r-loc
+		d2: (loc) -> (loc)
+
+		is
+	
+		d3 : (*), st |- e'		by dwf
+
+	end case
+
+	case rule
+
+		---------------------------------- r-lam
+		d2: (fn x => e1[x]) -> (fn x => e1[x])
+
+		is
+	
+		d3 : (*), st |- e'		by dwf
+
+	end case
+
+	case rule
+
+		d1: e1 -> (fn x => e3[x])
+		d2: e3[e2] -> e'
+		---------------------------- r-app
+		d3: (e1 e2) -> e'
+
+		is
+	
+		d4 : (*), st |- e1				by inversion of wf-app on dwf  
+		d5 : (*), st |- e2				by inversion of wf-app on dwf
+		d6 : (*), st |- (fn x => e3[x])	by induction hypothesis on d4, d1
+		d7 : (* , var x), st |- e3[x]	by inversion of wf-lam on d6
+		d8 : (*), st |- e3[e2]			by lemma wf-subst on d7, d5
+		d9 : (*), st |- e'				by induction hypothesis on d8, d2
+
+	end case
+
+end induction
+end theorem

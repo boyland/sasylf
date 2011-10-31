@@ -1,0 +1,232 @@
+/* 
+ * A Formalization of Featherweight Java in SASyLF
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines the static semantics of Featherweight Java.
+ * The dynamic semantics are still missing; if you would like to add them,
+ * please do so and email me.
+ *
+ * In this formalization, we simplify a few issues--only one argument is
+ * supported per method, and we don't address the so-called "stupid warning"
+ * A proof of type soundness is hopefully soon to come!
+ *
+ * The code is not extensively commented; for an introduction to SASyLF,
+ * look at lambda.slf.
+ */
+
+package edu.cmu.cs.fj;
+
+terminals class extends new return s z field method OK in override ftype mtype
+
+
+/************************ SYNTAX **************************************/
+
+syntax
+
+/** This version supports only a single method argument */
+
+// we omit K as its form is fixed
+CT ::= * | CT, class C extends C { fdecls; mdecls }
+
+fdecls ::= * | fdecls; C f
+
+mdecls ::= * | mdecls; C m{C x, C this} { return e[x][this]; }
+
+e ::= x | this | e "." f | e "." m{e} | new C{elist} | {C} e
+
+elist ::= * | elist, e
+
+
+// we represent class, field, and method names as integers
+
+C ::= class{n}
+f ::= field{n}
+m ::= method{n}
+
+n ::= z | s n
+
+/** Contexts G */
+
+G ::= *
+	| G, x : C
+
+
+/************************ TYPING JUDGMENTS **************************/
+
+judgment subtyping: CT |- C <: C
+
+------------ sub-refl
+CT |- C <: C
+
+CT |- C1 <: C2
+CT |- C2 <: C3
+-------------- sub-trans
+CT |- C1 <: C3
+
+CT{C1} = class C1 extends C2 { fdecls; mdecls }
+----------------------------------------------- sub-CT
+CT |- C1 <: C2
+
+
+judgment CT-lookup: CT{C1} = class C1 extends C2 { fdecls; mdecls }
+
+---------------------------------------------------------------------------------------- CT-lookup-found
+(CT,class C1 extends C2 { fdecls; mdecls }){C1} = class C1 extends C2 { fdecls; mdecls }
+
+CT{C1} = class class{n1} extends C2 { fdecls; mdecls }
+n1 != n3
+---------------------------------------------------------------------------------------- CT-lookup-notfound
+(CT,class class{n3} extends C4 { fdecls1; mdecls1 }){class{n1}} = class class{n1} extends C2 { fdecls; mdecls }
+
+
+/** auxiliary inequality judgment */
+judgment inequal: n != n
+
+--------- inequal-left
+z != s n
+
+-------- inequal-right
+s n != z
+
+n != n'
+----------- inequal-recurse
+s n != s n'
+
+
+judgment has-type: CT; G |- e : C
+assumes G
+
+------------------- t-var
+CT; G, x:C |- x : C
+
+CT; G |- e0 : C0
+CT |- ftype{f, C0} = C
+----------------------------------------------- t-field
+CT; G |- e0 "." f : C
+
+CT; G |- e0 : C0
+CT; G |- e1 : C1
+CT |- mtype{m, C0} = C' -> C
+CT |- C1 <: C'
+----------------------------------------------- t-invk
+CT; G |- e0 "." m{e} : C
+
+CT{C} = class C extends C' { fdecls; mdecls }
+CT; G |- elist : fdecls in C
+----------------------------------------------- t-new
+CT; G |- new C{elist} : C
+
+CT; G |- e : C'
+----------------- t-cast
+CT; G |- {C}e : C
+
+
+judgment well-formed-method : CT |- mdecls OK in C
+
+--------------- wf-method-empty
+CT |- * OK in C
+
+CT |- mdecls OK in C
+CT; *, x : C1, this : C |- e[x][this] : C0'
+CT |- C0' <: C0
+CT{C} = class C extends C' { fdecls; mdecls }
+CT, C' |- override mdecls{m} : C1 -> C0 OK
+------------------------------------------------------------- wf-method-ok
+CT |- mdecls; C m{C x, C this} { return e[x][this]; } OK in C
+
+
+judgment well-formed-class: CT |- CT OK
+
+----------- wf-class-empty
+CT |- * OK
+
+CT |- CT' OK
+CT |- mdecls OK in C
+--------------------------------------------------- wf-class-ok
+CT |- CT', class C extends C' { fdecls; mdecls } OK
+
+
+judgment constructor-args: CT; G |- elist : fdecls in C
+assumes G
+
+-------------------------- c-args-object
+CT; G |- * : * in class{z}
+
+CT{class{s n}} = class class{s n} extends C' { fdecls; mdecls }
+CT; G |- elist : fdecls in C'
+--------------------------------------------------------------- c-args-super
+CT; G |- elist : * in class{s n}
+
+CT; G |- elist : fdecls in C
+CT; G |- e : C'
+------------------------------------- c-args-decl
+CT; G |- elist, e : fdecls; C' f in C
+
+
+judgment field-type: CT |- ftype{f, C0} = C
+
+CT{C0} = class C0 extends C' { fdecls; mdecls }
+CT, C0 |- fdecls{f} = C
+----------------------------------------------- ft-class
+CT |- ftype{f, C0} = C
+
+
+judgment field-type-helper: CT, C0 |- fdecls{f} = C
+
+CT{class{s n}} = class class{s n} extends C' { fdecls; mdecls }
+CT, C' |- fdecls{f} = C
+--------------------------------------------------------------- fth-empty
+CT, class{s n} |- *{f} = C
+
+----------------------------- fth-found
+CT, C0 |- fdecls; C f {f} = C
+
+CT, C0 |- fdecls{field{n'}} = C
+n != n'
+-------------------------------------------- fth-notfound
+CT, C0 |- fdecls; C field{n} {field{n'}} = C
+
+
+judgment method-type: CT |- mtype{m, C0} = C' -> C
+
+CT{C0} = class C0 extends C0' { fdecls; mdecls }
+CT, C0 |- mdecls{m} = C' -> C
+------------------------------------------------ mt-class
+CT |- mtype{m, C0} = C' -> C
+
+
+judgment method-type-helper: CT, C0 |- mdecls{m} = C' -> C
+
+CT{class{s n}} = class class{s n} extends C0' { fdecls; mdecls }
+CT, C0' |- mdecls{m} = C' -> C
+---------------------------------------------------------------- mth-empty
+CT, class{s n} |- *{m} = C' -> C
+
+------------------------------------------------------------------------ mth-found
+CT, C0 |- mdecls; C m{C1 x, C0 this} { return e[x][this]; }{m} = C1 -> C
+
+CT, C0 |- mdecls {method{n'}} = C' -> C
+n != n'
+------------------------------------------------------------------------------------------- mth-notfound
+CT, C0 |- mdecls; C1 method{n}{C2 x, C3 this} { return e[x][this]; } {method{n'}} = C' -> C
+
+
+
+judgment overriding: CT, C0 |- override mdecls{m} : C1 -> C2 OK
+
+CT{class{s n}} = class class{s n} extends C0' { fdecls; mdecls }
+CT, C0' |- override mdecls{m} : C1 -> C2 OK
+---------------------------------------------------------------- override-empty
+CT, class{s n} |- override *{m} : C1 -> C2 OK
+
+------------------------------------------- override-empty-object
+CT, class{z} |- override *{m} : C1 -> C2 OK
+
+------------------------------------------------------------------------------------ override-found
+CT, C0 |- override mdecls; C m{C1 x, C2 this} { return e[x][this]; }{m} : C1 -> C OK
+
+CT, C0 |- override mdecls{m} : C1 -> C OK
+n != n'
+------------------------------------------------------------------------------------- override-notfound
+CT, C0 |- override mdecls; C2 m{C3 x, C4 this} { return e[x][this]; }{m} : C1 -> C OK

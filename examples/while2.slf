@@ -1,0 +1,352 @@
+/* 
+ * Proving Factorial correct by induction in the While language. 
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * Here we build on the tutorial in 654-asst4-pt1-sample.slf, with
+ * the features needed to prove theorems about While programs
+ * by induction.
+ */
+
+package edu.cmu.cs.cs654.asst4;
+
+terminals skip if then else while do math true false r i n m s
+
+syntax
+
+S ::= skip | S; S | x := a | if b then S else S | while b do S
+
+a ::= x | nat | a + a | a - a | a * a | a!
+
+b ::= a < a | a == a
+
+
+/** NOTE: here we've done numbers a bit differently.  We want to
+ * be able to do induction on numbers, but SASyLF doesn't understand
+ * numbers internally (at least not yet).  It does understand syntax,
+ * though, so if we encode numbers using syntax then it can understand
+ * and it can check our proofs by induction.
+ *
+ * We formalize numbers in unary form.  Unary is like binary except that
+ * instead of having zeros and ones, we just have ones!  In fact, in
+ * this case we use the symbol "0" to represent 0, and then we construct
+ * one by calling it the successor "s 0" of 0.  Two is then "s s 0", three
+ * is "s s s 0", and so on.  In general, if we have a natural number nat,
+ * then nat+1 is represented by s nat.
+ */
+nat ::= 0 | s nat
+
+x ::= r | i | n | m
+
+E ::= {} | {L}
+
+L ::= x -> nat | L, x -> nat
+
+
+/**************************************************************/
+
+judgment lookup: E{x} = nat
+judgment set: E{x -> nat} = E
+
+judgment add: nat1 math:+ nat2 = nat3
+judgment add: nat1 math:- nat2 = nat3
+judgment times: nat1 math:* nat2 = nat3
+judgment less: nat1 math:< nat2
+judgment greaterequal: nat1 math:>= nat2
+judgment env-implies: E => E'			// a convenient judgment that describes when
+										// one environment implies the other
+
+judgment factorial: nat2 = nat1!			// the mathematical definition of factorial
+
+----------- fact-s0						// 1! = 1
+s 0 = s 0!
+
+
+/** The recursive rule for factorial states that (nat + 1)! = nat! * (nat_1)
+ * Here, it's just slightly more complex because we don't have complete mathematical
+ * expressions built in, so we let nat3 = nat1!, look for nat2 = (nat1 + 1)! which is
+ * proved using as (nat1+1) * nat3 = nat2.  Of course, we write nat1 + 1 as s nat1,
+ * according to our unary number representation as discussed above.
+ */ 
+
+premise nat3 = nat1! 
+premise s nat1 math:* nat3 = nat2
+---------------------------------- fact-snat
+nat2 = (s nat1)!
+
+
+judgment eval-a: E |- a => nat
+
+--------------- eval-num
+E |- (nat) => nat
+
+premise E{x} = nat
+------------------ eval-var
+E |- (x) => nat
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:+ nat2 = nat3
+--------------------------------- eval-plus
+E |- (a1 + a2) => nat3
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:- nat2 = nat3
+--------------------------------- eval-minus
+E |- (a1 - a2) => nat3
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:* nat2 = nat3
+--------------------------------- eval-mult
+E |- (a1 * a2) => nat3
+
+
+
+judgment eval-btrue: E |- b => true
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:< nat2
+------------------------- eval-lesstrue
+E |- (a1 < a2) => true
+
+premise E |- a1 => nat
+premise E |- a2 => nat
+-------------------------- eval-equaltrue
+E |- (a1 == a2) => true
+
+
+judgment eval-bfalse: E |- b => false
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:>= nat2
+-------------------------- eval-lessfalse
+E |- (a1 < a2) => false
+
+
+// define eval for -, <, and * too
+
+
+
+judgment reduce: E |- S => E'
+
+-------------- reduce-skip
+E |- (skip) => E
+
+premise E |- S1 => E'
+premise E' |- S2 => E''
+----------------------- reduce-sequence
+E |- (S1; S2) => E''
+
+premise E |- a => nat
+premise E{x -> nat} = E'
+-------------------------- reduce-assign
+E |- (x := a) => E'
+
+premise E |- b => true
+premise E |- S1 => E'
+------------------------------- reduce-iftrue
+E |- (if b then S1 else S2) => E'
+
+premise E |- b => false
+premise E |- S2 => E'
+------------------------------- reduce-iffalse
+E |- (if b then S1 else S2) => E'
+
+premise E |- b => true
+premise E |- (S; (while b do S)) => E'
+---------------------------------- reduce-whiletrue
+E |- (while b do S) => E'
+
+premise E |- b => false
+----------------------- reduce-whilefalse
+E |- (while b do S) => E
+
+premise E |- S => E'
+premise E' => E''
+----------------------- weaken-post
+E |- S => E''
+
+/**************************************************************/
+
+/** Ok, time to prove factorial correct!
+ * What we want to say, intuitively, is that for all numbers nat1,
+ * if we execute the loop with i = nat1, then when execution terminates
+ * we will have r = nat1!
+ *
+ * But we have to write things slightly differently, to generalize
+ * the theorem so we can use the induction hypothesis.  We need to generalize the
+ * induction hypothesis to say that i can be any natural number as long as
+ * nat3 = (nat1-nat2)!.  That's because after we evaluate the loop once,
+ * r is no longer 1 and i is no longer nat1, but we still need to apply the
+ * induction hypothesis, and this is the right generalization to make that
+ * work.  Finally, we need to know that the result nat4 = nat1!
+ *
+ * Thus we say, forall nat1, nat2, dinv showing that nat3 = (nat1-nat2)!,
+ * and dfin showing that nat4 = nat1!,
+ * we can prove that the loop does the right thing (with r = nat4 = nat1!
+ * at the end).
+ */
+
+theorem factInvariant :	forall nat1
+							forall nat2
+							forall dinv: {} |- nat3 == (nat1 - nat2)! => true
+							forall dfin: {} |- nat4 == nat1! => true
+							exists
+{ n -> nat1, i -> nat2, r -> nat3 } |-
+while 0 < i do
+	(i := i - s(0);
+	r := r * (n - i))
+=> { n -> nat1, i -> 0, r -> nat4 }.
+
+/** Ok, now we've got to prove this by induction, so we just use the
+ * "by induction" justification.  We have to say what we're doing induction on.
+ * In this case, we're counting down i each loop iteration, so i is the natural
+ * induction variable.  We technically do induction on the number "nat2" to which
+ * the variable i maps.  The syntax has a ":" at the end--then we put in a bunch
+ * of cases, and finally do an "end induction" when we've proved all the cases.
+ * SASyLF should check that we haven't forgotten any cases, but that check isn't
+ * implemented yet, so don't forget one!  SASyLF *does* check to make sure you
+ * use a case correctly, though, so it should help you in that way (plus it checks
+ * all the rule derivations in the proof of the case).
+ *
+ * NOTE: In the proof below, I sometimes did explicit proofs for showing that expression
+ * evaluation worked out when, by the rules of question 3 of the assignment, I could
+ * have just said "by unproved."  So if the assignment had asked you to prove factorial
+ * correct, a somewhat less detailed proof would have been acceptable.  Remember, for
+ * questions 1-2 unproved is OK for mathematical primitives, environment lookup, and
+ * environment update, but NOT for expression evaluation.  For question 3, unproved is
+ * OK for mathematical primitives, environment lookup, and also for expression
+ * evaluation.
+ */
+
+d0:	{ n -> nat1, i -> nat2, r -> nat3 } |-
+		while 0 < i do
+			(i := i - s(0);
+			r := r * (n - i))
+		=> { n -> nat1, i -> 0, r -> nat4 }			by induction on nat2:
+
+/** There are two cases, for the two ways that you can build a "nat".  Either nat2
+ * is just a 0, or it is s nat2'.  We treat the 0 case first.  The syntax is "case e :"
+ * and then a bunch of derivations that prove the case, followed by "end case."
+ */
+
+case 0 is
+	d93: { n -> nat1, i -> 0, r -> nat3 } {i} = 0		by unproved
+	d94: { n -> nat1, i -> 0, r -> nat3 } |- i => 0	by rule eval-var on d93
+	d95: { n -> nat1, i -> 0, r -> nat3 } |- 0 => 0	by rule eval-num
+	d96: 0 math:>= 0									by unproved
+	
+	d97:	{ n -> nat1, i -> 0, r -> nat3 } |-
+			0 < i => false								by rule eval-lessfalse on d95, d94, d96
+			
+	d98:	{ n -> nat1, i -> 0, r -> nat3 } |-
+			while 0 < i do
+				(i := i - s(0);
+				r := r * (n - i))
+			=> { n -> nat1, i -> 0, r -> nat3 }			by rule reduce-whilefalse on d97
+			
+
+	// by math rules we can tell that nat3 = (nat1 - i)! = (nat1 - 0)! = nat1! = nat4
+
+	d99:	{ n -> nat1, i -> 0, r -> nat3 }
+			=> { n -> nat1, i -> 0, r -> nat4 }			by unproved
+			
+	d100:	{ n -> nat1, i -> 0, r -> nat3 } |-
+			while 0 < i do
+				(i := i - s(0);
+				r := r * (n - i))
+			=> { n -> nat1, i -> 0, r -> nat4 }			by rule weaken-post on d98, d99
+end case
+
+/** Now for the recursive case.  Note that our case expression introduces a new
+ * variable nat2', which is equal to nat2 - 1 (since s nat2' = nat2).
+ */
+
+case s nat2' is
+	d50:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			0 < i => true								by unproved
+
+	d51:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			i - s(0) => nat2'							by unproved
+
+	d52:	{ n -> nat1, i -> s nat2', r -> nat3 }
+			{i -> nat2'}
+			=	{ n -> nat1, i -> nat2', r -> nat3 }	by unproved
+
+	d53:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			i := i - s(0)
+			=> { n -> nat1, i -> nat2', r -> nat3 }		by rule reduce-assign on d51, d52
+
+	d54_1:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			n => nat1									by unproved
+	d54_2:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			i => nat2'									by unproved
+	d54_2a: nat1 math:- nat2' = nat7					by unproved
+	d54_3:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			(n - i) => nat7								by rule eval-minus on d54_1, d54_2, d54_2a
+	d54_4:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			r => nat3									by unproved
+	d54_4a: nat3 math:* nat7 = nat6					by unproved
+	d54_5:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			r * (n - i) => nat6							by rule eval-mult on d54_4, d54_3, d54_4a
+	d54_6:	{ n -> nat1, i -> nat2', r -> nat3 }
+			{r -> nat6}
+			=	{ n -> nat1, i -> nat2', r -> nat6 }	by unproved
+
+	d54_7:	{ n -> nat1, i -> nat2', r -> nat3 } |-
+			r := r * (n - i)
+			=> { n -> nat1, i -> nat2', r -> nat6 }		by rule reduce-assign on d54_5, d54_6
+
+	d55:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			i := i - s(0);
+			r := r * (n - i)
+			=> { n -> nat1, i -> nat2', r -> nat6 }		by rule reduce-sequence on d53, d54_7
+	
+	// We use unproved to do the necessary math wizardry
+	dinv': {} |- nat6 == (nat1 - nat2')! => true		by unproved
+
+
+/** Now comes the fun part: using the induction hypothesis.  We have to give a variable for each of the
+ * "forall" parts of the theorem.  Since we are doing induction on nat2, we have to pass nat2-1 into the
+ * appropriate spot so that the induction is well-founded.  Luckily (!) we have nat2' which is nat2-1 to
+ * use, as we got this from our case analysis.  We pass in dinv' as our derivation that the right relationships
+ * hold between nat1, nat2', and nat6.
+ *
+ * What we get out is just the exists part of the theorem, except with the variables bound in the "forall" parts
+ * substituted with the things we passed in.  Thus we have i -> nat2', not nat2, since our use of the induction
+ * hypothesis is "passing in" nat2' as an "actual" argument to the theorem corresponding to the "formal" argument
+ * "nat2".  This is a bit tricky but it turns out you can just think of it like calling a function--formals get
+ * substituted with actuals.
+ *
+ * Warning: most of the checks for induction hypothesis are not yet implemented, so be careful to get this part
+ * right.  (I hope to have these checks implemented before the assignment is turned in, to give you some additional
+ * help).
+ */
+ 			
+	d98:	{ n -> nat1, i -> nat2', r -> nat6 } |-
+			while 0 < i do
+				(i := i - s(0);
+				r := r * (n - i))
+			=> { n -> nat1, i -> 0, r -> nat4 }			by induction hypothesis on nat1, nat2', dinv', dfin
+
+	d99:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			(i := i - s(0);
+			r := r * (n - i));
+			while 0 < i do
+				(i := i - s(0);
+				r := r * (n - i))
+			=> { n -> nat1, i -> 0, r -> nat4 }			by rule reduce-sequence on d55, d98
+			
+	d100:	{ n -> nat1, i -> s nat2', r -> nat3 } |-
+			while 0 < i do
+				(i := i - s(0);
+				r := r * (n - i))
+			=> { n -> nat1, i -> 0, r -> nat4 }			by rule reduce-whiletrue on d50, d99
+end case
+end induction
+end theorem
+

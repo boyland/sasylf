@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<jardesc>
+    <jar path="C:/plaid/SASyLF/backend/SASyLF.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/SASyLF/SASyLF.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" mainClassHandleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf{Main.java[Main" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.grammar"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.term"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.ast.grammar"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.util"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.ast"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.parser"/>
+        <javaElement handleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf.prover"/>
+    </selectedElements>
+</jardesc>
