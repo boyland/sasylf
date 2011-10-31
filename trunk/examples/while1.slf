@@ -1,0 +1,329 @@
+/* 
+ * A SASyLF Tutorial Formalizing Hoare's While Language
+ *
+ * Author: Jonathan Aldrich
+ *
+ * This tutorial formalizes the While language used in Hoare's
+ * paper on his logic, as well as many subsequent papers and
+ * books on program semantics and correctness.  Comments
+ * explain key SASyLF constructs, especially from the point
+ * of view of Aldrich's 17-654 assignment 4.
+ * 
+ * This tutorial leaves out variable binding, which is not
+ * needed for the 17-654 class at CMU.
+ */
+
+
+/** The package declaration is currently a placeholder, but
+ * will eventually support a module system for SASyLF
+ */
+package edu.cmu.cs.cs654.asst4;
+
+
+/** SASyLF programs explicitly declare terminals that are
+ * used to parse expressions.  This helps the SASyLF parser
+ * detect problems in the input grammar.  The user should
+ * declare all identifiers used in syntax and judgment that
+ * do not themselves denote syntactic classes.  Symbols like
+ * + or |- do not need to be declared, even if they are terminals.
+ */
+
+terminals skip if then else while do math true false r i n y
+
+/** The syntax section declares the syntax of the formal
+ * system, in this case of the While language.  Syntax is
+ * given using an ordinary BNF grammar.
+ */
+
+syntax
+
+/** Statements include the empty statement skip, sequencing,
+ * assignment, if, and while.
+ */
+S ::= skip | S; S | x := a | if b then S else S | while b do S
+
+/** Arithmetic expressions include variables x, natural numbers
+ * (numbers >= 0) nat, and addition, subtraction, multiplication,
+ * and factorial (for proving the factorial function correct).
+ */
+a ::= x | nat | a + a | a - a | a * a | nat!
+
+/** Boolean expressions b include less than and equal to */
+b ::= a < a | a == a
+
+/** For this part of the assignment we are just modeling a set
+ * of constants for natural numbers.  We will need to formalize them
+ * a different way in order to do induction, in a later file.
+ */
+nat ::= 1 | 2 | 3 | 5 | 10		// the constants needed to do the assignment
+
+/** A variable "x" must have the name r, i, n, or y.  This is pretty limited,
+ * but it's a simple way to model variables and is sufficient for modeling the
+ * semantics of While.
+ */
+x ::= r | i | n | y 			// variables can be called r, i, n, or y
+
+/** Environments: the empty environment {} or a label L */
+E ::= {} | {L}
+
+/** A sequence of variable to natural number bindings */
+L ::= x -> nat | L, x -> nat
+
+
+/********************** JUDGMENTS ********************************/
+
+/** These judgments have no rules to go with them.  They are presumed
+ * to be built into the system.  (Actually right now they have not been
+ * implemented, but they may be before long).
+ */
+
+judgment lookup: E{x} = nat    // looks up x in E and returns nat
+judgment set: E{x -> nat} = E' // updates E with a binding x -> nat and
+							  // returns the environment E' on the right
+
+/** These judgments are also built in.  They model mathematical operations.
+ * Note that we will define the corresponding programming language operations
+ * in terms of these, as shown in lecture.  The names "math:+" are intended
+ * make clear that this is the + from mathematics, not from the programming
+ * language.
+ */ 
+judgment add: nat1 math:+ nat2 = nat3		// addition
+judgment subtract: nat1 math:- nat2 = nat3 	// subtraction
+judgment times: nat1 math:* nat2 = nat3		// multiplication
+judgment less: nat1 math:< nat2				// less
+judgment greaterequal: nat1 math:>= nat2		// greater or equal
+
+
+/** Here are the real judgments.  First, the eval-a judgment shows
+ * how an arithmetic expression a evaluates to a number nat in the
+ * context of a variable environment E.
+ */
+judgment eval-a: E |- a => nat
+
+--------------- eval-num
+E |- (nat) => nat
+
+/** Notice that for rules with a premise, we use the keyword "premise" to
+ * start each new premise of the rule.  We also put them on a new line, for
+ * readability, but this is not necessary.
+ */
+premise E{x} = nat				// the built-in lookup judgment
+------------------ eval-var
+E |- (x) => nat
+
+
+/** In the rule below, we've modeled math slightly differently than in lecture.
+ * Putting the math expression in the right hand side of the conclusion won't work
+ * in SASyLF, because the form of the judgment says that the right side of the
+ * conclusion has to be a literal natural number nat3, not an expression like
+ * "nat1 math:+ nat2".  Thus, we need to use a third premise to call into the 
+ * built-in judgment nat1 math:+ nat2 = nat3 to get the literal nat3, which we
+ * then use in the conclusion. */
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:+ nat2 = nat3
+--------------------------------- eval-plus
+E |- (a1 + a2) => nat3
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:- nat2 = nat3
+--------------------------------- eval-minus
+E |- (a1 - a2) => nat3
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:* nat2 = nat3
+--------------------------------- eval-mult
+E |- (a1 * a2) => nat3
+
+
+/** Boolean expression evaluation, first to true, then to false */
+judgment eval-btrue: E |- b => true
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:< nat2
+------------------------- eval-lesstrue
+E |- (a1 < a2) => true
+
+premise E |- a1 => nat
+premise E |- a2 => nat
+-------------------------- eval-equaltrue
+E |- (a1 == a2) => true
+
+
+judgment eval-bfalse: E |- b => false
+
+premise E |- a1 => nat1
+premise E |- a2 => nat2
+premise nat1 math:>= nat2
+-------------------------- eval-lessfalse
+E |- (a1 < a2) => false
+
+
+
+/** Statement evaluation: given environment E, statement S
+ * executes yielding a new environment E'.
+ */
+judgment reduce: E |- S => E'
+
+-------------- reduce-skip
+E |- (skip) => E
+
+premise E |- S1 => E'
+premise E' |- S2 => E''
+----------------------- reduce-sequence
+E |- (S1; S2) => E''			// if SASyLF has trouble parsing something,
+								// just put in parens like this (they aren't
+								// actually necessary here, though).
+
+/** In the second premise, we are being slightly more explicit than in
+ * lecture, by having a separate premise to update E to E'.  In the lecture
+ * we simply put this into the conclusion, but that was an abuse of notation
+ * and SASyLF requires we be a bit more careful.
+ */
+premise E |- a => nat
+premise E{x -> nat} = E'
+-------------------------- reduce-assign
+E |- (x := a) => E'
+
+premise E |- b => true
+premise E |- S1 => E'
+------------------------------- reduce-iftrue
+E |- (if b then S1 else S2) => E'
+
+premise E |- b => false
+premise E |- S2 => E'
+------------------------------- reduce-iffalse
+E |- (if b then S1 else S2) => E'
+
+premise E |- b => true
+premise E |- (S; (while b do S)) => E'
+---------------------------------- reduce-whiletrue
+E |- (while b do S) => E'
+
+premise E |- b => false
+----------------------- reduce-whilefalse
+E |- (while b do S) => E
+
+/**************************************************************/
+
+
+
+/** Now, a derivation!  To state a theorem, we use the syntax below,
+ * giving the theorem a name.  The statement of the theorem itself is
+ * a list of "forall e" and "forall d: j" where e is some syntactic
+ * thing, j is some judgement, and d is the name for the derivation
+ * we are assuming led to that judgment.  There may be zero foralls,
+ * as in the theorem below.  We follow the foralls with a single
+ * exists j, for some judgment j.  Our goal is to prove that j is
+ * true, using the rules defined in the system as well as the
+ * assumptions we've stated as "forall".  Here, that's all there is
+ * to it; later we'll add induction and other constructs as well.
+ */
+theorem fact2equals2 : exists
+{n -> 2}	|-	i := 1; (r := 1;			// our judgment is just a statement that
+        	while i < n do					// if n = 2, running the program results in
+        		(i := i + 1;				// the environment at the bottom.  Note that
+        		r := r * i))				// the result r = n! = 2.
+            => {n -> 2, i -> 2, r -> 2}.
+
+/** The actual proof is a series of statements of the form:
+ *
+ * name : judge			by justification
+ *
+ * Here name is an identifier that is used to refer to each fact, in case we need it
+ * later.  judge is the judgment we've proved.  And the justification is the reason
+ * we believe it's true (SASyLF will make sure we're right by checking that the
+ * justification actually proves the judgment).
+ *
+ * The most common justification is "by rule <rule-name> on <name1>, <name2>, ..., <name_k>"
+ * This means that we conclude the judgment on the left by applying rule <rule-name> to the
+ * (ordered) list of premises <name1>, <name2>, ..., <name_k>.  Each <name> must be either
+ * one of the foralls (we don't have any for this theorem) or one of the earlier things we
+ * concluded.  If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..."
+ * part.
+ */
+
+d0: {n -> 2} |- 1 => 1										by rule eval-num
+
+/** The "by unproved" justification tells the system to assume the statement holds.  A
+ * warning is given, but no error.  The intent is to use "by unproved" for judgments
+ * that represent math rather than language expressions.  These judgments have no
+ * inference rules associated with them in any case.
+ */ 
+
+d0': {n -> 2} {i -> 1} = {n -> 2,i -> 1}					by unproved
+d1: {n -> 2} |- i := 1 => {n -> 2,i -> 1}					by rule reduce-assign on d0, d0'
+d2: {n -> 2,i -> 1} |- 1 => 1								by rule eval-num
+d2': {n -> 2,i -> 1} {r -> 1} = {n -> 2,i -> 1,r -> 1}		by unproved
+d3: {n -> 2,i -> 1} |-	r := 1 => {n -> 2,i -> 1,r -> 1}	by rule reduce-assign on d2, d2'
+d3': {n -> 2,i -> 1,r -> 1} {i} = 1						by unproved
+d4: {n -> 2,i -> 1,r -> 1} |- i => 1						by rule eval-var on d3'
+d4': {n -> 2,i -> 1,r -> 1} {n} = 2						by unproved
+d5: {n -> 2,i -> 1,r -> 1} |- n => 2						by rule eval-var on d4'
+d5': 1 math:< 2											by unproved
+d6: {n -> 2,i -> 1,r -> 1} |- i < n => true				by rule eval-lesstrue on d4, d5, d5'
+d7: {n -> 2,i -> 1,r -> 1} |- 1 => 1						by rule eval-num
+d7': 1 math:+ 1 = 2										by unproved
+d8: {n -> 2,i -> 1,r -> 1} |- i + 1 => 2					by rule eval-plus on d4, d7, d7'
+d8': {n -> 2,i -> 1,r -> 1} {i -> 2} = {n -> 2,i -> 2,r -> 1}		by unproved
+d9: {n -> 2,i -> 1,r -> 1} |- i := i + 1 => {n -> 2,i -> 2,r -> 1}	by rule reduce-assign on d8, d8'
+d9': {n -> 2,i -> 2,r -> 1} {r} = 1						by unproved
+d10: {n -> 2,i -> 2,r -> 1} |- r => 1						by rule eval-var on d9'
+d10': {n -> 2,i -> 2,r -> 1} {i} = 2						by unproved
+d11: {n -> 2,i -> 2,r -> 1} |- i => 2						by rule eval-var on d10'
+d11': 1 math:* 2 = 2										by unproved
+d12: {n -> 2,i -> 2,r -> 1} |- r * i => 2					by rule eval-mult on d10, d11, d11'
+d12': {n -> 2,i -> 2,r -> 1} {r -> 2} = {n -> 2,i -> 2,r -> 2}		by unproved
+d13: {n -> 2,i -> 2,r -> 1} |- r := r * i => {n -> 2,i -> 2,r -> 2} by rule reduce-assign on d12, d12'
+d13': {n -> 2,i -> 2,r -> 2} {i} = 2						by unproved
+d14: {n -> 2,i -> 2,r -> 2} |- i => 2						by rule eval-var on d13'
+d14': {n -> 2,i -> 2,r -> 2} {n} = 2						by unproved
+d15: {n -> 2,i -> 2,r -> 2} |- n => 2						by rule eval-var on d14'
+d15': 2 math:>= 2											by unproved
+d16: {n -> 2,i -> 2,r -> 2} |- i < n => false				by rule eval-lessfalse on d14,d15, d15'
+
+/** Now we've proved all the bits of the program, it's time to put it together using
+ * while and sequence rules.
+ *
+ * A note on style: when I put this together, I just used "dN" where N is a number to name
+ * the derivation of each judgment that I proved.  That's probably not good practice (I'm a new
+ * SASyLF programmer, sorry!)  Using meaningful variable names may help you understand things
+ * better in your own SASyLF "code."
+ */
+
+d17: {n -> 2,i -> 2,r -> 2} |- while i < n do
+									(i := i + 1;
+									r := r * i)
+								=> {n -> 2,i -> 2,r -> 2}	by rule reduce-whilefalse on d16 
+
+d18: {n -> 2,i -> 1,r -> 1} |- i := i + 1;
+								r := r * i
+								=> {n -> 2,i -> 2,r -> 2}	by rule reduce-sequence on d9, d13
+
+d19: {n -> 2,i -> 1,r -> 1} |- (i := i + 1;
+								r := r * i);
+								(while i < n do
+									(i := i + 1;
+									r := r * i))
+								=> {n -> 2,i -> 2,r -> 2}	by rule reduce-sequence on d18, d17
+
+d20: {n -> 2,i -> 1,r -> 1} |- while i < n do
+									(i := i + 1;
+									r := r * i)
+								=> {n -> 2,i -> 2,r -> 2}	by rule reduce-whiletrue on d6, d19
+
+d21: {n -> 2,i -> 1} |- 	r := 1;
+							while i < n do
+								(i := i + 1;
+								r := r * i)
+							=> {n -> 2,i -> 2,r -> 2}	by rule reduce-sequence on d3, d20
+
+d22: {n -> 2} |-		i := 1; (r := 1;
+						while i < n do
+							(i := i + 1;
+							r := r * i))
+						=> {n -> 2,i -> 2,r -> 2}	by rule reduce-sequence on d1, d21
+end theorem

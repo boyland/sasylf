@@ -1,0 +1,224 @@
+/* 
+ * A Formalization of Abadi and Cardelli's simply-typed object calculus in SASyLF
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines Abadi and Cardelli's simply-typed object calculus.
+ * A proof of type soundness is hopefully soon to come!
+ *
+ * The code is not extensively commented; for an introduction to SASyLF,
+ * look at lambda.slf.
+ */
+
+package edu.cmu.cs.objectcalculus;
+
+terminals c z s remove Top in
+
+
+/************************ SYNTAX **************************************/
+
+syntax
+
+/** We change the syntax slightly to avoid the need to put in lots of "" */
+
+a ::= x
+	| { labs }
+	| a "." lab
+	| a "." lab <= c x:A => a[x]
+	
+labs ::= *
+	| labs, lab : c x:A => a[x]
+
+
+/** A label is represented as a natural number */
+
+lab ::= z
+	| s lab
+
+
+/** Here we define the syntax of types A */
+
+A ::= { tlabs }
+	| Top
+
+tlabs ::= *
+	| tlabs, lab : A
+
+
+/** Contexts E */
+
+E ::= *
+	| E, x : A
+
+
+/************************ REDUCTION JUDGMENTS **************************/
+
+judgment reduce: a ~> a
+
+a1 ~> a1'
+------------------------- c-invoke
+a1 "." lab ~> a1' "." lab
+
+a1 ~> a1'
+------------------------------------------------------------- c-update
+a1 "." lab <= c x:A => a2[x] ~> a1' "." lab <= c x:A => a2[x]
+
+
+labs{lab} = c x:A => a[x]
+------------------------- r-invoke
+{labs}"."lab ~> a[{labs}]
+
+remove labs lab = labs'
+--------------------------------------------------------------- r-update
+{labs} "." lab <= c x:A => a[x] ~> {labs', lab : c x:A => a[x]}
+
+
+/** auxiliary lookup judgment */
+judgment lookup: labs{lab} = c x:A => a[x]
+
+------------------------------------------------ lookup-found
+(labs, lab : c x:A => a[x]){lab} = c x:A => a[x]
+
+lab1 != lab2
+labs{lab2} = c x1:A1 => a'[x1]
+------------------------------------------------------ lookup-not-found
+(labs, lab1 : c x:A => a[x]){lab2} = c x1:A1 => a'[x1]
+
+
+/** auxiliary remove judgment */
+judgment remove: remove labs lab = labs'
+
+---------------- remove-base
+remove * lab = *
+
+
+----------------------------------------------- remove-match
+remove (labs, lab1 : c x:A => a[x]) lab1 = labs
+
+lab1 != lab2
+remove labs lab2 = labs'
+---------------------------------------------------------------------- remove-nomatch
+remove (labs, lab1 : c x:A => a[x]) lab2 = labs', lab1 : c x:A => a[x]
+
+
+/** auxiliary label inequality judgment */
+judgment inequal: lab1 != lab2
+
+----------- inequal-left
+z != s lab
+
+---------- inequal-right
+s lab != z
+
+lab != lab'
+--------------- inequal-recurse
+s lab != s lab'
+
+
+/************************ TYPING JUDGMENTS **************************/
+
+judgment has-type: E |- a : A
+assumes E
+
+----------------- t-var
+E, x : A |- x : A
+
+E |- labs : tlabs in {tlabs}
+---------------------------- t-object
+E |- { labs } : { tlabs }
+
+E |- a : {tlabs}
+tlabs{lab} = A'
+--------------------- t-select
+E |- a "." lab : A'
+
+E |- a : {tlabs}
+E, x:{tlabs} |- a : A'
+tlabs{lab} = A'
+------------------------------------------------- t-update
+E |- a1 "." lab <= c x:{tlabs} => a2[x] : {tlabs}
+
+A' <: A
+---------- t-sub
+E |- a : A
+
+
+judgment has-labtype: E |- labs : tlabs in A
+assumes E
+
+--------------- lt-empty
+E |- * : * in A
+
+E, x:A |- a[x] : A'
+E |- labs : tlabs in A
+--------------------------------------------------------- lt-recurse
+E |- (labs, lab : c x:A => a[x]) : (tlabs, lab : A') in A
+
+
+judgment tlookup: tlabs{lab} = A
+
+------------------------- lookup-found
+(tlabs, lab : A){lab} = A
+
+lab1 != lab2
+tlabs{lab2} = A'
+---------------------------- lookup-not-found
+(tlabs, lab1 : A){lab2} = A'
+
+
+judgment subtypes: A <: A
+
+------ sub-refl
+A <: A
+
+A1 <: A2
+A2 <: A3
+--------- sub-trans
+A1 <: A3
+
+tlabs1 <: tlabs2
+------------------ sub-obj
+{tlabs1} <: {tlabs2}
+
+
+judgment field-subtypes: tlabs <: tlabs
+
+-------------- fsub-refl
+tlabs <: tlabs
+
+tlabs1 <: tlabs2
+tlabs2 <: tlabs3
+---------------- fsub-trans
+tlabs1 <: tlabs3
+
+tlabs1 <: tlabs2
+------------------------- fsub-width
+tlabs1, lab : A <: tlabs2
+
+tlabs1 <: tlabs2
+------------------------------------------------------------ fsub-order
+(tlabs1, lab : A1), lab : A2 <: (tlabs2, lab : A2), lab : A1 
+
+
+/*judgment well-formed: |- A
+
+-------- wf-top
+E |- Top
+
+
+E |- tlabs
+-------------- wf-obj
+E |- { tlabs }
+
+
+judgment well-formed: E |- tlabs
+assumes E
+
+E |- tlabs
+E |- A
+------------------- wf-field
+E |- tlabs, lab : A
+
+------ wf-empty
+E |- *
+*/

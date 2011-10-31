@@ -1,0 +1,1 @@
+export CLASSPATH='.;c:\shared\research\SASyLF\SASyLF.jar;c:\develop\junit4.4\junit-4.4.jar'
