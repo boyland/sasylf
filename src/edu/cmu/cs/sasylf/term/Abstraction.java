@@ -110,11 +110,12 @@ public class Abstraction extends Term {
 			return newBody.incrFreeDeBruijn(-1);
 		} else {
 			// we're just substituting
-			if (newBody == body)
+		  Term newType = varType.apply(arguments, whichApplied-1);
+			if (newBody == body && newType == varType)
 				// no change
 				return this;
 			else
-				return make(varName, varType, newBody);
+				return make(varName, newType, newBody);
 		}
 	}
 
@@ -172,7 +173,7 @@ public class Abstraction extends Term {
 		Term bodyType = body.getType(newBindings);
 		return Abs(varName, varType, bodyType);
 	}
-
+	
 	public void setBody(Term body) {
 		this.body = body;
 	}
