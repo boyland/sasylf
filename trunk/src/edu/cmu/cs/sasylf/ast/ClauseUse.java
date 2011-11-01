@@ -1,13 +1,23 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.EXPECTED_VARIABLE;
+import static edu.cmu.cs.sasylf.ast.Errors.MISSING_ASSUMPTION_RULE;
+import static edu.cmu.cs.sasylf.term.Facade.Abs;
+import static edu.cmu.cs.sasylf.term.Facade.pair;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import static edu.cmu.cs.sasylf.term.Facade.*;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import edu.cmu.cs.sasylf.term.*;
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 public class ClauseUse extends Clause {
@@ -213,14 +223,19 @@ public class ClauseUse extends Clause {
 			}
 		}
 
-		// should have zero to one variable - add it
-		boolean foundVar = false;
-		for (Element e : getElements()) {
-			if (e instanceof Variable) {
+		int varIndex = cons.getVariableIndex();
+
+		// Previously: this code would look for variables in the elements, but a variable
+		// appearing was not necessary in a binding occurrence, e.g.  X <: X2
+		// where X is being bound but X2 is a USE of an existing variable.
+		// So we can't just loop through the USE looking for variables, we need to go to the place
+		// where the clause definition says variables should appear.
+    if (varIndex >= 0) {
+      Element e = getElements().get(varIndex);
+      if (!(e instanceof Variable)) {
+        ErrorHandler.report(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
+      } else {
 				Variable v = (Variable) e;
-				if (foundVar)
-					ErrorHandler.report("An assumption case must not have more than one variable", cons);
-				foundVar = true;
 				
 				/* Here we implement hypothetical judgments
 				 * Look up the var rule for the ClauseDef and get its conclusion
@@ -268,7 +283,7 @@ public class ClauseUse extends Clause {
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				/* v2 */ varBindings.add(pair(derivSym, derivTerm));
-			}
+      }
 		}
 		
 		return root;
