@@ -82,31 +82,45 @@ at jonathan.aldrich@cs.cmu.edu.
 
 KNOWN LIMITATIONS (incomplete list)
 
-The major checks are implemented, including rule application,
+Almost all checks are implemented, including rule application,
 correct and completeness case analysis, and uses of lemmas and
-the induction hypothesis.  A few checks are still unimplemented,
-including those for substitution, weakening, exchange, and contraction.
+the induction hypothesis.  "inversion" is still unchecked;
+it is unclear precisely what it means.
 
 Error messages point to the line of code and the kind of error, but
 could use some improvement.
 
 
 Mutual induction is supported syntactically as follows:
-
 	theorem Thm1: ... end theorem and theorem Thm2: ... by theorem Thm1 ... end theorem
-
-but we do not yet check that mutual induction is well-founded.
-
 
 The automated prover ("by solve") is very primitive.  It works only
 for straightforward derivations without the use of induction or case
 analysis.
 
-We hope to address the limitations above soon.
-
 
 
 RELEASE HISTORY
+1.0.2 (uwm 6)
+    Mutual induction: by default induction on first argument.
+    Revert change in "uwm 3": dot no longer will be permitted in syntax (reserved for modules)
+    Correctly identifies variables in contexts e.g. Gamma, X2 <: Top, X1 <: X2
+    Substitution now handles cases where the antecedent also has a context.
+1.0.2 (uwm 5)
+    Mutual induction checked,
+    recursion permitted under same restriction as "induction hypothesis"
+1.0.2 (uwm 4)
+    Substitution is checked
+1.0.2 (uwm 3)	Syntax
+	Lexical errors cleaned up (JavaCC generated messages a confused mess of double quote)
+	Files read in unicode, permit unicode operators (identifiers already handled), see lambda-unicode.slf
+	Dot permitted in syntax except at end of line (reserved for "exists")
+	"Inversion" partially checked
+1.0.2 (uwm 2)	Syntax
+	Permit "|", "case" and "end" in syntax.
+1.0.2 (uwm 1)	Checking
+	Check weakening, exchange
+	Print warnings for unchecked derivations
 1.0.2	Various bug fixes
 	Better error messages
 0.23	Fixed bug where an exception was thrown if substitution was used with too few arguments
