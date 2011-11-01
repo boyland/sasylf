@@ -47,7 +47,7 @@ Tutorial examples (with comments that explain the SASyLF syntax) in the
 examples/ directory include:
 
  * sum.slf - Commutativity of addition
- * labmda.slf - Type Soundness for the Simply-Typed Lambda Calculus
+ * lambda.slf - Type Soundness for the Simply-Typed Lambda Calculus
  * while1.slf - A derivation of program execution in Hoare's While language
 		(assumes an oracle for arithmetic)
  * while2.slf - A proof that factorial in While computes factorial
@@ -58,6 +58,7 @@ Other examples include:
  * lambda-loc.slf - shows preservation of a well-formed store in the untyped lambda calculus
  * object-calculus.slf - Definition of Abadi and Cardelli's Simply Typed Object Calculus
  * featherweight-java.slf - Definition of Featherweight Java (soundness proof to come)
+ * lambda-unicode.slf - version of lambda.slf using unicode identifiers and operators
 
 
 
