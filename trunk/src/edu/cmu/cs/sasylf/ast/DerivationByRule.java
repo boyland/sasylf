@@ -1,14 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.term.Facade.App;
-
-import java.util.*;
-import java.io.*;
-
-import edu.cmu.cs.sasylf.term.*;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 public class DerivationByRule extends DerivationByIHRule {
 	public DerivationByRule(String n, Location l, Clause c, String rn) {
@@ -25,18 +17,36 @@ public class DerivationByRule extends DerivationByIHRule {
 				rule = ctx.recursiveTheorems.get(ruleName);
 				if (rule == null)
 					ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
-				else
-					ErrorHandler.warning(Errors.FORWARD_REFERENCE, this);
 			}
 		}
 		return rule;
 	}
 
+	@Override
+	public void typecheck(Context ctx) {
+    super.typecheck(ctx);
+    
+    if (rule instanceof Theorem) {
+      Theorem self = ctx.currentTheorem;
+      Theorem other = (Theorem)rule;
+      if (self.getGroupLeader() == other.getGroupLeader()) {
+        Fact inductiveArg = getArgs().get(other.getInductionIndex());
+        if (!ctx.subderivations.contains(inductiveArg)) {
+          if (inductiveArg == self.getForalls().get(self.getInductionIndex())) {
+            if (self.getGroupIndex() <= other.getGroupIndex()) {
+              ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+            }
+          } else {
+            ErrorHandler.report(Errors.MUTUAL_NOT_SUBDERIVATION, this);
+          }
+        }
+      }
+    }
+	}
+	
 	public String prettyPrintByClause() {
 		return " by rule " + ruleName;
 	}
-
-	private static int constId = 0;
 
 	private String ruleName;
 	private RuleLike rule;
