@@ -20,7 +20,7 @@ lemma test1 :
   exists n + 0 = n.
   _: n + 0 = n by induction on n:
   	case 0 is 
-  		_: 0 + 0 = 0 by unproved
+  		_: 0 + 0 = 0 by rule add-zero
   	end case
   	case s n' is
   	    x: n' + 0 = n' by lemma test2 on n'
