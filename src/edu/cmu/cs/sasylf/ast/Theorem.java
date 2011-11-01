@@ -30,6 +30,17 @@ public class Theorem extends RuleLike {
 	public void setAnd(Theorem next) {
 		debug("setting and of "+this.getName() + " to " + next.getName());
 		andTheorem = next;
+		andTheorem.firstInGroup = firstInGroup;
+		andTheorem.indexInGroup = indexInGroup+1;
+	}
+	public Theorem getGroupLeader() {
+	  return firstInGroup;
+	}
+	public int getGroupIndex() {
+	  return indexInGroup;
+	}
+	public int getInductionIndex() {
+	  return inductionIndex;
 	}
 
 	/** A theorem's existential variables are those that appear in its conclusion
@@ -62,12 +73,25 @@ public class Theorem extends RuleLike {
 	public void checkInterface(Context ctx) {
 		if (!interfaceChecked) {
 			interfaceChecked = true;
+			List<String> inputNames = new ArrayList<String>();
 			for (Fact f : foralls) {
 				f.typecheck(ctx, false);
+				inputNames.add(f.getName());
 			}
 	
 			exists.typecheck(ctx);
 			exists = (Clause) exists.computeClause(ctx, false);
+			
+			for (Derivation d : derivations) {
+			  if (d instanceof DerivationByInduction) {
+			    DerivationByInduction dbi = (DerivationByInduction)d;
+			    String dn = dbi.getTargetDerivationName();
+			    int i = inputNames.indexOf(dn);
+			    if (i == -1) {
+			      ErrorHandler.report("Induction target "+ dn +" must be an explicit forall argument of this theorem", this);
+			    } else inductionIndex = i;
+			  }
+			}
 		}
 	}
 
@@ -90,9 +114,15 @@ public class Theorem extends RuleLike {
 		
 		checkInterface(ctx);
 		
+		if (assumes != null) {
+		  ErrorHandler.warning("theorem assumes not implemented", this);
+		  ctx.innermostGamma = assumes;
+		  ctx.adaptationRoot = assumes;
+		}
+		
 		for (Fact f : foralls) {
 			f.addToDerivationMap(ctx);
-			ctx.derivationMap.put(f.getName(), f);
+			ctx.derivationMap.put(f.getName(), f); // JTB: This is redundant, isn't it?
 			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
 			if (f instanceof DerivationByAssumption) {
 				ClauseUse cu = (ClauseUse)f.getElement();
@@ -115,9 +145,11 @@ public class Theorem extends RuleLike {
 		ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 		ctx.outputVars.removeAll(ctx.inputVars);
 		
+		/*
 		if (andTheorem != null) {
 			andTheorem.addToMap(ctx);
-		}
+		}*/
+		firstInGroup.addToMap(ctx);
 
 		boolean derivationErrors = false;
 		for (Derivation d : derivations) {
@@ -200,13 +232,18 @@ public class Theorem extends RuleLike {
 		}
 	}
 
-
+	public void setAssumes(NonTerminal c) { assumes = c; }
+	
 	public void setExists(Clause c) { exists = c; }
 
+	private NonTerminal assumes = null;
 	private List<Fact> foralls = new ArrayList<Fact>();
 	private Clause exists;
 	private List<Derivation> derivations = new ArrayList<Derivation>();
 	private Theorem andTheorem;
+	private Theorem firstInGroup = this;
+	private int indexInGroup = 0;
+	private int inductionIndex = 0; // default to first argument
 	private boolean interfaceChecked=false;
 
 }
