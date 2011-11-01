@@ -1,13 +1,18 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.term.Facade.Abs;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import java.util.*;
-import java.io.*;
-
-import edu.cmu.cs.sasylf.term.*;
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 public class ClauseDef extends Clause {
@@ -102,6 +107,21 @@ public class ClauseDef extends Clause {
 		return new Constant(consName, typeTerm);
 	}
 
+	public int getVariableIndex() {
+	  int index = 0;
+	  int result = -1;
+	  for (Element e : getElements()) {
+	    if (e instanceof Variable) {
+	      if (result == -1) result = index;
+	      else {
+	        ErrorHandler.warning("An assumption clause must not have more than one variable", this);
+	      }
+	    }
+	    ++index;
+	  }
+	  return result;
+	}
+	
 	public int getIndexOf(Variable boundVar) {
 		return getElements().indexOf(boundVar);
 	}
@@ -150,7 +170,7 @@ public class ClauseDef extends Clause {
 				// a variable declared at the top was not used in a binding
 				topVars.removeAll(boundVars);
 				if (!isContext)
-					ErrorHandler.report(UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
+					ErrorHandler.report(Errors.UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
 			}
 		}
 	}
