@@ -1,0 +1,565 @@
+/* 
+ * A Formalization of the Simply Typed Lambda Calculus in SASyLF
+ *
+ * Author: Jonathan Aldrich
+ * 
+ * This file defines the simply typed lambda calculus with an implicit representation of
+ * contexts, and proves type safety.  As we go along, we illustrate the SASyLF language
+ * in tutorial style.
+ *
+ * This file is encoded in UTF-8 and uses Unicode for mathematical symbols.
+ */
+
+
+/** The package declaration is currently a placeholder, but
+ * will eventually support a module system for SASyLF
+ */
+package edu.cmu.cs.lambda;
+
+/** SASyLF programs explicitly declare terminals that are
+ * used to parse expressions.  This helps the SASyLF parser
+ * detect problems in the input grammar--anything that is not
+ * a declared terminal, non-terminal, or variable must be an error.
+ * The user should declare all identifiers used in syntax and judgment
+ * that do not themselves denote syntactic classes.  Symbols like
+ * + or ⊢ do not need to be declared, even if they are terminals.
+ */
+terminals λ unit in value stepsorvalue
+
+
+/************************ SYNTAX **************************************/
+
+/** The syntax section declares the syntax of the formal
+ * system, in this case of the lambda calculus.  Syntax is
+ * given using an ordinary BNF grammar.
+ */
+syntax
+
+/** This declaration declares e as a nonterminal.  e and variants of e
+ * (e', e'', e1, e2, etc.--you can add primes or numbers) are used as
+ * metavariables for this syntactic category, as commonly used in the
+ * PL research literature.
+ *
+ * We use the notation e[x] to denote that the variable x is bound in e.
+ * Any uses of the same variable in a binding, such as λ "x" : ... are
+ * treated as the binding occurrence where the name of the variable is
+ * defined.
+ */
+e ::= λ x:τ • e[x]
+
+/** To what syntactic class does the variable x refer?  We specify that
+ * by including a case "x" in the grammar for e.
+ */
+
+ | x
+ | e e
+ | 1 				
+
+
+/** Here we define the syntax of types */
+
+τ ::= unit
+  | τ → τ
+
+
+/** The form of contexts.  Judgments that use this as a variable
+ * context will say "assumes Γ."  SASyLF uses built-in semantics for
+ * these contexts, allowing properties like substitution, weakening, and
+ * exchange.  We require that contexts that are understood using these
+ * built-in semantics have a recursive structure that binds exactly one
+ * variable at each level.
+ */ 
+
+Γ ::= ∅
+  |   Γ, x : τ
+
+
+/************************ JUDGMENTS **************************************/
+
+/** We declare a judgment with a name ("value") and a form ("e value").
+ * The judgment is then followed by a series of inference rules that define
+ * the judgment's semantics.
+ */
+
+judgment value: e value
+
+--------------- val-unit
+1 value
+
+------------------ val-fn
+λ x:τ • e1[x] value
+
+
+/** The reduction judgment.  Rules are defined with the premises above the line
+ * and the conclusion below the line.
+ */
+
+judgment reduce: e → e
+
+e1 → e1'
+------------------- c-app-l
+e1 e2 → e1' e2
+
+e1 value
+e2 → e2'
+------------------- c-app-r
+(e1 e2) → (e1 e2')			// the parentheses are not necessary here, but can be used to disambiguate
+							// expressions that otherwise can be parsed more than one way 
+
+/** Substitution is built into SASyLF.  Here, we see that e has the variable x bound in it.
+ * We substitute e2 for x in e using the notation e[e2].
+ */
+
+e2 value
+--------------------------- r-app
+(λ x : τ • e[x]) e2 → e[e2]
+
+
+
+/** The typing judgment uses a list of assumptions for variable types.
+ * This is just like the LF context in Twelf.  More details on how this works will
+ * come later, but the gist is that it gives us a bunch of theorems for free,
+ * including substitution, weakening, contraction, and exchange.
+ */
+
+judgment has-type: Γ ⊢ e : τ
+assumes Γ
+
+
+-------------------------- t-unit
+Γ ⊢ 1 : unit
+
+/** This rule shows how to use an assumption in Γ to determine that a variable
+ * is well-typed.  These assumption-using rules have a special form: no premises are
+ * allowed, exactly one variable must be free in Γ, and one variable free in the
+ * main judgment.
+ */
+
+-------------- t-var
+Γ, x:τ ⊢ x : τ
+
+
+/** we can replace x with x1 because it's a bound variable */
+
+Γ, x1:τ ⊢ e[x1] : τ'
+-------------------------- t-fn
+Γ ⊢ λ x : τ • e[x] : τ → τ'
+
+
+Γ ⊢ e1 : τ' → τ
+Γ ⊢ e2 : τ'
+--------------- t-app
+Γ ⊢ e1 e2 : τ
+
+
+/** We don't have logical and or or operators built-in, so we define the logical
+ * or used in progress (steps OR is a value) using its own judgment, with one
+ * rule for each disjunct.  Twelf uses the same trick for encoding "or."
+ */
+
+judgment stepsorvalue: e stepsorvalue
+
+e value
+--------------- stepsorvalue-value
+e stepsorvalue
+
+e → e'
+--------------- stepsorvalue-steps
+e stepsorvalue
+
+
+/************************ THEOREMS **************************************/
+
+/** Warm-up theorem: the identity function really is the identity.
+ *
+ * Theorems consist of the keyword theorem (or lemma), a name, a :,
+ * a list of foralls, and a single exists.  The foralls may be syntax
+ * like "e" or judgments like "e1 → e2" -- in the latter case, the
+ * derivation of the judgment itself must be named ("dv" below).
+ * We can assume derivations are available for all the facts in the forall
+ * part; we are trying to construct a derivation for the exists part.
+ */ 
+
+theorem identity-behavior : forall dv : e value exists (λ x : τ • x) e → e.
+
+
+/** The actual proof is a series of statements of the form:
+ *
+ * name : judge			by justification
+ *
+ * Here name is an identifier that is used to refer to each fact, in case we need it
+ * later.  judge is the judgment we've proved.  And the justification is the reason
+ * we believe it's true (SASyLF will make sure we're right by checking that the
+ * justification actually proves the judgment).
+ *
+ * The most common justification is "by rule <rule-name> on <name1>, <name2>, ..., <name_k>"
+ * This means that we conclude the judgment on the left by applying rule <rule-name> to the
+ * (ordered) list of premises <name1>, <name2>, ..., <name_k>.  Each <name> must be either
+ * one of the foralls (we don't have any for this theorem) or one of the earlier things we
+ * concluded.  If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..."
+ * part.
+ */
+
+d1 : (λ x : τ • x) e → e by rule r-app on dv
+
+end theorem
+
+
+/** Note: we'd usually define substitution here, and maybe weakening and other basic
+ * properties.  But in this case, we don't need to, because the underlying LF type theory
+ * gives us substitution for free!
+ */
+
+
+/************************ PROGRESS **************************************/
+
+
+theorem progress : forall dt : ∅ ⊢ e : τ exists e stepsorvalue.
+
+/** Now the real fun begins--a proof by induction.  We use a "by induction on X :"
+ * justification, where X is the derivation or syntax that we are doing induction
+ * over.
+ */
+
+dsv : e stepsorvalue by induction on dt :
+
+/** Inside the induction proof, we do a case analysis, with one case for each rule
+ * that could have been used to produce the indicated judgment.  If we are doing
+ * induction over syntax, then we will have cases for each case in the BNF
+ * definition.
+ *
+ * A rule case is of the form "case rule <rule> is <derivation>"
+ * Here <rule> is a rule defined above, but instantiated with actual
+ * expressions as appropriate for the judgment we are doing case analysis over.
+ * Any fresh variables in <rule> are bound for the derivation and can be used there.
+ * SASyLF checks to make sure you don't get the case analysis wrong, for example, by
+ * assuming more than is justified about the premises of the rule.
+ */
+
+case rule
+
+	-------------------------- t-unit
+	dut : ∅ ⊢ 1 : unit
+
+is
+
+	dv : e value by rule val-unit
+	dsv : 1 stepsorvalue by rule stepsorvalue-value on dv
+
+end case
+
+// case t-var impossible - conclusion doesn't unify with dt
+
+
+case rule
+
+	dext: ∅, x:τ'' ⊢ e'[x] : τ'
+	------------------------------------------------- t-fn
+	dλt: ∅ ⊢ λ x : τ'' • e'[x] : τ'' → τ'
+
+is
+
+	dv : λ x : τ'' • e'[x] value by rule val-fn
+	dsv : λ x : τ'' • e'[x] stepsorvalue by rule stepsorvalue-value on dv
+
+end case
+
+case rule
+
+	dp1t: ∅ ⊢ e1 : τ' → τ
+	dp2t: ∅ ⊢ e2 : τ'
+	---------------------------------- t-app
+	dappt: ∅ ⊢ (e1 e2) : τ
+
+is
+
+/** This example shows how we can use the induction hypothesis.
+ * Note that this is only legal because dp1t is a subderivation of dt.
+ */
+
+	dp1sv: e1 stepsorvalue by induction hypothesis on dp1t
+	dp2sv: e2 stepsorvalue by induction hypothesis on dp2t
+	
+	dsv : e stepsorvalue by case analysis on dp1sv :
+
+	case rule
+
+		dp1v : e1 value
+		---------------------- stepsorvalue-value
+		dp1sv' : e1 stepsorvalue
+
+	is
+	
+		dsv : e stepsorvalue by case analysis on dp2sv :
+	
+		case rule
+		
+			dp2v : e2 value
+			---------------------- stepsorvalue-value
+			dp2sv' : e2 stepsorvalue
+		
+		is
+		
+			dsv : e stepsorvalue by case analysis on dp1t :
+			
+			case rule
+			
+				dpp1t' : ∅, x:τ' ⊢ e1'[x] : τ
+				---------------------------------------------------- t-fn
+				dp1t' : ∅ ⊢ λ x : τ' • e1'[x] : τ' → τ
+			
+			is
+			
+				ds : (λ x : τ' • e1'[x]) e2 → e1'[e2] by rule r-app on dp2v
+				dsv : e stepsorvalue by rule stepsorvalue-steps on ds
+				
+			end case
+			
+			case rule
+			
+				dp1t1' : ∅ ⊢ e11 : τ'' → (τ' → τ)
+				dp1t2' : ∅ ⊢ e12 : τ''
+				--------------------------------------------- t-app
+				tp1t' : ∅ ⊢ e11 e12 : τ' → τ
+			
+			is
+				dsv : e stepsorvalue by case analysis on dp1v :
+				
+				end case analysis
+								
+			end case
+			
+			// other cases don't unify with conclusion
+			
+			end case analysis
+
+		end case
+		
+		case rule
+		
+			dp2s : e2 → e2'
+			---------------- stepsorvalue-steps
+			dp2sv' :  e2 stepsorvalue
+		
+		is
+		
+			ds : e1 e2 → e1 e2' by rule c-app-r on dp1v, dp2s
+			dsv : e1 e2 stepsorvalue by rule stepsorvalue-steps on ds
+		
+		end case
+		end case analysis
+	end case
+	
+	case rule
+	
+		dp1s : e1 → e1'
+		-------------------------- stepsorvalue-steps
+		dp1sv' :  e1 stepsorvalue
+	
+	is
+	
+		ds : e1 e2 → e1' e2 by rule c-app-l on dp1s
+		dsv : e1 e2 stepsorvalue by rule stepsorvalue-steps on ds
+	
+	end case
+	end case analysis
+end case
+end induction
+end theorem
+
+
+/************************ PRESERVATION **************************************/
+
+
+theorem preservation: forall dt: ∅ ⊢ e : τ forall ds: e → e' exists ∅ ⊢ e' : τ.
+
+dt' : ∅ ⊢ e' : τ by induction on ds:
+
+case rule
+
+	d1 : e1 → e1'
+	----------------------- c-app-l
+	d2 : e1 e2 → e1' e2
+
+is
+
+	dt' : ∅ ⊢ e' : τ by case analysis on dt :
+	
+	case rule
+	
+		d3 : ∅ ⊢ e1 : τ' → τ
+		d4 : ∅ ⊢ e2 : τ'
+		--------------------- t-app
+		d5 : ∅ ⊢ (e1 e2) : τ
+	
+	is
+	
+		d6 : ∅ ⊢ e1' : τ' → τ by induction hypothesis on d3, d1
+		dt' : ∅ ⊢ e1' e2 : τ by rule t-app on d6, d4
+	
+	end case
+	// other cases do not unify with form of e = (e1 e2)
+	end case analysis
+
+end case
+
+case rule
+
+	d1 : e1 value
+	d2 : e2 → e2'
+	----------------------- c-app-r
+	d3 : e1 e2 → e1 e2'
+
+is
+
+	dt' : ∅ ⊢ e' : τ by case analysis on dt :
+
+	case rule
+	
+		d4 : ∅ ⊢ e1 : τ' → τ
+		d5 : ∅ ⊢ e2 : τ'
+		---------------------- t-app
+		d6 : ∅ ⊢ e1 e2 : τ
+	
+	is
+	
+		d7 : ∅ ⊢ e2' : τ' by induction hypothesis on d5, d2
+		dt' : ∅ ⊢ e1 e2' : τ by rule t-app on d4, d7
+	
+	end case
+	// other cases do not unify with form of e = (e1 e2)
+	end case analysis
+
+end case
+
+case rule
+
+	d1 : e2 value
+	----------------------------------- r-app
+	d2 : (λ x : τ' • e1[x]) e2 → e1[e2]
+
+is
+
+	dt' : ∅ ⊢ e' : τ by case analysis on dt :
+
+	case rule
+
+		d4 : ∅ ⊢ λ x : τ' • e1[x] : τ'' → τ
+		d5 : ∅ ⊢ e2 : τ''
+		------------------------------------ t-app
+		d6 : ∅ ⊢ (λ x : τ' • e1[x]) e2 : τ
+	
+	is
+	
+		dt' : ∅ ⊢ e' : τ by case analysis on d4 :
+	
+		case rule
+		
+			d7: ∅, x:τ' ⊢ e1[x] : τ
+			--------------------------------- t-fn
+			d8: ∅ ⊢ λ x : τ' • e1[x] : τ' → τ
+		
+		is
+		
+			/** Substitution preserves typing!  No lemma to prove.
+			 */
+			
+			d9: ∅ ⊢ e1[e2] : τ by substitution on d7, d5
+		
+		end case
+		// other cases do not unify with λ expression
+		end case analysis
+	
+	end case
+	// other cases do not unify with form of e = (e1 e2)
+	end case analysis
+
+end case
+end induction
+end theorem
+
+
+/************************ SUBSTITUTION **********************************/
+
+/* Just for fun, we prove a substitution lemma.  Note that this is
+ * UNNECESSARY in SASyLF and in fact is NOT USED in the proof above--instead,
+ * the proof above uses the built-in substitution mechanism that is justified
+ * by the LF type theory behind SASyLF.  However, sometimes one may have to
+ * prove substitution explicitly, and this example shows how it can be done.
+ *
+ * Additionally, some instructors may find it pedagogically useful to ask
+ * students to prove substitution explicitly even though it is built into the
+ * type theory of the tool.
+ */
+
+theorem subst : forall dt : (Γ, x:τ') ⊢ e[x] : τ 
+				forall dt' : Γ ⊢ e' : τ'
+				exists Γ ⊢ e[e'] : τ.
+
+d1 : Γ ⊢ e[e'] : τ by induction on dt :
+
+	case rule
+
+		------------------------------------ t-unit
+		d2 : Γ, x:τ' ⊢ 1 : unit
+
+		is
+	
+		d3 : Γ ⊢ 1 : unit		by rule t-unit
+
+	end case
+	
+	case rule
+	
+		------------------------- t-var
+		d2 : Γ, x:τ ⊢ x : τ
+
+		is
+		
+		d3 : Γ ⊢ e' : τ					by dt'
+
+	end case
+	
+	case rule
+	
+		-------------------------------------------- t-var
+		d2 : Γ', x1:τ, x:τ' ⊢ x1 : τ
+
+		is
+		
+		d3 : Γ', x1:τ ⊢ x1 : τ		by rule t-var
+
+	end case
+	
+	case rule
+		d2: (Γ, x:τ'), x1:τ'' ⊢ e1[x][x1] : τ'''
+		------------------------------------------------------------------------ t-fn
+		d3: Γ, x:τ' ⊢ (λ x1 : τ'' • e1[x][x1]) : (τ'' → τ''')
+
+		is
+		
+		d2': ((Γ, x1:τ''), x:τ') ⊢ e1[x][x1] : τ''' by exchange on d2
+		dt'': (Γ, x1:τ'') ⊢ e' : τ' by weakening on dt'
+		d4 : (Γ, x1:τ'') ⊢ e1[e'][x1] : τ'''	by induction hypothesis on d2', dt''
+		d5 : Γ ⊢ (λ x1 : τ'' • e1[e'][x1]) : (τ'' → τ''') by rule t-fn on d4
+
+	end case 
+	
+	case rule
+
+		d2: (Γ, x:τ') ⊢ e1[x] : (τ'' → τ)
+		d3: (Γ, x:τ') ⊢ e2[x] : τ''
+		-------------------------------------- t-app
+		d4: (Γ, x:τ') ⊢ (e1[x] e2[x]) : τ
+		
+		is
+		
+		d5 : Γ ⊢ e1[e'] : (τ'' → τ)	by induction hypothesis on d2, dt'
+		d6 : Γ ⊢ e2[e'] : τ''		by induction hypothesis on d3, dt'
+		d7 : Γ ⊢ (e1[e'] e2[e']) : τ	by rule t-app on d5, d6
+		
+	end case
+end induction
+end theorem
+
+
