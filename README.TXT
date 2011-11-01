@@ -70,6 +70,10 @@ with the JavaCC Eclipse plugin, available from update site
 http://eclipse-javacc.sourceforge.net/ (compile the .jj file to .java
 by right-clicking on parser.jj and choosing Compile with JavaCC).
 
+Alternatively, if you fetch the source from SVN, you can build SASyLF
+(under Unix) assuming you have java and javacc in your path using
+	make build
+
 
 
 CONTACT
@@ -90,14 +94,11 @@ it is unclear precisely what it means.
 Error messages point to the line of code and the kind of error, but
 could use some improvement.
 
-
-Mutual induction is supported syntactically as follows:
-	theorem Thm1: ... end theorem and theorem Thm2: ... by theorem Thm1 ... end theorem
-
 The automated prover ("by solve") is very primitive.  It works only
 for straightforward derivations without the use of induction or case
 analysis.
 
+The tool could use some documentation.
 
 
 RELEASE HISTORY

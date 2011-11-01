@@ -6,6 +6,7 @@ build :
 	(cd src && javac -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java)
 	(cd bin && find . -name "*.class" -print > classlist)
 	(cd bin && jar cmf ../META-INF/MANIFEST.MF ../SASyLF.jar @classlist)
+	rm bin/classlist
 	
 clean:
 	rm -rf bin SASyLF.jar
