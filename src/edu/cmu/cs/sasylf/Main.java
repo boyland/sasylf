@@ -8,10 +8,7 @@ import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 public class Main {
 
@@ -31,7 +28,7 @@ public class Main {
 		}
 		int oldErrorCount = 0;
 		if (args.length == 1 && args[0].equals("--version")) {
-			System.out.println("SASyLF version 0.24");
+			System.out.println("SASyLF version 1.0.2 (uwm 6)");
 			return;
 		}
 		// TODO: may want to add command line argument for explicit error messages on case analysis -- see Rule.getErrorDescription()
