@@ -379,7 +379,7 @@ dwf' : (*), st |- e' by induction on de:
 		d4 : (*), st |- e1				by inversion of wf-app on dwf  
 		d5 : (*), st |- e2				by inversion of wf-app on dwf
 		d6 : (*), st |- (fn x => e3[x])	by induction hypothesis on d4, d1
-		d7 : (* , var x), st |- e3[x]	by inversion of wf-lam on d6
+		d7 : (* , var x), st |- e3[x]	by inversion of wf-fn on d6
 		d8 : (*), st |- e3[e2]			by lemma wf-subst on d7, d5
 		d9 : (*), st |- e'				by induction hypothesis on d8, d2
 

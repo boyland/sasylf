@@ -914,7 +914,7 @@ case rule
 	d2: * |- lambda x:T1 => t12[x] : T1 -> T
 is
 	dt2': * |- t2 : T1 by rule T-Sub on dt2, dsub
-	dt12: * |- t12[t2] : T by substitution on dt2, d1 // BUG: should use dt2' here
+	dt12: * |- t12[t2] : T by substitution on d1, dt2'
 end case
 
 case rule

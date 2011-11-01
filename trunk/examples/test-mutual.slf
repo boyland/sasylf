@@ -1,0 +1,36 @@
+package edu.uwm.cs.tst;
+
+terminals s
+
+syntax
+  n ::= 0 | s n
+  
+judgment add: n + n = n 
+
+--------- add-zero
+0 + n = n
+
+n1 + n2 = n3
+---------------- add-succ
+s n1 + n2 = s n3
+
+  
+lemma test1 :
+  forall n
+  exists n + 0 = n.
+  _: n + 0 = n by induction on n:
+  	case 0 is 
+  		_: 0 + 0 = 0 by unproved
+  	end case
+  	case s n' is
+  	    x: n' + 0 = n' by lemma test2 on n'
+  	    _: s n' + 0 = s n' by rule add-succ on x
+  	end case
+  end induction
+end lemma
+and
+lemma test2 :
+  forall n
+  exists n + 0 = n.
+  _: n + 0 = n by lemma test1 on n
+end lemma
