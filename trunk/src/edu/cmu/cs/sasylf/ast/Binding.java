@@ -105,7 +105,8 @@ public class Binding extends Element {
 			bindingTypes.put(this.getNonTerminal().getSymbol(), myType);
 		} else {
 			if (!prevType.equals(myType))
-				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + nonTerminal + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame);
+				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + nonTerminal + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame,
+				    "(" + prevType + " != " + myType + ")");
 		}
 	}
 }
