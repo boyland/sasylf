@@ -2,11 +2,16 @@ package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.term.Facade.App;
 import static edu.cmu.cs.sasylf.term.Facade.Const;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import java.util.*;
-import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -47,7 +52,7 @@ public abstract class RuleLike extends Node {
 	/** Computes a mutable list of free variables that are suitable as premises for this rule */
 	public List<Term> getFreeVarArgs(Term instanceTerm) {
 		// compute adaptation amount
-		Term concTerm = getConclusion().asTerm();
+		//Term concTerm = getConclusion().asTerm();
 		// TODO: not sure if I need adaptation here, disabling it until I'm sure I do need it
 		int adaptation = 0;//((ClauseUse)getConclusion()).getAdaptationNumber(concTerm, instanceTerm);
 		debug("adaptation: " + adaptation);
@@ -102,9 +107,11 @@ public abstract class RuleLike extends Node {
 					}
 					debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
 					argTerm = clause.wrapWithOuterLambdas(argTerm, localInstanceTerm, localAdaptation, wrappingSub, false);
+					// System.out.println("    wrapping sub = " + wrappingSub);
 					debug("\tresult is " + argTerm);
 				}
 			}
+	    // System.out.println("  argTerm = " + argTerm);
 			args.add(argTerm);
 		}
 		debug("\tgenerated concterm before adaptation: " + concTerm);
@@ -113,6 +120,37 @@ public abstract class RuleLike extends Node {
 		debug("\tresult is " + concTerm);
 		args.add(concTerm);
 		Term ruleTerm = App(getRuleAppConstant(), args);
+		
+		// JTB: fix defect #4
+		// We need to determine if any variable was substituted in a wrapping
+		// sub but is still being used under its old name: we need to return it
+		// to the old (unqualified) name.  We painfully substitute it back.
+		Set<FreeVar> ruleFreeVars = ruleTerm.getFreeVariables();
+		Substitution fixSub = null;
+		for (Map.Entry<Atom,Term> e : wrappingSub.getMap().entrySet()) {
+		  if (ruleFreeVars.contains(e.getKey())) {
+		    // ErrorHandler.warning("case for rule was wrong, trying to fix it", this);
+		    if (fixSub == null) fixSub = new Substitution();
+		    // Horrid kludge: fixSub.add(e.getKey(), e.getValue());
+		    Term appl = e.getValue();
+		    Abstraction absMatchTerm = (Abstraction)instanceTerm;
+		    List<Term> varTypes = new ArrayList<Term>();
+		    List<String> varNames = new ArrayList<String>();
+		    
+        List<? extends Term> fixargs = ((Application)appl).getArguments();
+		    ClauseUse.readNamesAndTypes(absMatchTerm, fixargs.size(), varNames, varTypes);
+		    Term body = e.getKey();
+		    for (Term ty : varTypes) {
+		      body = Facade.Abs(ty, body);
+		    }
+		    Atom function = ((Application)appl).getFunction();
+        // System.out.println("substituting " + function + " with " + body);
+		    fixSub.add(function,body);
+		  }
+		}
+		if (fixSub != null) {
+		  ruleTerm = ruleTerm.substitute(fixSub);
+		}
 
 		/*debug("\tgenerated term before freshification: " + ruleTerm);
 		
