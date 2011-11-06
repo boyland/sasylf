@@ -28,7 +28,7 @@ public class Main {
 		}
 		int oldErrorCount = 0;
 		if (args.length == 1 && args[0].equals("--version")) {
-			System.out.println("SASyLF version 1.0.2 (uwm 6)");
+			System.out.println("SASyLF version 1.0.2 (uwm 7)");
 			return;
 		}
 		// TODO: may want to add command line argument for explicit error messages on case analysis -- see Rule.getErrorDescription()
