@@ -103,6 +103,10 @@ The tool could use some documentation.
 
 
 RELEASE HISTORY
+1.0.2 (uwm 8)
+    Inversion checks implemented; does not handle a new variable above the line
+1.0.2 (uwm 7)
+    Fixed defect #4.
 1.0.2 (uwm 6)
     Mutual induction: by default induction on first argument.
     Revert change in "uwm 3": dot no longer will be permitted in syntax (reserved for modules)

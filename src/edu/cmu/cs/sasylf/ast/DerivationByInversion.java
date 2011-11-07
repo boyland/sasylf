@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -72,8 +73,17 @@ public class DerivationByInversion extends DerivationWithArgs {
       Set<Pair<Term,Substitution>> caseResult = rule.caseAnalyze(ctx);
       if (caseResult.isEmpty()) continue;
       if (rule == rulel) {
-        // TODO: look for premise in substituted premises.
-        ErrorHandler.warning(Errors.INVERSION_UNCHECKED, this);
+        debug("inversion: caseResult = " + caseResult);
+        Pair<Term,Substitution> pair = caseResult.iterator().next();
+        Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
+        // TODO: eventually update so that we can have new variables in the result.
+        // Set<FreeVar> freevars = result.getFreeVariables();
+        result = result.substitute(pair.second);
+        Application ruleInstance = (Application)pair.first; 
+        if (!ruleInstance.getArguments().contains(result)) {
+          ErrorHandler.report(Errors.INVERSION_NOT_FOUND, this,
+              "\t SASyLF did not find " + result + " in " + ruleInstance.getArguments());
+        }
         found_rulel = true;
       } else {
         ErrorHandler.report(Errors.MISSING_CASE,
