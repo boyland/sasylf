@@ -1,0 +1,72 @@
+/*
+ * Bug demonstrating bad pattern generation
+ *
+ * John Boyland
+ * Fall 2011
+ */
+package edu.uwm.cs.fj;
+
+terminals class s in
+
+syntax
+
+CT ::= class C { }
+    |  CT class C { x:C => t[x] }
+
+t  ::= x
+    |  t !
+
+C  ::= n
+
+n ::= 0 | s n
+
+
+Gamma ::= * | Gamma, x:C
+
+
+/*** CLASS TABLES ***/
+
+
+judgment lookup: CT |- class C
+
+
+
+/******** TYPES *************/
+
+
+judgment isvar : t:C in Gamma
+assumes Gamma
+
+------------------- var
+x:C in (Gamma, x:C)
+
+
+judgment type: CT; Gamma |- t : C
+assumes Gamma
+
+
+CT; Gamma |- t : C
+CT |- class C
+--------------------------- T-Bang
+CT; Gamma |- t ! : C
+
+
+
+
+/**************** CHECKING CLASSES/METHODS ************/
+
+
+lemma test:
+    forall dt: CT; Gamma, x:C |- t[x] : C1
+    exists CT |- class C1 .
+    _: CT |- class C1 by induction on dt:
+	case rule
+	    dt: CT; Gamma, x:C |- t'[x] : C1
+	    fl: CT |- class C1
+	    ------------------------------------ T-Bang
+	    _:  CT; Gamma, x:C |- t'[x] ! : C1
+	is
+	    _: CT |- class C1 by fl
+	end case
+    end induction
+end lemma
