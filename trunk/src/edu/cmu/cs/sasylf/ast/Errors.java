@@ -43,6 +43,7 @@ public enum Errors {
 	BAD_EXCHANGE("result cannot be produced by permuting variable bindings"),
 	INVERSION_UNCHECKED("inversion is unchecked"),
 	INVERSION_REQUIRES_CLAUSE("inversion cannot be applied to syntax, only judgments"),
+	INVERSION_NOT_FOUND("did not find claimed judgment in inversion of rule"),
 	WEIRD_ADAPT_ERROR("internal error in adapt"),
 	MUTUAL_INDUCTION_NO_INDUCTION("mutual induction cannot be used without an inductive argument"),
   MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
