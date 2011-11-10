@@ -1,0 +1,17 @@
+terminals s
+
+syntax
+
+n ::= 0
+    | s n
+
+
+judgment gt: n > n
+
+------- gt-one
+s n > n
+
+// this is the bug
+n1 > n2
+--------- gt-more
+s n1 > n2

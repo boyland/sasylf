@@ -1,0 +1,29 @@
+package edu.uwm.cs.cs732;
+
+terminals s
+
+syntax
+
+n ::= 0
+    | s n
+
+judgment equal: n == n
+
+----- eq
+n == n
+
+theorem impossible:
+  exists 0 == s 0 .
+  a: 0 == 0 by rule eq
+  b: s 0 == s 0 by rule eq
+  c: s 0 == n by weakening on b
+  d: 0 == n by weakening on a
+  e: 0 == s 0 by case analysis on c:
+	case rule
+	    ------ eq
+	    _: s 0 == s 0
+	is
+	    _: 0 == s 0 by d
+	end case
+    end case analysis
+end theorem
