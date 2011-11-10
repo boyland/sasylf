@@ -103,6 +103,8 @@ The tool could use some documentation.
 
 
 RELEASE HISTORY
+1.0.2 (uwm 9)
+    Permit syntax checking of binders, e.g. lambdas (not yet of variables)
 1.0.2 (uwm 8)
     Inversion checks implemented; does not handle a new variable above the line
 1.0.2 (uwm 7)
