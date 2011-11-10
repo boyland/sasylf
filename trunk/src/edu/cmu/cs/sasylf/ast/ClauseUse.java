@@ -173,6 +173,10 @@ public class ClauseUse extends Clause {
 		return t;
 	}
 	
+	/**
+	 * Called when checking a syntax case.
+	 * @return list of nonterminals in something we are case analyzing
+	 */
 	public List<Fact> getNonTerminals() {
 		int assumeIndex = getConstructor().getAssumeIndex();
 		List<Fact> facts = new ArrayList<Fact>();
@@ -181,7 +185,7 @@ public class ClauseUse extends Clause {
 			if (! (e instanceof Terminal) && i != assumeIndex 
 					&& !(e instanceof Variable)) {
 				if (e instanceof Binding) {
-					ErrorHandler.report("Can't case analyze bindings", this);
+          facts.add(new BindingAssumption((Binding)e));					
 				} else if (e instanceof NonTerminal){
 					facts.add(new SyntaxAssumption((NonTerminal)e));
 				} else if (e instanceof Clause) {
