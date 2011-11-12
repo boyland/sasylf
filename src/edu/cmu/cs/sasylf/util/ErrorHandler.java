@@ -26,6 +26,23 @@ public class ErrorHandler {
 			warningCount++;
 		}
 	}
+	
+	public static void recoverableError(String msg, Node obj) {
+	  try {
+	    report(msg,obj);
+	  } catch (SASyLFError x) {
+	    // stop throw
+	  }
+	}
+	
+	public static void recoverableError(String msg, Node obj, String debugInfo) {
+	  try {
+	    report(msg,obj,debugInfo);
+	  } catch (SASyLFError x) {
+	    // stop throw
+	  }
+	}
+
 
 	public static void warning(Errors errorType, Node obj) {
 		report(errorType, null, obj.getLocation(), null, false, true);
