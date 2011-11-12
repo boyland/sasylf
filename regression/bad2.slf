@@ -1,0 +1,28 @@
+package edu.uwm.cs.sasylf;
+
+terminals contradiction
+
+syntax n ::= 0 | 1+ n
+
+judgment absurd : contradiction
+
+// demonstrate whether mutual induction is checked
+
+lemma impossible :
+  forall n
+  exists contradiction .
+  _: contradiction by induction on n:
+    case 0 is 
+    	_: contradiction by lemma impossible1 on n
+    end case
+    case 1+ n' is 
+    	_: contradiction by lemma impossible1 on n
+    end case
+  end induction
+end lemma
+and
+lemma impossible1 :
+  forall n
+  exists contradiction .
+  _: contradiction by lemma impossible on n
+end lemma

@@ -1,0 +1,58 @@
+/*
+ * Checking that we can use variables in variable binding.
+ */
+ 
+package edu.uwm.cs.structural;
+ 
+
+terminals fn in Fn Unit unit contradiction
+ 
+syntax
+ 
+t ::= t t | x | fn x:T => t[x] | unit | Fn X => t[X]
+ 
+T ::= Unit | X | T -> T
+
+Gamma ::= * | Gamma, x:T | Gamma, X
+ 
+ 
+judgment isvar : t:T in Gamma
+assumes Gamma
+
+--------------- var
+x:T in (Gamma, x:T)
+ 
+
+judgment typevar : T in Gamma
+assumes Gamma
+
+--------------- Var
+X in (Gamma, X)
+ 
+
+judgment equal: Gamma |- t = t
+assumes Gamma
+ 
+Gamma |- t1 = t1'
+Gamma |- t2 = t2'
+------------------------ equal-app
+Gamma |- t1 t2 = t1' t2'
+ 
+t:T in Gamma
+--------------- equal-var
+Gamma |- t = t
+
+Gamma, x:T |- t[x] = t'[x]
+------------------------------------ equal-fun
+Gamma |- fn x:T => t[x] = fn x:T => t'[x]
+
+-------------------- equal-unit
+Gamma |- unit = unit
+
+
+// Before SASyLF 1.0.2 (uwm 6), x:X would be an error
+lemma no-problem:
+   exists *, X, x:X |- unit = unit .
+   _: *, X, x:X |- unit = unit by rule equal-unit
+end lemma
+
