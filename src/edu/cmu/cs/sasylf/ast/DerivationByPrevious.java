@@ -27,7 +27,8 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		
 		if (!argTerm.equals(derivTerm)) {
 			// TODO: could be looser than this
-			ErrorHandler.report(NOT_EQUIVALENT, "Derivation " + getElement() + " is not equivalent to the previous derivation " + getArgStrings().get(0), this);			
+			ErrorHandler.report(NOT_EQUIVALENT, "Derivation " + getElement() + " is not equivalent to the previous derivation " + getArgStrings().get(0), this,
+			    "\t this term is " + derivTerm + "\n\tprevious term is " + argTerm);			
 		}
 	}
 }
