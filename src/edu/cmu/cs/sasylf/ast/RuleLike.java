@@ -161,6 +161,12 @@ public abstract class RuleLike extends Node {
 		return ruleTerm;
 	}
 
+	/**
+	 * Return the assumes for a judgment / outermostGamma for a theorem.
+	 * @return
+	 */
+	public abstract NonTerminal getAssumes();
+	
 	/** Returns a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion) */
 	// removed because it now depends on instanceTerm
 	/*public Term getRuleAppTerm(Term instanceTerm) {

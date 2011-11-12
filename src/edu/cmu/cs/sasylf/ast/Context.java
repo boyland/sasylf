@@ -46,6 +46,7 @@ public class Context {
 	public int inductionPosition;
 	public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap;
 	public Substitution adaptationSub;
+	public Set<NonTerminal> varfreeNTs = new HashSet<NonTerminal>();
 	
 	/*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {
 		if (g == null) {

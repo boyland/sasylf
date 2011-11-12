@@ -77,6 +77,25 @@ public class Theorem extends RuleLike {
 			for (Fact f : foralls) {
 				f.typecheck(ctx, false);
 				inputNames.add(f.getName());
+				// TODO: rationalize the following special cases:
+				if (f instanceof DerivationByAssumption) {
+	        ClauseUse cu = (ClauseUse)f.getElement();
+	        cu.asTerm();
+	        if (cu.getRoot() != null) {
+	          setAssumes(cu.getRoot());
+	        }				  
+				} else if (f instanceof SyntaxAssumption) {
+				  Clause c = ((SyntaxAssumption)f).getContext();
+				  if (c == null) continue;
+				  Element x = c.computeClause(ctx, false);
+				  if (x instanceof NonTerminal) setAssumes((NonTerminal)x);
+				  else {
+				    ClauseUse cu = (ClauseUse)x;
+				    if (cu.getRoot() != null) {
+	            setAssumes(cu.getRoot());
+	          } 
+				  }
+				}
 			}
 	
 			exists.typecheck(ctx);
@@ -100,8 +119,6 @@ public class Theorem extends RuleLike {
 		try {
 		debug("checking theorem "+this.getName());
 		
-		// TODO: check that if one arg of a theorem has a context Gamma, all other arguments and result have the same context,
-		// or else nothing in Gamma could be free in any of their expressions
 		ctx.derivationMap = new HashMap<String, Fact>();
 		ctx.inputVars = new HashSet<FreeVar>();
 		ctx.outputVars = new HashSet<FreeVar>();
@@ -115,27 +132,23 @@ public class Theorem extends RuleLike {
 		checkInterface(ctx);
 		
 		if (assumes != null) {
-		  ErrorHandler.warning("theorem assumes not implemented", this);
 		  ctx.innermostGamma = assumes;
 		  ctx.adaptationRoot = assumes;
 		}
+		ctx.varfreeNTs.clear();
 		
 		for (Fact f : foralls) {
 			f.addToDerivationMap(ctx);
-			ctx.derivationMap.put(f.getName(), f); // JTB: This is redundant, isn't it?
 			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
+			// determine var free nonterminals
 			if (f instanceof DerivationByAssumption) {
-				ClauseUse cu = (ClauseUse)f.getElement();
-				cu.asTerm();
-				if (cu.getRoot() != null) {
-					debug("set innermostGamma to " + cu.getRoot());
-					if (ctx.innermostGamma == null) {
-						ctx.innermostGamma = cu.getRoot();
-						ctx.adaptationRoot = cu.getRoot();
-					} else
-						if (!ctx.innermostGamma.equals(cu.getRoot()))
-							ErrorHandler.report(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + ctx.innermostGamma + " and " + cu.getRoot(), this);
-				}
+        ClauseUse cu = (ClauseUse)f.getElement();
+        int assumeIndex = cu.getConstructor().getAssumeIndex();
+        if (assumeIndex >= 0) continue; // not varFree
+        // System.out.println("var free: " + cu);
+        for (Element e : cu.getElements()) {
+          if (e instanceof NonTerminal) ctx.varfreeNTs.add((NonTerminal)e);
+        }
 			}
 		}
 
@@ -232,7 +245,13 @@ public class Theorem extends RuleLike {
 		}
 	}
 
-	public void setAssumes(NonTerminal c) { assumes = c; }
+	public void setAssumes(NonTerminal c) { 
+	  if (assumes != null && !assumes.equals(c))
+	    ErrorHandler.report(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + assumes + " and " + c, this);
+	  assumes = c; 
+	}
+	@Override
+	public NonTerminal getAssumes() { return assumes; }
 	
 	public void setExists(Clause c) { exists = c; }
 
