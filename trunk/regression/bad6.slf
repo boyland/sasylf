@@ -1,0 +1,38 @@
+package edu.uwm.cs.test;
+
+terminals fn in
+
+syntax 
+   t ::= x | t t | fn x => t[x]
+
+   Gamma ::= * | Gamma, x
+
+judgment isvar: t in Gamma
+assumes Gamma
+
+-------------- var
+x in (Gamma,x)
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+t in Gamma
+---------- B-Var
+Gamma |- t
+
+Gamma |- t1
+Gamma |- t2
+--------------- B-App
+Gamma |- t1 t2
+
+Gamma, x |- t[x]
+--------------------- B-Abs
+Gamma |- fn x => t[x]
+
+
+lemma subst :
+    forall b1: Gamma, x |- t1[x]
+    forall b2: Gamma |- t2
+    exists Gamma |- t1[t2] .
+    _: Gamma |- t2 t2 by rule B-App on (Gamma |- t2)
+end lemma

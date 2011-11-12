@@ -26,6 +26,7 @@ public enum Errors {
 	DUPLICATE_CASE			("Already provided a case of this syntactic form"),
 	NOT_EQUIVALENT,
 	JUDGMENT_EXPECTED,
+	SYNTAX_EXPECTED ("cannot create judgment by syntax"),
 	WRONG_JUDGMENT,
 	FORWARD_REFERENCE		("mutual induction is unchecked"),
 	UNDECLARED_NONTERMINAL,
