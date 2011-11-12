@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Term;
 
 import static edu.cmu.cs.sasylf.util.Util.*;
 
@@ -154,6 +155,38 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return nonTerminal.toString();
 	}
 
+	private Set<Syntax> varTypes;
+	/**
+	 * Return the variable types that this context nonterminal can include
+	 * @return set of variable types
+	 */
+	public Set<Syntax> getVarTypes() {
+	  if (varTypes == null) {
+	    varTypes = new HashSet<Syntax>();
+	    for (Clause c : getClauses()) {
+	      if (isContextCase(c)) {
+	        for (Element e : c.getElements()) {
+	          if (e instanceof Variable) varTypes.add(((Variable)e).getType());
+	        }
+	      }
+	    }
+	  }
+	  return varTypes;
+	}
+	
+	/**
+	 * Return true if any of the variables bound by this gamma context
+	 * could occur inside the given type.
+	 * @param type type to check out
+	 * @return true if a variable could be used in a term of the given type.
+	 */
+	public boolean canAppearIn(Term type) {
+	  for (Syntax s : getVarTypes()) {
+	    if (FreeVar.canAppearIn(s.typeTerm(), type)) return true;
+	  }
+	  return false;
+	}
+	
 	public void computeVarTypes(Map<String,Variable> varMap) {
 		for (Clause c : getClauses()) {
 			c.computeVarTypes(this, varMap);
