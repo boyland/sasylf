@@ -79,6 +79,10 @@ public class Judgment extends Node implements ClauseType {
 			term =new Constant(name, Constant.TYPE); 
 		return term;
 	}
+	
+	public NonTerminal getAssumes() {
+	  return assume;
+	}
 
 	private Constant term = null;
 }

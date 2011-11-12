@@ -47,6 +47,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 
 	public void typecheck(Context ctx, Judgment judge) {
+	  judgment = judge;
 		Map<String, List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
 		conclusion.typecheck(ctx);
 		ClauseUse myConc = (ClauseUse) conclusion.computeClause(ctx, false);
@@ -175,6 +176,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (isAssumption()) {
 			// see how deep the assumptions are in term
 			int assumptionDepth = term.countLambdas();
+			// System.out.println("In assumption, with depth = " + assumptionDepth);
 
 			/*int assumeIndex = ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getAssumeIndex();
 			List<Variable> assumedVars = new ArrayList<Variable>();
@@ -342,5 +344,16 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
     }*/
 	
+	@Override
+	public NonTerminal getAssumes() {
+	  return getJudgment().getAssumes();
+	}
+	
+	public Judgment getJudgment() {
+	  if (judgment == null) throw new InternalError("judgment not yet set!");
+	  return judgment;
+	}
+	
+	private Judgment judgment;
 }
 

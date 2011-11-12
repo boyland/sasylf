@@ -103,6 +103,9 @@ The tool could use some documentation.
 
 
 RELEASE HISTORY
+
+1.0.2 (uwm 10)
+   Fixed Defect #3: unsoundness.  May break some existing examples
 1.0.2 (uwm 9)
     Permit syntax checking of binders, e.g. lambdas (not yet of variables)
 1.0.2 (uwm 8)

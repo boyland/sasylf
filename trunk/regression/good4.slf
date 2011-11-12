@@ -1,0 +1,101 @@
+/*
+ * Check that we don't reject all uses of non-assuming judgments.
+ */
+ 
+package edu.uwm.cs.structural;
+ 
+
+terminals fn in Fn Unit unit contradiction
+ 
+syntax
+ 
+t ::= t t | x | fn x:T => t[x] | unit | Fn X => t[X]
+ 
+T ::= Unit | X | T -> T
+
+Gamma ::= * | Gamma, x:T | Gamma, X
+ 
+ 
+judgment isvar : t:T in Gamma
+assumes Gamma
+
+--------------- var
+x:T in (Gamma, x:T)
+ 
+
+judgment typevar : T in Gamma
+assumes Gamma
+
+--------------- Var
+X in (Gamma, X)
+ 
+
+judgment equal: Gamma |- t = t
+assumes Gamma
+ 
+Gamma |- t1 = t1'
+Gamma |- t2 = t2'
+------------------------ equal-app
+Gamma |- t1 t2 = t1' t2'
+ 
+t:T in Gamma
+--------------- equal-var
+Gamma |- t = t
+
+Gamma, x:T |- t[x] = t'[x]
+------------------------------------ equal-fun
+Gamma |- fn x:T => t[x] = fn x:T => t'[x]
+
+-------------------- equal-unit
+Gamma |- unit = unit
+
+
+judgment type-equal: T == T
+
+------ type-eq
+T == T
+
+
+judgment notvar : T !
+
+------- NV-Unit
+Unit !
+
+---------- NV-Arrow
+T1 -> T2 !
+
+
+judgment absurd : contradiction
+
+
+lemma type-never-var :
+    forall e: T == T
+    exists T ! .
+    _: T! by case analysis on T:
+	  case T1 -> T2 is
+	    _: T1 -> T2! by rule NV-Arrow 
+	  end case	
+	  case Unit is
+	    _: Unit! by rule NV-Unit
+	  end case
+    end case analysis
+end lemma
+
+lemma lam-type-not-var :
+    forall nv1: T! // here T is NOT in a context, so it's OK to pass it to type-eq
+    forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
+    forall v: T in Gamma // this directly says T MAY be in Gamma (and indirectly that it MUST be in Gamma)
+    exists contradiction .
+    ee: T == T by rule type-eq
+    nv: T! by lemma type-never-var on ee // redundant, but OK.
+    _: contradiction by case analysis on v:
+	case rule
+	    ------------------ Var
+	    _: X in (Gamma',X)
+	is
+	    _: contradiction by case analysis on nv: end case analysis
+	end case
+    end case analysis
+end lemma
+
+
