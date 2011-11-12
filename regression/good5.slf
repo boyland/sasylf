@@ -1,0 +1,93 @@
+/** Hacked up version of lambda.slf to demonstrate a previous bug:
+ * Couldn't handle bndings as lemma arguments
+ */
+
+package edu.cmu.cs.lambda;
+
+terminals fn unit in value stepsorvalue
+
+
+/************************ SYNTAX **************************************/
+
+syntax
+
+e ::= fn x : tau => e[x]
+ | x
+ | e e
+ | "(" ")" 				
+
+
+tau ::= unit
+ | tau -> tau
+
+
+Gamma ::= *
+      |   Gamma, x : tau
+
+
+/************************ JUDGMENTS **************************************/
+
+judgment value: e value
+
+--------------- val-unit
+"(" ")" value
+
+--------------------------- val-fn
+fn x : tau => e1[x] value
+
+
+
+judgment reduce: e -> e
+
+e1 -> e1'
+------------------- c-app-l
+e1 e2 -> e1' e2
+
+e1 value
+e2 -> e2'
+------------------- c-app-r
+(e1 e2) -> (e1 e2')
+
+
+e2 value
+---------------------------------- r-app
+(fn x : tau => e[x]) e2 -> e[e2]
+
+
+judgment has-type: Gamma |- e : tau
+assumes Gamma
+
+
+-------------------------- t-unit
+Gamma |- "("")" : unit
+
+
+------------------------- t-var
+Gamma, x:tau |- x : tau
+
+
+Gamma, x1:tau |- e[x1] : tau'
+--------------------------------------------- t-fn
+Gamma |- fn x : tau => e[x] : tau -> tau'
+
+
+Gamma |- e1 : tau' -> tau
+Gamma |- e2 : tau'
+---------------------------------- t-app
+Gamma |- e1 e2 : tau
+
+
+lemma c-app-l-as-lem :
+   forall r: e1 -> e1'
+   forall e2
+   exists (e1 e2) -> (e1' e2).
+   _: (e1 e2) -> (e1' e2) by rule c-app-l on r
+end lemma
+
+lemma pointless: 
+   forall dt: *, x:tau |- e[x] : unit -> unit
+   exists e' e["(" ")"] -> e'' e["(" ")"] .
+   v: "("")" value by rule val-unit
+   beta: (fn x:unit => x) ("(" ")") -> ("(" ")") by rule r-app on v
+   _: ((fn x:unit => x) ("(" ")")) e["(" ")"] -> ("(" ")") e["(" ")"] by lemma c-app-l-as-lem on beta, (e["(" ")"])
+end lemma

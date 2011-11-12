@@ -1,14 +1,18 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug2;
+import static edu.cmu.cs.sasylf.term.Facade.Abs;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.tdebug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 abstract public class DerivationWithArgs extends Derivation {
 	public DerivationWithArgs(String n, Location l, Clause c) {
@@ -42,24 +46,45 @@ abstract public class DerivationWithArgs extends Derivation {
 	public void typecheck(Context ctx) {
 		for (int i = 0; i < argStrings.size(); ++i) {
 			Clause c = argStrings.get(i);
+			// remove all (c) parens:
+			while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
+			  argStrings.set(i,c = (Clause)c.getElements().get(0));
+			}
 			Fact f = null;
-			if (c.getElements().size() == 1 && !(c.getElements().get(0) instanceof Clause)) {
-				// case for a reference to a derivation 
-				String s = c.getElements().get(0).toString();
-				f = ctx.derivationMap.get(s);
-				if (f == null) {
-					// case for a use of a one element clause
-					f = new SyntaxAssumption(s, getLocation());
-					f.typecheck(ctx, true);
-				}
+			if (c.getElements().size() == 1) {
+			  Element e = c.getElements().get(0);
+			  if (e instanceof Binding) {
+			    Binding b = (Binding)e;
+			    f = new BindingAssumption(b);
+			    f.typecheck(ctx, false);		    
+			  } else if (e instanceof NonTerminal) {
+			    // case for a reference to a derivation 
+			    String s = e.toString();
+			    f = ctx.derivationMap.get(s);
+			    if (f == null) {
+			      FreeVar fake = new FreeVar(s,null);
+			      if (ctx.varMap.containsKey(s) || ctx.synMap.containsKey(s) || ctx.inputVars.contains(fake)) {
+			        // case for a use of a one element clause
+			        f = new SyntaxAssumption(s, getLocation());
+			        f.typecheck(ctx, false);
+			      } else {
+			        ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
+			      }
+			    } 
+			  } else {
+          throw new InternalError("What sort of arg is this ? " + e);
+        } 
 			} else {
 				// case for a clause given directly
-				debug2("computing fact for " + c + " in class " + this.getClass().getName());
-				c = (Clause) c.typecheck(ctx);
+			  c = (Clause)c.typecheck(ctx);
+				debug("computing fact for " + c + " of class " + c.getClass().getName());
 				c = (Clause) c.computeClause(ctx, false);
+				if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
+				  ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+				}
 				argStrings.set(i,c);
 				f = new ClauseAssumption(c, getLocation());
-				f.typecheck(ctx, true);
+				f.typecheck(ctx, false);
 			}
 			args.add(f);
 		}
@@ -71,7 +96,6 @@ abstract public class DerivationWithArgs extends Derivation {
 	 */
 	protected Term getAdaptedArg(Context ctx, Substitution wrappingSub, int i) {
 		Element element = getArgs().get(i).getElement();
-		
 		Term argTerm = DerivationByAnalysis.adapt(element.asTerm(), element, ctx, false);
 		//Term argTerm = element.asTerm().substitute(ctx.currentSub);
 		
@@ -90,7 +114,7 @@ abstract public class DerivationWithArgs extends Derivation {
 	protected Term getAdaptedArg(Context ctx, int i) {
 		return getAdaptedArg(ctx, new Substitution(), i);
 	}
-
+	
 	private List<Clause> argStrings = new ArrayList<Clause>();
 	private List<Fact> args = new ArrayList<Fact>();
 }
