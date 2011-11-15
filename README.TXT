@@ -89,8 +89,7 @@ KNOWN LIMITATIONS (incomplete list)
 
 Almost all checks are implemented, including rule application,
 correct and completeness case analysis, and uses of lemmas and
-the induction hypothesis.  "inversion" is still unchecked;
-it is unclear precisely what it means.
+the induction hypothesis.
 
 Error messages point to the line of code and the kind of error, but
 could use some improvement.
