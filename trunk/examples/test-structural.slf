@@ -1,0 +1,63 @@
+/*
+ * Testing structural induction over terms with variables.
+ * This file tests a new feature in SASyLF:
+ * the ability to perform induction over terms which have variables.
+ */
+
+package edu.uwm.cs.structural;
+ 
+
+terminals fn in
+ 
+syntax
+ 
+t ::= t t | x | fn x => t[x]
+ 
+Gamma ::= * | Gamma, x
+ 
+ 
+judgment isvar : t in Gamma
+assumes Gamma
+
+--------------- var
+x in (Gamma, x)
+ 
+ 
+judgment equal: Gamma |- t = t
+assumes Gamma
+ 
+Gamma |- t1 = t1'
+Gamma |- t2 = t2'
+------------------------ equal-app
+Gamma |- t1 t2 = t1' t2'
+ 
+t in Gamma
+--------------- equal-var
+Gamma |- t = t
+
+Gamma, x |- t[x] = t'[x]
+------------------------------------ equal-fun
+Gamma |- fn x => t[x] = fn x => t'[x]
+
+
+lemma equal-reflexive :
+    forall t assumes Gamma
+    exists Gamma |- t = t .
+    _: Gamma |- t = t by induction on t:
+	case x assumes Gamma', x is
+	    v: x in (Gamma',x) by rule var
+	    a: Gamma', x |- x = x by rule equal-var on v
+	end case
+	case t1 t2 is
+	    e1: Gamma |- t1 = t1 by induction hypothesis on t1
+	    e2: Gamma |- t2 = t2 by induction hypothesis on t2
+	    _: Gamma |- t1 t2 = t1 t2 by rule equal-app on e1,e2
+	end case
+	case fn x => t1[x] is
+	    e: Gamma, x |- t1[x] = t1[x] 
+		    by induction hypothesis on (t1[x] assumes Gamma,x)
+	    _: Gamma |- fn x => t1[x] = fn x => t1[x] by rule equal-fun on e
+	end case
+    end induction
+end lemma
+

@@ -55,6 +55,13 @@ public class ClauseUse extends Clause {
 		cons = cd;
 	}
 
+	@Override 
+	public boolean equals(Object x) {
+	  if (!(x instanceof ClauseUse)) return false;
+	  ClauseUse cu = (ClauseUse)x;
+	  return (cons == cu.cons && elements.equals(cu.getElements()));
+	}
+	
 	public ClauseDef getConstructor() { return cons; }
 
 	@Override
@@ -163,10 +170,7 @@ public class ClauseUse extends Clause {
 		Term t = computeBasicTerm(varBindings, false);
 		
 		if (assumeIndex != -1) {
-			//for (int i = initialBindingsSize; i < varBindings.size(); ++i) {
-			for (int i = varBindings.size()-1; i >= initialBindingsSize; --i) {
-				t = Abs(varBindings.get(i).first, varBindings.get(i).second, t);
-			}
+		  t = newWrap(t,varBindings,initialBindingsSize);
 		}
 		debug("    conversion result is " + t);
 		//System.out.println("converted " + this + " to " + t);
@@ -180,14 +184,19 @@ public class ClauseUse extends Clause {
 	public List<Fact> getNonTerminals() {
 		int assumeIndex = getConstructor().getAssumeIndex();
 		List<Fact> facts = new ArrayList<Fact>();
+		// JTB: TODO: This method is poorly named,
+		// and it looks at assumeIndex which will never be define for syntax.
+		if (assumeIndex != -1) {
+		  System.out.println("assumeIndex = " + assumeIndex);
+		}
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
 			if (! (e instanceof Terminal) && i != assumeIndex 
 					&& !(e instanceof Variable)) {
 				if (e instanceof Binding) {
-          facts.add(new BindingAssumption((Binding)e));					
+          facts.add(new BindingAssumption((Binding)e,new Clause(e.getLocation())));					
 				} else if (e instanceof NonTerminal){
-					facts.add(new SyntaxAssumption((NonTerminal)e));
+					facts.add(new SyntaxAssumption((NonTerminal)e,new Clause(e.getLocation())));
 				} else if (e instanceof Clause) {
 					throw new RuntimeException("should be impossible case");
 				} else {
@@ -335,14 +344,30 @@ public class ClauseUse extends Clause {
 	public Term wrapWithOuterLambdas(Term term, Term matchTerm, int i, Substitution sub, boolean wrapUnrooted) {
 		if (i == 0 || (!isRootedInVar() && !wrapUnrooted))
 			return term;
-		Abstraction absMatchTerm = (Abstraction) matchTerm;
+		return wrapWithOuterLambdas(term, matchTerm, i, sub);
+	}
+	
+  /**
+   * Wrap a term with lambdas to match the match term, up to i variables.
+   * We substitute variables that could depend on the term.
+   * @param term term to wrap
+   * @param matchTerm term to get variables from
+   * @param i number of variables to get
+   * @param sub substitution used and modified, to hold substitution with paranmeterized variables
+   * @return wrapped term
+   */
+  public static Term wrapWithOuterLambdas(Term term, Term matchTerm, int i,
+      Substitution sub) {
+    if (i == 0) return term;
+    Abstraction absMatchTerm = (Abstraction) matchTerm;
 		List<Term> varTypes = new ArrayList<Term>();
 		List<String> varNames = new ArrayList<String>();
 		
 		readNamesAndTypes(absMatchTerm, i, varNames, varTypes);
 
 		return doWrap(term, varNames, varTypes, sub);
-	}
+  }
+  
 	/**
 	 * Reads the names and types of the i lambdas on the outside of absMatchTerm, and adds them to varNames and varTypes
 	 */
@@ -356,7 +381,32 @@ public class ClauseUse extends Clause {
 		}
 	}
 
-	/** Wraps term in i lambdas that have variable names and typtes given by varNames and varTypes.
+	/**
+	 * Wrap a generated term in bindings from the list
+	 * @param t term to wrap
+	 * @param varBindings bindings to use
+	 * @param from skip this many from the front of the list
+	 * @return wrapped term
+	 */
+	public static Term newWrap(Term t, List<Pair<String,Term>> varBindings, int from) {
+    for (int i = varBindings.size()-1; i >= from; --i) {
+      t = Abs(varBindings.get(i).first, varBindings.get(i).second, t);
+    }
+    return t;
+	}
+	
+	public static Term newDoBindWrap(Term term, List<Pair<String,Term>> varBindings) {
+	  List<String> varNames = new ArrayList<String>();
+	  List<Term> varTypes = new ArrayList<Term>();
+	  Substitution sub = new Substitution();
+	  for (Pair<String,Term> pair : varBindings) {
+	    varNames.add(pair.first);
+	    varTypes.add(pair.second);
+	  }
+	  return doWrap(term,varNames,varTypes,sub);
+	}
+	
+	/** Wraps term in i lambdas that have variable names and types given by varNames and varTypes.
 	 * Also changes free variables so they bind new the new bound variables in them
 	 * Modifies the substitution to reflect changes.
 	 */
