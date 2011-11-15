@@ -17,7 +17,21 @@ public class Binding extends Element {
 		elements = l;
 	}
 
-	public NonTerminal getNonTerminal() { return nonTerminal; }
+	
+  @Override
+  public int hashCode() {
+    return nonTerminal.hashCode() + elements.hashCode();
+  }
+
+	@Override
+  public boolean equals(Object obj) {
+	  if (!(obj instanceof Binding)) return false;
+	  Binding b = (Binding)obj;
+	  return nonTerminal.equals(b.nonTerminal) && elements.equals(b.elements);
+  }
+
+
+  public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Element> getElements() { return elements; }
 	public ElemType getElemType() { return nonTerminal.getType(); }
 	public Symbol getGrmSymbol() {

@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.term.Facade.App;
-import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;

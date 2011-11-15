@@ -78,24 +78,126 @@ public abstract class DerivationByAnalysis extends Derivation {
 		if (isSubderivation) debug("found subderivation: " + targetDerivation);
 		
 		ctx.caseTermMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
-
+		
+		// JTB: There are unfortunately many ways to be a syntax case:
+		// 1. a nonterminal: e.g. t
+		// 2. an assumption: e.g. t assumes Gamma
+		// 3. an assumption with a binding: e.g. t[x] assumes (Gamma, x:tau)
+		NonTerminal caseNT = null;
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
-			Syntax syntax = ((NonTerminal)ctx.currentCaseAnalysisElement).getType();
+		  caseNT = (NonTerminal)ctx.currentCaseAnalysisElement;
+		} else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
+		  // JTB: TODO: Figure out how to avoid the duplicate logic from here and in the next section.
+		  AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
+      Element e = ae.getBase();
+      if (e instanceof Binding) caseNT = ((Binding)e).getNonTerminal();
+      else caseNT = (NonTerminal)e;
+		  // now we need to check that the assumptions INCLUDE the current context, if it could influence the NT
+      if (ctx.innermostGamma != null &&
+          ctx.innermostGamma.getType().canAppearIn(caseNT.getType().typeTerm()) &&
+          !ctx.varfreeNTs.contains(caseNT)) {
+        Clause assumes = ae.getAssumes();
+        NonTerminal root = null;
+        if (assumes instanceof ClauseUse) {
+          root = ((ClauseUse)assumes).getRoot();
+        } else {
+          root = (NonTerminal)assumes.getElements().get(0);
+        } 
+        if (root == null || !root.equals(ctx.innermostGamma)) {
+          ErrorHandler.report("Case analysis target cannot assume less than context does",this);
+        }
+      }
+		}
+
+		if (caseNT != null) {
+			Syntax syntax = caseNT.getType();
+			// JTB: TODO: We need to change this check; it's obsolete
 			if (!(ctx.currentCaseAnalysis instanceof FreeVar))
 				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of variable " + ctx.currentCaseAnalysisElement + " is already known and so case analysis is unnecessary (and not currently supported by SASyLF)", this);			
 
 			for (Clause clause : syntax.getClauses()) {
-				if (clause.isVarOnlyClause()) {
-					continue; // no cases for var clauses
+			  Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
+        ctx.caseTermMap.put(clause, set);
+        // and below, we add to the set, as appropriate
+        if (clause.isVarOnlyClause()) {
+          List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
+          NonTerminal root = null;
+				  if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
+				    AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
+				    Clause assumes =  ae.getAssumes();
+		        if (assumes instanceof ClauseUse) {
+		          ((ClauseUse)assumes).readAssumptions(varBindings, true);
+		          root = ((ClauseUse)assumes).getRoot();
+		        } else {
+		          root = (NonTerminal)assumes.getElements().get(0);
+		        } 
+				  } else {
+				    // no context, no problem
+				    if (ctx.innermostGamma == null) continue;
+				    // not dependent on context, no problem
+				    if (!ctx.innermostGamma.getType().canAppearIn(syntax.typeTerm())) continue;
+				    // if known to be variable free, no problem
+				    if (ctx.varfreeNTs.contains(caseNT)) continue;
+				    root = ctx.innermostGamma;
+				  }
+				  debug("Adding variable cases for " + syntax);
+				  for (Pair<String,Term> pair : varBindings) {
+				    if (pair.second.equals(syntax.typeTerm())) {
+				      debug("  for " + pair.first);
+				      Variable gen = new Variable(pair.first,getLocation());
+				      gen.setType(syntax);
+				      Term caseTerm = ClauseUse.newWrap(gen.computeTerm(varBindings),varBindings,0);
+				      debug("  generated " + caseTerm);
+				      set.add(new Pair<Term,Substitution>(caseTerm,new Substitution()));
+				    }
+				  }
+				  if (root != null) {
+				    for (Clause c : root.getType().getClauses()) {
+				      for (Element e : c.getElements()) {
+				        if (e instanceof Variable && ((Variable)e).getType() == syntax) {
+				          List<Element> copied = new ArrayList<Element>();
+				          int i=0;
+				          for (Element e1 : c.getElements()) {
+				            if (e1 instanceof NonTerminal) {
+				              NonTerminal nt = (NonTerminal)e1;
+                      NonTerminal copy = new NonTerminal(nt.getSymbol()+"_"+i, getLocation());
+				              copy.setType(nt.getType());
+				              copied.add(copy);
+				            } else if (e1 instanceof Variable) {
+				              Variable v = (Variable)e;
+				              Variable copy = new Variable(v.getSymbol()+"_"+i, getLocation());
+				              copy.setType(v.getType());
+				              copied.add(copy);
+				            } else {
+				              copied.add(e1);
+				            }
+				            ++i;
+				          }
+				          ClauseUse fakeUse = new ClauseUse(getLocation(),copied,(ClauseDef)c);
+				          List<Pair<String,Term>> moreBindings = new ArrayList<Pair<String,Term>>();
+				          fakeUse.readAssumptions(moreBindings, true);
+				          debug("  for " + moreBindings.get(0));
+				          Term caseTerm = ClauseUse.newWrap(new BoundVar(varBindings.size()+2),varBindings,0);
+				          caseTerm = ClauseUse.newDoBindWrap(caseTerm, moreBindings);
+				          debug("  generated " + caseTerm);
+		              set.add(new Pair<Term,Substitution>(caseTerm,new Substitution()));
+				          break;
+				        }
+				      }
+				    }
+				  }
+				  // Detect bug3.slf
+				  //ErrorHandler.recoverableError("A variable is a possible case, but (currently) SASyLF has no way to case variables.",this);
+				  continue;
 				}
+				// System.out.println("clause : " + clause);
 				Term term = ((ClauseDef)clause).getSampleTerm();
+				// System.out.println("  sample term: " + term);
 				Substitution freshSub = term.freshSubstitution(new Substitution());
 				term.substitute(freshSub);
-				Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
+        // System.out.println("  sample term after freshification: " + term);
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
-				ctx.caseTermMap.put(clause, set);
 			}
-			
 		} else {
 			Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
 			debug("*********** case analyzing line " + getLocation().getLine());
@@ -104,6 +206,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 			// see if each rule, in turn, applies
 			for (Rule rule : judge.getRules()) {
 				Set<Pair<Term,Substitution>> caseResult = rule.caseAnalyze(ctx);
+				// System.out.println("  case Result = " + caseResult);
 				ctx.caseTermMap.put(rule, caseResult);
 			}
 		}

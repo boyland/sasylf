@@ -1601,7 +1601,7 @@ Clause Expr() :
 }
 
 Clause SimpleExpr() :
-{ Element e; Clause c = null; }
+{ Element e; Clause c = null, a; Token t; }
 {
   (
     LOOKAHEAD(<IDENTIFIER>) e=Term()
@@ -1609,7 +1609,9 @@ Clause SimpleExpr() :
 		c = new Clause(e);
 		c.getElements().add(e);
 	}
-    | <LPAREN> e=Expr() <RPAREN>
+    | <LPAREN> e=Expr()
+      [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(new Location(t), e, a); } ]
+      <RPAREN>
 	{
 		c = new Clause(e);
 		c.getElements().add(e);
@@ -1619,14 +1621,16 @@ Clause SimpleExpr() :
 }
 
 Theorem TheoremDeclaration() :
-{ Token t; String s; Clause c; Theorem thm; Derivation d; }
+{ Token t; String s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
   (t=<THEOREM> | t=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t)); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
-  | <FORALL> t=<IDENTIFIER>
-    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true)); }
+  | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
+    { thm.getForalls().add(new BindingAssumption(b, a)); }
+  | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
+    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); }
   )*
   <EXISTS> c=Expr() "." { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
@@ -1670,8 +1674,7 @@ Derivation Justification(Token startT, Clause c) :
     // args should include expressions *****
   | <INDUCTION> <HYPOTHESIS> <ON> cl=SimpleExpr() //t=<IDENTIFIER>
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
-      d.getArgStrings().add(cl);
-    }
+      d.getArgStrings().add(cl);    }
     ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*
     { return d; }
   | <SUBSTITUTION> <ON> t=<IDENTIFIER>
@@ -1702,11 +1705,11 @@ Derivation Justification(Token startT, Clause c) :
 }
 
 Case Case() :
-{ Token t,t2,t3; String s; Clause cl,ce; Case ca; Derivation d;
+{ Token t,t2,t3; String s; Clause cl,ce=null; Case ca; Derivation d;
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
-  ( LOOKAHEAD(2) t=<CASE> cl=Clause() <IS> { ca = new SyntaxCase(new Location(t), cl); }
+  ( LOOKAHEAD(2) t=<CASE> cl=Clause() [<ASSUMES> ce=Clause()] <IS> { ca = new SyntaxCase(new Location(t), cl, ce); }
 
   | t=<CASE> <RULE>
     ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()

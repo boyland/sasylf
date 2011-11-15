@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 
 /** Common interface for Rules and Theorems */
@@ -110,8 +111,23 @@ public abstract class RuleLike extends Node {
 					// System.out.println("    wrapping sub = " + wrappingSub);
 					debug("\tresult is " + argTerm);
 				}
-			}
-	    // System.out.println("  argTerm = " + argTerm);
+			} else if (elem instanceof AssumptionElement) {
+			  // TODO: merge with previous branch to avoid duplicate code
+			  Clause clause = ((AssumptionElement)elem).getAssumes();
+        debug("\tgenerated argterm before adaptation: " + argTerm);
+        {
+          int localAdaptation = adaptation;
+          Term localInstanceTerm = instanceTerm;
+          if (termArgsIfKnown != null && !((ClauseUse)getConclusion()).isRootedInVar()) {
+            localInstanceTerm = termArgsIfKnown.get(i);
+            localAdaptation = localInstanceTerm.countLambdas() - argTerm.countLambdas();
+          }
+          debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
+          argTerm = ClauseUse.wrapWithOuterLambdas(argTerm, localInstanceTerm, localAdaptation, wrappingSub);
+          // System.out.println("    wrapping sub = " + wrappingSub);
+          debug("\tresult is " + argTerm);
+        }
+      }
 			args.add(argTerm);
 		}
 		debug("\tgenerated concterm before adaptation: " + concTerm);

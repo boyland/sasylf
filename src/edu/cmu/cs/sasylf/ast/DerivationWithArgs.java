@@ -53,9 +53,14 @@ abstract public class DerivationWithArgs extends Derivation {
 			Fact f = null;
 			if (c.getElements().size() == 1) {
 			  Element e = c.getElements().get(0);
+			  Clause assumes = null;
+			  if (e instanceof AssumptionElement) {
+			    assumes = ((AssumptionElement)e).getAssumes();
+			    e = ((AssumptionElement)e).getBase();
+			  }
 			  if (e instanceof Binding) {
 			    Binding b = (Binding)e;
-			    f = new BindingAssumption(b);
+			    f = new BindingAssumption(b,assumes);
 			    f.typecheck(ctx, false);		    
 			  } else if (e instanceof NonTerminal) {
 			    // case for a reference to a derivation 
@@ -65,7 +70,7 @@ abstract public class DerivationWithArgs extends Derivation {
 			      FreeVar fake = new FreeVar(s,null);
 			      if (ctx.varMap.containsKey(s) || ctx.synMap.containsKey(s) || ctx.inputVars.contains(fake)) {
 			        // case for a use of a one element clause
-			        f = new SyntaxAssumption(s, getLocation());
+			        f = new SyntaxAssumption(s, getLocation(),assumes);
 			        f.typecheck(ctx, false);
 			      } else {
 			        ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);

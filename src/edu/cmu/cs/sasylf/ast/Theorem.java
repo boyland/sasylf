@@ -84,7 +84,7 @@ public class Theorem extends RuleLike {
 	        if (cu.getRoot() != null) {
 	          setAssumes(cu.getRoot());
 	        }				  
-				} /* else if (f instanceof SyntaxAssumption) {
+				} else if (f instanceof SyntaxAssumption) {
 				  Clause c = ((SyntaxAssumption)f).getContext();
 				  if (c == null) continue;
 				  Element x = c.computeClause(ctx, false);
@@ -95,7 +95,7 @@ public class Theorem extends RuleLike {
 	            setAssumes(cu.getRoot());
 	          } 
 				  }
-				}*/
+				}
 			}
 	
 			exists.typecheck(ctx);

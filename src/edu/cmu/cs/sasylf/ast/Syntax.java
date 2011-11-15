@@ -115,6 +115,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 */
 	private boolean isContextCase(Clause c) {
 		// look for sub-part of gamma clause, a NonTerminal with same type as this
+	  // TODO: SHould ensure there is only ONE recursive reference and only ONE variable.
 		boolean found = false;
 		for (ElemType eType: c.getElemTypes()) {
 			if (eType == this)
