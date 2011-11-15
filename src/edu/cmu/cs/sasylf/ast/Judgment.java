@@ -59,29 +59,27 @@ public class Judgment extends Node implements ClauseType {
 	public void typecheck(Context ctx) {
 		//form.typecheck(synMap, varMap);
 
-		boolean foundAssumeRule = false;
-		for (Rule r : getRules()) {
-			r.typecheck(ctx, this);
-			foundAssumeRule = foundAssumeRule || r.isAssumption();
+		Syntax contextSyntax = null;
+		
+		for (Element f : form.getElements()) {
+		  if (f instanceof NonTerminal) {
+		    Syntax s = ((NonTerminal)f).getType();
+		    if (s.isInContextForm()) contextSyntax = s;
+		  }
 		}
 		
-		// TODO: check that a clause exists showing how to use the assumption
-		// below is right idea, but look if something we depend on shows how to use the assumption
-		//if ((getAssume() != null) && !foundAssumeRule)
-		//	ErrorHandler.warning(Errors.CANNOT_USE_ASSUMPTION, this);
-		// CUT the above because it was too confusing right now
-		if ((getAssume() == null) && foundAssumeRule)
-			ErrorHandler.warning(Errors.MISSING_ASSUMES, this);
+		for (Rule r : getRules()) {
+			r.typecheck(ctx, this);
+		}
+		
+		if ((getAssume() == null) && contextSyntax != null)
+			ErrorHandler.report(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this);
 	}
 	
 	public Constant typeTerm() {
 		if (term == null)
 			term =new Constant(name, Constant.TYPE); 
 		return term;
-	}
-	
-	public NonTerminal getAssumes() {
-	  return assume;
 	}
 
 	private Constant term = null;

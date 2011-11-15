@@ -1,0 +1,290 @@
+/* 
+ * omitting "assumes Gamma" in a judgment can cause crashes.
+ */
+
+package edu.uwm.cs.cs732;
+
+terminals contradiction s unit value
+          Unit fn Ref ref loc emp Emp in
+
+
+syntax
+
+n ::= 0 | s n
+
+t ::= unit
+  | fn x:T => t[x]
+  | x
+  | t t
+  | ref t
+  | *t
+  | t = t
+  | loc n
+
+T ::= Unit
+  | T -> T
+  | Ref T
+
+m ::= emp
+  | t , m
+
+M ::= Emp
+  | T , M
+
+Gamma ::= *
+      | Gamma, x : T
+
+
+judgment absurd: contradiction
+
+
+judgment isavalue: t value
+
+
+---------- val-unit
+unit value
+
+-------------------- val-fn
+fn x:T => t[x] value
+
+----------- val-loc
+loc n value
+
+
+
+/** Allocation.
+ * m <- t = loc n ! m' means
+ * if we allocate a space for t in m, we get location n in a new memory m'
+ */
+judgment alloc: m <- t = loc n ! m
+
+---------------------------- alloc-emp
+emp <- t = loc 0 ! (t,emp)
+
+m <- t = loc n ! m'
+--------------------------------- alloc-nonemp
+(t',m) <- t = loc s n ! (t',m')
+
+
+/** Lookup.
+ * m { n } = t
+ * means we lookup n in m and get t
+ */
+judgment lookup: m { n } = t
+
+----------- lookup-zero
+(t,m){0} = t
+
+m{n} = t'
+-------------- lookup-nonzero
+(t,m){s n} = t'
+
+
+/** Update
+ * {n -> t} m = m'
+ * means we update location n in memory to be t and get new memory m'
+ */
+judgment update: {n -> t}m = m'
+
+------------------------ update-zero
+{0 -> t'}(t,m) = (t',m)
+
+{n -> t'}m = m'
+------------------------- update-nonzero
+{s n -> t'}(t,m) = (t,m')
+
+
+/** Type Lookup.
+ * M { n } = T
+ * means we lookup n in M and get T
+ */
+judgment type-lookup: M { n } = T
+
+------------ type-lookup-zero
+(T,M){0} = T
+
+M{n} = T'
+--------------- type-lookup-nonzero
+(T,M){s n} = T'
+
+
+/** Type Allocate
+ * {n -> T}M = M'
+ * means we allocate location n in memory to be T and get new memory-type M'
+ * (This uses notation analogous to update because we know what
+ * the "n" to use will be.)
+ */
+judgment type-allocate: {n -> T}M = M'
+
+------------------------ type-allocate-zero
+{0 -> T}Emp = (T,Emp)
+
+{n -> T'}M = M'
+------------------------- type-allocate-nonzero
+{s n -> T'}(T,M) = (T,M')
+
+
+judgment eval: t!m -> t!m
+
+t1!m -> t1'!m'
+---------------------- E-App1
+t1 t2 !m -> t1' t2 !m'
+
+t1 value
+t2!m -> t2'!m'
+---------------------- E-App2
+t1 t2 !m -> t1 t2' !m'
+
+t2 value
+----------------------------------- E-AppAbs
+(fn x:T => t1[x]) t2 !m -> t1[t2]!m
+
+t!m -> t'!m'
+------------------------ E-Ref
+ref t ! m -> ref t' ! m'
+
+t value
+m <- t = loc n ! m'
+----------------------- E-RefV
+ref t ! m -> loc n ! m'
+
+t!m -> t'!m'
+------------------ E-Deref
+*t ! m -> *t' ! m'
+
+m{n} = t
+--------------- E-DerefLoc
+*loc n!m -> t!m
+
+t1!m -> t1'!m'
+-------------------------- E-Assign1
+t1 = t2 !m -> t1' = t2 !m'
+
+t1 value
+t2!m -> t2'!m'
+-------------------------- E-Assign2
+t1 = t2 !m -> t1 = t2' !m'
+
+t value
+{n -> t}m = m'
+----------------------- E-Assign
+loc n = t !m -> unit!m'
+
+
+
+
+judgment isvar: t : T in Gamma
+assumes Gamma
+
+----------------------- var
+x : T in (Gamma, x : T)
+
+
+judgment type: Gamma; M |- t : T
+assumes Gamma
+
+----------------------- T-Unit
+Gamma; M |- unit : Unit
+
+t : T in Gamma
+----------------- T-Var
+Gamma; M |- t : T
+
+Gamma, x : T1; M |- t[x] : T2
+---------------------------------------- T-Abs
+Gamma; M |- (fn x:T1 => t[x]) : T1 -> T2
+
+Gamma; M |- t1 : T2 -> T1
+Gamma; M |- t2 : T2
+-------------------------- T-App
+Gamma; M |- t1 t2 : T1
+
+Gamma; M |- t : T
+------------------------- T-Ref
+Gamma; M |- ref t : Ref T
+
+Gamma; M |- t : Ref T
+--------------------- T-Deref
+Gamma; M |- *t : T
+
+Gamma; M |- t1 : Ref T
+Gamma; M |- t2 : T
+-------------------------- T-Assign
+Gamma; M |- t1 = t2 : Unit
+
+M{n} = T
+------------------------- T-Loc
+Gamma; M |- loc n : Ref T
+
+
+// Definition 13.5.1
+// (We use M instead of Sigma)
+// Also, M appears twice because it has two different roles to play
+judgment memtyping: Gamma; M |- m : M
+assumes Gamma
+
+
+---------------------- emp-ok
+Gamma; M0 |- emp : Emp
+
+
+Gamma; M0 |- t : T
+Gamma; M0 |- m : M
+-------------------------- nonemp-ok
+Gamma; M0 |- (t,m) : (T,M)
+
+
+
+judgment includes: M >= M
+
+-------- includes-emp
+M >= Emp
+
+M >= M'
+--------------- includes-nonemp
+(T,M) >= (T,M')
+
+
+
+judgment preserved: Gamma; M |- t : T; m /\ M >= M
+
+
+Gamma; M' |- t : T
+Gamma; M' |- m' : M'
+M' >= M
+----------------------------------------- preserved-def
+Gamma; M' |- t : T; m' /\ M' >= M
+
+
+
+
+
+// Theorem 13.5.3
+theorem preservation :
+    forall d: Gamma; M |- t : T
+    forall o: Gamma; M |- m : M
+    forall e: t!m -> t'!m'
+    exists Gamma; M' |- t' : T; m' /\ M' >= M.
+    _ : Gamma; M' |- t' : T; m' /\ M' >= M by induction on d:
+	case rule
+	    v: t : T in Gamma
+	    -------------------- T-Var
+	    _: Gamma; M |- t : T
+	is
+	    _: Gamma; M |- t' : T; m' /\ M >= M by case analysis on v:
+		case rule
+		    ----------------------- var
+		    _: x':T in Gamma', x':T
+		is
+		    _: Gamma',x':T; M |- t' : T; m' /\ M >= M 
+			    by case analysis on e:
+		    end case analysis
+		end case
+	    end case analysis
+	end case
+    end induction
+end theorem
+
+
+
+

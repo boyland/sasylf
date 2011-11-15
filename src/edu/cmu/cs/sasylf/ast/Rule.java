@@ -346,7 +346,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	@Override
 	public NonTerminal getAssumes() {
-	  return getJudgment().getAssumes();
+	  return getJudgment().getAssume();
 	}
 	
 	public Judgment getJudgment() {
