@@ -95,8 +95,23 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		ctx.ruleSet.add(startRule);
 	}
 	
+	private int contextFormCode = -1;
+	
 	public boolean isInContextForm() {
-		// one case must have only terminals
+	  if (contextFormCode == -1) {
+	    contextFormCode = computeContextForm();
+	  }
+		return contextFormCode > 0;
+	}
+	
+  /**
+   * Determine whether this is a context syntax (a "Gamma").
+   * If so, return a positive numer (the number of ways variables are bound).
+   * Otherwise return 0.
+   * @return positive if indeed, otherwise zero.
+   */
+  private int computeContextForm() {
+    // one case must have only terminals
 		int terminalCaseCount = 0;
 		int contextCaseCount = 0;
 		for (Clause c : getClauses()) {
@@ -104,42 +119,43 @@ public class Syntax extends Node implements ClauseType, ElemType {
 				terminalCaseCount++;
 			else if (isContextCase(c))
 				contextCaseCount++;
+			else return 0;
 		}
-		boolean isContext = terminalCaseCount == 1 && contextCaseCount == getClauses().size()-1; 
+		boolean isContext = terminalCaseCount == 1 && contextCaseCount > 0; 
 		if (isContext)
 			debug("Found a context: " + this.getNonTerminal());
-		return isContext;
-	}
+		return isContext ? contextCaseCount : 0;
+  }
 
 	/** A context case has a recursive reference to the syntax and a variable
 	 */
 	private boolean isContextCase(Clause c) {
 		// look for sub-part of gamma clause, a NonTerminal with same type as this
-	  // TODO: SHould ensure there is only ONE recursive reference and only ONE variable.
-		boolean found = false;
+	  int vars = 0;
+	  int recs = 0;
+	  
 		for (ElemType eType: c.getElemTypes()) {
-			if (eType == this)
-				found = true;
-			else if (eType instanceof Syntax)
-				debug("Not it: " + ((Syntax)eType).getNonTerminal());
-			else
-				debug("Not it: " + eType);				
+			if (eType == this) ++recs;
 		}
-		if (!found) {
-			debug("Not found: " + c);
+		if (recs != 1) {
+			debug("Not found: " + c + " has wrong number of recursive references: " + recs);
 			return false;
 		}
 		
 		// look for sub-part of gamma clause that is a variable
 		for (Element e : c.getElements()) {
-			if (e instanceof Variable) {
-				debug("Found a context case: " + c);
-				return true;
-			} else {
-				debug("Not a variable: " + e);
+			if (e instanceof Variable) ++vars;
+			if (e instanceof Binding) {
+			  debug("not found: " + c + " has a binding " + e);
+			  return false;
 			}
 		}
-		return false;
+		if (vars != 1) {
+		  debug("Not found: " + c + " has wrong number of variables: " + vars);
+      return false;
+    }
+		
+		return true;
 	}
 	
 	/** A terminal case has only Terminals
