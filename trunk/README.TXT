@@ -104,6 +104,8 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.0.2 (uwm 12)
+	Addressed Defect #7: syntax case analysis of variables
 1.0.2 (uwm 11)
 	Fixed Defect #6: didn't accept bindings, and crashed if rule clause given as arg
 1.0.2 (uwm 10)
