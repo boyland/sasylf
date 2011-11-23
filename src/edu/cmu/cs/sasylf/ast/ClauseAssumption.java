@@ -6,14 +6,21 @@ import java.util.Collections;
 public class ClauseAssumption extends Fact {
 
 	public ClauseAssumption(Clause c, Location location) {
-		super(null,location);
-		clause = c;
+		this(c,location,null);
 	}
 	
+  public ClauseAssumption(Clause c, Location location, Clause a) {
+    super(null,location);
+    clause = c;
+    assumes = a;
+  }
+  
 	private Clause clause;
-
+	private Clause assumes;
+	
 	@Override
 	public Element getElement() {
+	  if (assumes != null) return new AssumptionElement(getLocation(),clause,assumes);
 		return clause;
 	}
 

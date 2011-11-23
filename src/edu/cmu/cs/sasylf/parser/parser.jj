@@ -1630,7 +1630,7 @@ Theorem TheoremDeclaration() :
   | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new BindingAssumption(b, a)); }
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); }
+    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
   <EXISTS> c=Expr() "." { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*

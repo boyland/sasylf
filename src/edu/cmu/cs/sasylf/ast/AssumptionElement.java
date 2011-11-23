@@ -3,7 +3,7 @@
  */
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -12,7 +12,6 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.util.Util;
 
 /**
  * A syntax element (binding, variable or nonterminal) that is bound in a context
@@ -21,9 +20,8 @@ public class AssumptionElement extends Element {
 
   public AssumptionElement(Location l, Element e, Clause assumes) {
     super(l);
-    while (e instanceof Clause) {
+    while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
       Clause cl = (Clause)e;
-      Util.verify(cl.getElements().size() == 1, "Assumption element with a real clause??");
       e = cl.getElements().get(0);
     }
     base = e;

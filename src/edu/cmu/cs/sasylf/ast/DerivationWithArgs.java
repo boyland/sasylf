@@ -56,6 +56,8 @@ abstract public class DerivationWithArgs extends Derivation {
 			  Clause assumes = null;
 			  if (e instanceof AssumptionElement) {
 			    assumes = ((AssumptionElement)e).getAssumes();
+			    assumes = (Clause)assumes.typecheck(ctx);
+			    assumes = (Clause)assumes.computeClause(ctx, false);
 			    e = ((AssumptionElement)e).getBase();
 			  }
 			  if (e instanceof Binding) {
@@ -76,6 +78,15 @@ abstract public class DerivationWithArgs extends Derivation {
 			        ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
 			      }
 			    } 
+			  } else if (e instanceof Clause) {
+			    c = (Clause)e.typecheck(ctx);
+			    c = (Clause)c.computeClause(ctx, false);
+			    if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
+	          ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+	        }
+	        argStrings.set(i,c);
+	        f = new ClauseAssumption(c, getLocation(), assumes);
+	        // f.typecheck(ctx, false);
 			  } else {
           throw new InternalError("What sort of arg is this ? " + e);
         } 
