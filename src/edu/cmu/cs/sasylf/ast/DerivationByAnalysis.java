@@ -9,7 +9,6 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 import static edu.cmu.cs.sasylf.util.Util.*;
 import static edu.cmu.cs.sasylf.ast.Errors.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 
 public abstract class DerivationByAnalysis extends Derivation {
@@ -250,7 +249,22 @@ public abstract class DerivationByAnalysis extends Derivation {
 		if (ctx.adaptationSub != null) debug("ctx.matchTermForAdaptation.countLambdas() = "+ctx.matchTermForAdaptation.countLambdas());
 		try {
 		if (ctx.adaptationSub != null && term.countLambdas() < ctx.matchTermForAdaptation.countLambdas() && element instanceof ClauseUse && !ctx.innermostGamma.equals(((ClauseUse)element).getRoot())) {
-			term = ((ClauseUse)element).adaptTermTo(term, ctx.matchTermForAdaptation, ctx.adaptationSub, wrapUnrooted);
+		  // TODO: This whole section needs to be changed.
+      term = ((ClauseUse)element).adaptTermTo(term, ctx.matchTermForAdaptation, ctx.adaptationSub, wrapUnrooted);
+		  if (((ClauseUse)element).getRoot() == null) {
+		    while (term instanceof Abstraction) {
+		      Abstraction abs = (Abstraction)term;
+		      // Kludge: we assume we always put two things into variables at a time:
+		      Abstraction abs2 = (Abstraction)abs.getBody();
+		      if (abs2.getBody().hasBoundVar(2)) {
+		        debug("uses bound variable wrapped." + term);
+		        break;
+		      } else {
+		        debug("does not use bound variable " + term);
+		        term = abs2.getBody();
+		      }
+		    }
+		  }
 		}
 		} catch (NullPointerException e) {
 			e.printStackTrace();
