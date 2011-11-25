@@ -1,0 +1,61 @@
+/*
+ * Implicit assumes should not apply to irrelevant terms.
+ */
+ 
+terminals fn s in
+ 
+syntax
+ 
+   n ::= 0 | s n
+   
+   t ::= x | fn x => t[x] | t t
+   
+   Gamma ::= * | Gamma, x
+   
+   
+judgment var: t in Gamma
+assumes Gamma
+
+------------ var
+x in Gamma,x
+ 
+
+judgment label: Gamma;n |- t -| n
+assumes Gamma
+ 
+t in Gamma
+-------------------- L-Var
+Gamma;n |- t -| s n
+ 
+Gamma; s n0 |- t1 -| n1
+Gamma; n1 |- t2 -| n2
+------------------------- L-App
+Gamma; n0 |- t1 t2 -| n2
+
+Gamma, x; s n |- t[x] -| n'
+------------------------------- L-Abs
+Gamma; n |- fn x => t[x] -| n'
+
+
+lemma label-total:
+    forall t assumes Gamma
+    forall n assumes Gamma
+    exists Gamma; n |- t -| n'.
+    _: Gamma; n |- t -| n' by induction on t:
+        case x assumes Gamma',x is
+            v: x in (Gamma', x) by rule var
+            _: Gamma',x; n |- x -| s n by rule L-Var on v
+        end case
+        
+        case t1 t2 is
+            l1: Gamma; s n |- t1 -| n1 by induction hypothesis on t1,(s n)
+            l2: Gamma; n1 |- t2 -| n2 by induction hypothesis on t2,n1
+            _: Gamma; n0 |- t1 t2 -| n2 by rule L-App on l1,l2
+        end case
+        
+        case fn x => t1[x] is
+            l: Gamma,x; s n |- t1[x] -| n' by induction hypothesis on (t1[x] assumes Gamma,x), (s n assumes Gamma,x)
+            _: Gamma; n |- fn x=>t1[x] -| n' by rule L-Abs on l
+        end case
+    end induction
+end lemma

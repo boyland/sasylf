@@ -85,15 +85,21 @@ public class Theorem extends RuleLike {
 	          setAssumes(cu.getRoot());
 	        }				  
 				} else if (f instanceof SyntaxAssumption) {
-				  Clause c = ((SyntaxAssumption)f).getContext();
+				  SyntaxAssumption sa = (SyntaxAssumption)f;
+          Clause c = sa.getContext();
 				  if (c == null) continue;
 				  Element x = c.computeClause(ctx, false);
-				  if (x instanceof NonTerminal) setAssumes((NonTerminal)x);
+				  NonTerminal root = null;
+				  if (x instanceof NonTerminal) root = (NonTerminal)x;
 				  else {
 				    ClauseUse cu = (ClauseUse)x;
-				    if (cu.getRoot() != null) {
-	            setAssumes(cu.getRoot());
-	          } 
+				    root = cu.getRoot();
+				  }
+				  if (root != null) {
+				    if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
+				      ErrorHandler.report("assumes irrelevant for " + sa, this);
+				    }
+				    setAssumes(root);
 				  }
 				}
 			}

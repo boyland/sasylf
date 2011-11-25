@@ -87,9 +87,8 @@ at jonathan.aldrich@cs.cmu.edu.
 
 KNOWN LIMITATIONS (incomplete list)
 
-Almost all checks are implemented, including rule application,
-correct and completeness case analysis, and uses of lemmas and
-the induction hypothesis.
+The system does not check context roots: Gamma and * are treated
+almost the same way.
 
 Error messages point to the line of code and the kind of error, but
 could use some improvement.
@@ -103,6 +102,12 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.0.2 (uwm 15)
+    Addressed Defects #11, #12
+1.0.2 (uwm 14)
+    Addressed Defect #9: "assumes Gamma" spread from one NT to all later
+1.0.2 (uwm 13)
+    Addressed Defect #5: "assumes Gamma" should be required; strange things happen otherwise
 1.0.2 (uwm 12)
 	Addressed Defect #7: syntax case analysis of variables
 1.0.2 (uwm 11)

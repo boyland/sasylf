@@ -1,0 +1,69 @@
+/*
+ * implicit context should not attach to irrelevant terms
+ */
+ 
+terminals fn s in contradiction
+ 
+syntax
+ 
+   n ::= 0 | s n
+   
+   t ::= x | fn x => t[x] | t t
+   
+   Gamma ::= * | Gamma, x
+   
+   
+judgment absurd: contradiction
+
+
+judgment var: t in Gamma
+assumes Gamma
+
+------------ var
+x in Gamma,x
+ 
+
+judgment equal: n = n
+
+----- eq
+n = n
+
+
+judgment bound: Gamma |- t
+assumes Gamma
+ 
+t in Gamma
+----------- B-Var
+Gamma |- t
+ 
+
+lemma label-impossible:
+    forall l: Gamma |- t
+    exists contradiction.
+    e: 0 = 0 by rule eq
+    _: contradiction by case analysis on l:
+        case rule
+            v: t in Gamma
+            ------------- B-Var
+            _: Gamma |- t
+        is
+            _: contradiction by case analysis on v:
+                case rule
+                    ----------------- var
+                    _: x in Gamma',x
+                is
+                    // BUG: in this context, all SASyLF through uwm 14 adds "Gamma',x"
+                    // to all judgments, including e! 
+                    _: contradiction by case analysis on e: end case analysis
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+theorem impossible:
+    exists contradiction.
+    v: x in (Gamma,x) by rule var
+    b: Gamma,x |- x by rule B-Var on v
+    _: contradiction by lemma label-impossible on b
+end theorem
