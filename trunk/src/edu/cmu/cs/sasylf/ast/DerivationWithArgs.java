@@ -1,15 +1,12 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.util.Util.debug;
-import static edu.cmu.cs.sasylf.util.Util.tdebug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -51,6 +48,7 @@ abstract public class DerivationWithArgs extends Derivation {
 			  argStrings.set(i,c = (Clause)c.getElements().get(0));
 			}
 			Fact f = null;
+			// TODO: lots of duplicated code.
 			if (c.getElements().size() == 1) {
 			  Element e = c.getElements().get(0);
 			  Clause assumes = null;
@@ -87,8 +85,16 @@ abstract public class DerivationWithArgs extends Derivation {
 	        argStrings.set(i,c);
 	        f = new ClauseAssumption(c, getLocation(), assumes);
 	        // f.typecheck(ctx, false);
+			  } else if (e instanceof Terminal) {
+			    c = (Clause)c.typecheck(ctx);
+			    c = (Clause)c.computeClause(ctx, false);
+			    if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
+            ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+          }
+          argStrings.set(i,c);
+          f = new ClauseAssumption(c, getLocation(), assumes);
 			  } else {
-          throw new InternalError("What sort of arg is this ? " + e);
+          throw new InternalError("What sort of arg is this ? " + e + " : " + e.getClass());
         } 
 			} else {
 				// case for a clause given directly
