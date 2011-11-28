@@ -170,18 +170,7 @@ public class Theorem extends RuleLike {
 		}*/
 		firstInGroup.addToMap(ctx);
 
-		boolean derivationErrors = false;
-		for (Derivation d : derivations) {
-			try {
-				d.typecheck(ctx);
-			} catch (SASyLFError e) {
-				// already reported, swallow the exception
-				derivationErrors = true;
-			}
-		}
-
-		if (!derivationErrors)
-			verifyLastDerivation(ctx, theoremTerm, exists, derivations, this);
+		Derivation.typecheck(this, ctx, derivations);
 		
 		ctx.ruleMap.put(getName(), this);
 		ctx.recursiveTheorems = new HashMap<String, Theorem>();

@@ -1,12 +1,10 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
-
-import edu.cmu.cs.sasylf.term.Substitution;
-import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.term.UnificationFailed;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class Case extends Node {
@@ -25,11 +23,7 @@ public class Case extends Node {
 		Map<String, Fact> oldMap = ctx.derivationMap;
 		ctx.derivationMap = new HashMap<String, Fact>(oldMap);
 
-		for (Derivation d : derivations) {
-			d.typecheck(ctx);
-		}
-
-		Theorem.verifyLastDerivation(ctx, ctx.currentGoal, ctx.currentGoalClause, derivations, this);
+		Derivation.typecheck(this, ctx, derivations);
 		
 		ctx.derivationMap = oldMap;
 	}

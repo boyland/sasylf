@@ -55,6 +55,10 @@ public class Judgment extends Node implements ClauseType {
 		ctx.ruleSet.add(r);
 
 	}
+	
+	protected void setForm(Clause f) {
+	  form = f;
+	}
 
 	public void typecheck(Context ctx) {
 		//form.typecheck(synMap, varMap);

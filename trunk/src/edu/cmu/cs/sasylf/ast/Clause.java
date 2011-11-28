@@ -1,19 +1,29 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug_parse;
+import static edu.cmu.cs.sasylf.util.Util.verify;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
-import edu.cmu.cs.sasylf.grammar.*;
-import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.grammar.AmbiguousSentenceException;
+import edu.cmu.cs.sasylf.grammar.NotParseableException;
+import edu.cmu.cs.sasylf.grammar.ParseNode;
+import edu.cmu.cs.sasylf.grammar.RuleNode;
+import edu.cmu.cs.sasylf.grammar.Symbol;
+import edu.cmu.cs.sasylf.grammar.TerminalNode;
 import edu.cmu.cs.sasylf.term.Pair;
-import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 public class Clause extends Element implements CanBeCase {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
@@ -129,7 +139,7 @@ public class Clause extends Element implements CanBeCase {
 	public Element typecheck(Context ctx) {
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e = elements.get(i);
-			elements.set(i, elements.get(i).typecheck(ctx));
+			elements.set(i, e.typecheck(ctx));
 			/*if (e instanceof NonTerminal) {
 		NonTerminal nt = (NonTerminal) e;
 		elements.set(i, nt.typecheck(synMap, varMap));
@@ -144,10 +154,76 @@ public class Clause extends Element implements CanBeCase {
 	public Element computeClause(Context ctx, boolean inBinding) {
 		return computeClause(ctx, inBinding, ctx.getGrammar());
 	}
+	
 	public Element computeClause(Context ctx, boolean inBinding, edu.cmu.cs.sasylf.grammar.Grammar g) {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
-		RuleNode parseTree = null;
+    /*
+     * JTB: The following section is to implement parsing of "and" judgments
+     * without requiring us to change the grammar.
+     */
+    boolean hasAnd = false;
+    for (GrmTerminal t : symList) {
+      if (t.getElement() instanceof AndJudgment.AndTerminal) {
+        hasAnd = true;
+        break;
+      }
+    }
+    if (hasAnd) {
+      List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
+      List<GrmTerminal> andList = new ArrayList<GrmTerminal>();
+      List<GrmTerminal> aList = new ArrayList<GrmTerminal>();
+      for (GrmTerminal t : symList) {
+        if (t.getElement() instanceof AndJudgment.AndTerminal) {
+          symLists.add(aList);
+          aList = new ArrayList<GrmTerminal>();
+          andList.add(t);
+        } else {
+          aList.add(t);
+        }
+      }
+      symLists.add(aList);
+      List<ClauseUse> clauses = new ArrayList<ClauseUse>();
+      List<Judgment> types = new ArrayList<Judgment>();
+      for (List<GrmTerminal> sublist : symLists) {
+        Element e = parseClause(ctx,inBinding,g,sublist);
+        if (e instanceof ClauseUse) {
+          ClauseUse cu = (ClauseUse)e;
+          ClauseType ty = cu.getConstructor().getType();
+          if (ty instanceof Judgment) types.add((Judgment)ty);
+          else ErrorHandler.report("cannot 'and' syntax only judgments", this);
+          clauses.add(cu);
+        } else {
+          ErrorHandler.report("can only 'and' clauses together, not nonterminals", this);
+        }
+      }
+      List<Element> newElements = new ArrayList<Element>();
+      Iterator<GrmTerminal> ands = andList.iterator();
+      for (ClauseUse cl : clauses) {
+        for (Element e : cl.getElements()) {
+          newElements.add(e);
+        }
+        if (ands.hasNext()) newElements.add(ands.next().getElement());
+      }
+      ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
+      return new AndClauseUse(getLocation(),newElements,cd,clauses);
+    }
+    /*
+     * JTB: End of section to implement parsing of "and" judgments
+     */
+		return parseClause(ctx, inBinding, g, symList);
+	}
+	
+  /**
+   * @param ctx
+   * @param inBinding
+   * @param g
+   * @param symList
+   * @return
+   */
+  private Element parseClause(Context ctx, boolean inBinding,
+      edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
+    RuleNode parseTree = null;
 		try {
 			parseTree = g.parse(symList);
 			return computeClause(parseTree);
@@ -184,7 +260,7 @@ public class Clause extends Element implements CanBeCase {
 			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " + e.getParseTrees() /*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
 		}
-	}
+  }
 	
 	private Element computeClause(RuleNode parseTree) {
 		List<Element> newElements = new ArrayList<Element>();
