@@ -102,6 +102,9 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.0.2 (uwm 16)
+    RFE: Defect #13: Adds "and" implicit judgments
+    RFE: Defect #10: Parenthesis on syntax cases 
 1.0.2 (uwm 15)
     Addressed Defects #11, #12
 1.0.2 (uwm 14)

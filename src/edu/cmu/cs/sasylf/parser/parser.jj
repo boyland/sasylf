@@ -71,7 +71,6 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
 			|| getToken(1).kind == COMMA
-			|| getToken(1).kind == AND
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == INTEGER_LITERAL;
@@ -242,6 +241,7 @@ TOKEN :
 | < UNPROVED: "unproved" >
 | < SOLVE: "solve" >
 | < AND: "and" >
+| < PROOF: "proof" >
 }
 
 /* LITERALS */
@@ -1628,20 +1628,27 @@ Theorem TheoremDeclaration() :
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
   | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new BindingAssumption(b, a)); }
+    { thm.getForalls().add(new BindingAssumption(b, a)); a = null; }
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
-  <EXISTS> c=Expr() "." { thm.setExists(c); }
+  <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
+  "." { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
   <END> (<THEOREM> | <LEMMA>)
   { return thm; }
 }
 
 Derivation Derivation() :
-{ Token t; String s; Clause c; Derivation d; }
+{ Token t; Token t2; Token a; String s; Clause c; Clause c2; Derivation d; }
 {
-   t=<IDENTIFIER> <COLON> c=Expr() <BY> d=Justification(t, c)
+   (     t=<IDENTIFIER> <COLON> c=Expr()
+   (a=<AND> t2=<IDENTIFIER> <COLON> c2=Expr()
+     { t.image = t.image+","+t2.image;
+       AndJudgment.addAnd(c,new Location(a),c2); })*
+     |
+     t=<PROOF> { c = null; })
+   <BY> d=Justification(t, c)
   { return d; }
 }
 
@@ -1700,8 +1707,8 @@ Derivation Justification(Token startT, Clause c) :
       return d; }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
-      d.getArgStrings().add(clauseFor(t));
-	  return d; }
+      d.getArgStrings().add(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )*
+	{ return d; }
 }
 
 Case Case() :
@@ -1709,7 +1716,7 @@ Case Case() :
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
-  ( LOOKAHEAD(2) t=<CASE> cl=Clause() [<ASSUMES> ce=Clause()] <IS> { ca = new SyntaxCase(new Location(t), cl, ce); }
+  ( LOOKAHEAD(2) t=<CASE> cl=Expr() [<ASSUMES> ce=Expr()] <IS> { ca = new SyntaxCase(new Location(t), cl, ce); }
 
   | t=<CASE> <RULE>
     ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()

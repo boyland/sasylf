@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -69,7 +70,13 @@ public class ClauseUse extends Clause {
 
 	private ClauseDef cons;
 	
-	/** True iff assumptions environment is rooted in a variable */
+	
+	@Override
+  public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
+    return this; // already done
+  }
+
+  /** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
 	public NonTerminal getRoot() { return root; }
 	public boolean isRootedInVar() { return root != null; }
