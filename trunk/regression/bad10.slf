@@ -1,0 +1,138 @@
+/* 
+ * bad10.slf: need to check bindings inside bindings!
+ */
+
+ 
+package edu.uwm.cs.cs732;
+
+terminals contradiction unit value
+          Unit in fn Rec fold
+
+
+syntax
+
+t ::= unit
+  | fn x:T => t[x]
+  | x
+  | t t
+  | fold T t
+
+T ::= 
+    Unit
+  | T -> T
+  | Rec X => T[X]
+  | X
+
+Gamma ::= *
+      | Gamma, x : T
+
+
+
+judgment absurd: contradiction
+
+
+judgment equality: t == t
+
+------ eq
+t == t
+
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+judgment isavalue: t value
+
+
+---------- val-unit
+unit value
+
+-------------------- val-fn
+fn x:T => t[x] value
+
+
+t value
+---------------- val-fold
+(fold T t) value
+
+
+
+judgment isvar: t : T in Gamma
+assumes Gamma
+
+----------------------- var
+x : T in (Gamma, x : T)
+
+
+judgment type: Gamma |- t : T
+assumes Gamma
+
+-------------------- T-Unit
+Gamma |- unit : Unit
+
+t : T in Gamma
+-------------- T-Var
+Gamma |- t : T
+
+Gamma, x : T1 |- t[x] : T2
+------------------------------------- T-Abs
+Gamma |- (fn x:T1 => t[x]) : T1 -> T2
+
+Gamma |- t1 : T2 -> T1
+Gamma |- t2 : T2
+----------------------- T-App
+Gamma |- t1 t2 : T1
+
+
+T2 == Rec X => T1[X]
+Gamma |- t1 : T1[T2]
+---------------------------- T-Fld
+Gamma |- fold T2 t1 : T2
+
+
+judgment canonical: Gamma |- t value : T
+assumes Gamma
+
+Gamma, x:T1 |- t[x] : T2
+------------------------------------------- canonical-fn
+Gamma |- (fn x:T1 => t[x]) value : T1 -> T2
+
+--------------------------- canonical-unit
+Gamma |- unit value : Unit
+
+
+//TODO: New canonical form
+
+t value
+Gamma |- t :T1[Rec X => T1[X]]
+---------------------------------------------------------- canonical-fold
+Gamma |- (fold (Rec X => T1[X]) t) value : Rec X => T1[X]
+
+lemma canonical-forms :
+    forall d: Gamma |- t : T
+    forall v: t value
+    exists Gamma |- t value : T .
+    _: Gamma |- t value : T by induction on v:
+    case rule
+        e:t1 value
+        -------------------- val-fold
+        _:fold T1 t1 value
+    is
+        _:Gamma |- fold T1 t1 value : T by case analysis on d:
+            case rule
+                f:T1 == Rec X => T2[X]
+                g:Gamma |- t1 : T2[T1]
+                ---------------------------- T-Fld
+                _:Gamma |- fold T1 t1 : T1
+            is
+                h:Gamma |- t1 : T2[Rec X => T1[X]] by unproved // problem not detected in 1.0.2 (uwm 16)
+                _:Gamma |- (fold T1 t1) value : T1 by rule canonical-fold on e,h
+            end case
+        end case analysis
+    end case
+
+    end induction
+end lemma
+

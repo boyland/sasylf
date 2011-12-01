@@ -112,6 +112,7 @@ public class Binding extends Element {
 		List<ElemType> myType = new ArrayList<ElemType>();
 		for (Element e : elements) {
 			myType.add(e.getElemType());
+			e.checkBindings(bindingTypes, nodeToBlame);
 		}
 		List<ElemType> prevType = bindingTypes.get(this.getNonTerminal().getSymbol());
 		debug("binding for " + this + " is " + bindingTypes);
