@@ -121,10 +121,16 @@ Notes:
 
   * by induction hypothesis
 
+  * by case analysis
+
+  * by induction
+
   * by x
 
   * by x,y,z
+
   * by inversion
+
   * by weakening
   * by exchange
-* by substitution
+  * by substitution
