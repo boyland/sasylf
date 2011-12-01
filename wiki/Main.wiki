@@ -1,0 +1,57 @@
+#summary Using SASyLF
+
+= Introduction =
+
+SASyLF is a natural-language based proof system.
+We are using this Wiki format to create a manual of use.
+
+
+= Structure of SASyLF FIles =
+
+A SASyLF file consists of the following parts:
+ * An optional package declaration
+ * A list of terminals
+ * Description of (abstract) syntax
+ * Declaration of judgments and the rules for each.
+ * Theorems
+Currently, there is no way to refer to elements declared in other files,
+or even to declare new judgments after the theorems have started.
+
+== Example ==
+
+{{{
+package edu.uwm.cs.plus;
+
+terminals S
+
+syntax
+
+n ::= 0
+  | S n
+
+
+judgment plus: n + n = n
+
+--------- plus-zero
+0 + n = n
+
+n1 + n2 = n3
+---------------- plus-succ
+S n1 + n2 = S n3
+
+
+lemma plus-right-zero:
+    forall n
+    exists n + 0 = n.
+    proof by induction on n:
+        case 0 is
+            _: 0 + 0 = 0 by rule plus-zero
+        end case
+
+        case S n' is
+            p': n' + 0 = n' by induction hypothesis on n'
+            _: S n' + 0 = S n' by rule plus-succ on p'
+        end case
+    end induction
+end lemma
+}}}
