@@ -19,6 +19,8 @@ or even to declare new judgments after the theorems have started.
 
 == Example ==
 
+(The following example uses syntax first provided in SASyLF 1.0.2 (uwm 16).)
+
 {{{
 package edu.uwm.cs.plus;
 
@@ -55,3 +57,74 @@ lemma plus-right-zero:
     end induction
 end lemma
 }}}
+
+== Comments ==
+
+SASyLF files support both kinds of C++ comments: line comments starting with `//` and comments starting `/*` and ending with `*/`.  Sometimes a linebreak is semantically meaningful, in which case it is important to know that both kinds of comments swallow linebreaks.
+
+== Terminals ==
+
+In the abstract syntax, any terminals that consist of (Unicode) letters must be declared
+as terminals.  Terminals consisting entirely of non-letter (Unicode) characters need not and should not be declared.  In the preceding example, `S` was declared, but not `0`.
+
+== Syntax ==
+
+BNF is used for abstract syntax.  Any word (series of letters) is a nonterminal unless it was
+declared as a terminal.  Nonterminals may be declared in any order, but all nonterminals must be declared.  SASyLF keywords are usually not permitted as terminals (or nonterminals),
+but as an exception `case` and `end` may be used.  Neither may SASyLF special operators:
+the period `.`, the pipe `|`, parentheses `()`, brackets `[]`, and a long series of dashes (at least 3 long).
+
+The syntax may use HOAS by using brackets after a nonterminal.  Inside the brackets is a _variable_ name (traditionally `x`) that must occur elsewhere in the same production.  Exactly one production for some nonterminal must consist only of the variable name.  This indicates the nonterminal associated with the variable.
+Any other use of a variable can only be used for a 'context' nonterminal.
+
+A context nonterminal must have one production with nothing in it but terminals, and the other productions should be _binding_ productions: with a recursive use of the context nonterminal, a single occurrence of one variable and other terminals and nonterminals, for example:
+{{{
+Gamma ::= *
+         | Gamma, x : T
+         | Gamma, X :: K
+}}}
+Currently each variable must be bound by exactly one context.
+
+== Judgments ==
+
+Each judgment is declared with a name, used internally and for identification, but otherwise unimportant and a syntax production.  If a judgment includes a context nonterminal, it must additionally be declared that is `assumes` the nonterminal.  Currently judgments can only assume a single context nonterminal.
+
+After the judgment declaration are the rules that give the (definitive) rules for generating facts of the judgment.  Each rule consists of a series of _premises_, instances of judgments (the same judgment or other judgments) each on its own line.  If a premise must cross a line boundary, the linebreak should be hidden using a `//` comment.  After all the premises is a bar made up of many (at least 3) minus/hyphen symbols (as seen in the example).
+After the bar comes the conclusion, an instance of the judgment being declared.
+
+Judgments may be used in the premises of other judgments, before or after their own declaration without restriction, but all the rules following a judgment declaration must have conclusions
+that are instances of that judgment.
+
+Judgments and syntax are parsed using a GLR parser that finds all legal parses; an error is signaled if there are more than one possible parse.  It may be necessary to use parentheses to make the structure unambiguous; sometimes parentheses are used to help the human reader as well.
+
+Every binding of a variable in a context should be associated with exactly one rule
+which may have no premises in which the conclusion has one instance of the context binding production and one additional instance of the variable.
+
+== Theorems ==
+
+Notes:
+  * mutual induction
+
+  * exists and
+
+  * "proof" keyword
+
+=== Derivations ===
+
+Notes:
+
+  * by unproved
+
+  * by rule
+
+  * by lemma/theorem
+
+  * by induction hypothesis
+
+  * by x
+
+  * by x,y,z
+  * by inversion
+  * by weakening
+  * by exchange
+* by substitution
