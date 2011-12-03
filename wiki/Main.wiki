@@ -89,7 +89,8 @@ Currently each variable must be bound by exactly one context.
 
 Each judgment is declared with a name, used internally and for identification, but otherwise unimportant and a syntax production.  If a judgment includes a context nonterminal, it must additionally be declared that is `assumes` the nonterminal.  Currently judgments can only assume a single context nonterminal.
 
-After the judgment declaration are the rules that give the (definitive) rules for generating facts of the judgment.  Each rule consists of a series of _premises_, instances of judgments (the same judgment or other judgments) each on its own line.  If a premise must cross a line boundary, the linebreak should be hidden using a `//` comment.  After all the premises is a bar made up of many (at least 3) minus/hyphen symbols (as seen in the example).
+After the judgment declaration are the rules that give the (definitive) rules for generating facts of the judgment.  Each rule consists of a series of _premises_, instances of judgments (the same judgment or other judgments) each on its own line.  If a premise must cross a line boundary, the linebreak should be hidden using a `//` comment.  After all the premises is a bar made up of many (at least 3) minus/hyphen symbols (as seen in the example) and the name of the rule, which unlike many
+names in SASyLF may include hyphens.
 After the bar comes the conclusion, an instance of the judgment being declared.
 
 Judgments may be used in the premises of other judgments, before or after their own declaration without restriction, but all the rules following a judgment declaration must have conclusions
@@ -102,11 +103,29 @@ which may have no premises in which the conclusion has one instance of the conte
 
 == Theorems ==
 
-Notes:
-  * mutual induction
+A theorem has inputs (`forall`) and outputs (`exists`).
+The inputs are either syntax, for which one uses a name such as `t1'` implicitly giving the type (here `t`) or a judgment which must be named.  A nonterminal input may be declared as potentially using variables from a context by adding the declaration `assumes` _cname_ where _cname_ is a context nonterminal.
+The result (after `exists`) is not named but must be terminated with a period (`.`).
+Any names occurring in the output that do not occur in the input are implicitly outputs.
+If one needs to have multiple judgment outputs, one conjoins the outputs using `and`.
 
-  * exists and
+The body of the theorem is a proof (See [Proofs]).
+In summary format is as follows:
 
-  * "proof" keyword
+`theorem` <i>theorem-name</i> `:`
+  `forall` <i>name</i> ( `assumes` <i>cname</i> )?
 
+  `forall` <i>name</i> `:` <i>judgment</i>
+    ...
+  `exists` <i>judgment</i> (`and` <i>judgment</i> ...) `.`
+
+   <i>proof</i>
+`end theorem`
+
+Instead of the keyword `theorem`, one may use `lemma`.  SASyLF currently does not check whether a theorem is declared as a theorem rather than a lemma: they are treated the same way.
+Along with rules, theorem names may include hyphens.
+
+One may declare theorems (or lemmas) as mutually inductive by joining them with the `and` keyword.
+If a mutually inductive theorem does not explicitly give its induction variable (as explained in the [Proofs]
+page), the first argument is assumed to be the inductive argument.
 See [Proofs] for details in how proofs are written.
