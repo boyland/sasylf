@@ -11,4 +11,28 @@ A derivation has the form:
   *  _name_ : _judgment_  (`and` _name_ : _judgment_ ...) `by` _justification_
 Alternately, the last derivation of a block may use the keyword `proof` to substitute for all that comes before the keyword `by`; it is implied that one is justifying the result that must be moved.
 
- 
+ == Justification ==
+
+Notes:
+
+  * by unproved
+
+  * by rule
+
+  * by lemma/theorem
+
+  * by induction hypothesis
+
+  * by case analysis
+
+  * by induction
+
+  * by x
+
+  * by x,y,z
+
+  * by inversion
+
+  * by weakening
+  * by exchange
+  * by substitution
