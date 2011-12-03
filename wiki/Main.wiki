@@ -4,7 +4,7 @@
 
 SASyLF is a natural-language based proof system.
 We are using this Wiki format to create a manual of use.
-This documentation covers the 1.1.0 and later releases.
+This documentation covers SASyLF 1.1.0 and later releases.
 
 
 = Structure of SASyLF FIles =
@@ -108,9 +108,8 @@ The inputs are either syntax, for which one uses a name such as `t1'` implicitly
 The result (after `exists`) is not named but must be terminated with a period (`.`).
 Any names occurring in the output that do not occur in the input are implicitly outputs.
 If one needs to have multiple judgment outputs, one conjoins the outputs using `and`.
-
 The body of the theorem is a proof (See [Proofs]).
-In summary format is as follows:
+In summary the format is as follows:
 
 `theorem` <i>theorem-name</i> `:`
   `forall` <i>name</i> ( `assumes` <i>cname</i> )?
