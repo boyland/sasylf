@@ -45,7 +45,7 @@ This section described each of the ways in which derivations can be justified:
     If a case analysis would need only one case and there is at least one premise,
     then it can be written as a justification of the premises (conjoined by `and` if there are
     more than one) using this form.<br>
-    An older of inversion may be used if one is interested in only a single premise 
+    An older form of inversion may be used if one is interested in only a single premise 
     (even if multiple premises exist for the rule),
     and this premise does not require the binding of new variables.  Then one
     can justify just this single premise by inversion.
@@ -92,6 +92,7 @@ If the target of the case analysis is a syntax term (instance of a syntactic non
 
     `case` _production_ `is` _proof_ `end case`
 
+All the variables in the production must be new, for example by adding a suffix such as `1` or `'`.
 If the syntax term is bound in a non-empty context and a variable is one of the possibilities for the nonterminal, then one must provide a variable case that shows a possible binding for the variable in the context (using a new context):
 
     `case` x `assumes` (Gamma', x:T) `is` _proof_ `end case`
@@ -100,4 +101,26 @@ SASyLF currently does not support case analysis of terms using a variable, such 
 
 === Rule Case ===
 
-_IN PROGRESS_
+If target of a case analysis is an instance of a judgment, then each case must be a _rule case_
+of the form:
+
+    `case rule`
+        _name_ `:` _premise_<br>
+        ...<br>
+        `----------------` _rule-name_<br>
+        _name_ `:` _result_
+    `is`
+        _proof_
+    `end case`
+
+Each premise and the result must be named, although the result is usually named `_` because there's no need to get a new name for the target derivation we are pattern matching.
+
+The case must have the most general instance of the rule whose result matches the target derivation.
+If the rule result cannot be made to match the target, it is an error to have a case for the rule at all.
+In the body of the proof, one can use the named premises to justify other derivations.
+One may also assume the unification implied by the pattern match.  All uses inside the local proof of any derivation from outside the scope of the pattern match are localized through application of the required unification.
+
+If, because of pattern matching, only one case is possible, _inversion_ (q.v.) may be a good option to use.
+If _no_ case applies at all, then the case analysis can be empty.  This allows us to justify any (type valid) judgment at all.
+
+_TODO: var binding cases_
