@@ -1,0 +1,14 @@
+#summary A description of how SASyLF proofs are structured
+
+= Introduction =
+
+The body of a theorem is a block of steps (derivations), the last of which must be the result to be proved.
+This page describes how each step in a proof is structured, and how steps can be proved in SASyLF.
+
+= Details =
+
+A derivation has the form:
+  *  _name_ : _judgment_  (`and` _name_ : _judgment_ ...) `by` _justification_
+Alternately, the last derivation of a block may use the keyword `proof` to substitute for all that comes before the keyword `by`; it is implied that one is justifying the result that must be moved.
+
+ 
