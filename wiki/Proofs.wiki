@@ -5,34 +5,83 @@
 The body of a theorem is a block of steps (derivations), the last of which must be the result to be proved.
 This page describes how each step in a proof is structured, and how steps can be proved in SASyLF.
 
+The meta-syntax ( _stuff_ )? is used to express optional parts and ellipsis (...) to indicate appropriate repetion.
+
 = Details =
 
 A derivation has the form:
-  *  _name_ : _judgment_  (`and` _name_ : _judgment_ ...) `by` _justification_
-Alternately, the last derivation of a block may use the keyword `proof` to substitute for all that comes before the keyword `by`; it is implied that one is justifying the result that must be moved.
+  *  _name_ : _judgment_  (`and` _name_ : _judgment_ ...)? `by` _justification_
+Alternately, the last derivation of a block may use the keyword `proof` to substitute for all that comes before the keyword `by`; it is implied that one is justifying the result that must be proved.
 
- == Justification ==
 
-Notes:
+== Justification ==
 
-  * by unproved
+This section described each of the ways in which derivations can be justified:
+  * `by unproved`
+     This justification is accepted with a warning.  This justification is useful when
+     writing a proof to outline steps before the proof is completed.
 
-  * by rule
+  * `by` _name_
+    This proves the current derivation by referencing a previous derivation.
 
-  * by lemma/theorem
+  * `by` _name_ `,` _name_ `,` ...
+    This proves a conjunction derivation (an `and` judgment) 
+    by showing how each part was proved     earlier.
 
-  * by induction hypothesis
+  * `by case analysis on` _name_ `:` _case_ _case_ ... `end case analysis`
+    This justification is delegated to a case analysis on a _target_, an existing derivation or syntax term.
+    Each case has a pattern that must match the target.  
+    Pattern matching is at a single level only.
+    Each case has a block of derivations, the last of which must be the derivation
+    being proved here (and which therefore may use the `proof` keyword).
 
-  * by case analysis
+  * `by induction on` _name_ `:` _case_ _case_ ... `end induction`
+    This justification is a case analysis that, at the same time, indicates the inductive
+    term, judgment which must be an explicit input of the theorem.
+    This form of justification can only be done at the top-level of a theorem,
+    and there can only be one induction justification per theorem.
 
-  * by induction
+  * `by inversion of` _rule-name_ `on` _name_
+    If a case analysis would need only one case and there is at least one premise,
+    then it can be written as a justification of the premises (conjoined by `and` is there is
+    more than one) using this form.<br>
+    An older of inversion may be used if one is interested in only a single premise 
+    (even if multiple premises exist for the rule),
+    and this premise does not require the binding of new variables.  Then one
+    can justify just this single premise by inversion.
 
-  * by x
+  * `by rule` _rule-name_ (`on` _name_ `,` _name_ ...)?
+    The derivation is justified by applying the given named rule to the previously proved derivations.
+    The derivations must satisfy the rule's premises, in order.
 
-  * by x,y,z
+  * `by theorem` theorem-name (`on` _name_ `,` `(`_syntax_`)` `,` ...)?
+    The derivation is proved by calling a theorem with the given inputs; judgment
+    inputs are provided using previously proved derivations, syntax inputs by giving
+    the syntax, which if more than a single term, must be parenthesized.
+    <br>
+    If the theorem being called is the one being proved, or a mutually inductive theorem,
+    then the provided input for the induction variable must be a subderivation / subsyntax
+    of the input for this theorem.  If the mutually inductive theorem occurs earlier in the
+    file, the inductive argument may be the same as the one for this theorem.
+ 
+  * `by induction hypothesis` (`on` ...)?
+    This is an inductive (recursive) call to the theorem being proved.  Otherwise,
+    it works the same as a theorem call (see previous).
 
-  * by inversion
+  * `by solve`
+    This justification asks SASyLF to try to find a proof.  If it can, it prints the steps.
+    Automatic solving is very limited.
 
-  * by weakening
-  * by exchange
-  * by substitution
+The following three justifications concern contexts and bindings:
+  * `by weakening on` _name_
+     This justification applies if the derivation can be proved from an existing derivation by adding    additional variables/assumptions.
+
+  * `by exchange on` _name_
+    This justification applies if the derivation can be proved from an existing derivation by reordering variable bindings and/or assumptions.  The new derivation must not move uses of a variable out of scope.
+
+  * `by substitution on`  _name_`,` _name_
+    This justification applies if the derivation can be proved from an existing derivation (first argument) with an assumption supplied (second argument).  The assumption must be an instance of the special rule related to the binding being replaced.  It is not a syntax term to substitute for the bound variable.
+
+== Cases ==
+ 
+_IN PROGRESS_
