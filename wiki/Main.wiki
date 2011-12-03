@@ -109,28 +109,4 @@ Notes:
 
   * "proof" keyword
 
-=== Derivations ===
-
-Notes:
-
-  * by unproved
-
-  * by rule
-
-  * by lemma/theorem
-
-  * by induction hypothesis
-
-  * by case analysis
-
-  * by induction
-
-  * by x
-
-  * by x,y,z
-
-  * by inversion
-
-  * by weakening
-  * by exchange
-  * by substitution
+See [Proofs] for details in how proofs are written.
