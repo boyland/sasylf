@@ -43,7 +43,7 @@ This section described each of the ways in which derivations can be justified:
 
   * `by inversion of` _rule-name_ `on` _name_
     If a case analysis would need only one case and there is at least one premise,
-    then it can be written as a justification of the premises (conjoined by `and` is there is
+    then it can be written as a justification of the premises (conjoined by `and` if there are
     more than one) using this form.<br>
     An older of inversion may be used if one is interested in only a single premise 
     (even if multiple premises exist for the rule),
@@ -84,4 +84,20 @@ The following three justifications concern contexts and bindings:
 
 == Cases ==
  
+There are two forms for cases: those for syntax and those for judgments.
+
+=== Syntax Case ===
+
+If the target of the case analysis is a syntax term (instance of a syntactic nonterminal), then (aside from variables) one must provide one case for each production for the nonterminal.  Each case takes the form
+
+    `case` _production_ `is` _proof_ `end case`
+
+If the syntax term is bound in a non-empty context and a variable is one of the possibilities for the nonterminal, then one must provide a variable case that shows a possible binding for the variable in the context (using a new context):
+
+    `case` x `assumes` (Gamma', x:T) `is` _proof_ `end case`
+
+SASyLF currently does not support case analysis of terms using a variable, such as `t1[x]`.
+
+=== Rule Case ===
+
 _IN PROGRESS_
