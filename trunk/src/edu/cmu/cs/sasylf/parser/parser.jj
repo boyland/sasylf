@@ -1705,6 +1705,8 @@ Derivation Justification(Token startT, Clause c) :
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
       return d; }
+  | LOOKAHEAD(2) t=<IDENTIFIER> (<MINUS>|<ON>)     { ErrorHandler.report("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+       throw new AssertionError("should not get here");     }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )*
