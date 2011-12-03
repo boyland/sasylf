@@ -18,17 +18,17 @@ public class Main {
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
-		if (args.length == 0 || (args.length == 1 && args[0].equals("--help"))) {
-			System.err.println("usage: sasylf file1.slf");
-			System.err.println("   or: sasylf --version");
-			System.err.println("   or: sasylf --help");
-			System.err.println("   or: sasylf --verbose (prints out theorem names as it checks them)");
-			System.err.println("   or: sasylf --LF file1.slf (extra info about LF terms in certain error messages)");
+		if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
+			System.err.println("usage: sasylf file1.slf ...");
+			System.err.println("   or: sasylf --version (print version)");
+			System.err.println("   or: sasylf --help (print this message)");
+			System.err.println("   or: sasylf --verbose file1.slf ... (prints out theorem names as it checks them)");
+			System.err.println("   or: sasylf --LF file1.slf ... (extra info about LF terms in certain error messages)");
 			return;
 		}
 		int oldErrorCount = 0;
-		if (args.length == 1 && args[0].equals("--version")) {
-			System.out.println("SASyLF version 1.0.2 (uwm 16)");
+		if (args.length >= 1 && args[0].equals("--version")) {
+			System.out.println("SASyLF version 1.1.0");
 			return;
 		}
 		// TODO: may want to add command line argument for explicit error messages on case analysis -- see Rule.getErrorDescription()

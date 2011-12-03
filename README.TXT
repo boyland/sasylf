@@ -102,47 +102,18 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
-1.0.2 (uwm 16)
-    RFE: Defect #13: Adds "and" implicit judgments
-    RFE: Defect #10: Parenthesis on syntax cases 
-1.0.2 (uwm 15)
-    Addressed Defects #11, #12
-1.0.2 (uwm 14)
-    Addressed Defect #9: "assumes Gamma" spread from one NT to all later
-1.0.2 (uwm 13)
-    Addressed Defect #5: "assumes Gamma" should be required; strange things happen otherwise
-1.0.2 (uwm 12)
-	Addressed Defect #7: syntax case analysis of variables
-1.0.2 (uwm 11)
-	Fixed Defect #6: didn't accept bindings, and crashed if rule clause given as arg
-1.0.2 (uwm 10)
-	Fixed Defect #3: unsoundness.  May break some existing examples
-1.0.2 (uwm 9)
-    Permit syntax checking of binders, e.g. lambdas (not yet of variables)
-1.0.2 (uwm 8)
-    Inversion checks implemented; does not handle a new variable above the line
-1.0.2 (uwm 7)
-    Fixed defect #4.
-1.0.2 (uwm 6)
-    Mutual induction: by default induction on first argument.
-    Revert change in "uwm 3": dot no longer will be permitted in syntax (reserved for modules)
-    Correctly identifies variables in contexts e.g. Gamma, X2 <: Top, X1 <: X2
-    Substitution now handles cases where the antecedent also has a context.
-1.0.2 (uwm 5)
-    Mutual induction checked,
-    recursion permitted under same restriction as "induction hypothesis"
-1.0.2 (uwm 4)
-    Substitution is checked
-1.0.2 (uwm 3)	Syntax
-	Lexical errors cleaned up (JavaCC generated messages a confused mess of double quote)
-	Files read in unicode, permit unicode operators (identifiers already handled), see lambda-unicode.slf
-	Dot permitted in syntax except at end of line (reserved for "exists")
-	"Inversion" partially checked
-1.0.2 (uwm 2)	Syntax
-	Permit "|", "case" and "end" in syntax.
-1.0.2 (uwm 1)	Checking
-	Check weakening, exchange
-	Print warnings for unchecked derivations
+1.1.0	UWM changes:
+    Address Issues #1, #2, #3, #4, #5, #6, #7, #9, #10, #11. #12, #13, #14
+    Added implicit "and" judgments
+    Induction and case analysis for HOAS
+	Implemented all remaining checks:
+	   inversion
+	   mutual induction
+	   exchange, weakening, substitution
+	SLF files read in UTF-8: unicode operators permitted
+	Various bug fixes
+	Regression test files
+	Improved error messages
 1.0.2	Various bug fixes
 	Better error messages
 0.23	Fixed bug where an exception was thrown if substitution was used with too few arguments
