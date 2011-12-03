@@ -4,6 +4,7 @@
 
 SASyLF is a natural-language based proof system.
 We are using this Wiki format to create a manual of use.
+This documentation covers the 1.1.0 and later releases.
 
 
 = Structure of SASyLF FIles =
@@ -19,7 +20,6 @@ or even to declare new judgments after the theorems have started.
 
 == Example ==
 
-(The following example uses syntax first provided in SASyLF 1.0.2 (uwm 16).)
 
 {{{
 package edu.uwm.cs.plus;
