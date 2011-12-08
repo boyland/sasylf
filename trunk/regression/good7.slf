@@ -1,0 +1,55 @@
+/* 
+ * and judgments don't handle contexts correctly.
+ */
+
+package edu.uwm.cs.good;
+
+terminals contradiction fn unit Unit
+
+
+syntax
+
+t ::= x
+  | unit
+  | t t
+  | fn x:T => t[x]
+
+T ::= Unit
+  | T -> T
+
+Gamma ::= *
+  | Gamma, x:T
+
+
+judgment type: Gamma |- t : T
+assumes Gamma
+
+------------------ T-Var
+Gamma, x:T |- x:T 
+
+
+-------------------- T-Unit
+Gamma |- unit : Unit
+
+
+Gamma |- t1 : T2 -> T1
+Gamma |- t2 : T2
+----------------------- T-App
+Gamma |- t1 t2 : T1
+
+Gamma, x:T |- t[x] : T'
+--------------------------------- T-Abs
+Gamma |- fn x:T => t[x] : T' -> T
+
+
+lemma and2:
+    forall d: Gamma |- t : T'
+    exists Gamma |- t : T' and Gamma |- t : T'.
+    proof by d,d
+end lemma
+
+lemma and2a:
+    forall d: Gamma, x:T |- t[x] : T'
+    exists Gamma, x:T |- t[x] : T' and Gamma, x:T |- t[x] : T'.
+    proof by lemma and2 on d
+end lemma
