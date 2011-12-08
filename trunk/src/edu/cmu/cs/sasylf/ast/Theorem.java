@@ -219,6 +219,7 @@ public class Theorem extends RuleLike {
 			try {
 				debug("end of theorem ("+last.getLocation().getLine()+"): unifying " + derivTerm + " to match " + theoremTerm);
 				debug("current sub = " + ctx.currentSub);
+				debug("wrapping sub = " + ctx.adaptationSub);
 				Substitution instanceSub = derivTerm.instanceOf(theoremTerm);
 				// must not require instantiating free variables
 				if (!instanceSub.avoid(ctx.inputVars)) {

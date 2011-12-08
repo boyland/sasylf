@@ -95,7 +95,7 @@ public class RuleCase extends Case {
 		// did we increase the number of lambdas?
 		int lambdaDifference =  adaptedCaseAnalysis.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 		Substitution oldAdaptationSub = ctx.adaptationSub;
-		Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap(ctx.adaptationMap);
+		Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap<NonTerminal,AdaptationInfo>(ctx.adaptationMap);
 		NonTerminal oldInnermostGamma = ctx.innermostGamma;
 		Term oldMatchTerm = ctx.matchTermForAdaptation;
 		
@@ -131,8 +131,9 @@ public class RuleCase extends Case {
 			ctx.innermostGamma = info.nextContext;
 			verify(info.nextContext != null, "internal invariant violated");
 		}
-		Term adaptedConcTerm = concTerm.substitute(adaptationSub);
 		debug("concTerm: " + concTerm);
+		Term adaptedConcTerm = DerivationByAnalysis.adapt(concTerm, conclusion.getElement(), ctx, false); //concTerm.substitute(adaptationSub);
+		debug("adapted concTerm: " + adaptedConcTerm);
 
 		
 		// find the conclusion term from the matched case term
@@ -201,6 +202,7 @@ public class RuleCase extends Case {
 				verify(caseResult.remove(pair), "internal invariant broken");
 				break;
 			} catch (UnificationFailed uf) {
+			  debug("candidate " + candidate + " is not an instance of " + caseTerm);
 				//uf.printStackTrace();
 				continue;
 			}/* catch (RuntimeException rt) {
@@ -322,18 +324,17 @@ public class RuleCase extends Case {
 	/** Computes a term representing the current rule case, with actual premises and conclusion */
 	private Term computeTerm(Context ctx) {
 		Term concTerm = conclusion.getElement().asTerm();
-		debug("concTerm = " + concTerm + " currentSub = " + ctx.currentSub);
+		concTerm = DerivationByAnalysis.adapt(concTerm, conclusion.getElement(), ctx, false);
 		
 		List<Term> args = new ArrayList<Term>();
 		for (int i = 0; i < getPremises().size(); ++i) {
 			Term argTerm = getPremises().get(i).getElement().asTerm();
+			argTerm = DerivationByAnalysis.adapt(argTerm,getPremises().get(i).getElement(), ctx, false);
 			args.add(argTerm);
 		}
 		args.add(concTerm);
 		Term ruleTerm = App(getRule().getRuleAppConstant(), args);
 
-		debug("ruleTerm = " + ruleTerm + " currentSub = " + ctx.currentSub);
-		ruleTerm = ruleTerm.substitute(ctx.currentSub);
 		debug("new term = " + ruleTerm);
 
 		return ruleTerm;

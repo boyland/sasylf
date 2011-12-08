@@ -69,13 +69,24 @@ public abstract class Derivation extends Fact {
 	    // else if (i == n-1) do a check match NOW
 	    d.typecheck(ctx);
 	  }
-	  // JTB: TODO: change to use checkMatch:
+	  if (n == 0) {
+	    ErrorHandler.report(Errors.NO_DERIVATION, node);
+	  }
+	  // JTB: TODO: change to use local version:
 	  Theorem.verifyLastDerivation(ctx, ctx.currentGoal, ctx.currentGoalClause, derivations, node);
 	}
 	
+	// JTB: This has DIFFERENT failure modes than Theorem.verifyLastDerivation
+	@SuppressWarnings("unused")
+  private static void verifyLastDerivation(Context ctx, Term goalTerm, Clause goalClause, List<Derivation> derivations, Node node) {
+	  Derivation last = derivations.get(derivations.size()-1);
+    checkMatch(last,ctx,goalClause,last.getElement(), Errors.WRONG_RESULT.getText());
+	}
+	
 	public static void checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
-	  checkMatch(node,ctx,DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false),
-	      DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false),errorMsg);
+	  Term matchTerm = DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false);
+    Term suppliedTerm = DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false);
+    checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg);
 	}
 	
 	/**
@@ -91,6 +102,7 @@ public abstract class Derivation extends Fact {
     try {
       debug("match = " + matchTerm + ", supplied = " + suppliedTerm);
       debug("current sub = " + ctx.currentSub);
+      debug("wrapping sub = " + ctx.adaptationSub);
       debug("current inputVars = " + ctx.inputVars);
       Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
       debug("instance sub = " + instanceSub);

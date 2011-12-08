@@ -250,8 +250,13 @@ public abstract class DerivationByAnalysis extends Derivation {
 		try {
 		if (ctx.adaptationSub != null && term.countLambdas() < ctx.matchTermForAdaptation.countLambdas() && element instanceof ClauseUse && !ctx.innermostGamma.equals(((ClauseUse)element).getRoot())) {
 		  // TODO: This whole section needs to be changed.
+		  // JTB: newly added: fix issue #16
+		  debug("term before new sub: " + term);
+		  term = term.substitute(ctx.currentSub);
+      debug("term after new sub: " + term);
       term = ((ClauseUse)element).adaptTermTo(term, ctx.matchTermForAdaptation, ctx.adaptationSub, wrapUnrooted);
-		  if (((ClauseUse)element).getRoot() == null) {
+      debug("term after adapt: " + term);
+      if (((ClauseUse)element).getRoot() == null) {
 		    while (term instanceof Abstraction) {
 		      Abstraction abs = (Abstraction)term;
 		      // Kludge: we assume we always put two things into variables at a time:
@@ -277,6 +282,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 	 * and also adapting the context to include assumptions currently in scope
 	 */
 	public static Term adapt(Term term, NonTerminal originalContext, Context ctx) {
+	  term = term.substitute(ctx.currentSub); // JTB: Added for Issue #16
 		NonTerminal targetContext = ctx.innermostGamma;
 		debug("adapting from " + originalContext + " to " + targetContext + " on " + term);
 		
