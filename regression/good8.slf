@@ -1,0 +1,189 @@
+/* 
+ * A detection of variable in a context,
+ * doesn't correctly commute with patern matching, before or after.
+ */
+
+package edu.uwm.cs.good;
+
+terminals contradiction fn unit Unit in
+
+
+syntax
+
+t ::= x
+  | unit
+  | t t
+  | fn x:T => t[x]
+
+T ::= Unit
+  | T -> T
+
+Gamma ::= *
+  | Gamma, x:T
+
+
+judgment var: t in Gamma
+assumes Gamma
+
+------------------ var
+x in Gamma, x:T
+
+
+// A stripped down, trivial reduction
+judgment reduce: Gamma |- t -> t
+assumes Gamma
+
+t in Gamma
+--------------- R-Var
+Gamma |- t -> t
+
+// This is accepted
+lemma reduction-confluent0:
+    forall r1: Gamma |- t1 -> t2
+    forall r2: Gamma |- t1 -> t3
+    exists Gamma |- t2 -> t3.
+    _: Gamma |- t2 -> t3 by case analysis on r1:
+	case rule
+	    v: t1 in Gamma
+	    -------------------- R-Var
+	    _: Gamma |- t1 -> t1
+	is
+	    _: Gamma |- t2 -> t3 by case analysis on r2:
+		case rule
+		    _: t1 in Gamma
+		    -------------------- R-Var
+		    _: Gamma |- t1 -> t1
+		is
+		    _: Gamma |- t2 -> t3 by r1
+		end case
+	    end case analysis
+	end case
+    end case analysis
+end lemma
+
+// This takes the last lemma and ADDS a pattern match on "v"
+// in between which should have no effect:
+lemma reduction-confluent1:
+    forall r1: Gamma |- t1 -> t2
+    forall r2: Gamma |- t1 -> t3
+    exists Gamma |- t2 -> t3.
+    _: Gamma |- t2 -> t3 by case analysis on r1:
+	case rule
+	    v: t1 in Gamma
+	    -------------------- R-Var
+	    _: Gamma |- t1 -> t1
+	is
+	    _: Gamma |- t2 -> t3 by case analysis on v:
+		case rule
+		    ------------------ var
+		    _: x in Gamma',x:T
+		is
+		    _: Gamma |- t2 -> t3 by case analysis on r2:
+			case rule
+			    _: t1 in Gamma
+			    -------------------- R-Var
+			    _: Gamma |- t1 -> t1
+			is
+			    _: Gamma |- t2 -> t3 by r1
+			end case
+		    end case analysis
+		end case
+	    end case analysis
+	end case
+    end case analysis
+end lemma
+
+// another attempt on the inner pattern match:
+lemma reduction-confluent2:
+    forall r1: Gamma |- t1 -> t2
+    forall r2: Gamma |- t1 -> t3
+    exists Gamma |- t2 -> t3.
+    _: Gamma |- t2 -> t3 by case analysis on r1:
+	case rule
+	    v: t1 in Gamma
+	    -------------------- R-Var
+	    _: Gamma |- t1 -> t1
+	is
+	    _: Gamma |- t2 -> t3 by case analysis on v:
+		case rule
+		    ------------------ var
+		    _: x in Gamma',x:T
+		is
+		    _: Gamma |- t2 -> t3 by case analysis on r2:
+			case rule
+			    _: x in Gamma',x:T
+			    ----------------------- R-Var
+			    _: Gamma',x:T |- x -> x
+			is
+			    _: Gamma |- t2 -> t3 by r1
+			end case
+		    end case analysis
+		end case
+	    end case analysis
+	end case
+    end case analysis
+end lemma
+
+// a third attempt succeeds in the match,
+// but now the result is not accepted.
+lemma reduction-confluent3:
+    forall r1: Gamma |- t1 -> t2
+    forall r2: Gamma |- t1 -> t3
+    exists Gamma |- t2 -> t3.
+    _: Gamma |- t2 -> t3 by case analysis on r1:
+	case rule
+	    v: t1 in Gamma
+	    -------------------- R-Var
+	    _: Gamma |- t1 -> t1
+	is
+	    _: Gamma |- t2 -> t3 by case analysis on v:
+		case rule
+		    ------------------ var
+		    _: x in Gamma',x:T
+		is
+		    _: Gamma |- t2 -> t3 by case analysis on r2:
+			case rule
+			    _: t1'[x] in Gamma',x:T
+			    --------------------------------- R-Var
+			    _: Gamma',x:T |- t1'[x] -> t1'[x]
+			is
+			    _: Gamma |- t2 -> t3 by r1
+			end case
+		    end case analysis
+		end case
+	    end case analysis
+	end case
+    end case analysis
+end lemma
+
+// now we can prove something with r1, but it isn't what we need:
+lemma reduction-confluent4:
+    forall r1: Gamma |- t1 -> t2
+    forall r2: Gamma |- t1 -> t3
+    exists Gamma |- t2 -> t3.
+    _: Gamma |- t2 -> t3 by case analysis on r1:
+	case rule
+	    v: t1 in Gamma
+	    -------------------- R-Var
+	    _: Gamma |- t1 -> t1
+	is
+	    _: Gamma |- t2 -> t3 by case analysis on v:
+		case rule
+		    ------------------ var
+		    _: x in Gamma',x:T
+		is
+		    _: Gamma |- t2 -> t3 by case analysis on r2:
+			case rule
+			    _: t1'[x] in Gamma',x:T
+			    --------------------------------- R-Var
+			    _: Gamma',x:T |- t1'[x] -> t1'[x]
+			is
+			    _: Gamma',x:T |- t1'[x] -> x by r1
+			end case
+		    end case analysis
+		end case
+	    end case analysis
+	end case
+    end case analysis
+end lemma
+

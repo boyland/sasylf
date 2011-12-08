@@ -4,8 +4,7 @@ import static edu.cmu.cs.sasylf.ast.Errors.EXPECTED_VARIABLE;
 import static edu.cmu.cs.sasylf.ast.Errors.MISSING_ASSUMPTION_RULE;
 import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.pair;
-import static edu.cmu.cs.sasylf.util.Util.debug;
-import static edu.cmu.cs.sasylf.util.Util.verify;
+import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -421,7 +420,7 @@ public class ClauseUse extends Clause {
 	public static Term doWrap(Term term, List<String> varNames, List<Term> varTypes, Substitution sub) {
 
 		// bind in free vars
-		debug("before binding in free vars: " + term.substitute(sub) + " with types " + varTypes);
+		debug("before binding in free vars: " + term + " with types " + varTypes);
 		term.bindInFreeVars(varTypes, sub, 1);
 		term = term.substitute(sub);
 		/*for (int j = i-1; j >= 0; --j) {
