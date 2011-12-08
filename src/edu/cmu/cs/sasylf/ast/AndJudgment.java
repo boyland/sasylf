@@ -80,10 +80,20 @@ public class AndJudgment extends Judgment {
   private static Clause makeForm(Location l, List<Judgment> parts) {
     Clause result = new Clause(l);
     boolean started = false;
+    NonTerminal context = null;
     for (Judgment j : parts) {
       if (started) result.getElements().add(makeAndTerminal(l));
       else started = true;
       for (Element e : j.getForm().getElements()) {
+        if (e instanceof NonTerminal && ((NonTerminal)e).getType().isInContextForm()) {
+          if (context == null) {
+            context = (NonTerminal)e;
+          } else {
+            if (!context.equals(e)) {
+              ErrorHandler.report("All contexts in an 'and' judgment must be the same", l);
+            }
+          }
+        }
         result.getElements().add(e);
       }
     }
@@ -128,7 +138,17 @@ public class AndJudgment extends Judgment {
   
   @Override
   public void defineConstructor(Context ctx) {
+    super.getForm().typecheck(ctx);
   }
   
+  
+  @Override
+  public void typecheck(Context ctx) {
+    super.typecheck(ctx);
+    for (Rule r : super.getRules()) {
+      r.typecheck(ctx, this);
+    }
+  }
+
   public List<Judgment> getJudgments() { return parts; }
 }

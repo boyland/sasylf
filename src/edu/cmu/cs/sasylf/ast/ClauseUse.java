@@ -117,6 +117,7 @@ public class ClauseUse extends Clause {
 			if (! (e instanceof Terminal) && i != assumeIndex 
 					&& !(cons.getElements().get(i) instanceof Variable)) {
 				Element defE = cons.getElements().get(i);
+				if (defE instanceof NonTerminal && ((NonTerminal)defE).getType().isInContextForm()) continue;
 				Term t = null;
 				if (defE instanceof Binding) {
 					Binding defB = (Binding) defE;
