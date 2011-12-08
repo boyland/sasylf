@@ -92,7 +92,10 @@ public class ClauseDef extends Clause {
 					}
 					argType = Term.wrapWithLambdas(argType, varTypes);
 				} else if (e instanceof NonTerminal){
-					argType = ((NonTerminal)e).getType().typeTerm();
+				  // JTB: The following check is needed for AndClauses which can have multiple
+				  // contexts.
+				  if (((NonTerminal)e).getType().isInContextForm()) continue;
+				  argType = ((NonTerminal)e).getType().typeTerm();
 				} else if (e instanceof Clause) {
 					argType = ((ClauseUse)e).getConstructor().asTerm();
 				} else {
