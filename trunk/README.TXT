@@ -102,6 +102,10 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.1.2	Bug fixes
+    Address Issue #17
+1.1.1	Bug fixes
+    Address Issues #15, #16
 1.1.0	UWM changes:
     Address Issues #1, #2, #3, #4, #5, #6, #7, #9, #10, #11. #12, #13, #14
     Added implicit "and" judgments

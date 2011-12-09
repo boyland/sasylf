@@ -68,7 +68,8 @@ abstract public class DerivationWithArgs extends Derivation {
 			    f = ctx.derivationMap.get(s);
 			    if (f == null) {
 			      FreeVar fake = new FreeVar(s,null);
-			      if (ctx.varMap.containsKey(s) || ctx.synMap.containsKey(s) || ctx.inputVars.contains(fake)) {
+			      if (ctx.varMap.containsKey(s) || ctx.synMap.containsKey(s) || ctx.inputVars.contains(fake) ||
+			          ctx.currentSub.getMap().containsKey(fake)) {
 			        // case for a use of a one element clause
 			        f = new SyntaxAssumption(s, getLocation(),assumes);
 			        f.typecheck(ctx, false);

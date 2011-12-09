@@ -1,0 +1,77 @@
+/* 
+ * can't call theorems with nonterminals
+ */
+
+package edu.uwm.cs.good;
+
+terminals S
+
+
+syntax
+
+n ::= 0 | S n
+
+
+judgment eq: n = n
+
+----- eq-z
+0 = 0
+
+n1 = n2
+----------- eq-s
+S n1 = S n2
+
+lemma eq-reflexive:
+    forall n 
+    exists n = n.
+    _: n = n by induction on n:
+	case 0 is
+	    _: 0 = 0 by rule eq-z
+	end case
+	case S n1 is
+	    e: n1 = n1 by induction hypothesis on n1
+	    _: S n1 = S n1 by rule eq-s on e
+	end case
+    end induction
+end lemma
+
+lemma eq-transitive:
+    forall e12: n1 = n2
+    forall e23: n2 = n3
+    exists n1 = n3.
+    _: n1 = n3 by induction on e23:
+	case rule
+	    -------- eq-z
+	    _: 0 = 0
+	is
+	    _: n1 = 0 by case analysis on e12:
+		case rule
+		    -------- eq-z
+		    _: 0 = 0
+		is
+		    // should use rule eq-z, but using lemma should be OK
+		    // 0 gets a syntax error, so student chose n2 instead
+		    // ("correct" solution is to parenthesize 0)
+		    _: 0 = 0 by lemma eq-reflexive on n2
+		end case
+	    end case analysis
+	end case
+
+	case rule
+	    e23': n2' = n3'
+	    --------------- eq-s
+	    _: S n2' = S n3'
+	is
+	    _: n1 = S n3' by case analysis on e12:
+		case rule
+		    e12': n1' = n2'
+		    ---------------- eq-s
+		    _: S n1' = S n2'
+		is
+		    e13': n1' = n3' by induction hypothesis on e12',e23'
+		    _: S n1' = S n3' by rule eq-s on e13'
+		end case
+	    end case analysis
+	end case
+    end induction
+end lemma
