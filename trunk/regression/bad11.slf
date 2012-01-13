@@ -1,0 +1,59 @@
+terminals fn value Unit in
+
+syntax 
+
+t ::= x
+    | t t
+    | fn x => t[x]
+
+T ::= Unit
+    | T -> T
+
+Gamma ::= *
+      | Gamma, x : T
+
+judgment isvalue : t value
+
+---------------------- val-abs
+(fn x => t[x]) value
+
+judgment eval: t -> t
+assumes Gamma
+
+t1 -> t1'
+----------------- E-App1
+t1 t2 -> t1' t2
+
+t1 value
+t2 -> t2'
+----------------- E-App2
+t1 t2 -> t1 t2'
+
+t2 value
+------------------------------- E-AppAbs
+(fn x => t12[x]) t2 -> t12[x]
+
+judgment isvar: t : T in Gamma
+assumes Gamma
+
+----------------------- var
+x : T in (Gamma, x : T)
+
+judgment type: Gamma |- t : T
+assumes Gamma
+
+Gamma, x : T1 |- t[x] : T2
+------------------------------------- T-Abs
+Gamma |- (fn x => t[x]) : T1 -> T2
+
+Gamma |- t1 : T2 -> T3
+Gamma |- t2 : T2
+----------------------- T-App
+Gamma |- t1 t2 : T3
+
+
+lemma nothing :
+  forall dt: Gamma |- t : T
+  exists Gamma |- t : T.
+  _: Gamma |- t:T by dt
+end lemma

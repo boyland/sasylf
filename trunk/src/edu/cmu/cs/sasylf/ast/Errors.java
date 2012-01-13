@@ -13,6 +13,7 @@ public enum Errors {
 	MISSING_CASE			("must provide a case for "),
 	EXTRA_CASE				("case is redundant or unnecessary"),
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
+	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal in assumes clause"),
 	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	SYNTAX_CASE_FOR_DERIVATION ("When case-analyzing a derivation, must use rule cases, not syntax cases"),
 	UNBOUND_VAR_CASE,
