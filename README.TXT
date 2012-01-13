@@ -1,6 +1,7 @@
-SASyLF, version 1.0.2
+SASyLF, version 1.1.3
 
 Copyright (c) 2009 by Jonathan Aldrich
+Additional contributions by John Boyland
 
 This software is distributed under the Eclipse Public License Version 1.0
 ("EPL"). A copy of the EPL is provided with this distribution and is also

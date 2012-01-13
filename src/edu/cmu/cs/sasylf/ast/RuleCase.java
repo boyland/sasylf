@@ -122,7 +122,7 @@ public class RuleCase extends Case {
 			ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference, info.varNames, info.varTypes);
 
 			// may not be the same as the previous context...
-			if (ctx.innermostGamma.equals(info.nextContext))
+			if (ctx.innermostGamma != null && ctx.innermostGamma.equals(info.nextContext))
 				ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " + ctx.innermostGamma, this);
 			// ...or any prior context
 			if (ctx.adaptationMap.containsKey(ctx.innermostGamma))

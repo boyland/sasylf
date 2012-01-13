@@ -72,12 +72,14 @@ public class Judgment extends Node implements ClauseType {
 		  }
 		}
 		
-		for (Rule r : getRules()) {
-			r.typecheck(ctx, this);
-		}
-		
 		if ((getAssume() == null) && contextSyntax != null)
 			ErrorHandler.report(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this);
+		else if ((getAssume() != null) && !getAssume().getType().equals(contextSyntax))
+		  ErrorHandler.report(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), this);
+
+		for (Rule r : getRules()) {
+      r.typecheck(ctx, this);
+    }
 	}
 	
 	public Constant typeTerm() {
