@@ -4,13 +4,16 @@
     <options buildIfNeeded="true" compress="true" descriptionLocation="/SASyLF/SASyLF.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
-    <manifest generateManifest="true" mainClassHandleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf{Main.java[Main" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+    <manifest generateManifest="false" mainClassHandleIdentifier="=SASyLF/src&lt;edu.cmu.cs.sasylf{Main.java[Main" manifestLocation="/SASyLF/META-INF/MANIFEST.MF" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
         <sealing sealJar="false">
             <packagesToSeal/>
             <packagesToUnSeal/>
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <folder path="/SASyLF/icons"/>
         <javaElement handleIdentifier="=SASyLF/src"/>
+        <file path="/SASyLF/build.properties"/>
+        <file path="/SASyLF/plugin.xml"/>
     </selectedElements>
 </jardesc>

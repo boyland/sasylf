@@ -1,4 +1,4 @@
-SASyLF, version 1.1.3
+SASyLF version 1.2.0
 
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
@@ -103,6 +103,8 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.2.0	Integrated Eclipse plugin source
+1.1.3	Bug fix
 1.1.2	Bug fixes
     Address Issue #17
 1.1.1	Bug fixes
