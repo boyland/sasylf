@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="editor.perspectives.EditorPerspective"
+            icon="icons/releng_gears.gif"
+            id="editor.perspectives.EditorPerspective"
+            name="SASyLF">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="editor.editors.PropertiesEditor2"
+            contributorClass="editor.editors.PropertiesEditorContributor"
+            extensions="slf"
+            icon="icons/slf.gif"
+            id="editor.editors.PropertiesEditor2"
+            name="SASyLF editor">
+      </editor>
+      <editor
+            class="editor.editors.MainEditor.MainEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            extensions="slg"
+            icon="icons/slf.gif"
+            id="editor.editors.MainEditor.MainEditor"
+            name="%editor.name.0">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="View"
+            name="%category.name">
+      </category>
+      <view
+            category="org.eclipse.ant.ui.views"
+            class="editor.views.Rules"
+            icon="icons/copy.png"
+            id="editor.views.Rules"
+            name="%view.name">
+      </view>
+      <view
+            category="View"
+            class="editor.views.SyntaxView"
+            icon="icons/copy.png"
+            id="editor.views.SyntaxView"
+            name="%view.name.0">
+      </view>
+      <view
+            category="View"
+            class="editor.views.ExampleView"
+            icon="icons/copy.png"
+            id="editor.views.ExampleView"
+            name="%view.name.1">
+      </view>
+      <view
+            category="View"
+            class="editor.views.Lemmas"
+            icon="icons/copy.png"
+            id="editor.views.Lemmas"
+            name="%view.name.2">
+      </view>
+   </extension>
+   
+   
+   
+   
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="Operations we can do to a SASyLF file"
+            id="Editor.actionSet"
+            label="SASyLF actions"
+            visible="true">
+         <menu
+               id="Menu"
+               label="SASyLF">
+            <separator
+                  name="Group">
+            </separator>
+         </menu>
+         <action
+               class="editor.actions.SasylfAction"
+               icon="icons/sample.gif"
+               id="editor.actions.SasylfAction"
+               label="Check Proofs"
+               menubarPath="Menu/Group"
+               toolbarPath="Group"
+               tooltip="%action.tooltip">
+         </action>
+      </actionSet>
+      
+      
+      
+      
+   </extension>
+   <extension
+         id="com.cmu.hci.slfmarker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+
+</plugin>
