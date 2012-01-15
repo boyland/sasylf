@@ -12,6 +12,7 @@ import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
+import editor.actions.CheckProofsAction;
 import editor.actions.SasylfMarker;
 import editor.editors.propertyOutline.PropertyOutlinePage;
 
@@ -99,7 +100,7 @@ public class PropertiesEditor extends MultiPageEditorPart {
 		IEditorInput iei = this.getEditorInput();
 		IFileEditorInput ifi = (IFileEditorInput) iei;
 		if (iei instanceof IFileEditorInput) {
-			SasylfMarker.analyzeSlf(ifi.getFile());
+			CheckProofsAction.analyzeSlf(ifi.getFile());
 		}
 	}
 
