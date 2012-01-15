@@ -8,6 +8,7 @@ import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
+import editor.actions.CheckProofsAction;
 import editor.actions.SasylfMarker;
 import editor.editors.propertyOutline.PropertyOutlinePage;
 import editor.editors.propertyOutline.PropertyOutlinePage2;
@@ -22,7 +23,7 @@ public class PropertiesEditor2 extends TextEditor {
 		fOutlinePage.setInput(iei);
 		IFileEditorInput ifi = (IFileEditorInput) iei;
 		if (iei instanceof IFileEditorInput) {
-			SasylfMarker.analyzeSlf(ifi.getFile());
+			CheckProofsAction.analyzeSlf(ifi.getFile());
 		}
 	}
 

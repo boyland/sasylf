@@ -1,8 +1,5 @@
 package editor.actions;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -26,20 +23,16 @@ import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
- * Our sample action implements workbench action delegate. The action proxy will
- * be created by the workbench and shown in the UI. When the user tries to use
- * the action, this delegate will be created and execution will be delegated to
- * it.
- * 
+ * Check SASyLF Proofs
  * @see IWorkbenchWindowActionDelegate
  */
-public class SasylfAction implements IWorkbenchWindowActionDelegate {
+public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
 
 	/**
 	 * The constructor.
 	 */
-	public SasylfAction() {
+	public CheckProofsAction() {
 	}
 
 	// console message output
@@ -57,9 +50,9 @@ public class SasylfAction implements IWorkbenchWindowActionDelegate {
 	// conMan.addConsoles(new IConsole[] { myConsole });
 	// return myConsole;
 	// }
-	private static final String MARKER_ID = "com.cmu.hci.slfmarker";
+	private static final String MARKER_ID = SasylfMarker.MARKER_ID;
 
-	private void reportProblem(ErrorReport report, IFile file) {
+	private static void reportProblem(ErrorReport report, IFile file) {
 		IMarker marker;
 		try {
 			marker = file.createMarker(MARKER_ID);
@@ -82,24 +75,22 @@ public class SasylfAction implements IWorkbenchWindowActionDelegate {
 		}
 	}
 
-	private String analyzeSlf(IFile file) {
-		String filename = file.getLocationURI().getPath().replaceFirst("/", "");
+	public static String analyzeSlf(IFile file) {
+    StringBuilder sb = new StringBuilder();
 
-		StringBuilder sb = new StringBuilder();
+    // int oldErrorCount = 0;
 
-		// int oldErrorCount = 0;
-
-		try {
-			CompUnit cu = null;
-			try {
-				cu = DSLToolkitParser.read(new File(filename));
-			} catch (ParseException e) {
-				ErrorHandler.report(null, e.getMessage(), new Location(
-						e.currentToken.next), null, true, false);
-			} catch (FileNotFoundException e) {
-				sb.append(filename + "is not found.\n");
-			}
-			cu.typecheck();
+    try {
+      CompUnit cu = null;
+      try {
+        cu = DSLToolkitParser.read(file.getName(),file.getContents());
+      } catch (ParseException e) {
+        ErrorHandler.report(null, e.getMessage(), new Location(
+            e.currentToken.next), null, true, false);
+      } catch (CoreException e) {
+        sb.append(file.getName() + "is not found.\n");
+      }
+      cu.typecheck();
 
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported

@@ -1,4 +1,4 @@
-SASyLF version 1.2.0
+SASyLF version 1.2.1.a1
 
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
