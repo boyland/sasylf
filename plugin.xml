@@ -14,19 +14,11 @@
          point="org.eclipse.ui.editors">
       <editor
             class="org.sasylf.editors.ProofEditor"
-            contributorClass="org.sasylf.editors.PropertiesEditorContributor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             extensions="slf"
             icon="icons/slf.gif"
             id="org.sasylf.editors.ProofEditor"
             name="SASyLF editor">
-      </editor>
-      <editor
-            class="org.sasylf.editors.MainEditor.MainEditor"
-            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
-            extensions="slg"
-            icon="icons/slf.gif"
-            id="org.sasylf.editors.MainEditor.MainEditor"
-            name="%editor.name.0">
       </editor>
    </extension>
    <extension
@@ -98,7 +90,7 @@
       
    </extension>
    <extension
-         id="com.cmu.hci.slfmarker"
+         id="org.sasylf.marker"
          point="org.eclipse.core.resources.markers">
       <super
             type="org.eclipse.core.resources.problemmarker">

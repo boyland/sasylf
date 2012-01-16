@@ -17,7 +17,6 @@ Export-Package: edu.cmu.cs.sasylf,
  org.sasylf,
  org.sasylf.actions,
  org.sasylf.editors,
- org.sasylf.editors.MainEditor,
  org.sasylf.editors.propertyOutline,
  org.sasylf.perspectives,
  org.sasylf.views

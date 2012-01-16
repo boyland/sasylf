@@ -52,7 +52,7 @@ public class ProofEditor extends TextEditor {
 	@Override
 	protected void initializeEditor() {
 		super.initializeEditor();
-		setSourceViewerConfiguration(new SASyLFSourceViewerConfiguration());
+		setSourceViewerConfiguration(new ProofViewerConfiguration());
 //		setDocumentProvider(new PropertyDocumentProvider());
 	}
 	

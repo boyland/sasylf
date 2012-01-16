@@ -7,16 +7,16 @@ import org.eclipse.jface.text.Position;
 
 import edu.cmu.cs.sasylf.ast.NonTerminal;
 
-public class PropertyElement {
+public class ProofElement {
 	private String category;
 	private String content;
-	private PropertyElement parentElement;
-	private List<PropertyElement> children;
+	private ProofElement parentElement;
+	private List<ProofElement> children;
 	private int start;
 	private int end;
 	private Position position;
 	
-	public PropertyElement(String category, String content) {
+	public ProofElement(String category, String content) {
 		this.category = category;
 		this.content = content;
 	}
@@ -39,26 +39,26 @@ public class PropertyElement {
 		this.content = content;
 	}
 	
-	public void addChild(PropertyElement element) {
+	public void addChild(ProofElement element) {
 		if(this.children == null) {
-			this.children = new ArrayList<PropertyElement>();
+			this.children = new ArrayList<ProofElement>();
 		}
 		this.children.add(element);
 	}
 	
-	public List<PropertyElement> getChildren() {
+	public List<ProofElement> getChildren() {
 		return children;
 	}
 	
-	public void setChildren(List<PropertyElement> children) {
+	public void setChildren(List<ProofElement> children) {
 		this.children = children;
 	}
 
-	public PropertyElement getParentElement() {
+	public ProofElement getParentElement() {
 		return parentElement;
 	}
 
-	public void setParentElement(PropertyElement parentElement) {
+	public void setParentElement(ProofElement parentElement) {
 		this.parentElement = parentElement;
 	}	
 	

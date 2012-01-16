@@ -12,7 +12,7 @@ import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
 
 
-public class SASyLFSourceViewerConfiguration extends TextSourceViewerConfiguration {
+public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 
 	static class SingleTokenScanner extends BufferedRuleBasedScanner {
         public SingleTokenScanner (TextAttribute attribute) {
@@ -20,7 +20,7 @@ public class SASyLFSourceViewerConfiguration extends TextSourceViewerConfigurati
         }   
     }
 	
-	public SASyLFSourceViewerConfiguration (){
+	public ProofViewerConfiguration (){
 	}
 	
 	public IPresentationReconciler getPresentationReconciler (ISourceViewer sourceViewer) {

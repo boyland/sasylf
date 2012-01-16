@@ -54,7 +54,7 @@ public class ProofOutline extends ContentOutlinePage {
 
 		protected final static String SEGMENTS= "__slf_segments"; //$NON-NLS-1$
 		protected IPositionUpdater fPositionUpdater= new DefaultPositionUpdater(SEGMENTS);
-		protected List<PropertyElement> pList= new ArrayList<PropertyElement>();
+		protected List<ProofElement> pList= new ArrayList<ProofElement>();
 		
 		private Position convertLocToPos(IDocument document, Location loc) {
 			Position pos = null;
@@ -87,7 +87,7 @@ public class ProofOutline extends ContentOutlinePage {
 				return;
 			}
 			
-			PropertyElement pe = null;
+			ProofElement pe = null;
 			
 			//terminals
 //			for (Terminal t : cu.getTerminals()) {
@@ -100,7 +100,7 @@ public class ProofOutline extends ContentOutlinePage {
 //			
 			//judgments
 			for (Judgment judg : cu.getJudgments()) {
-				pe = new PropertyElement("Judgment", (judg.getName() + ": " + judg.getForm()).replaceAll("\"", ""));
+				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()).replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
 			}
@@ -116,7 +116,7 @@ public class ProofOutline extends ContentOutlinePage {
 				for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}
-				pe = new PropertyElement("Theorem", sb.toString().replaceAll("\"", ""));
+				pe = new ProofElement("Theorem", sb.toString().replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, theo.getLocation()));
 				pList.add(pe);
 				cStack.push(pe);
@@ -129,13 +129,13 @@ public class ProofOutline extends ContentOutlinePage {
 			}
 		}
 		
-		Stack<PropertyElement> cStack = new Stack<PropertyElement>();
+		Stack<ProofElement> cStack = new Stack<ProofElement>();
 
 		private void findCaseRule(IDocument document, List<Case> rList) {
 			for(Case _case : rList) {
 				if(_case instanceof RuleCase) {
 					RuleCase ruleCase = (RuleCase) _case;
-					PropertyElement pe = new PropertyElement("Case rule", ruleCase.getRuleName());
+					ProofElement pe = new ProofElement("Case rule", ruleCase.getRuleName());
 					pe.setPosition(convertLocToPos(document, ruleCase.getLocation()));
 					if(!cStack.empty()) {
 						cStack.peek().addChild(pe);
@@ -215,15 +215,15 @@ public class ProofOutline extends ContentOutlinePage {
 		 * @see ITreeContentProvider#hasChildren(Object)
 		 */
 		public boolean hasChildren(Object element) {
-			return ((PropertyElement)element).hasChildren();
+			return ((ProofElement)element).hasChildren();
 		}
 
 		/*
 		 * @see ITreeContentProvider#getParent(Object)
 		 */
 		public Object getParent(Object element) {
-			if (element instanceof PropertyElement)
-				return ((PropertyElement)element).getParentElement();
+			if (element instanceof ProofElement)
+				return ((ProofElement)element).getParentElement();
 			return null;
 		}
 
@@ -231,8 +231,8 @@ public class ProofOutline extends ContentOutlinePage {
 		 * @see ITreeContentProvider#getChildren(Object)
 		 */
 		public Object[] getChildren(Object element) {
-			if (element instanceof PropertyElement) {
-				return ((PropertyElement)element).getChildren().toArray();
+			if (element instanceof ProofElement) {
+				return ((ProofElement)element).getChildren().toArray();
 			}
 			return null;
 		}
@@ -281,7 +281,7 @@ public class ProofOutline extends ContentOutlinePage {
 		if (selection.isEmpty())
 			fTextEditor.resetHighlightRange();
 		else {
-			PropertyElement element = (PropertyElement) ((IStructuredSelection) selection).getFirstElement();
+			ProofElement element = (ProofElement) ((IStructuredSelection) selection).getFirstElement();
 			int start= element.getPosition().getOffset();
 			int length= element.getPosition().getLength();
 			try {
