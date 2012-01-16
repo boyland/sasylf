@@ -1,8 +1,6 @@
 package editor.editors.propertyOutline;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -43,10 +41,9 @@ import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 
 /**
- * A content outline page which always represents the content of the
- * connected editor in 10 segments.
+ * A content outline page which summarizes the structure of a proof file.
  */
-public class PropertyOutlinePage2 extends ContentOutlinePage {
+public class ProofOutline extends ContentOutlinePage {
 
 //	private Object rootElement;
 	/**
@@ -78,7 +75,9 @@ public class PropertyOutlinePage2 extends ContentOutlinePage {
 			} catch (CoreException e) {
 				e.printStackTrace();
 			} catch (ParseException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
+			  // handled elsewhere
+			  return;
 			}
 			
 			if(cu == null) {
@@ -246,7 +245,7 @@ public class PropertyOutlinePage2 extends ContentOutlinePage {
 	 * @param provider the document provider
 	 * @param editor the editor
 	 */
-	public PropertyOutlinePage2(IDocumentProvider provider, ITextEditor editor) {
+	public ProofOutline(IDocumentProvider provider, ITextEditor editor) {
 		super();
 		this.fDocumentProvider = provider;
 		this.fTextEditor = editor;

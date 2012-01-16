@@ -3,28 +3,21 @@ package editor.editors;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.editors.text.TextEditor;
-import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 import editor.actions.CheckProofsAction;
-import editor.actions.SasylfMarker;
-import editor.editors.propertyOutline.PropertyOutlinePage;
-import editor.editors.propertyOutline.PropertyOutlinePage2;
+import editor.editors.propertyOutline.ProofOutline;
 
-public class PropertiesEditor2 extends TextEditor {
-  public PropertiesEditor2() {}
+public class ProofEditor extends TextEditor {
+  public ProofEditor() {}
 	
 	@Override
 	public void doSave(IProgressMonitor progressMonitor) {
 		super.doSave(progressMonitor);
 		IEditorInput iei = getEditorInput();
 		fOutlinePage.setInput(iei);
-		IFileEditorInput ifi = (IFileEditorInput) iei;
-		if (iei instanceof IFileEditorInput) {
-			CheckProofsAction.analyzeSlf(ifi.getFile());
-		}
+		CheckProofsAction.analyzeSlf(this);
 	}
 
 	@Override
@@ -40,13 +33,14 @@ public class PropertiesEditor2 extends TextEditor {
 		setTitleToolTip(input.getToolTipText());
 	}
 
-	private PropertyOutlinePage2 fOutlinePage;
+	private ProofOutline fOutlinePage;
 	
-	@Override
+	@SuppressWarnings("rawtypes")
+  @Override
 	public Object getAdapter(Class adapter) {
 		if (IContentOutlinePage.class.equals(adapter)) {
 			if (fOutlinePage == null) {
-				fOutlinePage= new PropertyOutlinePage2(getDocumentProvider(), this);
+				fOutlinePage= new ProofOutline(getDocumentProvider(), this);
 				if (getEditorInput() != null)
 					fOutlinePage.setInput(getEditorInput());
 			}

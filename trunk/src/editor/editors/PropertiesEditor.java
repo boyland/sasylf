@@ -2,8 +2,6 @@ package editor.editors;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
@@ -13,7 +11,6 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 import editor.actions.CheckProofsAction;
-import editor.actions.SasylfMarker;
 import editor.editors.propertyOutline.PropertyOutlinePage;
 
 //import org.eclipse.editors.EditorsLog;
@@ -53,18 +50,6 @@ public class PropertiesEditor extends MultiPageEditorPart {
 
 	}
 
-	private Composite parent(int ops, Transfer[] transfers,
-			TextEditorDropAdapter textEditorDropAdapter) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// protected void handlePropertyChange(int propertyId) {
-	// if (propertyId == IEditorPart.PROP_DIRTY)
-	// isPageModified = isDirty();
-	// super.handlePropertyChange(propertyId);
-	// }
-
 	void updateTitle() {
 		IEditorInput input = getEditorInput();
 		setPartName(input.getName());
@@ -97,11 +82,7 @@ public class PropertiesEditor extends MultiPageEditorPart {
 		// updateTextEditorFromTree();
 		// isPageModified = false;
 		textEditor.doSave(monitor);
-		IEditorInput iei = this.getEditorInput();
-		IFileEditorInput ifi = (IFileEditorInput) iei;
-		if (iei instanceof IFileEditorInput) {
-			CheckProofsAction.analyzeSlf(ifi.getFile());
-		}
+		CheckProofsAction.analyzeSlf(textEditor);
 	}
 
 	public void doSaveAs() {
@@ -126,7 +107,9 @@ public class PropertiesEditor extends MultiPageEditorPart {
 //		}
 //		return super.getAdapter(required);
 //	}
-
+	
+	@SuppressWarnings("rawtypes")
+  @Override
 	public Object getAdapter(Class required) {
 		if (IContentOutlinePage.class.equals(required)) {
 			if (propertyOutlinePage == null) {
