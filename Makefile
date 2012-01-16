@@ -4,7 +4,7 @@
 # SASAyLF version VERSIONSTRING\r
 # where VERSION string is a valid Eclipse Version, e.g. 1.1.3
 
-VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`
+VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y%m%d'`
 .PHONY: build build-plugin
 
 build :
@@ -13,7 +13,7 @@ build :
 	(cd src && javac -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java)
 	jar cmf sasylf.mf SASyLF.jar README.TXT -C bin edu
 
-TESTBIN= bin/editor/Activator.class
+TESTBIN= bin/org/sasylf/Activator.class
 build-plugin : ${TESTBIN} README.TXT
 	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml README.TXT icons -C bin .
 

@@ -2,17 +2,10 @@ Manifest-Version: 1.0
 Bundle-Name: SASyLF Editor
 Bundle-SymbolicName: org.sasylf;singleton:=true
 Bundle-Version: 1.2.1
-Bundle-Activator: editor.Activator
+Bundle-Activator: org.sasylf.Activator
 Bundle-Vendor: sasylf.org
 Main-Class: edu.cmu.cs.sasylf.Main
-Export-Package: editor,
- editor.actions,
- editor.editors,
- editor.editors.MainEditor,
- editor.editors.propertyOutline,
- editor.perspectives,
- editor.views,
- edu.cmu.cs.sasylf,
+Export-Package: edu.cmu.cs.sasylf,
  edu.cmu.cs.sasylf.ast,
  edu.cmu.cs.sasylf.ast.grammar,
  edu.cmu.cs.sasylf.grammar,
@@ -20,7 +13,14 @@ Export-Package: editor,
  edu.cmu.cs.sasylf.prover,
  edu.cmu.cs.sasylf.spine,
  edu.cmu.cs.sasylf.term,
- edu.cmu.cs.sasylf.util
+ edu.cmu.cs.sasylf.util,
+ org.sasylf,
+ org.sasylf.actions,
+ org.sasylf.editors,
+ org.sasylf.editors.MainEditor,
+ org.sasylf.editors.propertyOutline,
+ org.sasylf.perspectives,
+ org.sasylf.views
 Bundle-ManifestVersion: 2
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,

@@ -4,28 +4,28 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            class="editor.perspectives.EditorPerspective"
+            class="org.sasylf.perspectives.EditorPerspective"
             icon="icons/releng_gears.gif"
-            id="editor.perspectives.EditorPerspective"
+            id="org.sasylf.perspectives.EditorPerspective"
             name="SASyLF">
       </perspective>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="editor.editors.ProofEditor"
-            contributorClass="editor.editors.PropertiesEditorContributor"
+            class="org.sasylf.editors.ProofEditor"
+            contributorClass="org.sasylf.editors.PropertiesEditorContributor"
             extensions="slf"
             icon="icons/slf.gif"
-            id="editor.editors.ProofEditor"
+            id="org.sasylf.editors.ProofEditor"
             name="SASyLF editor">
       </editor>
       <editor
-            class="editor.editors.MainEditor.MainEditor"
+            class="org.sasylf.editors.MainEditor.MainEditor"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             extensions="slg"
             icon="icons/slf.gif"
-            id="editor.editors.MainEditor.MainEditor"
+            id="org.sasylf.editors.MainEditor.MainEditor"
             name="%editor.name.0">
       </editor>
    </extension>
@@ -37,30 +37,30 @@
       </category>
       <view
             category="org.eclipse.ant.ui.views"
-            class="editor.views.Rules"
+            class="org.sasylf.views.Rules"
             icon="icons/copy.png"
-            id="editor.views.Rules"
+            id="org.sasylf.views.Rules"
             name="%view.name">
       </view>
       <view
             category="View"
-            class="editor.views.SyntaxView"
+            class="org.sasylf.views.SyntaxView"
             icon="icons/copy.png"
-            id="editor.views.SyntaxView"
+            id="org.sasylf.views.SyntaxView"
             name="%view.name.0">
       </view>
       <view
             category="View"
-            class="editor.views.ExampleView"
+            class="org.sasylf.views.ExampleView"
             icon="icons/copy.png"
-            id="editor.views.ExampleView"
+            id="org.sasylf.views.ExampleView"
             name="%view.name.1">
       </view>
       <view
             category="View"
-            class="editor.views.Lemmas"
+            class="org.sasylf.views.Lemmas"
             icon="icons/copy.png"
-            id="editor.views.Lemmas"
+            id="org.sasylf.views.Lemmas"
             name="%view.name.2">
       </view>
    </extension>
@@ -72,7 +72,7 @@
          point="org.eclipse.ui.actionSets">
       <actionSet
             description="Operations we can do to a SASyLF file"
-            id="Editor.actionSet"
+            id="org.sasylf.actionSet"
             label="SASyLF actions"
             visible="true">
          <menu
@@ -83,7 +83,7 @@
             </separator>
          </menu>
          <action
-               class="editor.actions.CheckProofsAction"
+               class="org.sasylf.actions.CheckProofsAction"
                icon="icons/slf.gif"
                id="editor.actions.CheckProofsAction"
                label="Check Proofs"
