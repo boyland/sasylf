@@ -39,6 +39,7 @@ import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
  * A content outline page which summarizes the structure of a proof file.
@@ -77,6 +78,8 @@ public class ProofOutline extends ContentOutlinePage {
 			} catch (ParseException e) {
 				// e.printStackTrace();
 			  // handled elsewhere
+			  return;
+			} catch (SASyLFError e) {
 			  return;
 			}
 			
