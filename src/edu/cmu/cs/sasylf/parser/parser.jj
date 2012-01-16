@@ -68,6 +68,12 @@ public class DSLToolkitParser {
       return parser.CompilationUnit();
     }
 
+    public static CompUnit read(String filename, Reader r) throws ParseException {
+      DSLToolkitParser parser = new DSLToolkitParser(r);
+      currentFile = filename;
+      return parser.CompilationUnit();       }
+      
+
     boolean isTermNoBAR() {
 		return (getToken(1).kind == IDENTIFIER && getToken(2).kind != ASSIGN)
 	        /* || (getToken(1).kind == DOT && notNL(getToken(2).specialToken)) */

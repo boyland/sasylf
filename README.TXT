@@ -1,4 +1,4 @@
-SASyLF version 1.2.1.a1
+SASyLF version 1.2.1.a2
 
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
@@ -103,6 +103,9 @@ The tool could use some documentation.
 
 RELEASE HISTORY
 
+1.2.1	Not released yet
+	Fixed issues #18, #19
+	Added "proof" and "and" as highlightable keywords
 1.2.0	Integrated Eclipse plugin source
 1.1.3	Bug fix
 1.1.2	Bug fixes

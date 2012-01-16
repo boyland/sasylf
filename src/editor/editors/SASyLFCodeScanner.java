@@ -10,9 +10,8 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWhitespaceDetector;
 import org.eclipse.jface.text.rules.IWordDetector;
-import org.eclipse.jface.text.rules.RuleBasedScanner;
-import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.MultiLineRule;
+import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
@@ -26,7 +25,8 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		"end", "induction", "analysis", "case", "of",
 		"is", "unproved", "lemma", "assumes", "inversion",
 		"hypothesis", "substitution", "premise",
-		"weakening", "exchange", "contraction", "solve"
+		"weakening", "exchange", "contraction", "solve", 
+		"proof", "and"
 	};
 	
 	private static String[] _templates = {
@@ -51,7 +51,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		IToken multiLineComment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT)));
 		IToken rule = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.RULE)));
 		
-		List rules = new ArrayList ();
+		List<IRule> rules = new ArrayList<IRule> ();
 		rules.add (new EndOfLineRule ("//", comment));
 		rules.add (new MultiLineRule ("/*", "*/", multiLineComment));
 		/*rules.add (new SingleLineRule ("N","E",comment));

@@ -13,11 +13,11 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="editor.editors.PropertiesEditor2"
+            class="editor.editors.ProofEditor"
             contributorClass="editor.editors.PropertiesEditorContributor"
             extensions="slf"
             icon="icons/slf.gif"
-            id="editor.editors.PropertiesEditor2"
+            id="editor.editors.ProofEditor"
             name="SASyLF editor">
       </editor>
       <editor
