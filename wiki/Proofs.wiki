@@ -28,14 +28,14 @@ This section described each of the ways in which derivations can be justified:
     This proves a conjunction derivation (an `and` judgment) 
     by showing how each part was proved     earlier.
 
-  * `by case analysis on` _name_ `:` _case_ _case_ ... `end case analysis`
+  * `by case analysis on` _name_ `:` _case1_ _case2_ ... `end case analysis`
     This justification is delegated to a case analysis on a _target_, an existing derivation or syntax term.
     Each case has a pattern that must match the target.  
     Pattern matching is at a single level only.
     Each case has a block of derivations, the last of which must be the derivation
     being proved here (and which therefore may use the `proof` keyword).
 
-  * `by induction on` _name_ `:` _case_ _case_ ... `end induction`
+  * `by induction on` _name_ `:` _case1_ _case2_ ... `end induction`
     This justification is a case analysis that, at the same time, indicates the inductive
     term, judgment which must be an explicit input of the theorem.
     This form of justification can only be done at the top-level of a theorem,
