@@ -11,7 +11,11 @@ In this case, you will need to use the {{{Makefile}}} to produce the JAR files.
 The SVN project is a legal Eclipse plugin project; you will need to use Eclipse to help build the Eclipse plugin JAR.
 
 To use the Eclipse plugin, you need Eclipse, version 3.6 or later.
-See http://www.eclipse.org for more information.
+See http://www.eclipse.org for how to download this free software.
+Many people find the plethora of download possibilities confusing.
+See http://www.eclipse.org/downloads/moreinfo/compare.php
+for a comparison.  If you're just interested in SASyLF and maybe Java programming, get the "Eclipse IDE for Java Developers".
+
 The Eclipse plugin JAR file should be placed in the {{{dropins/}}} directory of your Eclipse installation.
 Then restart Eclipse.
 Once this is done, you can create files with extension {{{.slf}}} and SASyLF>Check Proofs
