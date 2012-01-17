@@ -185,7 +185,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 						"(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);
 			else {
 				debug("(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);
-				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + "\n\tis not a consequence of applying rule " + getRuleName() + " to the arguments", this,
+				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments", this,
 						"SASyLF computed that result LF term should be " + explanationTerm);
 			}
 		}
