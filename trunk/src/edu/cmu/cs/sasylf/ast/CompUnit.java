@@ -5,7 +5,6 @@ import java.io.*;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Constant;
-import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -108,7 +107,7 @@ public class CompUnit extends Node {
 	public void typecheck(Context ctx) {
 		for (Syntax syn: syntax) {
 			if (declaredTerminals.contains(syn.getNonTerminal().getSymbol()))
-				ErrorHandler.report("Syntax nonterminal " + syn.getNonTerminal().getSymbol() + " may not appear in the terminals list", syn.getNonTerminal());
+				ErrorHandler.report("Syntax nonterminal " + syn.getNonTerminal().getSymbol() + " may not appear in the terminals list", syn);
 			syn.computeVarTypes(ctx.varMap);
 			ctx.synMap.put(syn.getNonTerminal().getSymbol(), syn);
 		}
@@ -116,6 +115,14 @@ public class CompUnit extends Node {
 		for (Syntax syn: syntax) {
 			syn.typecheck(ctx);
 		}
+    
+		// check if useless
+		for (Syntax syn : syntax) {
+		  if (!syn.isProductive()) {
+		    ErrorHandler.recoverableError("Syntax is unproductive.  You need a production that can actually generate a string.", syn);
+		  }
+		}
+
 		
 		computeSubordination(ctx);
 

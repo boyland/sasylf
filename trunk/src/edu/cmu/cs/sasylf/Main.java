@@ -1,15 +1,7 @@
 package edu.cmu.cs.sasylf;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
@@ -36,35 +28,7 @@ public class Main {
 		}
 		int oldErrorCount = 0;
 		if (args.length >= 1 && args[0].equals("--version")) {
-		  // Rather than include the version here, we look for README.TXT
-		  // This is rather more complex than I hoped; if we are packed up in a JAR,
-		  // it's easy to find, but otherwise, we have to go hunting.
-		  InputStream s = Main.class.getClassLoader().getResourceAsStream("README.TXT");
-		  if (s == null) {
-		    URL execdir = Main.class.getClassLoader().getResource(".");
-		    URI uri;
-		    try {
-		      uri = execdir.toURI();
-		    } catch (URISyntaxException e) {
-		      e.printStackTrace();
-		      return;
-		    }
-		    if (uri.getScheme().equals("file")) {
-		      File dir = new File(uri.getPath());
-		      File rfile = new File(dir.getParentFile(),"README.TXT");
-		      try {
-		        s = new FileInputStream(rfile);
-		      } catch (FileNotFoundException ex) {
-		        // muffle
-		      }
-		    }
-		    if (s == null) {
-		      System.out.println("SASyLF version ???");
-		      return;
-		    }
-		  }
-		  BufferedReader br = new BufferedReader(new InputStreamReader(s));
-		  System.out.println(br.readLine());
+      System.out.println(Version.getInstance());
 		  return;
 		}
 		// TODO: may want to add command line argument for explicit error messages on case analysis -- see Rule.getErrorDescription()

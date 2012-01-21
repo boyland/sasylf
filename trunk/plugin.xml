@@ -81,7 +81,15 @@
                label="Check Proofs"
                menubarPath="Menu/Group"
                toolbarPath="Group"
-               tooltip="%action.tooltip">
+               tooltip="Parse/analyze the file and check proofs">
+         </action>
+         <action
+               class="org.sasylf.actions.AboutAction"
+               id="org.sasylf.actions.openAbout"
+               label="About SASyLF"
+               menubarPath="Menu/Group"
+               style="push"
+               toolbarPath="Group">
          </action>
       </actionSet>
       

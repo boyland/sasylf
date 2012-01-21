@@ -1,7 +1,13 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -11,12 +17,16 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
+import edu.cmu.cs.sasylf.util.Status;
 
 
 public class Syntax extends Node implements ClauseType, ElemType {
-	public Syntax(NonTerminal nt, List<Clause> l) { nonTerminal = nt; elements = l; }
+	public Syntax(Location loc, NonTerminal nt, List<Clause> l) { 
+	  super(loc); 
+	  nonTerminal = nt; 
+	  elements = l; 
+	}
+	
 	public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Clause> getClauses() { return elements; }
 
@@ -93,6 +103,53 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
 		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
 		ctx.ruleSet.add(startRule);
+	}
+	
+	private boolean isProductive;
+	private Status isProductiveStatus = Status.NOTSTARTED;
+	private static List<Syntax> computed = new ArrayList<Syntax>();
+	
+	public boolean isProductive() {
+	  if (isProductiveStatus == Status.DONE) return isProductive;
+	  isProductiveStatus = Status.NOTSTARTED;
+	  isProductive = computeIsProductive();
+	  for (Syntax s : computed) {
+	    if (s.isProductiveStatus == Status.INPROCESS) {
+	      s.isProductiveStatus = Status.NOTSTARTED;
+	    }
+	  }
+	  isProductiveStatus = Status.DONE;
+	  // System.out.println("Finished " + (isProductive ? "productive" : "unproductive") + " " + this);
+	  return isProductive;
+	}
+	
+	private boolean computeIsProductive() {
+	  switch (isProductiveStatus) {
+	  case NOTSTARTED: 
+	    isProductiveStatus = Status.INPROCESS;
+	    for (Clause elem : elements) {
+	      boolean productive = true;
+	      for (Element e : elem.getElements()) {
+	        if (e instanceof NonTerminal && !((NonTerminal)e).getType().computeIsProductive()) {
+	          // System.out.println("  Found unproductive use of " + e);
+	          productive = false;
+	          break;
+	        }
+	      }
+	      if (productive) {
+	        // System.out.println("  Clause " + elem + " is productive");
+	        isProductive = true;
+	        isProductiveStatus = Status.DONE;
+	        break;
+	      }
+	    }
+	    computed.add(this);
+	    return isProductive;
+	  case INPROCESS:
+	  case DONE:
+	    return isProductive;
+	  }
+	  return false;
 	}
 	
 	private int contextFormCode = -1;
