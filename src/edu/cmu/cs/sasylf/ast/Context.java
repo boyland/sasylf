@@ -20,6 +20,7 @@ import static edu.cmu.cs.sasylf.util.Util.*;
 
 /** Represents a typing context */
 public class Context {
+  // TODO: Create instances of this class rather than mutating it.
     public Map<String,Syntax> synMap = new HashMap<String,Syntax>();
     public Map<String,Variable> varMap = new HashMap<String, Variable>();
     public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();

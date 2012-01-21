@@ -1500,7 +1500,7 @@ Syntax BNFRule() :
   t=<IDENTIFIER> <ASSIGN> Clauses(l)
   {
     NonTerminal nt = getNonTerminal(t);
-    return new Syntax(nt, l);
+    return new Syntax(new Location(t), nt, l);
   }
 }
 

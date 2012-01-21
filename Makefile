@@ -15,7 +15,7 @@ build :
 
 TESTBIN= bin/org/sasylf/Activator.class
 build-plugin : ${TESTBIN} README.TXT
-	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml README.TXT icons -C bin .
+	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml README.TXT icons/*.gif icons/*.png -C bin .
 
 ${TESTBIN}:
 	@echo Unable to compile Eclipse plugin code in Makefile.
