@@ -172,7 +172,6 @@ public class Theorem extends RuleLike {
 
 		Derivation.typecheck(this, ctx, derivations);
 		
-		ctx.ruleMap.put(getName(), this);
 		ctx.recursiveTheorems = new HashMap<String, Theorem>();
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
@@ -187,6 +186,7 @@ public class Theorem extends RuleLike {
 				}
 			}
 		}
+    ctx.ruleMap.put(getName(), this);
 	}
 
 	private void addToMap(Context ctx) {
