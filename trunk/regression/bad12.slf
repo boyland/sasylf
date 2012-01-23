@@ -1,0 +1,55 @@
+terminals contradiction OK
+
+syntax
+  u ::= u + v
+     | v * w
+     | u / w
+     
+  v ::= u w
+  
+  w ::= v - u
+  
+judgment absurd: contradiction
+
+judgment ok: u OK
+
+---- ok-u
+u OK
+
+
+lemma u-impossible:
+  forall u
+  exists contradiction.
+  _: contradiction by induction on u:
+    case u1 + v is
+      _: contradiction by induction hypothesis on u1
+    end case 
+    case v * w is
+      _: contradiction by lemma v-impossible on v
+    end case
+    case u1 / w is
+      _: contradiction by induction hypothesis on u1
+    end case
+  end induction
+end lemma
+and
+lemma v-impossible:
+  forall v
+  exists contradiction.
+  _: contradiction by induction on v:
+     case u w is
+        _: contradiction by lemma u-impossible on u
+     end case
+  end induction
+end lemma
+ 
+lemma u-ok:
+  exists u OK.
+  _: u OK by rule ok-u
+end lemma
+
+theorem impossible:
+  exists contradiction.
+  o: u OK by lemma u-ok
+  _: contradiction by lemma u-impossible on u
+end theorem

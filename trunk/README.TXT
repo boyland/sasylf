@@ -97,11 +97,14 @@ The automated prover ("by solve") is very primitive.  It works only
 for straightforward derivations without the use of induction or case
 analysis.
 
-The tool could use some documentation.
 
 
 RELEASE HISTORY
 
+1.2.2	Bug fixes
+	Issue #23
+	Added "About SASyLF"
+	Better creation of jars
 1.2.1	Bug fixes
 	Fixed issues #18, #19, #20, #22
 	Added "proof" and "and" as highlightable keywords
