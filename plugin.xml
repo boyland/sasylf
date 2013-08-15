@@ -109,6 +109,12 @@
                   id="org.sasylf.menus.checkProofs"
                   mnemonic="C">
             </command>
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
          </menu>
       </menuContribution>
       <menuContribution
@@ -120,6 +126,12 @@
                   icon="icons/green_check.png"
                   id="org.sasylf.toolbars.checkProofs"
                   tooltip="Run SASyLF on proofs to find errors">
+               <visibleWhen
+                     checkEnabled="false">
+                  <reference
+                        definitionId="org.sasylf.inPerspective">
+                  </reference>
+               </visibleWhen>
             </command>
          </toolbar>
       </menuContribution>
@@ -172,6 +184,12 @@
              </test>
          </adapt>
       </definition>
+      <definition id="org.sasylf.inPerspective">
+          <with variable="activeWorkbenchWindow.activePerspective">
+               <equals value="org.sasylf.perspectives.EditorPerspective"/>
+          </with>
+      </definition>
    </extension>
+   
 
 </plugin>

@@ -1,4 +1,4 @@
-SASyLF version 1.2.2a3
+SASyLF version 1.2.2a4
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -11,7 +11,7 @@ available at http://www.eclipse.org/legal/epl-v10.html.
 
 INSTALLATION
 
-To run SASyLF, you must have Java version 5.0 or later installed.  You
+To run SASyLF, you must have Java version SE 6 or later installed.  You
 can get Java at:
 
 http://java.sun.com/javase/downloads/index.jsp
@@ -102,6 +102,7 @@ analysis.
 RELEASE HISTORY
 
 1.2.2	Bug fixes
+    Issue #21
 	Issue #23
 	Added "About SASyLF"
 	Better creation of jars
