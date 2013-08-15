@@ -1,16 +1,22 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.ast.Errors.BINDING_INCONSISTENT;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import java.util.*;
-import java.io.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
-import edu.cmu.cs.sasylf.term.*;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Util;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 public class NonTerminal extends Element {
 	public NonTerminal(String s, Location l) { super(l); symbol = s; }

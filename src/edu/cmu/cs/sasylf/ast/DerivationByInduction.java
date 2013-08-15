@@ -1,10 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
-
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 public class DerivationByInduction extends DerivationByAnalysis {
 	public DerivationByInduction(String n, Location l, Clause c, String derivName) {

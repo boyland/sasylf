@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import java.util.Queue;
 
 
 public class Constant extends Atom {

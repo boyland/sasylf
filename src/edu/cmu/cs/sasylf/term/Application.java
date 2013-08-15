@@ -1,11 +1,15 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import static edu.cmu.cs.sasylf.term.Facade.Abs;
-import static edu.cmu.cs.sasylf.term.Facade.pair;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 public class Application extends Term {
 	public Application(Atom f, List<? extends Term> a) {
@@ -694,7 +698,7 @@ public class Application extends Term {
 				theArguments = newArgs;
 				
 				Term newTerm = theFunction.apply(theArguments, 0);
-				newTerm = newTerm.wrapWithLambdas(newTerm, argTypes);
+				newTerm = Term.wrapWithLambdas(newTerm, argTypes);
 				sub.add(function, newTerm);
 			}
 		}

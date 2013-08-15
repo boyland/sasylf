@@ -1,9 +1,7 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class Facade {
 	public static Substitution Sub(Term t, FreeVar v) {

@@ -17,7 +17,6 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 
 /** Common interface for Rules and Theorems */
@@ -113,7 +112,7 @@ public abstract class RuleLike extends Node {
 				}
 			} else if (elem instanceof AssumptionElement) {
 			  // TODO: merge with previous branch to avoid duplicate code
-			  Clause clause = ((AssumptionElement)elem).getAssumes();
+			  //Clause clause = ((AssumptionElement)elem).getAssumes();
         debug("\tgenerated argterm before adaptation: " + argTerm);
         {
           int localAdaptation = adaptation;

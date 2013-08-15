@@ -1,14 +1,20 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.BINDING_INCONSISTENT;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import edu.cmu.cs.sasylf.grammar.Symbol;
-import edu.cmu.cs.sasylf.term.*;
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 public class Binding extends Element {
 	public Binding(Location loc, NonTerminal nt, List<Element> l) {

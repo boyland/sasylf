@@ -1,9 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
-
-import edu.cmu.cs.sasylf.parser.*;
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
+import edu.cmu.cs.sasylf.parser.Token;
 
 public class Location {
 	public Location(Token t) {

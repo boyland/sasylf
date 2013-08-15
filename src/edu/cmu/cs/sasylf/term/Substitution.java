@@ -1,9 +1,13 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Substitution {
 	public Substitution() { }

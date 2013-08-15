@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
-import edu.cmu.cs.sasylf.grammar.Symbol;
 
 public class GrmNonTerminal implements NonTerminal {
 	public GrmNonTerminal(String s) { string = s; }

@@ -1,10 +1,13 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.term.Facade.Abs;
+import static edu.cmu.cs.sasylf.term.Facade.pair;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import static edu.cmu.cs.sasylf.term.Facade.*;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 public class Abstraction extends Term {
 	public Term varType;
@@ -221,6 +224,7 @@ public class Abstraction extends Term {
 	 * If this is impossible a UnificationFailedException is thrown.
 	 * We just recurse down into the body, with an incremented i
 	 */
+	@Deprecated
 	@Override
 	public Term removeBoundVarsAbove(int i) {
 		Term newBody = body.removeBoundVarsAbove(i+1);

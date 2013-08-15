@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.util;
 
-import java.util.*;
-import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Location;
@@ -70,7 +70,9 @@ public class ErrorHandler {
 		report(null, msg,loc,null, true, true);
 	}
 
-	// TODO: deprecated
+	/*
+	 * @deprecated use report(errorType, msg,obj.getLocation(),null, true, true)
+	 */
 	public static void report(Errors errorType, String msg, Node obj) {
 		report(errorType, msg,obj.getLocation(),null, true, true);
 	}
@@ -93,6 +95,7 @@ public class ErrorHandler {
 		FreeVar.reinit();
 	}
 	public static int getErrorCount() { return errorCount; }
+	public static int getWarningCount() { return warningCount; } // TODO: Use this in user output
 
 	private static List<ErrorReport> reports = new ArrayList<ErrorReport>();
 	

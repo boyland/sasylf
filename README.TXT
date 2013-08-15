@@ -1,4 +1,4 @@
-SASyLF version 1.2.2a4
+SASyLF version 1.2.3a1
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -101,6 +101,7 @@ analysis.
 
 RELEASE HISTORY
 
+1.2.3
 1.2.2	Bug fixes
     Issue #21
 	Issue #23
