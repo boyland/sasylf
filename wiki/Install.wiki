@@ -5,7 +5,7 @@
 You can get SASyLF in one of two downloads: the whole zip file or just the Eclipse plugin.
 Both are available on the downloads page:
 https://sourceforge.net/projects/sasylf/files/Releases/
-  * {{{SASyLF-}}}_version_{{{.zip}}} This includes the source and both JAR files (see below)
+  * {{{SASyLF-}}}_version_{{{.zip}}} This includes the source and the SASyLF JAR file (see below)
   * {{{org.sasylf_}}}_version_{{{.v}}}_date_{{{.jar}}} The Eclipse plugin JAR file
 You may also get the project directly out of SVN to get the latest bleeding edge version.
 In this case, you will need to use the {{{Makefile}}} to produce the JAR files.
