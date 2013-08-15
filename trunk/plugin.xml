@@ -60,43 +60,7 @@
    
    
    
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            description="Operations we can do to a SASyLF file"
-            id="org.sasylf.actionSet"
-            label="SASyLF actions"
-            visible="true">
-         <menu
-               id="Menu"
-               label="SASyLF">
-            <separator
-                  name="Group">
-            </separator>
-         </menu>
-         <action
-               class="org.sasylf.actions.CheckProofsAction"
-               icon="icons/slf.gif"
-               id="editor.actions.CheckProofsAction"
-               label="Check Proofs"
-               menubarPath="Menu/Group"
-               toolbarPath="Group"
-               tooltip="Parse/analyze the file and check proofs">
-         </action>
-         <action
-               class="org.sasylf.actions.AboutAction"
-               id="org.sasylf.actions.openAbout"
-               label="About SASyLF"
-               menubarPath="Menu/Group"
-               style="push"
-               toolbarPath="Group">
-         </action>
-      </actionSet>
-      
-      
-      
-      
-   </extension>
+
    <extension
          id="org.sasylf.marker"
          point="org.eclipse.core.resources.markers">
@@ -109,6 +73,105 @@
       <persistent
             value="true">
       </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.sasylf.handlers.CheckProofsHandler"
+            commandId="org.sasylf.commands.checkProofs">
+      </handler>
+      <handler
+            class="org.sasylf.handlers.AboutHandler"
+            commandId="org.sasylf.commands.about"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.sasylf.commands.checkProofs"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+0">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="org.sasylf.menus.mainMenu"
+               label="SASyLF"
+               mnemonic="S">
+            <command
+            		commandId="org.sasylf.commands.about"
+            		mnemonic="A"/>
+            <command
+                  commandId="org.sasylf.commands.checkProofs"
+                  id="org.sasylf.menus.checkProofs"
+                  mnemonic="C">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="org.sasylf.toolbars.sampleToolbar">
+            <command
+                  commandId="org.sasylf.commands.checkProofs"
+                  icon="icons/green_check.png"
+                  id="org.sasylf.toolbars.checkProofs"
+                  tooltip="Run SASyLF on proofs to find errors">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution 
+      	allPopups="false"
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+      	<command
+              commandId="org.sasylf.commands.checkProofs"
+              icon="icons/green_check.png"
+              label="Check Proofs"
+              style="push"
+              tooltip="Run SASyLF on proofs to find errors">
+           <visibleWhen>
+   			<or>
+      			<with variable="selection">
+         			<iterate ifEmpty="false">
+           				<reference definitionId="org.sasylf.isProofFile"/>
+         			</iterate>
+      			</with>
+      			!--<with variable="activeEditorInput">
+        			<reference definitionId="org.sasylf.isProofFile"/>
+      			</with>-->
+   			</or>
+			</visibleWhen>
+		</command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="org.sasylf.commands.proofs"
+            name="Category of proof related commands">
+      </category>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            id="org.sasylf.commands.checkProofs"
+            name="Check Proofs">
+      </command>
+      <command
+            id="org.sasylf.commands.about"
+            name="About SASyLF"/>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="org.sasylf.isProofFile">
+         <adapt type="org.eclipse.core.resources.IResource">
+             <test property="org.eclipse.core.resources.extension"
+                   value="slf">
+             </test>
+         </adapt>
+      </definition>
    </extension>
 
 </plugin>

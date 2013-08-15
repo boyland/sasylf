@@ -30,4 +30,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.views,
  org.eclipse.gef,
  org.eclipse.jface.text,
- org.eclipse.jdt.ui
+ org.eclipse.jdt.ui,
+ org.eclipse.core.expressions
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

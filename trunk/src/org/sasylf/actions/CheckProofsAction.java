@@ -1,15 +1,17 @@
 package org.sasylf.actions;
 
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
@@ -77,6 +79,36 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 		}
 	}
 
+	public static String analyzeSlf(IResource res) {
+	  IFile f = (IFile)res.getAdapter(IFile.class);
+	  if (f == null) {
+	    System.out.println("cannot get contents of resource");
+	    return "cannot get contents of resource";
+	  } else {
+	    try {
+        return analyzeSlf(res,new InputStreamReader(f.getContents(),"UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        return e.toString();
+      } catch (CoreException e) {
+        return e.toString();
+      }
+	  }
+	}
+	
+  /**
+   * @param ite
+   */
+  public static void analyzeSlf(ITextEditor ite) {
+    analyzeSlf(ResourceUtil.getResource(ite.getEditorInput()),ite);
+  }
+
+  public static String analyzeSlf(IResource res, IEditorPart editor) {
+	  if (!(editor instanceof ITextEditor)) return "cannot open non-text file";
+	  ITextEditor ite = (ITextEditor)editor;
+	  IDocument doc = ite.getDocumentProvider().getDocument(ite.getEditorInput());
+	  return analyzeSlf(res, new StringReader(doc.get()));
+	}
+	
 	public static String analyzeSlf(IResource res, Reader contents) {
     StringBuilder sb = new StringBuilder(); //XXX: WHy do this?
     
@@ -140,33 +172,6 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 		
 	}
 
-  /**
-   * @param ite
-   */
-  public static void analyzeSlf(ITextEditor ite) {
-    IEditorInput iei = ite.getEditorInput();
-		IDocument doc = ite.getDocumentProvider().getDocument(iei);
-		Reader r = new StringReader(doc.get());
-    IResource res = ResourceUtil.getResource(iei);
-		
-		// MessageConsole myConsole = findConsole(CONSOLE_NAME);
-		// MessageConsoleStream out = myConsole.newMessageStream();
-		// System.setOut(new PrintStream(new BufferedOutputStream(out)));
-
-    analyzeSlf(res,r);
-    // IWorkbenchPage page = PlatformUI.getWorkbench()
-    // .getActiveWorkbenchWindow().getActivePage();// obtain the
-    // // active page
-    // String id = IConsoleConstants.ID_CONSOLE_VIEW;
-    // IConsoleView view = null;
-    // try {
-    // view = (IConsoleView) page.showView(id);
-    // } catch (PartInitException e) {
-    //
-    // e.printStackTrace();
-    // }
-    // view.display(myConsole);
-  }
 
 	/**
 	 * Selection in the workbench has been changed. We can change the state of
