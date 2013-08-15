@@ -3,40 +3,49 @@ package org.sasylf.views;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.part.*;
-import org.eclipse.gef.dnd.TemplateTransfer; //import org.eclipse.gef.dnd.GadgetTransfer;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.EndOfLineRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.MultiLineRule;
+import org.eclipse.jface.text.rules.PatternRule;
 import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
-import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSourceAdapter;
-import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.TextLayout;
-import org.eclipse.jface.action.*;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.ui.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.ViewPart;
 import org.sasylf.editors.SASyLFColorProvider;
+//import org.eclipse.gef.dnd.GadgetTransfer;
 
 
 /**
@@ -124,15 +133,15 @@ public class SyntaxView extends ViewPart {
 		}
 		
 		public void ViewCodeScanner(SASyLFColorProvider provider)	{
-			TextAttribute kwAtt = new TextAttribute (provider.getColor(SASyLFColorProvider.KEYWORD), null,SWT.BOLD);
-			Token keyword = new Token (kwAtt);
+			//TextAttribute kwAtt = new TextAttribute (provider.getColor(SASyLFColorProvider.KEYWORD), null,SWT.BOLD);
+			//Token keyword = new Token (kwAtt);
 			
 			IToken comment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.SINGLE_LINE_COMMENT)));
-			IToken other = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.DEFAULT)));
+			//IToken other = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.DEFAULT)));
 			IToken multiLineComment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT)));
 			IToken rule = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.RULE)));
 			
-			List rules = new ArrayList ();
+			List<PatternRule> rules = new ArrayList<PatternRule> ();
 			rules.add (new EndOfLineRule ("//", comment));
 			rules.add (new MultiLineRule ("/*", "*/", multiLineComment));
 			rules.add (new SingleLineRule ("<",">",comment));

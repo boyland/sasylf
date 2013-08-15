@@ -64,14 +64,12 @@ public class SyntaxJavaElement implements ISyntaxItem {
 		return element.hashCode();
 	}
 
-	public Object getAdapter(Class adapter) {
+	public Object getAdapter(Class<?> adapter) {
 		if (adapter.isInstance(element))
 			return element;
 		IResource resource = element.getUnderlyingResource();
 		if (adapter.isInstance(resource))
 			return resource;
-		Class adapterType = null;
-		Object adaptable;
 		return Platform.getAdapterManager().getAdapter(this, adapter);
 
 	}
