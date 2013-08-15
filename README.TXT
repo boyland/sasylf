@@ -102,6 +102,7 @@ analysis.
 RELEASE HISTORY
 
 1.2.3
+    Command-line tool reports a count of warnings too.
 1.2.2	Bug fixes
     Issue #21
 	Issue #23

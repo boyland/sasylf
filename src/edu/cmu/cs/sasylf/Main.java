@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
@@ -27,6 +28,7 @@ public class Main {
 			return;
 		}
 		int oldErrorCount = 0;
+		int oldWarnings = 0;
 		if (args.length >= 1 && args[0].equals("--version")) {
       System.out.println(Version.getInstance());
 		  return;
@@ -63,13 +65,25 @@ public class Main {
 				e.printStackTrace(); // unexpected exception
 			} finally {
 				int newErrorCount = ErrorHandler.getErrorCount() - oldErrorCount;
+				int newWarnings = ErrorHandler.getWarningCount() - oldWarnings;
 				oldErrorCount = ErrorHandler.getErrorCount();
+				oldWarnings = ErrorHandler.getWarningCount();
+				@SuppressWarnings("resource")
+        PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
 				if (newErrorCount == 0)
-					System.out.println(filename + ": No errors found.");
+					ps.print(filename + ": No errors");
 				else if (newErrorCount == 1)
-					System.err.println(filename + ": 1 error found");
+					ps.print(filename + ": 1 error");
 				else
-					System.err.println(filename + ": "+ newErrorCount +" errors found");
+					ps.print(filename + ": "+ newErrorCount +" errors");
+				if (newWarnings > 0) {
+				  if (newWarnings > 1) {
+				    ps.print(" and " + newWarnings + " warnings");
+				  } else {
+				    ps.print(" and 1 warning");
+				  }
+				}
+				ps.println(" reported.");
 			}
 		}
 	}
