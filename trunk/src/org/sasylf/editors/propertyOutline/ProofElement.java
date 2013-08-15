@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.eclipse.jface.text.Position;
 
-import edu.cmu.cs.sasylf.ast.NonTerminal;
-
 public class ProofElement {
 	private String category;
 	private String content;

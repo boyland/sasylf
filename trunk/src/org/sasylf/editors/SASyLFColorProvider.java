@@ -20,14 +20,14 @@ public class SASyLFColorProvider {
 	protected Map<RGB, Color> _colorTable = new HashMap<RGB, Color>(10);
 	
 	public void dispose(){
-		Iterator e = _colorTable.values().iterator();
+		Iterator<Color> e = _colorTable.values().iterator();
 		while(e.hasNext()){
-			((Color)e.next()).dispose();
+			e.next().dispose();
 		}
 	}
 	
 	public Color getColor(RGB rgb){
-		Color color = (Color)_colorTable.get(rgb);
+		Color color = _colorTable.get(rgb);
 		if(color==null){
 			color = new Color(Display.getCurrent(),rgb);
 			_colorTable.put(rgb, color);
