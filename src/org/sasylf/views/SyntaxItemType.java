@@ -6,7 +6,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 
-public abstract class SyntaxItemType implements Comparable {
+public abstract class SyntaxItemType implements Comparable<SyntaxItemType> {
 	private static final ISharedImages PLATFORM_IMAGES = PlatformUI
 			.getWorkbench().getSharedImages();
 
@@ -50,8 +50,8 @@ public abstract class SyntaxItemType implements Comparable {
 
 	public abstract ISyntaxItem loadSyntax(String info);
 
-	public int compareTo(Object arg) {
-		return this.ordinal - ((SyntaxItemType) arg).ordinal;
+	public int compareTo(SyntaxItemType arg) {
+		return this.ordinal - arg.ordinal;
 	}
 
 	public static final SyntaxItemType UNKNOWN = new SyntaxItemType(

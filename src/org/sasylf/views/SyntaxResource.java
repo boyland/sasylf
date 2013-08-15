@@ -60,7 +60,7 @@ public class SyntaxResource implements ISyntaxItem {
 		return resource.hashCode();
 	}
 
-	public Object getAdapter(Class adapter) {
+	public Object getAdapter(Class<?> adapter) {
 		if (adapter.isInstance(resource))
 			return resource;
 		return Platform.getAdapterManager().getAdapter(this, adapter);

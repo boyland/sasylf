@@ -12,7 +12,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 
 public class SyntaxManager {
 	private static SyntaxManager manager;
-	private Collection Syntax;
+	private Collection<ISyntaxItem> Syntax;
 
 	private SyntaxManager() {
 	}
@@ -26,7 +26,7 @@ public class SyntaxManager {
 	public ISyntaxItem[] getSyntax() {
 		if (Syntax == null)
 			loadSyntax();
-		return (ISyntaxItem[]) Syntax.toArray(new ISyntaxItem[Syntax.size()]);
+		return Syntax.toArray(new ISyntaxItem[Syntax.size()]);
 	}
 
 	private void loadSyntax() {
@@ -34,7 +34,7 @@ public class SyntaxManager {
 	      // to prepopulate list with projects
 	      IProject[] projects = ResourcesPlugin.getWorkspace().getRoot()
 	            .getProjects();
-	      Syntax = new HashSet(projects.length);
+	      Syntax = new HashSet<ISyntaxItem>(projects.length);
 	      for (int i = 0; i < projects.length; i++)
 	         Syntax.add(new SyntaxResource(
 	               SyntaxItemType.WORKBENCH_PROJECT, projects[i]));
@@ -52,16 +52,16 @@ public class SyntaxManager {
 		return null;
 	}
 
-	public ISyntaxItem[] newSyntaxFor(Iterator iter) {
+	public ISyntaxItem[] newSyntaxFor(Iterator<?> iter) {
 		if (iter == null)
 			return ISyntaxItem.NONE;
-		Collection items = new HashSet(20);
+		Collection<ISyntaxItem> items = new HashSet<ISyntaxItem>(20);
 		while (iter.hasNext()) {
-			ISyntaxItem item = newSyntaxFor((Object) iter.next());
+			ISyntaxItem item = newSyntaxFor(iter.next());
 			if (item != null)
 				items.add(item);
 		}
-		return (ISyntaxItem[]) items.toArray(new ISyntaxItem[items.size()]);
+		return items.toArray(new ISyntaxItem[items.size()]);
 	}
 
 	public ISyntaxItem[] newSyntaxFor(Object[] objects) {
@@ -73,24 +73,24 @@ public class SyntaxManager {
 	public ISyntaxItem existingSyntaxFor(Object obj) {
 		if (obj == null)
 			return null;
-		Iterator iter = Syntax.iterator();
+		Iterator<ISyntaxItem> iter = Syntax.iterator();
 		while (iter.hasNext()) {
-			ISyntaxItem item = (ISyntaxItem) iter.next();
+			ISyntaxItem item = iter.next();
 			if (item.isSyntaxFor(obj))
 		          return item;
 		}
 		return null;
 	}
 
-	public ISyntaxItem[] existingSyntaxFor(Iterator iter) {
-		List result = new ArrayList(10);
+	public ISyntaxItem[] existingSyntaxFor(Iterator<?> iter) {
+		List<ISyntaxItem> result = new ArrayList<ISyntaxItem>(10);
 		while (iter.hasNext()) {
 			ISyntaxItem item = existingSyntaxFor(iter.next());
 
 			if (item != null)
 				result.add(item);
 		}
-		return (ISyntaxItem[]) result.toArray(new ISyntaxItem[result.size()]);
+		return result.toArray(new ISyntaxItem[result.size()]);
 	}
 
 	public void addSyntax(ISyntaxItem[] items) {
@@ -107,7 +107,7 @@ public class SyntaxManager {
 			fireSyntaxChanged(items, ISyntaxItem.NONE);
 	}
 
-	private List listeners = new ArrayList();
+	private List<SyntaxManagerListener> listeners = new ArrayList<SyntaxManagerListener>();
 
 	public void addSyntaxManagerListener(SyntaxManagerListener listener) {
 		if (!listeners.contains(listener))
@@ -122,8 +122,8 @@ public class SyntaxManager {
 			ISyntaxItem[] itemsRemoved) {
 		SyntaxManagerEvent event = new SyntaxManagerEvent(this,
 				itemsAdded, itemsRemoved);
-		for (Iterator iter = listeners.iterator(); iter.hasNext();)
-			((SyntaxManagerListener) iter.next()).SyntaxChanged(event);
+		for (Iterator<SyntaxManagerListener> iter = listeners.iterator(); iter.hasNext();)
+			iter.next().SyntaxChanged(event);
 	}
 
 }
