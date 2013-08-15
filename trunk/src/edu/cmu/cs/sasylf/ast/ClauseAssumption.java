@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
-import java.util.Collections;
 
 public class ClauseAssumption extends Fact {
 

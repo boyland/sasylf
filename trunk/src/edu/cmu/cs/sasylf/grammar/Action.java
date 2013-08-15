@@ -71,6 +71,8 @@ class Action {
 			return "s" + next;
 		case REDUCE:
 			return "r" + next;
+		case CONFLICT:
+		  return "c" + next;
 		}
 		return null;
 	}

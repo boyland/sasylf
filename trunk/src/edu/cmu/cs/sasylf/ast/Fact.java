@@ -1,9 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.io.PrintWriter;
 
 /**
  * Common superclass of Derivation, SyntaxAssumption, and ClauseAssumption

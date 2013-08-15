@@ -2,8 +2,6 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
-
 public class DerivationUnproved extends DerivationWithArgs {
 	public DerivationUnproved(String n, Location l, Clause c) {
 		super(n,l,c);

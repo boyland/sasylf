@@ -1,21 +1,21 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.verify;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
-import edu.cmu.cs.sasylf.grammar.AmbiguousSentenceException;
 import edu.cmu.cs.sasylf.grammar.Grammar;
-import edu.cmu.cs.sasylf.grammar.NotParseableException;
-import edu.cmu.cs.sasylf.grammar.RuleNode;
-import edu.cmu.cs.sasylf.grammar.Terminal;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 
 /** Represents a typing context */

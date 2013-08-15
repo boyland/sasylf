@@ -1,11 +1,20 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.JUDGMENT_EXPECTED;
+import static edu.cmu.cs.sasylf.ast.Errors.WRONG_JUDGMENT;
+import static edu.cmu.cs.sasylf.term.Facade.App;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
@@ -13,10 +22,6 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-
-import static edu.cmu.cs.sasylf.term.Facade.*;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 public class Rule extends RuleLike implements CanBeCase {
 	public Rule(Location loc, String n, List<Clause> l, Clause c) { super(n, loc); premises=l; conclusion=c; }

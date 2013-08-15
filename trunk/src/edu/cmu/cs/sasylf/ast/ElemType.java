@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
 
 
 /** Marker type for all types used in parsing Clauses

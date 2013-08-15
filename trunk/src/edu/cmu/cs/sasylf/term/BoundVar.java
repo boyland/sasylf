@@ -1,9 +1,10 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
+import java.util.List;
+import java.util.Queue;
 
 public class BoundVar extends Term {
 	public BoundVar(int index) {

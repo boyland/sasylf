@@ -108,6 +108,8 @@ class Automaton {
 		//If it's an accept state, go ahead and accept.
 		case ACCEPT:
 			return true;
+		default:
+			throw new AssertionError("grammar is malformed");  
 		}
 		return false;
 	}

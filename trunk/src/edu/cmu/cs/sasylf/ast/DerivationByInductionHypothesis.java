@@ -1,10 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
-
+import static edu.cmu.cs.sasylf.util.Util.debug;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 
 public class DerivationByInductionHypothesis extends DerivationByIHRule {

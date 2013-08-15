@@ -2,7 +2,6 @@ package edu.cmu.cs.sasylf.util;
 
 import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Location;
-import edu.cmu.cs.sasylf.ast.Node;
 
 public class ErrorReport {
 	public ErrorReport(Errors errorType, String msg, Location loc, String debugInfo, boolean isError) {

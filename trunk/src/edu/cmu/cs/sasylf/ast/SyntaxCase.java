@@ -1,13 +1,21 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.term.Facade.Abs;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
+import static edu.cmu.cs.sasylf.ast.Errors.EXTRA_CASE;
+import static edu.cmu.cs.sasylf.ast.Errors.INVALID_CASE;
+import static edu.cmu.cs.sasylf.ast.Errors.NONTERMINAL_CASE;
+import static edu.cmu.cs.sasylf.ast.Errors.REUSED_CONTEXT;
+import static edu.cmu.cs.sasylf.ast.Errors.SYNTAX_CASE_FOR_DERIVATION;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import java.util.*;
-import java.io.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
@@ -124,6 +132,7 @@ public class SyntaxCase extends Case {
       try {
         debug("case unify " + concTerm + " and " + pair.first);
         Substitution computedSub = pair.first.instanceOf(concTerm);
+        debug("result is " + computedSub);
       } catch (UnificationFailed uf) {
         System.out.println("Case " + this + " does not apply to " + ctx.currentCaseAnalysisElement);
         continue;
@@ -139,7 +148,7 @@ public class SyntaxCase extends Case {
     }
 		
     Substitution oldAdaptationSub = ctx.adaptationSub;
-    Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap(ctx.adaptationMap);
+    Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap<NonTerminal, AdaptationInfo>(ctx.adaptationMap);
     NonTerminal oldInnermostGamma = ctx.innermostGamma;
     Term oldMatchTerm = ctx.matchTermForAdaptation;
 

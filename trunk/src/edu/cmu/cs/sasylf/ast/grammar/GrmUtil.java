@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
-import edu.cmu.cs.sasylf.grammar.Symbol;
-import edu.cmu.cs.sasylf.grammar.Terminal;
 
 public class GrmUtil {
 	private static NonTerminal startSymbol;

@@ -1,11 +1,13 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Relation;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
 
 
 public class FreeVar extends Atom {

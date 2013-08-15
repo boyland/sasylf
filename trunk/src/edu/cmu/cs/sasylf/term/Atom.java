@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.*;
-import java.io.*;
+import java.util.List;
 
 
 public abstract class Atom extends Term {
