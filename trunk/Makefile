@@ -10,7 +10,7 @@ VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
-	(cd src && javac -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java)
+	(cd src && javac -source 1.6 -target 1.6 -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java)
 	jar cmf sasylf.mf SASyLF.jar README.TXT -C bin edu
 
 TESTBIN= bin/org/sasylf/Activator.class
