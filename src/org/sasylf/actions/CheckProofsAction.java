@@ -103,6 +103,7 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
   }
 
   public static String analyzeSlf(IResource res, IEditorPart editor) {
+    if (editor == null) return analyzeSlf(res);
 	  if (!(editor instanceof ITextEditor)) return "cannot open non-text file";
 	  ITextEditor ite = (ITextEditor)editor;
 	  IDocument doc = ite.getDocumentProvider().getDocument(ite.getEditorInput());
