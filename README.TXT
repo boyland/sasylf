@@ -1,4 +1,4 @@
-SASyLF version 1.2.3a1
+SASyLF version 1.2.3a2
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -103,6 +103,8 @@ RELEASE HISTORY
 
 1.2.3
     Command-line tool reports a count of warnings too.
+    Proof tool doesn't give up on first error in a list any more
+    plugin now has a "New Proof" wizard
 1.2.2	Bug fixes
     Issue #21
 	Issue #23

@@ -92,6 +92,12 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+0">
       </key>
+      <key
+            commandId="org.eclipse.pde.runtime.spy.commands.menuSpyCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+SHIFT+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -157,8 +163,45 @@
    			</or>
 			</visibleWhen>
 		</command>
+	</menuContribution>
+	<menuContribution
+		locationURI="popup:common.new.menu?after=additions">
+		<command
+               commandId="org.sasylf.commands.new"
+               icon="icons/slf.gif"
+               label="SASyLF Proof"
+               mnemonic="P"
+               style="push"
+               tooltip="Create a new SASAyLF proof file">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:new">
+         <command
+               commandId="org.sasylf.commands.new"
+               icon="icons/slf.gif"
+               label="SASyLF Proof"
+               mnemonic="P"
+               style="push"
+               tooltip="Create a new SASAyLF proof file">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </command>
       </menuContribution>
    </extension>
+   
    <extension
          point="org.eclipse.ui.commands">
       <category
@@ -173,6 +216,12 @@
       <command
             id="org.sasylf.commands.about"
             name="About SASyLF"/>
+      <command
+            defaultHandler="org.sasylf.handlers.NewProofHandler"
+            description="Open dialog to create a new SASyLF proof file"
+            id="org.sasylf.commands.new"
+            name="New Proof ...">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">
@@ -189,6 +238,20 @@
                <equals value="org.sasylf.perspectives.EditorPerspective"/>
           </with>
       </definition>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.sasylf"
+            name="SASyLF Wizards">
+      </category>
+      <wizard
+            category="org.sasylf"
+            class="org.sasylf.wizards.NewProofWizard"
+            icon="icons/slf.gif"
+            id="org.sasylf.wizards.NewProofWizard"
+            name="SASyLF Proof file">
+      </wizard>
    </extension>
    
 
