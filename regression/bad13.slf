@@ -1,0 +1,117 @@
+// illustrating issue #8, discarding context
+// in three ways:
+// (1) When pattern matching (for conclusion)
+// (2) when pattern matching (for premises)
+// (3) when passing to a theorem
+// This file should get (at least) three errors
+// As of SASyLF 1.2.2 it gets none.
+
+package regression;
+
+terminals fn in contradiction
+
+syntax 
+   t ::= x | t t | fn x => t[x]
+
+   Gamma ::= * | Gamma, x
+
+
+judgment absurd: contradiction
+
+
+judgment isvar: t in Gamma
+assumes Gamma
+
+-------------- var
+x in (Gamma,x)
+
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+t in Gamma
+---------- B-Var
+Gamma |- t
+
+Gamma |- t1
+Gamma |- t2
+--------------- B-App
+Gamma |- t1 t2
+
+Gamma, x |- t[x]
+--------------------- B-Abs
+Gamma |- fn x => t[x]
+
+
+lemma variables-must-be-bound:
+    forall p: t in *
+    exists contradiction.
+    proof by case analysis on p: end case analysis
+end lemma
+
+theorem bad-logic-1:
+    forall p: Gamma |- t
+    forall i: t in Gamma
+    exists contradiction.
+    proof by case analysis on p:
+        case rule
+            q: t in *
+            ---------- B-Var
+            _: * |- t
+        is
+             proof by lemma variables-must-be-bound on q
+        end case
+        case rule
+            _: Gamma |- t1
+            _: Gamma |- t2
+            ------------------- B-App
+            _: Gamma |- t1 t2
+        is
+            proof by case analysis on i: end case analysis
+        end case
+        case rule
+            _: Gamma, x |- t1[x]
+            ------------------------- B-Abs
+            _: Gamma |- fn x => t1[x]
+        is
+            proof by case analysis on i: end case analysis
+        end case
+    end case analysis
+end theorem
+
+theorem bad-logic-2:
+    forall p: Gamma |- t
+    forall i: t in Gamma
+    exists contradiction.
+    proof by case analysis on p:
+        case rule
+            q: t in *
+            ---------- B-Var
+            _: Gamma |- t
+        is
+             proof by lemma variables-must-be-bound on q
+        end case
+        case rule
+            _: Gamma |- t1
+            _: Gamma |- t2
+            ------------------- B-App
+            _: Gamma |- t1 t2
+        is
+            proof by case analysis on i: end case analysis
+        end case
+        case rule
+            _: Gamma, x |- t1[x]
+            ------------------------- B-Abs
+            _: Gamma |- fn x => t1[x]
+        is
+            proof by case analysis on i: end case analysis
+        end case
+    end case analysis
+end theorem
+
+theorem bad-logic-3:
+    forall p: Gamma |- t
+    forall i: t in Gamma
+    exists contradiction.
+    proof by lemma variables-must-be-bound on i
+end theorem
