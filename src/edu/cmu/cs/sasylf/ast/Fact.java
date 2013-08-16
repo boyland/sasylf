@@ -17,8 +17,8 @@ public abstract class Fact extends Node {
 
     public abstract void prettyPrint(PrintWriter out);
     public void printReference(PrintWriter out) { out.print(getName()); }
-    public abstract void typecheck(Context ctx, boolean addToMap);
-	public void addToDerivationMap(Context ctx) {
-		ctx.derivationMap.put(getName(), this);    	
+    public abstract void typecheck(Context ctx);
+	  public void addToDerivationMap(Context ctx) {
+		  ctx.derivationMap.put(getName(), this);    	
     }
 }

@@ -53,16 +53,17 @@ public class BindingAssumption extends SyntaxAssumption {
   }
   
   @Override
-  public void typecheck(Context ctx, boolean addToMap) {
+  public void typecheck(Context ctx) {
     binding.typecheck(ctx);
-    if (addToMap) {
+    if (ctx == null) { // XXX: Not sure if this should always happen.  Originally only if being added to map.
       for (Element e : binding.getElements()) {
         if (!(e instanceof Variable)) {
+          if (e != null) throw new IllegalStateException("I don't know what is happening");
           ErrorHandler.report("cannot match a substituted term", this);
         }
       }
     }
-    super.typecheck(ctx, addToMap);
+    super.typecheck(ctx);
   }
   
   private Binding binding;

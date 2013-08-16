@@ -60,6 +60,8 @@ public class DerivationByInversion extends DerivationWithArgs {
     Term oldGoal = ctx.currentGoal;
     Clause oldGoalClause = ctx.currentGoalClause;
     Map<CanBeCase,Set<Pair<Term,Substitution>>> oldCaseTermMap = ctx.caseTermMap;
+    
+    try {
     ctx.currentCaseAnalysis = DerivationByAnalysis.adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
     debug("setting current case analysis to " + ctx.currentCaseAnalysis);
     //ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
@@ -126,12 +128,13 @@ public class DerivationByInversion extends DerivationWithArgs {
     if (!found_rulel) {
       ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
     }
-
+    } finally {
     ctx.caseTermMap = oldCaseTermMap;
     ctx.currentCaseAnalysis = oldCase;
     ctx.currentCaseAnalysisElement = oldElement;
     ctx.currentGoal = oldGoal ;
     ctx.currentGoalClause = oldGoalClause;
+    }
     
     // Permit induction on this term if source was a subderivation
     if (ctx.subderivations.contains(targetDerivation))

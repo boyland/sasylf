@@ -75,7 +75,7 @@ public class Theorem extends RuleLike {
 			interfaceChecked = true;
 			List<String> inputNames = new ArrayList<String>();
 			for (Fact f : foralls) {
-				f.typecheck(ctx, false);
+				f.typecheck(ctx);
 				inputNames.add(f.getName());
 				// TODO: rationalize the following special cases:
 				if (f instanceof DerivationByAssumption) {

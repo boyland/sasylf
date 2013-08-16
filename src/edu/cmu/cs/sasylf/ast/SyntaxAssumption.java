@@ -69,7 +69,7 @@ public class SyntaxAssumption extends Fact {
 	}
 
 	@Override
-	public void typecheck(Context ctx, boolean addToMap) {
+	public void typecheck(Context ctx) {
     if (context != null) {
       context = (Clause)context.typecheck(ctx);
       Element computed = context.computeClause(ctx,false);
@@ -84,9 +84,6 @@ public class SyntaxAssumption extends Fact {
 		/*String strippedName = Util.stripId(getName());
 		syntax = ctx.synMap.get(strippedName);
 		if (syntax == null)*/
-		
-		if (addToMap)
-			this.addToDerivationMap(ctx);
 	}
 
 	public void setContext(Clause c) { context = c; }
