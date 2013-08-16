@@ -48,10 +48,11 @@ import java.util.*;
 public class DSLToolkitParser {
     public static String currentFile = "NONE";
 
-    public static CompUnit read(File f) throws FileNotFoundException, ParseException {
+    public static CompUnit read(File f) throws FileNotFoundException, IOException, ParseException {
+        InputStream fi = new FileInputStream(f);
         try {
                         DSLToolkitParser parser;
-                        parser = new DSLToolkitParser(new FileInputStream(f),"UTF-8");
+                        parser = new DSLToolkitParser(fi,"UTF-8");
                         currentFile = f.toString();
                         return parser.CompilationUnit();
         } catch (ParseException e) {
@@ -59,6 +60,8 @@ public class DSLToolkitParser {
                 //ErrorHandler.report(e.getMessage(), null);
                 throw e;
                 //return null; // unreachable
+        } finally {
+                fi.close();
         }
     }
     
