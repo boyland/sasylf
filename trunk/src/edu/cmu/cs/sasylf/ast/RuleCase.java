@@ -46,6 +46,7 @@ public class RuleCase extends Case {
 		if (rule == null)
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
 
+		// TODO: add premises to context anyway.
 		if (rule.getPremises().size() != getPremises().size())
 			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
 			//ErrorHandler.report("Expected " + rule.getPremises().size() + " premises for rule " + ruleName + " but " + getPremises().size() + " were given", this);	
@@ -54,6 +55,7 @@ public class RuleCase extends Case {
 		ctx.bindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
 		for (Derivation d : premises) {
 			d.typecheck(ctx);
+			d.addToDerivationMap(ctx);
 			d.getClause().checkBindings(ctx.bindingTypes, this);
 		}
 

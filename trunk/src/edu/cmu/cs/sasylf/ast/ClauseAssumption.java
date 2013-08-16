@@ -36,7 +36,7 @@ public class ClauseAssumption extends Fact {
 	}
 
 	@Override
-	public void typecheck(Context ctx, boolean addToMap) {
+	public void typecheck(Context ctx) {
 		clause = (Clause) clause.typecheck(ctx);
 	}
 	

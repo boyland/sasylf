@@ -28,8 +28,10 @@ public abstract class DerivationByAnalysis extends Derivation {
 						if (this instanceof DerivationByInduction)
 							ErrorHandler.report("Cannot perform induction over "+ targetDerivationName + " unless you add this variable as a specific \"forall\" clause of the theorem", this);
 						else {
+						  // XXX: JTB: Isn't this redundant?  We already have the thing in the map,
+						  // or we wouldn't have found it?
 							targetDerivation = new SyntaxAssumption(targetDerivationName, getLocation());
-							targetDerivation.typecheck(ctx, true);
+							targetDerivation.typecheck(ctx);
 							return;
 						}
 					}
@@ -58,13 +60,15 @@ public abstract class DerivationByAnalysis extends Derivation {
 	public void typecheck(Context ctx) {
 		computeTargetDerivation(ctx);
 
-		super.typecheck(ctx, false);
+		super.typecheck(ctx);
 
 		Term oldCase = ctx.currentCaseAnalysis;
 		Element oldElement = ctx.currentCaseAnalysisElement;
 		Term oldGoal = ctx.currentGoal;
 		Clause oldGoalClause = ctx.currentGoalClause;
 		Map<CanBeCase,Set<Pair<Term,Substitution>>> oldCaseTermMap = ctx.caseTermMap;
+		
+		try {
 		ctx.currentCaseAnalysis = adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
 		debug("setting current case analysis to " + ctx.currentCaseAnalysis);
 		//ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
@@ -231,12 +235,14 @@ public abstract class DerivationByAnalysis extends Derivation {
 								+ "\n\trule conc was " + arguments.get(lastIdx)* /, this);
 		}*/
 
+		} finally {
 		ctx.caseTermMap = oldCaseTermMap;
 		ctx.currentCaseAnalysis = oldCase;
 		ctx.currentCaseAnalysisElement = oldElement;
 		ctx.currentGoal = oldGoal ;
 		ctx.currentGoalClause = oldGoalClause;
-		this.addToDerivationMap(ctx);
+		}
+		// this.addToDerivationMap(ctx);
 	}
 
 	/** Adapts this term using the current context

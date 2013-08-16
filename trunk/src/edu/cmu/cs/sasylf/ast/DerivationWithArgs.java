@@ -61,7 +61,7 @@ abstract public class DerivationWithArgs extends Derivation {
 			  if (e instanceof Binding) {
 			    Binding b = (Binding)e;
 			    f = new BindingAssumption(b,assumes);
-			    f.typecheck(ctx, false);		    
+			    f.typecheck(ctx);		    
 			  } else if (e instanceof NonTerminal) {
 			    // case for a reference to a derivation 
 			    String s = e.toString();
@@ -72,7 +72,7 @@ abstract public class DerivationWithArgs extends Derivation {
 			          ctx.currentSub.getMap().containsKey(fake)) {
 			        // case for a use of a one element clause
 			        f = new SyntaxAssumption(s, getLocation(),assumes);
-			        f.typecheck(ctx, false);
+			        f.typecheck(ctx);
 			      } else {
 			        ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
 			      }
@@ -107,7 +107,7 @@ abstract public class DerivationWithArgs extends Derivation {
 				}
 				argStrings.set(i,c);
 				f = new ClauseAssumption(c, getLocation());
-				f.typecheck(ctx, false);
+				f.typecheck(ctx);
 			}
 			args.add(f);
 		}
