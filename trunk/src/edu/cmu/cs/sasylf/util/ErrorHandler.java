@@ -95,7 +95,7 @@ public class ErrorHandler {
 		FreeVar.reinit();
 	}
 	public static int getErrorCount() { return errorCount; }
-	public static int getWarningCount() { return warningCount; } // TODO: Use this in user output
+	public static int getWarningCount() { return warningCount; }
 
 	private static List<ErrorReport> reports = new ArrayList<ErrorReport>();
 	
