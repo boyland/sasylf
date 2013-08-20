@@ -45,6 +45,7 @@ import edu.cmu.cs.sasylf.util.*;
 import java.io.*;
 import java.util.*;
 
+@SuppressWarnings({"unused","serial"})
 public class DSLToolkitParser {
     public static String currentFile = "NONE";
 
@@ -1476,8 +1477,9 @@ String RuleName() :
   (t1=<IDENTIFIER> | t1= Keyword()) { s = t1.image; }
   ( LOOKAHEAD({ isRulePart() }) <MINUS> (t=<IDENTIFIER> | t=<INTEGER_LITERAL> | t=Keyword()) { s += "-" + t.image; }
   )*
-  { if (!(notNL(t1.specialToken)))
-  		ErrorHandler.report("Missing a rule name (must be on the same line as the ---)", new Location(t1));
+  { if (!(notNL(t1.specialToken))) {
+  		ErrorHandler.recoverableError("Missing a rule name (must be on the same line as the ---)", new Location(t1));
+  	}
   	return s; }
 }
 
@@ -1674,14 +1676,16 @@ Derivation Derivation() :
   { return d; }
 |  t=<USE> <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t2=<IDENTIFIER>
     {
-      if (!of.image.equals("of")) throw new ParseException("expected 'inversion of', not 'inversion " + of.image + "'");
+      if (!of.image.equals("of")) {
+          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+      }
    	  d = new DerivationByInversion(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
     }
     { return d; } 
 }
 
 Derivation Justification(Token startT, Clause c) :
-{ Token t; DerivationWithArgs d; DerivationByInduction di; Case ca;
+{ Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
   DerivationByCaseAnalysis dca; String s; Element e; Clause cl; Token of;
 }
 { // args should include expressions
@@ -1702,16 +1706,25 @@ Derivation Justification(Token startT, Clause c) :
     { return dca; }
   | <CONTRADICTION> <ON> t=<IDENTIFIER>
     { return new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
-  | <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t=<IDENTIFIER>
+  | <INVERSION> of=<IDENTIFIER> s=RuleName() [ <ON> t=<IDENTIFIER> ]
     {
-      if (!of.image.equals("of")) throw new ParseException("expected 'inversion of', not 'inversion " + of.image + "'");
+      if (t == null) {
+          ErrorHandler.recoverableError("inversion " + of.image + " " + s + " on what?",new Location(of));
+          t = new Token(IDENTIFIER,"<missing>");
+      } else if (!of.image.equals("of")) {
+          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+      }
    	  d = new DerivationByInversion(startT.image, new Location(startT), c, s, t.image);
     }
     { return d; }
     // args should include expressions *****
-  | <INDUCTION> <HYPOTHESIS> <ON> cl=SimpleExpr() //t=<IDENTIFIER>
+  | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
-      d.getArgStrings().add(cl);    }
+      if (cl != null) {
+          d.getArgStrings().add(cl);
+      } else {
+          ErrorHandler.recoverableError("induction hypothesis on what?",new Location(t));
+      }    }
     ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*
     { return d; }
   | <SUBSTITUTION> <ON> t=<IDENTIFIER>
@@ -1735,8 +1748,11 @@ Derivation Justification(Token startT, Clause c) :
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
       return d; }
-  | LOOKAHEAD(2) t=<IDENTIFIER> (<MINUS>|<ON>)     { ErrorHandler.report("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
-       throw new AssertionError("should not get here");     }
+  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} (<MINUS> t2=<IDENTIFIER> {s += "-" + t2.image;})* 
+     { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
+     <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*      { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+       return d;     }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )*
