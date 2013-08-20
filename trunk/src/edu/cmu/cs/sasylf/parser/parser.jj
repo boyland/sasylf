@@ -121,7 +121,7 @@ public class DSLToolkitParser {
     boolean isRulePart() {
 		return getToken(1).kind == MINUS
 			&& (getToken(2).kind == IDENTIFIER || getToken(2).kind == INTEGER_LITERAL ||
-			    getToken(2).kind == AND || getToken(2).kind == USE || 
+			    getToken(2).kind == USE || 
 			    getToken(2).kind == CONTRADICTION);
     }
 
@@ -1662,7 +1662,7 @@ Theorem TheoremDeclaration() :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; String s; Clause c; Clause c2; Derivation d; }
+{ Token t; Token t2; Token a; String s; Clause c; Clause c2; Derivation d; Token of;}
 {
    (     t=<IDENTIFIER> <COLON> c=Expr()
    (a=<AND> t2=<IDENTIFIER> <COLON> c2=Expr()
@@ -1672,6 +1672,12 @@ Derivation Derivation() :
      t=<PROOF> { c = null; })
    <BY> d=Justification(t, c)
   { return d; }
+|  t=<USE> <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t2=<IDENTIFIER>
+    {
+      if (!of.image.equals("of")) throw new ParseException("expected 'inversion of', not 'inversion " + of.image + "'");
+   	  d = new DerivationByInversion(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
+    }
+    { return d; } 
 }
 
 Derivation Justification(Token startT, Clause c) :

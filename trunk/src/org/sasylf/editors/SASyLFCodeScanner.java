@@ -26,7 +26,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		"is", "unproved", "lemma", "assumes", "inversion",
 		"hypothesis", "substitution", "premise",
 		"weakening", "exchange", "contraction", "solve", 
-		"proof", "and"
+		"proof", "and", "use", "contradiction"
 	};
 	
 	private static String[] _templates = {
