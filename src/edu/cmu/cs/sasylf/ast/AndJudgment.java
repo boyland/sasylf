@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +131,16 @@ public class AndJudgment extends Judgment {
       result.defineConstructor(ctx);
       result.typecheck(ctx);
       cache.put(parts,result);
+    }
+    return result;
+  }
+  
+  public static AndJudgment makeEmptyAndJudgment(Location loc) {
+    List<Judgment> empty = Collections.<Judgment>emptyList();
+    AndJudgment result = cache.get(empty);
+    if (result == null) {
+      result = new AndJudgment(loc,empty);
+      cache.put(empty, result);
     }
     return result;
   }

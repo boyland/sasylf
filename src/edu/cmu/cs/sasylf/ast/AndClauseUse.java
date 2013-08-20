@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AndClauseUse extends ClauseUse {
@@ -29,4 +30,8 @@ public class AndClauseUse extends ClauseUse {
     return new AndClauseUse(loc,elems,cd,parts);
   }
 
+  public static AndClauseUse makeEmptyAndClause(Location loc) {
+    ClauseDef cd = (ClauseDef)AndJudgment.makeEmptyAndJudgment(loc).getForm();
+    return new AndClauseUse(loc,Collections.<Element>emptyList(),cd,Collections.<ClauseUse>emptyList());
+  }
 }
