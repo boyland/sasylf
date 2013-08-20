@@ -13,6 +13,9 @@ A derivation has the form:
   *  _name_ : _judgment_  (`and` _name_ : _judgment_ ...)? `by` _justification_
 Alternately, the last derivation of a block may use the keyword `proof` to substitute for all that comes before the keyword `by`; it is implied that one is justifying the result that must be proved.
 
+In place of a derivation, one may use the syntax
+  *  `use inversion of` _rule_name_ `on` _name
+_if the case analysis of _name_ has only one case (_rule_name_) and that rule has no premises.  This derivation doesn't prove anything, but it performs any unification of variables presumed by the case.  This special form (new to SASyLF 1.2.3) is useful for inverting equality judgments which require absolute identity.
 
 == Justification ==
 
@@ -50,6 +53,10 @@ This section described each of the ways in which derivations can be justified:
     and this premise does not require the binding of new variables.  Then one
     can justify just this single premise by inversion.
 
+  * `by contradiction on` _name_  
+     (This syntax was added only in SASyLF 1.2.3)
+     If case analysis on _name_ needs *no* cases, then
+     you can use this form of justification.
   * `by rule` _rule-name_ (`on` _name_ `,` _name_ ...)?
     The derivation is justified by applying the given named rule to the previously proved derivations.
     The derivations must satisfy the rule's premises, in order.
