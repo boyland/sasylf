@@ -88,6 +88,7 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == COMMA
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
+			|| getToken(1).kind == CONTRADICTION
 			|| getToken(1).kind == INTEGER_LITERAL;
 			/*|| getToken(1).kind == LBRACE;*/
     }
@@ -119,7 +120,9 @@ public class DSLToolkitParser {
 
     boolean isRulePart() {
 		return getToken(1).kind == MINUS
-			&& (getToken(2).kind == IDENTIFIER || getToken(2).kind == INTEGER_LITERAL);
+			&& (getToken(2).kind == IDENTIFIER || getToken(2).kind == INTEGER_LITERAL ||
+			    getToken(2).kind == AND || getToken(2).kind == USE || 
+			    getToken(2).kind == CONTRADICTION);
     }
 
     Variable getVar(Token t) {
@@ -257,6 +260,8 @@ TOKEN :
 | < SOLVE: "solve" >
 | < AND: "and" >
 | < PROOF: "proof" >
+| < CONTRADICTION: "contradiction" >
+| < USE: "use" >
 }
 
 /* LITERALS */
@@ -1448,6 +1453,8 @@ Token Keyword() :
 {   (		t=< AND >
     |   t=< CASE >
     |  	t=< END >
+    |   t=< CONTRADICTION >
+    |   t=< USE >
   ) { return t; }}
  
 List<String> Name() :
@@ -1466,8 +1473,8 @@ List<String> Name() :
 String RuleName() :
 {Token t, t1; String s; }
 {
-  t1=<IDENTIFIER> { s = t1.image; }
-  ( LOOKAHEAD({ isRulePart() }) <MINUS> (t=<IDENTIFIER> | t=<INTEGER_LITERAL>) { s += "-" + t.image; }
+  (t1=<IDENTIFIER> | t1= Keyword()) { s = t1.image; }
+  ( LOOKAHEAD({ isRulePart() }) <MINUS> (t=<IDENTIFIER> | t=<INTEGER_LITERAL> | t=Keyword()) { s += "-" + t.image; }
   )*
   { if (!(notNL(t1.specialToken)))
   		ErrorHandler.report("Missing a rule name (must be on the same line as the ---)", new Location(t1));
@@ -1486,7 +1493,7 @@ List<Syntax> SyntaxDeclaration() :
 Token ExtendedIdentifier() :
 { Token t; }
 {
-	(t=<IDENTIFIER> | t=<AND>) { return t; }
+	(t=<IDENTIFIER> | t=<AND> | t=<CONTRADICTION> | t=<END> | t=<CASE>) { return t; }
 } 
 
 Set<String> TerminalsDeclaration() :
@@ -1687,6 +1694,8 @@ Derivation Justification(Token startT, Clause c) :
     ( ca=Case() { dca.getCases().add(ca); })*
     <END> <CASE> <ANALYSIS>
     { return dca; }
+  | <CONTRADICTION> <ON> t=<IDENTIFIER>
+    { return new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
   | <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t=<IDENTIFIER>
     {
       if (!of.image.equals("of")) throw new ParseException("expected 'inversion of', not 'inversion " + of.image + "'");
