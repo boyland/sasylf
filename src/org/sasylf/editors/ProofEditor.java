@@ -16,7 +16,7 @@ public class ProofEditor extends TextEditor {
 	public void doSave(IProgressMonitor progressMonitor) {
 		super.doSave(progressMonitor);
 		IEditorInput iei = getEditorInput();
-		fOutlinePage.setInput(iei);
+		getProofOutline().setInput(iei);
 		CheckProofsAction.analyzeSlf(this);
 	}
 
@@ -35,16 +35,20 @@ public class ProofEditor extends TextEditor {
 
 	private ProofOutline fOutlinePage;
 	
+	public ProofOutline getProofOutline() {
+    if (fOutlinePage == null) {
+      fOutlinePage= new ProofOutline(getDocumentProvider(), this);
+      if (getEditorInput() != null)
+        fOutlinePage.setInput(getEditorInput());
+    }
+    return fOutlinePage;	  
+	}
+	
 	@SuppressWarnings("rawtypes")
   @Override
 	public Object getAdapter(Class adapter) {
 		if (IContentOutlinePage.class.equals(adapter)) {
-			if (fOutlinePage == null) {
-				fOutlinePage= new ProofOutline(getDocumentProvider(), this);
-				if (getEditorInput() != null)
-					fOutlinePage.setInput(getEditorInput());
-			}
-			return fOutlinePage;
+		  return getProofOutline();
 		}
 		return super.getAdapter(adapter);
 	}
@@ -53,12 +57,13 @@ public class ProofEditor extends TextEditor {
 	protected void initializeEditor() {
 		super.initializeEditor();
 		setSourceViewerConfiguration(new ProofViewerConfiguration());
-//		setDocumentProvider(new PropertyDocumentProvider());
 	}
 	
 	public void doSetInput(IEditorInput input) throws CoreException {
 		super.doSetInput(input);
 		if (fOutlinePage != null)
 			fOutlinePage.setInput(input);
-	}
+  }
+	
+	
 }
