@@ -1,5 +1,6 @@
 package org.sasylf.editors;
 
+import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
@@ -36,4 +37,12 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
         return reconciler;
 	}
 
+  @Override
+  public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer,
+      String contentType) {
+    // System.out.println("getAutoEditStrategies: contentType =  " + contentType);
+    return new IAutoEditStrategy[]{ new SASyLFAutoIndentStrategy() };
+  }
+
+	
 }
