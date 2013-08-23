@@ -9,19 +9,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
 import org.eclipse.jface.text.DocumentCommand;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentListener;
-import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.swt.widgets.Display;
 
 /**
  * Auto indent for proof files.
  */
-public class SASyLFAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy {
+public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
 
   public SASyLFAutoIndentStrategy() { }
   
@@ -95,73 +93,6 @@ public class SASyLFAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
     if (events.size() == 1) doc.addDocumentListener(listener);
   }
 
-  public int getIndentUnit() {
-    return 4;
-  }
-
-  private static StringBuilder spaces = new StringBuilder("    ");
-  
-  public String indentToSpaces(int i) {
-    while (spaces.length() < i) {
-      spaces.append("        ");
-    }
-    return spaces.substring(0, i);
-  }
-  
-  /**
-   * Get the start offset of the line that this offset is in.
-   * @param d document offset is in, must not be null
-   * @param offset offset within document
-   * @throws BadLocationException if a problem happens
-   */
-  private int getLineStart(IDocument d, int offset)
-      throws BadLocationException {
-    int p = (offset == d.getLength() ? offset - 1 : offset);
-    return d.getLineInformationOfOffset(p).getOffset();
-  }
-  
-  private int getLineLength(IDocument d, int offset) throws BadLocationException {
-    int p = (offset == d.getLength() ? offset - 1 : offset);
-    IRegion r = d.getLineInformationOfOffset(p);
-    return r.getOffset() + r.getLength() - offset;
-    
-  }
-  private enum CommentStatus { NONE, LINE, LONG };
-  
-  /**
-   * Return the line up to the point passed, trimming left indentation.
-   * @param d
-   * @param offset
-   * @return string from start of line to the point given.
-   * @throws BadLocationException
-   */
-  private String getLineUpTo(IDocument d, int offset)
-      throws BadLocationException {
-    int start = getLineStart(d, offset);
-    while (start < offset && Character.isWhitespace(d.getChar(start))) {
-      ++start;
-    }
-    String line = d.get(start, offset-start);
-    return line;
-  }
-
-  private CommentStatus inComment(String line) throws BadLocationException {
-    if (line.startsWith("*")) { // require /* comments to have * leaders on lines for indenting to work
-      line = "/" + line;
-    }
-    int i = 0;
-    do {
-      int p1 = line.indexOf("/*",i);
-      int p2 = line.indexOf("//",i);
-      if (p1 < 0 && p2 < 0) return CommentStatus.NONE;
-      if (p1 < 0 || (p2 >= 0 && p2 < p1)) return CommentStatus.LINE;
-      i = p1+2;
-      int p3 = line.indexOf("*/",i);
-      if (p3 < 0) return CommentStatus.LONG;
-      i = p3+2;
-    } while (true);
-  }
-
   private void doDefaultNewlineAutoIndent(IDocument d, DocumentCommand c) {
     super.customizeDocumentCommand(d, c);
   }
@@ -217,6 +148,7 @@ public class SASyLFAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
   public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
     try {
       if (d.getLength() > 0 && c.offset > 0 && c.length == 0 && c.text != null) {
+        c.text = c.text.replaceAll("\t", indentToSpaces(getIndentUnit()));
         if (TextUtilities.endsWith(d.getLegalLineDelimiters(), c.text) != -1) {
           doNewlineAutoIndent(d,c);
         } else {

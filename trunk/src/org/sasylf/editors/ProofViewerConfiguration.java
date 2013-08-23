@@ -3,6 +3,8 @@ package org.sasylf.editors;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.formatter.ContentFormatter;
+import org.eclipse.jface.text.formatter.IContentFormatter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.BufferedRuleBasedScanner;
@@ -42,6 +44,13 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
       String contentType) {
     // System.out.println("getAutoEditStrategies: contentType =  " + contentType);
     return new IAutoEditStrategy[]{ new SASyLFAutoIndentStrategy() };
+  }
+
+  @Override
+  public IContentFormatter getContentFormatter(ISourceViewer sourceViewer) {
+    ContentFormatter result = new ContentFormatter();
+    result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
+    return result;
   }
 
 	
