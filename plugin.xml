@@ -84,11 +84,12 @@
             class="org.sasylf.handlers.AboutHandler"
             commandId="org.sasylf.commands.about"/>
    </extension>
+   
    <extension
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.sasylf.commands.checkProofs"
-            contextId="org.eclipse.ui.contexts.window"
+            contextId="org.sasylf.context"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+0">
       </key>
@@ -98,7 +99,14 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+SHIFT+F2">
       </key>
+      <key
+            commandId="org.sasylf.commands.reindent"
+            contextId="org.sasylf.context"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+I">
+      </key>
    </extension>
+   
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
@@ -115,6 +123,10 @@
                   id="org.sasylf.menus.checkProofs"
                   mnemonic="C">
             </command>
+            <command
+            	commandId="org.sasylf.commands.reindent"
+            	id="org.sasylf.menus.reindent"
+            	mnemonic="I"/>
             <visibleWhen
                   checkEnabled="false">
                <reference
@@ -222,6 +234,13 @@
             id="org.sasylf.commands.new"
             name="New Proof ...">
       </command>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            defaultHandler="org.sasylf.handlers.CorrectIndentationHandler"
+            description="Correct indentation of lines in selection"
+            id="org.sasylf.commands.reindent"
+            name="Correct Indentation">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">
@@ -252,6 +271,15 @@
             id="org.sasylf.wizards.NewProofWizard"
             name="SASyLF Proof file">
       </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            description="The context of SASyLF proof files"
+            id="org.sasylf.context"
+            name="SASyLF"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    
 
