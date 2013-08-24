@@ -63,7 +63,6 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
         System.out.println("bad event replayed: " + e);
         // muffle
       }
-      // TODO modify caret.
     }  
   };
   
