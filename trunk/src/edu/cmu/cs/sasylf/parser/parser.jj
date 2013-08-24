@@ -1640,6 +1640,12 @@ Clause SimpleExpr() :
 		c = new Clause(e);
 		c.getElements().add(e);
 	}
+	| t=<INTEGER_LITERAL>
+	{  
+		e = addTerminal(t, t.image);
+		c = new Clause(e);
+		c.getElements().add(e); 
+	}
   )
   { return c; }
 }
@@ -1697,12 +1703,18 @@ Derivation Justification(Token startT, Clause c) :
   | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER> <COLON>
     { di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
     ( ca=Case() { di.getCases().add(ca); })+
-    <END> <INDUCTION>
+    of=<END> 
+    (<INDUCTION> |
+     (LOOKAHEAD(2) <CASE> <ANALYSIS> | <CASE> | <LEMMA> | <THEOREM>)
+     { ErrorHandler.recoverableError("expected 'end case analysis'",new Location(of)); } )
     { return di; }
   | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
     ( ca=Case() { dca.getCases().add(ca); })*
-    <END> <CASE> <ANALYSIS>
+    of=<END> 
+    ( LOOKAHEAD(2) <CASE> <ANALYSIS> |
+     (<CASE> | <INDUCTION> | <LEMMA> | <THEOREM> )
+     { ErrorHandler.recoverableError("expected 'end case analysis'",new Location(of)); } )
     { return dca; }
   | <CONTRADICTION> <ON> t=<IDENTIFIER>
     { return new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
@@ -1748,7 +1760,14 @@ Derivation Justification(Token startT, Clause c) :
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
       return d; }
-  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} (<MINUS> t2=<IDENTIFIER> {s += "-" + t2.image;})* 
+  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} (<MINUS> t2=<IDENTIFIER> {s += "-" + t2.image;})+ 
+     { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
+     (<ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* | {} )
+     { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+       return d;
+     }
+  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} 
      { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
      <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*      { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
@@ -1770,7 +1789,7 @@ Case Case() :
     ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()
       { premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce)); } )*
     <BAR> s=RuleName()
-    t3=<IDENTIFIER> <COLON> ce=Expr() <IS>
+    t3=<IDENTIFIER> <COLON> ce=Expr() t=<IS>
     { ca = new RuleCase(new Location(t),
 		   	 s,
 		    	premises,
@@ -1778,8 +1797,12 @@ Case Case() :
     }
   )
 
-  ( d=Derivation() { ca.getDerivations().add(d); } )+
-    <END> <CASE>
+    ( ( d=Derivation() { ca.getDerivations().add(d); } )+
+    | { ErrorHandler.recoverableError("must have at least one derivation",new Location(t)); } )
+    t=<END> 
+    (LOOKAHEAD(2) <CASE> |
+     (<CASE> <ANALYSIS> | <INDUCTION> | <LEMMA> | <THEOREM>)
+     { ErrorHandler.recoverableError("expected 'end case'",new Location(t)); } )
     { return ca; }
 }
 
