@@ -35,6 +35,7 @@ import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Location;
+import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
@@ -103,12 +104,21 @@ public class ProofOutline extends ContentOutlinePage {
 				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()).replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
+				for (Rule r : judg.getRules()) {
+				  ProofElement re = new ProofElement("Rule", r.getName() + ": " + judg.getName());
+				  Location loc = r.getLocation();
+				  if (r.getPremises().size() > 0) {
+				    loc = r.getPremises().get(0).getLocation();
+				  }
+				  re.setPosition(convertLocToPos(document, loc));
+				  pe.addChild(re);
+				}
 			}
 			
 			//theorem
 			for (Theorem theo : cu.getTheorems()) {
 				StringBuilder sb = new StringBuilder();
-				sb.append(theo.getName()).append(" : forall ");
+				sb.append(theo.getName()).append(": forall ");
 				for(Fact fact : theo.getForalls()) {
 					sb.append(fact).append(" ");
 				}
@@ -236,6 +246,19 @@ public class ProofOutline extends ContentOutlinePage {
 			}
 			return null;
 		}
+		
+		public ProofElement findProofElementByName(String name) {
+		  String key = name + ": ";
+		  for (ProofElement pe : pList) {
+		    if (pe.getContent().startsWith(key)) return pe;
+		    if ("Judgment".equals(pe.getCategory())) {
+		      for (ProofElement ce : pe.getChildren()) {
+		        if (ce.getContent().startsWith(key)) return ce;
+		      }
+		    }
+		  }
+		  return null;
+		}
 	}
 
 	protected Object fInput;
@@ -317,5 +340,17 @@ public class ProofOutline extends ContentOutlinePage {
 				control.setRedraw(true);
 			}
 		}
+	}
+	
+	/**
+	 * Find a theorem or judgment by name.
+	 * @param name name of theorem of judgment to locate
+	 * @return position of declaration, or null if not found.
+	 */
+	public Position findProofElementByName(String name) {
+	  ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
+	  ProofElement pe = provider.findProofElementByName(name);
+	  if (pe == null) return null;
+	  return pe.getPosition();
 	}
 }

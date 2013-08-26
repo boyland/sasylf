@@ -3,6 +3,7 @@ package org.sasylf.editors;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
@@ -42,6 +43,10 @@ public class ProofEditor extends TextEditor {
 
 	public IDocument getDocument() {
 	  return getDocumentProvider().getDocument(this.getEditorInput());
+	}
+	
+	public ISourceViewer getSourceViweer() {
+	  return super.getSourceViewer();
 	}
 	
 	private ProofOutline fOutlinePage;

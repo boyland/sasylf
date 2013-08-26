@@ -157,11 +157,32 @@
       	allPopups="false"
       	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
       	<command
-              commandId="org.sasylf.commands.checkProofs"
-              icon="icons/green_check.png"
-              label="Check Proofs"
-              style="push"
-              tooltip="Run SASyLF on proofs to find errors">
+             commandId="org.sasylf.commands.open"
+             label="Open Declaration"
+             style="push"
+             tooltip="Go to declaration of named judgment or theorem">
+           <visibleWhen>
+   			<and>
+      			<with variable="activeEditorInput">
+        			<reference definitionId="org.sasylf.isProofFile"/>
+      			</with>
+      			<with variable="selection">
+         			<adapt type="org.eclipse.jface.text.ITextSelection"/>
+      			</with>
+   			</and>
+			</visibleWhen>
+		</command>
+	  </menuContribution>
+      <menuContribution 
+      	allPopups="false"
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+      	<command
+             commandId="org.sasylf.commands.checkProofs"
+             icon="icons/green_check.png"
+             id="org.sasylf.popup.checkProofs"
+             label="Check Proofs"
+             style="push"
+             tooltip="Run SASyLF on proofs to find errors">
            <visibleWhen>
    			<or>
       			<with variable="selection">
@@ -240,6 +261,12 @@
             description="Correct indentation of lines in selection"
             id="org.sasylf.commands.reindent"
             name="Correct Indentation">
+      </command>
+      <command
+            defaultHandler="org.sasylf.handlers.OpenDeclarationHandler"
+            description="Go to the declaration of judgment or theorem"
+            id="org.sasylf.commands.open"
+            name="Open Declaration">
       </command>
    </extension>
    <extension
