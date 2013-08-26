@@ -1702,7 +1702,7 @@ Derivation Justification(Token startT, Clause c) :
     { return d; }
   | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER> <COLON>
     { di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
-    ( ca=Case() { di.getCases().add(ca); })+
+    ( ca=Case() { if (ca != null) di.getCases().add(ca); })+
     of=<END> 
     (<INDUCTION> |
      (LOOKAHEAD(2) <CASE> <ANALYSIS> | <CASE> | <LEMMA> | <THEOREM>)
@@ -1710,7 +1710,7 @@ Derivation Justification(Token startT, Clause c) :
     { return di; }
   | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
-    ( ca=Case() { dca.getCases().add(ca); })*
+    ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
     ( LOOKAHEAD(2) <CASE> <ANALYSIS> |
      (<CASE> | <INDUCTION> | <LEMMA> | <THEOREM> )
@@ -1783,6 +1783,11 @@ Case Case() :
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
+  LOOKAHEAD(2) d=Derivation() {
+    ErrorHandler.recoverableError("need a case here",d);
+    return null;
+  }
+  | 
   ( LOOKAHEAD(2) t=<CASE> cl=Expr() [<ASSUMES> ce=Expr()] <IS> { ca = new SyntaxCase(new Location(t), cl, ce); }
 
   | t=<CASE> <RULE>
