@@ -122,12 +122,12 @@ public abstract class Derivation extends Fact {
 	 */
 	public static void checkMatch(Node node, Context ctx, Term matchTerm, Term suppliedTerm, String errorMsg) {
     try {
-      debug("match = " + matchTerm + ", supplied = " + suppliedTerm);
-      debug("current sub = " + ctx.currentSub);
-      debug("wrapping sub = " + ctx.adaptationSub);
-      debug("current inputVars = " + ctx.inputVars);
+      debug("check match = " + matchTerm + ", supplied = " + suppliedTerm);
+      debug("  current sub = " + ctx.currentSub);
+      debug("  wrapping sub = " + ctx.adaptationSub);
+      debug("  current inputVars = " + ctx.inputVars);
       Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
-      debug("instance sub = " + instanceSub);
+      debug("  instance sub = " + instanceSub);
       // must not require instantiating free variables
       if (!instanceSub.avoid(ctx.inputVars)) {
         Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
