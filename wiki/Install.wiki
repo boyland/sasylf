@@ -11,7 +11,7 @@ You may also get the project directly out of SVN to get the latest bleeding edge
 In this case, you will need to use the {{{Makefile}}} to produce the JAR files.
 The SVN project is a legal Eclipse plugin project; you will need to use Eclipse to help build the Eclipse plugin JAR.
 
-To use the Eclipse plugin, you need Eclipse, version 3.6 or later.
+To use the Eclipse plugin, you need Eclipse, version 4.2.2 (Juno) or later.
 See http://www.eclipse.org for how to download this free software.
 Many people find the plethora of download possibilities confusing.
 See http://www.eclipse.org/downloads/moreinfo/compare.php
@@ -24,7 +24,6 @@ to check proofs.  Proofs are also checked when the file is saved.
 
 The zip file includes the following parts:
   * {{{README.TXT}}} Release notes
-  * The Eclipse plugin JAR
   * {{{SASyLF.jar}}} JAR file needed for command-line checking of proofs.
   * {{{sasylf}}} A shell script for Linux/MacOSX command-line checking of SASyLF files.
   * {{{sasylf.bat}}} A WIndows script for the same purpose.
