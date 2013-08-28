@@ -1,4 +1,4 @@
-SASyLF version 1.2.3a9
+SASyLF version 1.2.3a10
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -101,7 +101,7 @@ analysis.
 
 RELEASE HISTORY
 
-1.2.3	Improvements to plugin
+1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
     Proof tool doesn't give up on first error in a list any more
     plugin now has a "New Proof" wizard
@@ -109,7 +109,7 @@ RELEASE HISTORY
     plugin has "Open Declaration" Popup menu.
     plugin improved information in outline window (added rules)
     plugin has basic content-assist enabled.
-    Fixed issues #24, #26, #27, #29
+    Resolved issues #24, #26, #27, #29, #30, #31
 1.2.2	Bug fixes
     Issue #21
 	Issue #23

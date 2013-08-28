@@ -60,7 +60,6 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 
   @Override
   public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
-    System.out.println("creating content assistant");
     ContentAssistant assist = new ContentAssistant();
     assist.setContentAssistProcessor(new ProofContentAssistProcessor(editor,assist), IDocument.DEFAULT_CONTENT_TYPE);
     assist.setInformationControlCreator(getInformationControlCreator(sourceViewer));

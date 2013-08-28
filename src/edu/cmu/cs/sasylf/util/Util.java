@@ -4,7 +4,7 @@ package edu.cmu.cs.sasylf.util;
 
 public class Util {
 	public static final boolean DEBUG_PARSE = false;
-	public static final boolean DEBUG = false;
+	public static boolean DEBUG = false;
 	public static final boolean DEBUG2 = false;
 	public static boolean EXTRA_ERROR_INFO = false;
 	public static boolean VERBOSE = false;

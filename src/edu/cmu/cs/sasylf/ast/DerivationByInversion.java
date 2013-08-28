@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInversion extends DerivationWithArgs {
   private final String ruleName;
@@ -60,6 +60,7 @@ public class DerivationByInversion extends DerivationWithArgs {
     Term oldGoal = ctx.currentGoal;
     Clause oldGoalClause = ctx.currentGoalClause;
     Map<CanBeCase,Set<Pair<Term,Substitution>>> oldCaseTermMap = ctx.caseTermMap;
+    boolean oldDebug = Util.DEBUG;
     
     try {
     ctx.currentCaseAnalysis = DerivationByAnalysis.adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
@@ -70,6 +71,8 @@ public class DerivationByInversion extends DerivationWithArgs {
     ctx.currentGoalClause = getClause();
     ctx.caseTermMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
 
+    Util.DEBUG = false;
+    
     Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
     boolean found_rulel = false;
     debug("*********** case analyzing line " + getLocation().getLine());
@@ -85,12 +88,14 @@ public class DerivationByInversion extends DerivationWithArgs {
         // TODO: eventually update so that we can have new variables in the result.
         // Set<FreeVar> freevars = result.getFreeVariables();
         result = result.substitute(pair.second);
-        ctx.currentSub.compose(pair.second);
-        for (FreeVar fv : result.getFreeVariables()) {
+        debug("  after adapt/subst, result = " + result);
+        // ctx.currentSub.compose(pair.second);
+        /*for (FreeVar fv : result.getFreeVariables()) {
           if (ctx.inputVars.add(fv)) {
             debug("In inversion, adding new input variable: " + fv);
           }
-        }
+        }*/
+        ctx.currentSub.compose(pair.second);
         Application ruleInstance = (Application)pair.first;
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
         pieces.remove(pieces.size()-1);
@@ -109,6 +114,8 @@ public class DerivationByInversion extends DerivationWithArgs {
           for (int i=0; i < pieces.size(); ++i) {
             ClauseUse cu = clauses.get(i);
             Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
+            debug("  piece #" + (i+1) + " freevars = " + pieces.get(i).getFreeVariables());
+            ctx.inputVars.addAll(pieces.get(i).getFreeVariables());
             Derivation.checkMatch(cu, ctx, mt, pieces.get(i), 
                   "inversion result #" + (i+1) + " does not match given derivation");
           }
@@ -134,6 +141,7 @@ public class DerivationByInversion extends DerivationWithArgs {
     ctx.currentCaseAnalysisElement = oldElement;
     ctx.currentGoal = oldGoal ;
     ctx.currentGoalClause = oldGoalClause;
+    Util.DEBUG = oldDebug;
     }
     
     // Permit induction on this term if source was a subderivation
