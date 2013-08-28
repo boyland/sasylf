@@ -72,7 +72,7 @@ public class ProofEditor extends TextEditor {
 	@Override
 	protected void initializeEditor() {
 		super.initializeEditor();
-		setSourceViewerConfiguration(new ProofViewerConfiguration());
+		setSourceViewerConfiguration(new ProofViewerConfiguration(this));
 	}
 	
 	@Override

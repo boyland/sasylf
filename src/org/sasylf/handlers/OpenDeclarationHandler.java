@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.sasylf.editors.ProofEditor;
+import org.sasylf.editors.propertyOutline.ProofElement;
 import org.sasylf.editors.propertyOutline.ProofOutline;
 
 /**
@@ -28,10 +29,11 @@ public class OpenDeclarationHandler extends AbstractHandler {
     if (!(editor instanceof ProofEditor)) return null;
     ProofEditor proofEditor = (ProofEditor)editor;
     ProofOutline outline = proofEditor.getProofOutline();
-    Position pos = outline.findProofElementByName(name);
-    if (pos == null) {
+    ProofElement element = outline.findProofElementByName(name);
+    if (element == null) {
       MessageDialog.openError(HandlerUtil.getActiveShell(event), "Open Declaration", "No judgment or theorem '"+ name +"' found");
     } else {
+      Position pos = element.getPosition();
       //TODO: later we may need to open an editor:
       ISourceViewer sourceViewer = proofEditor.getSourceViweer();
       sourceViewer.setRangeIndication(pos.getOffset(), pos.getLength(), true);

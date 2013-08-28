@@ -15,11 +15,11 @@ public class ClauseAssumption extends Fact {
   }
   
 	private Clause clause;
-	private Clause assumes;
+	private Clause assumes; //XXX: this field is apparently useless
 	
 	@Override
 	public Element getElement() {
-	  if (assumes != null) return new AssumptionElement(getLocation(),clause,assumes);
+	  //if (assumes != null) return new AssumptionElement(getLocation(),clause,assumes);
 		return clause;
 	}
 

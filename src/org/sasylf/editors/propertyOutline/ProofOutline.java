@@ -28,10 +28,10 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 import edu.cmu.cs.sasylf.ast.Case;
+import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
-import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Location;
@@ -105,7 +105,14 @@ public class ProofOutline extends ContentOutlinePage {
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
 				for (Rule r : judg.getRules()) {
-				  ProofElement re = new ProofElement("Rule", r.getName() + ": " + judg.getName());
+				  StringBuilder sb = new StringBuilder();
+				  sb.append(r.getName()).append(": ");
+				  for (Clause cl : r.getPremises()) {
+				    sb.append("forall " + cl).append(" ");
+				  }
+				  sb.append("exists ");
+				  sb.append(r.getConclusion());
+				  ProofElement re = new ProofElement("Rule", sb.toString().replaceAll("\"", ""));
 				  Location loc = r.getLocation();
 				  if (r.getPremises().size() > 0) {
 				    loc = r.getPremises().get(0).getLocation();
@@ -118,14 +125,17 @@ public class ProofOutline extends ContentOutlinePage {
 			//theorem
 			for (Theorem theo : cu.getTheorems()) {
 				StringBuilder sb = new StringBuilder();
-				sb.append(theo.getName()).append(": forall ");
+				sb.append(theo.getName());
+				sb.append(": ");
 				for(Fact fact : theo.getForalls()) {
-					sb.append(fact).append(" ");
+	        sb.append("forall ");
+					sb.append(fact.getElement()).append(" ");
 				}
 				sb.append("exists ");
-				for(Element element : theo.getExists().getElements()) {
+				sb.append(theo.getExists());
+				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
-				}
+				}*/
 				pe = new ProofElement("Theorem", sb.toString().replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, theo.getLocation()));
 				pList.add(pe);
@@ -259,6 +269,21 @@ public class ProofOutline extends ContentOutlinePage {
 		  }
 		  return null;
 		}
+		
+		public List<ProofElement> findMatching(String category, String prefix) {
+		  if (category == null) category = "";
+		  List<ProofElement> result = new ArrayList<ProofElement>();
+		  for (ProofElement pe : pList) {
+        if (pe.getCategory().startsWith(category) && pe.getContent().startsWith(prefix)) result.add(pe);
+        if ("Judgment".equals(pe.getCategory())) {
+          for (ProofElement ce : pe.getChildren()) {
+            if (ce.getCategory().startsWith(category) &&
+                ce.getContent().startsWith(prefix)) result.add(ce);
+          }
+        }
+      }
+		  return result;
+		}
 	}
 
 	protected Object fInput;
@@ -267,7 +292,8 @@ public class ProofOutline extends ContentOutlinePage {
 
 	/**
 	 * Creates a content outline page using the given provider and the given editor.
-	 * 
+	 * XXX: do it at every check, not just at save.
+	 * XXX: but perhaps this must wait for a builder....
 	 * @param provider the document provider
 	 * @param editor the editor
 	 */
@@ -347,10 +373,27 @@ public class ProofOutline extends ContentOutlinePage {
 	 * @param name name of theorem of judgment to locate
 	 * @return position of declaration, or null if not found.
 	 */
-	public Position findProofElementByName(String name) {
+	public ProofElement findProofElementByName(String name) {
 	  ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
-	  ProofElement pe = provider.findProofElementByName(name);
-	  if (pe == null) return null;
-	  return pe.getPosition();
+	  return provider.findProofElementByName(name);
+	}
+	
+	/**
+	 * Return a list of content strings that start with the given key (for content assist)
+	 */
+	public List<String> findContentAssist(String category, String prefix) {
+    List<String> result = new ArrayList<String>();
+    if (getTreeViewer() == null) {
+      System.out.println("No tree viewer!");
+      return result;
+    }
+    ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
+	  if (category.equals("lemma") || category.equals("theorem")) category = "Theorem";
+	  else if (category.equals("rule")) category = "Rule";
+	  else category = "";
+	  for (ProofElement pe : provider.findMatching(category, prefix)) {
+	    result.add(pe.getContent());
+	  }
+	  return result;
 	}
 }

@@ -281,27 +281,6 @@ TOKEN :
 |
   < #OCTAL_LITERAL: "0" (["0"-"7"])* >
 |
-  < FLOATING_POINT_LITERAL:
-        <DECIMAL_FLOATING_POINT_LITERAL>
-      | <HEXADECIMAL_FLOATING_POINT_LITERAL>
-  >
-|
-  < #DECIMAL_FLOATING_POINT_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])* (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
-      | "." (["0"-"9"])+ (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
-      | (["0"-"9"])+ <DECIMAL_EXPONENT> (["f","F","d","D"])?
-      | (["0"-"9"])+ (<DECIMAL_EXPONENT>)? ["f","F","d","D"]
-  >
-|
-  < #DECIMAL_EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
-|
-  < #HEXADECIMAL_FLOATING_POINT_LITERAL:
-        "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])+ (".")? <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
-      | "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])* "." (["0"-"9","a"-"f","A"-"F"])+ <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
-  >
-|
-  < #HEXADECIMAL_EXPONENT: ["p","P"] (["+","-"])? (["0"-"9"])+ >
-|
   < STRING_LITERAL:
       "\""
       (   (~["\"","\\","\n","\r"])

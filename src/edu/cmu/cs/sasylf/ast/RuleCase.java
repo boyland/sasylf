@@ -200,7 +200,7 @@ public class RuleCase extends Case {
 				computedSubDomain.retainAll(newInputVars);
 				if (!computedSubDomain.isEmpty())
 					ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
-							+ "\n    The term given requires instantiating the following variable(s) that should be free: " + computedSubDomain, this);
+							+ "\n    The case given requires instantiating the following variable(s) that should be free: " + computedSubDomain, this);
 				verify(caseResult.remove(pair), "internal invariant broken");
 				break;
 			} catch (UnificationFailed uf) {
