@@ -1,4 +1,4 @@
-SASyLF version 1.2.3a8
+SASyLF version 1.2.3a9
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -107,6 +107,8 @@ RELEASE HISTORY
     plugin now has a "New Proof" wizard
     plugin has auto indent and indentation correction in editor
     plugin has "Open Declaration" Popup menu.
+    plugin improved information in outline window (added rules)
+    plugin has basic content-assist enabled.
     Fixed issues #24, #26, #27, #29
 1.2.2	Bug fixes
     Issue #21

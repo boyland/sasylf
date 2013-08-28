@@ -3,6 +3,8 @@ package org.sasylf.editors;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.contentassist.ContentAssistant;
+import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.formatter.ContentFormatter;
 import org.eclipse.jface.text.formatter.IContentFormatter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
@@ -23,7 +25,10 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
         }   
     }
 	
-	public ProofViewerConfiguration (){
+	private final ProofEditor editor;
+	
+	public ProofViewerConfiguration (ProofEditor ed){
+	  editor = ed;
 	}
 	
 	public IPresentationReconciler getPresentationReconciler (ISourceViewer sourceViewer) {
@@ -51,6 +56,17 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
     ContentFormatter result = new ContentFormatter();
     result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
     return result;
+  }
+
+  @Override
+  public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
+    System.out.println("creating content assistant");
+    ContentAssistant assist = new ContentAssistant();
+    assist.setContentAssistProcessor(new ProofContentAssistProcessor(editor,assist), IDocument.DEFAULT_CONTENT_TYPE);
+    assist.setInformationControlCreator(getInformationControlCreator(sourceViewer));
+    assist.enableAutoActivation(true);
+    
+    return assist;
   }
 
 	

@@ -29,13 +29,17 @@ public class CorrectIndentationHandler extends AbstractHandler {
   
   @Override
   public Object execute(ExecutionEvent event) throws ExecutionException {
+    System.out.println("correct indetnation");
     IEditorPart editor = HandlerUtil.getActiveEditor(event);
     if (!(editor instanceof ProofEditor)) return null;
     ProofEditor proofEditor = (ProofEditor)editor;
     IDocument doc = proofEditor.getDocument();
     if (doc == null) return null;
     ISelection sel = HandlerUtil.getCurrentSelection(event);
-    if (!(sel instanceof ITextSelection)) return null;
+    if (!(sel instanceof ITextSelection)) {
+      // if (sel == null) System.out.println("no selection");
+      return null;
+    }
     ITextSelection textSel = (ITextSelection)sel;
     if (doIndent == null) doIndent = new SASyLFCorrectIndentStrategy();
     final int first = textSel.getStartLine();
