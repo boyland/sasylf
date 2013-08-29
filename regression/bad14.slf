@@ -22,11 +22,9 @@ lemma weird:
     proof by inversion of plus-s on p
 end lemma
 
-/*
 theorem impossible:
     exists 0 + 0 = S 0 .
     p000: 0 + 0 = 0 by rule plus-z
     p101: S 0 + 0 = S 0 by rule plus-s on p000
     p001: 0 + 0 = S 0 by lemma weird on p101, (S 0)
 end theorem
-*/
