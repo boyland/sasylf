@@ -472,85 +472,6 @@ end induction
 end theorem
 
 
-
-lemma narrow-subtype:	forall dsub: Gamma, X <: T |- T1[X] <: T2[X]
-						forall dsub': Gamma |- T' <: T
-						exists Gamma, X <: T' |- T1[X] <: T2[X].
-
-dres: Gamma, X <: T' |- T1[X] <: T2[X] by induction on dsub:
-
-case rule
-	----------------------------- SA-Top
-	d1: Gamma, X <: T |- T1[X] <: Top
-is
-	d2: Gamma, X <: T' |- T1[X] <: Top by rule SA-Top	
-end case
-
-case rule
-	----------------------- SA-Var
-	d1: Gamma, X <: T |- X <: T
-is
-	d2: Gamma, X <: T' |- X <: T' by rule SA-Var
-	d3: Gamma, X <: T' |- T' <: T by weakening on dsub'
-	d4: Gamma, X <: T' |- X <: T by rule SA-Trans on d2, d3
-end case
-
-case rule
-	----------------------------------------- SA-Var
-	d1: Gamma', X' <: T'', X <: T |- X' <: T''
-is
-	d2: Gamma', X' <: T'' |- X' <: T'' by rule SA-Var
-	d3: Gamma', X' <: T'', X <: T' |- X' <: T'' by weakening on d2
-end case
-
-case rule
-	----------------------------------- SA-Refl
-	d1: Gamma, X <: T |- T1[X] <: T1[X]
-is
-	d2: Gamma, X <: T' |- T1[X] <: T1[X] by rule SA-Refl
-end case
-
-case rule
-	d1: Gamma, X <: T |- T1[X] <: T3[X]
-	d2: Gamma, X <: T |- T3[X] <: T2[X]
-	----------------------------------- SA-Trans
-	d3: Gamma, X <: T |- T1[X] <: T2[X]
-is
-	d4: Gamma, X <: T' |- T1[X] <: T3[X] by induction hypothesis on d1, dsub'
-	d5: Gamma, X <: T' |- T3[X] <: T2[X] by induction hypothesis on d2, dsub'
-	d6: Gamma, X <: T' |- T1[X] <: T2[X] by rule SA-Trans on d4, d5 
-end case
-
-case rule
-	d1: Gamma, X <: T |- T2'[X] <: T1'[X]
-	d2: Gamma, X <: T |- T1''[X] <: T2''[X]
-	----------------------------------------------------------- SA-Arrow
-	d3: Gamma, X <: T |- T1'[X] -> T1''[X] <: T2'[X] -> T2''[X]
-is
-	d4: Gamma, X <: T' |- T2'[X] <: T1'[X] by induction hypothesis on d1, dsub'
-	d5: Gamma, X <: T' |- T1''[X] <: T2''[X] by induction hypothesis on d2, dsub'
-	d6: Gamma, X <: T' |- T1'[X] -> T1''[X] <: T2'[X] -> T2''[X] by rule SA-Arrow on d4, d5
-end case
-
-case rule
-	d1: Gamma, X <: T |- T2'[X] <: T1'[X]
-	d2: Gamma, X <: T, X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X']
-	--------------------------------------------------------------------------------------- SA-All
-	d3: Gamma, X <: T |- all X' <: T1'[X] => T1''[X][X'] <: all X' <: T2'[X] => T2''[X][X'] 
-is
-	d4: Gamma, X <: T' |- T2'[X] <: T1'[X] by induction hypothesis on d1, dsub'
-	//d8: Gamma, X <: T', X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X'] by induction hypothesis on d2, dsub' // limitation: not yet supported
-	d9: Gamma, X <: T', X' <: T2'[X] |- T1''[X][X'] <: T2''[X][X'] by unproved // should be the text above!
-	d10: Gamma, X <: T' |- T1[X] <: T2[X] by rule SA-All on d4, d9
-end case
-
-end induction
-end lemma
-
-
-
-
-
 lemma Tarrow-sub-Tarrow: forall dsub: * |- T'' <: all X <: T11'' => T12[X]
 								exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
 
@@ -590,7 +511,10 @@ is
 			d11: all X <: T11''' => T12''[X] == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X]
 		is
 			d12: * |- T11'' <: T11''' by rule SA-Trans on d5, d9
-			d13: *, X <: T11'' |- T12''[X] <: T22[X] by lemma narrow-subtype on d10, d5
+			xx1: *, X <: T11'' |- X <: T11'' by rule SA-Var
+			xx2: *, X <: T11'' |- T11'' <: T21' by weakening on d5
+			xx3: *, X <: T11'' |- X <: T21' by rule SA-Trans on xx1, xx2
+			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10, xx3
 			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule SA-Trans on d13, d6
 			deq: T'' == all X <: T11''' => T12''[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d12, d14
 		end case
