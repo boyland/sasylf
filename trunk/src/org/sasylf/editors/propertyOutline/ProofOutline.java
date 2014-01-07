@@ -40,6 +40,7 @@ import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -76,6 +77,8 @@ public class ProofOutline extends ContentOutlinePage {
 				cu = DSLToolkitParser.read(documentFile.getName(),documentFile.getContents());
 			} catch (CoreException e) {
 				e.printStackTrace();
+			} catch (TokenMgrError e) {
+			  return;
 			} catch (ParseException e) {
 				// e.printStackTrace();
 			  // handled elsewhere

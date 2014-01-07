@@ -22,6 +22,7 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -110,6 +111,19 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 	  return analyzeSlf(res, new StringReader(doc.get()));
 	}
 	
+  public static Location lexicalErrorAsLocation(String file, String error) {
+    try {
+      int lind = error.indexOf("line ");
+      int cind = error.indexOf(", column ");
+      int eind = error.indexOf(".", cind+1);
+      int line = Integer.parseInt(error.substring(lind+5, cind));
+      int column = Integer.parseInt(error.substring(cind+9, eind));
+      return new Location(file,line,column);
+    } catch (RuntimeException e) {
+      return new Location(file,0,0);
+    }
+  }
+  
 	public static String analyzeSlf(IResource res, Reader contents) {
     StringBuilder sb = new StringBuilder(); //XXX: WHy do this?
     
@@ -122,8 +136,11 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
       } catch (ParseException e) {
         ErrorHandler.report(null, e.getMessage(), new Location(
             e.currentToken.next), null, true, false);
+      } catch (TokenMgrError e) {
+        Location loc = lexicalErrorAsLocation(res.getName(),e.getMessage());
+        ErrorHandler.report(null, e.getMessage(), loc, null, true, false);
       }
-      cu.typecheck();
+      if (cu != null) cu.typecheck();
 
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
