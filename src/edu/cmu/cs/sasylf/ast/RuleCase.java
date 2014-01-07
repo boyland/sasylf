@@ -60,6 +60,7 @@ public class RuleCase extends Case {
 		}
 
 		conclusion.typecheck(ctx);
+    conclusion.addToDerivationMap(ctx);
 		conclusion.getClause().checkBindings(ctx.bindingTypes, this);
 		
 		// make sure we were case-analyzing a derivation, not a nonterminal
