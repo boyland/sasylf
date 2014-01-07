@@ -1,4 +1,4 @@
-SASyLF version 1.2.3
+SASyLF version 1.2.4a1
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -101,6 +101,11 @@ analysis.
 
 RELEASE HISTORY
 
+1.2.4
+    Preferences page added (only one property for now)
+    Fixed bug from 1.2.3 that some versions of lambda-loc.slf gave an error
+    poplmark2a.slf no longer requires "unproved"
+    starting to supported mixed judgments and theorems
 1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
     Proof tool doesn't give up on first error in a list any more

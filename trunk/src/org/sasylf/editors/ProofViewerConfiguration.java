@@ -54,7 +54,7 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
   @Override
   public IContentFormatter getContentFormatter(ISourceViewer sourceViewer) {
     ContentFormatter result = new ContentFormatter();
-    result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
+    // result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
     return result;
   }
 

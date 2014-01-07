@@ -24,6 +24,7 @@ import org.sasylf.Options;
  * as the former method. Some assume that every call gets its own partition,
  * others that every call gets its own region to apply to.
  * TODO: Implement this class.  It's currently a NOP.
+ * @deprecated Use SASyLFCorrectIndentatStrategy
  */
 public class ProofFormattingStrategy implements IFormattingStrategy,
     IFormattingStrategyExtension {
@@ -39,7 +40,7 @@ public class ProofFormattingStrategy implements IFormattingStrategy,
     IRegion region = (IRegion) context.getProperty(FormattingContextProperties.CONTEXT_REGION);
     Map<?,?> prefs = (Map<?,?>) context.getProperty(FormattingContextProperties.CONTEXT_PREFERENCES);
     if (document == null || prefs == null) {
-      System.out.println("no document ot prefes: nothing to do");
+      System.out.println("no document or prefs: nothing to do");
       return;
     }
     documents.addLast(document);

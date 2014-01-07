@@ -29,7 +29,6 @@ public class CorrectIndentationHandler extends AbstractHandler {
   
   @Override
   public Object execute(ExecutionEvent event) throws ExecutionException {
-    System.out.println("correct indetnation");
     IEditorPart editor = HandlerUtil.getActiveEditor(event);
     if (!(editor instanceof ProofEditor)) return null;
     ProofEditor proofEditor = (ProofEditor)editor;

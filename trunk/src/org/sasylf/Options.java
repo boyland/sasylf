@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * Class for plugin preferences.
+ * @deprecated Use Activator.getDefault().getPreferenceStore()
  */
 public class Options extends HashMap<String,String> {
   /**
