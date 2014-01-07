@@ -41,6 +41,7 @@ Gamma |- fn x => t[x] = fn x => t'[x]
 
 
 lemma equal-reflexive :
+    assumes Gamma
     forall t assumes Gamma
     exists Gamma |- t = t .
     _: Gamma |- t = t by induction on t:

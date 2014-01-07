@@ -492,7 +492,8 @@ end theorem
  * type theory of the tool.
  */
 
-theorem subst : forall dt : (Γ, x:τ') ⊢ e[x] : τ 
+theorem subst : assumes Γ
+                forall dt : (Γ, x:τ') ⊢ e[x] : τ 
 				forall dt' : Γ ⊢ e' : τ'
 				exists Γ ⊢ e[e'] : τ.
 
