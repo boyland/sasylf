@@ -261,6 +261,7 @@ Gamma; M' |- t : T; m' /\ M' >= M
 
 // Theorem 13.5.3
 theorem preservation :
+    assumes Gamma
     forall d: Gamma; M |- t : T
     forall o: Gamma; M |- m : M
     forall e: t!m -> t'!m'
