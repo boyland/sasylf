@@ -70,14 +70,25 @@ public class Rule extends RuleLike implements CanBeCase {
 			Clause c = premises.get(i);
 			c.typecheck(ctx);
 			ClauseUse premiseClause = (ClauseUse) c.computeClause(ctx, false);
-			if (!(premiseClause.getConstructor().getType() instanceof Judgment))
+			if (!(premiseClause.getConstructor().getType() instanceof Judgment)) {
 				ErrorHandler.report(JUDGMENT_EXPECTED, "Rule premise must be a judgment form, not just syntax", premiseClause);
+			}
 			premiseClause.checkBindings(bindingTypes, this);
 			premises.set(i, premiseClause);
 			//premises.set(i, new ClauseUse(c, ctx.parseMap));
 		}
 		ctx.ruleMap.put(getName(), this);
 		computeAssumption(ctx);
+		
+    if (judge.getAssume() != null && !isAssumpt) { // bad15
+      myConc.getBaseTerm(); // YUCK! for side-effect
+      NonTerminal nt = myConc.getRoot();
+      if (nt == null) {
+        ErrorHandler.report(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
+      } else if (myConc.hasVariables()) {
+        ErrorHandler.report(Errors.VAR_CONCLUSION_CONTEXT, conclusion);
+      }
+    }
 	}
 	
 	private void computeAssumption(Context ctx) {
