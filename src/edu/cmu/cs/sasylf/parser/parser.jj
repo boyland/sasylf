@@ -120,10 +120,13 @@ public class DSLToolkitParser {
     }
 
     boolean isRulePart() {
-		return getToken(1).kind == MINUS
+		return getToken(1).specialToken == null && getToken(1).kind == MINUS && getToken(2).specialToken == null;
+		/*
 			&& (getToken(2).kind == IDENTIFIER || getToken(2).kind == INTEGER_LITERAL ||
-			    getToken(2).kind == USE || 
+			    getToken(2).kind == IS || getToken(2).kind == INVERSION ||
+			    getToken(2).kind == USE || getToken(2).kind == WEAKENING ||
 			    getToken(2).kind == CONTRADICTION);
+			    */
     }
 
     Variable getVar(Token t) {
@@ -1373,37 +1376,33 @@ TOKEN :
  */
 
 CompUnit CompilationUnit() :
-{ List<String> pkg = null; List<Syntax> syntax = null; Judgment j;
+{ List<String> pkg = null; 
+  List<Syntax> syntax = new ArrayList<Syntax>(); 
+  List<Syntax> s; Judgment j;
   Set<String> terms = new HashSet<String>();
+  Set<String> trm;
   List<Judgment> judges = new ArrayList<Judgment>();
   Theorem thm, lastThm;
-  Token andTok = null;
   List<Theorem> theorems = new ArrayList<Theorem>(); }
 {
   [ pkg=PackageDeclaration() ]
-  [ terms=TerminalsDeclaration() ]
-  [ syntax=SyntaxDeclaration() ]
-  ( j=JudgmentDeclaration() { judges.add(j); } )*
-  
   (
-    thm = TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
-    (
-      (andTok = "and" )? 
-      thm = TheoremDeclaration()
+    trm=TerminalsDeclaration() { terms.addAll(trm); }
+  | s=SyntaxDeclaration() { syntax.addAll(s); } 
+  | j=JudgmentDeclaration() { judges.add(j); }
+  | thm=TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
+      ( "and" 
+        thm = TheoremDeclaration()
         { theorems.add(thm);
-          if (andTok != null)
-            lastThm.setAnd(thm);
-          andTok = null;
+          lastThm.setAnd(thm);
           lastThm = thm;
         }
-    )*
-  )?
+      )*
+  )*
   <EOF>
   {
     if (pkg == null)
 		pkg = new ArrayList<String>();
-    if (syntax == null)
-		syntax = new ArrayList<Syntax>();
     return new CompUnit(pkg, terms, syntax, judges, theorems);
   }
 }
@@ -1434,7 +1433,10 @@ Token Keyword() :
     |   t=< CASE >
     |  	t=< END >
     |   t=< CONTRADICTION >
+    |   t=< INVERSION >
+    |   t=< IS >
     |   t=< USE >
+    |   t=< WEAKENING >
   ) { return t; }}
  
 List<String> Name() :
@@ -1630,9 +1632,9 @@ Clause SimpleExpr() :
 }
 
 Theorem TheoremDeclaration() :
-{ Token t; String s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
+{ Token t0, t, tp; String s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
-  (t=<THEOREM> | t=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t)); }
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t0)); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
@@ -1644,8 +1646,13 @@ Theorem TheoremDeclaration() :
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
   "." { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
-  <END> (<THEOREM> | <LEMMA>)
-  { return thm; }
+  <END> (tp=<THEOREM> | tp=<LEMMA>)
+  { 
+    if (!tp.image.equals(t0.image)) {
+        ErrorHandler.recoverableError("expected 'end " + t0.image + "' not 'end " + tp.image + "'", new Location(tp)); 
+    }
+    return thm; 
+  }
 }
 
 Derivation Derivation() :
@@ -1685,7 +1692,7 @@ Derivation Justification(Token startT, Clause c) :
     of=<END> 
     (<INDUCTION> |
      (LOOKAHEAD(2) <CASE> <ANALYSIS> | <CASE> | <LEMMA> | <THEOREM>)
-     { ErrorHandler.recoverableError("expected 'end case analysis'",new Location(of)); } )
+     { ErrorHandler.recoverableError("expected 'end induction'",new Location(of)); } )
     { return di; }
   | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
