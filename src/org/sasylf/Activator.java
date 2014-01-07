@@ -9,7 +9,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "Editor";
+	public static final String PLUGIN_ID = "org.sasylf";
 
 	// The shared instance
 	private static Activator plugin;
@@ -45,6 +45,9 @@ public class Activator extends AbstractUIPlugin {
 	 * @return the shared instance
 	 */
 	public static Activator getDefault() {
+	  if (plugin == null) {
+	    plugin = new Activator();
+	  }
 		return plugin;
 	}
 

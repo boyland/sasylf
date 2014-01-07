@@ -173,6 +173,22 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 		
 	}
 
+  /**
+   * @param res
+   */
+  public static void dumpMarkers(IResource res) {
+    System.out.println("Printing all markers on " + res);
+		try {
+      for (IMarker m : res.findMarkers(null, true, IResource.DEPTH_INFINITE)) {
+        System.out.println("Marker is subtype of problem marker? " + m.isSubtypeOf("org.eclipse.core.resources.problemmarker"));
+        System.out.println("Marker found with message " + m.getAttribute(IMarker.MESSAGE, "<none>"));
+      }
+    } catch (CoreException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
 
 	/**
 	 * Selection in the workbench has been changed. We can change the state of

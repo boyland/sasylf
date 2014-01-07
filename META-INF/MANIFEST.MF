@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: SASyLF Editor
 Bundle-SymbolicName: org.sasylf;singleton:=true
-Bundle-Version: 1.2.1
+Bundle-Version: 1.2.4
 Bundle-Activator: org.sasylf.Activator
 Bundle-Vendor: sasylf.org
 Main-Class: edu.cmu.cs.sasylf.Main
@@ -18,8 +18,10 @@ Export-Package: edu.cmu.cs.sasylf,
  org.sasylf.actions,
  org.sasylf.editors,
  org.sasylf.editors.propertyOutline,
+ org.sasylf.handlers,
  org.sasylf.perspectives,
- org.sasylf.views
+ org.sasylf.views,
+ org.sasylf.wizards
 Bundle-ManifestVersion: 2
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -28,9 +30,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
- org.eclipse.gef,
  org.eclipse.jface.text,
- org.eclipse.jdt.ui,
- org.eclipse.core.expressions,
- org.eclipse.pde.runtime
+ org.eclipse.jdt.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

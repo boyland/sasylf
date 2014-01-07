@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
+<?eclipse version="4.2"?>
 <plugin>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -307,6 +307,20 @@
             name="SASyLF"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.sasylf.preferences.PreferencePage"
+            id="org.sasylf.preferences.PreferencePage"
+            name="SASyLF Preferences">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.sasylf.preferences.PreferenceInitializer">
+      </initializer>
    </extension>
    
 
