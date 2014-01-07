@@ -2,6 +2,7 @@
  * Untyped Lambda Calculus with locations
  *
  * Author: Jonathan Aldrich
+ * Modifications by John Boyland
  * 
  * This file defines the untyped lambda calculus with locations
  * and proves preservation of well-formed stores.
@@ -115,7 +116,8 @@ Gamma, var x |- st{loc} = e == e'[x]
 
 /************************ THEOREMS **************************************/
 
-lemma strengthen-lookup: forall dl: (Gamma, var x) |- st{loc} = e[x] exists (Gamma, var x) |- st{loc} = e' == e[x].
+lemma strengthen-lookup: assumes Gamma
+forall dl: (Gamma, var x) |- st{loc} = e[x] exists (Gamma, var x) |- st{loc} = e' == e[x].
 
 deq: (Gamma, var x) |- st{loc} = e' == e[x] by induction on dl:
 
@@ -151,7 +153,8 @@ end induction
 end lemma
 
 
-lemma strengthen-wf: forall dwf: (Gamma, var x), st |- e /*forall deq: (Gamma, var x) |- e' == e[x]*/ exists Gamma, st |- e.
+lemma strengthen-wf: assumes Gamma
+forall dwf: (Gamma, var x), st |- e /*forall deq: (Gamma, var x) |- e' == e[x]*/ exists Gamma, st |- e.
 
 de: Gamma, st |- e by induction on dwf:
 case rule
@@ -234,9 +237,10 @@ end induction
 end lemma
 
 
-lemma wf-subst: forall dwf1: (Gamma, var x), st |- e1[x]
-				forall dwf2: Gamma, st |- e2
-				exists 		 Gamma, st |- e1[e2].
+lemma wf-subst: assumes Gamma
+    forall dwf1: (Gamma, var x), st |- e1[x]
+    forall dwf2: Gamma, st |- e2
+	exists 		 Gamma, st |- e1[e2].
 
 dwf' : Gamma, st |- e1[e2] by induction on dwf1:
 
@@ -376,10 +380,41 @@ dwf' : (*), st |- e' by induction on de:
 
 		is
 	
-		d4 : (*), st |- e1				by inversion of wf-app on dwf  // BUG: cannot exclude wf-var
-		d5 : (*), st |- e2				by inversion of wf-app on dwf
+		d4 : (*), st |- e1 and
+		d5 : (*), st |- e2 by case analysis on dwf:
+		    case rule
+		        d4: *, st |- e1
+		        d5: *, st |- e2
+		        ------------------ wf-app
+		        _: *, st |- e1 e2
+		    is
+		        proof by d4,d5
+		    end case
+		    case rule
+		        v: * |- var e
+		        ------------------ wf-var
+		        _: *, st |- e
+		    is
+		        proof by contradiction on v
+		    end case
+		end case analysis
 		d6 : (*), st |- (fn x => e3[x])	by induction hypothesis on d4, d1
-		d7 : (* , var x), st |- e3[x]	by inversion of wf-fn on d6
+		d7 : (* , var x), st |- e3[x]	by case analysis on d6:
+		    case rule
+		        d6: (*, var x), st |- e3[x] 
+		        ---------------------------- wf-fn
+		        _: *, st |- fn x => e3[x]
+		    is
+		        proof by d6
+		    end case
+		    case  rule
+                v: * |- var (fn x => e3[x])
+                --------------------------- wf-var
+                _: *, st |- fn x => e3[x]
+            is
+                proof by contradiction on v
+            end case
+        end case analysis
 		d8 : (*), st |- e3[e2]			by lemma wf-subst on d7, d5
 		d9 : (*), st |- e'				by induction hypothesis on d8, d2
 
