@@ -37,7 +37,7 @@ public class PreferencePage
 		addField(
 			new IntegerFieldEditor(
 				PreferenceConstants.FORMATTER_INDENT_SIZE,
-				"&Indenttation of SASyLF constructs",
+				"&Indentation of SASyLF constructs",
 				getFieldEditorParent()));
 	}
 
