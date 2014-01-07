@@ -31,6 +31,7 @@ Gamma |- fn x => t[x]
 
 
 lemma subst :
+    assumes Gamma
     forall b1: Gamma, x |- t1[x]
     forall b2: Gamma |- t2
     exists Gamma |- t1[t2] .

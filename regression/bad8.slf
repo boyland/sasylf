@@ -38,6 +38,7 @@ Gamma; n |- fn x => t[x] -| n'
 
 
 lemma label-total:
+    assumes Gamma
     forall t assumes Gamma
     forall n assumes Gamma
     exists Gamma; n |- t -| n'.

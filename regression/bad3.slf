@@ -63,6 +63,7 @@ judgment absurd : contradiction
 
 
 lemma lam-type-not-var :
+    assumes Gamma
     forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
     forall v: T in Gamma
     exists contradiction .

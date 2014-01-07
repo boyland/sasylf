@@ -38,6 +38,7 @@ Gamma |- t
  
 
 lemma label-impossible:
+    assumes Gamma
     forall l: Gamma |- t
     exists contradiction.
     e: 0 = 0 by rule eq

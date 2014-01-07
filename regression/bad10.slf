@@ -111,6 +111,7 @@ Gamma |- t :T1[Rec X => T1[X]]
 Gamma |- (fold (Rec X => T1[X]) t) value : Rec X => T1[X]
 
 lemma canonical-forms :
+    assumes Gamma
     forall d: Gamma |- t : T
     forall v: t value
     exists Gamma |- t value : T .

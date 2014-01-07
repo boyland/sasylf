@@ -50,6 +50,7 @@ lemma variables-must-be-bound:
 end lemma
 
 theorem bad-logic-1:
+    assumes Gamma
     forall p: Gamma |- t
     forall i: t in Gamma
     exists contradiction.
@@ -80,6 +81,7 @@ theorem bad-logic-1:
 end theorem
 
 theorem bad-logic-2:
+    assumes Gamma
     forall p: Gamma |- t
     forall i: t in Gamma
     exists contradiction.
@@ -110,6 +112,7 @@ theorem bad-logic-2:
 end theorem
 
 theorem bad-logic-3:
+    assumes Gamma
     forall p: Gamma |- t
     forall i: t in Gamma
     exists contradiction.
