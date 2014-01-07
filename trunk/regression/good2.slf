@@ -57,6 +57,7 @@ CT; Gamma |- t ! : C
 
 
 lemma test:
+    assumes Gamma
     forall dt: CT; Gamma, x:C |- t[x] : C1
     exists CT |- class C1 .
     _: CT |- class C1 by induction on dt:

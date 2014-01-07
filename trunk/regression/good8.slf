@@ -39,6 +39,7 @@ Gamma |- t -> t
 
 // This is accepted
 lemma reduction-confluent0:
+    assumes Gamma
     forall r1: Gamma |- t1 -> t2
     forall r2: Gamma |- t1 -> t3
     exists Gamma |- t2 -> t3.
@@ -64,6 +65,7 @@ end lemma
 // This takes the last lemma and ADDS a pattern match on "v"
 // in between which should have no effect:
 lemma reduction-confluent1:
+    assumes Gamma
     forall r1: Gamma |- t1 -> t2
     forall r2: Gamma |- t1 -> t3
     exists Gamma |- t2 -> t3.
@@ -95,6 +97,7 @@ end lemma
 
 // another attempt on the inner pattern match:
 lemma reduction-confluent2:
+    assumes Gamma
     forall r1: Gamma |- t1 -> t2
     forall r2: Gamma |- t1 -> t3
     exists Gamma |- t2 -> t3.
@@ -125,8 +128,9 @@ lemma reduction-confluent2:
 end lemma
 
 // a third attempt succeeds in the match,
-// but now the result is not accepted.
+// but now the result was not accepted.
 lemma reduction-confluent3:
+    assumes Gamma
     forall r1: Gamma |- t1 -> t2
     forall r2: Gamma |- t1 -> t3
     exists Gamma |- t2 -> t3.
@@ -158,6 +162,7 @@ end lemma
 
 // now we can prove something with r1, but it isn't what we need:
 lemma reduction-confluent4:
+    assumes Gamma
     forall r1: Gamma |- t1 -> t2
     forall r2: Gamma |- t1 -> t3
     exists Gamma |- t2 -> t3.

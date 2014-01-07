@@ -43,12 +43,14 @@ Gamma |- fn x:T => t[x] : T' -> T
 
 
 lemma and2:
+    assumes Gamma
     forall d: Gamma |- t : T'
     exists Gamma |- t : T' and Gamma |- t : T'.
     proof by d,d
 end lemma
 
 lemma and2a:
+    assumes Gamma
     forall d: Gamma, x:T |- t[x] : T'
     exists Gamma, x:T |- t[x] : T' and Gamma, x:T |- t[x] : T'.
     proof by lemma and2 on d
