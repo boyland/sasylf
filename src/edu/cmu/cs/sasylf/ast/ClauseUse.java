@@ -184,6 +184,13 @@ public class ClauseUse extends Clause {
 		return t;
 	}
 	
+	public boolean hasVariables() {
+	  int ai = cons.getAssumeIndex();
+	  if (ai < 0) return false;
+	  Element e = getElements().get(ai);
+	  return !(e instanceof NonTerminal);
+	}
+	
 	/**
 	 * Called when checking a syntax case.
 	 * @return list of nonterminals in something we are case analyzing
