@@ -223,8 +223,8 @@ public abstract class DerivationByAnalysis extends Derivation {
 			if (!entry.getValue().isEmpty()) {
 				CanBeCase cbc = entry.getKey();
 				ErrorHandler.report(Errors.MISSING_CASE,
-									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx)/* + ": case is " + ctx.currentCaseAnalysis.substitute(sub)
-									+ "\n\trule conc was " + arguments.get(lastIdx)*/, this);				
+									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx) + ": case is " // + ctx.currentCaseAnalysis.substitute(sub)
+									+ "\n\tExpected was " + entry.getValue(), this);				
 			}
 		}
 		
@@ -287,7 +287,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 	 * This includes substituting with the current sub
 	 * and also adapting the context to include assumptions currently in scope
 	 */
-	public static Term adapt(Term term, NonTerminal originalContext, Context ctx) {
+	public static Term adapt(Term term, NonTerminal originalContext, Context ctx, Node errorPoint) {
 	  term = term.substitute(ctx.currentSub); // JTB: Added for Issue #16
 		NonTerminal targetContext = ctx.innermostGamma;
 		debug("adapting from " + originalContext + " to " + targetContext + " on " + term);
@@ -314,6 +314,9 @@ public abstract class DerivationByAnalysis extends Derivation {
 				//TODO: make this more principled (e.g. work for more than one adaptation -- see code below)
 				debug("adaptation sub = " + ctx.adaptationSub + " applied inside " + ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
 				debug("current sub = " + ctx.currentSub);
+				if (!(term instanceof Abstraction)) {
+				  ErrorHandler.report("Using variables with a judgment that doesn't assume context", errorPoint);
+				}
 				term = ((Abstraction)term).subInside(ctx.adaptationSub, ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
 				debug("term = " + term);
 			}

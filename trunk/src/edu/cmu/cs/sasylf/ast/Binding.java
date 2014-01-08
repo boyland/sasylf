@@ -39,6 +39,7 @@ public class Binding extends Element {
 
   public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Element> getElements() { return elements; }
+	public Syntax getType() { return nonTerminal.getType(); }
 	public ElemType getElemType() { return nonTerminal.getType(); }
 	public Symbol getGrmSymbol() {
 		return nonTerminal.getGrmSymbol();

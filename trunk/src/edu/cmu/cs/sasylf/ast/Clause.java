@@ -63,6 +63,10 @@ public class Clause extends Element implements CanBeCase {
 		return list;
 	}
 
+	public ClauseType getType() {
+	  throw new RuntimeException("Cannot determine type of unparsed Clause");
+	}
+	
 	public ElemType getElemType() {
 		throw new RuntimeException("should only call getElemTypes on syntax def clauses which don't have sub-clauses; can't call getElemType() on a Clause");
 	}
@@ -185,6 +189,7 @@ public class Clause extends Element implements CanBeCase {
       symLists.add(aList);
       List<ClauseUse> clauses = new ArrayList<ClauseUse>();
       List<Judgment> types = new ArrayList<Judgment>();
+      Element sharedContext = null;
       for (List<GrmTerminal> sublist : symLists) {
         Element e = parseClause(ctx,inBinding,g,sublist);
         if (e instanceof ClauseUse) {
@@ -193,6 +198,17 @@ public class Clause extends Element implements CanBeCase {
           if (ty instanceof Judgment) types.add((Judgment)ty);
           else ErrorHandler.report("cannot 'and' syntax only judgments", this);
           clauses.add(cu);
+          
+          if (((Judgment)ty).getAssume() != null) {
+            Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
+            if (sharedContext != null) {
+              if (!sharedContext.equals(context)) {
+                ErrorHandler.report("all 'and'ed judgments must use the same context", this);
+              }
+            } else {
+              sharedContext = context;
+            }
+          }
         } else {
           ErrorHandler.report("can only 'and' clauses together, not nonterminals", this);
         }

@@ -27,14 +27,30 @@ public class ErrorHandler {
 		}
 	}
 	
-	public static void recoverableError(String msg, Node obj) {
-	  try {
-	    report(msg,obj);
-	  } catch (SASyLFError x) {
-	    // stop throw
-	  }
-	}
-	
+  public static void recoverableError(Errors x, Node obj) {
+    try {
+      report(x,obj);
+    } catch (SASyLFError ex) {
+      // stop throw
+    }
+  }
+
+  public static void recoverableError(String msg, Node obj) {
+    try {
+      report(msg,obj);
+    } catch (SASyLFError x) {
+      // stop throw
+    }
+  }
+  
+  public static void recoverableError(Errors x, String msg, Node obj) {
+    try {
+      report(x, msg,obj);
+    } catch (SASyLFError ex) {
+      // stop throw
+    }
+  }
+  
   public static void recoverableError(String msg, Location obj) {
     try {
       report(msg,obj);

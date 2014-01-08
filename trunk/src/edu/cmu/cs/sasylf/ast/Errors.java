@@ -31,6 +31,7 @@ public enum Errors {
 	WRONG_JUDGMENT,
 	EMPTY_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have an empty context"), 
 	VAR_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have a context with variables"),
+	PREMISE_CONTEXT_MISMATCH ("premise cannot use a context variable not present in conclusion"),
 	FORWARD_REFERENCE		("mutual induction is unchecked"),
 	UNDECLARED_NONTERMINAL,
 	VAR_STRUCTURE_KNOWN,

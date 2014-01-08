@@ -25,6 +25,7 @@ public class ClauseUse extends Clause {
 		super(loc);
 		elements = elems;
 		cons = cd;
+    root = computeRoot();
 	}
 	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
 		super(copy.getLocation());
@@ -53,6 +54,7 @@ public class ClauseUse extends Clause {
 		if (cd == null)
 			ErrorHandler.report("Cannot find a syntax constructor or judgment for expression "+ copy +" with elements " + elemTypes, copy);
 		cons = cd;
+		root = computeRoot();
 	}
 
 	@Override 
@@ -63,6 +65,8 @@ public class ClauseUse extends Clause {
 	}
 	
 	public ClauseDef getConstructor() { return cons; }
+	
+	public ClauseType getType() { return cons.getType(); }
 
 	@Override
 	public Term getTypeTerm() { return getConstructor().asTerm(); }
@@ -77,9 +81,38 @@ public class ClauseUse extends Clause {
 
   /** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
+	//private boolean hasBindings;
 	public NonTerminal getRoot() { return root; }
 	public boolean isRootedInVar() { return root != null; }
+	/** Whether there are variable bindings -- not in use currently */
+	// public boolean hasBindings() { return hasBindings; }
 
+	private NonTerminal computeRoot() {
+	  int ai = cons.getAssumeIndex();
+	  if (ai < 0) {
+	    return null;
+	  }
+	  Element e = getElements().get(ai);
+	  return computeRootHelper(e);
+	}
+	
+	private NonTerminal computeRootHelper(Element e) {
+	  if (e instanceof NonTerminal) return (NonTerminal)e;
+	  if (e instanceof Terminal) return null;
+	  if (e instanceof ClauseUse) {
+	    for (Element ep : ((ClauseUse) e).getElements()) {
+	      if (ep.getType().equals(e.getType())) {
+	        //XXX will need to revisit (of course) if we permit context concatenation
+	        //hasBindings = true;
+	        return computeRootHelper(ep);
+	      }
+	    }
+	    return null;
+	  }
+	  ErrorHandler.report("Internal Error: no root in clause", e);
+	  throw new RuntimeException("Internal Error");
+	}
+	
 	@Override
 	public ElemType getElemType() {
 		ClauseType ct = getConstructor().getType();
