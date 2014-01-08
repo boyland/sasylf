@@ -46,9 +46,9 @@ public class Clause extends Element implements CanBeCase {
 		for (Element e : elements) {
 			if (e instanceof Clause) {
 				List<GrmTerminal> sublist = ((Clause)e).getTerminalSymbols();
-				list.add(GrmUtil.terminalFor("("));
+				list.add(GrmUtil.getLeftParen());
 				list.addAll(sublist);
-				list.add(GrmUtil.terminalFor(")"));
+				list.add(GrmUtil.getRightParen());
 			} else
 				list.add(e.getTerminalSymbol());
 		}

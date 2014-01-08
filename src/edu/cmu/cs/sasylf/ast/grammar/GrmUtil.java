@@ -24,4 +24,11 @@ public class GrmUtil {
 		return result;
 	}
 	
+	public static GrmTerminal getLeftParen() {
+	  return terminalFor("'('");
+	}
+	
+	public static GrmTerminal getRightParen() {
+	  return terminalFor("')'");
+	}
 }

@@ -223,8 +223,8 @@ public abstract class DerivationByAnalysis extends Derivation {
 			if (!entry.getValue().isEmpty()) {
 				CanBeCase cbc = entry.getKey();
 				ErrorHandler.report(Errors.MISSING_CASE,
-									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx) + ": case is " // + ctx.currentCaseAnalysis.substitute(sub)
-									+ "\n\tExpected was " + entry.getValue(), this);				
+									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx), // + ": case is " + ctx.currentCaseAnalysis.substitute(sub)
+									this, "\tExpected was " + entry.getValue());				
 			}
 		}
 		

@@ -12,7 +12,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 public class AndJudgment extends Judgment {
   public static class AndTerminal extends Terminal {
     public AndTerminal(Location loc) {
-      super("and",loc);
+      super("'and'",loc);
     }
 
     @Override
