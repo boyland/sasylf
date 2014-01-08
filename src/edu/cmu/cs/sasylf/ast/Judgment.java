@@ -7,6 +7,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class Judgment extends Node implements ClauseType {
@@ -78,8 +79,12 @@ public class Judgment extends Node implements ClauseType {
 		  ErrorHandler.report(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), this);
 
 		for (Rule r : getRules()) {
-      r.typecheck(ctx, this);
-    }
+		  try {
+		    r.typecheck(ctx, this);
+		  } catch (SASyLFError e) {
+		    // go on to next error
+		  }
+		}
 	}
 	
 	public Constant typeTerm() {

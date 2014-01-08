@@ -9,6 +9,12 @@ public class Location {
 		beginColumn = t.beginColumn;
 		file = DSLToolkitParser.currentFile;
 	}
+	public Location(String f, int line, int column) {
+	  beginLine = line;
+	  beginColumn = column;
+	  file = f;
+	}
+	
 	public int getLine() {
 		return beginLine;
 	}
