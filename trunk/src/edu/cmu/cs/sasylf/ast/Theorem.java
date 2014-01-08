@@ -82,6 +82,9 @@ public class Theorem extends RuleLike {
 	        ClauseUse cu = (ClauseUse)f.getElement();
 	        cu.asTerm();
 	        if (cu.getRoot() != null) {
+	          if (assumes == null) {
+	            ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this);
+	          }
 	          setAssumes(cu.getRoot());
 	        }				  
 				} else if (f instanceof SyntaxAssumption) {
@@ -96,6 +99,9 @@ public class Theorem extends RuleLike {
 				    root = cu.getRoot();
 				  }
 				  if (root != null) {
+            if (assumes == null) {
+              ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this);
+            }
 				    if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
 				      ErrorHandler.report("assumes irrelevant for " + sa, this);
 				    }
