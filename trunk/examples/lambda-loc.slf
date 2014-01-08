@@ -38,16 +38,16 @@ Gamma ::= *
 
 /************************ JUDGMENTS **************************************/
 
+// NB: this definition of lookup is ambiguous.
 
-judgment lookup: Gamma |- st { loc } = e
-assumes Gamma
+judgment lookup: st { loc } = e
 
------------------------------------- lookup-1
-Gamma |- (cons{loc, e, st}) {loc} = e
+---------------------------- lookup-1
+(cons{loc, e, st}) {loc} = e
 
-Gamma |- st{loc'} = e'
---------------------------------------- lookup-2
-Gamma |- (cons{loc, e'', st}) {loc'} = e'
+st{loc'} = e'
+-------------------------------- lookup-2
+(cons{loc, e'', st}) {loc'} = e'
 
 
 
@@ -67,8 +67,10 @@ Gamma |- var e
 ------------------- wf-var
 Gamma, st |- e
 
-Gamma |- st{loc} = e
-Gamma, st |- e
+st{loc} = e
+// The following line forbids cycles.
+// Instead we should have a store typing separate
+*, st |- e
 -------------------- wf-loc
 Gamma, st |- (loc)
 
@@ -105,56 +107,12 @@ assumes Gamma
 Gamma |- e == e
 
 
-judgment lookup-eq: Gamma |- st{loc} = e1 == e2
-assumes Gamma
-
-Gamma |- st{loc} = e
-Gamma, var x |- e == e'[x]
------------------------------------- lookup-eq
-Gamma, var x |- st{loc} = e == e'[x]
-
 
 /************************ THEOREMS **************************************/
 
-lemma strengthen-lookup: assumes Gamma
-forall dl: (Gamma, var x) |- st{loc} = e[x] exists (Gamma, var x) |- st{loc} = e' == e[x].
-
-deq: (Gamma, var x) |- st{loc} = e' == e[x] by induction on dl:
-
-case rule
-	----------------------------------------------------- lookup-1
-	d1: (Gamma, var x) |- (cons{loc, e', st'}) {loc} = e'
-is
-	d2: Gamma |- (cons{loc, e', st'}) {loc} = e' by rule lookup-1
-	d3: Gamma, var x |- e' == e[x] by rule equality
-	d4: (Gamma, var x) |- st{loc} = e' == e[x] by rule lookup-eq on d2, d3 
-end case
-
-case rule
-	d1: (Gamma, var x) |- st'{loc} = e[x]
-	------------------------------------------------------------ lookup-2
-	d2: (Gamma, var x) |- (cons{loc', e''', st'}) {loc} = e[x]
-is
-	d3: (Gamma, var x) |- st'{loc} = e1 == e[x] by induction hypothesis on d1
-	deq: (Gamma, var x) |- st{loc} = e' == e[x] by case analysis on d3:
-	case rule
-		d4: Gamma |- st'{loc} = e1
-		d5: Gamma, var x |- e1 == e[x]
-		------------------------------------------- lookup-eq
-		d6: Gamma, var x |- st'{loc} = e1 == e[x]
-	is
-		d7: Gamma |- st {loc} = e1 by rule lookup-2 on d4
-		deq: (Gamma, var x) |- st{loc} = e1 == e[x] by rule lookup-eq on d7, d5
-	end case
-	end case analysis
-end case
-
-end induction
-end lemma
-
 
 lemma strengthen-wf: assumes Gamma
-forall dwf: (Gamma, var x), st |- e /*forall deq: (Gamma, var x) |- e' == e[x]*/ exists Gamma, st |- e.
+forall dwf: (Gamma, var x), st |- e exists Gamma, st |- e.
 
 de: Gamma, st |- e by induction on dwf:
 case rule
@@ -179,33 +137,14 @@ end case
 	
 case rule
 
-	d1: (Gamma, var x) |- st{loc} = e'[x]
-	d2: (Gamma, var x), st |- e'[x]
+	d1: st{loc} = e'
+	d2: *, st |- e'
 	------------------------------------- wf-loc
 	d3: (Gamma, var x), st |- loc
 	
 is
-	d4: (Gamma, var x) |- st{loc} = e'' == e'[x] by lemma strengthen-lookup on d1
-	d5: Gamma, st |- loc by case analysis on d4:
-	
-	case rule
-		d6: Gamma |- st{loc} = e''
-		d7: Gamma, var x |- e'' == e'[x]
-		------------------------------------------ lookup-eq
-		d8: Gamma, var x |- st{loc} = e'' == e'[x]
-	is
-		d9: Gamma, st |- loc by case analysis on d7:
-		case rule
-			------------------------------- equality
-			d10: Gamma, var x |- e'' == e''
-		is
-			d11: Gamma, st |- e'' by induction hypothesis on d2
-			d12: Gamma, st |- loc by rule wf-loc on d6, d11
-		end case
-		end case analysis
-	end case
-	
-	end case analysis
+	d5: Gamma, st |- loc by rule wf-loc on d1, d2
+
 end case
 	
 case rule
@@ -261,33 +200,14 @@ dwf' : Gamma, st |- e1[e2] by induction on dwf1:
 
 	case rule
 
-		d1: (Gamma, var x) |- st{loc} = e[x] 
-		d2: (Gamma, var x), st |- e[x]
+		d1: st{loc} = e 
+		d2: *, st |- e
 		------------------------------------ wf-loc
 		d3: (Gamma, var x), st |- loc
 		
 	is
 	
-		d4: (Gamma, var x) |- st{loc} = e' == e[x] by lemma strengthen-lookup on d1
-		d5: Gamma, st |- loc by case analysis on d4:
-		
-		case rule
-			d6: Gamma |- st{loc} = e'
-			d7: (Gamma, var x) |- e' == e[x]
-			------------------------------------------ lookup-eq
-			d8: (Gamma, var x) |- st{loc} = e' == e[x]
-		is
-			d9: Gamma, st |- loc by case analysis on d7:
-			case rule
-				--------------------------------- equality
-				d10: Gamma, var x |- e' == e'
-			is
-				d11: Gamma, st |- e' by lemma strengthen-wf on d2
-				d12: Gamma, st |- loc by rule wf-loc on d6, d11
-			end case
-			end case analysis
-		end case
-		end case analysis
+	    proof by rule wf-loc on d1, d2
 
 	end case
 
@@ -395,7 +315,7 @@ dwf' : (*), st |- e' by induction on de:
 		        ------------------ wf-var
 		        _: *, st |- e
 		    is
-		        proof by contradiction on v
+		        proof by case analysis on v: end case analysis
 		    end case
 		end case analysis
 		d6 : (*), st |- (fn x => e3[x])	by induction hypothesis on d4, d1
@@ -412,7 +332,7 @@ dwf' : (*), st |- e' by induction on de:
                 --------------------------- wf-var
                 _: *, st |- fn x => e3[x]
             is
-                proof by contradiction on v
+                proof by case analysis on v: end case analysis
             end case
         end case analysis
 		d8 : (*), st |- e3[e2]			by lemma wf-subst on d7, d5
