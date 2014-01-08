@@ -382,4 +382,21 @@ public abstract class Term {
 
 	// reduce() is unnecessary - terms are always in normal form
 
+	/**
+	 * Check if the argument term is a subterm of this one.
+	 * @param other term to look for inside of this term
+	 * @return whether the other term is a strict subterm of this one.
+	 */
+	public boolean containsProper(Term other) {
+	  return false;
+	}
+	
+	/**
+	 * Check whether the argument term is a (possibly improper) subterm of this one.
+	 * @param other term to look for inside of this term
+	 * @return whether the other term is a (possibly improper) subterm of this one.
+	 */
+	public final boolean contains(Term other) {
+	  return this.equals(other) || containsProper(other);
+	}
 }

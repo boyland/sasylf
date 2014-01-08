@@ -24,8 +24,9 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
 		Fact inductiveArg = getArgs().get(ctx.inductionPosition);
 		Util.debug("inductionPosition = " + ctx.inductionPosition);
 		debug("subderivations: " + ctx.subderivations);
-		if (!ctx.subderivations.contains(inductiveArg))
+		if (!ctx.subderivations.contains(inductiveArg)) {
 			ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
+		}
 	}
 	
 }

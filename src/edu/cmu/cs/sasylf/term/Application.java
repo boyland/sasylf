@@ -719,4 +719,15 @@ public class Application extends Term {
 			return false;
 		}
 	}
+
+  @Override
+  public boolean containsProper(Term other) {
+    if (function.contains(other)) return true;
+    for (Term arg : arguments) {
+      if (arg.contains(other)) return true;
+    }
+    return false;
+  }
+	
+	
 }

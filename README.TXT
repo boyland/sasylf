@@ -1,4 +1,4 @@
-SASyLF version 1.2.4a3
+SASyLF version 1.2.4a4
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -107,7 +107,7 @@ RELEASE HISTORY
     poplmark2a.slf no longer requires "unproved"
     starting to supported mixed judgments and theorems
     more checking of assumes and losing of context
-    Resolved issues #34, #37, #38
+    Resolved issues #32, #34, #37, #38
 1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
     Proof tool doesn't give up on first error in a list any more
