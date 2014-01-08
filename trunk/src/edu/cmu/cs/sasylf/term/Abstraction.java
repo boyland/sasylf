@@ -280,4 +280,9 @@ public class Abstraction extends Term {
 		else
 			return make(varName, varType, newBody);			
 	}
+
+  @Override
+  public boolean containsProper(Term other) {
+    return body.contains(other);
+  }
 }

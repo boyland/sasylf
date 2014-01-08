@@ -145,6 +145,8 @@ public class DerivationByInversion extends DerivationWithArgs {
     }
     
     // Permit induction on this term if source was a subderivation
+    //XXX: This probably should handle an AndClause differently
+    //XXX: Also, if the targetDerivation is the inductive argument, we should also add.
     if (ctx.subderivations.contains(targetDerivation))
       ctx.subderivations.add(this);
     }

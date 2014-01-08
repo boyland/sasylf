@@ -1,0 +1,49 @@
+package regression;
+
+terminals s
+
+syntax
+
+n ::= 0
+    | s n
+
+judgment plus: n + n = n
+
+--------- plus-0
+0 + n = n
+
+n1 + n2 = n3
+---------------- plus-s
+s n1 + n2 = s n3
+
+
+judgment equal: n = n
+
+----- eq
+n = n
+
+
+theorem right-identity-zero:
+    // induction implicitly on "n"
+    forall n1
+    forall p : n1 + n2 = n1
+    exists n2 = 0.
+    proof by case analysis on p:
+        case rule
+            ------------ plus-0
+            _: 0 + 0 = 0
+        is
+            proof by rule eq
+        end case
+        case rule
+            p': n1' + n2 = n1'
+            --------------------- plus-s
+            _: s n1' + n2 = s n1'
+        is
+            // the following use of induction fails
+            // because there was no specific case analysis on n1,
+            // just implicit by case analysis on p
+            proof by theorem right-identity-zero on n1', p'
+        end case
+    end case analysis
+end theorem
