@@ -29,6 +29,8 @@ public enum Errors {
 	JUDGMENT_EXPECTED,
 	SYNTAX_EXPECTED ("cannot create judgment by syntax"),
 	WRONG_JUDGMENT,
+	EMPTY_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have an empty context"), 
+	VAR_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have a context with variables"),
 	FORWARD_REFERENCE		("mutual induction is unchecked"),
 	UNDECLARED_NONTERMINAL,
 	VAR_STRUCTURE_KNOWN,
@@ -49,7 +51,9 @@ public enum Errors {
 	WEIRD_ADAPT_ERROR("internal error in adapt"),
 	MUTUAL_INDUCTION_NO_INDUCTION("mutual induction cannot be used without an inductive argument"),
   MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
-  MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theoremc"),
+  MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
+  // warnings
+  ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
 	;
 
 	Errors() {
