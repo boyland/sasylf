@@ -78,8 +78,8 @@ public class Syntax extends Node implements ClauseType, ElemType {
 
 				if (r.getRightSide().size() > 1 || r.getRightSide().get(0) instanceof GrmTerminal) {
 					GrmRule rParens = new GrmRule(getSymbol(), new ArrayList<Symbol>(r.getRightSide()), cd);
-					rParens.getRightSide().add(0, GrmUtil.terminalFor("("));
-					rParens.getRightSide().add(GrmUtil.terminalFor(")"));					
+					rParens.getRightSide().add(0, GrmUtil.getLeftParen());
+					rParens.getRightSide().add(GrmUtil.getRightParen());					
 					ctx.ruleSet.add(rParens);
 				}
 			}
@@ -97,7 +97,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		// compute a rule mapping the terminal for this Syntax to the NonTerminal for this Syntax, with and without parens
 		GrmRule termRule = new GrmRule(getSymbol(), new GrmTerminal[] { getTermSymbol() }, null);
 		ctx.ruleSet.add(termRule);
-		termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.terminalFor("("), getTermSymbol(), GrmUtil.terminalFor(")") }, null);
+		termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.getLeftParen(), getTermSymbol(), GrmUtil.getRightParen() }, null);
 		ctx.ruleSet.add(termRule);
 
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
