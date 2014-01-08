@@ -63,6 +63,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	      for (Element e : getRule(ctx).getPremises()) {
 	        if (e instanceof NonTerminal) {
 	          if (!ctx.innermostGamma.getType().canAppearIn(((NonTerminal)e).getType().typeTerm())) continue;
+	          // I don't understand.  Why are we looking in OUR context for a nonterminal in the callee?
 	          if (ctx.varfreeNTs.contains(e)) continue;
 	          // Detect bad4.slf
 	          ErrorHandler.recoverableError("Passing " + e + " to " + getRule(ctx).getName() + " could conceal context", this);

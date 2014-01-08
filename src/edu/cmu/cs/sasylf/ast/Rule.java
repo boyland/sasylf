@@ -22,6 +22,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 
 public class Rule extends RuleLike implements CanBeCase {
 	public Rule(Location loc, String n, List<Clause> l, Clause c) { super(n, loc); premises=l; conclusion=c; }
@@ -66,7 +67,14 @@ public class Rule extends RuleLike implements CanBeCase {
 		conclusion = myConc;
 		//conclusion = new ClauseUse(conclusion, ctx.parseMap);
 
-		for (int i = 0; i < premises.size(); ++i) {
+    ctx.ruleMap.put(getName(), this);
+    try {
+      computeAssumption(ctx);
+    } catch (SASyLFError ex) {
+      // continue
+    }
+    
+    for (int i = 0; i < premises.size(); ++i) {
 			Clause c = premises.get(i);
 			c.typecheck(ctx);
 			ClauseUse premiseClause = (ClauseUse) c.computeClause(ctx, false);
@@ -76,12 +84,15 @@ public class Rule extends RuleLike implements CanBeCase {
 			premiseClause.checkBindings(bindingTypes, this);
 			premises.set(i, premiseClause);
 			//premises.set(i, new ClauseUse(c, ctx.parseMap));
+			NonTerminal nt = premiseClause.getRoot();
+			if (nt != null) {
+			  if (!nt.equals(myConc.getRoot())) {
+			    ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, this);
+			  }
+			}
 		}
-		ctx.ruleMap.put(getName(), this);
-		computeAssumption(ctx);
 		
     if (judge.getAssume() != null && !isAssumpt) { // bad15
-      myConc.getBaseTerm(); // YUCK! for side-effect
       NonTerminal nt = myConc.getRoot();
       if (nt == null) {
         ErrorHandler.report(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
@@ -103,6 +114,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		Element assumeElement = getConclusion().getElements().get(assumeIndex);
 		if (!(assumeElement instanceof Clause))
 			return; // default false
+
 		// look for sub-part of gamma clause, a NonTerminal with same type as gamma
 		ClauseUse assumeClause = (ClauseUse) assumeElement;
 		Syntax gammaType = (Syntax) assumeClause.getConstructor().getType();
@@ -113,7 +125,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		if (!found)
 			return; // default false
-		
+
 		// must have x in body
 		// look for sub-part of gamma clause that is a variable
 		Element varElem = null;
@@ -123,35 +135,38 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		if (varElem == null)
 			return; // default false
+
 		boolean foundVar = false;
 		for (Element e : getConclusion().getElements()) {
 			if (e.equals(varElem))
 				foundVar = true;
 		}
-		if (foundVar) {
-			isAssumpt = true;
-			if (assumeClause.getConstructor().assumptionRule != null)
-				// note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
-				ErrorHandler.report("Multiple uses of the same assumption not supported", this);
-			assumeClause.getConstructor().assumptionRule = this;
-			
-			// should not have more nonterminals in the body than we have in the assumption clause
-			//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
-			//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
-			int numBodyNonTerminals = 0;
-			int numAssumptionNonTerminals = 0;
-			for (Element e : assumeClause.getElements()) {
-				if (e instanceof NonTerminal)
-					numAssumptionNonTerminals++;
-			}
-			for (Element e : getConclusion().getElements()) {
-				if (e instanceof NonTerminal)
-					numBodyNonTerminals++;
-			}
-			if (numBodyNonTerminals>numAssumptionNonTerminals)
-				ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
-			// TODO: should check that the sets are the same
+		if (!foundVar)
+		    return;
+
+		isAssumpt = true;
+		if (assumeClause.getConstructor().assumptionRule != null)
+		  // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
+		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
+		assumeClause.getConstructor().assumptionRule = this;
+
+		// should not have more nonterminals in the body than we have in the assumption clause
+		//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
+		//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
+		int numBodyNonTerminals = 0;
+		int numAssumptionNonTerminals = 0;
+		for (Element e : assumeClause.getElements()) {
+		  if (e instanceof NonTerminal)
+		    numAssumptionNonTerminals++;
 		}
+		for (Element e : getConclusion().getElements()) {
+		  if (e instanceof NonTerminal)
+		    numBodyNonTerminals++;
+		}
+		if (numBodyNonTerminals>numAssumptionNonTerminals)
+		  ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
+		// TODO: should check that the sets are the same
+
 	}
 	
 	public boolean isAssumption() {

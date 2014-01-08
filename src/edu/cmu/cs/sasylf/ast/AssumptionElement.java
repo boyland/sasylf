@@ -28,6 +28,11 @@ public class AssumptionElement extends Element {
     context = assumes;
   }
 
+  @Override
+  public ElementType getType() {
+    return base.getType();
+  }
+  
   @Override 
   public Term getTypeTerm() {
     return base.getTypeTerm();

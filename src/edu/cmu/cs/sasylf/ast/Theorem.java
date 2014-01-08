@@ -216,10 +216,10 @@ public class Theorem extends RuleLike {
 			ErrorHandler.report(Errors.NO_DERIVATION, errorNode);
 		else {
 			Derivation last = derivs.get(derivs.size()-1);
-			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx);
+			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, errorNode);
 			debug("orig theoremTerm: "+theoremTerm);
 			debug("orig derivTerm: "+derivTerm);
-			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx);
+			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx, errorNode);
 			debug("adapted theoremTerm: " + theoremTerm);
 
 			try {

@@ -26,6 +26,8 @@ public class Terminal extends Element implements ElemType {
 	public Symbol getGrmSymbol() {
 		return getTerminalSymbol();
 	}
+	public ElemType getType() { return this; }
+	
 	public ElemType getElemType() { return this; }
 	
 	public Element typecheck(Context ctx) {

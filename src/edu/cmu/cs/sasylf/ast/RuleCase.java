@@ -220,7 +220,7 @@ public class RuleCase extends Case {
 			debug("Your case roundtripped:\n" + rule.getErrorDescription(caseTerm, ctx));
 			debug("SASyLF generated the LF term: " + candidate);
 			debug("You proposed the LF term: " + caseTerm);
-			ErrorHandler.report(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate);
+			ErrorHandler.report(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 			// TODO: explain WHY!!!
 		}
 		

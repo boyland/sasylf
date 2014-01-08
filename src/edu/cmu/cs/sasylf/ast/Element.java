@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.term.Term;
 public abstract class Element extends Node {
 	public Element(Location l) { super(l); }
 
+	public abstract ElementType getType();
 	public abstract ElemType getElemType();
 	public abstract Symbol getGrmSymbol();
 

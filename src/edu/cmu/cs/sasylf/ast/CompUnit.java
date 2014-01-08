@@ -139,7 +139,11 @@ public class CompUnit extends Node {
 		}
 
 		for (Judgment j: judgments) {
-			j.typecheck(ctx);
+			try {
+        j.typecheck(ctx);
+      } catch (SASyLFError e) {
+        // already reported.
+      }
 		}
 
 		for (Theorem t: theorems) {

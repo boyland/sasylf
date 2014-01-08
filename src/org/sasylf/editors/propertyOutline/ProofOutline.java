@@ -265,6 +265,7 @@ public class ProofOutline extends ContentOutlinePage {
 		  for (ProofElement pe : pList) {
 		    if (pe.getContent().startsWith(key)) return pe;
 		    if ("Judgment".equals(pe.getCategory())) {
+		      if (pe.getChildren() == null) continue;
 		      for (ProofElement ce : pe.getChildren()) {
 		        if (ce.getContent().startsWith(key)) return ce;
 		      }

@@ -41,7 +41,9 @@ abstract public class DerivationWithArgs extends Derivation {
 	}
 
 	public void typecheck(Context ctx) {
-		for (int i = 0; i < argStrings.size(); ++i) {
+    super.typecheck(ctx);
+    
+    for (int i = 0; i < argStrings.size(); ++i) {
 			Clause c = argStrings.get(i);
 			// remove all (c) parens:
 			while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
@@ -111,8 +113,6 @@ abstract public class DerivationWithArgs extends Derivation {
 			}
 			args.add(f);
 		}
-
-		super.typecheck(ctx);
 	}
 
 	/** Gets the ith argument as a term and adapts it to the current context using wrappingSub

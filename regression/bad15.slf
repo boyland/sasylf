@@ -1,0 +1,173 @@
+terminals fn c in contradiction
+
+syntax 
+   t ::= x | c | t t | fn x => t[x]
+
+   Gamma ::= * | Gamma, x
+
+
+judgment absurd: contradiction
+
+
+judgment isvar: t in Gamma
+assumes Gamma
+
+-------------- var
+x in (Gamma,x)
+
+
+judgment notvar: t !
+
+--- c-notvar
+c !
+
+------- app-notvar
+t1 t2 !
+
+-------------- fn-notvar
+fn x => t[x] !
+
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+------ B-Constant
+* |- c
+
+Gamma |- t1
+Gamma |- t2
+--------------- B-App-Weird
+* |- t1 t2
+
+Gamma, x |- t[x]
+--------------------- B-Abs
+Gamma |- fn x => t[x]
+
+Gamma |- t[c]
+---------------- B-Context-Weird
+Gamma, x |- t[x]
+
+
+lemma variables-must-be-bound:
+    forall p: t in *
+    exists contradiction.
+    proof by case analysis on p: end case analysis
+end lemma
+
+lemma notvar-not-in-context:
+  assumes Gamma
+  forall nv: t !
+  forall p: t in Gamma
+  exists contradiction.
+  proof by case analysis on nv:
+    case rule
+      ------- c-notvar
+      _: c !
+    is
+      proof by contradiction on p
+    end case
+    case rule
+      ---------- app-notvar
+      _: t1 t2 !
+    is
+      proof by contradiction on p
+    end case
+    case rule
+      ------------------ fn-notvar
+      _: fn x => t1[x] !
+    is
+      proof by contradiction on p
+    end case
+  end case analysis
+end lemma
+  
+lemma B-Context-inversion:
+  assumes Gamma
+  forall p: Gamma, x |- t[x]
+  exists Gamma |- t[c] .
+  proof by induction on p:
+    case rule
+      x: Gamma |- t[c] 
+      ------------------- B-Context-Weird
+      _: Gamma, x |- t[x]
+    is
+      proof by x
+    end case
+    case rule
+      p': Gamma, x, x' |- t'[x][x']
+      --------------------------------- B-Abs
+      _: Gamma, x |- fn x' => t'[x][x']
+    is
+      p'': Gamma, x', x |- t'[x][x'] by exchange on p'
+      q'': Gamma, x' |- t'[c][x'] by induction hypothesis on p''
+      proof by rule B-Abs on q''
+    end case
+  end induction
+end lemma
+
+lemma no-context-implies-notvar:
+  forall p: * |- t
+  exists t! .
+  proof by induction on p:
+    case rule
+      --------- B-Constant
+      _: * |- c
+    is
+      proof by rule c-notvar
+    end case
+    case rule
+      p1: * |- t1
+      p2: * |- t2
+      ------------ B-App-Weird
+      _: *|- t1 t2
+    is
+      proof by rule app-notvar
+    end case
+    case rule
+      p1: *, x |- t1[x]
+      --------------------- B-Abs
+      _: * |- fn x => t1[x]  
+    is
+      _: fn x => t1[x] ! by rule fn-notvar
+    end case
+  end induction
+end lemma
+  
+lemma var-implies-contradiction:
+  assumes Gamma
+  forall p: t in Gamma
+  exists contradiction .
+  q1 : Gamma |- t by case analysis on p:
+    case rule
+      ------------------- var
+      _: x in (Gamma', x)
+    is
+      p1 : * |- c by rule B-Constant
+      p2: Gamma' |- c by weakening on p1
+      proof by rule B-Context-Weird on p2
+    end case
+  end case analysis
+  p1: * |- c by rule B-Constant
+  p2: Gamma |- c by weakening on p1
+  q2: * |- t c by rule B-App-Weird on q1, p2
+  q3: * |- t by case analysis on q2:
+    case rule
+      q3 : * |- t
+      _: * |- c
+      ------------ B-App-Weird
+      _: * |- t c
+    is
+      proof by q3
+    end case
+  end case analysis
+  nv: t! by lemma no-context-implies-notvar on q3
+  _: contradiction by lemma notvar-not-in-context on nv,p
+end lemma
+
+theorem bad-logic:
+  exists contradiction .
+  v: x in (*, x) by rule var
+  proof by lemma var-implies-contradiction on v
+end theorem
+   
+   

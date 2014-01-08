@@ -6,5 +6,5 @@ package edu.cmu.cs.sasylf.ast;
  * to find their constructor.
  * Only Syntax and Terminals implement this interface.
  */
-public interface ElemType {
+public interface ElemType extends ElementType {
 }
