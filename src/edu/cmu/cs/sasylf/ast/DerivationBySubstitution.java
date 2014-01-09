@@ -71,11 +71,13 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     if (!result.equals(claimedResult)) {
       ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution",this,
           "  (got " + result + " instead)");
-    } else {
-      // Permit induction on this term if source was a subderivation
-      if (ctx.subderivations.contains(getArgs().get(0)))
-        ctx.subderivations.add(this);
-    }
+    } 
+    
+    checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
+
+    // Permit induction on this term if source was a subderivation
+    if (ctx.subderivations.contains(getArgs().get(0)))
+      ctx.subderivations.add(this);
 	}
 
   /**

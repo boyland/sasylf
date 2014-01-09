@@ -269,6 +269,15 @@ public class RuleCase extends Case {
 			}
 		}
 		
+		ClauseUse targetClause = (ClauseUse)ctx.currentCaseAnalysisElement;
+    if (targetClause.isRootedInVar()) {
+      int n = premises.size();
+      for (int i=0; i < n; ++i) {
+        Derivation.checkRootMatch(ctx,rule.getPremises().get(i),premises.get(i).getElement(),premises.get(i));
+      }
+      Derivation.checkRootMatch(ctx,rule.getConclusion(), conclusion.getElement(), conclusion);
+    }
+
 		
 		// update the current substitution
 		Substitution oldSub = new Substitution(ctx.currentSub);

@@ -36,6 +36,7 @@ public class DerivationByExchange extends DerivationWithArgs {
     if (!checkExchange(result,adapted)) {
       ErrorHandler.report(Errors.BAD_EXCHANGE, this);
     }
+    checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
 		if (ctx.subderivations.contains(arg))
 			ctx.subderivations.add(this);

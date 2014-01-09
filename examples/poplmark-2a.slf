@@ -32,7 +32,7 @@ terminals lambda all Top value stepsorvalue
  */
 syntax
 
-/** This declaration declares e as a nonterminal.  t and variants of t
+/** This declaration declares t as a nonterminal.  t and variants of t
  * (t', t'', t1, t2, etc.--you can add primes or numbers) are used as
  * metavariables for this syntactic category, as commonly used in the
  * PL research literature.
@@ -268,14 +268,6 @@ judgment type-equality: T == T
 T == T
 
 
-judgment arrow-sub: T == T1' -> T2 <: T1 -> T2
-
-* |- T1 <: T1'
-* |- T2' <: T2
--------------------------------------- arrow-sub
-(T1' -> T2') == T1' -> T2' <: T1 -> T2
-
-
 judgment Tarrow-sub: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
 
 * |- T11'' <: T11'
@@ -338,58 +330,52 @@ end theorem
 
 /************************ PROGRESS **************************************/
 
-lemma arrow-sub-arrow: forall dsub: * |- T <: T1 -> T2
-								exists T == T1' -> T2'' <: T1 -> T2.	// T == T1' -> T2', T1 <: T1', and T2' <: T2								
+lemma arrow-sub-arrow: 
+    forall dsub: * |- T <: T1 -> T2
+	exists T == (T1' -> T2') and * |- T1 <: T1' and * |- T2' <: T2 .								
 
-deq: T == T1' -> T2'' <: T1 -> T2 by induction on dsub:
+proof by induction on dsub:
 
 case rule
 	------------------- SA-Refl
-	d1: Gamma |- T <: T
+	d1: * |- T <: T
 is
+    deq: T1 -> T2 == T1 -> T2 by rule type-equality
 	dsub1: * |- T1 <: T1 by rule SA-Refl
 	dsub2: * |- T2 <: T2 by rule SA-Refl
-	deq: T == T1 -> T2 <: T1 -> T2 by rule arrow-sub on dsub1, dsub2
+	proof by deq, dsub1, dsub2
 end case
 	
 case rule
-	d1: Gamma |- T <: T2'
-	d2: Gamma |- T2' <: T1 -> T2
+	d1: * |- T <: T'
+	d2: * |- T' <: T1 -> T2
 	---------------------------- SA-Trans
-	d3: Gamma |- T <: T1 -> T2
+	d3: * |- T <: T1 -> T2
 is
-	d4: T2' == T21' -> T22' <: T1 -> T2 by induction hypothesis on d2
-	deq: T == T1' -> T2'' <: T1 -> T2 by case analysis on d4:
-	case rule
-		d5: * |- T1 <: T21'
-		d6: * |- T22' <: T2
-		----------------------------------- arrow-sub
-		d7: T21' -> T22' == T21' -> T22' <: T1 -> T2
-	is
-		d8: T == T1'' -> T3 <: T21' -> T22' by induction hypothesis on d1
-		deq: T == T1' -> T2'' <: T1 -> T2 by case analysis on d8:
-		case rule
-			d9: * |- T21' <: T1''
-			d10: * |- T3 <: T22'
-			----------------------------------------------- arrow-sub
-			d11: (T1'' -> T3) == T1'' -> T3 <: T21' -> T22'
-		is
-			d12: * |- T1 <: T1'' by rule SA-Trans on d5, d9
-			d13: * |- T3 <: T2 by rule SA-Trans on d10, d6
-			deq: T == T1'' -> T3 <: T1 -> T2 by rule arrow-sub on d12, d13
-		end case
-		end case analysis
-	end case
-	end case analysis
+	d4: T' == T21' -> T22' and 
+	d5: * |- T1 <: T21 and
+	d6: * |- T22' <: T2 by induction hypothesis on d2
+	// d4 has only one case which unifies the two types.  We want the unification
+	// and so use the following special case proof step:
+	use inversion of type-equality on d4
+	d8: T == T1'' -> T3 and
+	d9: * |- T21' <: T1'' and
+    d10: * |- T3 <: T22' by induction hypothesis on d1
+    use inversion of type-equality on d8
+    d11: T1'' -> T3 == T1'' -> T3 by rule type-equality
+    d12: * |- T1 <: T1'' by rule SA-Trans on d5, d9
+	d13: * |- T3 <: T2 by rule SA-Trans on d10, d6
+	proof by d11,d12,d13
 end case
 	
 case rule
-	d1: Gamma |- T1 <: T1'
-	d2: Gamma |- T2' <: T2
+	d1: * |- T1 <: T1'
+	d2: * |- T2' <: T2
 	----------------------------------- SA-Arrow
-	d3: Gamma |- T1' -> T2' <: T1 -> T2
+	d3: * |- T1' -> T2' <: T1 -> T2
 is
-	deq: T == T1' -> T2' <: T1 -> T2 by rule arrow-sub on d1, d2
+    d0: T1' -> T2' == T1' -> T2' by rule type-equality
+	proof by d0, d1, d2
 end case
 
 end induction
@@ -451,19 +437,11 @@ deq : t == lambda x : T1' => t'[x] by induction on dtt :
 		d3': * |- t : T1 -> T2
 
 	is
-		d4: T' == T1'' -> T2' <: T1 -> T2 by lemma arrow-sub-arrow on d2'
-		deq : t == lambda x : T1' => t'[x] by case analysis on d4:
-		
-		case rule
-			d5: * |- T1 <: T1''
-			d6: * |- T2' <: T2
-			------------------------------------------- arrow-sub
-			d7: (T1'' -> T2') == T1'' -> T2' <: T1 -> T2
-		is
-			d8: t == lambda x : T1''' => t''[x] by induction hypothesis on dtv, d1'
-		end case
-		
-		end case analysis	
+		d4: T' == T1'' -> T2' and
+		d5: * |- T1 <: T1'' and
+		d6: * |- T2' <: T2 by lemma arrow-sub-arrow on d2'
+		use inversion of type-equality on d4
+		d8: t == lambda x : T1''' => t''[x] by induction hypothesis on dtv, d1'		
 	end case
 
 	// other cases don't unify with conclusion
@@ -472,8 +450,11 @@ end induction
 end theorem
 
 
-lemma Tarrow-sub-Tarrow: forall dsub: * |- T'' <: all X <: T11'' => T12[X]
-								exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
+lemma Tarrow-sub-Tarrow: 
+    forall dsub: * |- T'' <: all X <: T11'' => T12[X]
+    exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
+    // exists T'' == all X <: T11' => T12'[X] and * |- T11'' <: T11' and *, X <: T11'' |- T12'[X] <: T12[X].
+	
 
 deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by induction on dsub:
 
@@ -847,20 +828,13 @@ case rule
 	----------------------------------------- T-Sub
 	d3: * |- lambda x:T11 => t12[x] : T1 -> T
 is
-	d4: T'' == T1' -> T' <: T1 -> T by lemma arrow-sub-arrow on d2
-	dt12: * |- t12[t2] : T by case analysis on d4:
-	case rule
-		d5: * |- T1 <: T1'
-		d6: * |- T' <: T
-		-------------------------------- arrow-sub
-		d7: T1' -> T' == T1' -> T' <: T1 -> T
-		
-	is
-		d8: * |- T2 <: T1' by rule SA-Trans on dsub, d5
-		d9: * |- t12[t2] : T' by induction hypothesis on d1, dt2, d8
-		dt12: * |- t12[t2] : T by rule T-Sub on d9, d6
-	end case
-	end case analysis
+	d4: T'' == T1' -> T' and 
+	d5: * |- T1 <: T1' and
+	d6: * |- T' <: T by lemma arrow-sub-arrow on d2
+	use inversion of type-equality on d4
+	d8: * |- T2 <: T1' by rule SA-Trans on dsub, d5
+	d9: * |- t12[t2] : T' by induction hypothesis on d1, dt2, d8
+	dt12: * |- t12[t2] : T by rule T-Sub on d9, d6
 end case
 
 end induction

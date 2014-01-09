@@ -51,12 +51,14 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		    ClauseUse source = sourceClauses.get(i);
 		    ClauseUse result = results.get(i);
 		    Derivation.checkMatch(this,ctx,result,source,"Claimed conjunct #" + (i+1) + " is not equivalent to previous");
+		    checkRootMatch(ctx,source,result,this);
 		  }
 		  return;
 		}
 		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);
 		
 		Derivation.checkMatch(this, ctx, derivTerm, argTerm, "Derivation " + getElement() + " is not equivalent to the previous derivation");
+    checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 		/*
 		if (!argTerm.equals(derivTerm)) {
 			// TODO: could be looser than this

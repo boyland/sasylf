@@ -38,6 +38,7 @@ public enum Errors {
 	UNKNOWN_CONTEXT,
 	REUSED_CONTEXT,
 	INCONSISTENT_CONTEXTS,
+	CONTEXT_DISCARDED ("context discarded"),
 	WRONG_SUBSTITUTION_ARGUMENTS ("expected 2 arguments to a substitution justification: the judgment being substituted, and the judgment being substituted into"),
 	SUBSTITUTION_UNCHECKED ("substitution is unchecked"),
 	SUBSTITUTION_NO_CONTEXT ("no context to substitute"),

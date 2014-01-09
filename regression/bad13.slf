@@ -118,3 +118,19 @@ theorem bad-logic-3:
     exists contradiction.
     proof by lemma variables-must-be-bound on i
 end theorem
+
+theorem bad-logic-4:
+    assumes Gamma
+    forall i: t in Gamma
+    exists contradiction.
+    i' : t in * by weakening on i
+    proof by lemma variables-must-be-bound on i'
+end theorem
+
+theorem bad-logic-5:
+    assumes Gamma
+    forall i: t in Gamma
+    exists contradiction.
+    i' : t in * by exchange on i
+    proof by lemma variables-must-be-bound on i'
+end theorem

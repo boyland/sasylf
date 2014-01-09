@@ -61,6 +61,9 @@ public class DerivationByWeakening extends DerivationWithArgs {
       ErrorHandler.report(Errors.BAD_WEAKENING, this); // main part of derivation is different
       return;
     }
+    
+    checkRootMatch(ctx,e,this.getElement(),this);
+    
     // System.out.println("Weakening succeeds!");
     
     // Permit induction on this term if source was a subderivation
