@@ -31,6 +31,7 @@ public class DerivationBySolve extends DerivationWithArgs {
 		else {
 			complete.prettyPrint();
 			System.out.println();
+			ErrorHandler.warning("proof by solve is not reliable", this);
 		}
 	}
 }

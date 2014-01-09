@@ -41,6 +41,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		if (!(targetDerivation.getElement() instanceof ClauseUse)) {
 		  ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
+		ClauseUse targetClause = (ClauseUse)targetDerivation.getElement();
 		
     RuleLike rulel = ctx.ruleMap.get(ruleName);
     if (rulel == null) {
@@ -118,12 +119,21 @@ public class DerivationByInversion extends DerivationWithArgs {
             ctx.inputVars.addAll(pieces.get(i).getFreeVariables());
             Derivation.checkMatch(cu, ctx, mt, pieces.get(i), 
                   "inversion result #" + (i+1) + " does not match given derivation");
+            // If the derivation has no implicit context, we
+            // skip the context check
+            if (targetClause.isRootedInVar()) {
+              checkRootMatch(ctx,rule.getPremises().get(i),clauses.get(i),this);
+            }
           }
         } else {
           // backward compatibility: just look for result in the pieces
           if (!pieces.contains(result)) {
             ErrorHandler.report(Errors.INVERSION_NOT_FOUND, this,
                 "\t SASyLF did not find " + result + " in " + pieces);
+          }
+          if (targetClause.isRootedInVar()) {
+            int i = pieces.indexOf(result);
+            checkRootMatch(ctx,rule.getPremises().get(i),this.getElement(),this);
           }
         }
         found_rulel = true;

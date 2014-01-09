@@ -35,10 +35,15 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		super.typecheck(ctx);
 		debug("line: " + this.getLocation().getLine());
 		
-		boolean contextCheckNeeded = false;
+    // make sure the number of arguments is correct
+    RuleLike ruleLike = getRule(ctx);
+    if (getArgs().size() != ruleLike.getPremises().size())
+      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
+
+    boolean contextCheckNeeded = false;
 		
-		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(getRule(ctx).getAssumes())) {
-		  NonTerminal nt = getRule(ctx).getAssumes();
+		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(ruleLike.getAssumes())) {
+		  NonTerminal nt = ruleLike.getAssumes();
 		  if (nt == null) {
 		    contextCheckNeeded = true;
 		  } else if (ctx.innermostGamma.getType() != nt.getType()) {
@@ -60,22 +65,18 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		  //
 		  // Detecting 1 is (fairly) easy and can be done here.  Detecting 2 is harder and is done later
 		  if (contextCheckNeeded) {
-	      for (Element e : getRule(ctx).getPremises()) {
+	      for (Element e : ruleLike.getPremises()) {
 	        if (e instanceof NonTerminal) {
 	          if (!ctx.innermostGamma.getType().canAppearIn(((NonTerminal)e).getType().typeTerm())) continue;
-	          // I don't understand.  Why are we looking in OUR context for a nonterminal in the callee?
-	          if (ctx.varfreeNTs.contains(e)) continue;
+	          Element f = getArgs().get(ruleLike.getPremises().indexOf(e)).getElement();
+	          if (ctx.isVarFree(f.asTerm())) continue;
 	          // Detect bad4.slf
-	          ErrorHandler.recoverableError("Passing " + e + " to " + getRule(ctx).getName() + " could conceal context", this);
+	          ErrorHandler.recoverableError("Passing " + e + " to " + ruleLike.getName() + " could conceal context", this);
 	        }
 	      }		    
 		  }
 		}
 		
-		// make sure the number of arguments is correct
-		if (getArgs().size() != getRule(ctx).getPremises().size())
-			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
-
 		// build ruleTerm: the rule claimed by the user, with all free variables freshified,
 		// and adapted to the variables in scope at this point (i.e. Gamma unrolled as necessary)
 		Element elem = getElement();
@@ -98,9 +99,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		termArgs.add(derivTerm); // tried concTermVar
 		FreeVar concTermVar = FreeVar.fresh("conclusion", Constant.UNKNOWN_TYPE); 
 		termArgsWithVar.add(concTermVar);
-		Term appliedTerm = App(getRule(ctx).getRuleAppConstant(), termArgs);
-		Term appliedTermWithVar = App(getRule(ctx).getRuleAppConstant(), termArgsWithVar);
-		Term ruleTerm = getRule(ctx).getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
+		Term appliedTerm = App(ruleLike.getRuleAppConstant(), termArgs);
+		Term appliedTermWithVar = App(ruleLike.getRuleAppConstant(), termArgsWithVar);
+		Term ruleTerm = ruleLike.getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
 
 		// unify the two terms, and check that the appropriate instance relationships hold
 		Substitution sub;
@@ -125,7 +126,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
         ruleConcVarSet.removeAll(ruleTermArgs.get(i).getFreeVariables());//ruleTermArgs.get(i).substitute(sub).getFreeVariables());
       }
       
-			if (getRule(ctx) instanceof Theorem) {				
+			if (ruleLike instanceof Theorem) {				
 				mustAvoid.addAll(ruleConcVarSet);
 				
 				// compute new input vars - they're what ruleConcVarSet substitutes to
@@ -153,10 +154,10 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			  for (FreeVar v : ruleConcVarSet) {
 			    if (v.getType() instanceof Constant) {
             if (!ctx.innermostGamma.getType().canAppearIn(v.getType())) continue;
-            NonTerminal nt = new NonTerminal(v.substitute(sub).toString(), this.getLocation());
-            if (ctx.varfreeNTs.contains(nt)) continue;
-			      // Detect bad5.slf
-			      ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + getRule(ctx).getName() +
+            Term actual = v.substitute(sub);
+            if (ctx.isVarFree(actual)) continue;
+            NonTerminal nt = new NonTerminal(actual.toString(), this.getLocation());
+			      ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
 			          " may conceal its context.", this, "\t(variable bound to " + nt + ")");
 			    }
 			  }
@@ -190,5 +191,22 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 						"SASyLF computed that result LF term should be " + explanationTerm);
 			}
 		}
+
+		// Now we must check that all relations that assume a context don't lose that context
+		int n = getArgs().size();
+		boolean anyContextsIn = false;
+    for (int i=0; i < n; ++i) {
+		  Element formal = ruleLike.getPremises().get(i);
+		  Element actual = getArgs().get(i).getElement();
+		  if (actual instanceof ClauseUse && ((ClauseUse)actual).isRootedInVar()) {
+		    anyContextsIn = true;
+		    checkRootMatch(ctx,actual,formal,this);
+		  }
+		}
+    // if we never passed any contexts into the rule/theorem, we expect none out,
+    // and so can avoid this check.
+    if (anyContextsIn) {
+      checkRootMatch(ctx,ruleLike.getConclusion(),this.getElement(),this);
+    }
 	}
 }

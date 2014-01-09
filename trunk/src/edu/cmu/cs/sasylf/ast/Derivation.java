@@ -147,4 +147,22 @@ public abstract class Derivation extends Fact {
     }
 
 	}
+	
+	/**
+	 * Type checking cannot check whether an implicit context is discarded.
+	 * This methods checks this situation.
+	 * @param ctx global definitions (not used)
+	 * @param source flow start of a derivation
+	 * @param dest flow termination of a derivation
+	 * @param errorPoint point where to mention an error.
+	 */
+	public static void checkRootMatch(Context ctx, Element source, Element dest, Node errorPoint) {
+	  if (source instanceof ClauseUse && dest instanceof ClauseUse) {
+	    ClauseUse src = (ClauseUse) source;
+	    ClauseUse dst = (ClauseUse) dest;
+	    if (src.getRoot() != null && dst.getRoot() == null) {
+	      ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
+	    }
+	  }
+	}
 }
