@@ -35,5 +35,5 @@ lemma subst :
     forall b1: Gamma, x |- t1[x]
     forall b2: Gamma |- t2
     exists Gamma |- t1[t2] .
-    _: Gamma |- t2 t2 by rule B-App on (Gamma |- t2)
+    _: Gamma |- t2 t2 by rule B-App on (Gamma |- t2) //! nonsense that crashed earlier versions
 end lemma

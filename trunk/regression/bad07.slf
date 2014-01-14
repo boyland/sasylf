@@ -246,11 +246,13 @@ M >= M'
 
 
 
-judgment preserved: Gamma; M |- t : T; m /\ M >= M
+judgment preserved: Gamma; M |- t : T; m /\ M >= M //! missing assumes
 
 
-Gamma; M' |- t : T
-Gamma; M' |- m' : M'
+Gamma; M' |- t : T //! cascade error
+
+Gamma; M' |- m' : M' //! cascade error
+
 M' >= M
 ----------------------------------------- preserved-def
 Gamma; M' |- t : T; m' /\ M' >= M
@@ -266,7 +268,7 @@ theorem preservation :
     forall o: Gamma; M |- m : M
     forall e: t!m -> t'!m'
     exists Gamma; M' |- t' : T; m' /\ M' >= M.
-    _ : Gamma; M' |- t' : T; m' /\ M' >= M by induction on d:
+    _ : Gamma; M' |- t' : T; m' /\ M' >= M by induction on d: //! missing case (incidental error)
 	case rule
 	    v: t : T in Gamma
 	    -------------------- T-Var
@@ -275,9 +277,9 @@ theorem preservation :
 	    _: Gamma; M |- t' : T; m' /\ M >= M by case analysis on v:
 		case rule
 		    ----------------------- var
-		    _: x':T in Gamma', x':T
+		    _: x':T in Gamma', x':T		    
 		is
-		    _: Gamma',x':T; M |- t' : T; m' /\ M >= M 
+		    _: Gamma',x':T; M |- t' : T; m' /\ M >= M  //! cascade error
 			    by case analysis on e:
 		    end case analysis
 		end case

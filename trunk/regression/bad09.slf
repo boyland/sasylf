@@ -55,7 +55,7 @@ lemma label-impossible:
                 is
                     // BUG: in this context, all SASyLF through uwm 14 adds "Gamma',x"
                     // to all judgments, including e! 
-                    _: contradiction by case analysis on e: end case analysis
+                    _: contradiction by case analysis on e: end case analysis //! missing case
                 end case
             end case analysis
         end case

@@ -32,12 +32,16 @@ judgment bound: Gamma |- t
 assumes Gamma
 
 ------ B-Constant
-* |- c
+* |- c //! can't use * in conclusion
 
-Gamma |- t1
-Gamma |- t2
+
+Gamma |- t1 //! premise can't use context not in conclusion
+
+Gamma |- t2 //! premise can't use context not in conclusion
+
 --------------- B-App-Weird
-* |- t1 t2
+* |- t1 t2 //! can't use * in conclusion
+
 
 Gamma, x |- t[x]
 --------------------- B-Abs
@@ -45,7 +49,7 @@ Gamma |- fn x => t[x]
 
 Gamma |- t[c]
 ---------------- B-Context-Weird
-Gamma, x |- t[x]
+Gamma, x |- t[x] //! can't bind variable in conclusion
 
 
 lemma variables-must-be-bound:

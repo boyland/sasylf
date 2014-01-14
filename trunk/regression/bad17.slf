@@ -1,0 +1,23 @@
+// Through SASyLF 1.2.3, inversion would generate new variables,
+// that could be rebound by later derivations (incorrectly)
+
+package regression;
+
+terminals s
+
+syntax
+    n ::= 0 | s n
+    
+judgment eq: n = n
+
+----- eq
+n = n
+
+theorem all-nats-equal:
+    forall n1
+    forall n2
+    exists n1 = n2.
+    d1: n1 = n1 by rule eq
+    use inversion of eq on d1
+    d2: n1 = n2 by d1 //! cannot re-bind variable from inversion
+end theorem

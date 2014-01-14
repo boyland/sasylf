@@ -1,13 +1,13 @@
 terminals contradiction OK
 
 syntax
-  u ::= u + v
+  u ::= u + v //! not inhabited
      | v * w
      | u / w
      
-  v ::= u w
+  v ::= u w //! not inhabited
   
-  w ::= v - u
+  w ::= v - u //! not inhabited
   
 judgment absurd: contradiction
 

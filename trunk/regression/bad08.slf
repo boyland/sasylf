@@ -40,7 +40,7 @@ Gamma; n |- fn x => t[x] -| n'
 lemma label-total:
     assumes Gamma
     forall t assumes Gamma
-    forall n assumes Gamma
+    forall n assumes Gamma //! n cannot assume Gamma
     exists Gamma; n |- t -| n'.
     _: Gamma; n |- t -| n' by induction on t:
         case x assumes Gamma',x is
