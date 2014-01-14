@@ -51,6 +51,14 @@ public class ErrorHandler {
     }
   }
   
+  public static void recoverableError(Errors error, Location location) {
+    try {
+      report(error,"",location,null,true,true);
+    } catch (SASyLFError x) {
+      // stop throw
+    }
+  }
+
   public static void recoverableError(String msg, Location obj) {
     try {
       report(msg,obj);
@@ -67,6 +75,13 @@ public class ErrorHandler {
 	  }
 	}
 
+  public static void recoverableError(Errors errorType, String msg, Node obj, String debugInfo) {
+    try {
+      report(errorType, msg, obj.getLocation(), debugInfo, true, true);
+    } catch (SASyLFError x) {
+      // stop throw
+    }
+  }
 
 	public static void warning(Errors errorType, Node obj) {
 		report(errorType, null, obj.getLocation(), null, false, true);
@@ -74,6 +89,10 @@ public class ErrorHandler {
 
 	public static void warning(String msg, Node obj) {
 		report(null, msg, obj.getLocation(), null, false, true);
+	}
+	
+	public static void warning(Errors errorType, Node obj, String fixInfo) {
+	  report(errorType, null, obj.getLocation(), fixInfo, false, true);
 	}
 
 	public static void report(Errors errorType, Node obj) {
