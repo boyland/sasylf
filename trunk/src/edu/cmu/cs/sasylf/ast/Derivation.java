@@ -85,7 +85,13 @@ public abstract class Derivation extends Fact {
 	  boolean finalOK = false;
 	  for (int i=0; i < n; ++i) {
 	    Derivation d = derivations.get(i);
-	    if (d.clause == null) d.clause = ctx.currentGoalClause;
+	    if (d.clause == null) {
+	      // we copy over to get the right loctaion for things
+	      d.clause = new Clause(d.getLocation());
+	      for (Element e : ctx.currentGoalClause.getElements()) {
+	        d.clause.getElements().add(e);
+	      }
+	    }
 	    // JTB: Unfortunately we can't do this yet because it may instantiate
 	    // outputVars and we don't want this side-effect to happen yet.
 	    // else if (i == n-1) do a check match NOW
