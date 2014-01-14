@@ -71,6 +71,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 				ClauseDef cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
+				ctx.prodMap.put(cd.getConstructorName(),cd);
 				ctx.parseMap.put(cd.getElemTypes(), cd);
 
 				GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);
