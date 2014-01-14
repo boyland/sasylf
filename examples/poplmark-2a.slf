@@ -353,7 +353,7 @@ case rule
 	d3: * |- T <: T1 -> T2
 is
 	d4: T' == T21' -> T22' and 
-	d5: * |- T1 <: T21 and
+	d5: * |- T1 <: T21' and
 	d6: * |- T22' <: T2 by induction hypothesis on d2
 	// d4 has only one case which unifies the two types.  We want the unification
 	// and so use the following special case proof step:
