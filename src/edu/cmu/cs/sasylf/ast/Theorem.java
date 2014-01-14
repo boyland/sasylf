@@ -83,7 +83,7 @@ public class Theorem extends RuleLike {
 	        cu.asTerm();
 	        if (cu.getRoot() != null) {
 	          if (assumes == null) {
-	            ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this);
+	            ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " +cu.getRoot().toString());
 	          }
 	          setAssumes(cu.getRoot());
 	        }				  
@@ -100,10 +100,10 @@ public class Theorem extends RuleLike {
 				  }
 				  if (root != null) {
             if (assumes == null) {
-              ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this);
+              ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " + root.toString());
             }
 				    if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
-				      ErrorHandler.report("assumes irrelevant for " + sa, this);
+				      ErrorHandler.report("assumes irrelevant for " + sa, f);
 				    }
 				    setAssumes(root);
 				  }
@@ -216,7 +216,7 @@ public class Theorem extends RuleLike {
 			ErrorHandler.report(Errors.NO_DERIVATION, errorNode);
 		else {
 			Derivation last = derivs.get(derivs.size()-1);
-			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, errorNode);
+			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
 			debug("orig theoremTerm: "+theoremTerm);
 			debug("orig derivTerm: "+derivTerm);
 			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx, errorNode);
