@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -86,17 +87,16 @@ public class DerivationByInversion extends DerivationWithArgs {
         debug("inversion: caseResult = " + caseResult);
         Pair<Term,Substitution> pair = caseResult.iterator().next();
         Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
-        // TODO: eventually update so that we can have new variables in the result.
-        // Set<FreeVar> freevars = result.getFreeVariables();
         result = result.substitute(pair.second);
         debug("  after adapt/subst, result = " + result);
-        // ctx.currentSub.compose(pair.second);
-        /*for (FreeVar fv : result.getFreeVariables()) {
+        ctx.currentSub.compose(pair.second);
+        for (FreeVar fv : pair.first.getFreeVariables()) {
           if (ctx.inputVars.add(fv)) {
             debug("In inversion, adding new input variable: " + fv);
           }
-        }*/
-        ctx.currentSub.compose(pair.second);
+        }
+        //ctx.currentSub.compose(pair.second);
+        //System.out.println("new sub = " + ctx.currentSub);
         Application ruleInstance = (Application)pair.first;
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
         pieces.remove(pieces.size()-1);
