@@ -16,7 +16,7 @@ public class ErrorReport {
 	 * @return The detailed error message including file, line, and actual error text message
 	 */
 	public String getMessage() {
-		String msg = loc == null ? "unknown file: " : loc.toString() + ' ';
+		String msg = loc == null ? "unknown file: " : loc.toString() + ": ";
 		if (!isError)
 			msg = msg + "warning: ";
 		msg = msg + getShortMessage();
