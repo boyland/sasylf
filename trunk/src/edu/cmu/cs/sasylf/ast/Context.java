@@ -25,7 +25,10 @@ public class Context implements Cloneable {
 
   /// The following fields represent global information
   
+  public final CompUnit compUnit;
   public Map<String,Syntax> synMap = new HashMap<String,Syntax>();
+  public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
+  public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
   public Map<String,Variable> varMap = new HashMap<String, Variable>();
   public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
   public Map<String,Fact> derivationMap = new HashMap<String, Fact>();
@@ -56,6 +59,10 @@ public class Context implements Cloneable {
   public Substitution adaptationSub;
   public Set<NonTerminal> varfreeNTs = new HashSet<NonTerminal>();
 
+  public Context(CompUnit cu) {
+    compUnit = cu;
+  }
+  
   /** Return a copy of this context
    * which new copies of everything local and mutable
    */

@@ -88,7 +88,7 @@ public class CompUnit extends Node {
 	 */
 	public boolean typecheck() {
 		int oldCount = ErrorHandler.getErrorCount();
-		Context ctx = new Context();
+		Context ctx = new Context(this);
 		try {
 			getVariables(ctx);
 			typecheck(ctx);
