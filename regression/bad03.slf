@@ -67,9 +67,9 @@ lemma lam-type-not-var :
     forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
     forall v: T in Gamma
     exists contradiction .
-    nv: T! by case analysis on T:
+    nv: T! by case analysis on T: //! missing case
 	  case T1 -> T2 is
-	    _: T1 -> T2! by rule NV-Arrow 
+	    _: T1 -> T2! by rule NV-Arrow //! discard context
 	  end case	
 	  case Unit is
 	    _: Unit! by rule NV-Unit

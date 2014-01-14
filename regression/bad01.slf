@@ -16,8 +16,8 @@ theorem impossible:
   exists 0 == s 0 .
   a: 0 == 0 by rule eq
   b: s 0 == s 0 by rule eq
-  c: s 0 == n by weakening on b
-  d: 0 == n by weakening on a
+  c: s 0 == n by weakening on b //! weakening requires identical
+  d: 0 == n by weakening on a //! not allowed to rebind n
   e: 0 == s 0 by case analysis on c:
 	case rule
 	    ------ eq

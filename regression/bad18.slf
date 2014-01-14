@@ -1,0 +1,30 @@
+package regression;
+
+terminals fn in
+    
+syntax
+   t ::= fn x => t[x] | x | t t
+   Gamma ::= * | Gamma, x
+   
+judgment isvar: t in Gamma
+assumes Gamma
+
+   --------------- var
+   x in (Gamma, x)
+   
+judgment bound: Gamma |- t //! Would crash SASyLF 1.2.3
+assumes Hamma 
+
+    t in Gamma
+    ----------- B-var
+    Gamma |- t
+    
+    Gamma |- t1
+    Gamma |- t2
+    -------------- B-app
+    Gamma |- t1 t2
+    
+    Gamma, x |- t[x]
+    ---------------------- B-fn
+    Gamma |- fn x => t[x]
+    

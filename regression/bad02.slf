@@ -13,10 +13,10 @@ lemma impossible :
   exists contradiction .
   _: contradiction by induction on n:
     case 0 is 
-    	_: contradiction by lemma impossible1 on n
+    	_: contradiction by lemma impossible1 on n //! improper induction
     end case
     case 1+ n' is 
-    	_: contradiction by lemma impossible1 on n
+    	_: contradiction by lemma impossible1 on n //! improper induction
     end case
   end induction
 end lemma

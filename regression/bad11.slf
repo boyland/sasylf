@@ -17,21 +17,24 @@ judgment isvalue : t value
 ---------------------- val-abs
 (fn x => t[x]) value
 
-judgment eval: t -> t
+judgment eval: t -> t //! extraneous assumes
 assumes Gamma
 
 t1 -> t1'
 ----------------- E-App1
-t1 t2 -> t1' t2
+t1 t2 -> t1' t2 //!! cascade error
+
 
 t1 value
 t2 -> t2'
 ----------------- E-App2
-t1 t2 -> t1 t2'
+t1 t2 -> t1 t2' //! cascade error
+
 
 t2 value
 ------------------------------- E-AppAbs
-(fn x => t12[x]) t2 -> t12[x]
+(fn x => t12[x]) t2 -> t12[x] //! cascade error
+
 
 judgment isvar: t : T in Gamma
 assumes Gamma
@@ -53,6 +56,7 @@ Gamma |- t1 t2 : T3
 
 
 lemma nothing :
+  assumes Gamma
   forall dt: Gamma |- t : T
   exists Gamma |- t : T.
   _: Gamma |- t:T by dt

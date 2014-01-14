@@ -56,7 +56,8 @@ theorem bad-logic-1:
     exists contradiction.
     proof by case analysis on p:
         case rule
-            q: t in *
+            q: t in * //! discarding context
+            
             ---------- B-Var
             _: * |- t
         is
@@ -87,7 +88,8 @@ theorem bad-logic-2:
     exists contradiction.
     proof by case analysis on p:
         case rule
-            q: t in *
+            q: t in * //! discarding context
+            
             ---------- B-Var
             _: Gamma |- t
         is
@@ -116,14 +118,14 @@ theorem bad-logic-3:
     forall p: Gamma |- t
     forall i: t in Gamma
     exists contradiction.
-    proof by lemma variables-must-be-bound on i
+    proof by lemma variables-must-be-bound on i //! discarding context
 end theorem
 
 theorem bad-logic-4:
     assumes Gamma
     forall i: t in Gamma
     exists contradiction.
-    i' : t in * by weakening on i
+    i' : t in * by weakening on i //! discarding context
     proof by lemma variables-must-be-bound on i'
 end theorem
 
@@ -131,6 +133,6 @@ theorem bad-logic-5:
     assumes Gamma
     forall i: t in Gamma
     exists contradiction.
-    i' : t in * by exchange on i
+    i' : t in * by exchange on i //! discarding context
     proof by lemma variables-must-be-bound on i'
 end theorem

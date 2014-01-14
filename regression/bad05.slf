@@ -94,7 +94,7 @@ lemma lam-type-not-var :
     forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
     forall v: T in Gamma
     exists contradiction .
-    ee: T == T by rule type-eq
+    ee: T == T by rule type-eq //! discard context
     nv: T! by lemma type-never-var on ee
     _: contradiction by case analysis on v:
 	case rule

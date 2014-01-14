@@ -6,11 +6,11 @@ terminals
 syntax
   e ::= x | e + e
 
-theorem bad: forall d: "(" e1 + e1 ")" exists e1 + e1.
+theorem bad: forall d: "(" e1 + e1 ")" exists e1 + e1. //! bad use of "("
   /* Causes unexpected java.lang.IndexOutOfBoundsException */
 end theorem
   
-theorem good: forall d: "[" e1 + e1 "]" exists e1 + e1.
+theorem good: forall d: "[" e1 + e1 "]" exists e1 + e1. //! bad use of "["
   /* Causes expected error:
    *   Cannot parse any syntactic case or judgment for expression "[" e1 "+" e1 "]"
    */

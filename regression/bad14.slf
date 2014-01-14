@@ -19,7 +19,7 @@ lemma weird:
     forall p: S n1 + n2 = n3
     forall n4
     exists n1 + n2 = n4.
-    proof by inversion of plus-s on p
+    proof by inversion of plus-s on p //! bad inversion (n4 bound)
 end lemma
 
 theorem impossible:
