@@ -87,7 +87,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			NonTerminal nt = premiseClause.getRoot();
 			if (nt != null) {
 			  if (!nt.equals(myConc.getRoot())) {
-			    ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, this);
+			    ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, c);
 			  }
 			}
 		}
