@@ -50,11 +50,13 @@ public class Judgment extends Node implements ClauseType {
 		ClauseDef cd = new ClauseDef(form, this, name);
 		cd.checkVarUse(false);
 		form = cd;
+		ctx.prodMap.put(name,cd);
 		ctx.parseMap.put(cd.getElemTypes(), cd);
 
 		GrmRule r = new GrmRule(GrmUtil.getStartSymbol(), cd.getSymbols(), cd);
 		ctx.ruleSet.add(r);
 
+		ctx.judgMap.put(name, this);
 	}
 	
 	protected void setForm(Clause f) {
@@ -74,7 +76,9 @@ public class Judgment extends Node implements ClauseType {
 		}
 		
 		if ((getAssume() == null) && contextSyntax != null)
-			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this);
+			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
+		else if ((getAssume() != null) && getAssume().getType() == null)
+		  ErrorHandler.report(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), this);
 		else if ((getAssume() != null) && !getAssume().getType().equals(contextSyntax))
 		  ErrorHandler.recoverableError(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), this);
 
