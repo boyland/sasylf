@@ -13,6 +13,7 @@ public enum Errors {
 	MISSING_CASE			("must provide a case for "),
 	EXTRA_CASE				("case is redundant or unnecessary"),
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
+	ILLEGAL_ASSUMES    ("assumed entity is not a context nonterminal"),
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal in assumes clause"),
 	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	SYNTAX_CASE_FOR_DERIVATION ("When case-analyzing a derivation, must use rule cases, not syntax cases"),
@@ -54,8 +55,8 @@ public enum Errors {
 	MUTUAL_INDUCTION_NO_INDUCTION("mutual induction cannot be used without an inductive argument"),
   MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
   MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
-  // warnings
   ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
+  INTERNAL_ERROR("SASyLF Internal Error")
 	;
 
 	Errors() {
