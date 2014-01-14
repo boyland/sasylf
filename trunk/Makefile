@@ -1,11 +1,11 @@
 # This makefile can build JAR files for command line use
 # or for Eclipse plugin use.
 # NB: The first line of file README.TXT, must have the format
-# SASAyLF version VERSIONSTRING\r
+# SASyLF version VERSIONSTRING\r
 # where VERSION string is a valid Eclipse Version, e.g. 1.1.3
 
 VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y%m%d'`
-.PHONY: build build-plugin
+.PHONY: build build-plugin test
 
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
@@ -22,6 +22,14 @@ ${TESTBIN}:
 	@echo Load project into Eclipse and build.
 	@echo Then come back and make build-plugin
 	false
-		
+
+test:
+	@-for f in regression/*.slf; do \
+	  printf "."; \
+	  ./sasylf.local $$f 2>&1 | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
+	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
+	done
+	@echo "  Done"
+	
 clean:
 	rm -rf bin SASyLF.jar org.sasylf*.jar
