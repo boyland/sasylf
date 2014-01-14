@@ -90,6 +90,11 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
+			|| getToken(1).kind == MODULE
+			|| getToken(1).kind == EXTENDS
+			|| getToken(1).kind == USE
+			|| getToken(1).kind == REQUIRES
+			|| getToken(1).kind == PROVIDES
 			|| getToken(1).kind == INTEGER_LITERAL;
 			/*|| getToken(1).kind == LBRACE;*/
     }
@@ -266,6 +271,10 @@ TOKEN :
 | < PROOF: "proof" >
 | < CONTRADICTION: "contradiction" >
 | < USE: "use" >
+| < MODULE: "module" >
+| < REQUIRES: "requires" >
+| < PROVIDES: "provides" >
+| < EXTENDS: "extends" >
 }
 
 /* LITERALS */
@@ -1377,6 +1386,9 @@ TOKEN :
 
 CompUnit CompilationUnit() :
 { List<String> pkg = null; 
+  Token moduleName = null;
+  Token t;
+  List<String> usedModule = null;
   List<Syntax> syntax = new ArrayList<Syntax>(); 
   List<Syntax> s; Judgment j;
   Set<String> terms = new HashSet<String>();
@@ -1386,6 +1398,17 @@ CompUnit CompilationUnit() :
   List<Theorem> theorems = new ArrayList<Theorem>(); }
 {
   [ pkg=PackageDeclaration() ]
+  [ <MODULE> moduleName=<IDENTIFIER>]
+  
+  (t=<EXTENDS> usedModule=Name() 
+    { if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
+      else ErrorHandler.recoverableError("module 'extends' not implemented yet", new Location(t)); }
+  )*
+   
+  (t=<PROVIDES> { if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
+  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(moduleName)); }
+  )
+  
   (
     trm=TerminalsDeclaration() { terms.addAll(trm); }
   | s=SyntaxDeclaration() { syntax.addAll(s); } 
@@ -1398,6 +1421,7 @@ CompUnit CompilationUnit() :
           lastThm = thm;
         }
       )*
+  | t=<USE> usedModule=Name() { ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
   )*
   <EOF>
   {
@@ -1437,6 +1461,10 @@ Token Keyword() :
     |   t=< IS >
     |   t=< USE >
     |   t=< WEAKENING >
+    |   t=< MODULE >
+    |   t=< REQUIRES >
+    |   t=< PROVIDES >
+    |   t=< EXTENDS >
   ) { return t; }}
  
 List<String> Name() :
@@ -1476,7 +1504,7 @@ List<Syntax> SyntaxDeclaration() :
 Token ExtendedIdentifier() :
 { Token t; }
 {
-	(t=<IDENTIFIER> | t=<AND> | t=<CONTRADICTION> | t=<END> | t=<CASE>) { return t; }
+	(t=<IDENTIFIER> | t=Keyword()) { return t; }
 } 
 
 Set<String> TerminalsDeclaration() :
