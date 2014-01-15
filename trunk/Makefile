@@ -23,8 +23,19 @@ ${TESTBIN}:
 	@echo Then come back and make build-plugin
 	false
 
+ADDTESTS= \
+	examples/and.slf \
+	examples/featherweight-java.slf \
+	examples/lambda-loc.slf \
+	examples/lambda-unicode.slf \
+	examples/lambda.slf \
+	examples/object-calculus.slf \
+	examples/poplmark-2a.slf \
+	examples/test-mutual.slf \
+	examples/test-structural.slf
+	
 test:
-	@-for f in regression/*.slf; do \
+	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
 	  ./sasylf.local $$f 2>&1 | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
 	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
