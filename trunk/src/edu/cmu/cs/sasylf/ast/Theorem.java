@@ -72,6 +72,7 @@ public class Theorem extends RuleLike {
 	
 	public void checkInterface(Context ctx) {
 		if (!interfaceChecked) {
+		  int oldErrors = ErrorHandler.getErrorCount();
 			interfaceChecked = true;
 			List<String> inputNames = new ArrayList<String>();
 			for (Fact f : foralls) {
@@ -103,7 +104,7 @@ public class Theorem extends RuleLike {
               ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " + root.toString());
             }
 				    if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
-				      ErrorHandler.report("assumes irrelevant for " + sa, f);
+				      ErrorHandler.report(Errors.EXTRANEOUS_ASSUMES, f, "assumes " + root.toString());
 				    }
 				    setAssumes(root);
 				  }
@@ -123,11 +124,14 @@ public class Theorem extends RuleLike {
 			    } else inductionIndex = i;
 			  }
 			}
+			if (oldErrors == ErrorHandler.getErrorCount())  interfaceOK = true;
 		}
 	}
 
-	public void typecheck(Context ctx) {
+	public void typecheck(Context oldCtx) {
+    oldCtx.ruleMap.put(getName(), this);
 		int oldErrorCount = ErrorHandler.getErrorCount();
+		Context ctx = oldCtx.clone();
 		try {
 		debug("checking theorem "+this.getName());
 		
@@ -142,6 +146,10 @@ public class Theorem extends RuleLike {
 		ctx.innermostGamma = null;
 		
 		checkInterface(ctx);
+		
+		if (ErrorHandler.getErrorCount() > oldErrorCount) {
+		  return;
+		}
 		
 		if (assumes != null) {
 		  ctx.innermostGamma = assumes;
@@ -174,11 +182,11 @@ public class Theorem extends RuleLike {
 		if (andTheorem != null) {
 			andTheorem.addToMap(ctx);
 		}*/
+    ctx.recursiveTheorems = new HashMap<String, Theorem>();
 		firstInGroup.addToMap(ctx);
 
 		Derivation.typecheck(this, ctx, derivations);
 		
-		ctx.recursiveTheorems = new HashMap<String, Theorem>();
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
 			//e.printStackTrace();
@@ -192,7 +200,6 @@ public class Theorem extends RuleLike {
 				}
 			}
 		}
-    ctx.ruleMap.put(getName(), this);
 	}
 
 	private void addToMap(Context ctx) {
@@ -247,6 +254,17 @@ public class Theorem extends RuleLike {
 		}
 	}
 
+	/**
+	 * Return true if this theorem has a well-defined interface,
+	 * even if it wasn't successfully proved.  Theorems without
+	 * OK interfaces should not be used.
+	 * @return whether this theorem has a sensible interface
+	 */
+	@Override
+	public boolean isInterfaceOK() {
+	  return interfaceOK;
+	}
+	
 	public void setAssumes(NonTerminal c) { 
 	  if (assumes != null && !assumes.equals(c))
 	    ErrorHandler.report(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + assumes + " and " + c, this);
@@ -266,6 +284,7 @@ public class Theorem extends RuleLike {
 	private int indexInGroup = 0;
 	private int inductionIndex = 0; // default to first argument
 	private boolean interfaceChecked=false;
+	private boolean interfaceOK = false;
 
 }
 

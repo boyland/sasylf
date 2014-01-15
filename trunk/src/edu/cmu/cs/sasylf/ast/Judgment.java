@@ -78,9 +78,10 @@ public class Judgment extends Node implements ClauseType {
 		if ((getAssume() == null) && contextSyntax != null)
 			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
 		else if ((getAssume() != null) && getAssume().getType() == null)
-		  ErrorHandler.report(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), this);
+		  ErrorHandler.report(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), this, "assumes " + getAssume() + "\n" +
+		      (contextSyntax == null ? "" : "assumes " + contextSyntax));
 		else if ((getAssume() != null) && !getAssume().getType().equals(contextSyntax))
-		  ErrorHandler.recoverableError(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), this);
+		  ErrorHandler.recoverableError(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), this, "assume " + getAssume());
 
 		for (Rule r : getRules()) {
 		  try {

@@ -177,6 +177,13 @@ public abstract class RuleLike extends Node {
 	}
 
 	/**
+	 * Return whether this rule-like entity has a sensible interface that can be checked.
+	 * If not, there's no point is checking uses.
+	 * @return whether the interface for this rule-like entity is reasonable.
+	 */
+	public abstract boolean isInterfaceOK();
+	
+	/**
 	 * Return the assumes for a judgment / outermostGamma for a theorem.
 	 * @return
 	 */

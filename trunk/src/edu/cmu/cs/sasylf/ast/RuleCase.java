@@ -45,6 +45,7 @@ public class RuleCase extends Case {
 		rule = (Rule) ctx.ruleMap.get(ruleName);
 		if (rule == null)
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+		if (!rule.isInterfaceOK()) return;
 
 		// TODO: add premises to context anyway.
 		if (rule.getPremises().size() != getPremises().size())

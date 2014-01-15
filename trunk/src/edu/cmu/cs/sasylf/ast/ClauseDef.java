@@ -72,15 +72,18 @@ public class ClauseDef extends Clause {
 		Term typeTerm = type.typeTerm();
 		int assumeIndex = getAssumeIndex();
 		List<Term> argTypes = new ArrayList<Term>();
-
+		List<String> argNames = new ArrayList<String>();
+		
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
 			if (! (e instanceof Terminal) && i != assumeIndex 
 					&& !(e instanceof Variable)) {
 				Term argType = null;
+				String argName = "x";
 				if (e instanceof Binding) {
 					Binding defB = (Binding) e;
 					argType = defB.getNonTerminal().getType().typeTerm();
+					argName = defB.getNonTerminal().getSymbol();
 						
 					List<Term> varTypes = new ArrayList<Term>();
 					for (Element boundVarElem : defB.getElements()) {
@@ -96,16 +99,19 @@ public class ClauseDef extends Clause {
 				  // contexts.
 				  if (((NonTerminal)e).getType().isInContextForm()) continue;
 				  argType = ((NonTerminal)e).getType().typeTerm();
+				  argName = ((NonTerminal)e).getSymbol();
 				} else if (e instanceof Clause) {
 					argType = ((ClauseUse)e).getConstructor().asTerm();
+					argName = ((ClauseUse)e).getElemType().toString();
 				} else {
 					throw new RuntimeException("should be impossible case");
 				}
 				argTypes.add(argType);
+				argNames.add(argName);
 			}
 		}
 
-		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes);
+		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes, argNames);
 		
 		return new Constant(consName, typeTerm);
 	}

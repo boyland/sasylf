@@ -1,12 +1,12 @@
 package edu.cmu.cs.sasylf.ast;
 
 public enum Errors {
-	// tested errors
 	DERIVATION_UNPROVED		("derivation unproved"),
 	RULE_NOT_FOUND			("cannot find a rule named "),
+	RULE_BAD  ("rule/theorem has a bad interface: "),
 	RULE_PREMISE_NUMBER		("wrong number of premises for rule "),
 	BAD_RULE_APPLICATION,
-	// untested errors
+	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	NO_DERIVATION			("must provide a derivation"),
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
@@ -14,7 +14,7 @@ public enum Errors {
 	EXTRA_CASE				("case is redundant or unnecessary"),
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
 	ILLEGAL_ASSUMES    ("assumed entity is not a context nonterminal"),
-	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal in assumes clause"),
+	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	SYNTAX_CASE_FOR_DERIVATION ("When case-analyzing a derivation, must use rule cases, not syntax cases"),
 	UNBOUND_VAR_CASE,
