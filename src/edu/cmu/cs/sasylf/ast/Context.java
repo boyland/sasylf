@@ -33,11 +33,12 @@ public class Context implements Cloneable {
   public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
   public Map<String,Fact> derivationMap = new HashMap<String, Fact>();
   public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
-  public Map<String, Theorem> recursiveTheorems = new HashMap<String, Theorem>();
   public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
 
   /// The remainder fields represent contextual (local) information
 
+  public Map<String, Theorem> recursiveTheorems; // only changes with theorems
+  
   public Map<String, List<ElemType>> bindingTypes;
   public Substitution currentSub = new Substitution();
   public Fact inductionVariable;
@@ -73,14 +74,14 @@ public class Context implements Cloneable {
     } catch (CloneNotSupportedException ex) {
       return null;
     }
-    result.bindingTypes = new HashMap<String, List<ElemType>>(bindingTypes);
+    if (bindingTypes != null) result.bindingTypes = new HashMap<String, List<ElemType>>(bindingTypes);
     result.currentSub = new Substitution(currentSub);
-    result.adaptationMap = new HashMap<NonTerminal, AdaptationInfo>(adaptationMap);
-    result.inputVars = new HashSet<FreeVar>(inputVars);
-    result.outputVars = new HashSet<FreeVar>(outputVars);
+    if (adaptationMap != null) result.adaptationMap = new HashMap<NonTerminal, AdaptationInfo>(adaptationMap);
+    if (inputVars != null) result.inputVars = new HashSet<FreeVar>(inputVars);
+    if (outputVars != null) result.outputVars = new HashSet<FreeVar>(outputVars);
     result.subderivations = new ArrayList<Fact>(subderivations);
-    result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
-    result.adaptationSub = new Substitution(adaptationSub);
+    if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
+    if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varfreeNTs = new HashSet<NonTerminal>(varfreeNTs);
     
     return result;
