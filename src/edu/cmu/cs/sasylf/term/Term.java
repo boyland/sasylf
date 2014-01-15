@@ -260,6 +260,13 @@ public abstract class Term {
 		return termToWrap;
 	}
 
+  public static Term wrapWithLambdas(Term termToWrap, List<Term> argTypes, List<String> argNames) {
+    for (int i = argTypes.size()-1; i >= 0; --i) {
+      termToWrap = Abstraction.make(argNames.get(i), argTypes.get(i), termToWrap);
+    }
+    return termToWrap;
+  }
+  
 	public static List<Term> getArgTypes(Term varType, int count) {
 		List<Term> argTypes = new ArrayList<Term>();
 		debug("getting " + count + " args from " + varType);

@@ -32,6 +32,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 
 	private List<Clause> elements;
 	private NonTerminal nonTerminal;
+	private Variable variable;
 
 	public void prettyPrint(PrintWriter out) {
 		nonTerminal.prettyPrint(out);
@@ -55,6 +56,14 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return s;
 	}
 
+	/**
+	 * Return the variable name for the (first) variable of this nonterminal,
+	 * or null if this nonterminal does not permit variables.
+	 */
+	public Variable getVariable() {
+	  return variable;
+	}
+	
 	public void getVariables(Map<String,Variable> map) {
 		for (Clause c : getClauses()) {
 			if (c == null)
@@ -64,10 +73,14 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	}
 
 	public void typecheck(Context ctx) {
+	  int countVarOnly = 0;
 		for (int i = 0; i < elements.size(); ++i) {
 			Clause c = elements.get(i);
 			c.typecheck(ctx);
-			if (!c.isVarOnlyClause()) {
+			if (c.isVarOnlyClause()) {
+			  if (countVarOnly == 0) variable = (Variable)c.getElements().get(0);
+			  ++countVarOnly;
+			} else {
 				ClauseDef cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
@@ -85,6 +98,11 @@ public class Syntax extends Node implements ClauseType, ElemType {
 				}
 			}
 		}
+		
+		/* NO: don't give an error.  See featherweight-java.slf
+		if (countVarOnly > 1) {
+		  ErrorHandler.recoverableError(Errors.TOO_MANY_VARIABLES, this);
+		}*/
 		
 		// check variable uses
 		for (int i = 0; i < elements.size(); ++i) {

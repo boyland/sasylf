@@ -128,7 +128,8 @@ public class NonTerminal extends Element {
 			if (syn != null) {
 				nt.setType(syn);
 			} else {
-				ErrorHandler.report(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);
+			  e = new Terminal(nt.getSymbol(),nt.getLocation());
+				ErrorHandler.recoverableError(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);
 			}
 		}
 		return e;

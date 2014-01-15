@@ -19,6 +19,9 @@ public class DerivationByRule extends DerivationByIHRule {
 				if (rule == null)
 					ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
 			}
+			if (!rule.isInterfaceOK()) {
+			  ErrorHandler.report(Errors.RULE_BAD, ruleName, this);
+			}
 		}
 		return rule;
 	}

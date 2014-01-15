@@ -193,12 +193,12 @@ public abstract class DerivationByAnalysis extends Derivation {
 				  //ErrorHandler.recoverableError("A variable is a possible case, but (currently) SASyLF has no way to case variables.",this);
 				  continue;
 				}
-				// System.out.println("clause : " + clause);
+				//System.out.println("clause : " + clause);
 				Term term = ((ClauseDef)clause).getSampleTerm();
-				// System.out.println("  sample term: " + term);
+				//System.out.println("  sample term: " + term);
 				Substitution freshSub = term.freshSubstitution(new Substitution());
 				term.substitute(freshSub);
-        // System.out.println("  sample term after freshification: " + term);
+        //System.out.println("  sample term after freshification: " + term);
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
 			}
 		} else {
@@ -208,6 +208,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 			//debug("    adaptationSub = " + ctx.adaptationSub);
 			// see if each rule, in turn, applies
 			for (Rule rule : judge.getRules()) {
+			  if (!rule.isInterfaceOK()) continue; // avoid these
 				Set<Pair<Term,Substitution>> caseResult = rule.caseAnalyze(ctx);
 				// System.out.println("  case Result = " + caseResult);
 				ctx.caseTermMap.put(rule, caseResult);
@@ -222,9 +223,43 @@ public abstract class DerivationByAnalysis extends Derivation {
 		for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> entry : ctx.caseTermMap.entrySet()) {
 			if (!entry.getValue().isEmpty()) {
 				CanBeCase cbc = entry.getKey();
+        Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
+				String missingCaseText = null;
+        Substitution sub = missing.second;
+        Substitution revSub = new Substitution();
+        for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
+          if (e2.getValue() instanceof Atom) {
+            revSub.add((Atom)e2.getValue(), e2.getKey());
+          }
+        }
+        Term missingCase = missing.first.substitute(revSub);
+        Element targetGamma = null;
+				if (ctx.currentCaseAnalysisElement instanceof ClauseUse) {
+				  ClauseUse target = (ClauseUse)ctx.currentCaseAnalysisElement;
+          if (target.getConstructor().getAssumeIndex() >= 0) {
+            targetGamma = target.getElements().get(target.getConstructor().getAssumeIndex());
+          }
+				} else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
+				  targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
+				} else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
+				  if (!ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
+				    targetGamma = ctx.innermostGamma;
+				  }
+				}
+        try {
+          TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
+          missingCaseText = termPrinter.caseToString(missingCase);
+        } catch (RuntimeException ex) {
+          ex.printStackTrace();
+        }
+				// System.out.println("missing: " + missing);
+				if (missingCaseText != null) {
+				  // System.out.println("Missing Case:");
+				  // System.out.println(missingCaseText);
+				}
 				ErrorHandler.report(Errors.MISSING_CASE,
-									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx), // + ": case is " + ctx.currentCaseAnalysis.substitute(sub)
-									this, "\tExpected was " + entry.getValue());				
+									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx),
+									this, missingCaseText);				
 			}
 		}
 		
@@ -314,8 +349,11 @@ public abstract class DerivationByAnalysis extends Derivation {
 				//TODO: make this more principled (e.g. work for more than one adaptation -- see code below)
 				debug("adaptation sub = " + ctx.adaptationSub + " applied inside " + ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
 				debug("current sub = " + ctx.currentSub);
-				if (!(term instanceof Abstraction)) {
-				  ErrorHandler.report("Using variables with a judgment that doesn't assume context", errorPoint);
+				if (term instanceof Application) {
+	        // System.out.println("term is " + term);
+	        // System.out.println("current sub = " + ctx.currentSub);
+	        // new RuntimeException("for trace").printStackTrace();
+				  ErrorHandler.report("Using variables with a judgment '" + ((Application)term).getFunction() + "' that doesn't assume context", errorPoint);
 				}
 				term = ((Abstraction)term).subInside(ctx.adaptationSub, ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
 				debug("term = " + term);

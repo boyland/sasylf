@@ -100,6 +100,8 @@ public class Rule extends RuleLike implements CanBeCase {
         ErrorHandler.report(Errors.VAR_CONCLUSION_CONTEXT, conclusion);
       }
     }
+    
+    ruleIsOk = true;
 	}
 	
 	private void computeAssumption(Context ctx) {
@@ -376,6 +378,11 @@ public class Rule extends RuleLike implements CanBeCase {
     }*/
 	
 	@Override
+	public boolean isInterfaceOK() {
+	  return ruleIsOk;
+	}
+	
+	@Override
 	public NonTerminal getAssumes() {
 	  return getJudgment().getAssume();
 	}
@@ -386,5 +393,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	
 	private Judgment judgment;
+	private boolean ruleIsOk = false;
 }
 
