@@ -79,6 +79,8 @@ public class TermPrinter {
       }
     } else if (x instanceof Abstraction) {
       Abstraction abs = (Abstraction)x;
+      FreeVar etaFV = abs.getEtaEquivFreeVar();
+      if (etaFV != null) return asElement(etaFV,vars);
       Term ty = abs.varType;
       Syntax syn = ctx.synMap.get(ty.toString());
       Variable v = new Variable(syn.getVariable().toString()+(vars.size()/2),location);
@@ -102,7 +104,8 @@ public class TermPrinter {
         }
         return bodyElem;
       } else {
-        throw new RuntimeException("abstraction with only one arg?: " + x);
+        //throw new RuntimeException("abstraction with only one arg?: " + x);
+        return new NonTerminal("abstraction with only one arg?",location);
       }
     } else {
       throw new RuntimeException("unknown element: " + x);
@@ -175,6 +178,7 @@ public class TermPrinter {
       List<Element> contents = new ArrayList<Element>(cd.getElements());
       int n = contents.size();
       int ai = cd.getAssumeIndex();
+      // System.out.println("AsClause: " + c + " with " + args);
       Iterator<Element> actuals = args.iterator();
       for (int i=0; i < n; ++i) {
         Element old = contents.get(i);
@@ -182,6 +186,9 @@ public class TermPrinter {
           contents.set(i,context);
         } else if (old instanceof NonTerminal) {
           contents.set(i,actuals.next());
+        } else if (old instanceof Binding) {
+          Binding b = (Binding)old;
+          contents.set(i,new Binding(location,(NonTerminal)actuals.next(),b.getElements()));
         }
       }
       return new ClauseUse(location,contents,cd);
