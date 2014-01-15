@@ -146,14 +146,14 @@ lemma var-implies-contradiction:
       ------------------- var
       _: x in (Gamma', x)
     is
-      p1 : * |- c by rule B-Constant
+      p1 : * |- c by rule B-Constant //! cascade error
       p2: Gamma' |- c by weakening on p1
-      proof by rule B-Context-Weird on p2
+      proof by rule B-Context-Weird on p2 //! cascade error
     end case
   end case analysis
-  p1: * |- c by rule B-Constant
+  p1: * |- c by rule B-Constant //! cascade error
   p2: Gamma |- c by weakening on p1
-  q2: * |- t c by rule B-App-Weird on q1, p2
+  q2: * |- t c by rule B-App-Weird on q1, p2 //! cascade error
   q3: * |- t by case analysis on q2:
     case rule
       q3 : * |- t
