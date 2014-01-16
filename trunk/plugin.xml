@@ -21,42 +21,7 @@
             name="SASyLF editor">
       </editor>
    </extension>
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            id="View"
-            name="%category.name">
-      </category>
-      <view
-            category="org.eclipse.ant.ui.views"
-            class="org.sasylf.views.Rules"
-            icon="icons/copy.png"
-            id="org.sasylf.views.Rules"
-            name="%view.name">
-      </view>
-      <view
-            category="View"
-            class="org.sasylf.views.SyntaxView"
-            icon="icons/copy.png"
-            id="org.sasylf.views.SyntaxView"
-            name="%view.name.0">
-      </view>
-      <view
-            category="View"
-            class="org.sasylf.views.ExampleView"
-            icon="icons/copy.png"
-            id="org.sasylf.views.ExampleView"
-            name="%view.name.1">
-      </view>
-      <view
-            category="View"
-            class="org.sasylf.views.Lemmas"
-            icon="icons/copy.png"
-            id="org.sasylf.views.Lemmas"
-            name="%view.name.2">
-      </view>
-   </extension>
-   
+  
    
    
    
@@ -190,9 +155,9 @@
            				<reference definitionId="org.sasylf.isProofFile"/>
          			</iterate>
       			</with>
-      			!--<with variable="activeEditorInput">
+      			<with variable="activeEditorInput">
         			<reference definitionId="org.sasylf.isProofFile"/>
-      			</with>-->
+      			</with>
    			</or>
 			</visibleWhen>
 		</command>
@@ -224,13 +189,22 @@
                label="SASyLF Proof"
                mnemonic="P"
                style="push"
-               tooltip="Create a new SASAyLF proof file">
+               tooltip="Create a new SASyLF proof file">
             <visibleWhen
                   checkEnabled="false">
                <reference
                      definitionId="org.sasylf.inPerspective">
                </reference>
             </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:#AbstractTextEditorRulerContext?after=QuickDiff.Toggle">
+         <command
+               commandId="org.eclipse.jdt.ui.edit.text.java.correction.assist.proposals"
+               label="Quick Fix"
+               style="push">
          </command>
       </menuContribution>
    </extension>
@@ -321,6 +295,17 @@
       <initializer
             class="org.sasylf.preferences.PreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+            class="org.sasylf.editors.MarkerResolutionGenerator"
+            markerType="org.sasylf.marker">
+         <attribute
+               name="org.sasylf.has.fix"
+               value="true">
+         </attribute>
+      </markerResolutionGenerator>
    </extension>
    
 

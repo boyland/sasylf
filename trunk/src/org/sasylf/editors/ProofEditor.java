@@ -42,6 +42,7 @@ public class ProofEditor extends TextEditor {
 	}
 
 	public IDocument getDocument() {
+	  if (getDocumentProvider() == null) return null;
 	  return getDocumentProvider().getDocument(this.getEditorInput());
 	}
 	
@@ -88,10 +89,8 @@ public class ProofEditor extends TextEditor {
   }
 
   public void doSetInput(IEditorInput input) throws CoreException {
-		super.doSetInput(input);
+    super.doSetInput(input);
 		if (fOutlinePage != null)
 			fOutlinePage.setInput(input);
   }
-	
-	
 }
