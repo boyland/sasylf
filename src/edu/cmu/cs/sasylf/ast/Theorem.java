@@ -129,7 +129,12 @@ public class Theorem extends RuleLike {
 	}
 
 	public void typecheck(Context oldCtx) {
-    oldCtx.ruleMap.put(getName(), this);
+    if (oldCtx.ruleMap.containsKey(getName())) {
+      if (oldCtx.ruleMap.get(getName()) != this) {
+        ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
+      }
+    } else oldCtx.ruleMap.put(getName(), this);
+    
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
 		try {

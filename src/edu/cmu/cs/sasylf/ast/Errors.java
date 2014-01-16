@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 public enum Errors {
 	DERIVATION_UNPROVED		("derivation unproved"),
 	RULE_NOT_FOUND			("cannot find a rule named "),
+	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
 	RULE_PREMISE_NUMBER		("wrong number of premises for rule "),
 	BAD_RULE_APPLICATION,

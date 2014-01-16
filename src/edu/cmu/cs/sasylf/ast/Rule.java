@@ -67,7 +67,12 @@ public class Rule extends RuleLike implements CanBeCase {
 		conclusion = myConc;
 		//conclusion = new ClauseUse(conclusion, ctx.parseMap);
 
-    ctx.ruleMap.put(getName(), this);
+		if (ctx.ruleMap.containsKey(getName())) {
+		  if (ctx.ruleMap.get(getName()) != this) {
+		    ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
+		  }
+		} else ctx.ruleMap.put(getName(), this);
+		
     try {
       computeAssumption(ctx);
     } catch (SASyLFError ex) {
