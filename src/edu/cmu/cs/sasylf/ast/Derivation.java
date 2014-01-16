@@ -23,8 +23,11 @@ public abstract class Derivation extends Fact {
 	public Clause getElement() { return clause; }
 
 	public void prettyPrint(PrintWriter out) {
-		out.print(getName() + ": ");
-		getClause().prettyPrint(out);
+	  if (clause == null) out.print("proof");
+	  else {
+	    out.print(getName() + ": ");
+	    getClause().prettyPrint(out);
+	  }
 	}
 
 	/**
