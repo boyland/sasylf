@@ -102,12 +102,12 @@ analysis.
 RELEASE HISTORY
 
 1.2.4	Minor bug fixes and plugin enhancements
-    Preferences page added (only one property for now)
+    Quick Fixes & Preferences page added (only one property for now)
     Fixed bug from 1.2.3 that some versions of lambda-loc.slf gave an error
     poplmark2a.slf no longer requires "unproved"
     starting to supported mixed judgments and theorems
     more checking of assumes and losing of context
-    Resolved issues #8, #32, #34, #37, #38, #40
+    Resolved issues #8, #32, #34, #37, #38, #39, #40, #41
 1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
     Proof tool doesn't give up on first error in a list any more
