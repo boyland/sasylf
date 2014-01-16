@@ -157,12 +157,12 @@ E |- (labs, lab : c x:A => a[x]) : (tlabs, lab : A') in A
 
 judgment tlookup: tlabs{lab} = A
 
-------------------------- lookup-found
+------------------------- tlookup-found
 (tlabs, lab : A){lab} = A
 
 lab1 != lab2
 tlabs{lab2} = A'
----------------------------- lookup-not-found
+---------------------------- tlookup-not-found
 (tlabs, lab1 : A){lab2} = A'
 
 
