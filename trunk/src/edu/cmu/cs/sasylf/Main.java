@@ -19,7 +19,9 @@ public class Main {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws ParseException, IOException {
-		if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
+	  //System.setOut(new PrintStream(System.out, true, "UTF-8"));
+	  //System.setErr(new PrintStream(System.err, true, "UTF-8"));
+	  if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
 			System.err.println("usage: sasylf file1.slf ...");
 			System.err.println("   or: sasylf --version (print version)");
 			System.err.println("   or: sasylf --help (print this message)");
