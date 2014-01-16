@@ -174,9 +174,9 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 
     String lineIndent;
     {
-      int i=0;
-      while (i < fixInfo.length()) {
-        int ch = fixInfo.charAt(i);
+      int i;
+      for (i=0; i < lineText.length(); ++i) {
+        int ch = lineText.charAt(i);
         if (ch == ' ' || ch == '\t') continue;
         break;
       }
