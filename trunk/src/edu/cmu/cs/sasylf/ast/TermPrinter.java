@@ -33,10 +33,27 @@ public class TermPrinter {
   
   public TermPrinter(Context ctx, Element gamma, Location loc) {
     this.ctx = ctx;
-    context = gamma;
+    context = rootElement(gamma);
     location = loc;
+    //System.out.println("TermPrinter(context = " + context + ")");
   }
 
+  private Element rootElement(Element gamma) {
+    if (gamma == null || gamma instanceof NonTerminal) return gamma;
+    ClauseUse cu = (ClauseUse)gamma;
+    int n = cu.getElements().size();
+    boolean onlyTerminals = true;
+    for (int i=0; i < n; ++i) {
+      Element e = cu.getElements().get(i);
+      if (e.getType().equals(cu.getType())) {
+        return rootElement(e);
+      }
+      if (!(e instanceof Terminal)) onlyTerminals = false;
+    }
+    if (onlyTerminals) return gamma;
+    throw new RuntimeException("cannot analyze context: " + gamma);
+  }
+  
   public Element asElement(Term x) {
     return asElement(x, new ArrayList<Variable>());
   }

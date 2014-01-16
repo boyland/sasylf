@@ -246,6 +246,22 @@ public abstract class DerivationByAnalysis extends Derivation {
 				    targetGamma = ctx.innermostGamma;
 				  }
 				}
+				if (cbc instanceof Rule && ((Rule)cbc).isAssumption()) {
+				  NonTerminal gammaNT = ((ClauseUse)ctx.currentCaseAnalysisElement).getRoot();
+				  NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+				  newGammaNT.setType(gammaNT.getType());
+				  targetGamma = newGammaNT;
+				} else if (cbc instanceof Clause && ((Clause)cbc).isVarOnlyClause()) {
+				  //XXX If we neglect to do this, we generate
+				  // a reuse of Gamma, which our PM system does NOT complain about.
+				  if (targetGamma instanceof ClauseUse) {
+				    targetGamma = ((ClauseUse)targetGamma).getRoot();
+				  }
+				  NonTerminal gammaNT = (NonTerminal)targetGamma;
+				  NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+          newGammaNT.setType(gammaNT.getType());
+          targetGamma = newGammaNT;
+				}
         try {
           TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
           missingCaseText = termPrinter.caseToString(missingCase);
