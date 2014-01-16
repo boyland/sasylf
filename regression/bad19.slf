@@ -1,0 +1,42 @@
+package regression;
+
+terminals p q r x y
+
+syntax
+  t ::= x | y
+
+judgment p: p t
+
+  --- p-x
+  p x
+
+judgment q: q t
+  
+  --- q-y
+  q y
+  
+judgment r: r t
+  
+  p t
+  --- rulename
+  r t
+  
+  q t
+  --- rulename //! should complain about duplicate rule
+  r t
+  
+theorem rulename: //! should complain about duplicate rule
+  forall t
+  exists r t.
+  
+  proof by case analysis on t:
+    case y is
+        d1: q y by rule q-y
+        proof by rule rulename on d1 //! won't work with or without rewrite
+    end case
+    case x is
+      d1: p x by rule p-x
+      proof by rule rulename on d1 // ERROR: The rule cannot legally be applied to the arguments
+    end case
+  end case analysis
+end theorem
