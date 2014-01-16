@@ -9,6 +9,8 @@ import org.eclipse.jface.text.formatter.ContentFormatter;
 import org.eclipse.jface.text.formatter.IContentFormatter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
+import org.eclipse.jface.text.quickassist.QuickAssistAssistant;
 import org.eclipse.jface.text.rules.BufferedRuleBasedScanner;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.Token;
@@ -65,6 +67,13 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
     assist.setInformationControlCreator(getInformationControlCreator(sourceViewer));
     assist.enableAutoActivation(true);
     
+    return assist;
+  }
+
+  @Override
+  public IQuickAssistAssistant getQuickAssistAssistant(ISourceViewer sourceViewer) {
+    QuickAssistAssistant assist = new QuickAssistAssistant();
+    assist.setQuickAssistProcessor(new ProofQuickFixProcessor(editor.getDocument()));
     return assist;
   }
 

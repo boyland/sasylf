@@ -9,6 +9,8 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.ISelection;
@@ -17,8 +19,14 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
+import org.osgi.framework.Bundle;
+import org.sasylf.Activator;
+import org.sasylf.Marker;
+import org.sasylf.editors.MarkerResolutionGenerator;
+import org.sasylf.util.EclipseUtil;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
@@ -55,7 +63,7 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 	// conMan.addConsoles(new IConsole[] { myConsole });
 	// return myConsole;
 	// }
-	private static final String MARKER_ID = SasylfMarker.MARKER_ID;
+	private static final String MARKER_ID = Marker.MARKER_ID;
 
 	private static void reportProblem(ErrorReport report, IResource res) {
 		IMarker marker;
@@ -67,6 +75,13 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 			marker.setAttribute(IMarker.SEVERITY,
 					report.isError ? IMarker.SEVERITY_ERROR
 							: IMarker.SEVERITY_WARNING);
+			if (report.errorType != null) {
+			  marker.setAttribute(Marker.SASYLF_ERROR_TYPE, report.errorType.toString());
+			}
+			marker.setAttribute(Marker.SASYLF_ERROR_INFO, report.debugInfo);
+			if (MarkerResolutionGenerator.hasProposals(marker)) {
+			  marker.setAttribute(Marker.HAS_QUICK_FIX, true);
+			}
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
@@ -81,13 +96,16 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 	}
 
 	public static String analyzeSlf(IResource res) {
+	  IDocument doc = EclipseUtil.getDocumentFromResource(res);
 	  IFile f = (IFile)res.getAdapter(IFile.class);
-	  if (f == null) {
+	  if (doc == null && f == null) {
 	    System.out.println("cannot get contents of resource");
 	    return "cannot get contents of resource";
 	  } else {
 	    try {
-        return analyzeSlf(res,new InputStreamReader(f.getContents(),"UTF-8"));
+	      if (doc != null)
+          return analyzeSlf(res, doc);
+        else return analyzeSlf(res,new InputStreamReader(f.getContents(),"UTF-8"));
       } catch (UnsupportedEncodingException e) {
         return e.toString();
       } catch (CoreException e) {
@@ -108,8 +126,22 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 	  if (!(editor instanceof ITextEditor)) return "cannot open non-text file";
 	  ITextEditor ite = (ITextEditor)editor;
 	  IDocument doc = ite.getDocumentProvider().getDocument(ite.getEditorInput());
-	  return analyzeSlf(res, new StringReader(doc.get()));
+	  return analyzeSlf(res, doc);
 	}
+
+  /**
+   * Check proofs for resource currently being edited as a document. 
+   * @param res resource to which to attach error and warning markers.
+   * Must not be null
+   * @param doc document holding content.  If null, we will search
+   * for an editor for the resource.
+   * @return error strings. Not sure why.  May go away.
+   */
+  public static String analyzeSlf(IResource res, IDocument doc) {
+    if (res == null) throw new NullPointerException("resource cannot be null");
+    if (doc == null) return analyzeSlf(res);
+    return analyzeSlf(res, new StringReader(doc.get()));
+  }
 	
   public static Location lexicalErrorAsLocation(String file, String error) {
     try {
@@ -146,7 +178,12 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
 			// ignore the error; it has already been reported
 			// sb.append(e.getMessage() + "\n");
 		} catch (RuntimeException e) {
-			sb.append("Internal SASyLF error!\n" + e.getMessage() + "\n");
+		  Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
+		  if (myBundle != null) {
+		    Platform.getLog(myBundle).log(new Status(Status.ERROR,Activator.PLUGIN_ID,"Internal error",e));
+		  }
+		  ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, new Location(res.getName(),1,1));
+		  e.printStackTrace();
 
 			// unexpected exception
 		} finally {
