@@ -74,6 +74,12 @@ public class Theorem extends RuleLike {
 		if (!interfaceChecked) {
 		  int oldErrors = ErrorHandler.getErrorCount();
 			interfaceChecked = true;
+			if (assumes != null) {
+			  Syntax syntax = assumes.getType();
+			  if (syntax == null || !syntax.isInContextForm()) {
+			    ErrorHandler.recoverableError(Errors.ILLEGAL_ASSUMES, this);
+			  }
+			}
 			List<String> inputNames = new ArrayList<String>();
 			for (Fact f : foralls) {
 				f.typecheck(ctx);

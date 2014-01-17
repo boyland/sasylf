@@ -75,7 +75,11 @@ public class SyntaxAssumption extends Fact {
       Element computed = context.computeClause(ctx,false);
       if (!(computed instanceof NonTerminal)) {
         if (computed instanceof Clause) context = (Clause)computed;
-        else ErrorHandler.report("assumes must be a nonterminal or clause", this);
+        else ErrorHandler.report(Errors.ILLEGAL_ASSUMES_CLAUSE, this);
+      }
+      ElementType type = computed.getType();
+      if (!(type instanceof Syntax) || !((Syntax)type).isInContextForm()) {
+        ErrorHandler.report(Errors.ILLEGAL_ASSUMES_CLAUSE,": " + type, this);
       }
     }
 		Element e = nonTerminal.typecheck(ctx);
