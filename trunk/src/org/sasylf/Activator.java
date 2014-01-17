@@ -1,5 +1,6 @@
 package org.sasylf;
 
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -51,4 +52,19 @@ public class Activator extends AbstractUIPlugin {
 		return plugin;
 	}
 
+	/**
+	 * Return image from plugin.
+	 * @param path
+	 * @return
+	 * @author VonC @ stackoverflow
+	 */
+	public Image getImage(String path) {
+	  Image image = Activator.getDefault().getImageRegistry().get(path);
+	  if (image == null) {
+	    getImageRegistry().put(path, AbstractUIPlugin.
+	        imageDescriptorFromPlugin(PLUGIN_ID, path));
+	    image = getImageRegistry().get(path);
+	  }
+	  return image;
+	}
 }
