@@ -10,6 +10,12 @@ public class Preferences {
   }
   
   public static int getFormatterIndentSize() {
-    return get().getInt(PreferenceConstants.FORMATTER_INDENT_SIZE);
+    IPreferenceStore store = get();
+    if (store == null) {
+      System.err.println("ERROR: pregference store is null!");
+      new RuntimeException("for trace").printStackTrace();
+      return 4;
+    }
+    return store.getInt(PreferenceConstants.FORMATTER_INDENT_SIZE);
   }
 }

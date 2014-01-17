@@ -4,8 +4,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
-import org.sasylf.Activator;
-import org.sasylf.preferences.PreferenceConstants;
+import org.sasylf.Preferences;
 
 /**
  * A utility class sharing code between auto-indent and indent correction classes.
@@ -15,7 +14,7 @@ public class SASyLFIndentStrategy extends DefaultIndentLineAutoEditStrategy {
   private static StringBuilder spaces = new StringBuilder("    ");
 
   public int getIndentUnit() {
-    int result = Activator.getDefault().getPreferenceStore().getInt(PreferenceConstants.FORMATTER_INDENT_SIZE);
+    int result = Preferences.getFormatterIndentSize();
     if (result < 0) return 0;
     return result;
   }

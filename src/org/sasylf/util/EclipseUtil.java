@@ -32,7 +32,8 @@ public class EclipseUtil {
         ITextEditor textEd = (ITextEditor)editor;
         IEditorInput iei = editor.getEditorInput();
         IResource res = ResourceUtil.getResource(iei);
-        if (res != resource) continue;
+        if (res == null) continue;
+        if (!res.equals(resource)) continue;
         IDocument result = textEd.getDocumentProvider().getDocument(iei);
         if (result != null) return result;
       }

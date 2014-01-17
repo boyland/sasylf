@@ -14,12 +14,12 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMarkerResolution;
-import org.eclipse.ui.IMarkerResolution2;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.sasylf.Marker;
 import org.sasylf.Preferences;
 import org.sasylf.actions.CheckProofsAction;
 import org.sasylf.util.CompletionProposal;
+import org.sasylf.util.CompletionProposalMarkerResolution;
 import org.sasylf.util.EclipseUtil;
 
 import edu.cmu.cs.sasylf.ast.Errors;
@@ -52,39 +52,6 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     }
     
   }
-  private static class CompletionProposalMarkerResolution implements IMarkerResolution, IMarkerResolution2 {
-
-    // private final IResource resource;
-    private final IDocument document;
-    private final ICompletionProposal proposal;
-    
-    public CompletionProposalMarkerResolution(IResource res, IDocument doc, ICompletionProposal p) {
-      // resource = res;
-      document = doc;
-      proposal = p;
-    }
-    
-    @Override
-    public String getLabel() {
-      return proposal.getDisplayString();
-    }
-
-    @Override
-    public void run(IMarker marker) {
-      proposal.apply(document);
-    }
-
-    @Override
-    public String getDescription() {
-      return proposal.getAdditionalProposalInfo();
-    }
-
-    @Override
-    public Image getImage() {
-      return proposal.getImage();
-    }
-    
-  }
   public MarkerResolutionGenerator() {
   }
 
@@ -104,7 +71,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         int n = proposals.length;
         result = new IMarkerResolution[n];
         for (int i=0; i < n; ++i) {
-          result[i] = new CompletionProposalMarkerResolution(res,document,proposals[i]);
+          result[i] = new CompletionProposalMarkerResolution(document,proposals[i]);
         }
       }
     }
@@ -189,6 +156,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     }
     
     IResource res = marker.getResource();
+    String extraIndent = "";
     
     try {
       String nl = doc.getLineDelimiter(line);
@@ -252,8 +220,11 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         }
         break;
       case ASSUMED_ASSUMES:
+        extraIndent = indent;
+        // fall through
       case MISSING_ASSUMES: 
-        proposals.add(new MyCompletionProposal(res,lineIndent+fixInfo+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, fixInfo.length(), 
+        newText = lineIndent + extraIndent + fixInfo;
+        proposals.add(new MyCompletionProposal(res,newText+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, newText.length(), 
             null, "insert '" + fixInfo + "'", null, null));
       }
     } catch (BadLocationException e) {
