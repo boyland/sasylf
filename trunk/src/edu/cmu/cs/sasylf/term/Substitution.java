@@ -146,6 +146,11 @@ public class Substitution {
 		varMap.put(var, tSubstituted);
 	}
 
+	/**
+	 * Return what this variable is substituted with according to this substitution.
+	 * @param var variable to look up.
+	 * @return null if no substitution
+	 */
 	public Term getSubstituted(Atom var) {
 		return varMap.get(var);
 		/*Term t = varMap.get(var);
