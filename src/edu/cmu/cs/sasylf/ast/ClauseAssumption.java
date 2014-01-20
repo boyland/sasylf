@@ -15,7 +15,7 @@ public class ClauseAssumption extends Fact {
   }
   
 	private Clause clause;
-	private Clause assumes; //XXX: this field is apparently useless
+	private Clause assumes; //XXX: this field is apparently useless, but may be used when we fix contexts
 	
 	@Override
 	public Element getElement() {
