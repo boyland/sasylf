@@ -225,11 +225,13 @@ public abstract class DerivationByAnalysis extends Derivation {
 				CanBeCase cbc = entry.getKey();
         Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
 				String missingCaseText = null;
+				// System.out.println("Missing: " + missing);
         Substitution sub = missing.second;
         Substitution revSub = new Substitution();
         for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
-          if (e2.getValue() instanceof Atom) {
-            revSub.add((Atom)e2.getValue(), e2.getKey());
+          if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue())) {
+            // System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
+            revSub.add((FreeVar)e2.getValue(), e2.getKey());
           }
         }
         Term missingCase = missing.first.substitute(revSub);

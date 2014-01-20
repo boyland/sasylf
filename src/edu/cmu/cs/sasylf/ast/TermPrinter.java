@@ -69,8 +69,10 @@ public class TermPrinter {
       String base = ty.toString();
       for (int i=0; true; ++i) {
         FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
+        // System.out.println("Checking " + v + " against " + ctx.inputVars);
         if (ctx.inputVars.contains(v)) continue;
         if (ctx.outputVars.contains(v)) continue;
+        if (ctx.currentSub.getSubstituted(v) != null) continue;
         if (used.contains(v)) continue;
         used.add(v);
         NonTerminal result = new NonTerminal(v.toString(),location);
