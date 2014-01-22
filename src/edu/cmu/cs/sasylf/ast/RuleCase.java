@@ -1,14 +1,29 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.INVALID_CASE;
+import static edu.cmu.cs.sasylf.ast.Errors.REUSED_CONTEXT;
+import static edu.cmu.cs.sasylf.term.Facade.App;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
-import edu.cmu.cs.sasylf.term.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import static edu.cmu.cs.sasylf.term.Facade.App;
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 
 public class RuleCase extends Case {
@@ -46,7 +61,7 @@ public class RuleCase extends Case {
 		if (rule == null)
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
 		if (!rule.isInterfaceOK()) return;
-
+		
 		// TODO: add premises to context anyway.
 		if (rule.getPremises().size() != getPremises().size())
 			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
@@ -196,7 +211,7 @@ public class RuleCase extends Case {
 				debug("\tcomputed sub = " + computedSub);
 				Set<FreeVar> unavoidableInputVars = pairSub.selectUnavoidable(newInputVars);
 				if (!unavoidableInputVars.isEmpty())
-					debug("\tremoving input vars " + unavoidableInputVars);
+				  debug("\tremoving input vars " + unavoidableInputVars);
 				newInputVars.removeAll(unavoidableInputVars);
 				Set<Term> computedSubDomain = new HashSet<Term>(computedSub.getMap().keySet());
 				computedSubDomain.retainAll(newInputVars);
@@ -293,7 +308,11 @@ public class RuleCase extends Case {
 		// update the set of free variables
 		Set<FreeVar> oldInputVars = ctx.inputVars;
 		ctx.inputVars = newInputVars;
-		Set<FreeVar> addedInputVars = adaptedConcTerm.getFreeVariables();
+		// System.out.println("RuleCase.java:314: checking ctx");
+		ctx.checkConsistent(this);
+		// NB: originally, we just used adpatedConcTerm, but since it was adapted, perhaps
+		// other things changed.
+		Set<FreeVar> addedInputVars = adaptedConcTerm.substitute(ctx.currentSub).getFreeVariables();
 		
 		for (Derivation d : premises) {
 			Term premiseTerm = d.getElement().asTerm();
@@ -305,6 +324,8 @@ public class RuleCase extends Case {
 		if (!addedInputVars.isEmpty())
 			debug("\tadding new input vars " + addedInputVars);
 		ctx.inputVars.addAll(addedInputVars);
+    // System.out.println("RuleCase.java:330: checking ctx");
+    ctx.checkConsistent(this);
 
 		// update the set of subderivations
 		List<Fact> oldSubderivations = new ArrayList<Fact>(ctx.subderivations);
