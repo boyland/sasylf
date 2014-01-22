@@ -41,6 +41,8 @@ public class FreeVar extends Atom {
 			return getName() + "_" + stamp;
 	}
 
+	public int getStamp() { return stamp; }
+	
 	int getOrder() { return 0; }
 	boolean isNonPatFreeVarApp(Term other) { return other.isNonPatFreeVarApp(); }
 

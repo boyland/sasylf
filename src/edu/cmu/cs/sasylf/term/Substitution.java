@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Util;
+
 public class Substitution {
 	public Substitution() { }
 
@@ -73,35 +75,26 @@ public class Substitution {
 				// see if there's an equivalent free variable
 				FreeVar fv = t.getEtaEquivFreeVar();
 				
-				/* THIS WAS BOGUS
-				int abstractionCount = 0;
-				while (fv == null && t instanceof Abstraction) {
-					// see if it's an abstraction with a free var inside
-					t = ((Abstraction)t).getBody();
-					abstractionCount++;
-					fv = t.getEtaEquivFreeVar();
-				}*/
 				if (fv == null) {
-					// can't avoid
-					result.add(v);
-					debug("could not avoid " + v + " because it is equal to non-FreeVar expression " + t);
+				  Substitution revSub = new Substitution();
+				  fv = t.getEtaPermutedEquivFreeVar((FreeVar)v, revSub);
+				  if (fv != null && !vars.contains(fv)) {
+				    Util.debug("Found permuted var: " + v);
+				    varMap.remove(v);
+				    this.compose(revSub);
+				  } else {
+				    // can't avoid
+				    result.add(v);
+				    Util.debug("could not avoid " + v + " because it is equal to non-FreeVar expression " + t);
+				  }
 				} else if (vars.contains(fv)) {
 					// can't avoid
 					result.add(v);
-					debug("could not avoid " + v +" because it is equal to another thing we must avoid, " + fv);
+					Util.debug("could not avoid " + v +" because it is equal to another thing we must avoid, " + fv);
 				} else {
 					// switch a and t
 					varMap.remove(v);
-					/* THIS WAS BOGUS construct a new term
-					Term newT = v;
-					List<Term> argList = new ArrayList<Term>();
-					for (int i = 0; i < abstractionCount; ++i) {
-						argList.add(Facade.BVar(i+1));
-					}
-					if (abstractionCount > 0)
-						newT = newT.apply(argList, 0);						
-					add((Atom)fv,newT);*/
-					add((Atom)fv,v);
+					add(fv,v);
 				}
 			}
 		}
