@@ -67,6 +67,7 @@ public abstract class Derivation extends Fact {
 	}
 	
 	public void typecheck(Context ctx) {
+	  ctx.checkConsistent(this);
     clause.typecheck(ctx);
 
     Element newClause = clause.computeClause(ctx, false);
@@ -146,7 +147,7 @@ public abstract class Derivation extends Fact {
       ctx.currentSub.compose(instanceSub);
       // we need to update input vars with new variables:
       for (FreeVar v : matchTerm.getFreeVariables()) {
-        if (!ctx.inputVars.contains(v)) {
+        if (ctx.currentSub.getSubstituted(v) == null && !ctx.inputVars.contains(v)) {
           debug("Adding new free variable: " + v);
           ctx.inputVars.add(v);
         }
