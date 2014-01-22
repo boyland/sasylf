@@ -267,7 +267,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
 				pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
 				if (pair != null) {
-					debug("\tadded result!");
+				  debug("\tadded result!");
 					result.add(pair);
 				}
 			} else {
@@ -293,7 +293,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				// see if the rule applies
 				pair = checkRuleApplication(term, ruleTerm, appliedTerm);
 				if (pair != null) {
-					debug("\tadding " + pair.first);
+				  debug("\tadding " + pair.first);
 					result.add(pair);
 				}
 				

@@ -33,7 +33,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 
 	public void typecheck(Context ctx) {    
     super.typecheck(ctx);
-		
+    
 		Fact targetDerivation = ctx.derivationMap.get(inputName);
 		if (targetDerivation == null) {
 		  ErrorHandler.report(DERIVATION_NOT_FOUND, "Cannot find a derivation named "+ inputName, this);
@@ -90,8 +90,12 @@ public class DerivationByInversion extends DerivationWithArgs {
         result = result.substitute(pair.second);
         debug("  after adapt/subst, result = " + result);
         ctx.currentSub.compose(pair.second);
+        for (FreeVar uv : ctx.currentSub.selectUnavoidable(ctx.inputVars)) {
+          debug("In inversion, removing unavoidable variable: " + uv);
+          ctx.inputVars.remove(uv);
+        }
         for (FreeVar fv : pair.first.getFreeVariables()) {
-          if (ctx.inputVars.add(fv)) {
+          if (ctx.currentSub.getSubstituted(fv) == null && ctx.inputVars.add(fv)) {
             debug("In inversion, adding new input variable: " + fv);
           }
         }
@@ -115,8 +119,11 @@ public class DerivationByInversion extends DerivationWithArgs {
           for (int i=0; i < pieces.size(); ++i) {
             ClauseUse cu = clauses.get(i);
             Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
+            /*XXX Why are we adding to free variables again?
             debug("  piece #" + (i+1) + " freevars = " + pieces.get(i).getFreeVariables());
-            ctx.inputVars.addAll(pieces.get(i).getFreeVariables());
+            if (ctx.inputVars.addAll(pieces.get(i).getFreeVariables())) {
+              ErrorHandler.report("!! Internal error: still able to add variables",this);
+            }*/
             Derivation.checkMatch(cu, ctx, mt, pieces.get(i), 
                   "inversion result #" + (i+1) + " does not match given derivation");
             // If the derivation has no implicit context, we
