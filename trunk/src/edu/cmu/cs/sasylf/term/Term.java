@@ -380,6 +380,16 @@ public abstract class Term {
 		return null;
 	}
 
+	/**
+	 * Return an eta-equivalent free variable with permutation, if possible.
+	 * Returns null if there is not free variable with a non-empty permutation of
+	 * arguments.  If result is not null, substitution is modified to specify
+	 * the reverse permutation.  Only Abstraction overrides.
+	 */
+	public FreeVar getEtaPermutedEquivFreeVar(FreeVar src, Substitution reverseSub) {
+	  return null;
+	}
+	
 	/** converts (locally) to eta-long form.
 	 * Here, we implement the default--return this.  Only FreeVar overrides.
 	 */

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Util;
+
 public class Abstraction extends Term {
 	public Term varType;
 	public String varName;
@@ -272,6 +274,64 @@ public class Abstraction extends Term {
 			return null;
 		}
 	}
+	
+	@Override
+  public FreeVar getEtaPermutedEquivFreeVar(FreeVar src, Substitution revSub) {
+    Term t = this;
+    int argCount = 0;
+    while (t instanceof Abstraction) {
+      t = ((Abstraction)t).body;
+      argCount++;
+    }
+    if (t instanceof Application) {
+      Application a = (Application) t;
+      if (a.getArguments().size() != argCount)
+        return null;
+      Util.debug("Checking whether " + src + " is a permutation of another free var");
+      // doesn't take into account arguments being eta-long
+      // but then again neither does getEtaEquivFreeVar
+      if (!(a.getFunction() instanceof FreeVar)) {
+        Util.debug("  Not a free var: " + a.getFunction());
+        return null;
+      }
+      int[] indices = new int[argCount];
+      int[] reverse = new int[argCount];
+      for (int i = 0; i < argCount; ++i) {
+        Term arg = a.getArguments().get(i);
+        if (!(arg instanceof BoundVar)) {
+          Util.debug("  Arg #" + i + " is not a bound var: " + arg);
+          return null;
+        }
+        int index = ((BoundVar)arg).getIndex();
+        if (index > argCount) return null;
+        if (reverse[argCount - index] != 0) return null; // not a permutation
+        indices[i] = argCount - index;
+        reverse[argCount - index] = argCount - i;
+      }
+      List<Term> revArgs = new ArrayList<Term>(argCount);
+      for (int i=0; i < argCount; ++i) {
+        revArgs.add(new BoundVar(reverse[i]));
+      }
+      Abstraction w = this;
+      Abstraction[] wrappers = new Abstraction[argCount];
+      wrappers[0] = w;
+      for (int i=1; i < argCount; ++i) {
+        w = (Abstraction)w.body;
+        wrappers[i] = w;
+      }
+      t = new Application(src,revArgs);
+      for (int i=argCount-1; i >= 0; --i) {
+        String name = wrappers[indices[i]].varName;
+        Term type = wrappers[indices[i]].varType;
+        t = new Abstraction(name,type,t);
+      }
+      FreeVar fv = (FreeVar)a.getFunction();
+      revSub.add(fv,t);
+      return fv;
+    } else {
+      return null;
+    }
+  }
 
 	public Term subInside(Substitution sub, int size) {
 		Term newBody = (size > 1) ? ((Abstraction)body).subInside(sub, size-1) : body.substitute(sub);
