@@ -124,14 +124,33 @@ public class DSLToolkitParser {
 		return getToken(1).kind == IDENTIFIER && getToken(2).kind == LBRACK;
     }
 
+    boolean isRulePartToken(Token t) {
+		return t.specialToken == null && 
+		  (t.kind == MINUS ||
+		   t.kind == IDENTIFIER || 
+		   t.kind == INTEGER_LITERAL ||
+		   t.kind == OPERATOR ||
+		   // list every keyword from Keyword():
+		   t.kind == AND || 
+		   t.kind == CASE ||
+		   t.kind == CONTRADICTION ||
+		   t.kind == END ||
+		   t.kind == EXTENDS ||
+		   t.kind == IS || 
+		   t.kind == INVERSION ||
+		   t.kind == MODULE ||
+		   t.kind == PROVIDES ||
+		   t.kind == REQUIRES ||
+		   t.kind == USE || 
+		   t.kind == WEAKENING);
+    }
+        
     boolean isRulePart() {
-		return getToken(1).specialToken == null && getToken(1).kind == MINUS && getToken(2).specialToken == null;
-		/*
-			&& (getToken(2).kind == IDENTIFIER || getToken(2).kind == INTEGER_LITERAL ||
-			    getToken(2).kind == IS || getToken(2).kind == INVERSION ||
-			    getToken(2).kind == USE || getToken(2).kind == WEAKENING ||
-			    getToken(2).kind == CONTRADICTION);
-			    */
+        return isRulePartToken(getToken(1));
+    }
+    
+    boolean isRulePart2() {
+        return isRulePartToken(getToken(1)) && isRulePartToken(getToken(2)); 
     }
 
     Variable getVar(Token t) {
@@ -189,12 +208,9 @@ PARSER_END(DSLToolkitParser)
 
 /* WHITE SPACE */
 
-SKIP :
+SPECIAL_TOKEN :
 {
-  " "
-| "\t"
-| "\r"
-| "\f"
+  < WHITESPACE: ( " " | "\t" | "\f" | "\r" )+ >
 }
 
 SPECIAL_TOKEN : 
@@ -1484,7 +1500,12 @@ String RuleName() :
 {Token t, t1; String s; }
 {
   (t1=<IDENTIFIER> | t1= Keyword()) { s = t1.image; }
-  ( LOOKAHEAD({ isRulePart() }) <MINUS> (t=<IDENTIFIER> | t=<INTEGER_LITERAL> | t=Keyword()) { s += "-" + t.image; }
+  ( LOOKAHEAD({ isRulePart() }) (
+      t=<MINUS>
+    | t=<OPERATOR>
+    | t=<IDENTIFIER>
+    | t=<INTEGER_LITERAL> 
+    | t=Keyword()) { s += t.image; }
   )*
   { if (!(notNL(t1.specialToken))) {
   		ErrorHandler.recoverableError("Missing a rule name (must be on the same line as the ---)", new Location(t1));
@@ -1716,7 +1737,7 @@ Derivation Justification(Token startT, Clause c) :
     { return d; }
   | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER> <COLON>
     { di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
-    ( ca=Case() { if (ca != null) di.getCases().add(ca); })+
+    ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
     (<INDUCTION> |
      (LOOKAHEAD(2) <CASE> <ANALYSIS> | <CASE> | <LEMMA> | <THEOREM>)
@@ -1774,7 +1795,7 @@ Derivation Justification(Token startT, Clause c) :
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
       return d; }
-  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} (<MINUS> t2=<IDENTIFIER> {s += "-" + t2.image;})+ 
+  | LOOKAHEAD({isRulePart2()}) s = RuleName() 
      { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
      (<ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* | {} )
