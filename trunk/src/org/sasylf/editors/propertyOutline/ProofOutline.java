@@ -2,10 +2,13 @@ package org.sasylf.editors.propertyOutline;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
@@ -56,7 +59,14 @@ public class ProofOutline extends ContentOutlinePage {
 
 		protected final static String SEGMENTS= "__slf_segments"; //$NON-NLS-1$
 		protected IPositionUpdater fPositionUpdater= new DefaultPositionUpdater(SEGMENTS);
-		protected List<ProofElement> pList= new ArrayList<ProofElement>();
+		protected Collection<ProofElement> pList= new TreeSet<ProofElement>();
+		
+		private boolean inResource(Location loc, IResource res) {
+		  String name = loc.getFile();
+		  if (res.getName().equals(name)) return true;
+		  System.out.println("Are modules implemented? " + res.getName() + " != " + name);
+		  return true;
+		}
 		
 		private Position convertLocToPos(IDocument document, Location loc) {
 			Position pos = null;
@@ -104,6 +114,7 @@ public class ProofOutline extends ContentOutlinePage {
 //			
 			//judgments
 			for (Judgment judg : cu.getJudgments()) {
+			  if (!inResource(judg.getLocation(), documentFile)) continue;
 				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()).replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
@@ -127,6 +138,7 @@ public class ProofOutline extends ContentOutlinePage {
 			
 			//theorem
 			for (Theorem theo : cu.getTheorems()) {
+        if (!inResource(theo.getLocation(), documentFile)) continue;
 				StringBuilder sb = new StringBuilder();
 				sb.append(theo.getName());
 				sb.append(": ");
@@ -142,19 +154,21 @@ public class ProofOutline extends ContentOutlinePage {
 				pe = new ProofElement("Theorem", sb.toString().replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, theo.getLocation()));
 				pList.add(pe);
+				/* This part  hasn't ever been useful, and it uses up screen real estate:
 				cStack.push(pe);
 				for(Derivation deri: theo.getDerivations()) {
 					if(deri instanceof DerivationByAnalysis) {
 						findCaseRule(document, ((DerivationByAnalysis) deri).getCases());
 					}
 				}
-				cStack.pop();
+				cStack.pop();*/
 			}
 		}
 		
 		Stack<ProofElement> cStack = new Stack<ProofElement>();
 
-		private void findCaseRule(IDocument document, List<Case> rList) {
+		@SuppressWarnings("unused")  // considering removing this capability
+    private void findCaseRule(IDocument document, List<Case> rList) {
 			for(Case _case : rList) {
 				if(_case instanceof RuleCase) {
 					RuleCase ruleCase = (RuleCase) _case;
