@@ -13,10 +13,12 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
+import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 
 /** Represents a typing context */
@@ -106,6 +108,66 @@ public class Context implements Cloneable {
       }
     }
     return false;
+  }
+  
+  public void checkConsistent(Node here) {
+    boolean problem = false;
+    for (FreeVar fv : inputVars) {
+      if (currentSub.getSubstituted(fv) != null) {
+        System.out.println("Internal error: input var " + fv + " has binding to " + currentSub.getSubstituted(fv));
+        problem = true;
+      }
+    }
+    for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+      if (e.getValue().substitute(currentSub) != e.getValue()) {
+        System.out.println("Internal error: currentSub is not idempotent for " + e.getValue());
+        System.out.println("  " + e.getValue().substitute(currentSub));
+        problem = true;
+      }
+    }
+    
+    for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+      Atom key = e.getKey();
+      if (!(key instanceof FreeVar)) {
+        System.out.println("Internal error: binding a constant " + key + " to " + e.getValue());
+        problem = true;
+      }
+    }
+    
+    if (problem) {
+      ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
+    } 
+    removeUnreachableVariables();
+  }
+  
+  public void removeUnreachableVariables() {
+    if (adaptationSub != null) {
+      boolean changed = false;
+      Substitution newAdaptSub = new Substitution();
+      for (Map.Entry<Atom, Term> e : adaptationSub.getMap().entrySet()) {
+        Term newTerm = e.getValue().substitute(currentSub);
+        newAdaptSub.add(e.getKey(),newTerm);
+        if (newTerm != e.getValue()) {
+          changed = true;
+        }
+      }
+      if (changed) adaptationSub = newAdaptSub;
+    }
+    boolean changed = false;
+    Substitution newSub = new Substitution();
+    for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+      Atom key = e.getKey();
+      if (key instanceof FreeVar) {
+        FreeVar fv = (FreeVar)key;
+        if (fv.getStamp() != 0) {
+          debug("removing unreachable variable binding: " + fv + " = " + e.getValue());
+          changed = true;
+        } else {
+          newSub.add(key, e.getValue());
+        }
+      }
+    }
+    if (changed) currentSub = newSub;
   }
   
   /*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {
