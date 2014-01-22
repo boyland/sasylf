@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.text.Position;
+import org.sasylf.util.PositionComparator;
 
-public class ProofElement {
+public class ProofElement implements Comparable<ProofElement> {
 	private String category;
 	private String content;
 	private ProofElement parentElement;
@@ -94,5 +95,13 @@ public class ProofElement {
 	public void setPosition(Position position) {
 		this.position = position;
 	}
+
+
+
+  @Override
+  public int compareTo(ProofElement arg0) {
+    return PositionComparator.getDefault().compare(position,arg0.position);
+  }
+	
 	
 }
