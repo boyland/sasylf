@@ -21,6 +21,11 @@ public class Location {
 	public int getColumn() {
 		return beginColumn;
 	}
+	
+	public String getFile() {
+	  return file;
+	}
+	
 	private int beginLine, beginColumn /*, endLine, endColumn*/;
 	private String file;
 
