@@ -107,6 +107,7 @@ RELEASE HISTORY
     poplmark2a.slf no longer requires "unproved"
     starting to supported mixed judgments and theorems
     more checking of assumes and losing of context
+    Stricter separation of rules/lemmas/theorems
     Resolved issues #8, #32, #34, #37, #38, #39, #40, #41
 1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
