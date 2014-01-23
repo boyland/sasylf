@@ -124,7 +124,7 @@ public class DerivationByInversion extends DerivationWithArgs {
             if (ctx.inputVars.addAll(pieces.get(i).getFreeVariables())) {
               ErrorHandler.report("!! Internal error: still able to add variables",this);
             }*/
-            Derivation.checkMatch(cu, ctx, mt, pieces.get(i), 
+            Derivation.checkMatch(cu, ctx, mt, pieces.get(i).substitute(ctx.currentSub), 
                   "inversion result #" + (i+1) + " does not match given derivation");
             // If the derivation has no implicit context, we
             // skip the context check
