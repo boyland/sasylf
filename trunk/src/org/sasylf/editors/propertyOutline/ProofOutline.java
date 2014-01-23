@@ -151,7 +151,7 @@ public class ProofOutline extends ContentOutlinePage {
 				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}*/
-				pe = new ProofElement("Theorem", sb.toString().replaceAll("\"", ""));
+				pe = new ProofElement(theo.getKindTitle(), sb.toString().replaceAll("\"", ""));
 				pe.setPosition(convertLocToPos(document, theo.getLocation()));
 				pList.add(pe);
 				/* This part  hasn't ever been useful, and it uses up screen real estate:
