@@ -32,19 +32,25 @@ public class SASyLFIndentStrategy extends DefaultIndentLineAutoEditStrategy {
    * @param offset offset within document
    * @throws BadLocationException if a problem happens
    */
-  protected int getLineStart(IDocument d, int offset)
-      throws BadLocationException {
-        int p = (offset == d.getLength() ? offset - 1 : offset);
-        return d.getLineInformationOfOffset(p).getOffset();
-      }
+  protected int getLineStart(IDocument d, int offset) throws BadLocationException {
+    int p = (offset == d.getLength() ? offset - 1 : offset);
+    return d.getLineInformationOfOffset(p).getOffset();
+  }
 
-  protected int getLineLength(IDocument d, int offset)
-      throws BadLocationException {
-        int p = (offset == d.getLength() ? offset - 1 : offset);
-        IRegion r = d.getLineInformationOfOffset(p);
-        return r.getOffset() + r.getLength() - offset;
-        
-      }
+  /**
+   * How much of the current line is after the current point.
+   * Return 0 if the offset is at the end of the line (or at end of document).
+   * @param d document to use, must not be null
+   * @param offset offset within the document
+   * @return size of current line minus where this offset is within the line.
+   * @throws BadLocationException if offset is out of range.
+   */
+  protected int getLineLength(IDocument d, int offset) throws BadLocationException {
+    if (offset == d.getLength()) return 0;
+    IRegion r = d.getLineInformationOfOffset(offset);
+    return r.getOffset() + r.getLength() - offset;
+
+  }
 
   protected SASyLFIndentStrategy() {
     super();
