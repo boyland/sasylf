@@ -13,6 +13,7 @@ import org.eclipse.jface.text.DocumentCommand;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentListener;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.swt.widgets.Display;
 
@@ -118,6 +119,40 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
     }
   }
   
+  /**
+   * @param d
+   * @param offset
+   * @param thisIndent
+   * @throws BadLocationException
+   */
+  protected boolean notAlreadyUndented(IDocument d, int offset, int thisIndent)
+      throws BadLocationException {
+    IRegion thisLineInfo = d.getLineInformationOfOffset(offset);
+    if (thisLineInfo.getOffset() == 0) {
+      // System.out.println("on first line");
+      return false;
+    }
+    IRegion prevLineInfo = d.getLineInformationOfOffset(thisLineInfo.getOffset()-1);
+    if (prevLineInfo.getLength() < thisIndent) {
+      // System.out.println("previous line '" + d.get(prevLineInfo.getOffset(), prevLineInfo.getLength())+ "'is shorter than us: " + thisIndent);
+      return false;
+    }
+    for (int k=0; k < thisIndent; ++k) {
+      char c1 = d.getChar(prevLineInfo.getOffset()+k);
+      char c2 = d.getChar(thisLineInfo.getOffset()+k);
+      if (c1 != c2) {
+        // System.out.println("doesn't match previous line at char #" + k + " '" + c1 + "' != '" + c2 + "'");
+        return false;
+      }
+    }
+    // System.out.println("all previous charcaters match: [0," + thisIndent + ")");
+    if (prevLineInfo.getLength() > thisIndent && Character.isWhitespace(d.getChar(prevLineInfo.getOffset()+thisIndent))) {
+      // System.out.println("already undented");
+      return false;
+    }
+    return true;
+  }
+
   private void doNewlineAutoIndent(IDocument d, DocumentCommand c) throws BadLocationException {
     String line = (getLineUpTo(d, c.offset) + c.text).trim();
     switch (inComment(line)) {
@@ -132,8 +167,27 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
       break;
     }
     if (line.equals("is")) {
-      addUndent(d,c);
-      doDefaultNewlineAutoIndent(d,c);
+      // we want to avoid the "is" undenting over and over
+      int thisIndent = 0;
+      IRegion thisLineInfo = d.getLineInformationOfOffset(c.offset);
+      // System.out.println("thisLineInfo = " + thisLineInfo.getOffset() + ":" + thisLineInfo.getLength());
+      while (thisIndent < thisLineInfo.getLength() && Character.isWhitespace(d.getChar(thisLineInfo.getOffset()+thisIndent))) {
+        ++thisIndent;
+      }
+      // System.out.println("  thisIndent in '" + d.get(thisLineInfo.getOffset(), thisLineInfo.getLength()) +"' = " + thisIndent);
+      if (thisIndent == thisLineInfo.getLength()) {
+        int k=0;
+        while (k < c.text.length() && Character.isWhitespace(c.text.charAt(k))) {
+          ++k;
+        }
+        thisIndent += k;
+      }
+      if (notAlreadyUndented(d,c.offset,thisIndent)) {
+        addUndent(d,c);
+        doDefaultNewlineAutoIndent(d,c);  
+      } else {
+        doModifiedNewlineAutoIndent(d,c,+1);
+      }
     } else if (line.endsWith(":") || line.startsWith("case ") || line.equals("case") || line.startsWith("terminals ") || line.startsWith("is" )) {
       doModifiedNewlineAutoIndent(d,c,+1);
     } else {
@@ -153,6 +207,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
         } else {
           if (getLineLength(d,c.offset) != 0) {
             // System.out.println("line length = " + getLineLength(d,c.offset));
+            // SYstem.out.println("not at end of line");
             return;
           }
           String upTo = getLineUpTo(d,c.offset);
@@ -174,8 +229,11 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
             // System.out.println("word not delimited with whitespace: " + j);
             return;
           } 
-          // System.out.println("attempting to undent");
-          addUndent(d,c);
+          int thisIndent = c.offset - upTo.length() - d.getLineInformationOfOffset(c.offset).getOffset();
+          if (notAlreadyUndented(d, c.offset, thisIndent)) {
+            // System.out.println("attempting to undent");
+            addUndent(d,c);
+          }
         }
       }
     } catch (BadLocationException e) {
