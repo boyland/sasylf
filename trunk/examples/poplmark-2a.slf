@@ -381,8 +381,8 @@ end case
 end induction
 end lemma
 
-theorem canonical-form-lambda : forall dtv : t value forall dtt: * |- t : T1 -> T2
-								exists t == lambda x : T1' => t'[x].
+lemma canonical-form-lambda : forall dtv : t value forall dtt: * |- t : T1 -> T2
+						      exists t == lambda x : T1' => t'[x].
 
 deq : t == lambda x : T1' => t'[x] by induction on dtt :
 	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
@@ -447,7 +447,7 @@ deq : t == lambda x : T1' => t'[x] by induction on dtt :
 	// other cases don't unify with conclusion
 
 end induction
-end theorem
+end lemma
 
 
 lemma Tarrow-sub-Tarrow: 
@@ -520,8 +520,8 @@ end lemma
 
 
 
-theorem canonical-form-Lambda : forall dtv : t value forall dtt: * |- t : all X <: T1 => T2[X]
-								exists t == lambda X <: T1' => t2[X].
+lemma canonical-form-Lambda : forall dtv : t value forall dtt: * |- t : all X <: T1 => T2[X]
+							  exists t == lambda X <: T1' => t2[X].
 
 deq : t == lambda X <: T1' => t2[X] by induction on dtt :
 	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
@@ -594,7 +594,7 @@ deq : t == lambda X <: T1' => t2[X] by induction on dtt :
 	// other cases don't unify with conclusion
 
 end induction
-end theorem
+end lemma
 
 
 theorem progress : forall dt : * |- t : T exists t stepsorvalue.

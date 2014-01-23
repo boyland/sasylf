@@ -51,5 +51,5 @@ end lemma
 theorem impossible:
   exists contradiction.
   o: u OK by rule u-ok //! used "rule" not "lemma"
-  _: contradiction by lemma u-impossible on u
+  _: contradiction by theorem u-impossible on u //! used 'theorem' not 'lemma'
 end theorem
