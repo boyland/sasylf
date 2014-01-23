@@ -6,6 +6,8 @@ public enum Errors {
 	THEOREM_NOT_FOUND  ("cannot find lemma/theorem named "),
 	RULE_NOT_THEOREM  ("expected theorem, not rule "),
 	THEOREM_NOT_RULE  ("expected rule, not theorem "),
+	THEOREM_KIND_WRONG ("not a "),
+	THEOREM_KIND_MISSING ("missing keyword "),
 	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
 	RULE_PREMISE_NUMBER		("wrong number of premises for rule "),

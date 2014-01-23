@@ -102,7 +102,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
       String line = doc.get(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
       String[] pieces = line.split(" ",-1);
       if (pieces.length < 3) {
-        return noProposals("no 'by rule' or 'by theorem' on line");
+        return noProposals("no 'by rule/lemma/theorem' on line");
       }
       /* // hack for whitespace
       if (Character.isWhitespace(doc.getChar(offset-1))) {
@@ -147,7 +147,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
       String[] pieces = line.substring(byIndex+4).split(" ");
       if (pieces.length < 3 || !pieces[2].equals("on")) {
         // System.out.println("pieces = " + Arrays.toString(pieces));
-        return noInformation("no 'by rule on' or 'by theorem on' on line");
+        return noInformation("no 'by rule/lemma/theorem on' on line");
       }
       // System.out.println("looking for " + pieces[0] + " for '" + pieces[1] + "'");
       ProofElement pe = outline.findProofElementByName(pieces[1]);

@@ -55,7 +55,7 @@ public class Theorem extends RuleLike {
     }
 
 	public void prettyPrint(PrintWriter out) {
-		out.println("theorem " + getName() + ":");
+		out.println(getKind() + " " + getName() + ":");
 		for (Fact forall : getForalls()) {
 			out.print("forall ");
 			forall.prettyPrint(out);
@@ -126,7 +126,7 @@ public class Theorem extends RuleLike {
 			    String dn = dbi.getTargetDerivationName();
 			    int i = inputNames.indexOf(dn);
 			    if (i == -1) {
-			      ErrorHandler.report("Induction target "+ dn +" must be an explicit forall argument of this theorem", this);
+			      ErrorHandler.report("Induction target "+ dn +" must be an explicit forall argument of this theorem/lemma", this);
 			    } else inductionIndex = i;
 			  }
 			}
@@ -144,7 +144,7 @@ public class Theorem extends RuleLike {
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
 		try {
-		debug("checking theorem "+this.getName());
+		debug("checking "+kind+" "+this.getName());
 		
 		ctx.derivationMap = new HashMap<String, Fact>();
 		ctx.inputVars = new HashSet<FreeVar>();
@@ -205,9 +205,9 @@ public class Theorem extends RuleLike {
 			int newErrorCount = ErrorHandler.getErrorCount() - oldErrorCount;
 			if (edu.cmu.cs.sasylf.util.Util.VERBOSE) {
 				if (newErrorCount == 0) {
-					System.out.println("Theorem " + getName() + " OK");
+					System.out.println(getKindTitle() + getName() + " OK");
 				} else {
-					System.out.println("Error(s) in theorem " + getName());					
+					System.out.println("Error(s) in " + getKind() + " " + getName());					
 				}
 			}
 		}
@@ -265,6 +265,22 @@ public class Theorem extends RuleLike {
 		}
 	}
 
+	public void setKind(String k) {
+	  if (kind != null && kind.equals(k)) return;
+	  if (k == null) k = "theorem";
+	  if (k.length() == 0) k = "theorem";
+	  kind = k;
+	  kindTitle = Character.toTitleCase(k.charAt(0)) + kind.substring(1);
+	}
+	
+	public String getKind() {
+	  return kind;
+	}
+	
+	public String getKindTitle() {
+	  return kindTitle;
+	}
+	
 	/**
 	 * Return true if this theorem has a well-defined interface,
 	 * even if it wasn't successfully proved.  Theorems without
@@ -286,6 +302,8 @@ public class Theorem extends RuleLike {
 	
 	public void setExists(Clause c) { exists = c; }
 
+	private String kind = "theorem";
+	private String kindTitle = "Theorem";
 	private NonTerminal assumes = null;
 	private List<Fact> foralls = new ArrayList<Fact>();
 	private Clause exists;

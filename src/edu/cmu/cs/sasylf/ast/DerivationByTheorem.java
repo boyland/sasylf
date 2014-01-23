@@ -5,9 +5,10 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 public class DerivationByTheorem extends DerivationByIHRule {
 
-  public DerivationByTheorem(String n, Location l, Clause c, String name) {
+  public DerivationByTheorem(String n, Location l, Clause c, String name, String kind) {
     super(n, l, c);
     theoremName = name;
+    theoremKind = kind;
   }
 
   @Override
@@ -22,11 +23,18 @@ public class DerivationByTheorem extends DerivationByIHRule {
         if (theorem == null)
           ErrorHandler.report(Errors.THEOREM_NOT_FOUND, theoremName, this);
       }
-      if (!(theorem instanceof Theorem)) {
-        ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName, this);  
-      }
       if (!theorem.isInterfaceOK()) {
         ErrorHandler.report(Errors.RULE_BAD, theoremName, this);
+      }
+      if (!(theorem instanceof Theorem)) {
+        ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName, this, theoremKind +"\nrule");  
+      } else { 
+        String kind = ((Theorem)theorem).getKind();
+        if (theoremKind.length() == 0) {
+          ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, " by\n by "+kind);
+        } else if (!kind.equals(theoremKind)) {
+          ErrorHandler.recoverableError(Errors.THEOREM_KIND_WRONG, theoremKind + " " + theoremName, this, theoremKind+"\n"+kind);
+        }
       }
     }
     return theorem;
@@ -68,9 +76,10 @@ public class DerivationByTheorem extends DerivationByIHRule {
   }
   
   public String prettyPrintByClause() {
-    return " by theorem " + theoremName;
+    return " by " + theoremKind + " " + theoremName;
   }
 
+  private String theoremKind;
   private String theoremName;
   private RuleLike theorem;
 

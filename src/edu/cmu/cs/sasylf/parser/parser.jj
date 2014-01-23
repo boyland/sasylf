@@ -1704,6 +1704,7 @@ Theorem TheoremDeclaration() :
     if (!tp.image.equals(t0.image)) {
         ErrorHandler.recoverableError("expected 'end " + t0.image + "' not 'end " + tp.image + "'", new Location(tp)); 
     }
+    thm.setKind(t0.image);
     return thm; 
   }
 }
@@ -1739,7 +1740,7 @@ Derivation Justification(Token startT, Clause c) :
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     ]
     { return d; }
-  | (<THEOREM> | <LEMMA>) s=RuleName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, s); }
+  | (t=<THEOREM> | t=<LEMMA>) s=RuleName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, t.image); }
     [ <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     ]
@@ -1805,16 +1806,16 @@ Derivation Justification(Token startT, Clause c) :
       d.getArgStrings().add(clauseFor(t));
       return d; }
   | LOOKAHEAD({isRulePart2()}) s = RuleName() 
-     { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
      (<ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* | {} )
-     { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
+     { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
        return d;
      }
   | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} 
-     { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
      <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*      { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
        return d;     }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);

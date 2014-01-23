@@ -99,11 +99,15 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     
     switch (markerType) {
     default: break;
-    case MISSING_CASE:
+    case MISSING_CASE: return true;
     case EXTRANEOUS_ASSUMES:
     case MISSING_ASSUMES: 
     case ILLEGAL_ASSUMES:
     case ASSUMED_ASSUMES: return true;
+    case RULE_NOT_THEOREM: 
+    case THEOREM_NOT_RULE:
+    case THEOREM_KIND_WRONG:
+    case THEOREM_KIND_MISSING: return true;
     }
     // NO_DERIVATION
     return false;
@@ -160,6 +164,8 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     
     try {
       String nl = doc.getLineDelimiter(line);
+      IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, false, true, false);
+
       switch (markerType) {
       default: break;
       case MISSING_CASE:
@@ -209,10 +215,16 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         break;
       case ILLEGAL_ASSUMES:
       case EXTRANEOUS_ASSUMES:
-        IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, false, true, false);
         if (old != null) {
           proposals.add(new MyCompletionProposal(res,"",old.getOffset(), old.getLength(), 0, 
               null, "remove '" + split[0] +"'", null, null));
+        }
+        // fall through
+      case RULE_NOT_THEOREM: 
+      case THEOREM_NOT_RULE:
+      case THEOREM_KIND_WRONG:
+      case THEOREM_KIND_MISSING:
+        if (old != null) {
           if (split.length > 1 && split[1].length() > 0) {
             proposals.add(new MyCompletionProposal(res, split[1], old.getOffset(), old.getLength(),0,
                 null, "replace '" + split[0] +"' with '" + split[1] + "'", null, null));
@@ -226,6 +238,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         newText = lineIndent + extraIndent + fixInfo;
         proposals.add(new MyCompletionProposal(res,newText+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, newText.length(), 
             null, "insert '" + fixInfo + "'", null, null));
+        break;
       }
     } catch (BadLocationException e) {
       System.err.println("unexpected bad location exception caught:");

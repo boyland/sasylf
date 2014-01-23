@@ -16,11 +16,12 @@ public class DerivationByRule extends DerivationByIHRule {
 			if (rule == null) {
 					ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
 			}
+      if (!rule.isInterfaceOK()) {
+        ErrorHandler.report(Errors.RULE_BAD, ruleName, this);
+      }
 			if (!(rule instanceof Rule)) {
-			  ErrorHandler.recoverableError(Errors.THEOREM_NOT_RULE, ruleName, this);
-			}
-			if (!rule.isInterfaceOK()) {
-			  ErrorHandler.report(Errors.RULE_BAD, ruleName, this);
+			  Theorem th = (Theorem)rule;
+			  ErrorHandler.recoverableError(Errors.THEOREM_NOT_RULE, ruleName, this, "rule\n" + th.getKind());
 			}
 		}
 		return rule;
