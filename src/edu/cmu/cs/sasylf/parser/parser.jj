@@ -124,8 +124,8 @@ public class DSLToolkitParser {
 		return getToken(1).kind == IDENTIFIER && getToken(2).kind == LBRACK;
     }
 
-    boolean isRulePartToken(Token t) {
-		return t.specialToken == null && 
+    boolean isRuleNamePiece(Token t) {
+		return
 		  (t.kind == MINUS ||
 		   t.kind == IDENTIFIER || 
 		   t.kind == INTEGER_LITERAL ||
@@ -144,13 +144,20 @@ public class DSLToolkitParser {
 		   t.kind == USE || 
 		   t.kind == WEAKENING);
     }
+
+    boolean isRulePartToken(Token t) {
+		return t.specialToken == null && isRuleNamePiece(t);
+    }
         
     boolean isRulePart() {
         return isRulePartToken(getToken(1));
     }
     
+    private Token firstRulePieceToken;
+    
     boolean isRulePart2() {
-        return isRulePartToken(getToken(1)) && isRulePartToken(getToken(2)); 
+    	firstRulePieceToken = getToken(1);
+        return isRuleNamePiece(getToken(1)) && isRulePartToken(getToken(2)); 
     }
 
     Variable getVar(Token t) {
@@ -1799,7 +1806,7 @@ Derivation Justification(Token startT, Clause c) :
      { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
      (<ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* | {} )
-     { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+     { ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(firstRulePieceToken));
        return d;
      }
   | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} 
