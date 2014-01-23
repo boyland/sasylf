@@ -1,0 +1,46 @@
+package org.sasylf.util;
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+
+judgment eq: n = n
+
+----- eq
+n = n
+
+
+judgment plus: n + n = n
+
+
+--------- plus-z
+0 + n = n
+
+n1 + n2 = n3
+----------------- plus-s
+S n1 + n2 = S n3
+
+
+judgment times: n * n = n
+
+
+---------- times-z
+0 * n = 0
+
+n1 * n2 = n3
+n3 + n2 = n4
+----------------- times-s
+S n1 * n2 = n4
+
+
+// bug in SASyLF 1.2.4a6
+theorem times-left-cancels:
+  forall t1: (S n1) * n2 = n3
+  forall t2: (S n1) * n2' = n3
+  exists n2 = n2'.
+  t2': n1 * n2' = n3'' and //! bindings [n1]
+  p2': n3'' + n1 = n3 by inversion of times-s on t2
+  proof by unproved //! warning only
+end theorem
+

@@ -50,6 +50,6 @@ end lemma
 
 theorem impossible:
   exists contradiction.
-  o: u OK by lemma u-ok
+  o: u OK by rule u-ok //! used "rule" not "lemma"
   _: contradiction by lemma u-impossible on u
 end theorem
