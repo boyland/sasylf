@@ -1406,8 +1406,8 @@ TOKEN :
 
 CompUnit CompilationUnit() :
 { List<String> pkg = null; 
-  Token moduleName = null;
-  Token t;
+  String moduleName = null;
+  Token t=null;
   List<String> usedModule = null;
   List<Syntax> syntax = new ArrayList<Syntax>(); 
   List<Syntax> s; Judgment j;
@@ -1418,7 +1418,7 @@ CompUnit CompilationUnit() :
   List<Theorem> theorems = new ArrayList<Theorem>(); }
 {
   [ pkg=PackageDeclaration() ]
-  [ <MODULE> moduleName=<IDENTIFIER>]
+  [ <MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   
   (t=<EXTENDS> usedModule=Name() 
     { if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
@@ -1426,7 +1426,7 @@ CompUnit CompilationUnit() :
   )*
    
   (t=<PROVIDES> { if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
-  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(moduleName)); }
+  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
   )
   
   (
@@ -1447,7 +1447,7 @@ CompUnit CompilationUnit() :
   {
     if (pkg == null)
 		pkg = new ArrayList<String>();
-    return new CompUnit(pkg, terms, syntax, judges, theorems);
+    return new CompUnit(pkg, moduleName, terms, syntax, judges, theorems);
   }
 }
 
@@ -1702,7 +1702,8 @@ Theorem TheoremDeclaration() :
   <END> (tp=<THEOREM> | tp=<LEMMA>)
   { 
     if (!tp.image.equals(t0.image)) {
-        ErrorHandler.recoverableError("expected 'end " + t0.image + "' not 'end " + tp.image + "'", new Location(tp)); 
+        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
+        	new Location(tp),tp.image + "\n" + t0.image); 
     }
     thm.setKind(t0.image);
     return thm; 
@@ -1758,8 +1759,8 @@ Derivation Justification(Token startT, Clause c) :
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
     ( LOOKAHEAD(2) <CASE> <ANALYSIS> |
-     (<CASE> | <INDUCTION> | <LEMMA> | <THEOREM> )
-     { ErrorHandler.recoverableError("expected 'end case analysis'",new Location(of)); } )
+     (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
+     { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
     { return dca; }
   | <CONTRADICTION> <ON> t=<IDENTIFIER>
     { return new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
