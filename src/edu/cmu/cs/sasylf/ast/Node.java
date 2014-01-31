@@ -19,4 +19,8 @@ public abstract class Node {
 	}
 
 	private Location location;
+	
+	protected void setLocation(Location l) {
+	  location = l;
+	}
 }
