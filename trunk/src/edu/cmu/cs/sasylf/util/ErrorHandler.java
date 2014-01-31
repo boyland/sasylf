@@ -83,6 +83,14 @@ public class ErrorHandler {
     }
   }
 
+  public static void recoverableError(Errors errorType, String msg, Location loc, String debugInfo) {
+    try {
+      report(errorType, msg, loc, debugInfo, true, true);
+    } catch (SASyLFError x) {
+      // stop throw
+    }
+  }
+
 	public static void warning(Errors errorType, Node obj) {
 		report(errorType, null, obj.getLocation(), null, false, true);
 	}
