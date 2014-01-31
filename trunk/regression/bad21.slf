@@ -1,0 +1,38 @@
+package regression;
+
+terminals s  contradiction
+
+syntax
+
+n ::= 0
+    | s n
+
+
+judgment gt: n > n
+
+------- gt-one
+s n > n
+
+
+n1 > n2
+--------- gt-more
+s n1 > n2
+
+
+judgment absurd: contradiction
+
+theorem succ-irreflexive:
+  forall d: n > n
+  exists contradiction.
+  
+  proof by induction on d:
+    case rule
+      d1: n' > s n'
+      --------------- gt-more
+       _: s n' > s n'
+    is
+      proof by induction on d1: //! can't do induction again (crashes before 1.2.4)
+      end induction
+    end case
+  end induction
+end theorem
