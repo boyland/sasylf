@@ -135,6 +135,9 @@ public class Theorem extends RuleLike {
 	}
 
 	public void typecheck(Context oldCtx) {
+    if (edu.cmu.cs.sasylf.util.Util.VERBOSE) {
+      System.out.println(getKindTitle() + " " + getName());
+    }
     if (oldCtx.ruleMap.containsKey(getName())) {
       if (oldCtx.ruleMap.get(getName()) != this) {
         ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
@@ -204,9 +207,7 @@ public class Theorem extends RuleLike {
 		} finally {
 			int newErrorCount = ErrorHandler.getErrorCount() - oldErrorCount;
 			if (edu.cmu.cs.sasylf.util.Util.VERBOSE) {
-				if (newErrorCount == 0) {
-					System.out.println(getKindTitle() + getName() + " OK");
-				} else {
+				if (newErrorCount > 0) {
 					System.out.println("Error(s) in " + getKind() + " " + getName());					
 				}
 			}
