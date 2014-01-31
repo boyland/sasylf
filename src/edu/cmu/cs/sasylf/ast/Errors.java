@@ -1,6 +1,9 @@
 package edu.cmu.cs.sasylf.ast;
 
 public enum Errors {
+  WRONG_PACKAGE ("wrong package"),
+  WRONG_MODULE_NAME ("wrong module name"),
+  WRONG_END,
 	DERIVATION_UNPROVED		("derivation unproved"),
 	RULE_NOT_FOUND			("cannot find a rule named "),
 	THEOREM_NOT_FOUND  ("cannot find lemma/theorem named "),
@@ -14,6 +17,8 @@ public enum Errors {
 	BAD_RULE_APPLICATION,
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	NO_DERIVATION			("must provide a derivation"),
+	INDUCTION_REPEAT ("can't nest induction analysis inside existing induction"),
+	INDUCTION_NOT_INPUT,
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	MISSING_CASE			("must provide a case for "),
