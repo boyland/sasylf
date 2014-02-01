@@ -65,9 +65,9 @@ Other examples include:
 
 COMPILING SASyLF
 
-This directory is an Eclipse project and can be compiled with Eclipse 3.3.
-You will need to compile the edu/cmu/cs/sasylf/parser/parser.jj file
-with the JavaCC Eclipse plugin, available from update site
+This directory is an Eclipse project and can be compiled with Eclipse 4.2
+(Juno) or later.  You will need to compile the edu/cmu/cs/sasylf/parser/parser.jj 
+file with the JavaCC Eclipse plugin, available from update site
 http://eclipse-javacc.sourceforge.net/ (compile the .jj file to .java
 by right-clicking on parser.jj and choosing Compile with JavaCC).
 
