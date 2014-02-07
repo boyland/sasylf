@@ -15,8 +15,7 @@ A SASyLF file consists of the following parts:
  * Description of (abstract) syntax
  * Declaration of judgments and the rules for each.
  * Theorems
-Currently, there is no way to refer to elements declared in other files,
-or even to declare new judgments after the theorems have started.
+Currently, there is no way to refer to elements declared in other files.  Starting in SASyLF 1.2.4, you can have interleave judgments and theorems.
 
 == Example ==
 
