@@ -169,9 +169,10 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     try {
       String nl = doc.getLineDelimiter(line);
       IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, false, true, false);
+      /* Too conservative:
       if (old != null && lineInfo != null && old.getOffset() - lineInfo.getOffset() > lineInfo.getLength()) {
         old = null;
-      }
+      }*/
 
       switch (markerType) {
       default: break;
