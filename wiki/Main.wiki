@@ -15,7 +15,7 @@ A SASyLF file consists of the following parts:
  * Description of (abstract) syntax
  * Declaration of judgments and the rules for each.
  * Theorems
-Currently, there is no way to refer to elements declared in other files.  Starting in SASyLF 1.2.4, you can have interleave judgments and theorems.
+Currently, there is no way to refer to elements declared in other files.  Starting in SASyLF 1.2.4, you can interleave judgments and theorems.
 
 == Example ==
 
@@ -122,7 +122,7 @@ In summary the format is as follows:
    <i>proof</i>
 `end theorem`
 
-Instead of the keyword `theorem`, one may use `lemma`.  SASyLF currently does not check whether a theorem is declared as a theorem rather than a lemma: they are treated the same way.
+Instead of the keyword `theorem`, one may use `lemma`.  SASyLF 1.2.4 and later distinguishes whether a theorem is declared as a theorem rather than a lemma, but they are used in the same way.
 Along with rules, theorem names may include hyphens.
 
 One may declare theorems (or lemmas) as mutually inductive by joining them with the `and` keyword.
