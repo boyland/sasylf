@@ -298,9 +298,13 @@ public class TermPrinter {
       List<Element> es = ((Clause)e).getElements();
       if (parenthesize && es.size() > 1) sb.append('(');
       int n = es.size();
+      boolean lastWasTerminal = false;
       for (int i=0; i < n; ++i) {
-        if (i > 0) sb.append(' ');
-        prettyPrint(sb,es.get(i),true, level+1);
+        Element e2 = es.get(i);
+        boolean thisIsTerminal = e2 instanceof Terminal;
+        if (i > 0 && !(lastWasTerminal && thisIsTerminal)) sb.append(' ');
+        prettyPrint(sb,e2,true, level+1);
+        lastWasTerminal = thisIsTerminal;
       }
       if (parenthesize && es.size() > 1) sb.append(')');
     } else if (e instanceof AssumptionElement) {
