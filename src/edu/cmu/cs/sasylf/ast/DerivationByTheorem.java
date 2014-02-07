@@ -27,11 +27,16 @@ public class DerivationByTheorem extends DerivationByIHRule {
         ErrorHandler.report(Errors.RULE_BAD, theoremName, this);
       }
       if (!(theorem instanceof Theorem)) {
-        ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName, this, theoremKind +"\nrule");  
+        if (theoremKind.length() == 0) {
+          String kind = "rule";
+          ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, "by\nby "+kind);
+        } else {
+          ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName, this, theoremKind +"\nrule");
+        }
       } else { 
         String kind = ((Theorem)theorem).getKind();
         if (theoremKind.length() == 0) {
-          ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, " by\n by "+kind);
+          ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, "by\nby "+kind);
         } else if (!kind.equals(theoremKind)) {
           ErrorHandler.recoverableError(Errors.THEOREM_KIND_WRONG, theoremKind + " " + theoremName, this, theoremKind+"\n"+kind);
         }
