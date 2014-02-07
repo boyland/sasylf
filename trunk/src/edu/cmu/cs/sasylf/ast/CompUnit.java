@@ -1,7 +1,17 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug2;
+import static edu.cmu.cs.sasylf.util.Util.debug_parse;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.cmu.cs.sasylf.Version;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -10,35 +20,38 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
-
 
 public class CompUnit extends Node {
-	public CompUnit(List<String> n, Set<String> terms, List<Syntax> s, List<Judgment> j, List<Theorem> t) {
-		name=n; declaredTerminals = terms; syntax=s; judgments=j; theorems = t; }
+	public CompUnit(List<String> pack, String n, Set<String> terms, List<Syntax> s, List<Judgment> j, List<Theorem> t) {
+		packageName=pack; moduleName = n; declaredTerminals = terms; syntax=s; judgments=j; theorems = t; }
 	public List<Syntax> getSyntax() { return syntax; }
 	public List<Judgment> getJudgments() { return judgments; }
 	public List<Theorem> getTheorems() { return theorems; }
-	public List<String> getName() { return name; }
+	public List<String> getName() { return packageName; }
 	public Set<String> getDeclaredTerminals() { return declaredTerminals; }
 
+  private List<String> packageName;
+	private String moduleName;
 	private List<Syntax> syntax;
 	private List<Judgment> judgments;
 	private List<Theorem> theorems;
-	private List<String> name;
 	private Set<String> declaredTerminals;
 
 	public void prettyPrint(PrintWriter out) {
-		if (name.size() > 0) {
+		if (packageName.size() > 0) {
 			out.print("package ");
 			boolean prev = false;
-			for (String s : name) {
+			for (String s : packageName) {
 				if (prev)
 					out.print('.');
 				out.print(s);
 				prev = true;
 			}
 			out.println(";\n");
+		}
+		
+		if (moduleName != null) {
+		  out.println("module " + moduleName);
 		}
 
 		out.print("terminals ");
@@ -86,11 +99,16 @@ public class CompUnit extends Node {
 	/** typechecks this compilation unit, returning true if the check was successful,
 	 * false if there were one or more errors.
 	 */
-	public boolean typecheck() {
+	public boolean typecheck(String filename) {
 		int oldCount = ErrorHandler.getErrorCount();
+		setLocation(new Location(filename,1,1));
 		Context ctx = new Context(this);
 		try {
 			getVariables(ctx);
+			// temporary to avoid problems with 1.2.4 release:
+			if (!Version.getInstance().toString().contains("1.2.4")) {
+			  checkFilename(filename);
+			}
 			typecheck(ctx);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
@@ -99,6 +117,36 @@ public class CompUnit extends Node {
 		return ErrorHandler.getErrorCount() == oldCount;
 	}
 
+	private void checkFilename(String filename) {
+	  File f = new File(filename);
+	  String name = f.getName();
+	  LinkedList<String> dirs = new LinkedList<String>();
+	  for (;;) {
+	    String p = f.getParent();
+	    if (p == null) break;
+	    f = new File(p);
+	    dirs.addFirst(f.getName());
+	  }
+	  if (!dirs.equals(packageName)) {
+	    StringBuilder sb = new StringBuilder();
+	    for (String part : dirs) {
+	      sb.append(part);
+	      sb.append(".");
+	    }
+	    if (dirs.size() > 0) sb.setLength(sb.length()-1);
+	    ErrorHandler.warning(Errors.WRONG_PACKAGE, this, sb.toString());
+	    return;
+	  }
+	  if (moduleName != null) {
+	    if (name.endsWith(".slf")) {
+	      name = name.substring(0, name.length()-4);
+	    }
+	    if (!moduleName.equals(name)) {
+	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, name);
+	    }
+	  }
+	}
+	
 	// TODO: ensures variable names do not include num or prime
 	// computes Syntax type for each variable
 	// computes Syntax for each NonTerminal
