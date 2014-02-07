@@ -42,6 +42,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         IContextInformation contextInformation, String additionalProposalInfo) {
       super(replacementString, replacementOffset, replacementLength, cursorPosition,
           image, displayString, contextInformation, additionalProposalInfo);
+      // System.out.println("replacementString = " + replacementString + ", replacementOffset = " + replacementOffset);
       resource = res;
     }
 
@@ -139,8 +140,9 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       return null;
     }
     if (markerType == null || fixInfo == null || line == 0) return null;
-    /*System.out.println("getProposals(" + marker + ") with type=" + markerType + ", info = " + fixInfo);
-    System.out.println("  line = " + line + ", region = " + lineText);*/
+    //System.out.println("getProposals(" + marker + ") with type=" + markerType + ", info = " + fixInfo);
+    //System.out.println("lineInfo = (" + lineInfo.getOffset() + ":" + lineInfo.getLength() + ")");
+    //System.out.println("  line = " + line + ", region = " + lineText);
     List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
 
     String[] split = fixInfo.split("\n");
@@ -167,6 +169,9 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     try {
       String nl = doc.getLineDelimiter(line);
       IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, false, true, false);
+      if (old.getOffset() - lineInfo.getOffset() > lineInfo.getLength()) {
+        old = null;
+      }
 
       switch (markerType) {
       default: break;
