@@ -108,7 +108,7 @@ RELEASE HISTORY
     starting to supported mixed judgments and theorems
     more checking of assumes and losing of context
     Stricter separation of rules/lemmas/theorems
-    Resolved issues #8, #32, #34, #37, #38, #39, #40, #41
+    Resolved issues #8, #32, #34, #37, #38, #39, #40, #41, #42
 1.2.3	Improvements to plugin and bug fixes
     Command-line tool reports a count of warnings too.
     Proof tool doesn't give up on first error in a list any more
