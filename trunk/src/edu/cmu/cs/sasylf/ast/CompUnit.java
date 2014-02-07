@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.Version;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -105,16 +104,26 @@ public class CompUnit extends Node {
 		Context ctx = new Context(this);
 		try {
 			getVariables(ctx);
-			// temporary to avoid problems with 1.2.4 release:
-			if (!Version.getInstance().toString().contains("1.2.4")) {
-			  checkFilename(filename);
-			}
+			checkFilename(filename);
 			typecheck(ctx);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
 			//e.printStackTrace();
 		}
 		return ErrorHandler.getErrorCount() == oldCount;
+	}
+	
+	public boolean typecheck() {
+    int oldCount = ErrorHandler.getErrorCount();
+    Context ctx = new Context(this);
+    try {
+      getVariables(ctx);
+      typecheck(ctx);
+    } catch (SASyLFError e) {
+      // ignore the error; it has already been reported
+      //e.printStackTrace();
+    }
+    return ErrorHandler.getErrorCount() == oldCount;	  
 	}
 
 	private void checkFilename(String filename) {
