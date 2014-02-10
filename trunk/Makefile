@@ -40,6 +40,7 @@ test:
 	  ./sasylf.local $$f 2>&1 | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
 	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
 	done
+	rm test.out
 	@echo "  Done"
 	
 clean:

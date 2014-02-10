@@ -1,6 +1,8 @@
 package edu.cmu.cs.sasylf;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -22,11 +24,13 @@ public class Main {
 	  //System.setOut(new PrintStream(System.out, true, "UTF-8"));
 	  //System.setErr(new PrintStream(System.err, true, "UTF-8"));
 	  if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
-			System.err.println("usage: sasylf file1.slf ...");
-			System.err.println("   or: sasylf --version (print version)");
-			System.err.println("   or: sasylf --help (print this message)");
-			System.err.println("   or: sasylf --verbose file1.slf ... (prints out theorem names as it checks them)");
-			System.err.println("   or: sasylf --LF file1.slf ... (extra info about LF terms in certain error messages)");
+			System.err.println("usage: sasylf [options] file1.slf ...");
+			System.err.println("Options include:");
+			System.err.println("   --version   print version");
+			System.err.println("   --help      print this message");
+			System.err.println("   --verbose   prints out theorem names as it checks them");
+			System.err.println("   --LF        extra info about LF terms in certain error messages");
+			System.err.println("   --root=dir  change to this directory before reading files.");
 			return;
 		}
 		int oldErrorCount = 0;
@@ -35,7 +39,7 @@ public class Main {
       System.out.println(Version.getInstance());
 		  return;
 		}
-		// TODO: may want to add command line argument for explicit error messages on case analysis -- see Rule.getErrorDescription()
+		String dir = null;
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("--LF")) {
 				edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO = true;
@@ -45,20 +49,43 @@ public class Main {
 				edu.cmu.cs.sasylf.util.Util.VERBOSE = true;
 				continue;
 			}
+			if (args[i].startsWith("--root=")) {
+			  dir = args[i].substring(7);
+        File root = new File(dir); 
+			  if (!root.isDirectory()) {
+			    if (root.exists()) {
+			      System.err.println("Not a directory: "+ dir);
+			      System.exit(-1);
+			    } else {
+			      System.err.println("No such file or directory: " + dir);
+			      System.exit(-1);
+			    }
+			  }
+			  continue;
+			}
 			String filename = args[i];
-			File file= new File(filename);
+			File file;
+			if (dir == null) {
+			  file = new File(filename);
+			} else {
+			  file = new File(dir,filename);
+			}
 			if (!file.canRead()) {
 				System.err.println("Could not open file " + filename);
+				System.exit(-1);
 				return;
 			}
 			try {
 				CompUnit cu = null;
 				try {
-					cu = DSLToolkitParser.read(file);
+					cu = DSLToolkitParser.read(filename,new FileInputStream(file));
 				} catch (ParseException e) {
 					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, false);
+				} catch (FileNotFoundException ex) {
+				  System.err.println("Could not open file " + filename);
+				  System.exit(-1);
 				}
-				cu.typecheck();
+				cu.typecheck(filename);
 			} catch (SASyLFError e) {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();

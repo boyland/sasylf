@@ -63,14 +63,6 @@ Export-Package: edu.cmu.cs.sasylf,
    org.eclipse.swt.graphics,
    org.eclipse.jface.text.contentassist,
    org.eclipse.swt.widgets",
- org.sasylf.views;
-  uses:="org.sasylf.editors,
-   org.eclipse.core.resources,
-   org.eclipse.swt.dnd,
-   org.eclipse.swt.graphics,
-   org.eclipse.jface.viewers,
-   org.eclipse.ui.part,
-   org.eclipse.swt.widgets",
  org.sasylf.wizards;
   uses:="org.eclipse.jface.wizard,
    org.eclipse.ui,
@@ -85,5 +77,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
  org.eclipse.jface.text,
- org.eclipse.jdt.ui
+ org.eclipse.jdt.ui,
+ org.eclipse.ui.navigator,
+ org.eclipse.ui.navigator.resources,
+ org.eclipse.core.expressions
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

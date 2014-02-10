@@ -1,4 +1,4 @@
-package issues.issue38;
+package regression; // issue 38
 
 terminals
   x math

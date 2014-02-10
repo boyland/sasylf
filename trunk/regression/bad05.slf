@@ -10,7 +10,7 @@
  * Difficulty: the term T is IMPLICIT in the use of the non-contextual rule.
  */
  
-package edu.uwm.cs.structural;
+package regression;
  
 
 terminals fn in Fn Unit unit contradiction

@@ -3,7 +3,7 @@
  * #1 local cases on a term that might have variables
  */
  
-package edu.uwm.cs.structural;
+package regression;
  
 
 terminals fn in Fn Unit unit contradiction
