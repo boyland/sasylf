@@ -18,7 +18,7 @@ See http://www.eclipse.org/downloads/moreinfo/compare.php
 for a comparison.  If you're just interested in SASyLF and maybe Java programming, get the "Eclipse IDE for Java Developers".
 
 Previously, through SASyLF 1.2.3, you would also need to install the "Graphical Editing Framework GEF SDK" plugin before using SASyLF.  Use the Help>Install New Software dialog, and use the "Juno - http://downloads.eclipse.org/releases/juno" site (or the equivalent for kepler, luna etc...).  The GEF is under category "Modeling". 
-Starting with release 1.2.4, SASyLF plugin no longer depends on GEF.
+Starting with release 1.2.4, the SASyLF plugin no longer depends on GEF.
 
 The Eclipse plugin JAR file should be placed in the {{{dropins/}}} directory of your Eclipse installation.
 Then restart Eclipse.
