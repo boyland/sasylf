@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
@@ -23,6 +24,7 @@ import org.osgi.framework.Bundle;
 import org.sasylf.Activator;
 import org.sasylf.Marker;
 import org.sasylf.editors.MarkerResolutionGenerator;
+import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.EclipseUtil;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -156,7 +158,12 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
     }
   }
   
-	public static String analyzeSlf(IResource res, Reader contents) {
+  public static String getProofFolderRelativePathString(IResource res) {
+    IPath rpath = ProofBuilder.getProofFolderRelativePath(res);
+    return rpath.toOSString();
+  }
+
+  public static String analyzeSlf(IResource res, Reader contents) {
     StringBuilder sb = new StringBuilder(); //XXX: WHy do this?
     
     // int oldErrorCount = 0;
@@ -172,7 +179,7 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
         Location loc = lexicalErrorAsLocation(res.getName(),e.getMessage());
         ErrorHandler.report(null, e.getMessage(), loc, null, true, false);
       }
-      if (cu != null) cu.typecheck();
+      if (cu != null) cu.typecheck(getProofFolderRelativePathString(res));
 
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported

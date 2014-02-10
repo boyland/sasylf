@@ -3,7 +3,7 @@
  */
 
  
-package edu.uwm.cs.cs732;
+package regression;
 
 terminals contradiction unit value
           Unit in fn Rec fold

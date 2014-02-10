@@ -21,7 +21,6 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
-import org.sasylf.actions.CheckProofsAction;
 import org.sasylf.editors.propertyOutline.ProofOutline;
 import org.sasylf.handlers.QuickFixHandler;
 
@@ -37,7 +36,7 @@ public class ProofEditor extends TextEditor {
 		super.doSave(progressMonitor);
 		IEditorInput iei = getEditorInput();
 		getProofOutline().setInput(iei);
-		CheckProofsAction.analyzeSlf(this);
+		// CheckProofsAction.analyzeSlf(this);
 	}
 
 	@Override

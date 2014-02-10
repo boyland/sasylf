@@ -2,7 +2,7 @@
  * omitting "assumes Gamma" in a judgment can cause crashes.
  */
 
-package edu.uwm.cs.cs732;
+package regression;
 
 terminals contradiction s unit value
           Unit fn Ref ref loc emp Emp in

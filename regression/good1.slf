@@ -1,3 +1,5 @@
+package regression;
+
 terminals s
 
 syntax

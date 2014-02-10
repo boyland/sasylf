@@ -3,7 +3,9 @@ package org.sasylf.wizards;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardPage;
@@ -100,16 +102,20 @@ public class NewProofWizardPage extends WizardPage {
 			if (ssel.size() > 1)
 				return;
 			Object obj = ssel.getFirstElement();
+			IContainer container = null;
 			if (obj instanceof IResource) {
-				IContainer container;
 				if (obj instanceof IContainer)
 					container = (IContainer) obj;
 				else
 					container = ((IResource) obj).getParent();
-				containerText.setText(container.getFullPath().toString());
+			} else if (obj instanceof IAdaptable) {
+			  container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
+			}
+			if (container != null) {
+			  containerText.setText(container.getFullPath().toString());
 			}
 		}
-		fileText.setText("file.slf");
+		fileText.setText("Test.slf");
 	}
 
 	/**

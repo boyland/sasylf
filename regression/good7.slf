@@ -2,7 +2,7 @@
  * and judgments don't handle contexts correctly.
  */
 
-package edu.uwm.cs.good;
+package regression;
 
 terminals contradiction fn unit Unit
 

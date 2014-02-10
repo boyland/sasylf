@@ -4,7 +4,7 @@
  * John Boyland
  * Fall 2011
  */
-package edu.uwm.cs.fj;
+package regression;
 
 terminals class s in
 
