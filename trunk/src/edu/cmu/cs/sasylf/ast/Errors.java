@@ -17,6 +17,7 @@ public enum Errors {
 	BAD_RULE_APPLICATION,
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	NO_DERIVATION			("must provide a derivation"),
+	INDUCTION_MISSING ("'induction hypothesis' requires explicit proof by induction"),
 	INDUCTION_REPEAT ("can't nest induction analysis inside existing induction"),
 	INDUCTION_NOT_INPUT,
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
