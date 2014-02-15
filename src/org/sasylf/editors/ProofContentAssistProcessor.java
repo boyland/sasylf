@@ -5,6 +5,8 @@ package org.sasylf.editors;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -17,6 +19,8 @@ import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.statushandlers.StatusManager;
+import org.sasylf.Activator;
 import org.sasylf.editors.propertyOutline.ProofElement;
 import org.sasylf.editors.propertyOutline.ProofOutline;
 
@@ -42,6 +46,8 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
   private ICompletionProposal[] noProposals(String reason) {
     //System.out.println("No completions: " + reason);
     failureReason = reason;
+    IStatus status = new Status(IStatus.WARNING,Activator.PLUGIN_ID, reason);
+    StatusManager.getManager().handle(status);
     return NO_COMPLETIONS;
   }
   
