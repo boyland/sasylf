@@ -10,6 +10,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
@@ -111,6 +112,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     case THEOREM_KIND_MISSING: return true;
     case WRONG_END:
     case INDUCTION_REPEAT: return true;
+    case WRONG_PACKAGE: return true;
     }
     // NO_DERIVATION
     return false;
@@ -145,7 +147,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     //System.out.println("  line = " + line + ", region = " + lineText);
     List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
 
-    String[] split = fixInfo.split("\n");
+    String[] split = fixInfo.split("\n",-1);
 
     String lineIndent;
     {
@@ -173,6 +175,11 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       if (old != null && lineInfo != null && old.getOffset() - lineInfo.getOffset() > lineInfo.getLength()) {
         old = null;
       }*/
+      if (old == null) {
+        if (split[0].equals(lineText)) {
+          old = new Region(lineInfo.getOffset(),lineText.length());
+        }
+      }
 
       switch (markerType) {
       default: break;
@@ -193,11 +200,12 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
           sb.append("case rule");
           sb.append(nl);
           newCursor = sb.length();
-          for (int i=0; i < split.length; ++i) {
+          int n=split.length-1; // extra line at end
+          for (int i=0; i < n; ++i) {
             sb.append(lineIndent);
             sb.append(indent);
             sb.append(indent);
-            if (i != split.length-2)  sb.append("_: ");
+            if (i != n-2)  sb.append("_: ");
             sb.append(split[i]);
             sb.append(nl);
           }
@@ -215,7 +223,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
           sb.append("end case");
           sb.append(nl);
           newText = sb.toString();
-          String ruleLine = split[split.length-2];
+          String ruleLine = split[n-2];
           descr = ruleLine.substring(ruleLine.indexOf(' ')+1);
         }
         proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
@@ -236,6 +244,23 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       case WRONG_END:
         if (old != null) {
           if (split.length > 1 && split[1].length() > 0) {
+            proposals.add(new MyCompletionProposal(res, split[1], old.getOffset(), old.getLength(),0,
+                null, "replace '" + split[0] +"' with '" + split[1] + "'", null, null));
+          }
+        }
+        break;
+      case WRONG_PACKAGE:
+        if (split[0].length() == 0) {
+          newText = split[1];
+          proposals.add(new MyCompletionProposal(res,newText+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, newText.length(),
+              null, "insert '" + newText + "'", null, null));
+        }
+        // System.out.println("fixInfo = " + fixInfo + ", old = " + old + ", res = " + res + ", split = " + Arrays.toString(split));
+        if (old != null && split.length > 1) {
+          if (split[1].length() == 0) {
+            proposals.add(new MyCompletionProposal(res,"",old.getOffset(), old.getLength(), 0, 
+                null, "remove '" + split[0] +"'", null, null));
+          } else {
             proposals.add(new MyCompletionProposal(res, split[1], old.getOffset(), old.getLength(),0,
                 null, "replace '" + split[0] +"' with '" + split[1] + "'", null, null));
           }
