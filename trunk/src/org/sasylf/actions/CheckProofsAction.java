@@ -179,7 +179,10 @@ public class CheckProofsAction implements IWorkbenchWindowActionDelegate {
         Location loc = lexicalErrorAsLocation(res.getName(),e.getMessage());
         ErrorHandler.report(null, e.getMessage(), loc, null, true, false);
       }
-      if (cu != null) cu.typecheck(getProofFolderRelativePathString(res));
+      if (cu != null) {
+        String location = getProofFolderRelativePathString(res);
+        cu.typecheck(location);
+      }
 
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported

@@ -2,6 +2,7 @@ package org.sasylf.project;
 
 import java.util.Map;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -118,15 +119,15 @@ public class ProofBuilder extends IncrementalProjectBuilder {
   public static IPath getProofFolderRelativePath(IResource res) {
     IPath p = res.getProjectRelativePath();
     IPath base = res.getProject().getProjectRelativePath();
-    IFolder pf = getProofFolder(res.getProject());
+    IContainer pf = getProofFolder(res.getProject());
     if (pf != null) base = pf.getProjectRelativePath();
     IPath rpath = p.makeRelativeTo(base);
     return rpath;
   }
 
   public static boolean isProofFolder(Object x) {
-    if (x instanceof IFolder) {
-      IFolder f = (IFolder)x;
+    if (x instanceof IContainer) {
+      IContainer f = (IFolder)x;
       IProject p = f.getProject();
       return f.equals(getProofFolder(p));
     }
@@ -137,7 +138,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
     return pfn;
   }
   
-  public static IFolder getProofFolder(IProject project) {
+  public static IContainer getProofFolder(IProject project) {
     if (project == null || !project.exists() || !project.isOpen()) return null;
     String buildPath;
     try {
@@ -146,10 +147,11 @@ public class ProofBuilder extends IncrementalProjectBuilder {
       // Apparently not
       return null;
     }
+    if (buildPath == null) return null;
     String[] pieces = buildPath.split(":");
     String proofFolderName = pieces[0];
-    IFolder result;
-    if (proofFolderName.isEmpty()) result = project.getFolder("");
+    IContainer result;
+    if (proofFolderName.isEmpty()) result = project;
     else result = project.getFolder(proofFolderName);
     // System.out.println("Proof folder is " + result);
     return result;
