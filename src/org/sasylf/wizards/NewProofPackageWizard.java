@@ -2,10 +2,12 @@ package org.sasylf.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
@@ -98,12 +100,13 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 		throws CoreException {
 	  String[] segs = packageName.split("\\.");
 		monitor.beginTask("Creating package " + packageName, segs.length+END_CREATION_SIZE);
-		IFolder f = ProofBuilder.getProofFolder(project);
+		IContainer con = ProofBuilder.getProofFolder(project);
 		for (int i=0; i < segs.length; ++i) {
-		  f = f.getFolder(segs[i]);
-		  if (!f.exists()) {
+		  IFolder f = con.getFolder(new Path(segs[i]));
+		  if (!con.exists()) {
 		    f.create(false, true, monitor);
 		  }
+		  con = f;
 		  monitor.worked(1);
 		}
 		monitor.worked(END_CREATION_SIZE);

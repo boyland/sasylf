@@ -16,6 +16,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -113,11 +114,11 @@ public class DeletePackageHandler extends AbstractHandler {
   {
     PriorityQueue<String[]> work = new PriorityQueue<String[]>(frags.size(),stringArrayComparator);
     int totalWork = 0;
-    IFolder pf =null;
+    IContainer pf =null;
     for (FolderPackageFragment f : frags) {
       String[] name = f.getName();
       IContainer fres = (IContainer)f.getBaseObject();
-      IFolder npf = ProofBuilder.getProofFolder(fres.getProject());
+      IContainer npf = ProofBuilder.getProofFolder(fres.getProject());
       if (pf == null) {
         pf = npf;
       } else if (!pf.equals(npf)) {
@@ -136,9 +137,9 @@ public class DeletePackageHandler extends AbstractHandler {
     while (!work.isEmpty()) {
       String[] packName = work.remove();
       // System.out.println("deleting: " + Arrays.toString(packName));
-      IFolder f = pf;
+      IContainer f = pf;
       for (int i=0; i < packName.length; ++i) {
-        f = f.getFolder(packName[i]);
+        f = f.getFolder(new Path(packName[i]));
       }
       if (!f.exists()) {
         // already deleted from a child

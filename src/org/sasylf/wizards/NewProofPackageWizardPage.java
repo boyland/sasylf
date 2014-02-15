@@ -1,13 +1,13 @@
 package org.sasylf.wizards;
 
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -140,13 +140,13 @@ public class NewProofPackageWizardPage extends WizardPage {
     
     IWorkspace ws = ResourcesPlugin.getWorkspace();
     String[] segs = packageName.split("\\.");
-    IFolder f = ProofBuilder.getProofFolder(project);
+    IContainer f = ProofBuilder.getProofFolder(project);
     for (int i=0; i < segs.length; ++i) {
       if (!ws.validateName(segs[i], IResource.FOLDER).isOK()) {
         updateStatus("Package name has illegal segment '" + segs[i] + "'");
         return;
       }
-      f = f.getFolder(segs[i]);
+      f = f.getFolder(new Path(segs[i]));
     }
     
     if (f.exists()) {

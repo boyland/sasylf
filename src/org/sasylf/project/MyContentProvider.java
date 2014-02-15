@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -116,7 +117,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
       return ((IPackageFragment)element).getParent();
     } else if (element instanceof IResource) {
       IResource res = (IResource)element;
-      IFolder proofFolder = ProofBuilder.getProofFolder(res.getProject());
+      IContainer proofFolder = ProofBuilder.getProofFolder(res.getProject());
       if (proofFolder != null) {
         if (element == proofFolder) return res.getProject();
         IResource parent = res.getParent();
@@ -253,7 +254,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
       Object obj = it.next();
       if (obj instanceof IFolder && !ProofBuilder.isProofFolder(obj)) {
         IFolder f = (IFolder)obj;
-        IFolder pf = ProofBuilder.getProofFolder(f.getProject());
+        IContainer pf = ProofBuilder.getProofFolder(f.getProject());
         if (pf.getProjectRelativePath().isPrefixOf(f.getProjectRelativePath())) {
           // System.out.println("Converting refresh " + f);
           it.remove();
@@ -279,10 +280,10 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 
   private class ProofFolderDeltaVisitor implements IResourceDeltaVisitor {
 
-    private final IFolder proofFolder;
+    private final IContainer proofFolder;
     
-    public ProofFolderDeltaVisitor(IFolder d) {
-      proofFolder = d;
+    public ProofFolderDeltaVisitor(IContainer pf) {
+      proofFolder = pf;
     }
     
     private boolean foundPackagesChange = false;
@@ -361,7 +362,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
             // projects opening or closing are handled already
             if (project.isOpen() && (pd.getFlags()&IResourceDelta.OPEN) == 0 &&
                 project.hasNature(MyNature.NATURE_ID)) {
-              IFolder pf = ProofBuilder.getProofFolder(project);
+              IContainer pf = ProofBuilder.getProofFolder(project);
               IResourceDelta pfd = pd.findMember(pf.getProjectRelativePath());
               if (pfd != null) {
                 // System.out.println("Found change on PF " + pf);
