@@ -114,9 +114,13 @@ public class DerivationByInversion extends DerivationWithArgs {
             clauses.add((ClauseUse)this.getClause());
           }
           if (pieces.size() != clauses.size()) {
-            ErrorHandler.report("inversion yields " + pieces.size() + " but only accepting " + clauses.size(), this);
+            // If clauses.size9) == 0, we are "use inversion" which can
+            // ignore all results.
+            if (clauses.size() > 0) { 
+              ErrorHandler.report("inversion yields " + pieces.size() + " but only accepting " + clauses.size(), this);
+            }
           }
-          for (int i=0; i < pieces.size(); ++i) {
+          for (int i=0; i < clauses.size(); ++i) {
             ClauseUse cu = clauses.get(i);
             Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
             /*XXX Why are we adding to free variables again?
