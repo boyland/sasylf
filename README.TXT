@@ -1,4 +1,4 @@
-SASyLF version 1.3.0a0
+SASyLF version 1.3.0a1
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -21,7 +21,12 @@ http://java.sun.com/javase/downloads/index.jsp
 
 RUNNING SASyLF
 
-You can run SASyLF by explicitly invoking java on the SASyLF.jar file,
+You can run SASyLF within Eclipse by downloading the plugin into
+the "dropins" folder of your Eclipse distribution.
+ 
+ 
+You can run SASyLF on the command line
+by explicitly invoking java on the SASyLF.jar file,
 as in:
 
 java -jar SASyLF.jar <filename>.slf
@@ -80,22 +85,22 @@ Alternatively, if you fetch the source from SVN, you can build SASyLF
 CONTACT
 
 If you have any trouble installing or running SASyLF, or understanding
-how to use the tool or interpret its output, contact Jonathan Aldrich
-at jonathan.aldrich@cs.cmu.edu.
+how to use the tool or interpret its output, contact John Boyland
+<boyland@uwm.edu> or else submit an issue report on the Google code site,
+or discuss the problem on the Google group http://groups.google.com/group/sasylf-users
 
 
 
 KNOWN LIMITATIONS (incomplete list)
 
-The system does not check context roots: Gamma and * are treated
-almost the same way.
+Only one context nonterminal permitted per judgment/theorem.
 
 Error messages point to the line of code and the kind of error, but
 could use some improvement.
 
-The automated prover ("by solve") is very primitive.  It works only
+The automated prover ("by solve") works poorly.  It works only
 for straightforward derivations without the use of induction or case
-analysis.
+analysis.  It's use is deprecated.
 
 
 
@@ -103,7 +108,7 @@ RELEASE HISTORY
 
 1.3.0	Packages and Projects
     The package declaration has a semantics now and we require folders = packages.
-    Ecliupse plugin updated to add project and package support
+    Eclipse plugin updated to add project and package support
 1.2.4	Minor bug fixes and plugin enhancements
     Quick Fixes & Preferences page added (only one property for now)
     Fixed bug from 1.2.3 that some versions of lambda-loc.slf gave an error
