@@ -164,6 +164,15 @@ public class Theorem extends RuleLike {
 		if (ErrorHandler.getErrorCount() > oldErrorCount) {
 		  return;
 		}
+
+		/*
+    if (andTheorem != null) {
+      andTheorem.addToMap(ctx);
+    }*/
+    ctx.recursiveTheorems = new HashMap<String, Theorem>();
+    firstInGroup.addToMap(ctx);
+
+    ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 		
 		if (assumes != null) {
 		  ctx.innermostGamma = assumes;
@@ -192,13 +201,6 @@ public class Theorem extends RuleLike {
 		ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 		ctx.outputVars.removeAll(ctx.inputVars);
 		
-		/*
-		if (andTheorem != null) {
-			andTheorem.addToMap(ctx);
-		}*/
-    ctx.recursiveTheorems = new HashMap<String, Theorem>();
-		firstInGroup.addToMap(ctx);
-
 		Derivation.typecheck(this, ctx, derivations);
 		
 		} catch (SASyLFError e) {
