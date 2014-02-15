@@ -21,15 +21,21 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class CompUnit extends Node {
-	public CompUnit(List<String> pack, String n, Set<String> terms, List<Syntax> s, List<Judgment> j, List<Theorem> t) {
-		packageName=pack; moduleName = n; declaredTerminals = terms; syntax=s; judgments=j; theorems = t; }
+	public CompUnit(PackageDeclaration pack, Location loc, String n, Set<String> terms, List<Syntax> s, List<Judgment> j, List<Theorem> t) {
+		super(loc);
+		packageDecl=pack; 
+		moduleName = n; 
+		declaredTerminals = terms; 
+		syntax=s; judgments=j; 
+		theorems = t; 
+	}
 	public List<Syntax> getSyntax() { return syntax; }
 	public List<Judgment> getJudgments() { return judgments; }
 	public List<Theorem> getTheorems() { return theorems; }
-	public List<String> getName() { return packageName; }
+	public PackageDeclaration getPackage() { return packageDecl; }
 	public Set<String> getDeclaredTerminals() { return declaredTerminals; }
 
-  private List<String> packageName;
+  private PackageDeclaration packageDecl;
 	private String moduleName;
 	private List<Syntax> syntax;
 	private List<Judgment> judgments;
@@ -37,17 +43,7 @@ public class CompUnit extends Node {
 	private Set<String> declaredTerminals;
 
 	public void prettyPrint(PrintWriter out) {
-		if (packageName.size() > 0) {
-			out.print("package ");
-			boolean prev = false;
-			for (String s : packageName) {
-				if (prev)
-					out.print('.');
-				out.print(s);
-				prev = true;
-			}
-			out.println(";\n");
-		}
+	  packageDecl.prettyPrint(out);
 		
 		if (moduleName != null) {
 		  out.println("module " + moduleName);
@@ -100,7 +96,6 @@ public class CompUnit extends Node {
 	 */
 	public boolean typecheck(String filename) {
 		int oldCount = ErrorHandler.getErrorCount();
-		setLocation(new Location(filename,1,1));
 		Context ctx = new Context(this);
 		try {
 			getVariables(ctx);
@@ -136,16 +131,8 @@ public class CompUnit extends Node {
 	    f = new File(p);
 	    dirs.addFirst(f.getName());
 	  }
-	  if (!dirs.equals(packageName)) {
-	    StringBuilder sb = new StringBuilder();
-	    for (String part : dirs) {
-	      sb.append(part);
-	      sb.append(".");
-	    }
-	    if (dirs.size() > 0) sb.setLength(sb.length()-1);
-	    ErrorHandler.warning(Errors.WRONG_PACKAGE, this, sb.toString());
-	    return;
-	  }
+	  packageDecl.typecheck(dirs.toArray(new String[dirs.size()]));
+	  
 	  if (moduleName != null) {
 	    if (name.endsWith(".slf")) {
 	      name = name.substring(0, name.length()-4);

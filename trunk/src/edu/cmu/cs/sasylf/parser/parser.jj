@@ -48,6 +48,7 @@ import java.util.*;
 @SuppressWarnings({"unused","serial"})
 public class DSLToolkitParser {
     public static String currentFile = "NONE";
+    public Token firstToken = null;
 
     public static CompUnit read(File f) throws FileNotFoundException, IOException, ParseException {
         InputStream fi = new FileInputStream(f);
@@ -1405,7 +1406,7 @@ TOKEN :
  */
 
 CompUnit CompilationUnit() :
-{ List<String> pkg = null; 
+{ PackageDeclaration pkg = null;
   String moduleName = null;
   Token t=null;
   List<String> usedModule = null;
@@ -1418,15 +1419,18 @@ CompUnit CompilationUnit() :
   List<Theorem> theorems = new ArrayList<Theorem>(); }
 {
   [ pkg=PackageDeclaration() ]
-  [ <MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
+  [ firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   
   (t=<EXTENDS> usedModule=Name() 
-    { if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
+    { if (firstToken == null) firstToken = t;
+      if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
       else ErrorHandler.recoverableError("module 'extends' not implemented yet", new Location(t)); }
   )*
    
-  (t=<PROVIDES> { if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
-  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
+  (t=<PROVIDES> { if (firstToken == null) firstToken = t;
+                  if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
+  | { if (firstToken == null) firstToken = t;
+      if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
   )
   
   (
@@ -1446,15 +1450,15 @@ CompUnit CompilationUnit() :
   <EOF>
   {
     if (pkg == null)
-		pkg = new ArrayList<String>();
-    return new CompUnit(pkg, moduleName, terms, syntax, judges, theorems);
+		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList());
+    return new CompUnit(pkg, new Location(firstToken), moduleName, terms, syntax, judges, theorems);
   }
 }
 
-List<String> PackageDeclaration() :
-{ List<String> l; }
+PackageDeclaration PackageDeclaration() :
+{ Token t; List<String> l; }
 {
-  "package" l=Name() <SEMICOLON> { return l; }
+  t="package" l=Name() <SEMICOLON> { return new PackageDeclaration(new Location(t), l); }
 }
 
 Token Operator() :
@@ -1518,12 +1522,12 @@ String RuleName() :
 }
 
 List<Syntax> SyntaxDeclaration() :
-{ 	Syntax s;
+{ 	Token f; Syntax s;
 	List<Syntax> l = new ArrayList<Syntax>(); }
 {
-  "syntax"
+  f="syntax"
   ( s=BNFRule() { l.add(s); } )+
-  { return l; }
+  { if (firstToken == null) firstToken =f; return l; }
 }
 
 Token ExtendedIdentifier() :
@@ -1533,11 +1537,11 @@ Token ExtendedIdentifier() :
 } 
 
 Set<String> TerminalsDeclaration() :
-{Token t; Set<String> l = new HashSet<String>(); }
+{Token f; Token t; Set<String> l = new HashSet<String>(); }
 {
-  "terminals"
+  f="terminals"
   (t=ExtendedIdentifier() { debug2(t.image); l.add(t.image); addTerminal(t); } )+
-  { return l; }
+  { if (firstToken == null) firstToken = f; return l; }
 }
 
 Syntax BNFRule() :
@@ -1751,8 +1755,10 @@ Derivation Justification(Token startT, Clause c) :
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
     (<INDUCTION> |
-     (LOOKAHEAD(2) <CASE> <ANALYSIS> | <CASE> | <LEMMA> | <THEOREM>)
-     { ErrorHandler.recoverableError("expected 'end induction'",new Location(of)); } )
+     (LOOKAHEAD(2) <CASE> t=<ANALYSIS> | t=<CASE> | t=<LEMMA> | t=<THEOREM>)
+     { String wrong = t.image;
+       if (wrong.equals("analysis")) wrong = "case analysis";
+       ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end induction'",new Location(t),wrong+"\ninduction"); } )
     { return di; }
   | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
