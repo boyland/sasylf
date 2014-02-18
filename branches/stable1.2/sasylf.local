@@ -1,0 +1,2 @@
+#!/bin/bash
+java -cp bin edu.cmu.cs.sasylf.Main "$@"

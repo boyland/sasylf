@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="4.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="org.sasylf.perspectives.EditorPerspective"
+            icon="icons/releng_gears.gif"
+            id="org.sasylf.perspectives.EditorPerspective"
+            name="SASyLF">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.sasylf.editors.ProofEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            extensions="slf"
+            icon="icons/slf.gif"
+            id="org.sasylf.editors.ProofEditor"
+            name="SASyLF editor">
+      </editor>
+   </extension>
+  
+   
+   
+   
+
+   <extension
+         id="org.sasylf.marker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.sasylf.handlers.CheckProofsHandler"
+            commandId="org.sasylf.commands.checkProofs">
+      </handler>
+      <handler
+            class="org.sasylf.handlers.AboutHandler"
+            commandId="org.sasylf.commands.about"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.sasylf.commands.checkProofs"
+            contextId="org.sasylf.context"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+0">
+      </key>
+      <key
+            commandId="org.eclipse.pde.runtime.spy.commands.menuSpyCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+SHIFT+F2">
+      </key>
+      <key
+            commandId="org.sasylf.commands.reindent"
+            contextId="org.sasylf.context"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+I">
+      </key>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="org.sasylf.menus.mainMenu"
+               label="SASyLF"
+               mnemonic="S">
+            <command
+            		commandId="org.sasylf.commands.about"
+            		mnemonic="A"/>
+            <command
+                  commandId="org.sasylf.commands.checkProofs"
+                  id="org.sasylf.menus.checkProofs"
+                  mnemonic="C">
+            </command>
+            <command
+            	commandId="org.sasylf.commands.reindent"
+            	id="org.sasylf.menus.reindent"
+            	mnemonic="I"/>
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="org.sasylf.toolbars.sampleToolbar">
+            <command
+                  commandId="org.sasylf.commands.checkProofs"
+                  icon="icons/green_check.png"
+                  id="org.sasylf.toolbars.checkProofs"
+                  tooltip="Run SASyLF on proofs to find errors">
+               <visibleWhen
+                     checkEnabled="false">
+                  <reference
+                        definitionId="org.sasylf.inPerspective">
+                  </reference>
+               </visibleWhen>
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution 
+      	allPopups="false"
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+      	<command
+             commandId="org.sasylf.commands.open"
+             label="Open Declaration"
+             style="push"
+             tooltip="Go to declaration of named judgment or theorem">
+           <visibleWhen>
+   			<and>
+      			<with variable="activeEditorInput">
+        			<reference definitionId="org.sasylf.isProofFile"/>
+      			</with>
+      			<with variable="selection">
+         			<adapt type="org.eclipse.jface.text.ITextSelection"/>
+      			</with>
+   			</and>
+			</visibleWhen>
+		</command>
+	  </menuContribution>
+      <menuContribution 
+      	allPopups="false"
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+      	<command
+             commandId="org.sasylf.commands.checkProofs"
+             icon="icons/green_check.png"
+             id="org.sasylf.popup.checkProofs"
+             label="Check Proofs"
+             style="push"
+             tooltip="Run SASyLF on proofs to find errors">
+           <visibleWhen>
+   			<or>
+      			<with variable="selection">
+         			<iterate ifEmpty="false">
+           				<reference definitionId="org.sasylf.isProofFile"/>
+         			</iterate>
+      			</with>
+      			<with variable="activeEditorInput">
+        			<reference definitionId="org.sasylf.isProofFile"/>
+      			</with>
+   			</or>
+			</visibleWhen>
+		</command>
+	</menuContribution>
+	<menuContribution
+		locationURI="popup:common.new.menu?after=additions">
+		<command
+               commandId="org.sasylf.commands.new"
+               icon="icons/slf.gif"
+               label="SASyLF Proof"
+               mnemonic="P"
+               style="push"
+               tooltip="Create a new SASAyLF proof file">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:new">
+         <command
+               commandId="org.sasylf.commands.new"
+               icon="icons/slf.gif"
+               label="SASyLF Proof"
+               mnemonic="P"
+               style="push"
+               tooltip="Create a new SASyLF proof file">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:#AbstractTextEditorRulerContext?after=QuickDiff.Toggle">
+         <command
+               commandId="org.eclipse.jdt.ui.edit.text.java.correction.assist.proposals"
+               label="Quick Fix"
+               style="push">
+         </command>
+      </menuContribution>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="org.sasylf.commands.proofs"
+            name="Category of proof related commands">
+      </category>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            id="org.sasylf.commands.checkProofs"
+            name="Check Proofs">
+      </command>
+      <command
+            id="org.sasylf.commands.about"
+            name="About SASyLF"/>
+      <command
+            defaultHandler="org.sasylf.handlers.NewProofHandler"
+            description="Open dialog to create a new SASyLF proof file"
+            id="org.sasylf.commands.new"
+            name="New Proof ...">
+      </command>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            defaultHandler="org.sasylf.handlers.CorrectIndentationHandler"
+            description="Correct indentation of lines in selection"
+            id="org.sasylf.commands.reindent"
+            name="Correct Indentation">
+      </command>
+      <command
+            defaultHandler="org.sasylf.handlers.OpenDeclarationHandler"
+            description="Go to the declaration of judgment or theorem"
+            id="org.sasylf.commands.open"
+            name="Open Declaration">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="org.sasylf.isProofFile">
+         <adapt type="org.eclipse.core.resources.IResource">
+             <test property="org.eclipse.core.resources.extension"
+                   value="slf">
+             </test>
+         </adapt>
+      </definition>
+      <definition id="org.sasylf.inPerspective">
+          <with variable="activeWorkbenchWindow.activePerspective">
+               <equals value="org.sasylf.perspectives.EditorPerspective"/>
+          </with>
+      </definition>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.sasylf"
+            name="SASyLF Wizards">
+      </category>
+      <wizard
+            category="org.sasylf"
+            class="org.sasylf.wizards.NewProofWizard"
+            icon="icons/slf.gif"
+            id="org.sasylf.wizards.NewProofWizard"
+            name="SASyLF Proof file">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            description="The context of SASyLF proof files"
+            id="org.sasylf.context"
+            name="SASyLF"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.sasylf.preferences.PreferencePage"
+            id="org.sasylf.preferences.PreferencePage"
+            name="SASyLF Preferences">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.sasylf.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+            class="org.sasylf.editors.MarkerResolutionGenerator"
+            markerType="org.sasylf.marker">
+         <attribute
+               name="org.sasylf.has.fix"
+               value="true">
+         </attribute>
+      </markerResolutionGenerator>
+   </extension>
+   
+
+</plugin>

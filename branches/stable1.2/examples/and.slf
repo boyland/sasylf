@@ -1,0 +1,72 @@
+/*
+ * Demonstrate how to use "and" for multiple results.
+ */
+
+package edu.uwm.cs.arith;
+
+terminals S
+
+syntax
+
+n ::= 0
+  | S n
+
+
+judgment plus: n + n = n
+
+--------- plus-zero
+0 + n = n
+
+n1 + n2 = n3
+---------------- plus-succ
+S n1 + n2 = S n3
+
+
+theorem plus-associative:
+    forall p1: n1 + n2 = n3
+    forall p2: n3 + n4 = n7
+    
+    // The result of a theorem can "and" together multiple derivations:
+    exists n2 + n4 = n6 and n1 + n6 = n7.
+    
+    // The pseudo-derivation "proof" means "whatever we're trying to prove now"
+    // In this case, this is the conjunction we are proving
+    // Instead of "proof", one could write: 
+    //   "_: n2 + n4 = n6 and _: n1 + n6 = n7"
+    proof by induction on p1:
+        case rule
+            -------------- plus-zero
+            _: 0 + n2 = n2
+        is
+            p7: 0 + n7 = n7 by rule plus-zero
+            
+            // The justification of an "and" derivation 
+            // consists of proofs of each part.
+            proof by p2,p7
+        end case
+
+        case rule
+            p1': n1' + n2 = n3'
+            --------------------- plus-succ
+            _: S n1' + n2 = S n3'
+        is
+        
+        	// plus-succ has a single premise above the line,
+        	// using new variables.  In an inversion one can select names
+        	// for the new variables.  Here n7 = S n7' is effected
+        	// by the inversion. 
+        	p2' : n3' + n4 = n7' by inversion of plus-succ on p2
+        	
+        	// If a judgment has multiple premises, 
+        	// the result of inversion is an "and" derivation.
+        	
+        	// In an inductive call to a theorem with an "and" result,
+        	// one justifies multiple derivations at once:
+        	p6: n2 + n4 = n6 and 
+            p7': n1' + n6 = n7' by induction hypothesis on p1',p2'
+            
+            p7: S n1' + n6 = S n7' by rule plus-succ on p7'
+            proof by p6,p7
+        end case
+   end induction
+end theorem 
