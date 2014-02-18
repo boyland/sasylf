@@ -39,11 +39,6 @@ public class PreferencePage
 				PreferenceConstants.FORMATTER_INDENT_SIZE,
 				"&Indentation of SASyLF constructs",
 				getFieldEditorParent()));
-		addField(
-		    new StringFieldEditor(
-		        PreferenceConstants.PROOF_FOLDER_NAME,
-		        "&Name of root proof folder",
-		        getFieldEditorParent()));
 	}
 
 	/* (non-Javadoc)

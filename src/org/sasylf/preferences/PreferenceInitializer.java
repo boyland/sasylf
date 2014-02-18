@@ -18,7 +18,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		store.setDefault(PreferenceConstants.FORMATTER_INDENT_SIZE, 4);
-		store.setDefault(PreferenceConstants.PROOF_FOLDER_NAME, "slf");
 	}
 
 }

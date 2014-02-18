@@ -3,7 +3,7 @@
  * doesn't correctly commute with patern matching, before or after.
  */
 
-package regression;
+package edu.uwm.cs.good;
 
 terminals contradiction fn unit Unit in
 

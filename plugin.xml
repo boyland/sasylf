@@ -84,8 +84,6 @@
             		commandId="org.sasylf.commands.about"
             		mnemonic="A"/>
             <command
-            		commandId="org.sasylf.commands.togglenature"/>
-            <command
                   commandId="org.sasylf.commands.checkProofs"
                   id="org.sasylf.menus.checkProofs"
                   mnemonic="C">
@@ -120,18 +118,9 @@
             </command>
          </toolbar>
       </menuContribution>
-      
-      <menuContribution
-        allPopups="false"
-        locationURI="popup:org.eclipse.ui.popup.any?before=additions">
-        <separator
-              name="edits"
-              visible="true"/>
-      </menuContribution>
-      
       <menuContribution 
       	allPopups="false"
-      	locationURI="popup:org.eclipse.ui.popup.any?before=edits">
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
       	<command
              commandId="org.sasylf.commands.open"
              label="Open Declaration"
@@ -151,7 +140,7 @@
 	  </menuContribution>
       <menuContribution 
       	allPopups="false"
-      	locationURI="popup:org.eclipse.ui.popup.any?before=edits">
+      	locationURI="popup:org.eclipse.ui.popup.any?before=additions">
       	<command
              commandId="org.sasylf.commands.checkProofs"
              icon="icons/green_check.png"
@@ -173,90 +162,15 @@
 			</visibleWhen>
 		</command>
 	</menuContribution>
-
-      <menuContribution 
-      	allPopups="false"
-      	locationURI="popup:org.eclipse.ui.popup.any?after=edits">
-      	<command
-             commandId="org.sasylf.commands.deletepackage"
-             label="Delete"
-             style="push"
-             icon="icons/delete.gif"
-             tooltip="Delete a package">
-           <visibleWhen>
-   			<or>
-      			<with variable="selection">
-      				<iterate ifEmpty="false">
-         				<instanceof value="org.sasylf.project.IPackageFragment"/>
-         			</iterate>
-      			</with>
-   			</or>
-			</visibleWhen>
-		</command>
-	</menuContribution>
-
-      <menuContribution 
-      	allPopups="false"
-      	locationURI="popup:org.eclipse.ui.popup.any?before=edits">
-      	<command
-             commandId="org.sasylf.commands.new"
-             icon="icons/slf.gif"
-             id="org.sasylf.popup.newProof"
-             label="New SASyLF Proof"
-             style="push"
-             tooltip="Create a SASyLF proof file">
-           <visibleWhen>
-   			<or>
-      			<with variable="selection">
-      				<iterate ifEmpty="false">
-         				<instanceof value="org.sasylf.project.IPackageFragment"/>
-         			</iterate>
-      			</with>
-   			</or>
-			</visibleWhen>
-		</command>
-      	<command
-             commandId="org.sasylf.commands.newpackage"
-             icon="icons/package_obj.png"
-             id="org.sasylf.popup.newPackage"
-             label="New SASyLF Package"
-             style="push"
-             tooltip="Create a SASyLF proof package">
-           <visibleWhen>
-   			<or>
-      			<with variable="selection">
-      				<iterate ifEmpty="false">
-         				<instanceof value="org.sasylf.project.IPackageFragment"/>
-         			</iterate>
-      			</with>
-   			</or>
-			</visibleWhen>
-		</command>
-	</menuContribution>
-
 	<menuContribution
-		locationURI="popup:common.new.menu?before=additions">
+		locationURI="popup:common.new.menu?after=additions">
 		<command
                commandId="org.sasylf.commands.new"
                icon="icons/slf.gif"
                label="SASyLF Proof"
-               mnemonic="S"
+               mnemonic="P"
                style="push"
-               tooltip="Create a new SASyLF proof file">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="org.sasylf.inPerspective">
-               </reference>
-            </visibleWhen>
-         </command>
-         <command
-                commandId="org.sasylf.commands.newpackage"
-                icon="icons/package_obj.png"
-                label="Proof Package"
-                mnemonic="P"
-                style="push"
-                tooltip="Create a new SASyLF package">
+               tooltip="Create a new SASAyLF proof file">
             <visibleWhen
                   checkEnabled="false">
                <reference
@@ -273,23 +187,9 @@
                commandId="org.sasylf.commands.new"
                icon="icons/slf.gif"
                label="SASyLF Proof"
-               mnemonic="S"
-               style="push"
-               tooltip="Create a new SASyLF proof file">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="org.sasylf.inPerspective">
-               </reference>
-            </visibleWhen>
-         </command>
-         <command
-               commandId="org.sasylf.commands.newpackage"
-               icon="icons/newpack_wiz.png"
-               label="SASyLF Package"
                mnemonic="P"
                style="push"
-               tooltip="Create a new SASyLF proof package">
+               tooltip="Create a new SASyLF proof file">
             <visibleWhen
                   checkEnabled="false">
                <reference
@@ -305,33 +205,6 @@
                commandId="org.eclipse.jdt.ui.edit.text.java.correction.assist.proposals"
                label="Quick Fix"
                style="push">
-         </command>
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
-         <command
-               commandId="org.sasylf.commands.togglenature"
-               icon="icons/slf.gif"
-               label="Toggle SASyLF Nature"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <reference
-                        definitionId="org.sasylf.inPerspective">
-                  </reference>
-                  <with
-                        variable="selection">
-                     <iterate
-                           ifEmpty="false">
-                        <instanceof
-                              value="org.eclipse.core.resources.IProject">
-                        </instanceof>
-                     </iterate>
-                  </with>
-               </and>
-            </visibleWhen>
          </command>
       </menuContribution>
    </extension>
@@ -351,11 +224,6 @@
             id="org.sasylf.commands.about"
             name="About SASyLF"/>
       <command
-            defaultHandler="org.sasylf.handlers.DeletePackageHandler"
-            id="org.sasylf.commands.deletepackage"
-            name="Delete Package"
-            description="Delete a package and all/any files in it."/>
-      <command
             defaultHandler="org.sasylf.handlers.NewProofHandler"
             description="Open dialog to create a new SASyLF proof file"
             id="org.sasylf.commands.new"
@@ -373,18 +241,6 @@
             description="Go to the declaration of judgment or theorem"
             id="org.sasylf.commands.open"
             name="Open Declaration">
-      </command>
-      <command
-            defaultHandler="org.sasylf.handlers.NewProofPackageHandler"
-            description="Open a dialog to create new SASyLF package"
-            id="org.sasylf.commands.newpackage"
-            name="New package ...">
-      </command>
-      <command
-            defaultHandler="org.sasylf.handlers.ToggleNatureHandler"
-            description="Turn off/on SASyLF Nature on selected project"
-            id="org.sasylf.commands.togglenature"
-            name="Toggle SASyLF Nature">
       </command>
    </extension>
    <extension
@@ -416,15 +272,7 @@
             id="org.sasylf.wizards.NewProofWizard"
             name="SASyLF Proof file">
       </wizard>
-      <wizard
-            category="org.sasylf"
-            class="org.sasylf.wizards.NewProofPackageWizard"
-            icon="icons/newpack_wiz.png"
-            id="org.sasylf.wizards.NewProofPackageWizard"
-            name="SASyLF Proof Package">
-      </wizard>
    </extension>
-
    <extension
          point="org.eclipse.ui.contexts">
       <context
@@ -459,122 +307,6 @@
          </attribute>
       </markerResolutionGenerator>
    </extension>
-   <extension
-         id="nature"
-         name="SASyLF Project Nature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="org.sasylf.project.MyNature">
-         </run>
-      </runtime>
-      <builder
-            id="org.sasylf.proofBuilder">
-      </builder>
-   </extension>
-   <extension
-         id="proofBuilder"
-         name="SASyLF Project Builder"
-         point="org.eclipse.core.resources.builders">
-      <builder
-            hasNature="true">
-         <run
-               class="org.sasylf.project.ProofBuilder">
-         </run>
-      </builder>
-   </extension>
    
-   <extension
-         point="org.eclipse.ui.ide.projectNatureImages">
-      <image
-            icon="icons/proof_overlay.gif"
-            id="proof.overlay"
-            natureId="org.sasylf.nature">
-      </image>
-   </extension>
-   
-   <extension
-         point="org.eclipse.ui.navigator.navigatorContent">
-      <navigatorContent
-            activeByDefault="true"
-            contentProvider="org.sasylf.project.MyContentProvider"
-            icon="icons/packagefolder_obj.png"
-            id="org.sasylf.project.navigator.content"
-            labelProvider="org.sasylf.project.MyLabelProvider"
-            name="Proof Navigator Content"
-            priority="high">
-         <triggerPoints>
-            <or>
-               <instanceof
-                     value="org.eclipse.core.resources.IFolder">
-               </instanceof>
-               <instanceof
-                     value="org.sasylf.project.IPackageFragment">
-               </instanceof>
-            </or>
-         </triggerPoints>
-         <override
-               policy="InvokeAlwaysRegardlessOfSuppressedExt"
-               suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
-         </override>
-         <commonSorter
-               class="org.sasylf.project.MySorter">
-            <parentExpression>
-               <instanceof
-                     value="org.eclipse.core.resources.IFolder">
-               </instanceof>
-            </parentExpression>
-         </commonSorter>
-      </navigatorContent>
-   </extension>
-   <extension
-         point="org.eclipse.ui.navigator.viewer">
-      <viewer
-            viewerId="org.eclipse.ui.navigator.ProjectExplorer">
-      </viewer>
-      <viewerContentBinding
-            viewerId="org.eclipse.ui.navigator.ProjectExplorer">
-         <includes>
-            <contentExtension
-                  pattern="org.sasylf.project.navigator.content">
-            </contentExtension></includes>
-      </viewerContentBinding>
-      <viewerActionBinding
-            viewerId="org.sasylf.view.test">
-         <includes>
-            <actionExtension
-                  pattern="org.eclipse.ui.navigator.resources.*">
-            </actionExtension>
-         </includes>
-      </viewerActionBinding>
-   </extension>
-   <extension
-         point="org.eclipse.ui.newWizards">
-      <wizard
-            category="org.sasylf"
-            class="org.sasylf.wizards.NewProjectWizard"
-            icon="icons/newsprj_wiz.png"
-            id="org.sasylf.wizard.newproject"
-            name="SASyLF Project"
-            project="true">
-      </wizard>
-   </extension>
-   <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
-            class="org.sasylf.project.ProjectPropertyPage"
-            id="org.sasylf.project.properties"
-            name="SASyLF Properties">
-         <enabledWhen>
-            <and>
-              <instanceof
-                  value="org.eclipse.core.resources.IProject">
-              </instanceof>
-              <test property="org.eclipse.core.resources.projectNature"
-                    value="org.sasylf.nature"/>
-            </and>
-         </enabledWhen>
-      </page>
-   </extension>
 
 </plugin>

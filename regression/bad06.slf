@@ -1,4 +1,4 @@
-package regression;
+package edu.uwm.cs.test;
 
 terminals fn in
 

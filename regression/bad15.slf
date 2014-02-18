@@ -1,5 +1,3 @@
-package regression;
-
 terminals fn c in contradiction
 
 syntax 

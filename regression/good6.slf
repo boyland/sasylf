@@ -3,8 +3,6 @@
  * Parser drops it on all following nonterminals for theorem
  */
  
-package regression;
-
 terminals fn s in
  
 syntax

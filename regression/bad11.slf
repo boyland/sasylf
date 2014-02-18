@@ -1,5 +1,3 @@
-package regression;
-
 terminals fn value Unit in
 
 syntax 

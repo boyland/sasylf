@@ -2,7 +2,7 @@
  * can't call theorems with nonterminals
  */
 
-package regression;
+package edu.uwm.cs.good;
 
 terminals S
 

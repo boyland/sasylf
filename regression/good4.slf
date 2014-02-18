@@ -2,7 +2,7 @@
  * Check that we don't reject all uses of non-assuming judgments.
  */
  
-package regression;
+package edu.uwm.cs.structural;
  
 
 terminals fn in Fn Unit unit contradiction

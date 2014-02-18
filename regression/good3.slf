@@ -2,7 +2,7 @@
  * Checking that we can use variables in variable binding.
  */
  
-package regression;
+package edu.uwm.cs.structural;
  
 
 terminals fn in Fn Unit unit contradiction

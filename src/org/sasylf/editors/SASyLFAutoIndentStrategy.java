@@ -145,7 +145,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
         return false;
       }
     }
-    // System.out.println("all previous characters match: [0," + thisIndent + ")");
+    // System.out.println("all previous charcaters match: [0," + thisIndent + ")");
     if (prevLineInfo.getLength() > thisIndent && Character.isWhitespace(d.getChar(prevLineInfo.getOffset()+thisIndent))) {
       // System.out.println("already undented");
       return false;
@@ -161,7 +161,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
       return;
     case LONG:
       doDefaultNewlineAutoIndent(d, c);
-      c.text += "* ";
+      c.text += "** ";
       return;
     default:
       break;
@@ -207,7 +207,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
         } else {
           if (getLineLength(d,c.offset) != 0) {
             // System.out.println("line length = " + getLineLength(d,c.offset));
-            // System.out.println("not at end of line");
+            // SYstem.out.println("not at end of line");
             return;
           }
           String upTo = getLineUpTo(d,c.offset);
@@ -229,9 +229,8 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
             // System.out.println("word not delimited with whitespace: " + j);
             return;
           } 
-          // int thisIndent = c.offset - upTo.length() - d.getLineInformationOfOffset(c.offset).getOffset();
-          /*if (notAlreadyUndented(d, c.offset, thisIndent)): does the wrong thing for "end". */ 
-          {
+          int thisIndent = c.offset - upTo.length() - d.getLineInformationOfOffset(c.offset).getOffset();
+          if (notAlreadyUndented(d, c.offset, thisIndent)) {
             // System.out.println("attempting to undent");
             addUndent(d,c);
           }

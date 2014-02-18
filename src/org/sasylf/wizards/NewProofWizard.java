@@ -14,7 +14,6 @@ import org.eclipse.core.runtime.CoreException;
 import java.io.*;
 import org.eclipse.ui.*;
 import org.eclipse.ui.ide.IDE;
-import org.sasylf.project.ProofBuilder;
 
 /**
  * This is a new proof file wizard. It was copied
@@ -100,7 +99,7 @@ public class NewProofWizard extends Wizard implements INewWizard {
 		IContainer container = (IContainer) resource;
 		final IFile file = container.getFile(new Path(fileName));
 		try {
-			InputStream stream = openContentStream(ProofBuilder.getProofFolderRelativePath(container));
+			InputStream stream = openContentStream(containerName);
 			if (file.exists()) {
 				file.setContents(stream, true, true, monitor);
 			} else {
@@ -128,16 +127,10 @@ public class NewProofWizard extends Wizard implements INewWizard {
 	 * We will initialize file contents with a sample text.
 	 */
 
-	private InputStream openContentStream(IPath relPath) {
-	  String[] segments = relPath.segments();
-	  StringBuilder sb = new StringBuilder();
-	  for (int i=0; i < segments.length; ++i) {
-	    if (i > 0) sb.append(".");
-	    sb.append(segments[i]);
-	  }
+	private InputStream openContentStream(String containerName) {
 	  String contents = "" +
-	      (segments.length > 0 ? "package " + sb.toString() + ";" : "// default package") +
-	      "\n\nterminals \n\n" +
+	      "package " + containerName.replace('/', '.').substring(1) + ";\n\n" +
+	      "terminals \n\n" +
 	      "syntax\n\n\n" +
 	      "// judgment ...\n\n" +
 	      "// theorem ...\n\n";

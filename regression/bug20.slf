@@ -1,4 +1,4 @@
-package regression;
+package org.sasylf.util;
 
 terminals S
 

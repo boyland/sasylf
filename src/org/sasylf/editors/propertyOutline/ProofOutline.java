@@ -290,13 +290,10 @@ public class ProofOutline extends ContentOutlinePage {
 		
 		public List<ProofElement> findMatching(String category, String prefix) {
 		  if (category == null) category = "";
-		  // System.out.println("category = " + category + ", prefix = " + prefix);
 		  List<ProofElement> result = new ArrayList<ProofElement>();
 		  for (ProofElement pe : pList) {
-		    // System.out.println("  looking at " + pe);
-        if (categoryMatch(pe.getCategory(),category) && pe.getContent().startsWith(prefix)) result.add(pe);
+        if (pe.getCategory().startsWith(category) && pe.getContent().startsWith(prefix)) result.add(pe);
         if ("Judgment".equals(pe.getCategory())) {
-          if (pe.getChildren() == null) continue;
           for (ProofElement ce : pe.getChildren()) {
             if (ce.getCategory().startsWith(category) &&
                 ce.getContent().startsWith(prefix)) result.add(ce);
@@ -304,14 +301,6 @@ public class ProofOutline extends ContentOutlinePage {
         }
       }
 		  return result;
-		}
-		
-		protected boolean categoryMatch(String cat, String pattern) {
-		  if (pattern.length() == 0) return true;
-		  if (cat.equals(pattern)) return true;
-		  if (cat.equals("Lemma") && pattern.equals("Theorem") ||
-		      cat.equals("Theorem") && pattern.equals("Lemma")) return true;
-		  return false;
 		}
 	}
 
@@ -417,8 +406,7 @@ public class ProofOutline extends ContentOutlinePage {
       return result;
     }
     ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
-	  if (category.equals("lemma")) category = "Lemma";
-	  else if (category.equals("theorem")) category = "Theorem";
+	  if (category.equals("lemma") || category.equals("theorem")) category = "Theorem";
 	  else if (category.equals("rule")) category = "Rule";
 	  else category = "";
 	  for (ProofElement pe : provider.findMatching(category, prefix)) {

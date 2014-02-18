@@ -1,8 +1,8 @@
 /** Hacked up version of lambda.slf to demonstrate a previous bug:
- * Couldn't handle bindings as lemma arguments
+ * Couldn't handle bndings as lemma arguments
  */
 
-package regression;
+package edu.cmu.cs.lambda;
 
 terminals fn unit in value stepsorvalue
 

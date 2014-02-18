@@ -1,5 +1,3 @@
-package regression;
-
 /*
  * Implicit assumes should not apply to irrelevant terms.
  */
