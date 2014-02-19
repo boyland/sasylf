@@ -58,7 +58,12 @@ public class TermPrinter {
     return asElement(x, new ArrayList<Variable>());
   }
   
+  public ClauseUse asClause(Term x) {
+    return asClause(x, new ArrayList<Variable>());
+  }
+  
   public Element asElement(Term x, List<Variable> vars) {
+    // System.out.println("as element : " + x);
     if (x instanceof FreeVar) {
       if (varMap.containsKey(x)) return varMap.get(x);
       if (ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location);
@@ -102,35 +107,78 @@ public class TermPrinter {
       if (etaFV != null) return asElement(etaFV,vars);
       Term ty = abs.varType;
       Syntax syn = ctx.synMap.get(ty.toString());
-      Variable v = new Variable(syn.getVariable().toString()+(vars.size()/2),location);
+      Variable v = new Variable(createVarName(syn,vars),location);
       v.setType(syn);
       vars.add(v);
-      Term body1 = abs.getBody();
-      if (body1 instanceof Abstraction) {
-        Abstraction abs2 = (Abstraction)body1;
-        ClauseUse bindingClause = assumeTypeAsElement(abs2.varType, vars);
-        vars.add(new Variable("<internal>",location));
-        Element bodyElem = asElement(abs2.getBody(),vars);
-        if (bodyElem instanceof ClauseUse) {
-          ClauseUse cu = (ClauseUse)bodyElem;
-          int ai = cu.getConstructor().getAssumeIndex();
-          cu.getElements().set(ai, replaceAssume(bindingClause,cu.getElements().get(ai)));
-        } else if (bodyElem instanceof AssumptionElement) {
-          AssumptionElement ae = (AssumptionElement)bodyElem;
-          return new AssumptionElement(location,ae.getBase(),replaceAssume(bindingClause,ae.getAssumes()));
-        } else {
-          return new AssumptionElement(location,bodyElem,bindingClause);
-        }
+      Element bodyElem = asElement(abs.getBody(),vars);
+      vars.remove(vars.size()-1);
+      // System.out.println("Insert variable " + v + " in " + bodyElem);
+      ClauseUse bindingClause = variableAsBindingClause(v);
+      // System.out.println("  using binding clause: " + bindingClause);
+      if (bodyElem instanceof AssumptionElement) {
+        AssumptionElement ae = (AssumptionElement)bodyElem;
+        replaceAssume(bindingClause,ae.getAssumes());
         return bodyElem;
       } else {
-        //throw new RuntimeException("abstraction with only one arg?: " + x);
-        return new NonTerminal("abstraction with only one arg?",location);
+        return new AssumptionElement(location,bodyElem,bindingClause);
       }
     } else {
       throw new RuntimeException("unknown element: " + x);
     }
   }
 
+  public ClauseUse asClause(Term x, List<Variable> vars) {
+    if (x instanceof Application) {
+      Application app = (Application)x;
+      List<Element> args = new LinkedList<Element>();
+      for (Term arg : app.getArguments()) {
+        args.add(asElement(arg,vars));
+      }
+      Atom func = app.getFunction();
+      if (func instanceof Constant) {
+        return appAsClause((Constant)func,args);
+      } else {
+        throw new RuntimeException("not a clause: " + x);
+      }
+    } else if (x instanceof Abstraction) {
+      Abstraction abs = (Abstraction)x;
+      Term ty = abs.varType;
+      Syntax syn = ctx.synMap.get(ty.toString());
+      Variable v = new Variable(createVarName(syn,vars),location);
+      v.setType(syn);
+      vars.add(v);
+      Term body1 = abs.getBody();
+      if (body1 instanceof Abstraction) {
+        Abstraction abs2 = (Abstraction)body1;
+        ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
+        vars.add(new Variable("<internal>",location));
+        ClauseUse body = asClause(abs2.getBody(),vars);
+        int ai = body.getConstructor().getAssumeIndex();
+        body.getElements().set(ai, replaceAssume(bindingClause,body.getElements().get(ai)));
+        vars.remove(vars.size()-1);
+        vars.remove(vars.size()-1);
+        return body;
+      } else {
+        throw new RuntimeException("abstraction with only one arg?: " + x);
+      }
+    } else {
+      throw new RuntimeException("unknown element: " + x);
+    }
+  }
+  
+  private String createVarName(Syntax s, List<Variable> vars) {
+    int count = 0;
+    for (Variable p : vars) {
+      if (p != null && p.getType() != null && p.getType().equals(s)) ++count;
+    }
+    StringBuilder sb = new StringBuilder(s.getVariable().toString());
+    while (count > 0) {
+      sb.append("'");
+      --count;
+    }
+    return sb.toString();
+  }
+  
   /**
    * Convert a term used as the type of the hypothetical
    * assumed along with the variable.  Convert it to an element.
@@ -138,7 +186,7 @@ public class TermPrinter {
    * @param vars bindings for variables in scope.
    * @return element that gives the context as an environment.
    */
-  ClauseUse assumeTypeAsElement(Term assumeType, List<Variable> vars) {
+  ClauseUse assumeTypeAsClause(Term assumeType, List<Variable> vars) {
     ClauseUse bindingClause = (ClauseUse)asElement(assumeType,vars);
     if (assumeType instanceof Application && 
         ctx.judgMap.containsKey(((Application)assumeType).getFunction().toString())) {
@@ -189,12 +237,34 @@ public class TermPrinter {
     }
     return bindingClause;
   }
+  
+  public ClauseUse variableAsBindingClause(Variable v) {
+    Syntax s = v.getType();
+    ClauseDef cd = s.getContextClause();
+    List<Element> elems = cd.getElements();
+    List<Element> newElems = new ArrayList<Element>(elems);
+    int n = elems.size();
+    for (int i=n-1; i>=0; --i ) {
+      Element e = newElems.get(i);
+      if (e instanceof NonTerminal) {
+        NonTerminal nt = (NonTerminal)e;
+        NonTerminal copy = new NonTerminal(nt.getSymbol()+"_"+i, location);
+        copy.setType(nt.getType());
+        newElems.set(i, copy);
+      } else if (e instanceof Variable) {
+        newElems.set(i, v);
+        v = null; // replace earlier variables with null
+      }
+    }
+    return new ClauseUse(location,newElems,cd);
+  }
 
   private ClauseUse appAsClause(Constant c, List<Element> args) {
     String fname = c.getName();
     ClauseDef cd = ctx.prodMap.get(fname);
     if (cd != null) {
       List<Element> contents = new ArrayList<Element>(cd.getElements());
+      // System.out.println("In " + contents);
       int n = contents.size();
       int ai = cd.getAssumeIndex();
       // System.out.println("AsClause: " + c + " with " + args);
@@ -202,12 +272,52 @@ public class TermPrinter {
       for (int i=0; i < n; ++i) {
         Element old = contents.get(i);
         if (i == ai) {
-          contents.set(i,context);
+          Element baseContext = context;
+          if (baseContext == null) {
+            NonTerminal g = (NonTerminal)old;
+            ClauseDef term = g.getType().getTerminalCase();
+            baseContext = new ClauseUse(location,new ArrayList<Element>(term.getElements()),term);
+          }
+          contents.set(i,baseContext);
         } else if (old instanceof NonTerminal) {
           contents.set(i,actuals.next());
+        } else if (old instanceof Variable) {
+          // do nothing
         } else if (old instanceof Binding) {
           Binding b = (Binding)old;
-          contents.set(i,new Binding(location,(NonTerminal)actuals.next(),b.getElements()));
+          // System.out.println("old = " + old);
+          Element actual = actuals.next();
+          // System.out.println("new = " + actual);
+          if (actual instanceof NonTerminal) {
+            contents.set(i,new Binding(location,(NonTerminal)actual,b.getElements()));
+          } else if (actual instanceof AssumptionElement) {
+            AssumptionElement ae = (AssumptionElement)actual;
+            ClauseUse cu = (ClauseUse)ae.getAssumes();
+            // System.out.println("  context clause = " + cu);
+            int nvar = b.getElements().size();
+            for (int j=nvar-1; j >= 0; --j) {
+              Variable oldVar = (Variable)b.getElements().get(j);
+              Variable newVar = null;
+              for (Element e : cu.getElements()) {
+                if (e instanceof Variable) {
+                  newVar = (Variable)e;
+                  break;
+                }
+              }
+              if (newVar == null) throw new RuntimeException("Couldn't find newvar in " + cu);
+              // System.out.println("Replacing " + oldVar + " with " + newVar);
+              contents.set(contents.indexOf(oldVar), newVar);
+              if (j > 0) {
+                cu = (ClauseUse)cu.getElements().get(cu.getConstructor().getAssumeIndex());
+              }
+            }
+            contents.set(i, ae.getBase());
+          } else {
+            System.out.println("What do I do with " + old + " getting " + actual + " ?");
+            contents.set(i, actual);
+          }
+        } else if (old instanceof Variable) {
+          System.out.println("What do I do with variable " + old);
         }
       }
       return new ClauseUse(location,contents,cd);
@@ -221,6 +331,12 @@ public class TermPrinter {
       throw new RuntimeException("Couldn't locate context in " + old);
     }
     ClauseUse cu = (ClauseUse)old;
+    int ai = cu.getConstructor().getAssumeIndex();
+    if (ai < 0) throw new RuntimeException("Couldn't replace in " + old);
+    Element e = cu.getElements().get(ai);
+    cu.getElements().set(ai,replaceAssume(repl,e));
+    return cu;
+    /*
     int n = cu.getElements().size();
     boolean onlyTerminals = true;
     for (int i=0; i < n; ++i) {
@@ -232,8 +348,8 @@ public class TermPrinter {
       }
       if (!(e instanceof Terminal)) onlyTerminals = false;
     }
-    if (onlyTerminals) return repl;
-    throw new RuntimeException("Couldn't locate context in clause " + old);
+    if (onlyTerminals) return repl;*/
+    //throw new RuntimeException("Couldn't locate context in clause " + old);
   }
 
   /**
@@ -259,7 +375,7 @@ public class TermPrinter {
                 sb.append(rName);
                 sb.append("\n");
               }
-              ClauseUse u = (ClauseUse)asElement(app.getArguments().get(i));
+              ClauseUse u = asClause(app.getArguments().get(i));
               prettyPrint(sb,u,false, 0);
               sb.append('\n');
             }
@@ -290,10 +406,10 @@ public class TermPrinter {
       sb.append(b.getNonTerminal());
       int n = b.getElements().size();
       for (int i=0; i < n; ++i) {
-        sb.append(i == 0 ? '[' : ',');
+        sb.append('[');
         prettyPrint(sb,b.getElements().get(i),false, level+1);
+        sb.append(']');
       }
-      sb.append(']');
     } else if (e instanceof Clause) {
       List<Element> es = ((Clause)e).getElements();
       if (parenthesize && es.size() > 1) sb.append('(');

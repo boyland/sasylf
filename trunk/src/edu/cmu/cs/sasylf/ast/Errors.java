@@ -16,6 +16,8 @@ public enum Errors {
 	RULE_PREMISE_NUMBER		("wrong number of premises for rule "),
 	BAD_RULE_APPLICATION,
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
+	VARIABLE_HAS_NO_CONTEXT ("the variable for this nonterminal is never bound in a context"),
+	VARIABLE_HAS_MULTIPLE_CONTEXTS ("the variable for this nonterminal is illegaly bound in multiple contexts"),
 	NO_DERIVATION			("must provide a derivation"),
 	INDUCTION_MISSING ("'induction hypothesis' requires explicit proof by induction"),
 	INDUCTION_REPEAT ("can't nest induction analysis inside existing induction"),
