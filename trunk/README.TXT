@@ -1,4 +1,4 @@
-SASyLF version 1.3.0a1
+SASyLF version 1.3.0a2
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -109,6 +109,8 @@ RELEASE HISTORY
 1.3.0	Packages and Projects
     The package declaration has a semantics now and we require folders = packages.
     Eclipse plugin updated to add project and package support
+1.2.5   Bug fixes to stable 1.2
+    Resolves issues #43, #44
 1.2.4	Minor bug fixes and plugin enhancements
     Quick Fixes & Preferences page added (only one property for now)
     Fixed bug from 1.2.3 that some versions of lambda-loc.slf gave an error
