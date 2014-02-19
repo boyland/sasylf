@@ -1,14 +1,27 @@
 package edu.cmu.cs.sasylf.ast;
 
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
+import static edu.cmu.cs.sasylf.ast.Errors.VAR_STRUCTURE_KNOWN;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import edu.cmu.cs.sasylf.term.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 
 public abstract class DerivationByAnalysis extends Derivation {
@@ -80,7 +93,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 			&& (targetDerivation.equals(ctx.inductionVariable) || ctx.subderivations.contains(targetDerivation));
 		if (isSubderivation) debug("found subderivation: " + targetDerivation);
 		
-		ctx.caseTermMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
+		ctx.caseTermMap = new LinkedHashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
 		
 		// JTB: There are unfortunately many ways to be a syntax case:
 		// 1. a nonterminal: e.g. t
@@ -202,10 +215,11 @@ public abstract class DerivationByAnalysis extends Derivation {
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
 			}
 		} else {
+      debug("*********** case analyzing line " + getLocation().getLine());
+      // tdebug("    currentCaseAnalysisElement = " + ctx.currentCaseAnalysisElement);
+      // tdebug("    sub = " + ctx.currentSub);
+      // tdebug("    adaptationSub = " + ctx.adaptationSub);
 			Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
-			debug("*********** case analyzing line " + getLocation().getLine());
-			//debug("    sub = " + ctx.currentSub);
-			//debug("    adaptationSub = " + ctx.adaptationSub);
 			// see if each rule, in turn, applies
 			for (Rule rule : judge.getRules()) {
 			  if (!rule.isInterfaceOK()) continue; // avoid these

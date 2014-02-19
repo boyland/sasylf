@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Status;
 
 
@@ -33,6 +34,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	private List<Clause> elements;
 	private NonTerminal nonTerminal;
 	private Variable variable;
+	private ClauseDef context;
 
 	public void prettyPrint(PrintWriter out) {
 		nonTerminal.prettyPrint(out);
@@ -99,10 +101,10 @@ public class Syntax extends Node implements ClauseType, ElemType {
 			}
 		}
 		
-		/* NO: don't give an error.  See featherweight-java.slf
+		// more than one variable cannot be distinguished
 		if (countVarOnly > 1) {
 		  ErrorHandler.recoverableError(Errors.TOO_MANY_VARIABLES, this);
-		}*/
+		}
 		
 		// check variable uses
 		for (int i = 0; i < elements.size(); ++i) {
@@ -172,6 +174,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	}
 	
 	private int contextFormCode = -1;
+	private ClauseDef terminalCase = null;
 	
 	public boolean isInContextForm() {
 	  if (contextFormCode == -1) {
@@ -180,9 +183,21 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return contextFormCode > 0;
 	}
 	
+	/**
+	 * If this context is in context form, return a non-null "empty context" case.
+	 * Otherwise, return null;
+	 * @return terminal case clause
+	 */
+	public ClauseDef getTerminalCase() {
+	  if (isInContextForm()) {
+	    return terminalCase;
+	  }
+	  return null;
+	}
+	
   /**
    * Determine whether this is a context syntax (a "Gamma").
-   * If so, return a positive numer (the number of ways variables are bound).
+   * If so, return a positive number (the number of ways variables are bound).
    * Otherwise return 0.
    * @return positive if indeed, otherwise zero.
    */
@@ -191,9 +206,10 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		int terminalCaseCount = 0;
 		int contextCaseCount = 0;
 		for (Clause c : getClauses()) {
-			if (isTerminalCase(c))
+			if (isTerminalCase(c)) {
+			  terminalCase = (ClauseDef)c;
 				terminalCaseCount++;
-			else if (isContextCase(c))
+			} else if (isContextCase(c))
 				contextCaseCount++;
 			else return 0;
 		}
@@ -244,6 +260,43 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return true;
 	}
 	
+	/**
+	 * Register this syntax (if in context form) so that it knows what
+	 * clause binds the variable.  If we discover a variable being bound
+	 * in multiple contexts, we report an error.
+	 */
+	public void registerVarTypes() {
+	  if (isInContextForm()) {
+	    for (Clause c : getClauses()) {
+	      if (isContextCase(c)) {
+	        for (Element e : c.getElements()) {
+	          if (e instanceof Variable) {
+	            Syntax varType = ((Variable)e).getType();
+	            if (varType.context == null) varType.context = (ClauseDef)c;
+	            else if (varType.context != c) {
+	              ErrorHandler.report(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,varType);
+	            }
+	          }
+	        }
+	      }
+	    }
+	  }
+	}
+	
+	/**
+	 * Check that if this syntax has variables that it has a registered context.
+	 * If it doesn't we report an error.
+	 */
+	public void checkVarTypeRegistered() {
+	  if (variable != null && context == null) {
+	    ErrorHandler.report(Errors.VARIABLE_HAS_NO_CONTEXT, this);
+	  }
+	}
+	
+	public ClauseDef getContextClause() {
+	  return context;
+	}
+	
 	public String toString() {
 		return nonTerminal.toString();
 	}
@@ -287,8 +340,9 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	}
 	
 	public Constant typeTerm() {
-		if (term == null)
-			term =new Constant(nonTerminal.getSymbol(), Constant.TYPE); 
+		if (term == null) {
+			term = new Constant(nonTerminal.getSymbol(), Constant.TYPE); 
+		}
 		return term;
 	}
 

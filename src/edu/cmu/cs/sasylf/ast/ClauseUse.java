@@ -7,6 +7,7 @@ import static edu.cmu.cs.sasylf.term.Facade.pair;
 import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +94,9 @@ public class ClauseUse extends Clause {
 	    return null;
 	  }
 	  Element e = getElements().get(ai);
+	  if (e == null) {
+	    System.out.println("null root in " + getElements() + " at " + ai);
+	  }
 	  return computeRootHelper(e);
 	}
 	
@@ -143,7 +147,7 @@ public class ClauseUse extends Clause {
 		int assumeIndex = cons.getAssumeIndex();
 		Constant cnst = (Constant) cons.computeTerm(varBindings);
 		List<Term> args = new ArrayList<Term>();
-		debug("converting term " + this + " with assumed vars " + varBindings);
+		// System.out.println("converting term " + this + " with assumed vars " + varBindings);
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
 			if (! (e instanceof Terminal) && i != assumeIndex 
@@ -155,9 +159,12 @@ public class ClauseUse extends Clause {
 					Binding defB = (Binding) defE;
 					List<Variable> vars = new ArrayList<Variable>();
 					List<Pair<String, Term>> newVarBindings = new ArrayList<Pair<String,Term>>(varBindings);
-					// must add in opposite order because of the way de Bruijn works 
-					for (int j = defB.getElements().size()-1; j >=0; --j) {
-						Element boundVarElem = defB.getElements().get(j);
+					// 1. varBindings must be added in the order they are bound
+					//    earlier (outer) bindings come earlier
+					// but when we generate Abs terms, we need to bind later things first.
+					// Hence the list reversal of vars.
+					// NB: The order of variables in the Binding of the ClauseDef is definitive.
+					for (Element boundVarElem : defB.getElements()) {
 						int varIndex = cons.getIndexOf((Variable)boundVarElem);
 						if (varIndex == -1)
 							debug("could not find " + boundVarElem + " in clause " + cons
@@ -172,6 +179,7 @@ public class ClauseUse extends Clause {
 					}
 					//newVarBindings.addAll(varBindings); // TODO: infinite loop in unification if we do this BEFORE
 					t = e.computeTerm(newVarBindings);
+					Collections.reverse(vars); // to get proper order.
 					for (Variable v : vars) {
 						t = Abs(v.getSymbol(), v.getType().typeTerm(), t);
 					}
@@ -212,8 +220,7 @@ public class ClauseUse extends Clause {
 		if (assumeIndex != -1) {
 		  t = newWrap(t,varBindings,initialBindingsSize);
 		}
-		debug("    conversion result is " + t);
-		//System.out.println("converted " + this + " to " + t);
+		// System.out.println("converted " + this + " to " + t);
 		return t;
 	}
 	
