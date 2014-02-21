@@ -58,6 +58,10 @@ public class TermPrinter {
     return asElement(x, new ArrayList<Variable>());
   }
   
+  public Element asCaseElement(Term x) {
+    return asCaseElement(x, new ArrayList<Variable>());
+  }
+  
   public ClauseUse asClause(Term x) {
     return asClause(x, new ArrayList<Variable>());
   }
@@ -107,6 +111,9 @@ public class TermPrinter {
       if (etaFV != null) return asElement(etaFV,vars);
       Term ty = abs.varType;
       Syntax syn = ctx.synMap.get(ty.toString());
+      if (syn == null) {
+        System.out.println("null syntax for " + ty + " in " + x);
+      }
       Variable v = new Variable(createVarName(syn,vars),location);
       v.setType(syn);
       vars.add(v);
@@ -125,6 +132,43 @@ public class TermPrinter {
     } else {
       throw new RuntimeException("unknown element: " + x);
     }
+  }
+
+  /**
+   * Convert a term used for case analysis back into an element, possibly an assumption element. 
+   * @param x term to convert
+   * @param vars list of bound variables
+   * @return element for this term
+   */
+  public Element asCaseElement(Term x, List<Variable> vars) {
+    if (x instanceof Abstraction) {
+      Abstraction abs = (Abstraction)x;
+      Term ty = abs.varType;
+      Syntax syn = ctx.synMap.get(ty.toString());
+      Variable v = new Variable(createVarName(syn,vars),location);
+      v.setType(syn);
+      vars.add(v);
+      Term body1 = abs.getBody();
+      if (body1 instanceof Abstraction) {
+        Abstraction abs2 = (Abstraction)body1;
+        ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
+        vars.add(new Variable("<internal>",location));
+        Element bodyElem = asCaseElement(abs2.getBody(),vars);
+        vars.remove(vars.size()-1);
+        vars.remove(vars.size()-1);
+        // System.out.println("Insert variable " + v + " in " + bodyElem);
+        // System.out.println("  using binding clause: " + bindingClause);
+        if (bodyElem instanceof AssumptionElement) {
+          AssumptionElement ae = (AssumptionElement)bodyElem;
+          replaceAssume(bindingClause,ae.getAssumes());
+          return bodyElem;
+        } else {
+          return new AssumptionElement(location,bodyElem,bindingClause);
+        }
+      } else {
+        throw new RuntimeException("abstraction with only one arg?: " + x);
+      }
+    } else return asElement(x,vars);
   }
 
   public ClauseUse asClause(Term x, List<Variable> vars) {
@@ -384,7 +428,7 @@ public class TermPrinter {
         }
       }
     }
-    prettyPrint(sb,asElement(caseTerm),false, 0);
+    prettyPrint(sb,asCaseElement(caseTerm),false, 0);
     return sb.toString();
   }
   
