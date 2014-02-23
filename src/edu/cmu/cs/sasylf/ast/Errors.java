@@ -13,7 +13,7 @@ public enum Errors {
 	THEOREM_KIND_MISSING ("missing keyword "),
 	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
-	RULE_PREMISE_NUMBER		("wrong number of premises for rule "),
+	RULE_PREMISE_NUMBER		("wrong number of premises for "),
 	BAD_RULE_APPLICATION,
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	VARIABLE_HAS_NO_CONTEXT ("the variable for this nonterminal is never bound in a context"),

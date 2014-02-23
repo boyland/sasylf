@@ -37,9 +37,10 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		
     // make sure the number of arguments is correct
     RuleLike ruleLike = getRule(ctx);
-    if (getArgs().size() != ruleLike.getPremises().size())
-      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
-
+    if (getArgs().size() != ruleLike.getPremises().size()) {
+      System.out.println("this #args = " + getArgs().size());
+      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, ruleLike.getKind()+" "+getRuleName(), this);
+    }
     boolean contextCheckNeeded = false;
 		
 		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(ruleLike.getAssumes())) {
