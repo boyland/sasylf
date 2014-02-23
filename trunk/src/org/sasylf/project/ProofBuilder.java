@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -225,7 +224,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 
   public static boolean isProofFolder(Object x) {
     if (x instanceof IContainer) {
-      IContainer f = (IFolder)x;
+      IContainer f = (IContainer)x;
       IProject p = f.getProject();
       return f.equals(getProofFolder(p));
     }
