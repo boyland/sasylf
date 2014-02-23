@@ -103,7 +103,7 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 		IContainer con = ProofBuilder.getProofFolder(project);
 		for (int i=0; i < segs.length; ++i) {
 		  IFolder f = con.getFolder(new Path(segs[i]));
-		  if (!con.exists()) {
+		  if (!f.exists()) {
 		    f.create(false, true, monitor);
 		  }
 		  con = f;
