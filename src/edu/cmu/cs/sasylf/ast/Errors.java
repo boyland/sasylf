@@ -1,6 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
 public enum Errors {
+  BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
+  BAD_FILE_NAME("Proof file for module must be a legal identifier"),
   WRONG_PACKAGE ("wrong package"),
   WRONG_MODULE_NAME ("wrong module name"),
   WRONG_END,
