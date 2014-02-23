@@ -127,6 +127,7 @@
         <separator
               name="edits"
               visible="true"/>
+        <separator name="imports" visible="true"/>
       </menuContribution>
       
       <menuContribution 
@@ -197,6 +198,41 @@
 
       <menuContribution 
       	allPopups="false"
+      	locationURI="popup:org.eclipse.ui.popup.any?after=imports">
+      	<command
+             commandId="org.eclipse.ui.file.import"
+             label="Import..."
+             style="push"
+             icon="icons/import_wiz.gif">
+           <visibleWhen>
+   			<or>
+      			<with variable="selection">
+      				<iterate ifEmpty="false">
+         				<instanceof value="org.sasylf.project.IPackageFragment"/>
+         			</iterate>
+      			</with>
+   			</or>
+			</visibleWhen>
+		</command>
+      	<command
+             commandId="org.eclipse.ui.file.export"
+             label="Export..."
+             style="push"
+             icon="icons/export_wiz.gif">
+           <visibleWhen>
+   			<or>
+      			<with variable="selection">
+      				<iterate ifEmpty="false">
+         				<instanceof value="org.sasylf.project.IPackageFragment"/>
+         			</iterate>
+      			</with>
+   			</or>
+			</visibleWhen>
+		</command>
+	</menuContribution>
+
+      <menuContribution 
+      	allPopups="false"
       	locationURI="popup:org.eclipse.ui.popup.any?before=edits">
       	<command
              commandId="org.sasylf.commands.new"
@@ -234,48 +270,17 @@
 		</command>
 	</menuContribution>
 
-	<menuContribution
-		locationURI="popup:common.new.menu?before=additions">
-		<command
-               commandId="org.sasylf.commands.new"
-               icon="icons/slf.gif"
-               label="SASyLF Proof"
-               mnemonic="S"
-               style="push"
-               tooltip="Create a new SASyLF proof file">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="org.sasylf.inPerspective">
-               </reference>
-            </visibleWhen>
-         </command>
-         <command
-                commandId="org.sasylf.commands.newpackage"
-                icon="icons/package_obj.png"
-                label="Proof Package"
-                mnemonic="P"
-                style="push"
-                tooltip="Create a new SASyLF package">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="org.sasylf.inPerspective">
-               </reference>
-            </visibleWhen>
-         </command>
-      </menuContribution>
       
       <menuContribution
             allPopups="false"
             locationURI="menu:new">
          <command
-               commandId="org.sasylf.commands.new"
-               icon="icons/slf.gif"
-               label="SASyLF Proof"
-               mnemonic="S"
+               commandId="org.sasylf.commands.newproject"
+               icon="icons/newsprj_wiz.png"
+               label="SASyLF Project"
+               mnemonic="J"
                style="push"
-               tooltip="Create a new SASyLF proof file">
+               tooltip="Create a new SASyLF project">
             <visibleWhen
                   checkEnabled="false">
                <reference
@@ -297,7 +302,22 @@
                </reference>
             </visibleWhen>
          </command>
+         <command
+               commandId="org.sasylf.commands.new"
+               icon="icons/slf.gif"
+               label="SASyLF Proof"
+               mnemonic="S"
+               style="push"
+               tooltip="Create a new SASyLF proof file">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="org.sasylf.inPerspective">
+               </reference>
+            </visibleWhen>
+         </command>
       </menuContribution>
+      
       <menuContribution
             allPopups="false"
             locationURI="popup:#AbstractTextEditorRulerContext?after=QuickDiff.Toggle">
@@ -381,6 +401,12 @@
             name="New package ...">
       </command>
       <command
+            defaultHandler="org.sasylf.handlers.NewProofProjectHandler"
+            description="Open a dialog to create new SASyLF project"
+            id="org.sasylf.commands.newproject"
+            name="New project ...">
+      </command>
+      <command
             defaultHandler="org.sasylf.handlers.ToggleNatureHandler"
             description="Turn off/on SASyLF Nature on selected project"
             id="org.sasylf.commands.togglenature"
@@ -406,22 +432,24 @@
    <extension
          point="org.eclipse.ui.newWizards">
       <category
-            id="org.sasylf"
+            id="org.sasylf.wizards"
             name="SASyLF Wizards">
       </category>
       <wizard
-            category="org.sasylf"
+            category="org.sasylf.wizards"
             class="org.sasylf.wizards.NewProofWizard"
             icon="icons/slf.gif"
-            id="org.sasylf.wizards.NewProofWizard"
-            name="SASyLF Proof file">
+            id="org.sasylf.wizards.newproof"
+            name="SASyLF Proof file"
+            project="false">
       </wizard>
       <wizard
-            category="org.sasylf"
+            category="org.sasylf.wizards"
             class="org.sasylf.wizards.NewProofPackageWizard"
             icon="icons/newpack_wiz.png"
-            id="org.sasylf.wizards.NewProofPackageWizard"
-            name="SASyLF Proof Package">
+            id="org.sasylf.wizards.newpackage"
+            name="SASyLF Proof Package"
+            project="false">
       </wizard>
    </extension>
 
@@ -473,7 +501,7 @@
       </builder>
    </extension>
    <extension
-         id="proofBuilder"
+         id="org.sasylf.proofBuilder"
          name="SASyLF Project Builder"
          point="org.eclipse.core.resources.builders">
       <builder
@@ -526,6 +554,21 @@
             </parentExpression>
          </commonSorter>
       </navigatorContent>
+      <commonWizard
+            type="new"
+            wizardId="org.sasylf.wizards.newproject">
+         <enablement></enablement>
+      </commonWizard>
+      <commonWizard
+            type="new"
+            wizardId="org.sasylf.wizards.newpackage">
+         <enablement></enablement>
+      </commonWizard>
+      <commonWizard
+            type="new"
+            wizardId="org.sasylf.wizards.newproof">
+         <enablement></enablement>
+      </commonWizard>
    </extension>
    <extension
          point="org.eclipse.ui.navigator.viewer">
@@ -551,10 +594,10 @@
    <extension
          point="org.eclipse.ui.newWizards">
       <wizard
-            category="org.sasylf"
+            category="org.sasylf.wizards"
             class="org.sasylf.wizards.NewProjectWizard"
             icon="icons/newsprj_wiz.png"
-            id="org.sasylf.wizard.newproject"
+            id="org.sasylf.wizards.newproject"
             name="SASyLF Project"
             project="true">
       </wizard>
@@ -575,6 +618,29 @@
             </and>
          </enabledWhen>
       </page>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ltk.core.refactoring.moveParticipants">
+      <moveParticipant
+            class="org.sasylf.refactor.MoveProofFile"
+            id="org.sasylf.refactor.move"
+            name="name">
+         <enablement>
+            <test
+                  property="org.eclipse.core.resources.name"
+                  value="*.slf">
+            </test>
+            <with
+                  variable="affectedNatures">
+               <iterate
+                     operator="or">
+                  <equals
+                        value="org.sasylf.nature">
+                  </equals>
+               </iterate>
+            </with></enablement>
+      </moveParticipant>
    </extension>
 
 </plugin>
