@@ -35,6 +35,11 @@ public class Rule extends RuleLike implements CanBeCase {
     	return new HashSet<FreeVar>();
     }
 
+    @Override
+    public String getKind() {
+      return "rule";
+    }
+    
 	private List<Clause> premises;
 	private Clause conclusion;
 	private boolean isAssumpt = false; // default: false
@@ -152,7 +157,8 @@ public class Rule extends RuleLike implements CanBeCase {
 		    return;
 
 		isAssumpt = true;
-		if (assumeClause.getConstructor().assumptionRule != null)
+		if (assumeClause.getConstructor().assumptionRule != null &&
+		    assumeClause.getConstructor().assumptionRule != this) // idempotency
 		  // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
 		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
 		assumeClause.getConstructor().assumptionRule = this;
