@@ -31,6 +31,7 @@ public abstract class RuleLike extends Node {
     public abstract Clause getConclusion();
 
     public String getName() { return name; }
+    public abstract String getKind();
 
 	public Constant getRuleAppConstant() {
 		if (ruleAppConstant == null) {
