@@ -1,5 +1,6 @@
 package org.sasylf.project;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IContainer;
@@ -14,11 +15,90 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.sasylf.actions.CheckProofsAction;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.ui.statushandlers.StatusManager;
+import org.sasylf.Marker;
+import org.sasylf.ProofChecker;
+import org.sasylf.util.Cell;
+
+import edu.cmu.cs.sasylf.ast.CompUnit;
 
 public class ProofBuilder extends IncrementalProjectBuilder {
 
   public static final String BUILDER_ID = "org.sasylf.proofBuilder";
+  
+  /// Registration of the builder with the project
+  // For some reason Eclipse doesn't make this information easy to get, 
+  // so we do it ourselves:
+  private static Map<IProject,ProofBuilder> builders = new HashMap<IProject,ProofBuilder>();
+  
+  @Override
+  protected void startupOnInitialize() {
+    super.startupOnInitialize();
+    builders.put(this.getProject(), this);
+  }
+
+  public static void ensureBuilt(final IProject project) {
+    if (builders.get(project) == null) {
+      final Cell<Boolean> lock = new Cell<Boolean>(false);
+      synchronized (lock) {
+        Job initialBuild = new Job("initial SASyLF build for " + project) {
+          @Override
+          protected IStatus run(IProgressMonitor monitor) {
+            synchronized (lock) {
+              lock.set(true);
+              lock.notify();
+            }
+            System.out.println("initial build for " + project + " starting...");
+            try {
+              project.build(FULL_BUILD, monitor);
+            } catch (CoreException e) {
+              e.printStackTrace();
+              return e.getStatus();
+            } catch (OperationCanceledException ex) {
+              return Status.CANCEL_STATUS;
+            }
+            return Status.OK_STATUS;
+          }
+        };
+        initialBuild.schedule();
+        while (!lock.get()) {
+          try {
+            lock.wait();
+          } catch (InterruptedException e) {
+            StatusManager.getManager().handle(Status.CANCEL_STATUS);
+            return;
+          }
+        }
+      }
+    }
+  }
+  
+  public static ProofBuilder getProofBuilder(IProject p) {
+    ensureBuilt(p);
+    ProofBuilder pb = builders.get(p);
+    if (pb == null) {
+      System.out.println("No proof builder for " + p);
+    }
+    return pb;
+  }
+  
+  public void dispose() {
+    builtModules.clear();
+    builders.remove(this.getProject());
+  }
+  
+  private final Map<IFile,CompUnit> builtModules = new HashMap<IFile,CompUnit>();
+  
+  public static CompUnit getCompUnit(IFile f) {
+    ProofBuilder pb = getProofBuilder(f.getProject());
+    if (pb == null) return null;
+    return pb.builtModules.get(f);
+  }
   
   /*
    * TODO:
@@ -44,9 +124,11 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 				break;
 			case IResourceDelta.REMOVED:
 				// handle removed resource
+			  builtModules.remove(resource);
 				break;
 			case IResourceDelta.CHANGED:
 				// handle changed resource
+        builtModules.remove(resource);
 				checkProof(resource);
 				break;
 			}
@@ -88,7 +170,10 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 
 	void checkProof(IResource resource) {
 		if (resource instanceof IFile && resource.getName().endsWith(".slf")) {
-			CheckProofsAction.analyzeSlf(resource);
+			CompUnit cu = ProofChecker.analyzeSlf(resource);
+			if (cu != null) {
+			  builtModules.put((IFile)resource,cu);
+			}
 		}
 	}
 
@@ -108,6 +193,19 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		// the visitor does the work.
 		delta.accept(new ProofDeltaVisitor());
 	}
+
+	@Override
+  protected void clean(IProgressMonitor monitor) throws CoreException {
+	  super.clean(null);
+	  if (monitor == null) monitor = new NullProgressMonitor();
+	  monitor.beginTask("clean", 100);
+    getProject().deleteMarkers(Marker.MARKER_ID, true, IResource.DEPTH_INFINITE);
+    monitor.worked(90);
+    builtModules.clear();
+    monitor.worked(10);
+    monitor.done();
+ }
+
 
   /**
    * Return the path from the path folder to this resource.
@@ -147,6 +245,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
       // Apparently not
       return null;
     }
+    ensureBuilt(project);
     if (buildPath == null) return null;
     String[] pieces = buildPath.split(":");
     String proofFolderName = pieces[0];

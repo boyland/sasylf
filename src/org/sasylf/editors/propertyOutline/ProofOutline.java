@@ -9,7 +9,6 @@ import java.util.TreeSet;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.DefaultPositionUpdater;
@@ -25,10 +24,15 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
+import org.sasylf.ProofChecker;
+import org.sasylf.project.ProofBuilder;
+import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
@@ -41,15 +45,11 @@ import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Theorem;
-import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
-import edu.cmu.cs.sasylf.parser.ParseException;
-import edu.cmu.cs.sasylf.parser.TokenMgrError;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
  * A content outline page which summarizes the structure of a proof file.
  */
-public class ProofOutline extends ContentOutlinePage {
+public class ProofOutline extends ContentOutlinePage implements ProofChecker.Listener {
 
 //	private Object rootElement;
 	/**
@@ -81,21 +81,8 @@ public class ProofOutline extends ContentOutlinePage {
 			return pos;
 		}
 		
-		private void parse(IDocument document, IFile documentFile) {
-			CompUnit cu = null;
-			try {
-				cu = DSLToolkitParser.read(documentFile.getName(),documentFile.getContents());
-			} catch (CoreException e) {
-				e.printStackTrace();
-			} catch (TokenMgrError e) {
-			  return;
-			} catch (ParseException e) {
-				// e.printStackTrace();
-			  // handled elsewhere
-			  return;
-			} catch (SASyLFError e) {
-			  return;
-			}
+		public void newCompUnit(IFile documentFile, IDocument document, CompUnit cu) {
+		  pList.clear();
 			
 			if(cu == null) {
 				return;
@@ -152,7 +139,11 @@ public class ProofOutline extends ContentOutlinePage {
 					sb.append(element).append(" ");
 				}*/
 				pe = new ProofElement(theo.getKindTitle(), sb.toString().replaceAll("\"", ""));
-				pe.setPosition(convertLocToPos(document, theo.getLocation()));
+				try {
+          pe.setPosition(DocumentUtil.getNodePosition(theo, document));
+        } catch (BadLocationException e) {
+          e.printStackTrace();
+        }
 				pList.add(pe);
 				/* This part  hasn't ever been useful, and it uses up screen real estate:
 				cStack.push(pe);
@@ -195,6 +186,7 @@ public class ProofOutline extends ContentOutlinePage {
 		 * @see IContentProvider#inputChanged(Viewer, Object, Object)
 		 */
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+		  System.out.println("oldInput = " + oldInput + ", newInput = " + newInput);
 			if (oldInput != null) {
 				IDocument document= fDocumentProvider.getDocument(oldInput);
 				if (document != null) {
@@ -217,8 +209,7 @@ public class ProofOutline extends ContentOutlinePage {
 					if(newInput instanceof IFileEditorInput) {
 						//String filePath = ((IFileEditorInput) newInput).getFile().getLocationURI().getPath().replaceFirst("/", "");
 						IFile file = ((IFileEditorInput)newInput).getFile(); // new File(filePath);
-						parse(document, file);
-						
+						newCompUnit(file, document, ProofBuilder.getCompUnit(file));
 					}
 				}
 			}
@@ -269,7 +260,9 @@ public class ProofOutline extends ContentOutlinePage {
 		 */
 		public Object[] getChildren(Object element) {
 			if (element instanceof ProofElement) {
-				return ((ProofElement)element).getChildren().toArray();
+				List<ProofElement> children = ((ProofElement)element).getChildren();
+				if (children == null) return null;
+        return children.toArray();
 			}
 			return null;
 		}
@@ -315,7 +308,7 @@ public class ProofOutline extends ContentOutlinePage {
 		}
 	}
 
-	protected Object fInput;
+	protected IEditorInput fInput;
 	protected IDocumentProvider fDocumentProvider;
 	protected ITextEditor fTextEditor;
 
@@ -330,6 +323,7 @@ public class ProofOutline extends ContentOutlinePage {
 		super();
 		this.fDocumentProvider = provider;
 		this.fTextEditor = editor;
+		ProofChecker.getInstance().addListener(this);
 	}
 
 	/* (non-Javadoc)
@@ -375,26 +369,47 @@ public class ProofOutline extends ContentOutlinePage {
 	 * 
 	 * @param input the input of this outline page
 	 */
-	public void setInput(Object input) {
+	public void setInput(IEditorInput input) {
 		fInput= input;
-		update();
+		IFile f = (IFile)fInput.getAdapter(IFile.class);
+		proofChecked(f,ProofBuilder.getCompUnit(f));
 	}
 	
-	/**
+	
+	@Override
+  public void proofChecked(final IFile file, final CompUnit cu) {
+	  if (file == null || cu == null || fInput == null) return;
+	  if (!file.equals(fInput.getAdapter(IFile.class))) return;
+	  final TreeViewer viewer= getTreeViewer();
+	  if (viewer != null) {
+	    Display.getDefault().asyncExec(new Runnable() {
+	      public void run() {
+	        Control control= viewer.getControl();
+	        if (control != null && !control.isDisposed()) {
+	          control.setRedraw(false);
+	          ContentProvider provider = (ContentProvider)viewer.getContentProvider();
+	          IDocument doc = fDocumentProvider.getDocument(fInput);
+	          provider.newCompUnit(file,doc,cu);
+	          viewer.expandAll();
+	          control.setRedraw(true);
+	          viewer.refresh(); // doesn't work if inside the controlled area.
+	        }
+	      }
+	    });
+	  }
+	}
+
+
+	@Override
+	public void dispose() {
+	  fInput = null;
+	  ProofChecker.getInstance().removeListener(this);
+	}
+	
+  /**
 	 * Updates the outline page.
 	 */
 	public void update() {
-		TreeViewer viewer= getTreeViewer();
-
-		if (viewer != null) {
-			Control control= viewer.getControl();
-			if (control != null && !control.isDisposed()) {
-				control.setRedraw(false);
-				viewer.setInput(fInput);
-				viewer.expandAll();
-				control.setRedraw(true);
-			}
-		}
 	}
 	
 	/**
