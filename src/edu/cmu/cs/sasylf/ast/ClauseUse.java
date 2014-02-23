@@ -76,6 +76,11 @@ public class ClauseUse extends Clause {
 	
 	
 	@Override
+	public Element typecheck(Context c) {
+	  return this; // already done
+	}
+	
+	@Override
   public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
     return this; // already done
   }

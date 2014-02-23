@@ -111,12 +111,21 @@ public class Clause extends Element implements CanBeCase {
 		for (Element e : elements) {
 			if (e instanceof Binding) {
 				for (Element e2 : ((Binding)e).getElements()) {
-					if (!(e2 instanceof NonTerminal))
+				  String key;
+				  Variable v;
+				  if (e2 instanceof Variable) { // idempotence of type checking
+				    v = (Variable)e2;
+				    key = ((Variable)e2).getSymbol();
+				  } else if (e2 instanceof NonTerminal) {
+				    NonTerminal nt = (NonTerminal)e2;
+				    key = nt.getSymbol();
+				    v = new Variable(key, nt.getLocation());
+				  } else {
 						ErrorHandler.report("Only variables are permitted inside a binding on the right hand side of a syntax definition", e2);
-					NonTerminal nt = (NonTerminal)e2;
-					String key = nt.getSymbol();
+						throw new RuntimeException("should not get here");
+				  }
 					if (!map.containsKey(key)) {
-						map.put(key, new Variable(key, nt.getLocation()));
+						map.put(key, v);
 					}
 				}
 			}
