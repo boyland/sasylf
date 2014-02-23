@@ -44,11 +44,11 @@ public class RenameProofModule extends RenameParticipant {
     newName = args.getNewName();
     if (element instanceof IFile) {
       proofFile = (IFile)element;
-      // System.out.println("Participating in moving " + element);
+      // System.out.println("Participating in renaming " + element);
       newProofFile = proofFile.getParent().getFile(new Path(newName));
       return true;
     } else {
-      // System.out.println("Cannot participate, element is " + element + ", dest = " + destination);
+      // System.out.println("Cannot participate, element is " + element + ", new name = " + newName);
       return false;
     }
   }
@@ -86,8 +86,13 @@ public class RenameProofModule extends RenameParticipant {
     boolean connected = false;
     pm.beginTask("Check Rename Module", 100);
     try {
-      if (!ParseUtil.isLegalIdentifier(newName)) {
-        status.addError("new name is not a legal SASyLF identifier");
+      if (!newName.endsWith(".slf")) {
+        status.addError("'" + newName + "' does not end in '.slf' as required.");
+        return result;
+      }
+      String newModuleName = newName.substring(0, newName.length()-4);
+      if (!ParseUtil.isLegalIdentifier(newModuleName)) {
+        status.addError("'" + newModuleName + "' is not a legal SASyLF identifier");
         return result;
       }
       pm.worked(10);
@@ -95,7 +100,7 @@ public class RenameProofModule extends RenameParticipant {
       manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
       connected = true;
       IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
-      createModuleRenameChange(document,result,status);
+      createModuleRenameChange(newModuleName,document,result,status);
       document.getLineInformation(1);
       pm.worked(40);
     } catch (BadLocationException e) {
@@ -109,7 +114,7 @@ public class RenameProofModule extends RenameParticipant {
     return result; 
   }
 
-  private void createModuleRenameChange(IDocument doc, TextFileChange result, RefactoringStatus status) throws BadLocationException {
+  private void createModuleRenameChange(String newModuleName, IDocument doc, TextFileChange result, RefactoringStatus status) throws BadLocationException {
     // first see if we can get a CompUnit:
     CompUnit cu = ProofBuilder.getCompUnit(proofFile);
     if (cu == null) {
@@ -144,13 +149,13 @@ public class RenameProofModule extends RenameParticipant {
     }
     IRegion nameLoc = new Region(offset,length);
 
-    if (doc.get(offset, length).equals(newName)) {
+    if (doc.get(offset, length).equals(newModuleName)) {
       // no change needed
       return;
     }
-    System.out.println("Replacing " + doc.get(offset, length) + " with " + newName);
+    System.out.println("Replacing " + doc.get(offset, length) + " with " + newModuleName);
     
-    TextEdit edit = new ReplaceEdit(nameLoc.getOffset(),nameLoc.getLength(),newName);
+    TextEdit edit = new ReplaceEdit(nameLoc.getOffset(),nameLoc.getLength(),newModuleName);
 
     // System.out.println("edit is " + edit);
     result.setEdit(edit);  

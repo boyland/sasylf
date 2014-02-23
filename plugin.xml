@@ -625,7 +625,7 @@
       <moveParticipant
             class="org.sasylf.refactor.MoveProofFile"
             id="org.sasylf.refactor.move"
-            name="name">
+            name="Move SASyLF Proof File">
          <enablement>
             <test
                   property="org.eclipse.core.resources.name"
@@ -641,6 +641,28 @@
                </iterate>
             </with></enablement>
       </moveParticipant>
+   </extension>
+   <extension
+         point="org.eclipse.ltk.core.refactoring.renameParticipants">
+      <renameParticipant
+            class="org.sasylf.refactor.RenameProofModule"
+            id="org.sasylf.refactor.rename"
+            name="Rename SASyLF module">
+         <enablement>
+            <test
+                  property="org.eclipse.core.resources.name"
+                  value="*.slf">
+            </test>
+            <with
+                  variable="affectedNatures">
+               <iterate
+                     operator="or">
+                  <equals
+                        value="org.sasylf.nature">
+                  </equals>
+               </iterate>
+            </with></enablement>
+      </renameParticipant>
    </extension>
 
 </plugin>
