@@ -43,6 +43,7 @@ abstract public class DerivationWithArgs extends Derivation {
 	public void typecheck(Context ctx) {
     super.typecheck(ctx);
     
+    args.clear(); // needed for idempotency
     for (int i = 0; i < argStrings.size(); ++i) {
 			Clause c = argStrings.get(i);
 			// remove all (c) parens:
