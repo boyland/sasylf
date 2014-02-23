@@ -83,7 +83,9 @@ public class Syntax extends Node implements ClauseType, ElemType {
 			  if (countVarOnly == 0) variable = (Variable)c.getElements().get(0);
 			  ++countVarOnly;
 			} else {
-				ClauseDef cd = new ClauseDef(c, this);
+				ClauseDef cd;
+				if (c instanceof ClauseDef) cd = (ClauseDef) c;
+				else cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
 				ctx.prodMap.put(cd.getConstructorName(),cd);
