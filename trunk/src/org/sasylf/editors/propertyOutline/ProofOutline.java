@@ -186,7 +186,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		 * @see IContentProvider#inputChanged(Viewer, Object, Object)
 		 */
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-		  System.out.println("oldInput = " + oldInput + ", newInput = " + newInput);
+		  // System.out.println("oldInput = " + oldInput + ", newInput = " + newInput);
 			if (oldInput != null) {
 				IDocument document= fDocumentProvider.getDocument(oldInput);
 				if (document != null) {
@@ -402,14 +402,9 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 	@Override
 	public void dispose() {
+	  super.dispose();
 	  fInput = null;
 	  ProofChecker.getInstance().removeListener(this);
-	}
-	
-  /**
-	 * Updates the outline page.
-	 */
-	public void update() {
 	}
 	
 	/**
