@@ -11,7 +11,7 @@
  * for more of a "tutorial" introduction.
  */
 
-package edu.cmu.cs.lambda;
+package examples;
 
 terminals fn s z cons var
 
