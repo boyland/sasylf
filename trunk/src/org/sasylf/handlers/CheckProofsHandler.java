@@ -13,7 +13,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.ResourceUtil;
-import org.sasylf.actions.CheckProofsAction;
+import org.sasylf.ProofChecker;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -43,7 +43,7 @@ public class CheckProofsHandler extends AbstractHandler {
           if ("slf".equals(res.getFileExtension())) {
             IFile f = (IFile)res.getAdapter(IFile.class);
             // System.out.println("  with correct extension");
-            CheckProofsAction.analyzeSlf(res,ResourceUtil.findEditor(page, f));
+            ProofChecker.analyzeSlf(res,ResourceUtil.findEditor(page, f));
           }
         }
         // System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
@@ -53,7 +53,7 @@ public class CheckProofsHandler extends AbstractHandler {
 	  IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
 	  IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
 	  if (res != null) {
-	    CheckProofsAction.analyzeSlf(res, activeEditor);
+	    ProofChecker.analyzeSlf(res, activeEditor);
 	  }  else {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		MessageDialog.openInformation(

@@ -18,7 +18,7 @@ import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.sasylf.Marker;
 import org.sasylf.Preferences;
-import org.sasylf.actions.CheckProofsAction;
+import org.sasylf.ProofChecker;
 import org.sasylf.util.CompletionProposal;
 import org.sasylf.util.CompletionProposalMarkerResolution;
 import org.sasylf.util.EclipseUtil;
@@ -50,7 +50,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     @Override
     public void apply(IDocument document) {
       super.apply(document);
-      CheckProofsAction.analyzeSlf(resource,document);
+      ProofChecker.analyzeSlf(resource,document);
     }
     
   }
