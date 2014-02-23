@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.sasylf.util.ParseUtil;
+
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -136,9 +138,14 @@ public class CompUnit extends Node {
 	  if (moduleName != null) {
 	    if (name.endsWith(".slf")) {
 	      name = name.substring(0, name.length()-4);
+	    } else {
+	      ErrorHandler.report(Errors.BAD_FILE_NAME_SUFFIX,this);
+	    } 
+	    if (!ParseUtil.isLegalIdentifier(name)) {
+	      ErrorHandler.report(Errors.BAD_FILE_NAME,this);
 	    }
 	    if (!moduleName.equals(name)) {
-	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, name);
+	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+name);
 	    }
 	  }
 	}
