@@ -9,8 +9,8 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 public class PackageDeclaration extends Node {
   private String[] pieces;
   
-  public PackageDeclaration(Location l, List<String> p) {
-    super(l);
+  public PackageDeclaration(Location l, List<String> p, Location endL) {
+    super(l,endL);
     pieces = p.toArray(new String[p.size()]);
   }
 

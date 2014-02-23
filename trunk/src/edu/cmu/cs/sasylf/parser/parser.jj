@@ -1450,15 +1450,15 @@ CompUnit CompilationUnit() :
   <EOF>
   {
     if (pkg == null)
-		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList());
+		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
     return new CompUnit(pkg, new Location(firstToken), moduleName, terms, syntax, judges, theorems);
   }
 }
 
 PackageDeclaration PackageDeclaration() :
-{ Token t; List<String> l; }
+{ Token t, u; List<String> l; }
 {
-  t="package" l=Name() <SEMICOLON> { return new PackageDeclaration(new Location(t), l); }
+  t="package" l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
 }
 
 Token Operator() :
@@ -1710,6 +1710,7 @@ Theorem TheoremDeclaration() :
         	new Location(tp),tp.image + "\n" + t0.image); 
     }
     thm.setKind(t0.image);
+    thm.setEndLocation(Location.endOf(tp));
     return thm; 
   }
 }
@@ -1754,22 +1755,23 @@ Derivation Justification(Token startT, Clause c) :
     { di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
-    (<INDUCTION> |
+    (t=<INDUCTION> |
      (LOOKAHEAD(2) <CASE> t=<ANALYSIS> | t=<CASE> | t=<LEMMA> | t=<THEOREM>)
      { String wrong = t.image;
        if (wrong.equals("analysis")) wrong = "case analysis";
        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end induction'",new Location(t),wrong+"\ninduction"); } )
-    { return di; }
+    { di.setEndLocation(Location.endOf(t)); return di; }
   | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
-    ( LOOKAHEAD(2) <CASE> <ANALYSIS> |
+    ( LOOKAHEAD(2) <CASE> t=<ANALYSIS> |
      (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
      { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
-    { return dca; }
+    { dca.setEndLocation(Location.endOf(t)); return dca; }
   | <CONTRADICTION> <ON> t=<IDENTIFIER>
-    { return new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
+    { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
+      dca.setEndLocation(Location.endOf(t)); return dca; }
   | <INVERSION> of=<IDENTIFIER> s=RuleName() [ <ON> t=<IDENTIFIER> ]
     {
       if (t == null) {
@@ -1800,17 +1802,21 @@ Derivation Justification(Token startT, Clause c) :
     { return d; }
   | t=<UNPROVED>
     { d = new DerivationUnproved(startT.image, new Location(startT), c);
+      d.setEndLocation(Location.endOf(t)); 
       return d; }
   | t=<SOLVE>
     { d = new DerivationBySolve(startT.image, new Location(startT), c);
+      d.setEndLocation(Location.endOf(t)); 
       return d; }
   | <EXCHANGE> <ON> t=<IDENTIFIER>
     { d = new DerivationByExchange(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
+      d.setEndLocation(Location.endOf(t)); 
       return d; }
   | <WEAKENING> <ON> t=<IDENTIFIER>
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
       d.getArgStrings().add(clauseFor(t));
+      d.setEndLocation(Location.endOf(t)); 
       return d; }
   | LOOKAHEAD({isRulePart2()}) s = RuleName() 
      { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
@@ -1826,12 +1832,13 @@ Derivation Justification(Token startT, Clause c) :
        return d;     }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
+      d.setEndLocation(Location.endOf(t)); 
       d.getArgStrings().add(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )*
 	{ return d; }
 }
 
 Case Case() :
-{ Token t,t2,t3; String s; Clause cl,ce=null; Case ca; Derivation d;
+{ Token t,t2,t3,u; String s; Clause cl,ce=null; Case ca; Derivation d;
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
@@ -1857,10 +1864,13 @@ Case Case() :
     ( ( d=Derivation() { ca.getDerivations().add(d); } )+
     | { ErrorHandler.recoverableError("must have at least one derivation",new Location(t)); } )
     t=<END> 
-    (LOOKAHEAD(2) <CASE> |
-     (<CASE> <ANALYSIS> | <INDUCTION> | <LEMMA> | <THEOREM>)
-     { ErrorHandler.recoverableError("expected 'end case'",new Location(t)); } )
-    { return ca; }
+    (LOOKAHEAD(2) u=<CASE> |
+     (<CASE> u=<ANALYSIS> | u=<INDUCTION> | u=<LEMMA> | u=<THEOREM>)
+     { String bad = u.image;
+       if (bad.equals("analysis")) bad = "case analysis";
+       ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case'",new Location(t),bad+"\ncase"); } )
+    { ca.setEndLocation(Location.endOf(u));
+      return ca; }
 }
 
 
