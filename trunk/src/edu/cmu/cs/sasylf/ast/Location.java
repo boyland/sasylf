@@ -14,6 +14,15 @@ public class Location {
 	  beginColumn = column;
 	  file = f;
 	}
+	/**
+	 * Return an <em>exclusive</em> endpoint given the token.
+	 * In other words, give the location just after the end of this token. 
+	 * @param t token to compute end location from (must not be null)
+	 * @return location just after end of token.
+	 */
+	public static Location endOf(Token t) {
+	  return new Location(DSLToolkitParser.currentFile,t.endLine,t.endColumn+1);
+	}
 	
 	public int getLine() {
 		return beginLine;
@@ -32,4 +41,5 @@ public class Location {
 	public String toString() {
 		return file + ":" + beginLine;
 	}
+
 }
