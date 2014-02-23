@@ -309,6 +309,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
   
   
   public void dispose() {
+    super.dispose();
     ProofChecker.getInstance().removeListener(this);
   }
   
