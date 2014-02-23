@@ -2,7 +2,7 @@
  * Demonstrate how to use "and" for multiple results.
  */
 
-package edu.uwm.cs.arith;
+package examples;
 
 terminals S
 

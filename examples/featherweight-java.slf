@@ -15,7 +15,7 @@
  * look at lambda.slf.
  */
 
-package edu.cmu.cs.fj;
+package examples;
 
 terminals class extends new return s z field method OK in override ftype mtype
 
@@ -31,9 +31,9 @@ CT ::= * | CT, class C extends C { fdecls; mdecls }
 
 fdecls ::= * | fdecls; C f
 
-mdecls ::= * | mdecls; C m{C x, C this} { return e[x][this]; }
+mdecls ::= * | mdecls; C m{C x, C x'} { return e[x][x']; }
 
-e ::= x | this | e "." f | e "." m{e} | new C{elist} | {C} e
+e ::= x | e "." f | e "." m{e} | new C{elist} | {C} e
 
 elist ::= * | elist, e
 
@@ -128,12 +128,12 @@ judgment well-formed-method : CT |- mdecls OK in C
 CT |- * OK in C
 
 CT |- mdecls OK in C
-CT; *, x : C1, this : C |- e[x][this] : C0'
+CT; *, x : C1, x' : C |- e[x][x'] : C0'
 CT |- C0' <: C0
 CT{C} = class C extends C' { fdecls; mdecls }
 CT, C' |- override mdecls{m} : C1 -> C0 OK
 ------------------------------------------------------------- wf-method-ok
-CT |- mdecls; C m{C x, C this} { return e[x][this]; } OK in C
+CT |- mdecls; C m{C x, C x'} { return e[x][x']; } OK in C
 
 
 judgment well-formed-class: CT |- CT OK
@@ -204,12 +204,12 @@ CT, C0' |- mdecls{m} = C' -> C
 CT, class{s n} |- *{m} = C' -> C
 
 ------------------------------------------------------------------------ mth-found
-CT, C0 |- mdecls; C m{C1 x, C0 this} { return e[x][this]; }{m} = C1 -> C
+CT, C0 |- mdecls; C m{C1 x, C0 x'} { return e[x][x']; }{m} = C1 -> C
 
 CT, C0 |- mdecls {method{n'}} = C' -> C
 n != n'
 ------------------------------------------------------------------------------------------- mth-notfound
-CT, C0 |- mdecls; C1 method{n}{C2 x, C3 this} { return e[x][this]; } {method{n'}} = C' -> C
+CT, C0 |- mdecls; C1 method{n}{C2 x, C3 x'} { return e[x][x']; } {method{n'}} = C' -> C
 
 
 
@@ -224,9 +224,9 @@ CT, class{s n} |- override *{m} : C1 -> C2 OK
 CT, class{z} |- override *{m} : C1 -> C2 OK
 
 ------------------------------------------------------------------------------------ override-found
-CT, C0 |- override mdecls; C m{C1 x, C2 this} { return e[x][this]; }{m} : C1 -> C OK
+CT, C0 |- override mdecls; C m{C1 x, C2 x'} { return e[x][x']; }{m} : C1 -> C OK
 
 CT, C0 |- override mdecls{m} : C1 -> C OK
 n != n'
 ------------------------------------------------------------------------------------- override-notfound
-CT, C0 |- override mdecls; C2 m{C3 x, C4 this} { return e[x][this]; }{m} : C1 -> C OK
+CT, C0 |- override mdecls; C2 m{C3 x, C4 x'} { return e[x][x']; }{m} : C1 -> C OK

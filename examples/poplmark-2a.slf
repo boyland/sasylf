@@ -8,10 +8,10 @@
  */
 
 
-/** The package declaration is currently a placeholder, but
- * will eventually support a module system for SASyLF
+/** The package declaration works similarly to Java:
+ * it must indicate the directory the proof file is in.
  */
-package edu.cmu.cs.sasylf.poplmark;
+package examples;
 
 /** SASyLF programs explicitly declare terminals that are
  * used to parse expressions.  This helps the SASyLF parser

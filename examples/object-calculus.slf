@@ -10,7 +10,7 @@
  * look at lambda.slf.
  */
 
-package edu.cmu.cs.objectcalculus;
+package examples;
 
 terminals c z s remove Top in
 

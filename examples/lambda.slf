@@ -9,10 +9,10 @@
  */
 
 
-/** The package declaration is currently a placeholder, but
- * will eventually support a module system for SASyLF
+/** The package declaration is similar to Java;
+ * it must match what directory the proof file is in.
  */
-package edu.cmu.cs.lambda;
+package examples;
 
 /** SASyLF programs explicitly declare terminals that are
  * used to parse expressions.  This helps the SASyLF parser
