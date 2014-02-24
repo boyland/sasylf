@@ -15,7 +15,7 @@ Alternately, the last derivation of a block may use the keyword `proof` to subst
 
 In place of a derivation, one may use the syntax
   *  `use inversion of` _rule_name_ `on` _name
-_if the case analysis of _name_ has only one case (_rule_name_) and that rule has no premises.  This derivation doesn't prove anything, but it performs any unification of variables presumed by the case.  This special form (new to SASyLF 1.2.3) is useful for inverting equality judgments which require absolute identity.
+_if the case analysis of _name_ has only one case (_rule_name_) and that rule has no premises.  This derivation doesn't prove anything, but it performs any unification of variables presumed by the case.  This special form (new to SASyLF 1.2.3) is useful for inverting equality judgments which require absolute identity.  As of SASyLF 1.2.5, the rule could have premises; they are simply ignored.
 
 == Justification ==
 
