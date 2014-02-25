@@ -186,49 +186,52 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       default: break;
       case MISSING_CASE:
         int newCursor;
-        String newText;
-        String descr;
-        if (split.length == 1) { // syntax case
-          descr = fixInfo;
-          newText = lineIndent + indent + "case " + fixInfo + " is" + nl +
-              lineIndent + indent + indent + "proof by unproved" + nl +
-              lineIndent + indent + "end case" + nl;
+        StringBuilder sb = new StringBuilder();
+        if (fixInfo.indexOf("\n\n") == -1) { // syntax case
+          int n = split.length-1;
+          for (int i=0; i < n; ++i) {
+            sb.append(lineIndent); sb.append(indent);
+            sb.append("case ");
+            sb.append(split[i]);
+            sb.append(" is"); sb.append(nl);
+            sb.append(lineIndent); sb.append(indent); sb.append(indent);
+            sb.append("proof by unproved"); sb.append(nl);
+            sb.append(lineIndent); sb.append(indent);
+            sb.append("end case"); sb.append(nl); sb.append(nl);
+          }
           newCursor = lineIndent.length() + indentAmount + 5;
         } else {
-          StringBuilder sb = new StringBuilder();
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("case rule");
-          sb.append(nl);
-          newCursor = sb.length();
+          newCursor = -1;
+          boolean startCase = true;
           int n=split.length-1; // extra line at end
           for (int i=0; i < n; ++i) {
-            sb.append(lineIndent);
-            sb.append(indent);
-            sb.append(indent);
-            if (i != n-2)  sb.append("_: ");
+            if (startCase) {
+              sb.append(lineIndent);
+              sb.append(indent);
+              sb.append("case rule");
+              sb.append(nl);
+              startCase = false;
+            }
+            if (split[i].length() == 0) {
+              sb.append(lineIndent); sb.append(indent);
+              sb.append("is"); sb.append(nl);
+              sb.append(lineIndent); sb.append(indent);sb.append(indent);
+              sb.append("proof by unproved"); sb.append(nl);
+              sb.append(lineIndent); sb.append(indent);
+              sb.append("end case"); sb.append(nl); sb.append(nl);
+              startCase = true;
+              continue;
+            }
+            if (newCursor == -1) newCursor = sb.length();
+            sb.append(lineIndent); sb.append(indent); sb.append(indent);
+            if (!split[i].startsWith("---"))  sb.append("_: ");
             sb.append(split[i]);
             sb.append(nl);
           }
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("is");
-          sb.append(nl);
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append(indent);
-          sb.append("proof by unproved");
-          sb.append(nl);
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("end case");
-          sb.append(nl);
-          newText = sb.toString();
-          String ruleLine = split[n-2];
-          descr = ruleLine.substring(ruleLine.indexOf(' ')+1);
         }
+        String newText = sb.toString();
         proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
-            null, "insert case for " + descr, null, fixInfo));
+            null, "insert missing case(s)", null, fixInfo));
         break;
       case ILLEGAL_ASSUMES:
       case EXTRANEOUS_ASSUMES:
