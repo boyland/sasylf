@@ -3,7 +3,9 @@ package org.sasylf.editors.propertyOutline;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
 
@@ -22,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -30,6 +33,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
+import org.sasylf.Activator;
 import org.sasylf.ProofChecker;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
@@ -44,6 +48,8 @@ import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
+import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
 /**
@@ -60,6 +66,9 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		protected final static String SEGMENTS= "__slf_segments"; //$NON-NLS-1$
 		protected IPositionUpdater fPositionUpdater= new DefaultPositionUpdater(SEGMENTS);
 		protected Collection<ProofElement> pList= new TreeSet<ProofElement>();
+		
+		protected final static String FORALL = "∀";
+		protected final static String EXISTS = "∃";
 		
 		private boolean inResource(Location loc, IResource res) {
 		  String name = loc.getFile();
@@ -90,29 +99,33 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			
 			ProofElement pe = null;
 			
-			//terminals
-//			for (Terminal t : cu.getTerminals()) {
-//				if (Character.isJavaIdentifierStart(t.getSymbol().charAt(0))) {
-//					pe = new PropertyElement("terminal", t.getGrmSymbol().toString());
-//					pe.setPosition(convertLocToPos(document, t.getLocation()));
-//					pList.add(pe);
-//				}
-//			}
-//			
+			for (Syntax syn : cu.getSyntax()) {
+			  if (!inResource(syn.getLocation(), documentFile)) continue;
+			  pe = new ProofElement("Syntax", syn.toString());
+			  pe.setPosition(convertLocToPos(document,syn.getLocation()));
+			  pList.add(pe);
+			  for (Clause c : syn.getClauses()) {
+			    ProofElement ce = new ProofElement("Clause",TermPrinter.toString(c));
+			    Location loc = c.getLocation();
+			    ce.setPosition(convertLocToPos(document, loc));
+			    pe.addChild(ce);
+			  }
+			}
+			
 			//judgments
 			for (Judgment judg : cu.getJudgments()) {
 			  if (!inResource(judg.getLocation(), documentFile)) continue;
-				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()).replaceAll("\"", ""));
+				pe = new ProofElement("Judgment", (judg.getName() + ": " + TermPrinter.toString(judg.getForm())));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
 				for (Rule r : judg.getRules()) {
 				  StringBuilder sb = new StringBuilder();
 				  sb.append(r.getName()).append(": ");
 				  for (Clause cl : r.getPremises()) {
-				    sb.append("forall " + cl).append(" ");
+				    sb.append(FORALL).append(TermPrinter.toString(cl)).append(" ");
 				  }
-				  sb.append("exists ");
-				  sb.append(r.getConclusion());
+				  sb.append(EXISTS);
+				  sb.append(TermPrinter.toString(r.getConclusion()));
 				  ProofElement re = new ProofElement("Rule", sb.toString().replaceAll("\"", ""));
 				  Location loc = r.getLocation();
 				  if (r.getPremises().size() > 0) {
@@ -130,17 +143,19 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				sb.append(theo.getName());
 				sb.append(": ");
 				for(Fact fact : theo.getForalls()) {
-	        sb.append("forall ");
+	        sb.append(FORALL);
 					sb.append(fact.getElement()).append(" ");
 				}
-				sb.append("exists ");
+				sb.append(EXISTS);
 				sb.append(theo.getExists());
 				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}*/
 				pe = new ProofElement(theo.getKindTitle(), sb.toString().replaceAll("\"", ""));
 				try {
-          pe.setPosition(DocumentUtil.getNodePosition(theo, document));
+          Position pos = DocumentUtil.getNodePosition(theo, document);
+          pe.setPosition(pos);
+          document.addPosition(pos);
         } catch (BadLocationException e) {
           e.printStackTrace();
         }
@@ -308,6 +323,52 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		}
 	}
 
+	private static class MyLabelProvider extends LabelProvider {
+
+	  private final Map<String,Image> kindImages = new HashMap<String,Image>();
+	  
+	  private void ensureImages() {
+	    if (kindImages.size() == 0) {
+	      Activator activator = Activator.getDefault();
+        kindImages.put("Lemma",activator.getImage("icons/dull-green-ball.png"));
+	      kindImages.put("Theorem", activator.getImage("icons/mauve-ball.png"));
+	      kindImages.put("Rule", activator.getImage("icons/green-ball.png"));
+	      kindImages.put("Judgment", activator.getImage("icons/yellow-diamond.png"));
+	      kindImages.put("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
+	      kindImages.put("Clause", activator.getImage("icons/small-green-ball.png"));
+	      kindImages.put("Package", activator.getImage("icons/packd_obj.png"));
+	    }
+	  }
+
+    
+    @Override
+    public Image getImage(Object element) {
+      if (element instanceof ProofElement) {
+        ensureImages();
+        return kindImages.get(((ProofElement)element).getCategory());
+      }
+      return super.getImage(element);
+    }
+
+    @Override
+    public String getText(Object element) {
+      if (element instanceof ProofElement) {
+        ProofElement pe = (ProofElement)element;
+        return pe.getContent();
+      }
+      return super.getText(element);
+    }
+
+
+    @Override 
+    public void dispose() {
+      super.dispose();
+      for (Image i : kindImages.values()) {
+        i.dispose();
+      }
+    }
+	}
+	
 	protected IEditorInput fInput;
 	protected IDocumentProvider fDocumentProvider;
 	protected ITextEditor fTextEditor;
@@ -335,7 +396,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 		TreeViewer viewer= getTreeViewer();
 		viewer.setContentProvider(new ContentProvider());
-		viewer.setLabelProvider(new LabelProvider());
+		viewer.setLabelProvider(new MyLabelProvider());
 		viewer.addSelectionChangedListener(this);
 
 		if (fInput != null)

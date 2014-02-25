@@ -434,7 +434,13 @@ public class TermPrinter {
   
   private static int SUSPECT_INFINITE_RECURSION = 100;
   
-  private void prettyPrint(StringBuilder sb, Element e, boolean parenthesize, int level) {
+  public static String toString(Element e) {
+    StringBuilder sb = new StringBuilder();
+    prettyPrint(sb,e,false,0);
+    return sb.toString();
+  }
+  
+  private static void prettyPrint(StringBuilder sb, Element e, boolean parenthesize, int level) {
     if (level > SUSPECT_INFINITE_RECURSION) {
       sb.append("#");
       return;
