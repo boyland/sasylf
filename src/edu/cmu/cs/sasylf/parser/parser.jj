@@ -1853,7 +1853,7 @@ Case Case() :
     ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()
       { premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce)); } )*
     <BAR> s=RuleName()
-    t3=<IDENTIFIER> <COLON> ce=Expr() t=<IS>
+    t3=<IDENTIFIER> <COLON> ce=Expr() <IS>
     { ca = new RuleCase(new Location(t),
 		   	 s,
 		    	premises,
