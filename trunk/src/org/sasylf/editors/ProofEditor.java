@@ -292,9 +292,10 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
     for (Derivation d : ds) {
       if (d instanceof DerivationByAnalysis) {
         DerivationByAnalysis dba = (DerivationByAnalysis)d;
+        if (dba.getCases().isEmpty()) continue; // no reason to fold
         positions.add(DocumentUtil.getNodePosition(d, document));
         for (Case c : dba.getCases()) {
-          // positions.add(DocumentUtil.getNodePosition(c, document));
+          positions.add(DocumentUtil.getNodePosition(c, document));
           findFoldable(document,c.getDerivations(),positions);
         }
       }
