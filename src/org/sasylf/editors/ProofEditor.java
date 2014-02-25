@@ -238,10 +238,6 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
     try {
       for (Position p : positions) {
         if (oldAnnos.remove(p) == null) {
-          System.out.println("Couldn't find " + p + " in: ");
-          for (Position old : oldAnnos.keySet()) {
-            System.out.println("  " + old);
-          }
           ProjectionAnnotation annotation = new ProjectionAnnotation();
           doc.addPosition(PROOF_PROJECTION_CATEGORY, p);
           newAnnos.put(annotation, p);
