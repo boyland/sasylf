@@ -376,7 +376,7 @@ public class TermPrinter {
     }
     ClauseUse cu = (ClauseUse)old;
     int ai = cu.getConstructor().getAssumeIndex();
-    if (ai < 0) throw new RuntimeException("Couldn't replace in " + old);
+    if (ai < 0) return repl; // throw new RuntimeException("Couldn't replace " + repl + " in " + old);
     Element e = cu.getElements().get(ai);
     cu.getElements().set(ai,replaceAssume(repl,e));
     return cu;
