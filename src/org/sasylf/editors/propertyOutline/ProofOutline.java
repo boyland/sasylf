@@ -363,9 +363,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
     @Override 
     public void dispose() {
       super.dispose();
-      for (Image i : kindImages.values()) {
-        i.dispose();
-      }
+      kindImages.clear();
     }
 	}
 	
