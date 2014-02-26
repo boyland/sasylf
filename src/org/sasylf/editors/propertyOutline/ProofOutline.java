@@ -126,7 +126,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				  }
 				  sb.append(EXISTS);
 				  sb.append(TermPrinter.toString(r.getConclusion()));
-				  ProofElement re = new ProofElement("Rule", sb.toString().replaceAll("\"", ""));
+				  ProofElement re = new ProofElement("Rule", sb.toString());
 				  Location loc = r.getLocation();
 				  if (r.getPremises().size() > 0) {
 				    loc = r.getPremises().get(0).getLocation();
@@ -144,14 +144,14 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				sb.append(": ");
 				for(Fact fact : theo.getForalls()) {
 	        sb.append(FORALL);
-					sb.append(fact.getElement()).append(" ");
+					sb.append(TermPrinter.toString(fact.getElement())).append(" ");
 				}
 				sb.append(EXISTS);
-				sb.append(theo.getExists());
+				sb.append(TermPrinter.toString(theo.getExists()));
 				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}*/
-				pe = new ProofElement(theo.getKindTitle(), sb.toString().replaceAll("\"", ""));
+				pe = new ProofElement(theo.getKindTitle(), sb.toString());
 				try {
           Position pos = DocumentUtil.getNodePosition(theo, document);
           pe.setPosition(pos);
