@@ -176,11 +176,16 @@ public class Clause extends Element implements CanBeCase {
      * without requiring us to change the grammar.
      */
     boolean hasAnd = false;
+    boolean hasOr = false;
     for (GrmTerminal t : symList) {
       if (t.getElement() instanceof AndJudgment.AndTerminal) {
         hasAnd = true;
-        break;
+      } else if (t.getElement() instanceof OrJudgment.OrTerminal) {
+        hasOr = true;
       }
+    }
+    if (hasOr) {
+      ErrorHandler.report(Errors.OR_NOT_IMPLEMENTED, this);
     }
     if (hasAnd) {
       List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
