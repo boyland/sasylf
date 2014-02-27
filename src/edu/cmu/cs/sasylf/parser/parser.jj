@@ -101,7 +101,7 @@ public class DSLToolkitParser {
     }
 
     boolean isTerm() {
-    	return isTermNoBAR() || getToken(1).kind == OR;      }
+    	return isTermNoBAR() || getToken(1).kind == PIPE;      }
 
 	boolean notNL(Token tok) {
 		return tok == null || tok.kind != NL && notNL(tok.specialToken);
@@ -140,6 +140,7 @@ public class DSLToolkitParser {
 		   t.kind == IS || 
 		   t.kind == INVERSION ||
 		   t.kind == MODULE ||
+		   t.kind == OR ||
 		   t.kind == PROVIDES ||
 		   t.kind == REQUIRES ||
 		   t.kind == USE || 
@@ -289,6 +290,7 @@ TOKEN :
 | < UNPROVED: "unproved" >
 | < SOLVE: "solve" >
 | < AND: "and" >
+| < OR: "or" >
 | < PROOF: "proof" >
 | < CONTRADICTION: "contradiction" >
 | < USE: "use" >
@@ -1005,7 +1007,7 @@ TOKEN :
 | < COLON: ":" >
 | < DOT: "." >
 | < ASSIGN: "::=" >
-| < OR: "|" >
+| < PIPE: "|" >
 }
 
 
@@ -1471,7 +1473,7 @@ Token Operator() :
 		| t=<SEMICOLON>
 		| t=<MINUS>
 		| t=<COMMA>
-		| t=<OR>
+		| t=<PIPE>
 		/* | t=<DOT> */
 	) { return t; }
 }
@@ -1487,6 +1489,7 @@ Token Keyword() :
     |   t=< USE >
     |   t=< WEAKENING >
     |   t=< MODULE >
+    |   t=< OR >
     |   t=< REQUIRES >
     |   t=< PROVIDES >
     |   t=< EXTENDS >
