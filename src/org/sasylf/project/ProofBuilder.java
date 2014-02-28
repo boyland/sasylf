@@ -1,7 +1,8 @@
 package org.sasylf.project;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -19,7 +20,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.ui.statushandlers.StatusManager;
 import org.sasylf.Marker;
 import org.sasylf.ProofChecker;
 import org.sasylf.util.Cell;
@@ -33,56 +33,88 @@ public class ProofBuilder extends IncrementalProjectBuilder {
   /// Registration of the builder with the project
   // For some reason Eclipse doesn't make this information easy to get, 
   // so we do it ourselves:
-  private static Map<IProject,ProofBuilder> builders = new HashMap<IProject,ProofBuilder>();
+  private static ConcurrentMap<IProject,Object> builders = new ConcurrentHashMap<IProject,Object>();
   
   @Override
   protected void startupOnInitialize() {
+    // System.out.println("Registering proof builder for " + this.getProject());
     super.startupOnInitialize();
-    builders.put(this.getProject(), this);
+    Object previous = builders.put(this.getProject(), this);
+    if (previous instanceof Cell<?>) {
+      // System.out.println("Oops, people are waiting...");
+      synchronized(previous) {
+        @SuppressWarnings("unchecked")
+        Cell<Boolean> bcell = (Cell<Boolean>)previous;
+        bcell.set(true);
+        bcell.notifyAll();
+      }
+      // System.out.println("Everyone should be notified: " + this.getProject());
+    } else {
+      // System.out.println("Making sure we have an initial build");
+      forceInitialBuild(getProject());
+    }
   }
 
-  public static void ensureBuilt(final IProject project) {
-    if (builders.get(project) == null) {
-      final Cell<Boolean> lock = new Cell<Boolean>(false);
-      synchronized (lock) {
-        Job initialBuild = new Job("initial SASyLF build for " + project) {
-          @Override
-          protected IStatus run(IProgressMonitor monitor) {
-            synchronized (lock) {
-              lock.set(true);
-              lock.notify();
-            }
-            System.out.println("initial build for " + project + " starting...");
-            try {
-              project.build(FULL_BUILD, monitor);
-            } catch (CoreException e) {
-              e.printStackTrace();
-              return e.getStatus();
-            } catch (OperationCanceledException ex) {
-              return Status.CANCEL_STATUS;
-            }
-            return Status.OK_STATUS;
-          }
-        };
-        initialBuild.schedule();
-        while (!lock.get()) {
+  /**
+   * Make sure that the project has been built at some time in the past
+   * or is in the process of being built.  In particular it ensures that 
+   * if the project has SASyLF nature, that a proof builder is created for it.
+   * @param project project to require building of.
+   */
+  public static void ensureBuilding(final IProject project) {
+    try {
+      if (!project.hasNature(MyNature.NATURE_ID)) return;
+    } catch (CoreException e1) {
+      e1.printStackTrace();
+      return;
+    }
+    if (builders.putIfAbsent(project, new Cell<Boolean>(false)) == null) {
+      forceInitialBuild(project);
+    }
+    Object x;
+    while ((x = builders.get(project)) instanceof Cell<?>) {
+      // System.out.println("still a cell?");
+      @SuppressWarnings("unchecked")
+      Cell<Boolean> bcell = (Cell<Boolean>)x;
+      synchronized (bcell) {
+        while (!bcell.get()) {
           try {
-            lock.wait();
+            bcell.wait();
           } catch (InterruptedException e) {
-            StatusManager.getManager().handle(Status.CANCEL_STATUS);
-            return;
+            e.printStackTrace();
+            break; // only one level of loop....
           }
         }
       }
     }
   }
-  
+
+  /**
+   * @param project
+   */
+  public static void forceInitialBuild(final IProject project) {
+    Job initialBuild = new Job("initial SASyLF build for " + project) {
+      @Override
+      protected IStatus run(IProgressMonitor monitor) {
+        // System.out.println("initial build for " + project + " starting...");
+        try {
+          project.build(FULL_BUILD, monitor);
+          // System.out.println("Completed initial build for " + project);
+        } catch (CoreException e) {
+          e.printStackTrace();
+          return e.getStatus();
+        } catch (OperationCanceledException ex) {
+          return Status.CANCEL_STATUS;
+        }
+        return Status.OK_STATUS;
+      }
+    };
+    initialBuild.schedule();
+  }
+
   public static ProofBuilder getProofBuilder(IProject p) {
-    ensureBuilt(p);
-    ProofBuilder pb = builders.get(p);
-    if (pb == null) {
-      System.out.println("No proof builder for " + p);
-    }
+    ensureBuilding(p);
+    ProofBuilder pb = (ProofBuilder)builders.get(p);
     return pb;
   }
   
@@ -91,7 +123,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
     builders.remove(this.getProject());
   }
   
-  private final Map<IFile,CompUnit> builtModules = new HashMap<IFile,CompUnit>();
+  private final Map<IFile,CompUnit> builtModules = new ConcurrentHashMap<IFile,CompUnit>();
   
   public static CompUnit getCompUnit(IFile f) {
     ProofBuilder pb = getProofBuilder(f.getProject());
@@ -179,7 +211,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 
 	protected void fullBuild(final IProgressMonitor monitor)
 			throws CoreException {
-    System.out.println("Doing full build");
+    // System.out.println("Doing full build");
 		try {
 			getProject().accept(new ProofResourceVisitor());
 		} catch (CoreException e) {
@@ -244,7 +276,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
       // Apparently not
       return null;
     }
-    ensureBuilt(project);
+    ensureBuilding(project);
     if (buildPath == null) return null;
     String[] pieces = buildPath.split(":");
     String proofFolderName = pieces[0];
