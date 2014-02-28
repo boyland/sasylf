@@ -1424,6 +1424,14 @@ CompUnit CompilationUnit() :
   [ pkg=PackageDeclaration() ]
   [ firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   
+  (t=<REQUIRES> { if (firstToken == null) firstToken = t;
+                  if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
+    ( s=AbstractSyntaxDeclaration() { syntax.addAll(s); }
+    | j=AbstractJudgmentDeclaration() { judges.add(j); }
+    | thm=AbstractTheoremDeclaration() { theorems.add(thm); }
+    )+
+  )?
+   
   (t=<EXTENDS> usedModule=Name() 
     { if (firstToken == null) firstToken = t;
       if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
@@ -1534,6 +1542,15 @@ List<Syntax> SyntaxDeclaration() :
   { if (firstToken == null) firstToken =f; return l; }
 }
 
+List<Syntax> AbstractSyntaxDeclaration() :
+{ 	Token f; Syntax s;
+	List<Syntax> l = new ArrayList<Syntax>(); }
+{
+  f="syntax"
+  ( s=AbstractBNFRule() { l.add(s); } )+
+  { return l; }
+}
+
 Token ExtendedIdentifier() :
 { Token t; }
 {
@@ -1555,6 +1572,16 @@ Syntax BNFRule() :
   {
     NonTerminal nt = getNonTerminal(t);
     return new Syntax(new Location(t), nt, l);
+  }
+}
+
+Syntax AbstractBNFRule() :
+{Token t;}
+{
+  t=<IDENTIFIER>
+  {
+    NonTerminal nt = getNonTerminal(t);
+    return new Syntax(new Location(t), nt);
   }
 }
 
@@ -1608,6 +1635,15 @@ Judgment JudgmentDeclaration() :
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
   ( r=RuleDeclaration() { rules.add(r); } )*
   { return new Judgment(new Location(t), s, rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
+}
+
+Judgment AbstractJudgmentDeclaration() :
+{ Token t,t_assume=null; String s; Clause c; }
+{
+  t=<JUDGMENT> s=RuleName() <COLON>
+  c=ExprToNL()
+  [ <ASSUMES> t_assume=<IDENTIFIER> ]
+  { return new Judgment(new Location(t), s, c, t_assume==null ? null : getNonTerminal(t_assume)); }
 }
 
 Rule RuleDeclaration() :
@@ -1707,6 +1743,33 @@ Theorem TheoremDeclaration() :
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
   "." { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
+  <END> (tp=<THEOREM> | tp=<LEMMA>)
+  { 
+    if (!tp.image.equals(t0.image)) {
+        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
+        	new Location(tp),tp.image + "\n" + t0.image); 
+    }
+    thm.setKind(t0.image);
+    thm.setEndLocation(Location.endOf(tp));
+    return thm; 
+  }
+}
+
+Theorem AbstractTheoremDeclaration() :
+{ Token t0, t, tp; String s; Clause c; Clause a = null; Binding b; Theorem thm; }
+{
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t0), true); }
+  [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
+  ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
+    { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
+  | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
+    { thm.getForalls().add(new BindingAssumption(b, a)); a = null; }
+  | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
+    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
+  )*
+  <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
+  "." { thm.setExists(c); }
+  ( Derivation() { ErrorHandler.recoverableError("do not prove required theorems",thm); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA>)
   { 
     if (!tp.image.equals(t0.image)) {

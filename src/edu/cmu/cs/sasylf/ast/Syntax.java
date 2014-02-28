@@ -4,6 +4,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,15 +27,25 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	  super(loc); 
 	  nonTerminal = nt; 
 	  elements = l; 
+	  isAbstract = false;
+	}
+	
+	public Syntax(Location loc, NonTerminal nt) {
+	  super(loc);
+	  nonTerminal = nt;
+	  elements = Collections.emptyList();
+	  isAbstract = true;
 	}
 	
 	public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Clause> getClauses() { return elements; }
-
+	public boolean isAbstract() { return isAbstract; }
+	
 	private List<Clause> elements;
 	private NonTerminal nonTerminal;
 	private Variable variable;
 	private ClauseDef context;
+	private boolean isAbstract;
 
 	public void prettyPrint(PrintWriter out) {
 		nonTerminal.prettyPrint(out);
@@ -133,6 +144,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	private static List<Syntax> computed = new ArrayList<Syntax>();
 	
 	public boolean isProductive() {
+	  if (isAbstract) return true; // by assumption
 	  if (isProductiveStatus == Status.DONE) return isProductive;
 	  isProductiveStatus = Status.NOTSTARTED;
 	  isProductive = computeIsProductive();

@@ -14,7 +14,18 @@ import static edu.cmu.cs.sasylf.util.Util.*;
 
 
 public class Theorem extends RuleLike {
-	public Theorem(String n, Location l) { super(n, l); }
+	public Theorem(String n, Location l) { 
+	  this(n,l,false);
+	}
+	public Theorem(String n, Location l, boolean abs) { 
+	  super(n, l); 
+	  isAbstract = abs; 
+	  if (isAbstract) {
+	    derivations = Collections.emptyList();
+	  } else {
+	    derivations = new ArrayList<Derivation>();
+	  }
+	}
 
 	public List<Fact> getForalls() { return foralls; }
 	public List<Element> getPremises() {
@@ -27,6 +38,7 @@ public class Theorem extends RuleLike {
 	public Clause getConclusion() { return exists; }
 	public Clause getExists() { return exists; }
 	public List<Derivation> getDerivations() { return derivations; }
+	
 	public void setAnd(Theorem next) {
 		debug("setting and of "+this.getName() + " to " + next.getName());
 		andTheorem = next;
@@ -160,6 +172,10 @@ public class Theorem extends RuleLike {
 		ctx.innermostGamma = null;
 		
 		checkInterface(ctx);
+		
+		if (isAbstract) {
+		  return;
+		}
 		
 		if (ErrorHandler.getErrorCount() > oldErrorCount) {
 		  return;
@@ -310,13 +326,14 @@ public class Theorem extends RuleLike {
 	private NonTerminal assumes = null;
 	private List<Fact> foralls = new ArrayList<Fact>();
 	private Clause exists;
-	private List<Derivation> derivations = new ArrayList<Derivation>();
+	private final List<Derivation> derivations;
 	private Theorem andTheorem;
 	private Theorem firstInGroup = this;
 	private int indexInGroup = 0;
 	private int inductionIndex = 0; // default to first argument
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
+	private final boolean isAbstract;
 
 }
 

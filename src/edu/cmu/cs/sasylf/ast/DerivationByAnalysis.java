@@ -81,6 +81,11 @@ public abstract class DerivationByAnalysis extends Derivation {
 		Clause oldGoalClause = ctx.currentGoalClause;
 		Map<CanBeCase,Set<Pair<Term,Substitution>>> oldCaseTermMap = ctx.caseTermMap;
 		
+		ClauseType caseType = (ClauseType)targetDerivation.getElement().getType();
+		if (caseType.isAbstract()) {
+		  ErrorHandler.report("Cannot perform case analysis on parameter structures", this);
+		}
+		
 		try {
 		ctx.currentCaseAnalysis = adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
 		debug("setting current case analysis to " + ctx.currentCaseAnalysis);
