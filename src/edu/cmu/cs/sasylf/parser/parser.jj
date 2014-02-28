@@ -140,6 +140,7 @@ public class DSLToolkitParser {
 		   t.kind == IS || 
 		   t.kind == INVERSION ||
 		   t.kind == MODULE ||
+		   t.kind == NOT ||
 		   t.kind == OR ||
 		   t.kind == PROVIDES ||
 		   t.kind == REQUIRES ||
@@ -291,6 +292,7 @@ TOKEN :
 | < SOLVE: "solve" >
 | < AND: "and" >
 | < OR: "or" >
+| < NOT: "not" >
 | < PROOF: "proof" >
 | < CONTRADICTION: "contradiction" >
 | < USE: "use" >
@@ -1497,6 +1499,7 @@ Token Keyword() :
     |   t=< USE >
     |   t=< WEAKENING >
     |   t=< MODULE >
+    |   t=< NOT >
     |   t=< OR >
     |   t=< REQUIRES >
     |   t=< PROVIDES >
