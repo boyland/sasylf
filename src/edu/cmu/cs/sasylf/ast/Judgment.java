@@ -18,6 +18,7 @@ public class Judgment extends Node implements ClauseType {
 	  rules = Collections.emptyList();
 	  form = s;
 	  assume = a;
+	  isAbstract = true;
 	}
 	
 	public List<Rule> getRules() { return rules; }
