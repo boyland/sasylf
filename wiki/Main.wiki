@@ -61,6 +61,13 @@ end lemma
 
 SASyLF files support both kinds of C++ comments: line comments starting with `//` and comments starting `/*` and ending with `*/`.  Sometimes a linebreak is semantically meaningful, in which case it is important to know that both kinds of comments swallow linebreaks.
 
+== Packages ==
+
+Starting in 1.3.0, the package declaration must match the directory in which the SASyLF proof file is located, in the same way as in Java.  The base directory may be specified with a command-line argument.  With the Eclipse plugin, the base directory is the project, or if the project has SASyLF "nature" and the file is nested in the "Proof Folder" (a project property), then the proof folder is the base directory.
+
+If the proof file is directly in the base directory, then no package declaration should be used, again as with Java.
+
+
 == Terminals ==
 
 In the abstract syntax, any terminals that consist of (Unicode) letters must be declared
