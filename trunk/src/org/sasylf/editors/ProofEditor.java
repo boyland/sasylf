@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.TextEditor;
@@ -36,6 +38,7 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.sasylf.ProofChecker;
 import org.sasylf.editors.propertyOutline.ProofOutline;
 import org.sasylf.handlers.QuickFixHandler;
+import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
@@ -58,7 +61,15 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		super.doSave(progressMonitor);
 		IEditorInput iei = getEditorInput();
 		getProofOutline().setInput(iei);
-		// CheckProofsAction.analyzeSlf(this);
+		if (iei instanceof IFileEditorInput) {
+		  IFile f = ((IFileEditorInput)iei).getFile();
+		  if (f != null) {
+		    IProject p = f.getProject();
+		    if (ProofBuilder.getProofBuilder(p) != null) return;
+		    // no proof builder to automatically parse the file, so we do it ourselves:
+		    ProofChecker.analyzeSlf(f, this);
+		  }
+		}
 	}
 
 	@Override
