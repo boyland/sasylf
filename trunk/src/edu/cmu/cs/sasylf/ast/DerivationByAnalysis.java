@@ -83,7 +83,11 @@ public abstract class DerivationByAnalysis extends Derivation {
 		
 		ClauseType caseType = (ClauseType)targetDerivation.getElement().getType();
 		if (caseType.isAbstract()) {
-		  ErrorHandler.report("Cannot perform case analysis on parameter structures", this);
+		  if (caseType instanceof NotJudgment) {
+		    ErrorHandler.report("Cannot perform case analysis on 'not' judgments",this);
+		  } else {
+		    ErrorHandler.report("Cannot perform case analysis on parameter structures", this);
+		  }
 		}
 		
 		try {
