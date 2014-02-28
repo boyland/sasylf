@@ -126,10 +126,10 @@ public class OrJudgment extends Judgment {
   private static Map<List<Judgment>,OrJudgment> cache = new HashMap<List<Judgment>,OrJudgment>();
   
   /**
-   * Generate an "or" judgment for conjoining a series of judgments together.
+   * Generate an "or" judgment for 'or'ing a series of judgments together.
    * @param loc location where generation was (first) required
    * @param parts list of judgments 
-   * @return judgment that is the conjunction of the parts
+   * @return judgment that is the disjunction of the parts
    */
   public static OrJudgment makeOrJudgment(Location loc, Context ctx, List <Judgment> parts) {
     OrJudgment result = cache.get(parts);

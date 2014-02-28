@@ -129,6 +129,8 @@ public class NonTerminal extends Element {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {
 			  e = new OrJudgment.OrTerminal(getLocation());
+      } else if (nt.getSymbol().equals("or")) {
+        e = new NotJudgment.NotTerminal(getLocation());
 			} else {
 			  e = new Terminal(nt.getSymbol(),nt.getLocation());
 				ErrorHandler.recoverableError(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);
