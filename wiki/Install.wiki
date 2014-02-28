@@ -7,6 +7,7 @@ Both are available on the downloads page:
 https://sourceforge.net/projects/sasylf/files/Releases/
   * {{{SASyLF-}}}_version_{{{.zip}}} This includes the source and the SASyLF JAR file (see below)
   * {{{org.sasylf_}}}_version_{{{.v}}}_date_{{{.jar}}} The Eclipse plugin JAR file
+Currently there are two lines of releases: the 1.2.X series and the 1.3.X series.  The latter include experimental features related to packages and modules.
 You may also get the project directly out of SVN to get the latest bleeding edge version.
 In this case, you will need to use the {{{Makefile}}} to produce the JAR files.
 The SVN project is a legal Eclipse plugin project; you will need to use Eclipse to help build the Eclipse plugin JAR.
