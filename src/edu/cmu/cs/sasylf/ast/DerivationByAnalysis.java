@@ -49,6 +49,13 @@ public abstract class DerivationByAnalysis extends Derivation {
 						}
 					}
 				}
+				// give a better error message for this case
+				for (Atom a : ctx.currentSub.getMap().keySet()) {
+				  if (targetDerivationName.equals(a.getName())) {
+				    ErrorHandler.report("Cannot perform case analysis over variable " + targetDerivationName + " because it has already been substituted.",this, 
+				        "\tSubstituted with LF term: " + ctx.currentSub.getSubstituted(a).toString());
+				  }
+				}
 				ErrorHandler.report(DERIVATION_NOT_FOUND, "Cannot find a derivation named "+ targetDerivationName, this);
 			}
 		}
@@ -255,7 +262,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 		      Substitution sub = missing.second;
 		      Substitution revSub = new Substitution();
 		      for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
-		        if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue())) {
+		        if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue()) && ctx.inputVars.contains(e2.getKey())) {
 		          // System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
 		          revSub.add((FreeVar)e2.getValue(), e2.getKey());
 		        }
