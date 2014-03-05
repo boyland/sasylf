@@ -42,16 +42,17 @@ public class ClauseDef extends Clause {
 	public String getConstructorName() { return consName; }
 	public ClauseType getType() { return type; }
 	public int getAssumeIndex() {
+	  if (cachedAssumeIndex > -2) return cachedAssumeIndex;
 		if (type instanceof Judgment) {
 			NonTerminal assumeNT = ((Judgment)type).getAssume();
-			return getElements().indexOf(assumeNT);
+			return cachedAssumeIndex=getElements().indexOf(assumeNT);
 		} else if (type instanceof Syntax) {
 		  Syntax s = (Syntax)type;
 		  if (s.isInContextForm()) {
-		    return getElements().indexOf(s.getNonTerminal());
+		    return cachedAssumeIndex=getElements().indexOf(s.getNonTerminal());
 		  }
 		}
-		return -1;
+		return cachedAssumeIndex=-1;
 	}
 	
 	@Override
@@ -60,6 +61,7 @@ public class ClauseDef extends Clause {
 	private String consName;
 	private ClauseType type;
 	public Rule assumptionRule;	
+	private int cachedAssumeIndex = -2;
 
 	static private int uniqueint = 0;
 	static private Set<String> strings = new HashSet<String>();
