@@ -47,6 +47,12 @@ public abstract class Element extends Node {
 	 * default empty implementation for Terminal and Variable
 	 */
 	void checkBindings(Map<String, List<ElemType>> bindingTypes, Node nodeToBlame) {}
+	/**
+	 * For each Variable in this clause check that it is bound exactly once.
+	 * @param bound set of variables that are already found to be bound.
+	 * @param defining true if this element is a defining occurrence.
+	 */
+	void checkVariables(Set<String> bound, boolean defining) {}
 	public Term getTypeTerm() { throw new UnsupportedOperationException(this.getClass().toString()); }
 	protected abstract Term computeTerm(List<Pair<String, Term>> varBindings);
 

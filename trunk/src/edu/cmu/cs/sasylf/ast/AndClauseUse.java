@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class AndClauseUse extends ClauseUse {
 
@@ -16,6 +17,13 @@ public class AndClauseUse extends ClauseUse {
   private List<ClauseUse> clauses;
   
   
+  @Override
+  void checkVariables(Set<String> bound, boolean defining) {
+    for (ClauseUse u: clauses) {
+       u.checkVariables(bound, defining);
+    }
+  }
+
   public static AndClauseUse makeAndClause(Location loc, Context ctx, List<ClauseUse> parts) {
     List<Element> elems = new ArrayList<Element>();
     List<Judgment> judgments = new ArrayList<Judgment>();

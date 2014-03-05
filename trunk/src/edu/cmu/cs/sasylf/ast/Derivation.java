@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -77,6 +78,7 @@ public abstract class Derivation extends Fact {
       ErrorHandler.report("Expected a judgment, but found syntax.",this);
     clause = (Clause) newClause;
     clause.checkBindings(ctx.bindingTypes, this);
+    clause.checkVariables(Collections.<String>emptySet(), false);
     
     clauseChecked = true;
 	}
