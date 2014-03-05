@@ -73,7 +73,8 @@ public abstract class Derivation extends Fact {
     Element newClause = clause.computeClause(ctx, false);
     if (!(newClause instanceof Clause))
       ErrorHandler.report("Expected a judgment, but found a nonterminal.  Did you forget to name the derivation?", this);
-
+    else if (!(newClause.getType() instanceof Judgment))
+      ErrorHandler.report("Expected a judgment, but found syntax.",this);
     clause = (Clause) newClause;
     clause.checkBindings(ctx.bindingTypes, this);
     
@@ -115,10 +116,10 @@ public abstract class Derivation extends Fact {
     checkMatch(last,ctx,goalClause,last.getElement(), Errors.WRONG_RESULT.getText());
 	}
 	
-	public static void checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
+	public static boolean checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
 	  Term matchTerm = DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false);
     Term suppliedTerm = DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false);
-    checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg);
+    return checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg);
 	}
 	
 	/**
@@ -128,9 +129,10 @@ public abstract class Derivation extends Fact {
 	 * @param ctx context, will be modified
 	 * @param matchTerm required term
 	 * @param suppliedTerm given term
-	 * @param errorMsg message to label in case match doesn't work
+	 * @param errorMsg message to label in case match doesn't work.  If null, return false instead
+	 * of giving an error message.
 	 */
-	public static void checkMatch(Node node, Context ctx, Term matchTerm, Term suppliedTerm, String errorMsg) {
+	public static boolean checkMatch(Node node, Context ctx, Term matchTerm, Term suppliedTerm, String errorMsg) {
     try {
       debug("check match = " + matchTerm + ", supplied = " + suppliedTerm);
       debug("  current sub = " + ctx.currentSub);
@@ -141,6 +143,7 @@ public abstract class Derivation extends Fact {
       // must not require instantiating free variables
       if (!instanceSub.avoid(ctx.inputVars)) {
         Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
+        if (errorMsg == null) return false;
         ErrorHandler.report(errorMsg,node,"  could not avoid vars " + unavoidable);
       }
       debug("Adding to ctx: " + instanceSub);
@@ -153,9 +156,10 @@ public abstract class Derivation extends Fact {
         }
       }
     } catch (UnificationFailed e) {
+      if (errorMsg == null) return false;
       ErrorHandler.report(errorMsg, node, "\twas checking " + suppliedTerm + " instance of " + matchTerm);
     }
-
+    return true;
 	}
 	
 	/**
@@ -166,13 +170,15 @@ public abstract class Derivation extends Fact {
 	 * @param dest flow termination of a derivation
 	 * @param errorPoint point where to mention an error.
 	 */
-	public static void checkRootMatch(Context ctx, Element source, Element dest, Node errorPoint) {
+	public static boolean checkRootMatch(Context ctx, Element source, Element dest, Node errorPoint) {
 	  if (source instanceof ClauseUse && dest instanceof ClauseUse) {
 	    ClauseUse src = (ClauseUse) source;
 	    ClauseUse dst = (ClauseUse) dest;
 	    if (src.getRoot() != null && dst.getRoot() == null) {
+	      if (errorPoint == null) return false;
 	      ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
 	    }
 	  }
+	  return true;
 	}
 }
