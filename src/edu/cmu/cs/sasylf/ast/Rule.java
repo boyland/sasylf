@@ -80,6 +80,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		
     try {
       computeAssumption(ctx);
+      myConc.checkVariables(new HashSet<String>(), false);
     } catch (SASyLFError ex) {
       // continue
     }
@@ -93,6 +94,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			}
 			premiseClause.checkBindings(bindingTypes, this);
 			premises.set(i, premiseClause);
+			premiseClause.checkVariables(new HashSet<String>(), false);
 			//premises.set(i, new ClauseUse(c, ctx.parseMap));
 			NonTerminal nt = premiseClause.getRoot();
 			if (nt != null) {
@@ -163,6 +165,9 @@ public class Rule extends RuleLike implements CanBeCase {
 		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
 		assumeClause.getConstructor().assumptionRule = this;
 
+		/* I don't see this as something we have to check.
+		 * Any nonterminal that occurs is simply free to be anything.
+		 * - JTB (2014/03/05)
 		// should not have more nonterminals in the body than we have in the assumption clause
 		//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
 		//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
@@ -179,7 +184,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (numBodyNonTerminals>numAssumptionNonTerminals)
 		  ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
 		// TODO: should check that the sets are the same
-
+		*/
 	}
 	
 	public boolean isAssumption() {
@@ -329,6 +334,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			for (FreeVar v : freeVars) {
 				Term substituted = sub.getSubstituted(v);
 				if (substituted != null && substituted.hasBoundVarAbove(0)) {
+				  debug("has bad binding: " + v + " to " + substituted);
 					// try to remove it
 					//Term newSubstituted1 = substituted.removeBoundVarsAbove(0);
 					substituted.removeBoundVarsAbove(0, removeBVSub);

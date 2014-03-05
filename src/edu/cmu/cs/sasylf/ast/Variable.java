@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -26,8 +27,8 @@ public class Variable extends Element {
 	public String getTerminalSymbolString() {
 		return type.getTermSymbolString();
 	}
-
-	public int hashCode() { return symbol.hashCode(); }
+	
+  public int hashCode() { return symbol.hashCode(); }
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Variable)) return false;
@@ -57,7 +58,21 @@ public class Variable extends Element {
 		return this;
 	}
 
-	private String symbol;
+	@Override
+  void checkVariables(Set<String> bound, boolean defining) {
+	  // System.out.println("Checking " + getSymbol() + " as defining? " + defining);
+	  if (defining) {
+	    if (!bound.add(getSymbol())) {
+	      ErrorHandler.report("Variable bound more than once: " + getSymbol(),this);
+	    }
+	  } else {
+	    if (!bound.contains(getSymbol())) {
+	      ErrorHandler.report("Variable not bound: " + getSymbol(),this);
+	    }
+	  }
+  }
+
+  private String symbol;
 	private Syntax type;
 
 	@Override
@@ -67,16 +82,18 @@ public class Variable extends Element {
 
 	public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
 		int index = -1;
-		for (int i = 0; i < varBindings.size(); ++i)
+		for (int i = 0; i < varBindings.size(); ++i) {
 			if (varBindings.get(i).first.equals(symbol)) {
 				index = i;
 				break;
 			}
+		}
 		
-		if (index == -1)
+		if (index == -1) {
+		  new Throwable("for the trace").printStackTrace();
 			ErrorHandler.report("Variable " + symbol + " is not bound", this);
-
-		//return new BoundVar(index + 1);
+		}
+		
 		return new BoundVar(varBindings.size()-index);
 	}
 }

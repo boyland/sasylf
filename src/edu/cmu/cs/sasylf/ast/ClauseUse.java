@@ -8,8 +8,10 @@ import static edu.cmu.cs.sasylf.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -79,12 +81,33 @@ public class ClauseUse extends Clause {
 	public Element typecheck(Context c) {
 	  return this; // already done
 	}
+
+  @Override
+  void checkVariables(Set<String> bound, boolean defining) {
+    // we want to handle cases like:
+    //   Gamma, x:(fn X => T[X])
+    //   Gamma, x':T'' |- (fn x : T => t[x][x']) : T -> T'
+    int ai = cons.getAssumeIndex();
+    boolean copied = false;
+    // System.out.println("Checking " + this + " with ai=" + ai + " defining? " + defining);
+    for (int i=0; i < elements.size(); ++i) {
+      if (i == ai || cons.getElements().get(i) instanceof Variable) {
+        if (!copied && !defining) bound = new HashSet<String>(bound);
+        elements.get(i).checkVariables(bound, true);
+      }
+    }
+    for (int i=0; i < elements.size(); ++i) {
+      if (i != ai) {
+        elements.get(i).checkVariables(bound, false);
+      }
+    }
+  }
 	
 	@Override
   public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
     return this; // already done
   }
-
+  
   /** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
 	//private boolean hasBindings;
@@ -108,6 +131,7 @@ public class ClauseUse extends Clause {
 	private NonTerminal computeRootHelper(Element e) {
 	  if (e instanceof NonTerminal) return (NonTerminal)e;
 	  if (e instanceof Terminal) return null;
+	  if (e instanceof Variable) return null; // syntax binder
 	  if (e instanceof ClauseUse) {
 	    for (Element ep : ((ClauseUse) e).getElements()) {
 	      if (ep.getType().equals(e.getType())) {
