@@ -268,7 +268,7 @@ judgment type-equality: T == T
 T == T
 
 
-judgment Tarrow-sub: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
+judgment Tarrow-sub: T'' == T <: T
 
 * |- T11'' <: T11'
 *, X <: T11'' |- T12'[X] <: T12[X]

@@ -77,7 +77,7 @@ remove labs lab = labs'
 judgment lookup: labs{lab} = c x:A => a[x]
 
 ------------------------------------------------ lookup-found
-(labs, lab : c x:A => a[x]){lab} = c x:A => a[x]
+(labs, lab : c x:A => a[x]){lab} = c x':A => a[x']
 
 lab1 != lab2
 labs{lab2} = c x1:A1 => a'[x1]
