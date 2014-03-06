@@ -412,16 +412,22 @@ public class TermPrinter {
         if (funcName.endsWith("TERM")) {
           String rName = funcName.substring(0, funcName.length()-4);
           if (ctx.ruleMap.containsKey(rName)) {
-            int n = app.getArguments().size();
-            for (int i=0; i < n; ++i) {
-              if (i == n-1) {
-                sb.append("--------------- ");
-                sb.append(rName);
-                sb.append("\n");
+            Judgment j = ((Rule)ctx.ruleMap.get(rName)).getJudgment();
+            if (j instanceof OrJudgment) {
+              sb.append("or _: ");
+              prettyPrint(sb,asClause(app.getArguments().get(0)),false,0);
+            } else {
+              int n = app.getArguments().size();
+              for (int i=0; i < n; ++i) {
+                if (i == n-1) {
+                  sb.append("--------------- ");
+                  sb.append(rName);
+                  sb.append("\n");
+                }
+                ClauseUse u = asClause(app.getArguments().get(i));
+                prettyPrint(sb,u,false, 0);
+                sb.append('\n');
               }
-              ClauseUse u = asClause(app.getArguments().get(i));
-              prettyPrint(sb,u,false, 0);
-              sb.append('\n');
             }
             return sb.toString();
           }

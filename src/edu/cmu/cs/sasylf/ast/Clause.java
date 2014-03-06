@@ -172,7 +172,7 @@ public class Clause extends Element implements CanBeCase {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
     /*
-     * JTB: The following section is to implement parsing of "and" judgments
+     * JTB: The following section is to implement parsing of "and" and "or" judgments
      * without requiring us to change the grammar.
      */
     boolean hasAnd = false;
@@ -181,27 +181,34 @@ public class Clause extends Element implements CanBeCase {
     for (GrmTerminal t : symList) {
       if (t.getElement() instanceof AndJudgment.AndTerminal) {
         hasAnd = true;
+        if (hasNot) {
+          ErrorHandler.report("ambiguous use of 'not'",this);
+        }
       } else if (t.getElement() instanceof OrJudgment.OrTerminal) {
         hasOr = true;
+        if (hasNot) {
+          ErrorHandler.report("ambiguous use of 'not'",this);
+        }
       } else if (t.getElement() instanceof NotJudgment.NotTerminal) {
         hasNot = true;
       }
     }
-    if (hasOr) {
-      ErrorHandler.report(Errors.OR_NOT_IMPLEMENTED, this);
+    if (hasOr && hasAnd) {
+      ErrorHandler.report("Ambiguous use of 'and' and 'or'.  Use parentheses.", this);
     }
     if (hasNot) {
       ErrorHandler.report("'not' judgments not supported",this);
     }
-    if (hasAnd) {
+    if (hasAnd || hasOr) {
       List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
-      List<GrmTerminal> andList = new ArrayList<GrmTerminal>();
+      List<GrmTerminal> sepList = new ArrayList<GrmTerminal>();
       List<GrmTerminal> aList = new ArrayList<GrmTerminal>();
       for (GrmTerminal t : symList) {
-        if (t.getElement() instanceof AndJudgment.AndTerminal) {
+        if (t.getElement() instanceof AndJudgment.AndTerminal ||
+            t.getElement() instanceof OrJudgment.OrTerminal) {
           symLists.add(aList);
           aList = new ArrayList<GrmTerminal>();
-          andList.add(t);
+          sepList.add(t);
         } else {
           aList.add(t);
         }
@@ -216,36 +223,41 @@ public class Clause extends Element implements CanBeCase {
           ClauseUse cu = (ClauseUse)e;
           ClauseType ty = cu.getConstructor().getType();
           if (ty instanceof Judgment) types.add((Judgment)ty);
-          else ErrorHandler.report("cannot 'and' syntax only judgments", this);
+          else ErrorHandler.report("cannot '"+sepList.get(0)+"' syntax only judgments", this);
           clauses.add(cu);
           
           if (((Judgment)ty).getAssume() != null) {
             Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
             if (sharedContext != null) {
               if (!sharedContext.equals(context)) {
-                ErrorHandler.report("all 'and'ed judgments must use the same context", this);
+                ErrorHandler.report("all '"+sepList.get(0)+"'ed judgments must use the same context", this);
               }
             } else {
               sharedContext = context;
             }
           }
         } else {
-          ErrorHandler.report("can only 'and' clauses together, not nonterminals", this);
+          ErrorHandler.report("can only '"+sepList.get(0)+"' clauses together, not nonterminals", this);
         }
       }
       List<Element> newElements = new ArrayList<Element>();
-      Iterator<GrmTerminal> ands = andList.iterator();
+      Iterator<GrmTerminal> seps = sepList.iterator();
       for (ClauseUse cl : clauses) {
         for (Element e : cl.getElements()) {
           newElements.add(e);
         }
-        if (ands.hasNext()) newElements.add(ands.next().getElement());
+        if (seps.hasNext()) newElements.add(seps.next().getElement());
       }
-      ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
-      return new AndClauseUse(getLocation(),newElements,cd,clauses);
+      if (hasAnd) {
+        ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
+        return new AndClauseUse(getLocation(),newElements,cd,clauses);
+      } else {
+        ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(getLocation(), ctx, types).getForm();
+        return new OrClauseUse(getLocation(),newElements,cd,clauses);
+      }
     }
     /*
-     * JTB: End of section to implement parsing of "and" judgments
+     * JTB: End of section to implement parsing of "and"/"or" judgments
      */
 		return parseClause(ctx, inBinding, g, symList);
 	}
@@ -339,7 +351,8 @@ public class Clause extends Element implements CanBeCase {
 			e.checkBindings(bindingTypes, nodeToBlame);
 		}
 	}
-	@Override
+	
+  @Override
 	public String getErrorDescription(Term t, Context ctx) {		
 		if (t != null) {
 			StringWriter sw = new StringWriter();

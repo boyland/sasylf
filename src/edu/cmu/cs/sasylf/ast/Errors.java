@@ -73,7 +73,6 @@ public enum Errors {
   MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
   MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
   ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
-  OR_NOT_IMPLEMENTED("'or' judgments not yet supported"),
   INTERNAL_ERROR("SASyLF Internal Error")
 	;
 
