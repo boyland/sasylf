@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.AndJudgment.AndTerminal;
+import edu.cmu.cs.sasylf.ast.OrJudgment.OrTerminal;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -303,11 +304,36 @@ public class TermPrinter {
     return new ClauseUse(location,newElems,cd);
   }
 
-  private ClauseUse appAsClause(Constant c, List<Element> args) {
-    String fname = c.getName();
+  private ClauseUse appAsClause(Constant con, List<Element> args) {
+    String fname = con.getName();
     ClauseDef cd = ctx.prodMap.get(fname);
-    if (cd != null) {
-      List<Element> contents = new ArrayList<Element>(cd.getElements());
+    if (cd == null) {
+      throw new RuntimeException("no cd for " + fname);
+    }
+    
+    List<Element> contents;
+    
+    // undo work of parseClause
+    if (cd.getType() instanceof AndOrJudgment) {
+      AndOrJudgment j = (AndOrJudgment)cd.getType();
+      // System.out.println("Reconsituting for " + j.getName() + " with " + args);
+      List<Judgment> judgments = j.getJudgments();
+      contents = new ArrayList<Element>(judgments.size());
+      Iterator<Element> it = args.iterator();
+      boolean first = true;
+      for (Judgment j2 : judgments) {
+        if (first) first = false; else contents.add(j.makeSeparator(location));
+        Constant con2 = (Constant)j2.getForm().asTerm();
+        Term tt2 = con2.getType();
+        List<Element> args2 = new ArrayList<Element>();
+        while (tt2 instanceof Abstraction) {
+          args2.add(it.next());
+          tt2 = ((Abstraction)tt2).getBody();
+        }
+        contents.add(appAsClause(con2,args2));
+      }
+    } else {
+      contents = new ArrayList<Element>(cd.getElements());
       // System.out.println("In " + contents);
       int n = contents.size();
       int ai = cd.getAssumeIndex();
@@ -364,9 +390,8 @@ public class TermPrinter {
           System.out.println("What do I do with variable " + old);
         }
       }
-      return new ClauseUse(location,contents,cd);
     }
-    throw new RuntimeException("no cd for " + fname);
+    return new ClauseUse(location,contents,cd);
   }
   
   private ClauseUse replaceAssume(ClauseUse repl, Element old) {
@@ -412,10 +437,13 @@ public class TermPrinter {
         if (funcName.endsWith("TERM")) {
           String rName = funcName.substring(0, funcName.length()-4);
           if (ctx.ruleMap.containsKey(rName)) {
-            Judgment j = ((Rule)ctx.ruleMap.get(rName)).getJudgment();
+            Rule rule = (Rule)ctx.ruleMap.get(rName);
+            Judgment j = rule.getJudgment();
             if (j instanceof OrJudgment) {
-              sb.append("or _: ");
-              prettyPrint(sb,asClause(app.getArguments().get(0)),false,0);
+              sb.append("or _: ");              
+              Term disj = app.getArguments().get(0);
+              ClauseUse clause = asClause(disj); 
+              prettyPrint(sb,clause,false,0);
             } else {
               int n = app.getArguments().size();
               for (int i=0; i < n; ++i) {
@@ -455,6 +483,8 @@ public class TermPrinter {
       sb.append(e.toString());
     } else if (e instanceof AndTerminal) {
       sb.append("and");
+    } else if (e instanceof OrTerminal) {
+      sb.append("or");
     } else if (e instanceof Terminal) {
       sb.append(((Terminal)e).getTerminalSymbolString());
     } else if (e instanceof Binding) {
@@ -477,6 +507,10 @@ public class TermPrinter {
         if (i > 0 && !(lastWasTerminal && thisIsTerminal)) sb.append(' ');
         prettyPrint(sb,e2,true, level+1);
         lastWasTerminal = thisIsTerminal;
+        if (e2 instanceof AndTerminal && !parenthesize) {
+          sb.append(" _:");
+          lastWasTerminal = false;
+        }
       }
       if (parenthesize && es.size() > 1) sb.append(')');
     } else if (e instanceof AssumptionElement) {

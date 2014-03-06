@@ -59,8 +59,8 @@ public class ClauseUse extends Clause {
 		cons = cd;
 		root = computeRoot();
 	}
-
-	@Override 
+	
+  @Override 
 	public boolean equals(Object x) {
 	  if (!(x instanceof ClauseUse)) return false;
 	  ClauseUse cu = (ClauseUse)x;

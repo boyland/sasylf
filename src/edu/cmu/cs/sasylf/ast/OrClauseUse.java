@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,5 +34,14 @@ public class OrClauseUse extends ClauseUse {
   public static OrClauseUse makeEmptyOrClause(Location loc) {
     ClauseDef cd = (ClauseDef)OrJudgment.makeEmptyOrJudgment(loc).getForm();
     return new OrClauseUse(loc,Collections.<Element>emptyList(),cd,Collections.<ClauseUse>emptyList());
+  }
+
+  @Override
+  public void prettyPrint(PrintWriter out, PrintContext ctx) {
+    if (clauses.isEmpty()) {
+      out.print("contradiction");
+    } else {
+      super.prettyPrint(out, ctx);
+    }
   }
 }

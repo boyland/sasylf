@@ -93,11 +93,9 @@ public abstract class Derivation extends Fact {
 	  for (int i=0; i < n; ++i) {
 	    Derivation d = derivations.get(i);
 	    if (d.clause == null) {
-	      // we copy over to get the right loctaion for things
-	      d.clause = new Clause(d.getLocation());
-	      for (Element e : ctx.currentGoalClause.getElements()) {
-	        d.clause.getElements().add(e);
-	      }
+	      // we copy over to get the right location for things
+	      d.clause = ctx.currentGoalClause.clone();
+	      d.clause.setLocation(d.getLocation());
 	    }
 	    // JTB: Unfortunately we can't do this yet because it may instantiate
 	    // outputVars and we don't want this side-effect to happen yet.

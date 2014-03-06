@@ -68,7 +68,8 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		      return;
 		    }
 		  }
-		  ErrorHandler.report("Argument doesn't match any of the disjoined clauses", this);
+		  // fall through: permit copy through.
+		  // ErrorHandler.report("Argument doesn't match any of the disjoined clauses", this);
 		}
 		
 		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);
