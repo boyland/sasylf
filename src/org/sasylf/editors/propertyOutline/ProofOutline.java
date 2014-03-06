@@ -157,7 +157,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
           pe.setPosition(pos);
           document.addPosition(pos);
         } catch (BadLocationException e) {
-          e.printStackTrace();
+          //IStatus st = new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Theorem has no position: " + theo.getName(), e);
+          //StatusManager.getManager().handle(st);
+          // NB: This theorem is now gone.  Just ignore it:
+          continue;
         }
 				pList.add(pe);
 				/* This part  hasn't ever been useful, and it uses up screen real estate:
