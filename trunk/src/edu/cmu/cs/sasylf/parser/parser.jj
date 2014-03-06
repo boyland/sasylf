@@ -92,6 +92,8 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
 			|| getToken(1).kind == MODULE
+			// || getToken(1).kind == NOT
+			// || getToken(1).kind == OR
 			|| getToken(1).kind == EXTENDS
 			|| getToken(1).kind == USE
 			|| getToken(1).kind == REQUIRES
@@ -1442,8 +1444,7 @@ CompUnit CompilationUnit() :
    
   (t=<PROVIDES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
-  | { if (firstToken == null) firstToken = t;
-      if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
+  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
   )
   
   (
@@ -1471,7 +1472,7 @@ CompUnit CompilationUnit() :
 PackageDeclaration PackageDeclaration() :
 { Token t, u; List<String> l; }
 {
-  t="package" l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
+  t=<PACKAGE> l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
 }
 
 Token Operator() :
@@ -1496,7 +1497,6 @@ Token Keyword() :
     |   t=< CONTRADICTION >
     |   t=< INVERSION >
     |   t=< IS >
-    |   t=< USE >
     |   t=< WEAKENING >
     |   t=< MODULE >
     |   t=< NOT >
@@ -1686,7 +1686,7 @@ Clause ExprToNL() :
 }
 
 Clause Expr() :
-{ Element e; Clause c = null; }
+{ Token t; Element e; Clause c = null; }
 {
   (
     LOOKAHEAD({ isTerm() }) e=Term()
@@ -1695,6 +1695,11 @@ Clause Expr() :
 			c = new Clause(e);
 		c.getElements().add(e);
 	}
+	| (t=<OR>|t=<NOT>) 
+		{ 
+			if (c == null) c = new Clause(new Location(t));
+			c.getElements().add(getElement(t));
+	    }
     | <LPAREN> e=Expr() <RPAREN>
 	{
 		if (c == null)
@@ -1771,7 +1776,7 @@ Theorem AbstractTheoremDeclaration() :
     { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
-  "." { thm.setExists(c); }
+  (".")? { thm.setExists(c); }
   ( Derivation() { ErrorHandler.recoverableError("do not prove required theorems",thm); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA>)
   { 
@@ -1908,7 +1913,7 @@ Derivation Justification(Token startT, Clause c) :
 }
 
 Case Case() :
-{ Token t,t2,t3,u; String s; Clause cl,ce=null; Case ca; Derivation d;
+{ Token t,t2,t3,u,a; String s; Clause cl,ce=null,c2; Case ca; Derivation d;
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
@@ -1917,20 +1922,23 @@ Case Case() :
     return null;
   }
   | 
-  ( LOOKAHEAD(2) t=<CASE> cl=Expr() [<ASSUMES> ce=Expr()] <IS> { ca = new SyntaxCase(new Location(t), cl, ce); }
-
+  ( LOOKAHEAD(2) t=<CASE> <OR> t3=<IDENTIFIER> <COLON> ce=Expr() 
+    (a=<AND> t2=<IDENTIFIER> <COLON> c2=Expr()
+     { t3.image = t3.image+","+t2.image; AndJudgment.addAnd(ce,new Location(a),c2); })*
+    { ca = new OrCase(new Location(t),new DerivationByAssumption(t3.image, new Location(t3), ce)); }
+  | LOOKAHEAD(2) t=<CASE> cl=Expr() [<ASSUMES> ce=Expr()] { ca = new SyntaxCase(new Location(t), cl, ce); }
   | t=<CASE> <RULE>
     ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()
       { premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce)); } )*
     <BAR> s=RuleName()
-    t3=<IDENTIFIER> <COLON> ce=Expr() <IS>
+    t3=<IDENTIFIER> <COLON> ce=Expr()
     { ca = new RuleCase(new Location(t),
 		   	 s,
 		    	premises,
 		    	new DerivationByAssumption(t3.image, new Location(t3), ce));
     }
   )
-
+    <IS>
     ( ( d=Derivation() { ca.getDerivations().add(d); } )+
     | { ErrorHandler.recoverableError("must have at least one derivation",new Location(t)); } )
     t=<END> 

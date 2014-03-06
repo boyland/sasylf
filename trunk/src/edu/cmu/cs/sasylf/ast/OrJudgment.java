@@ -64,7 +64,9 @@ public class OrJudgment extends Judgment {
     Clause result = new ClauseUse(l,concElems,cd);
     int i=1;
     for (Clause premise : premises) {
-      Rule rule = new Rule(l,name+"#"+i,Collections.singletonList(premise),result);
+      ArrayList<Clause> premiseList = new ArrayList<Clause>(1);
+      premiseList.add(premise);
+      Rule rule = new Rule(l,name+"#"+i,premiseList,result);
       ++i;
       super.getRules().add(rule);
     }

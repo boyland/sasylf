@@ -21,11 +21,12 @@ public class DerivationByPrevious extends DerivationWithArgs {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 
+    Clause cl = this.getClause();
+    
 		Term argTerm;
 		if (this.getArgStrings().size() == 1) {
 		  argTerm = getAdaptedArg(ctx, 0);
 		} else {
-		  Clause cl = this.getClause();
 		  if (!(cl instanceof AndClauseUse)) {
 		    ErrorHandler.report("Claimed fact is not a conjunction, remove extra arguments", this);
 		  }
@@ -56,15 +57,23 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		  }
 		  return;
 		}
+		
+		if (cl instanceof OrClauseUse) {
+		  Element source = getArgs().get(0).getElement();
+		  List<ClauseUse> results = ((OrClauseUse)cl).getClauses();
+		  for (ClauseUse possibleResult : results) {
+		    if (Derivation.checkMatch(this, ctx, possibleResult, source, null) &&
+		        Derivation.checkRootMatch(ctx, source, possibleResult, null)) {
+		      // OK
+		      return;
+		    }
+		  }
+		  ErrorHandler.report("Argument doesn't match any of the disjoined clauses", this);
+		}
+		
 		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);
 		
 		Derivation.checkMatch(this, ctx, derivTerm, argTerm, "Derivation " + getElement() + " is not equivalent to the previous derivation: " + getArgs().get(0));
     checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
-		/*
-		if (!argTerm.equals(derivTerm)) {
-			// TODO: could be looser than this
-			ErrorHandler.report(NOT_EQUIVALENT, "Derivation " + getElement() + " is not equivalent to the previous derivation " + getArgStrings().get(0), this,
-			    "\t this term is " + derivTerm + "\n\tprevious term is " + argTerm);			
-		}*/
 	}
 }
