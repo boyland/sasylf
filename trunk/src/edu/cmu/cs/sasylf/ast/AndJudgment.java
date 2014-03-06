@@ -9,7 +9,7 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
-public class AndJudgment extends Judgment {
+public class AndJudgment extends AndOrJudgment {
   public static class AndTerminal extends Terminal {
     public AndTerminal(Location loc) {
       super("'and'",loc);
@@ -26,6 +26,11 @@ public class AndJudgment extends Judgment {
     return new AndTerminal(loc);
   }
   
+  @Override
+  public Terminal makeSeparator(Location l) {
+    return makeAndTerminal(l);
+  }
+
   public static void addAnd(Clause cl, Location and, Clause more) {
     cl.getElements().add(new AndTerminal(and));
     cl.getElements().addAll(more.getElements());
@@ -71,11 +76,13 @@ public class AndJudgment extends Judgment {
    */
   private static String makeName(List<Judgment> parts) {
     StringBuilder sb = new StringBuilder();
-    sb.append("and");
+    sb.append("and[");
+    boolean first = true;
     for (Judgment j : parts) {
-      sb.append("-");
+      if (first) first = false; else sb.append(',');
       sb.append(j.getName());
     }
+    sb.append(']');
     return sb.toString();
   }
   
@@ -146,21 +153,4 @@ public class AndJudgment extends Judgment {
     return result;
   }
 
-  private List<Judgment> parts;
-  
-  @Override
-  public void defineConstructor(Context ctx) {
-    super.getForm().typecheck(ctx);
-  }
-  
-  
-  @Override
-  public void typecheck(Context ctx) {
-    super.typecheck(ctx);
-    for (Rule r : super.getRules()) {
-      r.typecheck(ctx, this);
-    }
-  }
-
-  public List<Judgment> getJudgments() { return parts; }
 }

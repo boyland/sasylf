@@ -9,8 +9,7 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
-public class OrJudgment extends Judgment {
-  // TODO: COmplete implementation of OR.
+public class OrJudgment extends AndOrJudgment {
   public static class OrTerminal extends Terminal {
     public OrTerminal(Location loc) {
       super("'or'",loc);
@@ -27,6 +26,12 @@ public class OrJudgment extends Judgment {
     return new OrTerminal(loc);
   }
   
+  @Override
+  public Terminal makeSeparator(Location l) {
+    return makeOrTerminal(l);
+  }
+
+
   public static void addOr(Clause cl, Location or, Clause more) {
     cl.getElements().add(new OrTerminal(or));
     cl.getElements().addAll(more.getElements());
@@ -43,6 +48,7 @@ public class OrJudgment extends Judgment {
       if (!premises.isEmpty()) {
         concElems.add(makeOrTerminal(l));
       }
+      // concElems.add(LParenTerminal);
       List<Element> es = new ArrayList<Element>();
       NonTerminal root = j.getAssume();
       for (Element e : j.getForm().getElements()) {
@@ -57,6 +63,7 @@ public class OrJudgment extends Judgment {
           concElems.add(e);
         }
       }
+      // concElems.add(RParenTerminal);
       premises.add(new ClauseUse(l,es,(ClauseDef)j.getForm()));
     }
     ClauseDef cd = new ClauseDef(super.getForm(), this, super.getName());
@@ -80,11 +87,13 @@ public class OrJudgment extends Judgment {
    */
   private static String makeName(List<Judgment> parts) {
     StringBuilder sb = new StringBuilder();
-    sb.append("or");
+    sb.append("or[");
+    boolean first = true;
     for (Judgment j : parts) {
-      sb.append("-");
+      if (first) first = false; else sb.append(',');
       sb.append(j.getName());
     }
+    sb.append(']');
     return sb.toString();
   }
   
@@ -154,22 +163,4 @@ public class OrJudgment extends Judgment {
     }
     return result;
   }
-
-  private List<Judgment> parts;
-  
-  @Override
-  public void defineConstructor(Context ctx) {
-    super.getForm().typecheck(ctx);
-  }
-  
-  
-  @Override
-  public void typecheck(Context ctx) {
-    super.typecheck(ctx);
-    for (Rule r : super.getRules()) {
-      r.typecheck(ctx, this);
-    }
-  }
-
-  public List<Judgment> getJudgments() { return parts; }
 }

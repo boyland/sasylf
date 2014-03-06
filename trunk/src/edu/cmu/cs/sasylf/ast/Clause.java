@@ -25,7 +25,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
-public class Clause extends Element implements CanBeCase {
+public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
 	public Clause(Element e) { super(e.getLocation()); verify(getLocation() != null, "location null for " + e + " of type " + e.getClass()); }
 
@@ -33,6 +33,20 @@ public class Clause extends Element implements CanBeCase {
 
 	protected List<Element> elements = new ArrayList<Element>();
 
+	public Clause clone() {
+	  Clause result;
+
+	  try {
+	    result = (Clause) super.clone();
+	  } catch (CloneNotSupportedException e) {
+	    return null;
+	  }
+	  
+	  result.elements = new ArrayList<Element>(elements);
+
+	  return result;
+	}
+	
 	public List<ElemType> getElemTypes() {
 		List<ElemType> list = new ArrayList<ElemType>();
 		for (Element e : elements) {
@@ -171,6 +185,19 @@ public class Clause extends Element implements CanBeCase {
 	public Element computeClause(Context ctx, boolean inBinding, edu.cmu.cs.sasylf.grammar.Grammar g) {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
+    if (symList.isEmpty()) return OrClauseUse.makeEmptyOrClause(getLocation());
+		return parseClause(ctx, inBinding, g, symList);
+	}
+	
+  /**
+   * @param ctx
+   * @param inBinding
+   * @param g
+   * @param symList
+   * @return
+   */
+  private Element parseClause(Context ctx, boolean inBinding,
+      edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
     /*
      * JTB: The following section is to implement parsing of "and" and "or" judgments
      * without requiring us to change the grammar.
@@ -178,18 +205,23 @@ public class Clause extends Element implements CanBeCase {
     boolean hasAnd = false;
     boolean hasOr = false;
     boolean hasNot = false;
+    int parens = 0;
     for (GrmTerminal t : symList) {
-      if (t.getElement() instanceof AndJudgment.AndTerminal) {
+      if (t == GrmUtil.getLeftParen()) ++parens;
+      else if (t == GrmUtil.getRightParen()) --parens;
+      if (parens > 0) continue;
+      Element elem = t.getElement();
+      if (elem instanceof AndJudgment.AndTerminal) {
         hasAnd = true;
         if (hasNot) {
           ErrorHandler.report("ambiguous use of 'not'",this);
         }
-      } else if (t.getElement() instanceof OrJudgment.OrTerminal) {
+      } else if (elem instanceof OrJudgment.OrTerminal) {
         hasOr = true;
         if (hasNot) {
           ErrorHandler.report("ambiguous use of 'not'",this);
         }
-      } else if (t.getElement() instanceof NotJudgment.NotTerminal) {
+      } else if (elem instanceof NotJudgment.NotTerminal) {
         hasNot = true;
       }
     }
@@ -200,12 +232,17 @@ public class Clause extends Element implements CanBeCase {
       ErrorHandler.report("'not' judgments not supported",this);
     }
     if (hasAnd || hasOr) {
+      // System.out.println("Found 'and'/'or'" + symList);
       List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
       List<GrmTerminal> sepList = new ArrayList<GrmTerminal>();
       List<GrmTerminal> aList = new ArrayList<GrmTerminal>();
+      parens = 0;
       for (GrmTerminal t : symList) {
-        if (t.getElement() instanceof AndJudgment.AndTerminal ||
-            t.getElement() instanceof OrJudgment.OrTerminal) {
+        if (t == GrmUtil.getLeftParen()) ++parens;
+        else if (t == GrmUtil.getRightParen()) --parens;
+        if (parens == 0 &&
+            (t.getElement() instanceof AndJudgment.AndTerminal ||
+             t.getElement() instanceof OrJudgment.OrTerminal)) {
           symLists.add(aList);
           aList = new ArrayList<GrmTerminal>();
           sepList.add(t);
@@ -218,7 +255,13 @@ public class Clause extends Element implements CanBeCase {
       List<Judgment> types = new ArrayList<Judgment>();
       Element sharedContext = null;
       for (List<GrmTerminal> sublist : symLists) {
-        Element e = parseClause(ctx,inBinding,g,sublist);
+        stripParens(sublist);
+        Clause subClause = new Clause(this.getLocation()); 
+        for (GrmTerminal t : sublist) {
+          subClause.elements.add(t.getElement());
+        }
+        // using a subClause forces the error to print correctly.
+        Element e = subClause.parseClause(ctx,inBinding,g,sublist);
         if (e instanceof ClauseUse) {
           ClauseUse cu = (ClauseUse)e;
           ClauseType ty = cu.getConstructor().getType();
@@ -259,23 +302,16 @@ public class Clause extends Element implements CanBeCase {
     /*
      * JTB: End of section to implement parsing of "and"/"or" judgments
      */
-		return parseClause(ctx, inBinding, g, symList);
-	}
-	
-  /**
-   * @param ctx
-   * @param inBinding
-   * @param g
-   * @param symList
-   * @return
-   */
-  private Element parseClause(Context ctx, boolean inBinding,
-      edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
+
     RuleNode parseTree = null;
 		try {
 			parseTree = g.parse(symList);
 			return computeClause(parseTree);
 		} catch (NotParseableException e) {
+		  // kludge while we figure out what to do with "contradiction"
+		  if (symList.size() == 1 && symList.get(0).toString().equals("contradiction")) {
+		    return OrClauseUse.makeEmptyOrClause(getLocation());
+		  }
 			/*for (edu.cmu.cs.sasylf.grammar.Rule r : g.getRules()) {
 				debug_parse(r.toString());
 			}
@@ -310,6 +346,28 @@ public class Clause extends Element implements CanBeCase {
 		}
   }
 	
+  private void stripParens(List<GrmTerminal> syms) {
+    // simple not super-efficient implementation
+    int l = syms.size()-1;
+    GrmTerminal leftParen = GrmUtil.getLeftParen();
+    GrmTerminal rightParen = GrmUtil.getRightParen();
+    while (syms.size() >= 2 && 
+          syms.get(0) == leftParen && 
+          syms.get(l) == rightParen) {
+      int parens = 0;
+      for (int i=1; i < l; ++i) {
+        GrmTerminal t = syms.get(i);
+        if (t == leftParen) ++parens;
+        else if (t == rightParen) {
+          if (--parens < 0) return; // no change
+        }
+      }
+      syms.remove(l);
+      syms.remove(0);
+      l -= 2;
+    }
+  }
+  
 	private Element computeClause(RuleNode parseTree) {
 		List<Element> newElements = new ArrayList<Element>();
 		for (ParseNode p : parseTree.getChildren()) {

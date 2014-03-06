@@ -1,4 +1,4 @@
-SASyLF version 1.3.1a1
+SASyLF version 1.3.1a2
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -106,6 +106,10 @@ analysis.  It's use is deprecated.
 
 RELEASE HISTORY
 
+1.3.1	Extensions
+	Abstract Modules
+	"or" judgments
+	Bug fixes: bad23
 1.3.0	Packages and Projects
     The package declaration has a semantics now and we require folders = packages.
     Eclipse plugin updated to add project and package support and builders

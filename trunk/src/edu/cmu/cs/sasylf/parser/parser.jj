@@ -1686,7 +1686,7 @@ Clause ExprToNL() :
 }
 
 Clause Expr() :
-{ Token t; Element e; Clause c = null; }
+{ Token t; Element e; Clause c = null, c2, a; }
 {
   (
     LOOKAHEAD({ isTerm() }) e=Term()
@@ -1700,11 +1700,12 @@ Clause Expr() :
 			if (c == null) c = new Clause(new Location(t));
 			c.getElements().add(getElement(t));
 	    }
-    | <LPAREN> e=Expr() <RPAREN>
+    | <LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,new Location(t),a); a = null; } )*
+      <RPAREN>
 	{
 		if (c == null)
-			c = new Clause(e);
-		c.getElements().add(e);
+			c = new Clause(c2);
+		c.getElements().add(c2);
 	}
   )+
   { return c; }
