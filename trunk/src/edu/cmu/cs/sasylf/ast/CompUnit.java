@@ -217,6 +217,9 @@ public class CompUnit extends Node {
 		for (Syntax syntax : ctx.synMap.values()) {
 			Term synType = syntax.typeTerm();
 			for (Clause clause : syntax.getClauses()) {
+			  if (clause.isVarOnlyClause()) {
+			    FreeVar.setAppearsIn(synType,synType);
+			  }
 				if (clause instanceof ClauseDef) {
 					ClauseDef clauseDef = (ClauseDef) clause;
 					Constant constant = (Constant)clauseDef.asTerm();
