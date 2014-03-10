@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -54,7 +53,8 @@ public class RuleCase extends Case {
 		super.prettyPrint(out);
 	}
 
-	public void typecheck(Context ctx, boolean isSubderivation) {
+	public void typecheck(Context parent, boolean isSubderivation) {
+	  Context ctx = parent.clone();
 		debug("line "+ this.getLocation().getLine() + " case " + ruleName);
 		debug("    currentSub = "+ ctx.currentSub);
 		rule = (Rule) ctx.ruleMap.get(ruleName);
@@ -67,7 +67,6 @@ public class RuleCase extends Case {
 			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
 			//ErrorHandler.report("Expected " + rule.getPremises().size() + " premises for rule " + ruleName + " but " + getPremises().size() + " were given", this);	
 		
-		Map<String, List<ElemType>> oldBindingTypes = ctx.bindingTypes;
 		ctx.bindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
 		for (Derivation d : premises) {
 			d.typecheck(ctx);
@@ -113,12 +112,6 @@ public class RuleCase extends Case {
 		
 		// did we increase the number of lambdas?
 		int lambdaDifference =  adaptedCaseAnalysis.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
-		Substitution oldAdaptationSub = ctx.adaptationSub;
-		Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap<NonTerminal,AdaptationInfo>(ctx.adaptationMap);
-		NonTerminal oldInnermostGamma = ctx.innermostGamma;
-		Term oldMatchTerm = ctx.matchTermForAdaptation;
-		
-		try {
 
 		if (lambdaDifference > 0) {
 			if (ctx.adaptationSub != null)
@@ -192,7 +185,7 @@ public class RuleCase extends Case {
 		Substitution pairSub = null;
 		Set<FreeVar> newInputVars = new HashSet<FreeVar>(ctx.inputVars);
 		for (Pair<Term,Substitution> pair : caseResult)
-			try {
+		  try {
 				pairSub = new Substitution(pair.second);
 				debug("\tpair.second was " + pairSub);
 				pairSub.selectUnavoidable(ctx.inputVars);
@@ -306,7 +299,6 @@ public class RuleCase extends Case {
 		debug("result: " + ctx.currentSub);
 		
 		// update the set of free variables
-		Set<FreeVar> oldInputVars = ctx.inputVars;
 		ctx.inputVars = newInputVars;
 		// System.out.println("RuleCase.java:314: checking ctx");
 		ctx.checkConsistent(this);
@@ -328,31 +320,16 @@ public class RuleCase extends Case {
     ctx.checkConsistent(this);
 
 		// update the set of subderivations
-		List<Fact> oldSubderivations = new ArrayList<Fact>(ctx.subderivations);
 		if (isSubderivation) {
 			// add each premise to the list of subderivations
 			ctx.subderivations.addAll(premises);
 		}
 		
-		try {
+		
 
 		super.typecheck(ctx, isSubderivation);
 
-		} finally {
-		ctx.currentSub = oldSub;
-		ctx.inputVars = oldInputVars;
-		ctx.subderivations = oldSubderivations;
-		}
 		
-		} finally {
-			
-		// restore the current substitution and input vars
-		ctx.adaptationSub = oldAdaptationSub;
-		ctx.adaptationMap = oldAdaptationMap;
-		ctx.innermostGamma = oldInnermostGamma;
-		ctx.bindingTypes = oldBindingTypes;
-		ctx.matchTermForAdaptation = oldMatchTerm;
-}
 	}
 
 	/** Computes a term representing the current rule case, with actual premises and conclusion */
