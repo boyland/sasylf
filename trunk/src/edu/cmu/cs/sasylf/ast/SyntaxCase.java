@@ -9,11 +9,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -39,9 +35,9 @@ public class SyntaxCase extends Case {
 		super.prettyPrint(out);
 	}
 
-	public void typecheck(Context ctx, boolean isSubderivation) {
+	public void typecheck(Context parent, boolean isSubderivation) {
+	  Context ctx = parent.clone();
 		debug("    ******* case line " + getLocation().getLine());
-		Map<String, List<ElemType>> oldBindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
     conclusion.typecheck(ctx);
 
     // make sure we were case-analyzing a nonterminal
@@ -146,11 +142,6 @@ public class SyntaxCase extends Case {
     if (computedCaseTerm == null) {
       ErrorHandler.report(EXTRA_CASE, this);
     }
-		
-    Substitution oldAdaptationSub = ctx.adaptationSub;
-    Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap<NonTerminal, AdaptationInfo>(ctx.adaptationMap);
-    NonTerminal oldInnermostGamma = ctx.innermostGamma;
-    Term oldMatchTerm = ctx.matchTermForAdaptation;
 
     Term adaptedCaseAnalysis = ctx.currentCaseAnalysis;
 
@@ -197,7 +188,6 @@ public class SyntaxCase extends Case {
 		}
 		
 		// update the current substitution
-		Substitution oldSub = new Substitution(ctx.currentSub);
 		ctx.currentSub.compose(unifyingSub); // modifies in place
 		
 		// update the set of free variables
@@ -210,26 +200,13 @@ public class SyntaxCase extends Case {
 		}
 
 		// update the set of subderivations
-		List<Fact> oldSubderivations = new ArrayList<Fact>(ctx.subderivations);
 		if (isSubderivation && concElem instanceof ClauseUse) {
 			// add each part of the clause to the list of subderivations
 			ctx.subderivations.addAll(((ClauseUse)concElem).getNonTerminals());
 		}
 		
-		try {
 		super.typecheck(ctx, isSubderivation);
 
-		} finally {
-		// restore the current substitution and input vars
-		ctx.currentSub = oldSub;
-		ctx.inputVars = oldInputVars;
-		ctx.subderivations = oldSubderivations;
-		ctx.bindingTypes = oldBindingTypes;
-    ctx.adaptationSub = oldAdaptationSub;
-    ctx.adaptationMap = oldAdaptationMap;
-    ctx.innermostGamma = oldInnermostGamma;
-    ctx.matchTermForAdaptation = oldMatchTerm;
-		}
 	}
 
 	private Clause conclusion;
