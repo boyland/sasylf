@@ -339,7 +339,9 @@ TOKEN :
 TOKEN :
 {
   < BAR:
-      "---" ( "-" )*
+      ("---" ( "-" )* ) |
+      ("\u2014\u2014\u2014" ( "\u2014" )* ) |
+      ("\u2015\u2015\u2015" ( "\u2015" )* )
   >
 }
 
@@ -1747,10 +1749,10 @@ Theorem TheoremDeclaration() :
   | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new BindingAssumption(b, a)); a = null; }
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
+    { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
-  "." { thm.setExists(c); }
+  (".")? { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA>)
   { 
@@ -1774,7 +1776,7 @@ Theorem AbstractTheoremDeclaration() :
   | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new BindingAssumption(b, a)); a = null; }
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new SyntaxAssumption(t.image, new Location(t), true, a)); a = null; }
+    { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
   (".")? { thm.setExists(c); }
