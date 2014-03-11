@@ -60,7 +60,12 @@ abstract public class DerivationWithArgs extends Derivation {
       if (f == null) {
         Element e = c.typecheck(ctx);
         if (e instanceof Clause) {
-          e = ((Clause)e).computeClause(ctx, false);
+          Clause cl = (Clause)e;
+          if (cl.getElements().size() == 1 && cl.getElements().get(0) instanceof NonTerminal) {
+            e = cl.getElements().get(0);
+          } else {
+            e = cl.computeClause(ctx, false);
+          }
         }
         f = e.asFact(ctx, ctx.innermostGamma);
       }
