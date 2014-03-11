@@ -1804,7 +1804,7 @@ Derivation Derivation() :
      t=<PROOF> { c = null; })
    <BY> d=Justification(t, c)
   { return d; }
-|  t=<USE> <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t2=<IDENTIFIER>
+|  LOOKAHEAD(<USE> <INVERSION>) t=<USE> <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t2=<IDENTIFIER>
     {
       if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
@@ -1812,6 +1812,10 @@ Derivation Derivation() :
    	  d = new DerivationByInversion(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
     }
     { return d; } 
+|  t=<USE> <INDUCTION> <ON> t2=<IDENTIFIER> 
+	{ d = new DerivationByInduction(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), t2.image); }
+	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).getArgStrings().add(c2); } )* 
+	{ return d; }
 }
 
 Derivation Justification(Token startT, Clause c) :
@@ -1829,8 +1833,10 @@ Derivation Justification(Token startT, Clause c) :
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     ]
     { return d; }
-  | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER> <COLON>
-    { di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
+  | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER>
+    { d = di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
+      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+    <COLON>
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
     (t=<INDUCTION> |
@@ -1839,18 +1845,20 @@ Derivation Justification(Token startT, Clause c) :
        if (wrong.equals("analysis")) wrong = "case analysis";
        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end induction'",new Location(t),wrong+"\ninduction"); } )
     { di.setEndLocation(Location.endOf(t)); return di; }
-  | <CASE> <ANALYSIS> <ON> t=<IDENTIFIER> <COLON>
-    { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
+  | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> t=<IDENTIFIER>
+    { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
+      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+    <COLON>
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
     ( LOOKAHEAD(2) <CASE> t=<ANALYSIS> |
      (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
      { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
     { dca.setEndLocation(Location.endOf(t)); return dca; }
-  | <CONTRADICTION> <ON> t=<IDENTIFIER>
+  | LOOKAHEAD(2) <CONTRADICTION> <ON> t=<IDENTIFIER>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
       dca.setEndLocation(Location.endOf(t)); return dca; }
-  | <INVERSION> of=<IDENTIFIER> s=RuleName() [ <ON> t=<IDENTIFIER> ]
+  | LOOKAHEAD(2) <INVERSION> of=<IDENTIFIER> s=RuleName() [ <ON> t=<IDENTIFIER> ]
     {
       if (t == null) {
           ErrorHandler.recoverableError("inversion " + of.image + " " + s + " on what?",new Location(of));
