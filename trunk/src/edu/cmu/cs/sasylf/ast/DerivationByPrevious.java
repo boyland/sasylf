@@ -72,8 +72,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		  // ErrorHandler.report("Argument doesn't match any of the disjoined clauses", this);
 		}
 		
-		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);
-		
+		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);		
 		Derivation.checkMatch(this, ctx, derivTerm, argTerm, "Derivation " + getElement() + " is not equivalent to the previous derivation: " + getArgs().get(0));
     checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 	}

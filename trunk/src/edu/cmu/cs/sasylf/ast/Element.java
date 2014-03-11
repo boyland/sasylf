@@ -40,6 +40,23 @@ public abstract class Element extends Node {
 	public abstract void prettyPrint(PrintWriter out, PrintContext ctx);
 	
 	/**
+	 * Compute a fact for this element.
+	 * This method is used to handle an argument to a Derivation,
+	 * and also to identify sub-terms of an inductive syntax term.
+	 * <p>
+	 * It can handle syntax, perhaps with an assumption,
+	 * and can handle existing derivations, but cannot handle
+	 * a written out judgment, because this would be a derivation without a
+	 * justification.
+	 * @param ctx global information
+	 * @param assumes context in which this element is seen.
+	 * One of: (a) null, (b) a NonTerminal, (c) a ClauseUse.
+	 * @return fact for this argument
+	 * @throws SASyLFError if this element is a Clause for a Judgment.
+	 */
+	public abstract Fact asFact(Context ctx, Element assumes);
+	
+	/**
 	 * For each binding in this clause, check that the list of element types bound in
 	 * the variable is consistent with what the map says.  If the variable is not already
 	 * in the map, we add it.

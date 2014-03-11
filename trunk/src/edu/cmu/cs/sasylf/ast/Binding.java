@@ -46,7 +46,13 @@ public class Binding extends Element {
 		//throw new RuntimeException("not implemented");
 	}
 
-	public String getTerminalSymbolString() {
+	@Override
+  public Term getTypeTerm() {
+    return nonTerminal.getTypeTerm();
+  }
+
+
+  public String getTerminalSymbolString() {
 		return nonTerminal.getType().getTermSymbolString();
 	}
 
@@ -96,7 +102,16 @@ public class Binding extends Element {
 		return this;
 	}
 
-	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+	  if (ctx.varfreeNTs.contains(nonTerminal) || assumes == null ||
+	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+	    return new BindingAssumption(this);
+	  return new BindingAssumption(this,assumes);
+	}
+
+
+  public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		FreeVar t = (FreeVar) nonTerminal.computeTerm(varBindings);
 		List<Term> argList = new ArrayList<Term>();
 		List<Term> argTypes = new ArrayList<Term>();

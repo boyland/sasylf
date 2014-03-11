@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 
-import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
 import static edu.cmu.cs.sasylf.ast.Errors.VAR_STRUCTURE_KNOWN;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
@@ -22,44 +21,28 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
-public abstract class DerivationByAnalysis extends Derivation {
+public abstract class DerivationByAnalysis extends DerivationWithArgs {
 	public DerivationByAnalysis(String n, Location l, Clause c, String derivName) {
-		super(n,l,c); targetDerivationName = derivName;
+		super(n,l,c); 
+		Clause cl = new Clause(l);
+		cl.getElements().add(new NonTerminal(derivName,l));
+		super.getArgStrings().add(cl);
 	}
 
-	public String getTargetDerivationName() { return targetDerivationName; }
+	public String getTargetDerivationName() { return super.getArgStrings().get(0).getElements().get(0).toString(); }
 
 	protected void computeTargetDerivation(Context ctx) {
 		if (targetDerivation == null) {
-			targetDerivation = ctx.derivationMap.get(targetDerivationName);
-			debug("targetDerivation is " + targetDerivation);
-			if (targetDerivation == null) {
-				for (FreeVar v : ctx.inputVars) {
-					if (targetDerivationName.equals(v.getName())) {
-						if (this instanceof DerivationByInduction)
-							ErrorHandler.report("Cannot perform induction over "+ targetDerivationName + " unless you add this variable as a specific \"forall\" clause of the theorem", this);
-						else {
-						  // XXX: JTB: Isn't this redundant?  We already have the thing in the map,
-						  // or we wouldn't have found it?
-							targetDerivation = new SyntaxAssumption(targetDerivationName, getLocation());
-							targetDerivation.typecheck(ctx);
-							return;
-						}
-					}
-				}
-				// give a better error message for this case
-				for (Atom a : ctx.currentSub.getMap().keySet()) {
-				  if (targetDerivationName.equals(a.getName())) {
-				    ErrorHandler.report("Cannot perform case analysis over variable " + targetDerivationName + " because it has already been substituted.",this, 
-				        "\tSubstituted with LF term: " + ctx.currentSub.getSubstituted(a).toString());
-				  }
-				}
-				ErrorHandler.report(DERIVATION_NOT_FOUND, "Cannot find a derivation named "+ targetDerivationName, this);
-			}
+		  super.typecheck(ctx);
+		  targetDerivation = getArgs().get(0);
+			Util.debug("targetDerivation is " + targetDerivation);
 		}
 	}
+	
 	public Fact getTargetDerivation() {
 		return targetDerivation;
 	}
@@ -67,10 +50,14 @@ public abstract class DerivationByAnalysis extends Derivation {
 	public List<Case> getCases() { return cases; }
 
 	public abstract String byPhrase();
+	
+	@Override
+	public String prettyPrintByClause() {
+	  return " by " + byPhrase();
+	}
 
 	public void prettyPrint(PrintWriter out) {
 		super.prettyPrint(out);
-		out.println(" by "+byPhrase()+" on " + targetDerivationName + ":");
 		for (Case c: cases) {
 			c.prettyPrint(out);
 		}
@@ -78,9 +65,8 @@ public abstract class DerivationByAnalysis extends Derivation {
 	}
 
 	public void typecheck(Context ctx) {
-		computeTargetDerivation(ctx);
-
 		super.typecheck(ctx);
+    computeTargetDerivation(ctx);
 
 		Term oldCase = ctx.currentCaseAnalysis;
 		Element oldElement = ctx.currentCaseAnalysisElement;
@@ -128,13 +114,7 @@ public abstract class DerivationByAnalysis extends Derivation {
       if (ctx.innermostGamma != null &&
           ctx.innermostGamma.getType().canAppearIn(caseNT.getType().typeTerm()) &&
           !ctx.varfreeNTs.contains(caseNT)) {
-        Clause assumes = ae.getAssumes();
-        NonTerminal root = null;
-        if (assumes instanceof ClauseUse) {
-          root = ((ClauseUse)assumes).getRoot();
-        } else {
-          root = (NonTerminal)assumes.getElements().get(0);
-        } 
+        NonTerminal root = ae.getRoot();
         if (root == null || !root.equals(ctx.innermostGamma)) {
           ErrorHandler.report("Case analysis target cannot assume less than context does",this);
         }
@@ -156,13 +136,7 @@ public abstract class DerivationByAnalysis extends Derivation {
           NonTerminal root = null;
 				  if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
 				    AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
-				    Clause assumes =  ae.getAssumes();
-		        if (assumes instanceof ClauseUse) {
-		          ((ClauseUse)assumes).readAssumptions(varBindings, true);
-		          root = ((ClauseUse)assumes).getRoot();
-		        } else {
-		          root = (NonTerminal)assumes.getElements().get(0);
-		        } 
+				    root = ae.getRoot();
 				  } else {
 				    // no context, no problem
 				    if (ctx.innermostGamma == null) continue;
@@ -245,10 +219,15 @@ public abstract class DerivationByAnalysis extends Derivation {
 			}
 		}
 
-		
+		SASyLFError error = null;
 		for (Case c : cases) {
-			c.typecheck(ctx, isSubderivation);
+		  try {
+		    c.typecheck(ctx, isSubderivation);
+		  } catch (SASyLFError ex) {
+		    error = ex;
+		  }
 		}
+		if (error != null) throw error;
 		
 		StringBuilder missingMessages = null;
 		StringBuilder missingCaseTexts = null;
@@ -345,10 +324,26 @@ public abstract class DerivationByAnalysis extends Derivation {
 	/** Adapts this term using the current context
 	 * This includes substituting with the current sub
 	 * and also adapting the context to include assumptions currently in scope
+	 * XXX This works wrong in some cases, where the next method (with originalContext)
+	 * XXX succeeds.  This is related to the two ways to check the last derivation
+	 * XXX in Theorem.java and Derivation.java.
+	 * TODO: generate good and bad regression tests, then combine these two methods together
+	 * and merge the "last derivation" checks to do the correct thing.
 	 */
 	public static Term adapt(Term term, Element element, Context ctx, boolean wrapUnrooted) {
-		// TODO: generalize this to all terms reference in system
-		debug("for element " + element + " term.countLambdas() = "+term.countLambdas());
+
+	  if (element instanceof ClauseUse) {
+	    return adapt(term,((ClauseUse)element).getRoot(),ctx,element);
+	  }
+	  
+	  if (element instanceof AssumptionElement) {
+	    AssumptionElement ae = (AssumptionElement)element;
+      return adapt(term, ae.getRoot(), ctx, ae.getBase());
+	  }
+	  
+	  // TODO: generalize this to all terms reference in system
+		Util.debug("for element " + element + " term.countLambdas() = "+term.countLambdas());
+		Util.debug("adaptation term = " + ctx.matchTermForAdaptation);
 		if (ctx.adaptationSub != null) debug("ctx.matchTermForAdaptation.countLambdas() = "+ctx.matchTermForAdaptation.countLambdas());
 		try {
 		if (ctx.adaptationSub != null && term.countLambdas() < ctx.matchTermForAdaptation.countLambdas() && element instanceof ClauseUse && !ctx.innermostGamma.equals(((ClauseUse)element).getRoot())) {
@@ -387,7 +382,9 @@ public abstract class DerivationByAnalysis extends Derivation {
 	public static Term adapt(Term term, NonTerminal originalContext, Context ctx, Node errorPoint) {
 	  term = term.substitute(ctx.currentSub); // JTB: Added for Issue #16
 		NonTerminal targetContext = ctx.innermostGamma;
-		debug("adapting from " + originalContext + " to " + targetContext + " on " + term);
+		Util.debug("adapting from " + originalContext + " to " + targetContext + " on " + term);
+		Util.debug("adaptationSub = " + ctx.adaptationSub);
+		if (originalContext == null) return term; // no context -- nothing to adapt
 		
 		if (originalContext != null && !originalContext.equals(targetContext)) {
 			List<Term> varTypes = new ArrayList<Term>();
@@ -435,6 +432,5 @@ public abstract class DerivationByAnalysis extends Derivation {
 	}
 
 	private List<Case> cases = new ArrayList<Case>();
-	private String targetDerivationName;
 	private Fact targetDerivation;
 }
