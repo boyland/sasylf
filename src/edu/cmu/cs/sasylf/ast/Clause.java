@@ -381,6 +381,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 		ClauseDef cd = ((GrmRule)parseTree.getRule()).getClauseDef();
 		if (cd == null) {
+		  if (newElements.size() == 1) {
+		    return newElements.get(0);
+		  }
+		  /*
 			// this rule goes from start to a nonterminal
 			if (newElements.size() == 1 && newElements.get(0) instanceof ClauseUse
 					&& parseTree.getRule().getLeftSide().equals(GrmUtil.getStartSymbol())
@@ -393,13 +397,19 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (e instanceof Binding || e instanceof NonTerminal || e instanceof Variable) {
 					return e;
 				}
-			}
+			}*/
 			ErrorHandler.report("internal error: not sure what to do with null ClauseUse on " + newElements, this);
 		}
 		return new ClauseUse(getLocation(), newElements, cd);
 	}
 	
-	public Term computeTerm(List<Pair<String, Term>>  varBindings) {
+	
+	@Override
+  public Fact asFact(Context ctx, Element assumes) {
+    throw new RuntimeException("internal error: can't get fact before typechecking");
+  }
+	
+  public Term computeTerm(List<Pair<String, Term>>  varBindings) {
 		throw new RuntimeException("internal error: can't compute the term before typechecking");
 	}
 

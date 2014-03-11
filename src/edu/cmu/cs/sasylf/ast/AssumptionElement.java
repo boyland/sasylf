@@ -12,13 +12,14 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 /**
  * A syntax element (binding, variable or nonterminal) that is bound in a context
  */
 public class AssumptionElement extends Element {
 
-  public AssumptionElement(Location l, Element e, Clause assumes) {
+  public AssumptionElement(Location l, Element e, Element assumes) {
     super(l);
     while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
       Clause cl = (Clause)e;
@@ -55,10 +56,14 @@ public class AssumptionElement extends Element {
 
   @Override
   public Element typecheck(Context ctx) {
-    context = (Clause)context.typecheck(ctx);
-    Element e = context.computeClause(ctx, false);
-    if (e instanceof Clause) context = (Clause)e;
+    context = context.typecheck(ctx);
+    if (context instanceof Clause) {
+      context = ((Clause)context).computeClause(ctx, false);
+    }
     base = base.typecheck(ctx);
+    if (base instanceof Clause) {
+      base = ((Clause)base).computeClause(ctx,false);
+    }
     return this;
   }
 
@@ -67,6 +72,27 @@ public class AssumptionElement extends Element {
     base.prettyPrint(out,ctx);
     out.print(" assumes ");
     context.prettyPrint(out,ctx);
+  }
+
+  public NonTerminal getRoot() {
+    if (context == null) return null;
+    if (context instanceof NonTerminal) return ((NonTerminal)context);
+    if (context instanceof ClauseUse) return ((ClauseUse)context).getRoot();
+    throw new RuntimeException("no root for assumption element: " + this);
+  }
+  
+  @Override
+  public Fact asFact(Context ctx, Element assumes) {
+    Fact f = base.asFact(ctx, null);
+    if (context == null) return f;
+    if (f instanceof SyntaxAssumption) {
+      SyntaxAssumption sa = (SyntaxAssumption)f;
+      sa.setContext(context);
+      return sa;
+    } else {
+      ErrorHandler.report("'assumes' can only be used with syntax", this);
+    }
+    return null;
   }
 
   @Override
@@ -91,13 +117,13 @@ public class AssumptionElement extends Element {
     return super.adaptTermTo(term, matchTerm, sub);
   }
 
-  public Clause getAssumes() {
+  public Element getAssumes() {
     return context;
   }
   public Element getBase() {
     return base;
   }
 
-  private Clause context;
+  private Element context;
   private Element base;
 }

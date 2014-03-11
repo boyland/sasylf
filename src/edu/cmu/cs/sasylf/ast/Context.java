@@ -111,6 +111,40 @@ public class Context implements Cloneable {
     return false;
   }
   
+  /**
+   * Return true if the given string has some sort of mapping out there.
+   * Such a name is not suitable for a fresh variable.
+   * @param s string to look up, must not be null
+   * @return whether the context is aware of anything with this name
+   */
+  public boolean isKnown(String s) {
+    FreeVar fake = new FreeVar(s,null);
+    return synMap.containsKey(s) ||
+        judgMap.containsKey(s) ||
+        prodMap.containsKey(s) ||
+        varMap.containsKey(s) ||
+        ruleMap.containsKey(s) ||
+        recursiveTheorems.containsKey(s) ||
+        derivationMap.containsKey(s) ||
+        bindingTypes.containsKey(s) ||
+        inputVars.contains(fake) ||
+        outputVars.contains(fake) ||
+        currentSub.getMap().containsKey(fake);
+  }
+  
+  /**
+   * Generate an identifier with the given prefix.
+   * The result will not be known {@link #isKnown(String)}.
+   * @param prefix string to start names with, must not be null
+   * @return fresh identifier
+   */
+  public String genFresh(String prefix) {
+    for (int i=0; true; ++i) {
+      String s = prefix + i;
+      if (!isKnown(s)) return s;
+    }
+  }
+  
   public void checkConsistent(Node here) {
     boolean problem = false;
     for (FreeVar fv : inputVars) {

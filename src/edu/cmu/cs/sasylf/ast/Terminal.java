@@ -44,7 +44,14 @@ public class Terminal extends Element implements ElemType {
 			out.print('\"');
 		}
 	}
-	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+	
+	
+	@Override
+  public Fact asFact(Context ctx, Element assumes) {
+    throw new RuntimeException("internal error: can't compute a Fact for a Terminal.");
+  }
+
+  public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
 }

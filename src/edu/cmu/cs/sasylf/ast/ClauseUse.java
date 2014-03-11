@@ -4,7 +4,8 @@ import static edu.cmu.cs.sasylf.ast.Errors.EXPECTED_VARIABLE;
 import static edu.cmu.cs.sasylf.ast.Errors.MISSING_ASSUMPTION_RULE;
 import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.pair;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,6 +109,23 @@ public class ClauseUse extends Clause {
     return this; // already done
   }
   
+  @Override
+  public Fact asFact(Context ctx, Element assumes) {
+    Element localAssumes = null;
+    // accept assumes only if we have something that the context can affect.
+    if (assumes != null) {
+      Syntax contextSyntax = (Syntax)assumes.getType();
+      for (Element e : getElements()) {
+        if (e instanceof NonTerminal || e instanceof Binding) {
+          if (contextSyntax.canAppearIn(e.getTypeTerm())) {
+            localAssumes = assumes;
+          }
+        }
+      }
+    }
+    return new ClauseAssumption(this,getLocation(),localAssumes);
+  }
+
   /** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
 	//private boolean hasBindings;
@@ -262,30 +280,36 @@ public class ClauseUse extends Clause {
 	
 	/**
 	 * Called when checking a syntax case.
+	 * @param assumes TODO
 	 * @return list of nonterminals in something we are case analyzing
 	 */
-	public List<Fact> getNonTerminals() {
+	public List<SyntaxAssumption> getNonTerminals(Context ctx, Element assumes) {
 		int assumeIndex = getConstructor().getAssumeIndex();
-		List<Fact> facts = new ArrayList<Fact>();
+		List<SyntaxAssumption> facts = new ArrayList<SyntaxAssumption>();
 		// JTB: TODO: This method is poorly named,
-		// and it looks at assumeIndex which will never be define for syntax.
+		// and it looks at assumeIndex which will never be defined for (normal) syntax.
 		if (assumeIndex != -1) {
-		  System.out.println("assumeIndex = " + assumeIndex);
+		  throw new RuntimeException("assumeIndex on a syntax clause? " + this);
 		}
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
-			if (! (e instanceof Terminal) && i != assumeIndex 
-					&& !(e instanceof Variable)) {
-				if (e instanceof Binding) {
-          facts.add(new BindingAssumption((Binding)e,new Clause(e.getLocation())));					
-				} else if (e instanceof NonTerminal){
-					facts.add(new SyntaxAssumption((NonTerminal)e,new Clause(e.getLocation())));
-				} else if (e instanceof Clause) {
-					throw new RuntimeException("should be impossible case");
-				} else {
-					throw new RuntimeException("should be impossible case");
-				}
+			if (e instanceof Terminal) continue;
+			if (e instanceof Variable) continue;
+			if (e instanceof Clause) {
+			  throw new RuntimeException("syntax cases shouldn't have nested syntax: " + this);
 			}
+			Fact f;
+			if (e instanceof Binding) {
+			  Binding b = (Binding)e;
+			  Element context = assumes;
+			  for (Element sube : b.getElements()) {
+			    context = ((Variable)sube).genContext(context, ctx);
+			  }
+			  f = e.asFact(ctx, context);
+			} else {
+			  f = e.asFact(ctx, assumes);
+			}
+			facts.add((SyntaxAssumption)f);
 		}
 		return facts;
 	}

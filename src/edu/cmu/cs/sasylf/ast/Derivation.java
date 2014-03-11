@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.Collections;

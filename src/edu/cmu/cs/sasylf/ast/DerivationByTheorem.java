@@ -60,7 +60,7 @@ public class DerivationByTheorem extends DerivationByIHRule {
             if (self.getGroupIndex() <= other.getGroupIndex()) {
               ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
             }
-          } else if (inductiveArg instanceof SyntaxAssumption) {
+          } else if (inductiveArg instanceof NonTerminalAssumption) {
             Term inductionTerm = inductionVariable.getElement().asTerm();
             Term inductiveTerm = inductiveArg.getElement().asTerm();
             Term inductionSub = inductionTerm.substitute(ctx.currentSub);

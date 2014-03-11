@@ -23,6 +23,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class Rule extends RuleLike implements CanBeCase {
 	public Rule(Location loc, String n, List<Clause> l, Clause c) { super(n, loc); premises=l; conclusion=c; }
@@ -197,7 +198,19 @@ public class Rule extends RuleLike implements CanBeCase {
 	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx) {
 		Term term = ctx.currentCaseAnalysis;
 		ClauseUse clause = (ClauseUse) ctx.currentCaseAnalysisElement;
-		Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
+    Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
+
+    // Special case: if the variable is known to be var-free, we can't match this rule
+		if (isAssumption()) {
+		  int n=conclusion.getElements().size();
+		  for (int i=0; i < n; ++i) {
+		    if (conclusion.getElements().get(i) instanceof Variable &&
+		        ctx.varfreeNTs.contains(clause.getElements().get(i))) {
+		      Util.debug("no vars in " + clause);
+		      return result;
+		    }
+		  }
+		}
 		
 		// compute term for rule
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
@@ -223,6 +236,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		
 		if (isAssumption()) {
+		  
 			// see how deep the assumptions are in term
 			int assumptionDepth = term.countLambdas();
 			// System.out.println("In assumption, with depth = " + assumptionDepth);
@@ -290,7 +304,6 @@ public class Rule extends RuleLike implements CanBeCase {
 				if (delta > 0) {
 					if (ctx.matchTermForAdaptation != null) {
 						Substitution adaptationSub = ctx.adaptationSub == null ? new Substitution() : new Substitution(ctx.adaptationSub);
-						debug("adaptationSub = " + adaptationSub);
 						term = ((ClauseUse)conclusion).adaptTermTo(term, ctx.matchTermForAdaptation, adaptationSub);
 					} else
 						term = ((ClauseUse)conclusion).adaptTermTo(term, concTerm, new Substitution());
@@ -325,7 +338,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			//sub = ruleTerm.unify(appliedTerm);
 			sub = ruleTerm.unifyAllowingBVs(appliedTerm);
 
-			debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
+			//Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
 			// a free variable in term should not, in its substitution result, have any free bound variables
 			// TODO: really should build up substitution, rather than just replacing each one piecemeal
 			// this version could be buggy.
