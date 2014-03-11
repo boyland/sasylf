@@ -95,13 +95,13 @@ lemma lam-type-not-var :
     forall v: T in Gamma
     exists contradiction .
     ee: T == T by rule type-eq //! discard context
-    nv: T! by lemma type-never-var on ee
+    nv: T! by lemma type-never-var on ee //X uses T in wrong context
     _: contradiction by case analysis on v:
 	case rule
 	    ------------------ Var
 	    _: X in (Gamma',X)
 	is
-	    _: contradiction by case analysis on nv: end case analysis
+	    _: contradiction by case analysis on nv: end case analysis //!! missign cases
 	end case
     end case analysis
 end lemma

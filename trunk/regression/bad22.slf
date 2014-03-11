@@ -59,7 +59,7 @@ theorem cut-admissible:
             ---------------------- axiom
             _: Γ, h: A ⊢ A'
         is
-            proof by case analysis on v: //!! Bug: should have two cases 
+            proof by case analysis on v: // Bug: should have two cases (masked by above)
             end case analysis
         end case
 
@@ -83,7 +83,7 @@ theorem cut-admissible:
     
         case rule
             d2': Γ, h: A, h1: A1, h2: A2 ⊢ A'
-            v: H:(A1 ∧ A2) ∈ (Γ, h : A)
+            v: H[h]:(A1 ∧ A2) ∈ (Γ, h : A)
             -------------------------------------- andL
             _: Γ, h: A ⊢ A'
         is
@@ -105,7 +105,7 @@ theorem cut-admissible:
             proof by rule impR on d3'
         end case
         
-        case rule
+        case rule //!! Should complain about H
             d2a: Γ, h: A ⊢ A1
             d2b: Γ, h: A, h2: A2 ⊢ A'
             v: H:(A1 ⇒ A2) ∈ (Γ, h: A)
@@ -116,7 +116,7 @@ theorem cut-admissible:
             d1':  Γ, h2: A2 ⊢ A by weakening on d1
             d2b': Γ, h2: A2, h: A ⊢ A' by exchange on d2b
             d3b:  Γ, h2: A2 ⊢ A' by induction hypothesis on d1', d2b'
-            proof by case analysis on v: //!! Bug should have two cases
+            proof by case analysis on v: // Bug should have two cases
             end case analysis
         end case
     end induction

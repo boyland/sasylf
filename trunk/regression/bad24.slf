@@ -1,0 +1,104 @@
+/* Demonstrate the adaption bug.
+ * SASyLF sticks in extra bindings that shouldn't be there
+ * when pattern matching a variable binding in a scope already
+ * with a binding in it.
+ * See also good12.slf which gives an example of something that should work.
+ */ 
+
+package regression;
+
+terminals fn unit in value
+
+
+syntax
+
+
+e ::= fn x : tau => e[x]
+ | x
+ | e e
+ | "(" ")" 				
+
+tau ::= unit
+ | tau -> tau
+
+
+Gamma ::= *
+      |   Gamma, x : tau
+
+
+
+judgment has-type: Gamma |- e : tau
+assumes Gamma
+
+
+-------------------------- t-unit
+Gamma |- "("")" : unit
+
+
+------------------------- t-var
+Gamma, x:tau |- x : tau
+
+
+/** we can replace x with x1 because it's a bound variable
+
+Gamma, x1:tau |- e[x1] : tau'
+--------------------------------------------- t-fn
+Gamma |- fn x : tau => e[x] : tau -> tau'
+
+
+Gamma |- e1 : tau' -> tau
+Gamma |- e2 : tau'
+---------------------------------- t-app
+Gamma |- e1 e2 : tau
+*/
+
+
+theorem subst : assumes Gamma
+                forall dt : (Gamma, x:tau') |- e[x] : tau 
+				forall dt' : Gamma |- e' : tau'
+				exists Gamma |- e[e'] : tau.
+
+d1 : Gamma |- e[e'] : tau by induction on dt :
+
+	case rule
+
+		------------------------------------ t-unit
+		d2 : (Gamma, x:tau') |- ("("")") : (unit)
+
+		is
+	
+		d3 : Gamma |- ("("")") : (unit)		by rule t-unit
+
+	end case
+	
+	case rule
+	
+		------------------------- t-var
+		d2 : (Gamma, x:tau) |- x : tau
+
+		is
+		
+		d3 : Gamma |- e' : tau					by dt'
+
+	end case
+	
+	case rule
+	
+		-------------------------------------------- t-var
+		d2 : (Gamma', x1:tau, x:tau') |- x1 : tau
+
+		is
+		
+		d3 : Gamma', x1:tau |- x1 : tau		by rule t-var
+		d3a: Gamma', x1:tau, x:tau' |- x1:tau by weakening on d3
+		d3b: Gamma', x:tau', x1: tau |- x1:tau by weakening on d3
+		res1: Gamma, x:tau' |- e[e'] : tau by d3a
+		wrong: Gamma, x:tau' |- x : tau by unproved //! Correct warning
+		bad : Gamma |- e'' : tau by wrong //! illegal strengthening 
+        proof by wrong //!! BUG: wrong context and wrong variable in result
+	end case
+
+end induction
+end theorem
+
+

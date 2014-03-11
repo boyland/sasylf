@@ -89,13 +89,8 @@ lemma lam-type-not-var :
     exists contradiction .
     ee: T == T by rule type-eq
     nv: T! by lemma type-never-var on ee // redundant, but OK.
+    // should be impossible since v is impossible
     _: contradiction by case analysis on v:
-	case rule
-	    ------------------ Var
-	    _: X in (Gamma',X)
-	is
-	    _: contradiction by case analysis on nv: end case analysis
-	end case
     end case analysis
 end lemma
 
