@@ -1,6 +1,5 @@
 /*
- * sasylf said you don't need to include variable cases: Defect #3
- * #1 local cases on a term that might have variables
+ * Check that we dcan't use var rules on var free NTs.
  */
  
 package regression;
@@ -50,6 +49,13 @@ Gamma |- fn x:T => t[x] = fn x:T => t'[x]
 -------------------- equal-unit
 Gamma |- unit = unit
 
+
+judgment type-equal: T == T
+
+------ type-eq
+T == T
+
+
 judgment notvar : T !
 
 ------- NV-Unit
@@ -62,35 +68,35 @@ T1 -> T2 !
 judgment absurd : contradiction
 
 
-lemma lam-type-not-var :
-    assumes Gamma
-    forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
-    forall v: T in Gamma
-    exists contradiction .
-    nv: T! by case analysis on T: //! missing case
+lemma type-never-var :
+    forall e: T == T
+    exists T ! .
+    _: T! by case analysis on T:
 	  case T1 -> T2 is
-	    _: T1 -> T2! by rule NV-Arrow //! discard context
+	    _: T1 -> T2! by rule NV-Arrow 
 	  end case	
 	  case Unit is
 	    _: Unit! by rule NV-Unit
 	  end case
-    end case analysis    
-    _: contradiction by case analysis on v:
-	case rule
-	    ------------------ Var
-	    _: X in (Gamma',X)
-	is
-	    _: contradiction by case analysis on nv: end case analysis //!! Missing cases
-	end case
     end case analysis
 end lemma
 
-lemma problem :    
+lemma lam-type-not-var :
+    assumes Gamma
+    forall nv1: T! // here T is NOT in a context, so it's OK to pass it to type-eq
+    forall ef: Gamma |- fn x:T => t[x] = fn x:T' => t'[x] 
+    forall v: T in Gamma // this directly says T MAY be in Gamma (and indirectly that it MUST be in Gamma)
     exists contradiction .
-    v: X in (*, X) by rule Var   
-    e1: *, X, x:X |- unit = unit by rule equal-unit
-    e2: *, X |- fn x:X => unit = fn x:X => unit by rule equal-fun on e1
-    _: contradiction by lemma lam-type-not-var on e2, v
+    ee: T == T by rule type-eq
+    nv: T! by lemma type-never-var on ee // redundant, but OK.
+    _: contradiction by case analysis on v:
+	case rule //!! Infeasible since T is var-free
+	    ------------------ Var
+	    _: X in (Gamma',X)
+	is
+	    _: contradiction by case analysis on nv: end case analysis
+	end case
+    end case analysis
 end lemma
 
 

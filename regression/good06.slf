@@ -58,7 +58,7 @@ lemma label-total:
         end case
         
         case fn x => t1[x] is
-            l: Gamma,x; s n |- t1[x] -| n' by induction hypothesis on (t1[x] assumes Gamma',x), (s n)
+            l: Gamma,x; s n |- t1[x] -| n' by induction hypothesis on (t1[x] assumes Gamma,x), (s n)
             _: Gamma; n |- fn x=>t1[x] -| n' by rule L-Abs on l
         end case
     end induction
