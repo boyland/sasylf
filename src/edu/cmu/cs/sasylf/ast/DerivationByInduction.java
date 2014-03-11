@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInduction extends DerivationByAnalysis {
 	public DerivationByInduction(String n, Location l, Clause c, String derivName) {
@@ -34,6 +35,12 @@ public class DerivationByInduction extends DerivationByAnalysis {
 		if (ctx.inductionPosition == -1)
 			ErrorHandler.report(Errors.INDUCTION_NOT_INPUT,"Fact "+ getTargetDerivationName() + " must be one of the assumed facts in the forall clause of this theorem", this);
 
+		// special case: handle "use induction by"
+		if (getClause() instanceof AndClauseUse && ((AndClauseUse)getClause()).getClauses().isEmpty()) {
+		  Util.debug("use induction detected.");
+		  return;
+		}
+		
 		super.typecheck(ctx);
 	}
 }
