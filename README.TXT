@@ -106,15 +106,17 @@ analysis.  It's use is deprecated.
 
 RELEASE HISTORY
 
-1.3.1	Extensions
+1.3.1	Extensions (& 1.2.6)
 	Abstract Modules
 	"or" judgments
 	Bug fixes: bad23
-1.3.0	Packages and Projects
+1.3.0	Packages and Projects (& 1.2.5)
     The package declaration has a semantics now and we require folders = packages.
     Eclipse plugin updated to add project and package support and builders
     Editor has fold support
     Resolved issues #45
+1.2.6   Bug fixes to stable 1.2
+    Resolved issues #47 #48
 1.2.5   Bug fixes to stable 1.2
     Resolved issues #43, #44, #46
 1.2.4	Minor bug fixes and plugin enhancements

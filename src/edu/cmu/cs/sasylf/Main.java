@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
@@ -81,6 +82,8 @@ public class Main {
 					cu = DSLToolkitParser.read(filename,new FileInputStream(file));
 				} catch (ParseException e) {
 					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, false);
+				} catch (TokenMgrError e) {
+				  ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
 				} catch (FileNotFoundException ex) {
 				  System.err.println("Could not open file " + filename);
 				  System.exit(-1);

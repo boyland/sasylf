@@ -152,4 +152,16 @@ public class ErrorHandler {
 	
 	private static int errorCount=0;
 	private static int warningCount=0;
+  public static Location lexicalErrorAsLocation(String file, String error) {
+    try {
+      int lind = error.indexOf("line ");
+      int cind = error.indexOf(", column ");
+      int eind = error.indexOf(".", cind+1);
+      int line = Integer.parseInt(error.substring(lind+5, cind));
+      int column = Integer.parseInt(error.substring(cind+9, eind));
+      return new Location(file,line,column);
+    } catch (RuntimeException e) {
+      return new Location(file,0,0);
+    }
+  }
 }
