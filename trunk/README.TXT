@@ -116,7 +116,7 @@ RELEASE HISTORY
     Editor has fold support
     Resolved issues #45
 1.2.6   Bug fixes to stable 1.2
-    Resolved issues #47 #48
+    Resolved issues #47 #48 #49
 1.2.5   Bug fixes to stable 1.2
     Resolved issues #43, #44, #46
 1.2.4	Minor bug fixes and plugin enhancements
