@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: SASyLF Editor
 Bundle-SymbolicName: org.sasylf;singleton:=true
-Bundle-Version: 1.2.4
+Bundle-Version: 1.2.5
 Bundle-Activator: org.sasylf.Activator
 Bundle-Vendor: sasylf.org
 Main-Class: edu.cmu.cs.sasylf.Main
@@ -9,8 +9,8 @@ Export-Package: edu.cmu.cs.sasylf,
  edu.cmu.cs.sasylf.ast;
   uses:="edu.cmu.cs.sasylf.grammar,
    edu.cmu.cs.sasylf.parser,
-   edu.cmu.cs.sasylf.term,
-   edu.cmu.cs.sasylf.ast.grammar",
+   edu.cmu.cs.sasylf.ast.grammar,
+   edu.cmu.cs.sasylf.term",
  edu.cmu.cs.sasylf.ast.grammar;uses:="edu.cmu.cs.sasylf.grammar,edu.cmu.cs.sasylf.ast",
  edu.cmu.cs.sasylf.grammar,
  edu.cmu.cs.sasylf.parser;uses:="edu.cmu.cs.sasylf.ast",
@@ -33,8 +33,8 @@ Export-Package: edu.cmu.cs.sasylf,
    edu.cmu.cs.sasylf.ast",
  org.sasylf.editors;
   uses:="org.eclipse.jface.text,
-   org.eclipse.core.runtime,
    org.eclipse.text.edits,
+   org.eclipse.core.runtime,
    org.eclipse.jface.text.source,
    org.sasylf.editors.propertyOutline,
    org.eclipse.jface.text.formatter,
@@ -65,8 +65,8 @@ Export-Package: edu.cmu.cs.sasylf,
    org.eclipse.swt.widgets",
  org.sasylf.views;
   uses:="org.sasylf.editors,
-   org.eclipse.core.resources,
    org.eclipse.swt.dnd,
+   org.eclipse.core.resources,
    org.eclipse.swt.graphics,
    org.eclipse.jface.viewers,
    org.eclipse.ui.part,

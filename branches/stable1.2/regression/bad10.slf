@@ -25,6 +25,7 @@ T ::=
 
 Gamma ::= *
       | Gamma, x : T
+      | Gamma, X
 
 
 

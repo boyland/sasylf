@@ -9,6 +9,7 @@ public abstract class Node {
 	public Node(Location l) { location = l; }
 
 	public Location getLocation() { return location; }
+	public Location getEndLocation() { return location; } // temporary fix
 
 	public abstract void prettyPrint(PrintWriter out);
 
