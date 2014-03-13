@@ -10,6 +10,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
@@ -145,7 +146,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     //System.out.println("  line = " + line + ", region = " + lineText);
     List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
 
-    String[] split = fixInfo.split("\n");
+    String[] split = fixInfo.split("\n",-1);
 
     String lineIndent;
     {
@@ -168,58 +169,66 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     
     try {
       String nl = doc.getLineDelimiter(line);
-      IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, false, true, false);
+      IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, true, false, false);
       /* Too conservative:
       if (old != null && lineInfo != null && old.getOffset() - lineInfo.getOffset() > lineInfo.getLength()) {
         old = null;
       }*/
-
+      if (old == null) {
+        if (split[0].equals(lineText)) {
+          old = new Region(lineInfo.getOffset(),lineText.length());
+        }
+      }
+      
       switch (markerType) {
       default: break;
       case MISSING_CASE:
         int newCursor;
-        String newText;
-        String descr;
-        if (split.length == 1) { // syntax case
-          descr = fixInfo;
-          newText = lineIndent + indent + "case " + fixInfo + " is" + nl +
-              lineIndent + indent + indent + "proof by unproved" + nl +
-              lineIndent + indent + "end case" + nl;
+        StringBuilder sb = new StringBuilder();
+        if (fixInfo.indexOf("\n\n") == -1) { // syntax case
+          int n = split.length-1;
+          for (int i=0; i < n; ++i) {
+            sb.append(lineIndent); sb.append(indent);
+            sb.append("case ");
+            sb.append(split[i]);
+            sb.append(" is"); sb.append(nl);
+            sb.append(lineIndent); sb.append(indent); sb.append(indent);
+            sb.append("proof by unproved"); sb.append(nl);
+            sb.append(lineIndent); sb.append(indent);
+            sb.append("end case"); sb.append(nl); sb.append(nl);
+          }
           newCursor = lineIndent.length() + indentAmount + 5;
         } else {
-          StringBuilder sb = new StringBuilder();
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("case rule");
-          sb.append(nl);
-          newCursor = sb.length();
-          for (int i=0; i < split.length; ++i) {
-            sb.append(lineIndent);
-            sb.append(indent);
-            sb.append(indent);
-            if (i != split.length-2)  sb.append("_: ");
+          newCursor = -1;
+          boolean startCase = true;
+          for (int i=0; i < split.length-1; ++i) {
+            if (startCase) {
+              sb.append(lineIndent);
+              sb.append(indent);
+              sb.append("case rule");
+              sb.append(nl);
+              startCase = false;
+            }
+            if (split[i].length() == 0) {
+              sb.append(lineIndent); sb.append(indent);
+              sb.append("is"); sb.append(nl);
+              sb.append(lineIndent); sb.append(indent);sb.append(indent);
+              sb.append("proof by unproved"); sb.append(nl);
+              sb.append(lineIndent); sb.append(indent);
+              sb.append("end case"); sb.append(nl); sb.append(nl);
+              startCase = true;
+              continue;
+            }
+            if (newCursor == -1) newCursor = sb.length();
+            sb.append(lineIndent); sb.append(indent); sb.append(indent);
+            if (!split[i].startsWith("---"))  sb.append("_: ");
             sb.append(split[i]);
             sb.append(nl);
           }
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("is");
-          sb.append(nl);
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append(indent);
-          sb.append("proof by unproved");
-          sb.append(nl);
-          sb.append(lineIndent);
-          sb.append(indent);
-          sb.append("end case");
-          sb.append(nl);
-          newText = sb.toString();
-          String ruleLine = split[split.length-2];
-          descr = ruleLine.substring(ruleLine.indexOf(' ')+1);
         }
+        String newText = sb.toString();
         proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
-            null, "insert case for " + descr, null, fixInfo));
+            null, "insert missing case(s)", null, fixInfo));
         break;
       case ILLEGAL_ASSUMES:
       case EXTRANEOUS_ASSUMES:

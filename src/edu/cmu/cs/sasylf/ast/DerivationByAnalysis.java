@@ -1,14 +1,27 @@
 package edu.cmu.cs.sasylf.ast;
 
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
+import static edu.cmu.cs.sasylf.ast.Errors.VAR_STRUCTURE_KNOWN;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
-import edu.cmu.cs.sasylf.term.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
-import static edu.cmu.cs.sasylf.ast.Errors.*;
 
 
 public abstract class DerivationByAnalysis extends Derivation {
@@ -80,7 +93,7 @@ public abstract class DerivationByAnalysis extends Derivation {
 			&& (targetDerivation.equals(ctx.inductionVariable) || ctx.subderivations.contains(targetDerivation));
 		if (isSubderivation) debug("found subderivation: " + targetDerivation);
 		
-		ctx.caseTermMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
+		ctx.caseTermMap = new LinkedHashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
 		
 		// JTB: There are unfortunately many ways to be a syntax case:
 		// 1. a nonterminal: e.g. t
@@ -202,10 +215,11 @@ public abstract class DerivationByAnalysis extends Derivation {
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
 			}
 		} else {
+      debug("*********** case analyzing line " + getLocation().getLine());
+      // tdebug("    currentCaseAnalysisElement = " + ctx.currentCaseAnalysisElement);
+      // tdebug("    sub = " + ctx.currentSub);
+      // tdebug("    adaptationSub = " + ctx.adaptationSub);
 			Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
-			debug("*********** case analyzing line " + getLocation().getLine());
-			//debug("    sub = " + ctx.currentSub);
-			//debug("    adaptationSub = " + ctx.adaptationSub);
 			// see if each rule, in turn, applies
 			for (Rule rule : judge.getRules()) {
 			  if (!rule.isInterfaceOK()) continue; // avoid these
@@ -220,73 +234,87 @@ public abstract class DerivationByAnalysis extends Derivation {
 			c.typecheck(ctx, isSubderivation);
 		}
 		
+		StringBuilder missingMessages = null;
+		StringBuilder missingCaseTexts = null;
 		for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> entry : ctx.caseTermMap.entrySet()) {
-			if (!entry.getValue().isEmpty()) {
-				CanBeCase cbc = entry.getKey();
-        Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
-				String missingCaseText = null;
-				// System.out.println("Missing: " + missing);
-        Substitution sub = missing.second;
-        Substitution revSub = new Substitution();
-        for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
-          if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue())) {
-            // System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
-            revSub.add((FreeVar)e2.getValue(), e2.getKey());
-          }
-        }
-        Term missingCase = missing.first.substitute(revSub);
-        Element targetGamma = null;
-				if (ctx.currentCaseAnalysisElement instanceof ClauseUse) {
-				  ClauseUse target = (ClauseUse)ctx.currentCaseAnalysisElement;
-          if (target.getConstructor().getAssumeIndex() >= 0) {
-            targetGamma = target.getElements().get(target.getConstructor().getAssumeIndex());
-          }
-				} else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
-				  targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
-				} else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
-				  if (!ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
-				    targetGamma = ctx.innermostGamma;
-				  }
-				}
-				if (cbc instanceof Rule && ((Rule)cbc).isAssumption()) {
-				  NonTerminal gammaNT = ((ClauseUse)ctx.currentCaseAnalysisElement).getRoot();
-				  NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
-				  newGammaNT.setType(gammaNT.getType());
-				  targetGamma = newGammaNT;
-				} else if (cbc instanceof Clause && ((Clause)cbc).isVarOnlyClause()) {
-				  //XXX If we neglect to do this, we generate
-				  // a reuse of Gamma, which our PM system does NOT complain about.
-				  if (targetGamma instanceof ClauseUse) {
-				    targetGamma = ((ClauseUse)targetGamma).getRoot();
-				  }
-				  NonTerminal gammaNT = (NonTerminal)targetGamma;
-				  NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
-          newGammaNT.setType(gammaNT.getType());
-          targetGamma = newGammaNT;
-				}
-        try {
-          TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
-          missingCaseText = termPrinter.caseToString(missingCase);
-        } catch (RuntimeException ex) {
-          ex.printStackTrace();
-        }
-				// System.out.println("missing: " + missing);
-				if (missingCaseText != null) {
-				  // System.out.println("Missing Case:");
-				  // System.out.println(missingCaseText);
-				}
-				ErrorHandler.report(Errors.MISSING_CASE,
-									cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx),
-									this, missingCaseText);				
-			}
+		  if (!entry.getValue().isEmpty()) {
+		    CanBeCase cbc = entry.getKey();
+		    for (Pair<Term,Substitution> missing : entry.getValue()) {
+		      // Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
+		      String missingCaseText = null;
+		      // System.out.println("Missing: " + missing);
+		      Substitution sub = missing.second;
+		      Substitution revSub = new Substitution();
+		      for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
+		        if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue())) {
+		          // System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
+		          revSub.add((FreeVar)e2.getValue(), e2.getKey());
+		        }
+		      }
+		      Term missingCase = missing.first.substitute(revSub);
+		      Element targetGamma = null;
+		      if (ctx.currentCaseAnalysisElement instanceof ClauseUse) {
+		        ClauseUse target = (ClauseUse)ctx.currentCaseAnalysisElement;
+		        if (target.getConstructor().getAssumeIndex() >= 0) {
+		          targetGamma = target.getElements().get(target.getConstructor().getAssumeIndex());
+		        }
+		      } else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
+		        targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
+		      } else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
+		        if (!ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
+		          targetGamma = ctx.innermostGamma;
+		        }
+		      }
+		      if (cbc instanceof Rule && ((Rule)cbc).isAssumption()) {
+		        NonTerminal gammaNT = ((ClauseUse)ctx.currentCaseAnalysisElement).getRoot();
+		        NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+		        newGammaNT.setType(gammaNT.getType());
+		        targetGamma = newGammaNT;
+		      } else if (cbc instanceof Clause && ((Clause)cbc).isVarOnlyClause()) {
+		        //XXX If we neglect to do this, we generate
+		        // a reuse of Gamma, which our PM system does NOT complain about.
+		        if (targetGamma instanceof ClauseUse) {
+		          targetGamma = ((ClauseUse)targetGamma).getRoot();
+		        }
+		        NonTerminal gammaNT = (NonTerminal)targetGamma;
+		        NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+		        newGammaNT.setType(gammaNT.getType());
+		        targetGamma = newGammaNT;
+		      }
+
+		      String missingMessage = cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx);
+		      try {
+		        TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
+		        missingCaseText = termPrinter.caseToString(missingCase);
+		      } catch (RuntimeException ex) {
+		        ex.printStackTrace();
+		        ErrorHandler.report(Errors.MISSING_CASE, missingMessage,this);
+		      }
+		      // System.out.println("missing: " + missing);
+		      if (missingCaseText != null) {
+		        // System.out.println("Missing Case:");
+		        // System.out.println(missingCaseText);
+		      }
+		      if (missingMessages == null) {
+		        missingMessages = new StringBuilder();
+		        missingCaseTexts = new StringBuilder();
+		      }
+		      missingMessages.append(missingMessage);
+		      missingMessages.append('\n');
+		      missingCaseTexts.append(missingCaseText);
+		      missingCaseTexts.append('\n');
+		    }
+		  }
 		}
 		
-		/*if (!(ctx.currentCaseAnalysisElement instanceof NonTerminal) && !ctx.caseTermMap.isEmpty()) {
-			Rule rule = ctx.caseTermMap.keySet().iterator().next();
-			ErrorHandler.report(Errors.MISSING_CASE,
-								rule.getName()/* + ": case is " + ctx.currentCaseAnalysis.substitute(sub)
-								+ "\n\trule conc was " + arguments.get(lastIdx)* /, this);
-		}*/
+		if (missingMessages != null) {
+      missingMessages.setLength(missingMessages.length()-1);
+		  int firstNL = missingMessages.indexOf("\n");
+		  if (firstNL > -1) {
+		    missingMessages.insert(0, '\n');
+		  }
+		  ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), this, missingCaseTexts.toString());
+		}
 
 		} finally {
 		ctx.caseTermMap = oldCaseTermMap;

@@ -45,9 +45,13 @@ public class ClauseDef extends Clause {
 		if (type instanceof Judgment) {
 			NonTerminal assumeNT = ((Judgment)type).getAssume();
 			return getElements().indexOf(assumeNT);
-		} else {
-			return -1;
+		} else if (type instanceof Syntax) {
+		  Syntax s = (Syntax)type;
+		  if (s.isInContextForm()) {
+		    return getElements().indexOf(s.getNonTerminal());
+		  }
 		}
+		return -1;
 	}
 	
 	@Override

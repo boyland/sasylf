@@ -111,7 +111,9 @@ public class Binding extends Element {
 		varType = Term.wrapWithLambdas(varType, argTypes);
 		t.setType(varType);
 		
-		return new Application(t, argList);
+		Application result = new Application(t, argList);
+		// System.out.println("term for " + this + " is " + result);
+    return result;
 	}
 
 	@Override

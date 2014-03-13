@@ -30,15 +30,25 @@ public class Util {
     		throw new RuntimeException(message);
     	}
     }
+    
+    public static boolean isNumber(char ch) {
+      return Character.isDigit(ch) || Character.getType(ch) == Character.OTHER_NUMBER;
+    }
+    
 	public static String stripId(String id) {
-		if (Character.isDigit(id.charAt(0)))
+		if (isNumber(id.charAt(0)))
 			return id;
 		int newLength = id.length();
 		char ch = id.charAt(newLength-1);
-		while (ch == '\'' || Character.isDigit(ch)) {
+		while (ch == '\'' || isNumber(ch)) {
 			newLength--;
 			ch = id.charAt(newLength-1);
 		}
 		return id.substring(0, newLength);
+	}
+	
+	public static void main(String[] args) {
+	  char c = '₁';
+	  System.out.println("type = " + Character.getType(c));
 	}
 }

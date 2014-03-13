@@ -179,6 +179,14 @@ public class CompUnit extends Node {
 		    ErrorHandler.recoverableError("Syntax is unproductive.  You need a production that can actually generate a string.", syn);
 		  }
 		}
+		
+		// check variables are bound in exactly context (two passes)
+		for (Syntax syn : syntax) {
+		  syn.registerVarTypes();
+		}
+		for (Syntax syn : syntax) {
+		  syn.checkVarTypeRegistered();
+		}
 
 		
 		computeSubordination(ctx);

@@ -21,6 +21,11 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		
+    if (ctx.inductionVariable == null) {
+      ErrorHandler.recoverableError(Errors.INDUCTION_MISSING,this);
+      return;
+    }
+
 		Fact inductiveArg = getArgs().get(ctx.inductionPosition);
 		Util.debug("inductionPosition = " + ctx.inductionPosition);
 		debug("subderivations: " + ctx.subderivations);

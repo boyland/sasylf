@@ -627,6 +627,7 @@ TOKEN :
          "_",
          //"-",				// added in sasyLF
          "'",				// added in sasyLF
+         "\u2080"-"\u2089", // added in sasyLF (issue #46)
          "a"-"z",
          "\u007f"-"\u009f",
          "\u00a2"-"\u00a5",
