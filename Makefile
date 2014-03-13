@@ -40,7 +40,8 @@ test:
 	  ./sasylf.local $$f 2>&1 | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
 	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
 	done
-	@echo "  Done"
+	@echo "  Done."
+	@rm test.out
 	
 clean:
 	rm -rf bin SASyLF.jar org.sasylf*.jar
