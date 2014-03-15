@@ -26,7 +26,7 @@ public class OrCase extends Case {
   }
 
   @Override
-  public void typecheck(Context parent, boolean isSubderivation) {
+  public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
     Context ctx = parent.clone();
     premise.typecheck(ctx);
     premise.addToDerivationMap(ctx);

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.term.Pair;
+
 
 public class Case extends Node {
 	public Case(Location l) { super(l); }
@@ -19,7 +21,7 @@ public class Case extends Node {
 		out.println("end case\n");
 	}
 
-	public void typecheck(Context ctx, boolean isSubderivation) {
+	public void typecheck(Context ctx, Pair<Fact,Integer> isSubderivation) {
 		Map<String, Fact> oldMap = ctx.derivationMap;
 		ctx.derivationMap = new HashMap<String, Fact>(oldMap);
 

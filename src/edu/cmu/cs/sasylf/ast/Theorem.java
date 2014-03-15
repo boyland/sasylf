@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -196,6 +197,7 @@ public class Theorem extends RuleLike {
 		
 		for (Fact f : foralls) {
 			f.addToDerivationMap(ctx);
+			ctx.subderivations.put(f, new Pair<Fact,Integer>(f,0));
 			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
 			// determine var free nonterminals
 			if (f instanceof DerivationByAssumption) {

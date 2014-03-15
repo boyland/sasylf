@@ -11,6 +11,7 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -233,28 +234,43 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
    */
   protected void checkInduction(Context ctx, Theorem self, Theorem other) {
     Fact inductiveArg = getArgs().get(other.getInductionIndex());
-    if (!ctx.subderivations.contains(inductiveArg)) {
-      Fact inductionVariable = self.getForalls().get(self.getInductionIndex());
-      if (inductiveArg.equals(inductionVariable)) {
-        if (self.getGroupIndex() <= other.getGroupIndex()) {
-          if (self != other) {
-            ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
-          } else {
-            ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
-          }
+    Fact inductionVariable = self.getForalls().get(self.getInductionIndex());
+    //System.out.println("inductiveArg = " + inductiveArg + "\ninductionVariable = " + inductionVariable + "\nsubderivation = " + ctx.subderivations.get(inductiveArg));
+    if (inductiveArg.equals(inductionVariable)) {
+      if (self.getGroupIndex() <= other.getGroupIndex()) {
+        if (self != other) {
+          ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+        } else {
+          ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
         }
-      } else if (inductiveArg instanceof NonTerminalAssumption) {
-        Term inductionTerm = inductionVariable.getElement().asTerm();
-        Term inductiveTerm = inductiveArg.getElement().asTerm();
-        Term inductionSub = inductionTerm.substitute(ctx.currentSub);
-        Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
-        Util.debug("Is " + inductiveSub + " subterm of " + inductionSub + "?");
-        if (!inductionSub.containsProper(inductiveSub)) {
-          ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
+      }
+      return; // OK!
+    }
+    if (inductiveArg instanceof NonTerminalAssumption) {
+      Term inductionTerm = inductionVariable.getElement().asTerm();
+      Term inductiveTerm = inductiveArg.getElement().asTerm();
+      Term inductionSub = inductionTerm.substitute(ctx.currentSub);
+      Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
+      Util.debug("Is " + inductiveSub + " subterm of " + inductionSub + "?");
+      if (!inductionSub.containsProper(inductiveSub)) {
+        ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
+      }
+      return;
+    }
+    Pair<Fact,Integer> sub = ctx.subderivations.get(inductiveArg);
+    if (sub == null || sub.first != inductionVariable) {
+      ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
+      return;
+    }
+    if (sub.second == 0) {
+      if (self.getGroupIndex() <= other.getGroupIndex()) {
+        if (self != other) {
+          ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+        } else {
+          ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
         }
-      } else {
-        ErrorHandler.report(Errors.MUTUAL_NOT_SUBDERIVATION, this);
       }
     }
+    // otherwise sub.second > 0 and OK.
   }
 }

@@ -53,7 +53,7 @@ public class RuleCase extends Case {
 		super.prettyPrint(out);
 	}
 
-	public void typecheck(Context parent, boolean isSubderivation) {
+	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 	  Context ctx = parent.clone();
 		debug("line "+ this.getLocation().getLine() + " case " + ruleName);
 		debug("    currentSub = "+ ctx.currentSub);
@@ -320,9 +320,12 @@ public class RuleCase extends Case {
     ctx.checkConsistent(this);
 
 		// update the set of subderivations
-		if (isSubderivation) {
+		if (isSubderivation != null) {
+		  Pair<Fact,Integer> newSub = new Pair<Fact,Integer>(isSubderivation.first,isSubderivation.second+1);
 			// add each premise to the list of subderivations
-			ctx.subderivations.addAll(premises);
+		  for (Fact f : premises) {
+		    ctx.subderivations.put(f, newSub);
+		  }
 		}
 		
 		

@@ -38,8 +38,8 @@ public class DerivationByExchange extends DerivationWithArgs {
     }
     checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
-		if (ctx.subderivations.contains(arg))
-			ctx.subderivations.add(this);
+		if (ctx.subderivations.containsKey(arg))
+			ctx.subderivations.put(this,ctx.subderivations.get(arg));
 	}
 	
 	private static boolean checkExchange(Term t1, Term t2) {

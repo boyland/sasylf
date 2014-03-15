@@ -67,7 +67,7 @@ public class DerivationByWeakening extends DerivationWithArgs {
     // System.out.println("Weakening succeeds!");
     
     // Permit induction on this term if source was a subderivation
-    if (ctx.subderivations.contains(arg))
-      ctx.subderivations.add(this);
+    if (ctx.subderivations.containsKey(arg))
+      ctx.subderivations.put(this,ctx.subderivations.get(arg));
     }
 }
