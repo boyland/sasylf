@@ -1,16 +1,19 @@
 package edu.cmu.cs.sasylf.term;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.List;
 import java.util.Queue;
 
+import edu.cmu.cs.sasylf.util.Util;
+
 public class BoundVar extends Term {
 	public BoundVar(int index) {
 		//verify(index > 0, "de brejn indexes must be positive");
-		if (index <= 0)
-			debug("warning: de bruijn indexes are generally positive - exceptions only for substitutions that capture vars");
+		if (index <= 0) {
+			Util.debug("warning: de bruijn indexes are generally positive - exceptions only for substitutions that capture vars");
+			// new Throwable("for trace").printStackTrace();
+		}
 		this.index = index;
 	}
 
