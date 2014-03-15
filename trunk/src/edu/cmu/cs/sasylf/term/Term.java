@@ -12,6 +12,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Util;
+
 /**
  * A Term has concrete transitive subclasses Constant, Abstraction,
  * Application, BoundVar, and FreeVar.
@@ -443,7 +445,8 @@ public abstract class Term {
 	 * @param other term to look for inside of this term
 	 * @return whether the other term is a (possibly improper) subterm of this one.
 	 */
-	public final boolean contains(Term other) {
+	public boolean contains(Term other) {
+	  Util.debug(this+" >?= "+other);
 	  return this.equals(other) || containsProper(other);
 	}
 }

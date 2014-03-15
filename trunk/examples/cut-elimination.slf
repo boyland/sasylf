@@ -1,0 +1,443 @@
+// Proof of admissibility of cut for a simple sequent calculus. 
+// Demonstrates use of complex induction
+// John Boyland, ETH Zürich, March 2014
+
+package examples;
+
+// For simplicity, we have and (but not or), true (but not false) and forall (but not exists)
+
+syntax
+  A ::= A ∧ A | ⊤ | A ⇒ A | ∀ i • A[i]    // Formulae
+  H ::= h                                 // Hypothetical markers
+  I ::= i                                 // Individuals
+
+  // The context definition:
+  Γ ::= ∅ | Γ, h:A | Γ, i
+  
+  // A fake syntax so that SASyLF can see that "h" is a variable.
+  // The first production ensures that the type is inhabited (required in SASyLF)
+  Fake ::= A◊ | h:A ⊢ Fake[h]
+
+// SASyLF requires that every variable bound in a context be associated
+// with a judgment (perhaps shared).  Here, for cleanliness, the judgments
+// are specialized to each variable type.
+
+judgment var: H:A ∈ Γ
+assumes Γ
+ 
+  ————————————— var
+  h:A ∈ (Γ, h:A)
+  
+judgment indiv: I ∈ Γ
+assumes Γ
+
+  ---------- indiv
+  i ∈ (Γ, i)
+
+
+// The main LJ-like sequent judgment.
+// Hypotheticals in the conclusion (e.g. andL) are made premises of the rule
+// since bindings are not permitted in rule conclusions.
+// But in LF, A -> (B -> C) can be seen as a curried function
+// rather than a producer of a function.   So our encoding is still adequate.
+  
+judgment conc: Γ ⊢ A
+assumes Γ
+
+  H:A ∈ Γ
+  --------- axiom
+  Γ ⊢ A
+  
+  ----- topR
+  Γ ⊢ ⊤
+  
+  Γ ⊢ A
+  Γ ⊢ A'
+  ---------- andR
+  Γ ⊢ A ∧ A'
+
+  Γ, h:A, h':A' ⊢ A''
+  H:(A ∧ A') ∈ Γ
+  ---------------------- andL
+  Γ ⊢ A''
+
+  Γ, h:A ⊢ A'
+  ---------- impR
+  Γ ⊢ A ⇒ A'
+  
+  Γ ⊢ A
+  Γ, h:A' ⊢ A''
+  H:(A ⇒ A') ∈ Γ
+  ---------------- impL
+  Γ ⊢ A''
+  
+  Γ, i ⊢ A[i]
+  -------------- forallR
+  Γ ⊢ ∀ i • A[i]
+  
+  Γ, h:A[I] ⊢ A'
+  H:(∀ i • A[i]) ∈ Γ
+  ------------------ forallL
+  Γ ⊢ A'
+  
+/*
+ * The following lemma uses SASyLF's built-in substitution,
+ * which requires that the special rule for variable binding to be available.
+ * Fortunately that's easy to come by since I is uninhabited except 
+ * as variables.
+ */ 
+lemma subst-individ:
+    assumes Γ
+    forall d: Γ, i ⊢ A[i]
+    forall I
+    exists Γ ⊢ A[I].
+    // we prove an intermediate derivation:
+    v: I ∈ Γ by case analysis on I:
+        case i assumes Γ', i is
+            // "proof" means whatever we're trying to prove.
+            proof by rule indiv
+        end case
+    end case analysis
+    proof by substitution on d,v
+end lemma
+
+// The main theorem: cut admissibility
+theorem cut-admissible:
+    assumes Γ // This line means that Γ is (part of) the LF context
+    forall A
+    forall d1: Γ ⊢ A
+    forall d2: Γ, h:A ⊢ A'
+    exists Γ ⊢ A'.
+    
+    // In SASyLF { d1, d2 } means that one of d1 or d2 must get smaller, but
+    // unlike the similar constructor [D1 D2] in Twelf, the arguments
+    // can be permuted.  Here, that ability isn't used.
+    // Lexicographic ordering is the default if one lists multiple induction variables.
+    // In the following line "A, d1, d2" would work just fine
+    // (and would be more efficient, since "{...}" tries all permutations).
+    use induction on A, { d1, d2 }
+    
+    // In the following case analysis, we end up handling the three L rules
+    // in d1 three times each in essentially identical ways.  
+    // Ideally the nine cases would be reduced to three.
+    proof by case analysis on d2:
+        case rule
+            v: H0[h]: A' ∈ (Γ, h: A)
+            ---------------------- axiom
+            _: Γ, h: A ⊢ A'
+        is
+            // There are two possible cases for v:
+            // either it is somewhere in Γ, or H0[h]: A' is actually h:A.
+            proof by case analysis on v:
+              case rule
+                ----------------------------- var
+                _: h':A' ∈ (Γ', h': A', h: A)
+              is
+                v': h':A' ∈ (Γ', h': A') by rule var
+                _: Γ', h': A' ⊢ A' by rule axiom on v'
+              end case
+
+              case rule
+                --------------- var
+                _: h : A' ∈ (Γ , h : A')
+              is
+                proof by d1
+              end case
+
+            end case analysis
+        end case
+
+        case rule
+            --------------- topR
+            _: Γ, h: A ⊢ ⊤
+        is
+            proof by rule topR
+        end case
+
+        case rule
+            d2a: Γ, h : A ⊢ A0
+            d2b: Γ, h : A ⊢ A1
+            ---------------------- andR
+            _: Γ, h : A ⊢ (A0 ∧ A1)
+        is
+            // Here we use induction, and even though the first two terms are unchanged,
+            // the third term is reduced which means the induction is legal.
+            d3a: Γ ⊢ A0 by induction hypothesis on A, d1, d2a
+            d3b: Γ ⊢ A1 by induction hypothesis on A, d1, d2b
+            proof by rule andR on d3a, d3b
+        end case
+    
+        case rule
+            d2': Γ, h: A, h1: A1, h2: A2 ⊢ A'
+            v: H[h]:(A1 ∧ A2) ∈ (Γ, h : A)
+            -------------------------------------- andL
+            _: Γ, h: A ⊢ A'
+        is
+            d2'': Γ, h1: A1, h2: A2, h: A ⊢ A' by exchange on d2'
+            d1': Γ, h1: A1, h2: A2 ⊢ A by weakening on d1
+            // weakening and exchange don't count as changes for induction purposes,
+            // so the reduction on d2'' (AKA d2' < d2) is sufficient for induction
+            d3': Γ, h1: A1, h2: A2 ⊢ A' by induction hypothesis on A, d1', d2''
+            proof by case analysis on v:
+              case rule
+                ------------------------------------- var
+                _: h': (A1 ∧ A2) ∈ (Γ', h': (A1 ∧ A2), h : A)
+              is
+                v': h' : (A1 ∧ A2) ∈ (Γ', h' : (A1 ∧ A2)) by rule var
+                proof by rule andL on d3', v'
+              end case
+
+              case rule
+                -------------------------------------- var
+                _: h : (A1 ∧ A2) ∈ (Γ , h : (A1 ∧ A2))
+              is
+                proof by case analysis on d1:
+                  case rule
+                    v1: H0 : (A1 ∧ A2) ∈ Γ
+                    ---------------------- axiom
+                    _: Γ ⊢ (A1 ∧ A2)
+                  is
+                    proof by rule andL on d3', v1
+                  end case
+
+                  case rule
+                    d1a: Γ ⊢ A1
+                    d1b: Γ ⊢ A2
+                    --------------- andR
+                    _: Γ ⊢ (A1 ∧ A2)
+                  is
+                    d1b': Γ, h1: A1 ⊢ A2 by weakening on d1b
+                    d4: Γ, h1: A1 ⊢ A' by induction hypothesis on A2, d1b', d3'
+                    d4': Γ ⊢ A' by induction hypothesis on A1, d1a, d4
+                    proof by d4'
+                  end case
+
+                  case rule
+                    d1a: Γ, h: A0, h': A3 ⊢ (A1 ∧ A2)
+                    v1: H0 : (A0 ∧ A3) ∈ Γ
+                    ------------------------- andL
+                    _: Γ ⊢ (A1 ∧ A2)
+                  is
+                    d2': Γ, h1:A0, h2:A3, h: (A1 ∧ A2) ⊢ A' by weakening on d2
+                    d3': Γ, h1:A0, h2:A3 ⊢ A' by induction hypothesis on A, d1a, d2'
+                    proof by rule andL on d3', v1
+                  end case
+
+                  case rule
+                    d1a: Γ ⊢ A0
+                    d1b: Γ, h : A3 ⊢ (A1 ∧ A2)
+                    v1: H0 : (A0 ⇒ A3) ∈ Γ
+                    --------------- impL
+                    _: Γ ⊢ (A1 ∧ A2)
+                  is
+                    d2': Γ, h': A3, h: (A1 ∧ A2) ⊢ A' by weakening on d2
+                    d3': Γ, h': A3 ⊢ A' by induction hypothesis on A, d1b, d2'
+                    proof by rule impL on d1a, d3', v1
+                  end case
+                  
+                  case rule
+                    d1a: Γ, h1: A0[I1] ⊢ A
+                    v1: H0 : (∀ i • A0[i]) ∈ Γ
+                    ----------------------------- forallL
+                    _: Γ ⊢ A
+                  is
+                    d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
+                    d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
+                    proof by rule forallL on d3, v1
+                  end case
+    
+                end case analysis
+              end case
+            end case analysis
+        end case
+
+        case rule
+            d2': Γ, h: A, h1: A1 ⊢ A2
+            ------------------------------- impR
+            _: Γ, h: A ⊢ A1 ⇒ A2
+        is
+            d1':  Γ, h1: A1 ⊢ A by weakening on d1
+            d2'': Γ, h1: A1, h: A ⊢ A2 by exchange on d2'
+            d3':  Γ, h1: A1 ⊢ A2 by induction hypothesis on A, d1', d2''
+            proof by rule impR on d3'
+        end case
+        
+        case rule
+            d2a: Γ, h: A ⊢ A1
+            d2b: Γ, h: A, h2: A2 ⊢ A'
+            v: H[h]:(A1 ⇒ A2) ∈ (Γ, h: A)
+            ----------------------------- impL
+            _: Γ, h: A ⊢ A'
+        is
+            d3a: Γ ⊢ A1 by induction hypothesis on A, d1, d2a
+            d1':  Γ, h2: A2 ⊢ A by weakening on d1
+            d2b': Γ, h2: A2, h: A ⊢ A' by exchange on d2b
+            d3b:  Γ, h2: A2 ⊢ A' by induction hypothesis on A, d1', d2b'
+            proof by case analysis on v:
+              case rule
+                --------------- var
+                _: h': (A1 ⇒ A2) ∈ (Γ', h': (A1 ⇒ A2), h : A)
+              is
+                v': h': (A1 ⇒ A2) ∈ (Γ', h': (A1 ⇒ A2)) by rule var
+                proof by rule impL on d3a, d3b, v'
+              end case
+
+              case rule
+                --------------- var
+                _: h : (A1 ⇒ A2) ∈ (Γ, h : (A1 ⇒ A2))
+              is
+                proof by case analysis on d1:
+                  case rule
+                    v': H0 : (A1 ⇒ A2) ∈ Γ
+                    --------------- axiom
+                    _: Γ ⊢ (A1 ⇒ A2)
+                  is
+                    proof by rule impL on d3a, d3b, v'
+                  end case
+
+                  case rule
+                    d1a: ((Γ , h : A0) , h' : A3) ⊢ (A1 ⇒ A2)
+                    v1: H0 : (A0 ∧ A3) ∈ Γ
+                    --------------------------- andL
+                    _: Γ ⊢ (A1 ⇒ A2)
+                  is
+                    d2': Γ, h1:A0, h2:A3, h: (A1 ⇒ A2) ⊢ A' by weakening on d2
+                    d3': Γ, h1:A0, h2:A3 ⊢ A' by induction hypothesis on A, d1a, d2'
+                    proof by rule andL on d3', v1
+                  end case
+
+                  case rule
+                    d1a: Γ, h : A1 ⊢ A2
+                    --------------- impR
+                    _: Γ ⊢ (A1 ⇒ A2)
+                  is
+                    d4a: Γ ⊢ A2 by induction hypothesis on A1, d3a, d1a
+                    d4b: Γ ⊢ A' by induction hypothesis on A2, d4a, d3b
+                  end case
+
+                  case rule
+                    d1a: Γ ⊢ A0
+                    d1b: (Γ , h : A3) ⊢ (A1 ⇒ A2)
+                    v1: H0 : (A0 ⇒ A3) ∈ Γ
+                    --------------- impL
+                    _: Γ ⊢ (A1 ⇒ A2)
+                  is
+                    d2': Γ, h': A3, h: (A1 ⇒ A2) ⊢ A' by weakening on d2
+                    d3': Γ, h': A3 ⊢ A' by induction hypothesis on A, d1b, d2'
+                    proof by rule impL on d1a, d3', v1
+                  end case
+                  
+                  case rule
+                    d1a: Γ, h1: A0[I1] ⊢ A
+                    v1: H0 : (∀ i • A0[i]) ∈ Γ
+                    ----------------------------- forallL
+                    _: Γ ⊢ A
+                  is
+                    d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
+                    d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
+                    proof by rule forallL on d3, v1
+                  end case
+    
+                end case analysis
+              end case
+
+             end case analysis
+        end case
+        
+        case rule
+            d21: Γ, h: A, i ⊢ A1[i]
+            ------------------------------ forallR
+            _: Γ , h: A ⊢ ∀ i • A1[i]
+        is
+            d1': Γ, i ⊢ A by weakening on d1
+            d21': Γ, i, h: A ⊢ A1[i] by exchange on d21
+            d3: Γ, i ⊢ A1[i] by induction hypothesis on A, d1', d21'
+            proof by rule forallR on d3 
+        end case
+
+        case rule
+            d21: Γ, h: A, h' : A0[I0] ⊢ A'
+            v2: H[h] : (∀ i • A0[i]) ∈ (Γ, h: A)
+            ------------------------------------- forallL
+            _: Γ, h: A ⊢ A'
+        is
+            d1': Γ, h' : A0[I0] ⊢ A by weakening on d1
+            d21':Γ, h' : A0[I0], h: A ⊢ A' by exchange on d21
+            d3:  Γ, h' : A0[I0] ⊢ A' by induction hypothesis on A, d1', d21'
+            proof by case analysis on v2:
+                case rule
+                    --------------------------------------------------------- var
+                    _: h : (∀ i • A0[i]) ∈ ((Γ' , h : (∀ i • A0[i])) , h' : A)
+                is
+                    v':  h : (∀ i • A0[i]) ∈ (Γ', h : (∀ i • A0[i])) by rule var
+                    proof by rule forallL on d3, v'
+                end case
+    
+                case rule
+                    -------------------------------------------- var
+                    _: h : (∀ i • A0[i]) ∈ (Γ, h: (∀ i • A0[i]))
+                is
+                    proof by case analysis on d1:
+                        case rule
+                            v': H0 : (∀ i • A0[i]) ∈ Γ
+                            ------------------------- axiom
+                            _: Γ ⊢ (∀ i • A0[i])
+                        is
+                            proof by rule forallL on d3, v'
+                        end case
+
+                        case rule
+                            d1a: Γ, h1 : A1, h2 : A2 ⊢ (∀ i • A0[i])
+                            v1: H0 : (A1 ∧ A2) ∈ Γ
+                            --------------------------------------------- andL
+                            _: Γ ⊢ (∀ i • A0[i])
+                        is
+                            d2': Γ, h1 : A1, h2 : A2, h:A ⊢ A' by weakening on d2
+                            d3: Γ, h : A1, h' : A2 ⊢ A' by induction hypothesis on A, d1a, d2'
+                            proof by rule andL on d3, v1
+                        end case
+
+                        case rule
+                            d1a: Γ ⊢ A1
+                            d1b: Γ, h2: A2 ⊢ (∀ i • A0[i])
+                            v1: H0 : (A1 ⇒ A2) ∈ Γ
+                            --------------------------------- impL
+                            _: Γ ⊢ (∀ i • A0[i])
+                        is
+                            d2': Γ, h2: A2, h:A ⊢ A' by weakening on d2
+                            d3:  Γ, h2: A2 ⊢ A' by induction hypothesis on A, d1b, d2'
+                            proof by rule impL on d1a, d3, v1
+                        end case
+
+                        case rule
+                            d11: Γ, i ⊢ A0[i]
+                            -------------------- forallR
+                            _: Γ ⊢ (∀ i • A0[i])
+                        is
+                            d11': Γ ⊢ A0[I0] by lemma subst-individ on d11, I0
+                            // The following line requires that reduction
+                            // accept A0[I0] as a subterm of (∀ i • A0[i])
+                            // which is permitted as in Twelf.
+                            // See Section 8.3 of Twelf User Manual.
+                            d21': Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3
+                        end case
+
+                        case rule
+                            d1a: Γ, h1: A1[I1] ⊢ A
+                            v1: H0 : (∀ i • A1[i]) ∈ Γ
+                            ----------------------------- forallL
+                            _: Γ ⊢ A
+                        is
+                            d2': Γ, h1: A1[I1], h: A ⊢ A' by weakening on d2
+                            d3:  Γ, h1: A1[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
+                            proof by rule forallL on d3, v1
+                        end case
+
+                    end case analysis
+                end case
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+

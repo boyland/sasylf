@@ -341,6 +341,26 @@ public class Abstraction extends Term {
 			return make(varName, varType, newBody);			
 	}
 
+	@Override
+	public boolean contains(Term other) {
+	  boolean first = super.contains(other);
+	  if (first) return true;
+    // special case for induction:
+    // \x.a[x] >= a[i] if result cannot appear in i
+	  if (other instanceof Application) {
+	    Application app = (Application)other;
+	    if (app.getFunction().equals(this.getEtaEquivFreeVar())) {
+	      Util.debug("found eta-equiv function application");
+	      if (!FreeVar.canAppearIn(app.getFunction().getTypeFamily(), varType.baseTypeFamily())) {
+	        Util.debug("Yes! " + app.getFunction().getTypeFamily() + " /< " + varType.baseTypeFamily());
+	        return true;
+	      }
+	      Util.debug("Nope " + app.getFunction().getTypeFamily() + " < " + varType.baseTypeFamily());
+	    }
+	  }
+	  return false;
+	}
+	
   @Override
   public boolean containsProper(Term other) {
     return body.contains(other);

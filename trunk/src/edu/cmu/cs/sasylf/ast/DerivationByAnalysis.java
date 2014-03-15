@@ -32,6 +32,9 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		cl.getElements().add(new NonTerminal(derivName,l));
 		super.getArgStrings().add(cl);
 	}
+	public DerivationByAnalysis(String n, Location l, Clause c) {
+	  super(n,l,c);
+	}
 
 	public String getTargetDerivationName() { return super.getArgStrings().get(0).getElements().get(0).toString(); }
 

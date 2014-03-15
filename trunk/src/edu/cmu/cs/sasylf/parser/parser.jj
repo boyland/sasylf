@@ -88,6 +88,8 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
 			|| getToken(1).kind == COMMA
+			|| getToken(1).kind == LBRACE
+			|| getToken(1).kind == RBRACE
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
@@ -1002,6 +1004,8 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACK: "[" >
 | < RBRACK: "]" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
 | < SEMICOLON: ";" >
 | < MINUS: "-" >
 | < COMMA: "," >
@@ -1483,6 +1487,8 @@ Token Operator() :
 		| t=<MINUS>
 		| t=<COMMA>
 		| t=<PIPE>
+		| t=<LBRACE>
+		| t=<RBRACE>
 		/* | t=<DOT> */
 	) { return t; }
 }
@@ -1710,7 +1716,7 @@ Clause Expr() :
 }
 
 Clause SimpleExpr() :
-{ Element e; Clause c = null, a; Token t; }
+{ Element e; Clause c = null, a; Token t, t2; }
 {
   (
     LOOKAHEAD(<IDENTIFIER>) e=Term()
@@ -1730,6 +1736,14 @@ Clause SimpleExpr() :
 		e = addTerminal(t, t.image);
 		c = new Clause(e);
 		c.getElements().add(e); 
+	}
+	| t="{" { c = new Clause(new Location(t)); 
+	          c.getElements().add(new Terminal("{",new Location(t))); }
+	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <OPERATOR> | <LPAREN>) 
+	   e=Term() { c.getElements().add(e); } ) * 
+	  t2="}"
+	{
+	     c.getElements().add(new Terminal("}",new Location(t2)));
 	}
   )
   { return c; }
@@ -1808,8 +1822,9 @@ Derivation Derivation() :
    	  d = new DerivationByInversion(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
     }
     { return d; } 
-|  t=<USE> <INDUCTION> <ON> t2=<IDENTIFIER> 
-	{ d = new DerivationByInduction(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), t2.image); }
+|  t=<USE> <INDUCTION> <ON> c2=SimpleExpr()
+	{ d = new DerivationByInduction(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t))); 
+	  ((DerivationWithArgs)d).getArgStrings().add(c2); }
 	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).getArgStrings().add(c2); } )* 
 	{ return d; }
 }

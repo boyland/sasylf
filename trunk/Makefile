@@ -25,6 +25,7 @@ ${TESTBIN}:
 
 ADDTESTS= \
 	examples/and.slf \
+	examples/cut-elimination.slf \
 	examples/featherweight-java.slf \
 	examples/lambda-loc.slf \
 	examples/lambda-unicode.slf \

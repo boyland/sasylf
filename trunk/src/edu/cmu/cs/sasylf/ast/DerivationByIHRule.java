@@ -8,10 +8,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.reduction.InductionSchema;
+import edu.cmu.cs.sasylf.reduction.Reduction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -233,44 +234,22 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
    * @param other callee theorem
    */
   protected void checkInduction(Context ctx, Theorem self, Theorem other) {
-    Fact inductiveArg = getArgs().get(other.getInductionIndex());
-    Fact inductionVariable = self.getForalls().get(self.getInductionIndex());
-    //System.out.println("inductiveArg = " + inductiveArg + "\ninductionVariable = " + inductionVariable + "\nsubderivation = " + ctx.subderivations.get(inductiveArg));
-    if (inductiveArg.equals(inductionVariable)) {
-      if (self.getGroupIndex() <= other.getGroupIndex()) {
-        if (self != other) {
-          ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
-        } else {
-          ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
-        }
-      }
-      return; // OK!
-    }
-    if (inductiveArg instanceof NonTerminalAssumption) {
-      Term inductionTerm = inductionVariable.getElement().asTerm();
-      Term inductiveTerm = inductiveArg.getElement().asTerm();
-      Term inductionSub = inductionTerm.substitute(ctx.currentSub);
-      Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
-      Util.debug("Is " + inductiveSub + " subterm of " + inductionSub + "?");
-      if (!inductionSub.containsProper(inductiveSub)) {
-        ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
-      }
-      return;
-    }
-    Pair<Fact,Integer> sub = ctx.subderivations.get(inductiveArg);
-    if (sub == null || sub.first != inductionVariable) {
-      ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
-      return;
-    }
-    if (sub.second == 0) {
-      if (self.getGroupIndex() <= other.getGroupIndex()) {
-        if (self != other) {
-          ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
-        } else {
-          ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
-        }
+    InductionSchema mySchema = self.getInductionSchema();
+    InductionSchema yourSchema = other.getInductionSchema();
+    if (mySchema.matches(yourSchema, this, false)) {
+      Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
+      switch (r) {
+      case NONE: break; // error already printed
+      case LESS: break; // no problem
+      case EQUAL: // maybe problem
+        if (self.getGroupIndex() <= other.getGroupIndex()) {
+          if (self != other) {
+            ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+          } else {
+            ErrorHandler.report(Errors.NOT_SUBDERIVATION, mySchema + " is unchanged", this);
+          }
+        }        
       }
     }
-    // otherwise sub.second > 0 and OK.
   }
 }
