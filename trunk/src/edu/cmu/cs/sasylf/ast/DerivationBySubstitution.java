@@ -75,9 +75,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     
     checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
-    // Permit induction on this term if source was a subderivation
-    if (ctx.subderivations.contains(getArgs().get(0)))
-      ctx.subderivations.add(this);
+    // TODO: Is it ever safe to do induction after a substitution?
 	}
 
   /**

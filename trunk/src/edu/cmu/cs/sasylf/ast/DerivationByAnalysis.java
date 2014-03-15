@@ -91,9 +91,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		ctx.currentGoal = getElement().asTerm().substitute(ctx.currentSub);
 		ctx.currentGoalClause = getClause();
 		
-		boolean isSubderivation = targetDerivation != null
-			&& (targetDerivation.equals(ctx.inductionVariable) || ctx.subderivations.contains(targetDerivation));
-		if (isSubderivation) debug("found subderivation: " + targetDerivation);
+		Pair<Fact,Integer> isSubderivation = ctx.subderivations.get(targetDerivation);
+		if (isSubderivation != null) debug("found subderivation: " + targetDerivation);
 		
 		ctx.caseTermMap = new LinkedHashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
 		

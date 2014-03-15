@@ -56,7 +56,7 @@ public class Context implements Cloneable {
   public Element currentCaseAnalysisElement;
   public Set<FreeVar> inputVars;
   public Set<FreeVar> outputVars;
-  public List<Fact> subderivations = new ArrayList<Fact>();
+  public Map<Fact,Pair<Fact,Integer>> subderivations = new HashMap<Fact,Pair<Fact,Integer>>();
   public int inductionPosition;
   public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap;
   public Substitution adaptationSub;
@@ -82,7 +82,7 @@ public class Context implements Cloneable {
     if (adaptationMap != null) result.adaptationMap = new HashMap<NonTerminal, AdaptationInfo>(adaptationMap);
     if (inputVars != null) result.inputVars = new HashSet<FreeVar>(inputVars);
     if (outputVars != null) result.outputVars = new HashSet<FreeVar>(outputVars);
-    result.subderivations = new ArrayList<Fact>(subderivations);
+    result.subderivations = new HashMap<Fact,Pair<Fact,Integer>>(subderivations);
     if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
     if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varfreeNTs = new HashSet<NonTerminal>(varfreeNTs);

@@ -12,8 +12,12 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	public String byPhrase() { return "induction"; }
 
 	public void typecheck(Context ctx) {
-	  if (ctx.inductionVariable != null) {
+	  if (ctx.inductionVariable != null) { 
+	    // XXX: should be OK to repeat the same thing
 	    ErrorHandler.report(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");
+	  }
+	  if (!ctx.currentTheorem.getDerivations().contains(this)) {
+	    ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction by " + getArgStrings() + "'", this);
 	  }
     computeTargetDerivation(ctx);
 		ctx.inductionVariable = getTargetDerivation();
@@ -41,6 +45,9 @@ public class DerivationByInduction extends DerivationByAnalysis {
 		  return;
 		}
 		
+		if (getArgStrings().size() > 1) {
+		  ErrorHandler.report("'induction' combined with a case analysis can accept only one argument.", this);
+		}
 		super.typecheck(ctx);
 	}
 }

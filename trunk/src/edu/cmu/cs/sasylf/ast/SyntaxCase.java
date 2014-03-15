@@ -37,7 +37,7 @@ public class SyntaxCase extends Case {
 		super.prettyPrint(out);
 	}
 
-	public void typecheck(Context parent, boolean isSubderivation) {
+	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 	  Context ctx = parent.clone();
 		debug("    ******* case line " + getLocation().getLine());
     conclusion.typecheck(ctx);
