@@ -81,7 +81,7 @@ public class Main {
 				try {
 					cu = DSLToolkitParser.read(filename,new FileInputStream(file));
 				} catch (ParseException e) {
-					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, false);
+					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
 				} catch (TokenMgrError e) {
 				  ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
 				} catch (FileNotFoundException ex) {
