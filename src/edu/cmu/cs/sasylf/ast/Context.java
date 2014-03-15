@@ -43,7 +43,6 @@ public class Context implements Cloneable {
   public Map<String,Fact> derivationMap = new HashMap<String, Fact>();
   public Map<String, List<ElemType>> bindingTypes;
   public Substitution currentSub = new Substitution();
-  public Fact inductionVariable;
   public Theorem currentTheorem;
   public Term currentCaseAnalysis;
   public Term currentGoal;
@@ -57,7 +56,6 @@ public class Context implements Cloneable {
   public Set<FreeVar> inputVars;
   public Set<FreeVar> outputVars;
   public Map<Fact,Pair<Fact,Integer>> subderivations = new HashMap<Fact,Pair<Fact,Integer>>();
-  public int inductionPosition;
   public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap;
   public Substitution adaptationSub;
   public Set<NonTerminal> varfreeNTs = new HashSet<NonTerminal>();

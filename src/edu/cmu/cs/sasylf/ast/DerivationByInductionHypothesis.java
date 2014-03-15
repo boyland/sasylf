@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 
 public class DerivationByInductionHypothesis extends DerivationByIHRule {
@@ -19,11 +18,6 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		
-    if (ctx.inductionVariable == null) {
-      ErrorHandler.recoverableError(Errors.INDUCTION_MISSING,this);
-      return;
-    }
-
     this.checkInduction(ctx, ctx.currentTheorem, ctx.currentTheorem);
 	}
 	

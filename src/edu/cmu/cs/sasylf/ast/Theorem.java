@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.reduction.InductionSchema;
+import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -58,8 +60,8 @@ public class Theorem extends RuleLike {
 	public int getGroupIndex() {
 	  return indexInGroup;
 	}
-	public int getInductionIndex() {
-	  return inductionIndex;
+	public InductionSchema getInductionSchema() {
+	  return inductionScheme;
 	}
 
 	/** A theorem's existential variables are those that appear in its conclusion
@@ -131,16 +133,31 @@ public class Theorem extends RuleLike {
 			exists.typecheck(ctx);
 			exists = (Clause) exists.computeClause(ctx, false);
 			
+			inductionScheme = null;
 			for (Derivation d : derivations) {
 			  if (d instanceof DerivationByInduction) {
 			    DerivationByInduction dbi = (DerivationByInduction)d;
-			    String dn = dbi.getTargetDerivationName();
-			    int i = inputNames.indexOf(dn);
-			    if (i == -1) {
-			      ErrorHandler.report("Induction target "+ dn +" must be an explicit forall argument of this theorem/lemma", this);
-			    } else inductionIndex = i;
+			    InductionSchema is = InductionSchema.create(this, dbi.getArgStrings(), this);
+			    if (is != null) {
+			      inductionScheme = is;
+			      // Inconsistency found later
+			      break;
+			    }
 			  }
 			}
+			if (inductionScheme == null) {
+			  if (foralls.size() == 0) {
+			    inductionScheme = InductionSchema.nullInduction;
+			  }
+			  else {
+			    inductionScheme = StructuralInduction.create(this, foralls.get(0).getName(), this);
+			  }
+			}
+			if (this != firstInGroup) {
+			  // for side-effect:
+			  inductionScheme.matches(firstInGroup.getInductionSchema(), this, false);
+			}
+			
 			if (oldErrors == ErrorHandler.getErrorCount())  interfaceOK = true;
 		}
 	}
@@ -165,7 +182,6 @@ public class Theorem extends RuleLike {
 		ctx.outputVars = new HashSet<FreeVar>();
 		ctx.currentSub = new Substitution();
 		ctx.currentTheorem = this;
-		ctx.inductionVariable = null;
 		ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 		ctx.adaptationMap = new HashMap<NonTerminal,AdaptationInfo>();
 		ctx.innermostGamma = null;
@@ -330,7 +346,7 @@ public class Theorem extends RuleLike {
 	private Theorem andTheorem;
 	private Theorem firstInGroup = this;
 	private int indexInGroup = 0;
-	private int inductionIndex = 0; // default to first argument
+	private InductionSchema inductionScheme = InductionSchema.nullInduction;
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
 	private final boolean isAbstract;

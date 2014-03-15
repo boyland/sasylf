@@ -1,10 +1,13 @@
-SASyLF version 1.3.1a3
+SASyLF version 1.3.1a4
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
 This software is distributed under the Eclipse Public License Version 1.0
 ("EPL"). A copy of the EPL is provided with this distribution and is also
 available at http://www.eclipse.org/legal/epl-v10.html.
+
+PermutationIterator from Apache Commons licensed under 
+http://www.apache.org/licenses/LICENSE-2.0
 
 
 
@@ -107,8 +110,10 @@ analysis.  It's use is deprecated.
 RELEASE HISTORY
 
 1.3.1	Extensions (& 1.2.6)
-	Abstract Modules
+	Abstract modules
 	"or" judgments
+	Lexicographic and unordered induction
+	Proof of cut elimination
 	Bug fixes: bad23
 1.3.0	Packages and Projects (& 1.2.5)
     The package declaration has a semantics now and we require folders = packages.
@@ -116,7 +121,7 @@ RELEASE HISTORY
     Editor has fold support
     Resolved issues #45
 1.2.6   Bug fixes to stable 1.2
-    Resolved issues #47 #48 #49
+    Resolved issues #47, #48, #49
 1.2.5   Bug fixes to stable 1.2
     Resolved issues #43, #44, #46
 1.2.4	Minor bug fixes and plugin enhancements
