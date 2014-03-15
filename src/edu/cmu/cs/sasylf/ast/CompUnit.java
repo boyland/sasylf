@@ -230,11 +230,12 @@ public class CompUnit extends Node {
 					Term typeTerm = constant.getType();
 					while (typeTerm instanceof Abstraction) {
 						Abstraction abs = (Abstraction)typeTerm;
-						Term varType = abs.varType;
-						// base of varType may appear in synType: compute base then set it up
-						while (varType instanceof Abstraction)
-							varType = ((Abstraction)varType).getBody();
-						FreeVar.setAppearsIn(varType, synType);
+						Util.debug(abs.varType.baseTypeFamily() + " < " + synType);
+						FreeVar.setAppearsIn(abs.varType.baseTypeFamily(), synType);
+						for (Term t = abs.varType; t instanceof Abstraction; t = ((Abstraction)t).getBody()){
+	            Util.debug(((Abstraction)t).varType.baseTypeFamily() + " < " + t.baseTypeFamily());
+						  FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
+						}
 						typeTerm = abs.getBody();
 					}
 				}
