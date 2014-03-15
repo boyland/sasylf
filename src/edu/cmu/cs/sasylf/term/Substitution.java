@@ -19,7 +19,7 @@ public class Substitution {
 	public Substitution(Term term, Atom var) {
 		add(var, term);
 	}
-	public Substitution(List<? extends Term> terms, List<Atom> vars) {
+	public Substitution(List<? extends Term> terms, List<? extends Atom> vars) {
 		if (terms.size() != vars.size())
 			throw new RuntimeException("implementation error");
 
@@ -211,6 +211,10 @@ public class Substitution {
 		return varMap.equals(s.varMap);
 	}
 
+	public boolean containsAll(Substitution other) {
+	  return varMap.entrySet().containsAll(other.varMap.entrySet());
+	}
+	
 	/*
     public Set<Atom> getAtomiables() {
 	Set<Variable> s = new HashSet<Variable>();
