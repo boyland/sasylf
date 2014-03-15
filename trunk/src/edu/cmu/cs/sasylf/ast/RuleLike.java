@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 /** Common interface for Rules and Theorems */
@@ -78,6 +79,7 @@ public abstract class RuleLike extends Node {
 		
 	/** Computes a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion).
 	 * Also freshens the variables in this term.
+	 * @param wrappingSub <i>output</i>
 	 */
 	public Term getFreshRuleAppTerm(Term instanceTerm, Substitution wrappingSub, List<Term> termArgsIfKnown /* may be null */) {
 		debug("getting conclusion term for rule " + getName());
@@ -86,10 +88,9 @@ public abstract class RuleLike extends Node {
 		ruleSub = concTerm.freshSubstitution(ruleSub);
 		concTerm = concTerm.substitute(ruleSub);
 		int adaptation = ((ClauseUse)getConclusion()).getAdaptationNumber(concTerm, instanceTerm, false);
-		// TODO: check that premises and conclusion are rooted in the same variable!!!
+		
 		// TODO: major hack here.  Must rationalize gamma checking.
 		List<Term> args = new ArrayList<Term>();
-		//Substitution wrappingSub = new Substitution();
 		for (int i = 0; i < getPremises().size(); ++i) {
 			Element elem = getPremises().get(i);
 			Term argTerm = elem.asTerm();
@@ -121,19 +122,21 @@ public abstract class RuleLike extends Node {
           if (termArgsIfKnown != null && !((ClauseUse)getConclusion()).isRootedInVar()) {
             localInstanceTerm = termArgsIfKnown.get(i);
             localAdaptation = localInstanceTerm.countLambdas() - argTerm.countLambdas();
+            Util.debug("  localAdaptation = " + localAdaptation);
           }
-          debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
+          Util.debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
           argTerm = ClauseUse.wrapWithOuterLambdas(argTerm, localInstanceTerm, localAdaptation, wrappingSub);
           // System.out.println("    wrapping sub = " + wrappingSub);
-          debug("\tresult is " + argTerm);
+          Util.debug("\tresult argTerm is " + argTerm);
         }
       }
 			args.add(argTerm);
 		}
-		debug("\tgenerated concterm before adaptation: " + concTerm);
-		debug("adaptation of " + concTerm + " to " + instanceTerm + " is " + adaptation);
+		Util.debug("\tgenerated concterm before adaptation: " + concTerm);
+		Util.debug("adaptation of " + concTerm + " to " + instanceTerm + " is " + adaptation);
+		Util.debug("\twrappingSub = " + wrappingSub);
 		concTerm = ((ClauseUse)getConclusion()).wrapWithOuterLambdas(concTerm, instanceTerm, adaptation, wrappingSub, false); 
-		debug("\tresult is " + concTerm);
+		Util.debug("\tresult concTerm is " + concTerm);
 		args.add(concTerm);
 		Term ruleTerm = App(getRuleAppConstant(), args);
 		
@@ -154,8 +157,8 @@ public abstract class RuleLike extends Node {
 		    List<String> varNames = new ArrayList<String>();
 		    
         List<? extends Term> fixargs = ((Application)appl).getArguments();
-		    ClauseUse.readNamesAndTypes(absMatchTerm, fixargs.size(), varNames, varTypes);
 		    Term body = e.getKey();
+        ClauseUse.readNamesAndTypes(absMatchTerm, fixargs.size(), varNames, varTypes, body);
 		    for (Term ty : varTypes) {
 		      body = Facade.Abs(ty, body);
 		    }

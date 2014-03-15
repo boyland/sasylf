@@ -17,12 +17,15 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class ClauseUse extends Clause {
 	public ClauseUse(Location loc, List<Element> elems, ClauseDef cd) {
@@ -318,9 +321,6 @@ public class ClauseUse extends Clause {
 	 * assumptions to varBindings and assumedVars.  For varBindings we
 	 * only add actual variables, but for assumed vars we also add a variable
 	 * for the derivation represented by the hypothetical judgment.
-	 * 
-	 * TODO: not sure, may need to add it to both
-	 * 
 	 * For other elements, does nothing.
 	 * 
 	 * Returns non-null if the innermost assumption is a NonTerminal (and returns that NonTerminal).
@@ -345,6 +345,8 @@ public class ClauseUse extends Clause {
 
 		int varIndex = cons.getVariableIndex();
 
+		// TODO: rewrite this code to handle non-variable assumptions too.  (If we add them)
+		
 		// Previously: this code would look for variables in the elements, but a variable
 		// appearing was not necessary in a binding occurrence, e.g.  X <: X2
 		// where X is being bound but X2 is a USE of an existing variable.
@@ -381,28 +383,32 @@ public class ClauseUse extends Clause {
 				List<Term> varTypes = new ArrayList<Term>();
 				for (Pair<String, Term> p : varBindings)
 					varTypes.add(p.second);
-				debug("varTypes = "+ varTypes);
+				Util.debug("varTypes = "+ varTypes);
 				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub, 1);
 				ruleClauseTerm = ruleClauseTerm.substitute(bindingSub);
-				debug("unifying terms " + myClauseTerm + " and " + ruleClauseTerm + " from " + this + " and " + varRuleConcAssumption);
+				Util.debug("unifying terms " + myClauseTerm + " and " + ruleClauseTerm + " from " + this + " and " + varRuleConcAssumption);
 				Substitution adaptationSub = myClauseTerm.unifyAllowingBVs(ruleClauseTerm);
 				// transform adaptationSub to adapt from ruleClauseTerm to myClauseTerm
 				adaptationSub.avoid(myClauseTerm.getFreeVariables());
-				debug("adaptationSub = "+ adaptationSub);
+				Util.debug("adaptationSub = "+ adaptationSub);
+				Util.debug("\tand bindingSub = " + bindingSub);
 				if (derivTerm != null) {
-					debug("\torig   derivTerm = " + derivTerm);
+					Util.debug("\torig   derivTerm = " + derivTerm);
 					derivTerm.freshSubstitution(ruleFreshSub);
 					derivTerm = derivTerm.substitute(ruleFreshSub);
-					bindingSub.incrFreeDeBruijn(2);
+					bindingSub.incrFreeDeBruijn(1); //XXX: This is unclear (JTB)
 					derivTerm = derivTerm.substitute(bindingSub);
-					debug("\tmiddle derivTerm = " + derivTerm);
+					Util.debug("\tmiddle derivTerm = " + derivTerm);
 					derivTerm = derivTerm.substitute(adaptationSub);
-					derivTerm = derivTerm.incrFreeDeBruijn(-1);
+					// derivTerm = derivTerm.incrFreeDeBruijn(-1);  <-- KLUDGE no longer needed since this method corrected
 				}
-				debug("\tresult derivTerm = " + derivTerm);
+				Util.debug("\tresult derivTerm = " + derivTerm);
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
-				/* v2 */ varBindings.add(pair(derivSym, derivTerm));
+				if (derivTerm != null) {
+				  Util.verify(includeAssumptionTerm, "assumoption term wasn't supposed to exist!");
+				  /* v2 */ varBindings.add(pair(derivSym, derivTerm));
+				}
       }
 		}
 		
@@ -470,21 +476,28 @@ public class ClauseUse extends Clause {
 		List<Term> varTypes = new ArrayList<Term>();
 		List<String> varNames = new ArrayList<String>();
 		
-		readNamesAndTypes(absMatchTerm, i, varNames, varTypes);
+		readNamesAndTypes(absMatchTerm, i, varNames, varTypes, null); // pass in null, because doWrap checks
 
 		return doWrap(term, varNames, varTypes, sub);
   }
   
 	/**
-	 * Reads the names and types of the i lambdas on the outside of absMatchTerm, and adds them to varNames and varTypes
+	 * Reads the names and types of the i lambdas on the outside of absMatchTerm, and adds them to varNames and varTypes.
+	 * XXX: This code is a mess: we have two ways to avoid non-subordinate types, and clients make use of different ones.
+	 * @param base TODO
 	 */
-	public static void readNamesAndTypes(Abstraction absMatchTerm, int i, List<String> varNames, List<Term> varTypes) {
+	public static void readNamesAndTypes(Abstraction absMatchTerm, int i, List<String> varNames, List<Term> varTypes, Term base) {
 		// determine how to wrap
-		for (int j = 0; j < i; ++j) {
-			varTypes.add(absMatchTerm.varType);
-			varNames.add(absMatchTerm.varName);
-			if (j < i-1)
-				absMatchTerm = (Abstraction) absMatchTerm.getBody();
+	  Constant ty = base == null ? null : base.getTypeFamily();
+	  for (int j = 0; j < i; ++j) {
+	    if (ty == null || FreeVar.canAppearIn(absMatchTerm.varType.baseTypeFamily(), ty)) {
+	      varTypes.add(absMatchTerm.varType);
+	      varNames.add(absMatchTerm.varName);
+	    } else {
+	      Util.debug("Skipping dependency on variable " + absMatchTerm.varName + " for " + base);
+	    }
+      if (j < i-1)
+        absMatchTerm = (Abstraction) absMatchTerm.getBody();
 		}
 	}
 
@@ -530,8 +543,19 @@ public class ClauseUse extends Clause {
 		debug("after binding in free vars: " + term + " with sub " + sub);
 
 		// do the wrapping
+		Constant typeFamily = term.getTypeFamily();
 		for (int j = varNames.size()-1; j >= 0; --j) {
-			term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
+		  Constant varFamily = varTypes.get(j).baseTypeFamily();
+      if (FreeVar.canAppearIn(varFamily, typeFamily)) {
+		    term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
+		  } else if (term.equals(new BoundVar(1))) {
+		    term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
+		    typeFamily = varFamily;
+		  } else {
+		    Util.debug("Skipping " + varNames.get(j) + " in " + term);
+		    term = term.incrFreeDeBruijn(-1);
+		    Util.debug("  term is now " + term);
+		  }
 		}
 
 		return term;

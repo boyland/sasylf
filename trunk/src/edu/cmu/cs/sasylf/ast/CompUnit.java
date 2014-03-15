@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class CompUnit extends Node {
@@ -183,7 +184,7 @@ public class CompUnit extends Node {
 		}
 
 		
-		computeSubordination(ctx);
+		computeSubordinationSyntax(ctx);
 
 		for (Judgment j: judgments) {
 			j.defineConstructor(ctx);
@@ -204,6 +205,8 @@ public class CompUnit extends Node {
         // already reported.
       }
 		}
+		
+		computeSubordinationJudgment(judgments);
 
 		for (Theorem t: theorems) {
 			try {
@@ -213,7 +216,8 @@ public class CompUnit extends Node {
 			}
 		}
 	}
-	private void computeSubordination(Context ctx) {
+	
+	private void computeSubordinationSyntax(Context ctx) {
 		for (Syntax syntax : ctx.synMap.values()) {
 			Term synType = syntax.typeTerm();
 			for (Clause clause : syntax.getClauses()) {
@@ -236,8 +240,33 @@ public class CompUnit extends Node {
 				}
 			}
 		}
-		
-		FreeVar.computeAppearsInClosure();
 	}
 
+	private void computeSubordinationJudgment(List<Judgment> js) {
+	  for (Judgment j : js) {
+	    Term jType = j.typeTerm();
+	    for (Element e : j.getForm().getElements()) {
+	      if (e instanceof NonTerminal) {
+	        Term nType = ((NonTerminal)e).getTypeTerm();
+	        Util.debug("subordination: " + nType + " < " + jType);
+          FreeVar.setAppearsIn(nType, jType);
+	      }
+	    }
+	    for (Rule r : j.getRules()) {
+	      if (r.isAssumption()) {
+	        Util.debug("subordination: " + jType + " < " + jType + " forced");
+	        FreeVar.setAppearsIn(jType,jType);
+	        Term cType = r.getAssumes().getTypeTerm();
+	        Util.debug("subordination: " + jType + " < " + cType + " forced.");
+          FreeVar.setAppearsIn(jType,cType);
+	      }
+	      for (Clause cl : r.getPremises()) {
+	        if (!(cl instanceof ClauseUse)) continue; // avoid recovered error -> internal error
+	        Term pType = ((ClauseUse)cl).getTypeTerm();
+	        Util.debug("subordination: " + pType + " < " + jType);
+          FreeVar.setAppearsIn(pType, jType);
+	      }
+	    }
+	  }
+	}
 }

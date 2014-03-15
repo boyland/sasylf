@@ -146,14 +146,15 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				    if (ctx.varfreeNTs.contains(caseNT)) continue;
 				    root = ctx.innermostGamma;
 				  }
-				  debug("Adding variable cases for " + syntax);
+				  Util.debug("Adding variable cases for " + syntax + " with root = " + root);
+				  // XXX: The following loop is dead code: varBindings is still empty!
 				  for (Pair<String,Term> pair : varBindings) {
 				    if (pair.second.equals(syntax.typeTerm())) {
-				      debug("  for " + pair.first);
+				      Util.debug("  for " + pair.first);
 				      Variable gen = new Variable(pair.first,getLocation());
 				      gen.setType(syntax);
 				      Term caseTerm = ClauseUse.newWrap(gen.computeTerm(varBindings),varBindings,0);
-				      debug("  generated " + caseTerm);
+				      Util.debug("  generated " + caseTerm);
 				      set.add(new Pair<Term,Substitution>(caseTerm,new Substitution()));
 				    }
 				  }
@@ -181,11 +182,12 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				          }
 				          ClauseUse fakeUse = new ClauseUse(getLocation(),copied,(ClauseDef)c);
 				          List<Pair<String,Term>> moreBindings = new ArrayList<Pair<String,Term>>();
-				          fakeUse.readAssumptions(moreBindings, true);
-				          debug("  for " + moreBindings.get(0));
-				          Term caseTerm = ClauseUse.newWrap(new BoundVar(varBindings.size()+2),varBindings,0);
+				          fakeUse.readAssumptions(moreBindings, false);
+				          Util.debug("  for " + moreBindings.get(0));
+				          // XXX: The following is misleading: varBindings is still empty
+				          Term caseTerm = ClauseUse.newWrap(new BoundVar(varBindings.size()+1),varBindings,0);
 				          caseTerm = ClauseUse.newDoBindWrap(caseTerm, moreBindings);
-				          debug("  generated " + caseTerm);
+				          Util.debug("  generated " + caseTerm);
 		              set.add(new Pair<Term,Substitution>(caseTerm,new Substitution()));
 				          break;
 				        }

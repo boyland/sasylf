@@ -9,10 +9,11 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -113,6 +114,7 @@ public class SyntaxCase extends Case {
     // reuse code:
     if (assumes != null) concElem = new AssumptionElement(getLocation(),concElem,assumes);
     Term concTerm = concElem.asTerm();
+    Util.debug("concTerm = " + concTerm);
     
     for (FreeVar fv : concTerm.getFreeVariables()) {
       if (ctx.inputVars.contains(fv)) {
@@ -153,9 +155,11 @@ public class SyntaxCase extends Case {
     int lambdaDifference =  computedCaseTerm.countLambdas() - adaptedCaseAnalysis.countLambdas();
     // TODO: SHould check matchTermForAdaptation (RuleCase code doesn't look right to me)
     if (lambdaDifference > 0) {
-      if (lambdaDifference != 2) {
+      if (lambdaDifference != 1) {
         ErrorHandler.report("New assumption can only add one variable",this);
       }
+      // JTB: The code here is tricky because syntax adds just one variable,
+      // but adaptation info must use both variables.
       verify(concElem instanceof AssumptionElement,"not an assumption element? " + concElem);
       AssumptionElement ae = (AssumptionElement)concElem;
       if (!(ae.getBase() instanceof Variable)) {
@@ -167,12 +171,18 @@ public class SyntaxCase extends Case {
         ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
       }
       
-      // JTB: Much of the following code copied from RuleCase, perhaps assumption element should do something?
       Substitution adaptationSub = new Substitution();
-      adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
-      debug("adaptedCaseAnalysis = " + adaptedCaseAnalysis);
-      AdaptationInfo info = new AdaptationInfo(newRoot);
-      ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference, info.varNames, info.varTypes);
+      List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
+      ((ClauseUse)ae.getAssumes()).readAssumptions(varBindings, true);
+      // JTB: The following ran into problems because of new subordination fixes:
+      // adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
+      AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);
+      adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
+      Util.debug("adaptedCaseAnalysis = " + adaptedCaseAnalysis);
+      Util.debug("new adaptationSub = " + adaptationSub);
+      
+      
+      //ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference*2, info.varNames, info.varTypes, null);
 
       ctx.adaptationSub = adaptationSub;
       ctx.adaptationMap.put(ctx.innermostGamma, info);
@@ -204,7 +214,7 @@ public class SyntaxCase extends Case {
 			ctx.inputVars.remove(fv);
 		}
 
-		// update the set of subderivations
+		/* / update the set of subderivations
 		if (isSubderivation) {
 		  Element base = concElem.asFact(ctx, caseAssumptions).getElement();
 		  Element assumes = null;
@@ -217,7 +227,7 @@ public class SyntaxCase extends Case {
 		    // add each part of the clause to the list of subderivations
 		    ctx.subderivations.addAll(((ClauseUse)base).getNonTerminals(ctx, assumes));
 		  }
-		}
+		}*/
 		
 		// update varFree
 		if (ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {

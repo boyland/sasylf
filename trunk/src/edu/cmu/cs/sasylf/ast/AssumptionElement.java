@@ -3,7 +3,7 @@
  */
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 /**
  * A syntax element (binding, variable or nonterminal) that is bound in a context
@@ -100,20 +101,19 @@ public class AssumptionElement extends Element {
     debug("Compute: " + this);
     int initialBindingSize = varBindings.size();
     if (context instanceof ClauseUse)
-      ((ClauseUse)context).readAssumptions(varBindings, true);
+      ((ClauseUse)context).readAssumptions(varBindings, base.getType() instanceof Judgment);
     Term t = base.computeTerm(varBindings);
     t = ClauseUse.newWrap(t, varBindings, initialBindingSize);
     while (varBindings.size() > initialBindingSize) {
       varBindings.remove(varBindings.size()-1);
     }
-    debug("  result = " + t);
+    Util.debug("  result = " + t);
     return t;
   }
   
   
   @Override
   public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
-    System.out.println("AssumptionElement.adaptTermTo ?? ");
     return super.adaptTermTo(term, matchTerm, sub);
   }
 

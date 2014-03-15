@@ -129,7 +129,8 @@ public class Context implements Cloneable {
         bindingTypes.containsKey(s) ||
         inputVars.contains(fake) ||
         outputVars.contains(fake) ||
-        currentSub.getMap().containsKey(fake);
+        currentSub.getMap().containsKey(fake) ||
+        adaptationMap.containsKey(new NonTerminal(s,null));
   }
   
   /**

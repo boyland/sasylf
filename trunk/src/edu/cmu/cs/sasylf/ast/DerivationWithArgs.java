@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
@@ -73,27 +72,12 @@ abstract public class DerivationWithArgs extends Derivation {
 		}
 	}
 
-	/** Gets the ith argument as a term and adapts it to the current context using wrappingSub
-	 */
-	protected Term getAdaptedArg(Context ctx, Substitution wrappingSub, int i) {
-		Element element = getArgs().get(i).getElement();
-		Term argTerm = DerivationByAnalysis.adapt(element.asTerm(), element, ctx, false);
-		//Term argTerm = element.asTerm().substitute(ctx.currentSub);
-		
-		/*tdebug("arg " + i);
-		if (ctx.adaptationNumber > 0 && element instanceof ClauseUse) {
-			ClauseUse cu = (ClauseUse) element;
-			tdebug("ctx.adaptationRoot = " + ctx.adaptationRoot);
-			if (cu.getRoot().equals(ctx.adaptationRoot))
-				argTerm = cu.wrapWithOuterLambdas(argTerm, ctx.matchTermForAdaptation, ctx.adaptationNumber, wrappingSub, false);
-		}*/
-		return argTerm;
-	}
-
 	/** Gets the ith argument as a term and adapts it to the current context
 	 */
 	protected Term getAdaptedArg(Context ctx, int i) {
-		return getAdaptedArg(ctx, new Substitution(), i);
+		Element element = getArgs().get(i).getElement();
+    Term argTerm = DerivationByAnalysis.adapt(element.asTerm(), element, ctx, false);
+    return argTerm;
 	}
 	
 	private List<Clause> argStrings = new ArrayList<Clause>();
