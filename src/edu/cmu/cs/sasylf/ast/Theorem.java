@@ -1,7 +1,14 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -9,8 +16,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-
-import static edu.cmu.cs.sasylf.util.Util.*;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Theorem extends RuleLike {
@@ -246,10 +252,10 @@ public class Theorem extends RuleLike {
 		else {
 			Derivation last = derivs.get(derivs.size()-1);
 			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
-			debug("orig theoremTerm: "+theoremTerm);
-			debug("orig derivTerm: "+derivTerm);
+			Util.debug("orig theoremTerm: "+theoremTerm);
+			Util.debug("orig derivTerm: "+derivTerm);
 			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx, errorNode);
-			debug("adapted theoremTerm: " + theoremTerm);
+			Util.debug("adapted theoremTerm: " + theoremTerm);
 
 			try {
 				debug("end of theorem ("+last.getLocation().getLine()+"): unifying " + derivTerm + " to match " + theoremTerm);

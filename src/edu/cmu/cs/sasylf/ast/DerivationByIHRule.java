@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 public abstract class DerivationByIHRule extends DerivationWithArgs {
 	public DerivationByIHRule(String n, Location l, Clause c) {
@@ -38,15 +39,26 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
     // make sure the number of arguments is correct
     RuleLike ruleLike = getRule(ctx);
     if (getArgs().size() != ruleLike.getPremises().size()) {
-      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, ruleLike.getKind()+" "+getRuleName(), this);
+      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, ruleLike.getKind()+" "+getRuleName()+", which expects "+ruleLike.getPremises().size(), this);
     }
-    boolean contextCheckNeeded = false;
-		
+    
+    // For better error reporting, do a first stab at type-checking the arguments
+    int n = getArgs().size();
+    for (int i=0; i < n; ++i) {
+      Element formal = ruleLike.getPremises().get(i);
+      Element actual = getArgs().get(i).getElement();
+      if (formal.getType() != actual.getType()) {
+        ErrorHandler.report("argument #" + (i+1) + "to " + ruleLike.getKind()+" "+getRuleName()+" is wrong type", this);
+      }
+    }
+
+    boolean contextCheckNeeded = false;		
 		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(ruleLike.getAssumes())) {
 		  NonTerminal nt = ruleLike.getAssumes();
 		  if (nt == null) {
 		    contextCheckNeeded = true;
-		  } else if (ctx.innermostGamma.getType() != nt.getType()) {
+		  } else if (ctx.innermostGamma.getType() != nt.getType()) { 
+		    // XXX: if we have more than one type of context, we're in trouble anyway
 		    contextCheckNeeded = true;
 		  }
 		  // JTB: There are two possible problems:
@@ -77,12 +89,10 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		  }
 		}
 		
-		// build ruleTerm: the rule claimed by the user, with all free variables freshified,
+		// build ruleTerm: the rule claimed by the user
 		// and adapted to the variables in scope at this point (i.e. Gamma unrolled as necessary)
 		Element elem = getElement();
 		Term derivTerm = DerivationByAnalysis.adapt(elem.asTerm(), elem, ctx, false);
-			//getElement().asTerm().substitute(ctx.currentSub);
-		Substitution wrappingSub = new Substitution(); // TODO: use carried adaptation sub
 		
 		// build appliedTerm: the element claimed by the user for the conclusion and the
 		// premises claimed by the user as the arguments
@@ -90,23 +100,29 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		List<Term> termArgsWithVar = new ArrayList<Term>();
 		Set<FreeVar> argFreeVars = new HashSet<FreeVar>();
 		for (int i = 0; i < getArgs().size(); ++i) {
-			Term argTerm = getAdaptedArg(ctx, wrappingSub, i);
+			Term argTerm = getAdaptedArg(ctx,i);
 			termArgs.add(argTerm);
 			termArgsWithVar.add(argTerm);
 			argFreeVars.addAll(argTerm.getFreeVariables());
 		}
-		// add a FreeVar for the conclusion; we are trying to discover what this should be
-		termArgs.add(derivTerm); // tried concTermVar
+    termArgs.add(derivTerm);
+    Term appliedTerm = App(ruleLike.getRuleAppConstant(), termArgs);
+
+    // add a FreeVar for the conclusion; we are trying to discover what this should be
 		FreeVar concTermVar = FreeVar.fresh("conclusion", Constant.UNKNOWN_TYPE); 
 		termArgsWithVar.add(concTermVar);
-		Term appliedTerm = App(ruleLike.getRuleAppConstant(), termArgs);
 		Term appliedTermWithVar = App(ruleLike.getRuleAppConstant(), termArgsWithVar);
+		
+    Substitution wrappingSub = new Substitution();		
 		Term ruleTerm = ruleLike.getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
+		Util.debug("wrappingSub for rule application is " + wrappingSub);
 
 		// unify the two terms, and check that the appropriate instance relationships hold
 		Substitution sub;
 		try {
+		  Util.debug("appliedTerm = "+ appliedTerm + ", ruleTerm = " + ruleTerm);
 			sub = appliedTerm.unify(ruleTerm);
+			Util.debug("  gets sub = " + sub);
 
 			// check to make sure the user didn't assume too much in derivTerm
 			// for RULES, this is already covered
@@ -193,7 +209,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		}
 
 		// Now we must check that all relations that assume a context don't lose that context
-		int n = getArgs().size();
 		boolean anyContextsIn = false;
     for (int i=0; i < n; ++i) {
 		  Element formal = ruleLike.getPremises().get(i);
@@ -233,7 +248,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
         Term inductiveTerm = inductiveArg.getElement().asTerm();
         Term inductionSub = inductionTerm.substitute(ctx.currentSub);
         Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
-        // System.out.println("Is " + inductiveSub + " subterm of " + inductionSub + "?");
+        Util.debug("Is " + inductiveSub + " subterm of " + inductionSub + "?");
         if (!inductionSub.containsProper(inductiveSub)) {
           ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
         }

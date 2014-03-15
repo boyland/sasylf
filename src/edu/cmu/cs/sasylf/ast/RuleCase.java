@@ -131,7 +131,7 @@ public class RuleCase extends Case {
 			// store the adapted term to keep track of how we unrolled the context
 			ctx.matchTermForAdaptation = adaptedCaseAnalysis;
 			AdaptationInfo info = new AdaptationInfo(((ClauseUse)conclusion.getClause()).getRoot());
-			ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference, info.varNames, info.varTypes);
+			ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference, info.varNames, info.varTypes, null);
 
 			// may not be the same as the previous context...
 			if (ctx.innermostGamma != null && ctx.innermostGamma.equals(info.nextContext))
