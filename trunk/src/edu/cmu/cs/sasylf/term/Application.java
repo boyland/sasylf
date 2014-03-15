@@ -5,9 +5,7 @@ import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -177,8 +175,7 @@ public class Application extends Term {
 				worklist.add(makePair(t.apply(arguments, 0), other));
 				unifyHelper(current, worklist);
 			} else {
-				// TODO: apply pattern unification here first, if possible!
-				
+				// TODO: apply pattern unification here first, if possible!				
 				other.unifyFlexApp((FreeVar)function, arguments, current, worklist);
 			}
 		}
@@ -201,22 +198,13 @@ public class Application extends Term {
 			 * set E = \x1...\xm . C (H1 e1''...em'') ... (Hn...)
 			 * 
 			 * in above, E is otherVar, e1'...em' is otherArgs, C is function, e1..en is arguments
-			 * e1''...em'' is otherArgs adjusted to capture variables bound in x1..xm
-			 * (i.e. if ei' is of the form xj then ek'' = [xi/xj]ek'
+			 * e1''...em'' is xm...x1.
 			 */
-			
-			// first compute the bound variable adjustments
-			Map<Integer, Term> adjustmentMap = new HashMap<Integer,Term>();
-			for (int i = 0; i < otherArgs.size(); ++i) {
-				if (otherArgs.get(i) instanceof BoundVar) {
-					BoundVar bv = (BoundVar) otherArgs.get(i);
-					int j = bv.getIndex();
-					int iAsIndex = i+1;
-					if (iAsIndex != j) {
-						debug("adjusting " + j + " to " + iAsIndex + " in " + otherArgs);
-						adjustmentMap.put(j, Facade.BVar(iAsIndex));
-					}
-				}
+
+			List<Term> helperArgs = new ArrayList<Term>();
+			int m = otherArgs.size();
+			for (int i=0; i < m; ++i) {
+			  helperArgs.add(new BoundVar(m-i));
 			}
 			
 			Constant constant = (Constant) function;
@@ -229,11 +217,9 @@ public class Application extends Term {
 				partialFunctionType = ((Abstraction)partialFunctionType).getBody();
 				
 				FreeVar newVar = FreeVar.fresh("none", newVarType);
+        newArgs.add(new Application(newVar, helperArgs));
 				Application argApp = new Application(newVar, otherArgs);
-				// Adjust to capture newly bound variables
-				Term adjustedApp = argApp.subForBoundVars(adjustmentMap);
-				newArgs.add(adjustedApp); // uses adjusted app
-				worklist.add(makePair(argApp, arguments.get(i))); // uses non-adjusted app
+				worklist.add(makePair(argApp, arguments.get(i))); 
 			}
 
 			Term varMatch = new Application(constant, newArgs);
