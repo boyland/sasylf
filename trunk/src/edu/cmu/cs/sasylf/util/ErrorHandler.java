@@ -103,7 +103,11 @@ public class ErrorHandler {
 	  report(errorType, null, obj.getLocation(), fixInfo, false, true);
 	}
 
-	public static void report(Errors errorType, Node obj) {
+  public static void warning(Errors errorType, String msg, Node obj, String debugInfo) {
+    report(errorType, msg, obj.getLocation(), debugInfo, false, true);
+  }
+
+  public static void report(Errors errorType, Node obj) {
 		report(errorType, null, obj.getLocation(), null, true, true);
 	}
 
