@@ -328,7 +328,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	
 	/** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
-	 * and appliedTerm is the rule term built up from term.
+	 * and appliedTerm is the rule term built up from term.  
 	 */
 	private Pair<Term, Substitution> checkRuleApplication(Term term,
 			Term ruleTerm, Term appliedTerm) {
@@ -353,6 +353,7 @@ public class Rule extends RuleLike implements CanBeCase {
 					substituted.removeBoundVarsAbove(0, removeBVSub);
 					Term newSubstituted = substituted.substitute(removeBVSub);
 					debug("got new substitution: " + newSubstituted);
+					sub.remove(v);
 					sub.add(v, newSubstituted);
 					//throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + sub);
 				}

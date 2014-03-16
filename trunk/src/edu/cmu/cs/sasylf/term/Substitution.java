@@ -103,7 +103,12 @@ public class Substitution {
 	}
 	
 	/** guarantees compositionality, ensures no recursion in substitution (including mutual recursion)
-	 * but allows substituting X for X (this leaves the map unchanged)*/
+	 * but allows substituting X for X (this leaves the map unchanged). If the variable
+   * already has a binding, the two values are unified, which might produce a
+   * unification exception, which must be caught.
+   * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
+   * @throws UnificationFailed two binding for the variable failed to unify.
+   */
 	public void add(Atom var, Term t) {
 		debug("substituting " + t + " for " + var + " adding to " + this);
 
@@ -128,6 +133,12 @@ public class Substitution {
 			throw new EOCUnificationFailed("Extended Occurs Check failed: " + var + " is free in " + tSubstituted, var);
 
 		// perform substitution on the existing variables
+		if (varMap.containsKey(var)) {
+		  Term oldTerm = varMap.get(var);
+		  Substitution unifier = oldTerm.unify(tSubstituted);
+		  tSubstituted = tSubstituted.substitute(unifier);
+		  compose(unifier);
+		}
 		if (!varMap.isEmpty()) {
 			Substitution newSub = new Substitution(tSubstituted, var);
 			for (Atom v : varMap.keySet()) {
@@ -139,6 +150,10 @@ public class Substitution {
 		varMap.put(var, tSubstituted);
 	}
 
+	public Term remove(Atom v) {
+	  return varMap.remove(v);
+	}
+	
 	/**
 	 * Return what this variable is substituted with according to this substitution.
 	 * @param var variable to look up.
