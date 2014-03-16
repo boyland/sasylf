@@ -1,4 +1,4 @@
-SASyLF version 1.3.1a4
+SASyLF version 1.3.1a5
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -115,7 +115,7 @@ RELEASE HISTORY
 	Lexicographic and unordered induction
 	Proof of cut elimination
 	Bug fixes: bad23
-	Resolved issues #33
+	Resolved issues #33, #50
 1.3.0	Packages and Projects (& 1.2.5)
     The package declaration has a semantics now and we require folders = packages.
     Eclipse plugin updated to add project and package support and builders
