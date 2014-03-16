@@ -25,7 +25,7 @@
  * whether direct or indirect, are strictly prohibited.  Export or reexport
  * to countries subject to U.S. embargo or to entities identified on U.S.
  * export exclusion lists, including, but not limited to, the denied persons
- * and specially designated nationals lists is strictly prohibited.
+ * and specially designated nationals lisfts is strictly prohibited.
  */
 
 options {
@@ -339,7 +339,8 @@ TOKEN :
   < BAR:
       ("---" ( "-" )* ) |
       ("\u2014\u2014\u2014" ( "\u2014" )* ) |
-      ("\u2015\u2015\u2015" ( "\u2015" )* )
+      ("\u2015\u2015\u2015" ( "\u2015" )* ) |
+      ("\u2500\u2500\u2500" ( "\u2500" )* )
   >
 }
 
@@ -1043,7 +1044,8 @@ TOKEN :
          "\\",
 	 	 "/"
       ] | "|-" |
-      ~ [ "\u0000"-"\u007f",
+      ~ [ // "\u2014", "\u2015", "\u2500"
+          "\u0000"-"\u007f",
          "\u0080"-"\u009f",
          "\u00a2"-"\u00a5",
          "\u00aa",
