@@ -195,8 +195,10 @@ public class TermPrinter {
       } else {
         throw new RuntimeException("abstraction with only one arg?: " + x);
       }
+    } else if (x instanceof Constant) {
+      return appAsClause((Constant)x,Collections.<Element>emptyList());
     } else {
-      throw new RuntimeException("unknown element: " + x);
+      throw new RuntimeException("unknown element: " + x + " of class " + x.getClass());
     }
   }
   
@@ -305,6 +307,7 @@ public class TermPrinter {
   private ClauseUse appAsClause(Constant con, List<Element> args) {
     String fname = con.getName();
     ClauseDef cd = ctx.prodMap.get(fname);
+    if (fname.equals("or[]")) return OrClauseUse.makeEmptyOrClause(location);
     if (cd == null) {
       throw new RuntimeException("no cd for " + fname);
     }
@@ -475,6 +478,10 @@ public class TermPrinter {
   private static void prettyPrint(StringBuilder sb, Element e, boolean parenthesize, int level) {
     if (level > SUSPECT_INFINITE_RECURSION) {
       sb.append("#");
+      return;
+    }
+    if (e instanceof OrClauseUse && ((OrClauseUse)e).getClauses().isEmpty()) {
+      sb.append("contradiction");
       return;
     }
     if (e instanceof NonTerminal || e instanceof Variable) {
