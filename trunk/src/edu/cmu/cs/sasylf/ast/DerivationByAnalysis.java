@@ -6,6 +6,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
@@ -98,6 +100,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		if (isSubderivation != null) debug("found subderivation: " + targetDerivation);
 		
 		ctx.caseTermMap = new LinkedHashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
+		Map<CanBeCase,Set<Pair<Term,Substitution>>> savedMap = null;
+		if (ctx.savedCaseMap != null) savedMap = ctx.savedCaseMap.get(targetDerivation.getName());
 		
 		// JTB: There are unfortunately many ways to be a syntax case:
 		// 1. a nonterminal: e.g. t
@@ -123,7 +127,32 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
       }
 		}
 
-		if (caseNT != null) {
+		if (savedMap != null) {
+		  for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> e : savedMap.entrySet()) {
+		    HashSet<Pair<Term, Substitution>> newSet = new HashSet<Pair<Term,Substitution>>();
+		    for (Pair<Term,Substitution> p : e.getValue()) {
+		      Pair<Term,Substitution> newPair;
+		      try {
+		        Util.debug("term = " + p.first);
+		        Util.debug("sub = " + p.second);
+		        Util.debug("current = " + ctx.currentSub);
+		        Substitution newSubstitution = new Substitution(p.second);
+		        newSubstitution.compose(ctx.currentSub);
+		        if (caseNT != null) {
+		          FreeVar v = new FreeVar(caseNT.getSymbol(),p.first.getType(new ArrayList<Pair<String,Term>>()));
+		          newSubstitution.add(v,p.first);
+		        }
+		        Util.debug("newSub = " + newSubstitution);
+		        newPair = new Pair<Term,Substitution>(p.first.substitute(ctx.currentSub),newSubstitution);
+		      } catch (UnificationFailed ex) {
+		        Util.debug("case no longer feasible.");
+		        continue;
+		      }
+		      newSet.add(newPair);
+		    }
+		    ctx.caseTermMap.put(e.getKey(), newSet);
+		  }
+		} else if (caseNT != null) {
 			Syntax syntax = caseNT.getType();
 			// JTB: TODO: We need to change this check; it's obsolete
 			if (!(ctx.currentCaseAnalysis instanceof FreeVar))
@@ -232,6 +261,12 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  }
 		}
 		if (error != null) throw error;
+		
+		if (this instanceof PartialCaseAnalysis) {
+		  if (ctx.savedCaseMap == null) ctx.savedCaseMap = new HashMap<String,Map<CanBeCase,Set<Pair<Term,Substitution>>>>();
+		  ctx.savedCaseMap.put(targetDerivation.getName(), ctx.caseTermMap);
+		  return;
+		}
 		
 		StringBuilder missingMessages = null;
 		StringBuilder missingCaseTexts = null;

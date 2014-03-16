@@ -93,6 +93,7 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
+			|| getToken(1).kind == DO
 			|| getToken(1).kind == MODULE
 			// || getToken(1).kind == NOT
 			// || getToken(1).kind == OR
@@ -139,6 +140,7 @@ public class DSLToolkitParser {
 		   t.kind == AND || 
 		   t.kind == CASE ||
 		   t.kind == CONTRADICTION ||
+		   t.kind == DO ||
 		   t.kind == END ||
 		   t.kind == EXTENDS ||
 		   t.kind == IS || 
@@ -300,6 +302,7 @@ TOKEN :
 | < REQUIRES: "requires" >
 | < PROVIDES: "provides" >
 | < EXTENDS: "extends" >
+| < DO: "do" >
 }
 
 /* LITERALS */
@@ -1806,7 +1809,7 @@ Theorem AbstractTheoremDeclaration() :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; String s; Clause c; Clause c2; Derivation d; Token of;}
+{ Token t; Token t2; Token a; String s; Case ca; Clause c; Clause c2; Derivation d; Token of;}
 {
    (     t=<IDENTIFIER> <COLON> c=Expr()
    (a=<AND> t2=<IDENTIFIER> <COLON> c2=Expr()
@@ -1829,6 +1832,16 @@ Derivation Derivation() :
 	  ((DerivationWithArgs)d).getArgStrings().add(c2); }
 	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).getArgStrings().add(c2); } )* 
 	{ return d; }
+|  t=<DO> <CASE> <ANALYSIS> <ON> t2=<IDENTIFIER>
+     { d = new PartialCaseAnalysis(new Location(t),t2.image); }
+        <COLON>
+    ( ca=Case() { if (ca != null) ((DerivationByAnalysis)d).getCases().add(ca); })*
+    of=<END> 
+   ( LOOKAHEAD(2) <CASE> t=<ANALYSIS> |
+     (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
+     { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
+    { d.setEndLocation(Location.endOf(t)); return d; }
+    
 }
 
 Derivation Justification(Token startT, Clause c) :

@@ -56,7 +56,8 @@ public class Context implements Cloneable {
   public Set<FreeVar> inputVars;
   public Set<FreeVar> outputVars;
   public Map<Fact,Pair<Fact,Integer>> subderivations = new HashMap<Fact,Pair<Fact,Integer>>();
-  public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap;
+  public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap; // entries mutable
+  public Map<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>> savedCaseMap; // entries immutable
   public Substitution adaptationSub;
   public Set<NonTerminal> varfreeNTs = new HashSet<NonTerminal>();
 
@@ -82,6 +83,7 @@ public class Context implements Cloneable {
     if (outputVars != null) result.outputVars = new HashSet<FreeVar>(outputVars);
     result.subderivations = new HashMap<Fact,Pair<Fact,Integer>>(subderivations);
     if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
+    if (result.savedCaseMap != null) result.savedCaseMap = new HashMap<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>>(savedCaseMap);
     if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varfreeNTs = new HashSet<NonTerminal>(varfreeNTs);
 
