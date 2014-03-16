@@ -19,8 +19,8 @@ syntax
   Fake ::= A◊ | h:A ⊢ Fake[h]
 
 // SASyLF requires that every variable bound in a context be associated
-// with a judgment (perhaps shared).  Here, for cleanliness, the judgments
-// are specialized to each variable type.
+// with a rule of some judgment.  Here, for cleanliness, we use a different
+// judgment for each kind of variable reference.
 
 judgment var: H:A ∈ Γ
 assumes Γ
@@ -117,9 +117,53 @@ theorem cut-admissible:
     // (and would be more efficient, since "{...}" tries all permutations).
     use induction on A, { d1, d2 }
     
-    // In the following case analysis, we end up handling the three L rules
-    // in d1 three times each in essentially identical ways.  
-    // Ideally the nine cases would be reduced to three.
+    // Sometimes in a proof, there are certain cases that are easy to
+    // handle that one wants to get out of the way.  The "do case analysis"
+    // does a case analysis that proves the result, and then remembers
+    // for the later part of the proof that these cases don't need to be
+    // handled again.  Without using this feature, our proof would be O(n^2)
+    // in length for the number of kinds of formulae.
+    
+    // Handle all "L" cases for d1.
+    do case analysis on d1:
+        case rule
+            d1a: Γ, h1 : A1, h2 : A2 ⊢ A
+            v1: H0 : (A1 ∧ A2) ∈ Γ
+            --------------------------------------------- andL
+            _: Γ ⊢ A
+        is
+            d2': Γ, h1 : A1, h2 : A2, h:A ⊢ A' by weakening on d2
+            d3: Γ, h : A1, h' : A2 ⊢ A' by induction hypothesis on A, d1a, d2'
+            proof by rule andL on d3, v1
+        end case
+
+        case rule
+            d1a: Γ ⊢ A1
+            d1b: Γ, h2: A2 ⊢ A
+            v1: H0 : (A1 ⇒ A2) ∈ Γ
+            --------------------------------- impL
+            _: Γ ⊢ A
+        is
+            d2': Γ, h2: A2, h:A ⊢ A' by weakening on d2
+            d3:  Γ, h2: A2 ⊢ A' by induction hypothesis on A, d1b, d2'
+            proof by rule impL on d1a, d3, v1
+        end case
+
+        case rule
+            d1a: Γ, h1: A0[I1] ⊢ A
+            v1: H0 : (∀ i • A0[i]) ∈ Γ
+            ----------------------------- forallL
+            _: Γ ⊢ A
+        is
+            d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
+            d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
+            proof by rule forallL on d3, v1
+        end case
+    
+    end case analysis
+    
+    // In the following case analysis, we can assume d1 isn't
+    // any of the "L" cases, since those are handled already.
     proof by case analysis on d2:
         case rule
             v: H0[h]: A' ∈ (Γ, h: A)
@@ -211,41 +255,6 @@ theorem cut-admissible:
                     d4': Γ ⊢ A' by induction hypothesis on A1, d1a, d4
                     proof by d4'
                   end case
-
-                  case rule
-                    d1a: Γ, h: A0, h': A3 ⊢ (A1 ∧ A2)
-                    v1: H0 : (A0 ∧ A3) ∈ Γ
-                    ------------------------- andL
-                    _: Γ ⊢ (A1 ∧ A2)
-                  is
-                    d2': Γ, h1:A0, h2:A3, h: (A1 ∧ A2) ⊢ A' by weakening on d2
-                    d3': Γ, h1:A0, h2:A3 ⊢ A' by induction hypothesis on A, d1a, d2'
-                    proof by rule andL on d3', v1
-                  end case
-
-                  case rule
-                    d1a: Γ ⊢ A0
-                    d1b: Γ, h : A3 ⊢ (A1 ∧ A2)
-                    v1: H0 : (A0 ⇒ A3) ∈ Γ
-                    --------------- impL
-                    _: Γ ⊢ (A1 ∧ A2)
-                  is
-                    d2': Γ, h': A3, h: (A1 ∧ A2) ⊢ A' by weakening on d2
-                    d3': Γ, h': A3 ⊢ A' by induction hypothesis on A, d1b, d2'
-                    proof by rule impL on d1a, d3', v1
-                  end case
-                  
-                  case rule
-                    d1a: Γ, h1: A0[I1] ⊢ A
-                    v1: H0 : (∀ i • A0[i]) ∈ Γ
-                    ----------------------------- forallL
-                    _: Γ ⊢ A
-                  is
-                    d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
-                    d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
-                    proof by rule forallL on d3, v1
-                  end case
-    
                 end case analysis
               end case
             end case analysis
@@ -296,17 +305,6 @@ theorem cut-admissible:
                   end case
 
                   case rule
-                    d1a: ((Γ , h : A0) , h' : A3) ⊢ (A1 ⇒ A2)
-                    v1: H0 : (A0 ∧ A3) ∈ Γ
-                    --------------------------- andL
-                    _: Γ ⊢ (A1 ⇒ A2)
-                  is
-                    d2': Γ, h1:A0, h2:A3, h: (A1 ⇒ A2) ⊢ A' by weakening on d2
-                    d3': Γ, h1:A0, h2:A3 ⊢ A' by induction hypothesis on A, d1a, d2'
-                    proof by rule andL on d3', v1
-                  end case
-
-                  case rule
                     d1a: Γ, h : A1 ⊢ A2
                     --------------- impR
                     _: Γ ⊢ (A1 ⇒ A2)
@@ -314,30 +312,6 @@ theorem cut-admissible:
                     d4a: Γ ⊢ A2 by induction hypothesis on A1, d3a, d1a
                     d4b: Γ ⊢ A' by induction hypothesis on A2, d4a, d3b
                   end case
-
-                  case rule
-                    d1a: Γ ⊢ A0
-                    d1b: (Γ , h : A3) ⊢ (A1 ⇒ A2)
-                    v1: H0 : (A0 ⇒ A3) ∈ Γ
-                    --------------- impL
-                    _: Γ ⊢ (A1 ⇒ A2)
-                  is
-                    d2': Γ, h': A3, h: (A1 ⇒ A2) ⊢ A' by weakening on d2
-                    d3': Γ, h': A3 ⊢ A' by induction hypothesis on A, d1b, d2'
-                    proof by rule impL on d1a, d3', v1
-                  end case
-                  
-                  case rule
-                    d1a: Γ, h1: A0[I1] ⊢ A
-                    v1: H0 : (∀ i • A0[i]) ∈ Γ
-                    ----------------------------- forallL
-                    _: Γ ⊢ A
-                  is
-                    d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
-                    d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
-                    proof by rule forallL on d3, v1
-                  end case
-    
                 end case analysis
               end case
 
@@ -387,29 +361,6 @@ theorem cut-admissible:
                         end case
 
                         case rule
-                            d1a: Γ, h1 : A1, h2 : A2 ⊢ (∀ i • A0[i])
-                            v1: H0 : (A1 ∧ A2) ∈ Γ
-                            --------------------------------------------- andL
-                            _: Γ ⊢ (∀ i • A0[i])
-                        is
-                            d2': Γ, h1 : A1, h2 : A2, h:A ⊢ A' by weakening on d2
-                            d3: Γ, h : A1, h' : A2 ⊢ A' by induction hypothesis on A, d1a, d2'
-                            proof by rule andL on d3, v1
-                        end case
-
-                        case rule
-                            d1a: Γ ⊢ A1
-                            d1b: Γ, h2: A2 ⊢ (∀ i • A0[i])
-                            v1: H0 : (A1 ⇒ A2) ∈ Γ
-                            --------------------------------- impL
-                            _: Γ ⊢ (∀ i • A0[i])
-                        is
-                            d2': Γ, h2: A2, h:A ⊢ A' by weakening on d2
-                            d3:  Γ, h2: A2 ⊢ A' by induction hypothesis on A, d1b, d2'
-                            proof by rule impL on d1a, d3, v1
-                        end case
-
-                        case rule
                             d11: Γ, i ⊢ A0[i]
                             -------------------- forallR
                             _: Γ ⊢ (∀ i • A0[i])
@@ -421,18 +372,6 @@ theorem cut-admissible:
                             // See Section 8.3 of Twelf User Manual.
                             d21': Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3
                         end case
-
-                        case rule
-                            d1a: Γ, h1: A1[I1] ⊢ A
-                            v1: H0 : (∀ i • A1[i]) ∈ Γ
-                            ----------------------------- forallL
-                            _: Γ ⊢ A
-                        is
-                            d2': Γ, h1: A1[I1], h: A ⊢ A' by weakening on d2
-                            d3:  Γ, h1: A1[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
-                            proof by rule forallL on d3, v1
-                        end case
-
                     end case analysis
                 end case
             end case analysis
