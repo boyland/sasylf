@@ -222,8 +222,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 
   public void updateFoldingStructure(List<Position> positions)
   {
-    ProjectionViewer viewer = (ProjectionViewer)getSourceViewer();
-    ProjectionAnnotationModel annotationModel = viewer.getProjectionAnnotationModel();
+    ProjectionAnnotationModel annotationModel = getProjectionAnnotationModel();
     IDocument doc = getDocument();
     
     if (!doc.containsPositionCategory(PROOF_PROJECTION_CATEGORY)) {
@@ -271,6 +270,15 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
     }
 
     annotationModel.modifyAnnotations(removeAnnos, newAnnos,null);
+  }
+
+  /**
+   * @return
+   */
+  public ProjectionAnnotationModel getProjectionAnnotationModel() {
+    ProjectionViewer viewer = (ProjectionViewer)getSourceViewer();
+    ProjectionAnnotationModel annotationModel = viewer.getProjectionAnnotationModel();
+    return annotationModel;
   }
   
   

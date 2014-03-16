@@ -1,8 +1,10 @@
 package org.sasylf.editors;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -10,12 +12,21 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
+import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.Marker;
 import org.sasylf.Preferences;
 import org.sasylf.ProofChecker;
@@ -114,6 +125,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     case INDUCTION_REPEAT: return true;
     case WRONG_MODULE_NAME:
     case WRONG_PACKAGE: return true;
+    case EXTRA_CASE: return true;
     }
     // NO_DERIVATION
     return false;
@@ -143,6 +155,28 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       return null;
     }
     if (markerType == null || fixInfo == null || line == 0) return null;
+    
+    ProofEditor proofEditor = null;
+    {
+      IResource res = marker.getResource();
+      if (res instanceof IFile) {
+        IWorkbench wb = PlatformUI.getWorkbench();
+        if (wb != null) {
+          IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
+          if (win != null) {
+            IWorkbenchPage page = win.getActivePage();
+            if (page != null) {
+              IEditorPart ep = ResourceUtil.findEditor(page, (IFile)res);
+              if (ep instanceof ProofEditor) {
+                // System.out.println("Found Proof Editor!");
+                proofEditor = (ProofEditor)ep;
+              }
+            }
+          }
+        }
+      }
+    }
+
     //System.out.println("getProposals(" + marker + ") with type=" + markerType + ", info = " + fixInfo);
     //System.out.println("lineInfo = (" + lineInfo.getOffset() + ":" + lineInfo.getLength() + ")");
     //System.out.println("  line = " + line + ", region = " + lineText);
@@ -278,6 +312,32 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         newText = lineIndent + extraIndent + fixInfo;
         proposals.add(new MyCompletionProposal(res,newText+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, newText.length(), 
             null, "insert '" + fixInfo + "'", null, null));
+        break;
+      case EXTRA_CASE:
+        if (proofEditor != null && lineInfo != null) {
+          ProjectionAnnotationModel annotationModel = proofEditor.getProjectionAnnotationModel();
+          Iterator<?> annos = annotationModel.getAnnotationIterator();
+          while (annos.hasNext()) {
+            Object anno = annos.next();
+            if (anno instanceof ProjectionAnnotation) {
+              Position enclosing = annotationModel.getPosition((ProjectionAnnotation)anno);
+              if (enclosing == null) {
+                // System.out.println("couldn't find position");
+                continue;
+              }
+              if (lineInfo.getOffset() > enclosing.getOffset() ||
+                  lineInfo.getOffset()+lineInfo.getLength() <= enclosing.getOffset()) {
+                // System.out.println("Wrong position was at " + doc.get(enclosing.offset, enclosing.length));
+                continue;
+              }
+              // System.out.println("Found " + doc.get(enclosing.offset, enclosing.length));
+              IRegion endInfo = doc.getLineInformationOfOffset(enclosing.getOffset()+enclosing.getLength());
+              proposals.add(new MyCompletionProposal(res, "", lineInfo.getOffset(), endInfo.getOffset()+endInfo.getLength()-lineInfo.getOffset(),0,
+                  null, "remove case", null, null));
+              break;
+            }
+          }
+        }
         break;
       }
     } catch (BadLocationException e) {

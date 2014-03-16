@@ -20,6 +20,11 @@ public class ProofElement implements Comparable<ProofElement> {
 		this.content = content;
 	}
 	
+	ProofElement(Position p) {
+	  category = "<none>";
+	  content = "<none>";
+	  this.position = p;
+	}
 	
 
 	public String getCategory() {

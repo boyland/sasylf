@@ -2,10 +2,10 @@ package org.sasylf.editors.propertyOutline;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Stack;
 import java.util.TreeSet;
 
@@ -65,7 +65,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 		protected final static String SEGMENTS= "__slf_segments"; //$NON-NLS-1$
 		protected IPositionUpdater fPositionUpdater= new DefaultPositionUpdater(SEGMENTS);
-		protected Collection<ProofElement> pList= new TreeSet<ProofElement>();
+		protected NavigableSet<ProofElement> pList= new TreeSet<ProofElement>();
 		
 		protected final static String FORALL = "∀";
 		protected final static String EXISTS = "∃";
@@ -317,6 +317,23 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		  return result;
 		}
 		
+	  /**
+	   * Find the smallest position (extent of text) that encloses the given offset.
+	   * XXX: This code is not useful currently.
+	   * @param offset offset within the document.
+	   * @return position that encloses the offset, or null if none does.
+	   */
+	  public Position findEnclosingPosition(int offset) {
+	    Position dummy = new Position(offset,Integer.MAX_VALUE);
+	    NavigableSet<ProofElement> partial = pList.headSet(new ProofElement(dummy),false);
+	    for (ProofElement pe : partial.descendingSet()) {
+	      Position pos = pe.getPosition();
+	      if (pos == null) continue;
+        if (pos.includes(offset)) return pos;
+	    }
+	    return null;
+	  }
+	  
 		protected boolean categoryMatch(String cat, String pattern) {
 		  if (pattern.length() == 0) return true;
 		  if (cat.equals(pattern)) return true;
@@ -497,5 +514,20 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	    result.add(pe.getContent());
 	  }
 	  return result;
+	}
+	
+	/**
+	 * Find the smallest position (extent of text) that encloses the given offset.
+	 * XXX Probably not useful.
+	 * @param offset offset within the document.
+	 * @return position that encloses the offset, or null if none does.
+	 */
+	public Position findEnclosingPosition(int offset) {
+    if (getTreeViewer() == null) {
+      System.out.println("No tree viewer!");
+      return null;
+    }
+    ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
+    return provider.findEnclosingPosition(offset);
 	}
 }
