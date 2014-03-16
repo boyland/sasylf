@@ -85,10 +85,10 @@ public class RuleCase extends Case {
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
 		if (caseResult == null)
-			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
+			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this, "suggestion: remove it");
 		if (caseResult.isEmpty())
 			//ErrorHandler.report("Rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
-			ErrorHandler.report(Errors.EXTRA_CASE, this);
+			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
 
 		
