@@ -143,7 +143,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		          newSubstitution.add(v,p.first);
 		        }
 		        Util.debug("newSub = " + newSubstitution);
-		        newPair = new Pair<Term,Substitution>(p.first.substitute(ctx.currentSub),newSubstitution);
+		        newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
 		      } catch (UnificationFailed ex) {
 		        Util.debug("case no longer feasible.");
 		        continue;
