@@ -269,6 +269,9 @@ public class Theorem extends RuleLike {
 			ErrorHandler.report(Errors.NO_DERIVATION, errorNode);
 		else {
 			Derivation last = derivs.get(derivs.size()-1);
+			if (last instanceof PartialCaseAnalysis) {
+			  ErrorHandler.report(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
+			}
 			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
 			Util.debug("orig theoremTerm: "+theoremTerm);
 			Util.debug("orig derivTerm: "+derivTerm);

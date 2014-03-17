@@ -126,6 +126,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     case WRONG_MODULE_NAME:
     case WRONG_PACKAGE: return true;
     case EXTRA_CASE: return true;
+    case PARTIAL_CASE_ANALYSIS: return true;
     }
     // NO_DERIVATION
     return false;
@@ -281,6 +282,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
       case INDUCTION_REPEAT:
       case WRONG_END:
       case WRONG_MODULE_NAME:
+      case PARTIAL_CASE_ANALYSIS:
         if (old != null) {
           if (split.length > 1 && split[1].length() > 0) {
             proposals.add(new MyCompletionProposal(res, split[1], old.getOffset(), old.getLength(),0,
