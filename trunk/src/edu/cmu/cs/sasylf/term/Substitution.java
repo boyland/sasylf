@@ -133,17 +133,17 @@ public class Substitution {
 			throw new EOCUnificationFailed("Extended Occurs Check failed: " + var + " is free in " + tSubstituted, var);
 
 		// perform substitution on the existing variables
+    if (!varMap.isEmpty()) {
+      Substitution newSub = new Substitution(tSubstituted, var);
+      for (Atom v : varMap.keySet()) {
+        varMap.put(v, varMap.get(v).substitute(newSub));
+      }
+    }
 		if (varMap.containsKey(var)) {
 		  Term oldTerm = varMap.get(var);
 		  Substitution unifier = oldTerm.unify(tSubstituted);
 		  tSubstituted = tSubstituted.substitute(unifier);
 		  compose(unifier);
-		}
-		if (!varMap.isEmpty()) {
-			Substitution newSub = new Substitution(tSubstituted, var);
-			for (Atom v : varMap.keySet()) {
-				varMap.put(v, varMap.get(v).substitute(newSub));
-			}
 		}
 		
 		// add the new entry to the map
