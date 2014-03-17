@@ -82,7 +82,7 @@ public class Binding extends Element {
 	public Element typecheck(Context ctx) {
 		Element e = nonTerminal.typecheck(ctx);
 		if (!(e instanceof NonTerminal))
-			ErrorHandler.report("A binder must have a nonterminal as the thing bound in", nonTerminal);
+			ErrorHandler.report("A binder must have a nonterminal as the thing bound in", this);
 		nonTerminal = (NonTerminal) e;
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e2 = elements.get(i).typecheck(ctx);
