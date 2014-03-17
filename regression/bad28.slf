@@ -1,0 +1,87 @@
+package regression;
+
+terminals contradiction true false if then else value Bool λ
+
+syntax
+
+t ::= true 
+  | false
+  | if t then t else t
+  | λ x : τ • t[x]
+  | x
+  | t t
+
+τ ::= Bool
+  | τ → τ
+
+Γ ::= *
+    | Γ, x : τ
+
+
+judgment absurd: contradiction
+
+
+
+
+judgment type: Γ ⊢ t : τ
+assumes Γ
+
+-------------------- τ-True
+Γ ⊢ true : Bool
+
+--------------------- τ-False
+Γ ⊢ false : Bool
+
+Γ ⊢ t1 : Bool
+Γ ⊢ t2 : τ
+Γ ⊢ t3 : τ
+---------------------------------- τ-If
+Γ ⊢ if t1 then t2 else t3 : τ
+
+-------------- τ-Var
+Γ, x: τ ⊢ x : τ
+
+Γ, x : τ1 ⊢ t[x] : τ2
+------------------------------------- τ-Abs
+Γ ⊢ (λ x : τ1 • t[x]) : τ1 → τ2
+
+Γ ⊢ t1 : τ2 → τ1
+Γ ⊢ t2 : τ2
+----------------------- τ-App
+Γ ⊢ t1 t2 : τ1
+
+// Substitution Lemma 9.3.8
+lemma subst :
+  assumes Γ
+  forall d1: Γ, x : τ2 ⊢ t1[x] : τ1
+  forall d2: Γ ⊢ t2 : τ2
+  exists     Γ ⊢ t1[t2] : τ1.
+  
+  proof by case analysis on t1: //! Should complain about t1
+      case true is // instead this crashes with an internal error
+          proof by unproved
+      end case
+
+      case false is
+          proof by unproved
+      end case
+
+      case if t0 then t3 else t4 is
+          proof by unproved
+      end case
+
+      case λ x : τ0 • t0[x] is
+          proof by unproved
+      end case
+
+      case x assumes Γ0 , x : τ0 is
+          proof by unproved
+      end case
+
+      case t0 t3 is
+          proof by unproved
+      end case
+
+  end case analysis
+
+end lemma

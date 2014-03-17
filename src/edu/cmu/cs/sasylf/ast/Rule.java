@@ -401,6 +401,11 @@ public class Rule extends RuleLike implements CanBeCase {
 		}*/
 		return sw.toString();
 	}
+	
+	@Override
+	public int countLambdas(Term t) {
+	  return ((Application)t).getArguments().get(premises.size()).countLambdas();
+	}
 
 	/*public void resolveClauses(Map<List<ElemType>,ClauseDef> parseMap) {
 	for (int i = 0; i < premises.size(); ++i) {
