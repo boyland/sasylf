@@ -28,6 +28,7 @@ public enum Errors {
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	MISSING_CASE			("must provide a case for "),
 	EXTRA_CASE				("case is redundant or unnecessary"),
+	PARTIAL_CASE_ANALYSIS ("'do case analysis' only handles special cases, you need a full proof still"),
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
 	ILLEGAL_ASSUMES    ("assumed entity is not a context nonterminal"),
 	ILLEGAL_ASSUMES_CLAUSE ("assumed clause is not a context"),
