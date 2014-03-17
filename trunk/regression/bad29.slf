@@ -1,0 +1,118 @@
+package regression;
+
+terminals contradiction true false if then else value Bool λ
+
+syntax
+
+t ::= true 
+  | false
+  | if t then t else t
+  | λ x : τ • t[x]
+  | x
+  | t t
+
+τ ::= Bool
+  | τ → τ
+
+Γ ::= *
+    | Γ, x : τ
+
+
+judgment absurd: contradiction
+
+
+
+
+judgment type: Γ ⊢ t : τ
+assumes Γ
+
+-------------------- τ-True
+Γ ⊢ true : Bool
+
+--------------------- τ-False
+Γ ⊢ false : Bool
+
+Γ ⊢ t1 : Bool
+Γ ⊢ t2 : τ
+Γ ⊢ t3 : τ
+---------------------------------- τ-If
+Γ ⊢ if t1 then t2 else t3 : τ
+
+-------------- τ-Var
+Γ, x: τ ⊢ x : τ
+
+Γ, x : τ1 ⊢ t[x] : τ2
+------------------------------------- τ-Abs
+Γ ⊢ (λ x : τ1 • t[x]) : τ1 → τ2
+
+Γ ⊢ t1 : τ2 → τ1
+Γ ⊢ t2 : τ2
+----------------------- τ-App
+Γ ⊢ t1 t2 : τ1
+
+// Substitution Lemma 9.3.8
+lemma subst :
+  assumes Γ
+  forall d1: Γ, x : τ2 ⊢ t1[x] : τ1
+  forall d2: Γ ⊢ t2 : τ2
+  exists     Γ ⊢ t1[t2] : τ1.
+  
+  proof by induction on d1:
+      case rule
+          --------------- τ-True
+          _: (Γ , x : τ2) ⊢ true : Bool
+      is
+          proof by unproved //! warning
+      end case
+
+      case rule
+          --------------- τ-False
+          _: (Γ , x : τ2) ⊢ false : Bool
+      is
+          proof by unproved //! warning
+      end case
+
+      case rule
+          _: (Γ , x : τ2) ⊢ t0[x] : Bool
+          _: (Γ , x : τ2) ⊢ t3[x] : τ1
+          _: (Γ , x : τ2) ⊢ t4[x] : τ1
+          --------------- τ-If
+          _: (Γ , x : τ2) ⊢ (if t0[x] then t3[x] else t4[x]) : τ1
+      is
+          proof by unproved //! warning
+      end case
+
+      case rule
+          --------------- τ-Var
+          _: (Γ , x : τ1) ⊢ x[x] : τ1 //! error should be here (not line 10)
+      is
+          proof by unproved
+      end case
+
+      case rule
+          --------------- τ-Var
+          _: ((Γ' , x : τ1) , x' : τ2) ⊢ x : τ1
+      is
+          proof by unproved //! warning
+      end case
+
+      case rule
+          _: ((Γ , x : τ2) , x' : τ0) ⊢ t0[x][x'] : τ3
+          --------------- τ-Abs
+          _: (Γ , x : τ2) ⊢ (λ x' : τ0 • t0[x][x']) : (τ0 → τ3)
+      is
+          proof by unproved //! warning
+      end case
+
+      case rule
+          _: (Γ , x : τ2) ⊢ t0[x] : (τ0 → τ1)
+          _: (Γ , x : τ2) ⊢ t3[x] : τ0
+          --------------- τ-App
+          _: (Γ , x : τ2) ⊢ (t0[x] t3[x]) : τ1
+      is
+          proof by unproved //! warning
+      end case
+
+  end induction
+
+end lemma

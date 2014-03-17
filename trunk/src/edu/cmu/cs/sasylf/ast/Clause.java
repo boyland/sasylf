@@ -437,4 +437,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		return sw.toString();*/
 	}
 	
+  @Override
+  public int countLambdas(Term t) {
+    return t.countLambdas();
+  }
 }

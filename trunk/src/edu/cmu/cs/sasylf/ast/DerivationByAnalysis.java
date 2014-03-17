@@ -267,6 +267,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  ctx.savedCaseMap.put(targetDerivation.getName(), ctx.caseTermMap);
 		  return;
 		}
+		System.out.println(getLocation().getLine() + ": midway, innermostGamma = " + ctx.innermostGamma);
 		
 		StringBuilder missingMessages = null;
 		StringBuilder missingCaseTexts = null;
@@ -299,22 +300,18 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		          targetGamma = ctx.innermostGamma;
 		        }
 		      }
-		      if (cbc instanceof Rule && ((Rule)cbc).isAssumption()) {
-		        NonTerminal gammaNT = ((ClauseUse)ctx.currentCaseAnalysisElement).getRoot();
-		        NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
-		        newGammaNT.setType(gammaNT.getType());
-		        targetGamma = newGammaNT;
-		      } else if (cbc instanceof Clause && ((Clause)cbc).isVarOnlyClause()) {
-		        //XXX If we neglect to do this, we generate
-		        // a reuse of Gamma, which our PM system does NOT complain about.
-		        if (targetGamma instanceof ClauseUse) {
-		          targetGamma = ((ClauseUse)targetGamma).getRoot();
-		        }
-		        NonTerminal gammaNT = (NonTerminal)targetGamma;
-		        NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
-		        newGammaNT.setType(gammaNT.getType());
-		        targetGamma = newGammaNT;
+		      if (ctx.currentCaseAnalysis.countLambdas() < cbc.countLambdas(missingCase)) {
+            if (targetGamma instanceof ClauseUse) {
+              targetGamma = ((ClauseUse)targetGamma).getRoot();
+            }
+            NonTerminal gammaNT = (NonTerminal)targetGamma;
+            NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+            newGammaNT.setType(gammaNT.getType());
+            targetGamma = newGammaNT;
 		      }
+		      //XXX: The work to get Gamma' here is ignored in TermPrinter for SyntaxCase: 
+		      // it gets Gamma0 which is more correct, but uglier (it makes sure it is unique), 
+		      // but this fact shows some disconnect.
 
 		      String missingMessage = cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx);
 		      try {

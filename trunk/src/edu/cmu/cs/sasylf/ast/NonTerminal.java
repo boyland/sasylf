@@ -146,6 +146,10 @@ public class NonTerminal extends Element {
 
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
+	  if (ctx.bindingTypes.containsKey(symbol) &&
+	      !ctx.bindingTypes.get(symbol).isEmpty()) {
+	    ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
+	  }
 	  // System.out.println(this+".asFact(_," + assumes + ")");
 	  if (ctx.varfreeNTs.contains(this) || assumes == null ||
 	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
