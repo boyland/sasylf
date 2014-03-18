@@ -267,7 +267,6 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  ctx.savedCaseMap.put(targetDerivation.getName(), ctx.caseTermMap);
 		  return;
 		}
-		System.out.println(getLocation().getLine() + ": midway, innermostGamma = " + ctx.innermostGamma);
 		
 		StringBuilder missingMessages = null;
 		StringBuilder missingCaseTexts = null;
