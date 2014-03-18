@@ -1,4 +1,4 @@
-SASyLF version 1.3.1a5
+SASyLF version 1.3.1a6
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -123,6 +123,7 @@ RELEASE HISTORY
     Resolved issues #45
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
+    Substitution semantics changed for complex contexts, poplmark-2a proof updated
     Resolved issues #47, #48, #49, #52
 1.2.5   Bug fixes to stable 1.2
     Resolved issues #43, #44, #46
