@@ -189,6 +189,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
         ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided.iterator().next() + ")", this, "\t(could not remove variables "+unavoided+ " from sub " + sub + ")");
 			}			
 
+			ctx.composeSub(sub);
 		} catch (UnificationFailed e) {
 			Term explanationTerm = null;
 			try {
