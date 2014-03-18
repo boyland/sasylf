@@ -30,6 +30,7 @@ import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.Marker;
 import org.sasylf.Preferences;
 import org.sasylf.ProofChecker;
+import org.sasylf.editors.propertyOutline.ProofElement;
 import org.sasylf.util.CompletionProposal;
 import org.sasylf.util.CompletionProposalMarkerResolution;
 import org.sasylf.util.EclipseUtil;
@@ -259,7 +260,21 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
             }
             if (newCursor == -1) newCursor = sb.length();
             sb.append(lineIndent); sb.append(indent); sb.append(indent);
-            if (!split[i].startsWith("---"))  sb.append("_: ");
+            if (split[i].startsWith("---")) {
+              String ruleName = split[i].split(" ")[1];
+              if (proofEditor != null) {
+                ProofElement pe = proofEditor.getProofOutline().findProofElementByName(ruleName);
+                if (pe != null && pe.getCategory().equals("Rule")) {
+                  String bar = pe.getLexicalInfo();
+                  if (bar.length() >= 3 ) {
+                    String prefix = bar.substring(0,3);
+                    split[i] = prefix + prefix + bar + " " + ruleName;
+                  }
+                }
+              }
+            } else {
+              sb.append("_: ");
+            }
             sb.append(split[i]);
             sb.append(nl);
           }

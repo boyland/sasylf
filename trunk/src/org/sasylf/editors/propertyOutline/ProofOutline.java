@@ -128,6 +128,12 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				  sb.append(TermPrinter.toString(r.getConclusion()));
 				  ProofElement re = new ProofElement("Rule", sb.toString());
 				  Location loc = r.getLocation();
+				  Position barPos = convertLocToPos(document, loc);
+				  try {
+            re.setLexicalInfo(document.get(barPos.getOffset(), barPos.getLength()).trim().split(" ")[0]);
+          } catch (BadLocationException e) {
+            // muffle;
+          }
 				  if (r.getPremises().size() > 0) {
 				    loc = r.getPremises().get(0).getLocation();
 				  }
