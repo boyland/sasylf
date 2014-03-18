@@ -194,10 +194,10 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	/** Returns a fresh term for the rule and a substitution that matches the term.
 	 * sub will be null if no case analysis is possible
+	 * @param term2 TODO
+	 * @param clauseUse TODO
 	 */
-	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx) {
-		Term term = ctx.currentCaseAnalysis;
-		ClauseUse clause = (ClauseUse) ctx.currentCaseAnalysisElement;
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, ClauseUse clause) {
     Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
 
     // Special case: if the variable is known to be var-free, we can't match this rule
