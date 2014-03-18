@@ -17,7 +17,7 @@ public class DerivationByInduction extends DerivationByAnalysis {
 
 	public void typecheck(Context ctx) {
     if (!ctx.currentTheorem.getDerivations().contains(this)) {
-      ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction by " + getArgStrings() + "'", this);
+      ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction on " + getArgStrings().get(0) + "'", this);
     }
 	  InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), this);
 
