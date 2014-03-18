@@ -272,6 +272,10 @@ public class Theorem extends RuleLike {
 			if (last instanceof PartialCaseAnalysis) {
 			  ErrorHandler.report(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
 			}
+			if (last.getClause() instanceof OrClauseUse && ((OrClauseUse)last.getClause()).getClauses().isEmpty()) {
+			  // proving contradiction is sufficient
+			  return;
+			}
 			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
 			Util.debug("orig theoremTerm: "+theoremTerm);
 			Util.debug("orig derivTerm: "+derivTerm);
