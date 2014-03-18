@@ -112,6 +112,7 @@ RELEASE HISTORY
 1.3.1	Extensions (& 1.2.6)
 	Abstract modules
 	"or" judgments
+	"contradiction" is sugar for or[], and or[] can be used as a last derivation 
 	Lexicographic and unordered induction
 	Proof of cut elimination
 	Bug fixes: bad23
