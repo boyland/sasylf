@@ -1,16 +1,13 @@
 package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
-import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -43,64 +40,41 @@ public class DerivationByInversion extends DerivationWithArgs {
 		  ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
 		ClauseUse targetClause = (ClauseUse)targetDerivation.getElement();
-		
+		if (!(targetClause.getType() instanceof Judgment)) {
+		  ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
+		}
+		Judgment judge = (Judgment)targetClause.getType();
     RuleLike rulel = ctx.ruleMap.get(ruleName);
-    if (rulel == null) {
-      ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
-      return;
-    }
     if (!(rulel instanceof Rule)) {
       ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
       return;
     }
-		
+		if (((Rule)rulel).getJudgment() != judge) {
+		  ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetClause, this);
+		}
     
     // Do a mini-case analysis, and see if we find result in premises
+        
+    Term targetTerm = DerivationByAnalysis.adapt(targetClause.asTerm(), targetClause, ctx, true);
     
-    Term oldCase = ctx.currentCaseAnalysis;
-    Element oldElement = ctx.currentCaseAnalysisElement;
-    Term oldGoal = ctx.currentGoal;
-    Clause oldGoalClause = ctx.currentGoalClause;
-    Map<CanBeCase,Set<Pair<Term,Substitution>>> oldCaseTermMap = ctx.caseTermMap;
-    boolean oldDebug = Util.DEBUG;
-    
-    try {
-    ctx.currentCaseAnalysis = DerivationByAnalysis.adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
-    debug("setting current case analysis to " + ctx.currentCaseAnalysis);
-    //ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
-    ctx.currentCaseAnalysisElement = targetDerivation.getElement();
-    ctx.currentGoal = getElement().asTerm().substitute(ctx.currentSub);
-    ctx.currentGoalClause = getClause();
-    ctx.caseTermMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();
-
-    Util.DEBUG = false;
-    
-    Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
     boolean found_rulel = false;
-    debug("*********** case analyzing line " + getLocation().getLine());
     
     // see if each rule, in turn, applies
     for (Rule rule : judge.getRules()) {
-      Set<Pair<Term,Substitution>> caseResult = rule.caseAnalyze(ctx);
+      Set<Pair<Term,Substitution>> caseResult;
+      caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause);
       if (caseResult.isEmpty()) continue;
+      Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
       if (rule == rulel) {
-        debug("inversion: caseResult = " + caseResult);
-        Pair<Term,Substitution> pair = caseResult.iterator().next();
+        Util.debug("inversion: caseResult = " + caseResult);
+        Pair<Term,Substitution> pair = iterator.next();
+        if (iterator.hasNext()) {
+          ErrorHandler.report("Cannot use inversion: two or more instance of '" + ruleName + "' apply.", this);
+        }
         Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
         result = result.substitute(pair.second);
-        debug("  after adapt/subst, result = " + result);
-        ctx.currentSub.compose(pair.second);
-        for (FreeVar uv : ctx.currentSub.selectUnavoidable(ctx.inputVars)) {
-          debug("In inversion, removing unavoidable variable: " + uv);
-          ctx.inputVars.remove(uv);
-        }
-        for (FreeVar fv : pair.first.getFreeVariables()) {
-          if (ctx.currentSub.getSubstituted(fv) == null && ctx.inputVars.add(fv)) {
-            debug("In inversion, adding new input variable: " + fv);
-          }
-        }
-        //ctx.currentSub.compose(pair.second);
-        //System.out.println("new sub = " + ctx.currentSub);
+        Util.debug("  after adapt/subst, result = " + result);
+        ctx.composeSub(pair.second);
         Application ruleInstance = (Application)pair.first;
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
         pieces.remove(pieces.size()-1);
@@ -123,11 +97,6 @@ public class DerivationByInversion extends DerivationWithArgs {
           for (int i=0; i < clauses.size(); ++i) {
             ClauseUse cu = clauses.get(i);
             Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
-            /*XXX Why are we adding to free variables again?
-            debug("  piece #" + (i+1) + " freevars = " + pieces.get(i).getFreeVariables());
-            if (ctx.inputVars.addAll(pieces.get(i).getFreeVariables())) {
-              ErrorHandler.report("!! Internal error: still able to add variables",this);
-            }*/
             Derivation.checkMatch(cu, ctx, mt, pieces.get(i).substitute(ctx.currentSub), 
                   "inversion result #" + (i+1) + " does not match given derivation");
             // If the derivation has no implicit context, we
@@ -150,19 +119,11 @@ public class DerivationByInversion extends DerivationWithArgs {
         found_rulel = true;
       } else {
         ErrorHandler.report(Errors.MISSING_CASE,
-            rule.getErrorDescription(caseResult.iterator().next().first, ctx), this);       
+            rule.getErrorDescription(iterator.next().first, ctx), this);       
       }
     }
     if (!found_rulel) {
       ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
-    }
-    } finally {
-    ctx.caseTermMap = oldCaseTermMap;
-    ctx.currentCaseAnalysis = oldCase;
-    ctx.currentCaseAnalysisElement = oldElement;
-    ctx.currentGoal = oldGoal ;
-    ctx.currentGoalClause = oldGoalClause;
-    Util.DEBUG = oldDebug;
     }
     
     // Permit induction on this term if source was a subderivation
