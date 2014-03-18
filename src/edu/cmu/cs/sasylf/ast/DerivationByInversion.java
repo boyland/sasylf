@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import static edu.cmu.cs.sasylf.ast.Errors.DERIVATION_NOT_FOUND;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -62,7 +64,28 @@ public class DerivationByInversion extends DerivationWithArgs {
     // see if each rule, in turn, applies
     for (Rule rule : judge.getRules()) {
       Set<Pair<Term,Substitution>> caseResult;
-      caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause);
+      if (ctx.savedCaseMap != null && ctx.savedCaseMap.containsKey(inputName)) {
+        caseResult = new HashSet<Pair<Term,Substitution>>();
+        for (Pair<Term,Substitution> p : ctx.savedCaseMap.get(inputName).get(rule)) {
+          // TODO: refactor this with DerivationByAnalysis
+          Pair<Term,Substitution> newPair;
+          try {
+            Util.debug("term = " + p.first);
+            Util.debug("sub = " + p.second);
+            Util.debug("current = " + ctx.currentSub);
+            Substitution newSubstitution = new Substitution(p.second);
+            newSubstitution.compose(ctx.currentSub);
+            Util.debug("newSub = " + newSubstitution);
+            newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
+          } catch (UnificationFailed ex) {
+            Util.debug("case no longer feasible.");
+            continue;
+          }
+          caseResult.add(newPair);
+        }
+      } else {
+        caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause);
+      }
       if (caseResult.isEmpty()) continue;
       Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
       if (rule == rulel) {
