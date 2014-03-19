@@ -17,6 +17,10 @@ In place of a derivation, one may use the syntax
   *  `use inversion of` _rule_name_ `on` _name
 _if the case analysis of _name_ has only one case (_rule_name_) and that rule has no premises.  This derivation doesn't prove anything, but it performs any unification of variables presumed by the case.  This special form (new to SASyLF 1.2.3) is useful for inverting equality judgments which require absolute identity.  As of SASyLF 1.2.5, the rule could have premises; they are simply ignored.
 
+In place of a derivation, one may also use the syntax (new to SASyLF 1.2.6)
+  *  `use induction on` _name_
+which marks that induction will be on the given derivation/nonterminal without forcing an immediate case analysis.  It has been a long-standing annoyance that these were coupled.  Starting in SASyLF 1.3.1, instead of a name, one may use a comma-separated series of names for lexicographic induction.  Furthermore, one may use, in place of a name, a set of names (`{` _name_ `,` ... `}`) for unordered induction which means that some permutation of the names has every corresponding argument to the induction hypothesis staying the same or getting smaller, with at least one getting smaller. 
+
 == Justification ==
 
 This section described each of the ways in which derivations can be justified:
@@ -130,4 +134,18 @@ One may also assume the unification implied by the pattern match.  All uses insi
 If, because of pattern matching, only one case is possible, _inversion_ (q.v.) may be a good option to use.
 If _no_ case applies at all, then the case analysis can be empty.  This allows us to justify any (type valid) judgment at all.
 
-_TODO: var binding cases_
+=== Context Cases ===
+
+_TODO_
+
+== Special cases ==
+
+When writing a proof, one may wish to handle certain situations up-front in a partial case analysis.  Starting in SASyLF 1.3.1, one can write
+
+    `do case analysis on` _name_
+        _case1_ 
+        _case2_ 
+        ...
+    `end case analysis`
+
+Each case should prove the statement required by the context. The case analysis need not be complete, and this form cannot be used as the last statement in a series precisely because it doesn't finish the proof.  But the cases that are handled here will not need to be handled later.  This can reduce a Cartesian product of cases to a more manageable number, as seen in the proof of cut elimination.
