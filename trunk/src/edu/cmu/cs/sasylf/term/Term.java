@@ -5,6 +5,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug2;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public abstract class Term {
 	}
 	
 	// TODO: deprecate - I think no-one should call this
-	// XXX: Rule and ClauseUse both call it.
+	// XXX: ClauseUse calls it.
 	public final Substitution unifyAllowingBVs(Term t) {
 		Substitution current = new Substitution();
 		Queue<Pair<Term,Term>> worklist = new PriorityQueue<Pair<Term,Term>>(11, new PairComparator());
@@ -130,27 +131,59 @@ public abstract class Term {
 		// a free variable in the input to unify() should not, in its substitution result, have any free bound variables
 		Set<FreeVar> freeVars = getFreeVariables();
 		freeVars.addAll(t.getFreeVariables());
+    Set<Pair<FreeVar,Integer>> unusable = new HashSet<Pair<FreeVar,Integer>>();
 		for (FreeVar v : freeVars) {
 			Term substituted = current.getSubstituted(v);
-			if (substituted != null && substituted.hasBoundVarAbove(0)) {				
-				// TODO: instead of saying this is illegal, try eliminating the variable
-				/* UNFORTUNATELY this seemed to be not successful...see also commented out code in FreeVar.java
-				if (substituted instanceof Application && ((Application)substituted).isPattern()) {
-					// try to set other = \x1..xn . this
-					FreeVar otherVar = (FreeVar) ((Application)substituted).getFunction();
-					if (current.getMap().get(otherVar) == null) {
-						Term varMatch = this;
-						List<Term> otherVarArgTypes = getArgTypes(otherVar.getType(), ((Application)substituted).getArguments().size());
-						varMatch = wrapWithLambdas(varMatch, otherVarArgTypes);
-						current.getMap().remove(v);
-						current.add(otherVar, varMatch);
-						continue;
-					}
-				}*/
-				
+			if (substituted != null && !substituted.selectUnusablePositions(0, unusable)) {
 				debug("Could not eliminate bound variables from substitution " + substituted + " for var " + v);
 				throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + current);
 			}
+		}
+		if (!unusable.isEmpty()) {
+		  // restructure set as map:
+		  Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
+		  for (Pair<FreeVar,Integer> p : unusable) {
+		    if (!map.containsKey(p.first)) {
+		      map.put(p.first, new HashSet<Integer>());
+		    }
+		    map.get(p.first).add(p.second);
+		  }
+		  for (Map.Entry<FreeVar, Set<Integer>> replace : map.entrySet()) {
+		    FreeVar v = replace.getKey();
+		    Term type = v.getType();
+		    List<Term> oldTypes = new ArrayList<Term>();
+		    List<String> oldNames = new ArrayList<String>();
+		    List<Term> newTypes = new ArrayList<Term>();
+		    List<String> newNames = new ArrayList<String>();
+		    int i=0;
+		    while (type instanceof Abstraction) {
+		      Abstraction f = (Abstraction)type;
+		      oldTypes.add(f.varType);
+		      oldNames.add(f.varName);
+		      if (replace.getValue().contains(i)) {
+	          //XXX we assume types on other parameters don't depend on removed positions
+		        type = f.getBody().incrFreeDeBruijn(-1);
+		      } else {
+		        newTypes.add(f.varType);
+		        newNames.add(f.varName);
+		        type = f.getBody();
+		      }
+		      ++i;
+		    }
+		    Term newType = wrapWithLambdas(type, newTypes, newNames);
+        FreeVar newV = FreeVar.fresh(v.getName(), newType);
+        Term replacement;
+        if (newTypes.isEmpty()) replacement = newV;
+        else {
+          List<Term> newArgs = new ArrayList<Term>();
+          int n = newTypes.size();
+          for (int j=0; j < n; ++j) {
+            newArgs.add(new BoundVar(n-j));
+          }
+          replacement = Facade.App(newV, newArgs);
+        }
+        current.add(v, wrapWithLambdas(replacement, oldTypes, oldNames));
+		  }
 		}
 
 		return current;
@@ -176,6 +209,19 @@ public abstract class Term {
 			debug("    worklist: " + worklist);
 			p.first.unifyCase(p.second, current, worklist);
 		}
+	}
+	
+	/**
+	 * Collect a set of argument positions (zero-based) for free variable applications
+	 * which cannot be used if the result must not have bound variables above given bound.
+	 * If a bound variable above the bound is not a parameter of a free variable application,
+	 * return false. <p> This implementation simply returns true, which is not sound in general.
+	 * @param bound highest legal deBruijn index
+	 * @param unusable set of unusable positions to be mutated
+	 * @return whether all illegal bound variables can be avoided
+	 */
+	protected boolean selectUnusablePositions(int bound, Set<Pair<FreeVar,Integer>> unusable) {
+	  return true;
 	}
 
 	public boolean typeEquals(Term otherType) {

@@ -487,7 +487,31 @@ public class Application extends Term {
 		return varMatch;
 	}
 
-	public int hashCode() { return function.hashCode() + arguments.hashCode(); }
+	@Override
+  protected boolean selectUnusablePositions(int bound,
+      Set<Pair<FreeVar, Integer>> unusable) {
+	  boolean result = true;
+	  if (function instanceof FreeVar) {
+	    for (int i=0; i < arguments.size(); ++i) {
+	      Term t = arguments.get(i);
+	      if (t instanceof BoundVar) {
+	        BoundVar b = (BoundVar)t;
+	        if (b.getIndex() > bound) {
+	          unusable.add(new Pair<FreeVar, Integer>((FreeVar)function,i));
+	        }
+	      } else {
+	        result &= t.selectUnusablePositions(bound, unusable);
+	      }
+	    }
+	  } else {
+	    for (Term t : arguments) {
+	      result &= t.selectUnusablePositions(bound, unusable);
+	    }
+	  }
+	  return result;
+  }
+
+  public int hashCode() { return function.hashCode() + arguments.hashCode(); }
 
 	@Override
 	public boolean typeEquals(Term otherType) {

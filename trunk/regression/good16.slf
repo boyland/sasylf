@@ -1,0 +1,83 @@
+/*
+ * good16.slf
+ * 
+ * Need to handle cases without outer variables.
+ * No releases of SASyLF reject this, but this
+ * was rejected by a suggested bug fix.
+ */
+package regression;
+
+terminals fn Unit
+
+
+
+syntax
+
+
+e ::= fn x : tau => e[x]
+ | x
+ | e e
+
+tau ::= Unit
+ | tau -> tau
+ 
+Gamma ::= *
+      |   Gamma, x : tau
+
+
+judgment has-type: Gamma |- e : tau
+assumes Gamma
+
+------------------------- t-var
+Gamma, x:tau |- x : tau
+
+
+Gamma, x1:tau |- e[x1] : tau'
+--------------------------------------------- t-fn
+Gamma |- fn x : tau => e[x] : tau -> tau'
+
+
+Gamma |- e1 : tau' -> tau
+Gamma |- e2 : tau'
+---------------------------------- t-app
+Gamma |- e1 e2 : tau
+
+
+lemma strengthening:
+    assumes Gamma
+    forall dt: Gamma, x:tau |- e : tau'
+    exists Gamma |- e : tau'.
+    proof by induction on dt:
+        case rule
+            --------------------------------------- t-var
+            _: Gamma', x' : tau', x : tau |- x' : tau'
+        is
+            v: Gamma', x' : tau' |- x' : tau' by rule t-var
+        end case
+
+        case rule
+            d1: Gamma, x : tau, x1 : tau1 |- e1[x1] : tau2
+            ------------------------------------------------------------- t-fn
+            _:  Gamma, x : tau |- (fn x1 : tau1 => e1[x1]) : tau1 -> tau2
+        is
+            d2: Gamma, x1: tau1, x : tau |- e1[x1] : tau2 by exchange on d1
+            d2':Gamma, x1: tau1 |- e1[x1] : tau2 by induction hypothesis on d2
+            proof by rule t-fn on d2'
+        end case
+
+        case rule
+            d1: Gamma, x : tau |- e0 : (tau'' -> tau')
+            d2: Gamma, x : tau |- e1 : tau''
+            ---------------------------------------- t-app
+            _: Gamma, x : tau |- (e0 e1) : tau'
+        is
+            d1': Gamma |- e0 : tau'' -> tau' by induction hypothesis on d1
+            d2': Gamma |- e1 : tau'' by induction hypothesis on d2
+            proof by rule t-app on d1', d2'
+        end case
+
+    end induction
+end lemma
+
+
+

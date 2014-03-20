@@ -201,6 +201,9 @@ public class Rule extends RuleLike implements CanBeCase {
     Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
 
     // Special case: if the variable is known to be var-free, we can't match this rule
+    // XXX: This will need to change if we permit variable free assumptions!
+    // Rewrite to not use a special case here, but rather where we try to put variables
+    // into a varFree NTS.
 		if (isAssumption()) {
 		  int n=conclusion.getElements().size();
 		  for (int i=0; i < n; ++i) {
@@ -214,7 +217,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		
 		// compute term for rule
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
-		debug("\tfor rule " + getName() + " computed rule term " + ruleTerm);
+		Util.debug("\tfor rule " + getName() + " computed rule term " + ruleTerm);
 
 		/*List<? extends Term > args = ((Application)ruleTerm).getArguments();
 		Term concTerm = args.get(args.size()-1);
@@ -259,7 +262,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				 * where J is an instance of a judgment form.
 				 * Goal: produce a new term of the form [fn x => fn y => J(x)]
 				 */
-				debug("applied term is " + appliedTerm);
+				Util.debug("applied term is " + appliedTerm);
 								
 				// adapt the rule term
 				Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
@@ -288,8 +291,8 @@ public class Rule extends RuleLike implements CanBeCase {
 				appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
 
 				//now try it out
-				debug("found a term with assumptions!\n\truleTerm2 = " + ruleTerm2 + "\n\tappliedTerm2 = " + appliedTerm2);
-				debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
+				Util.debug("found a term with assumptions!\n\truleTerm2 = " + ruleTerm2 + "\n\tappliedTerm2 = " + appliedTerm2);
+				Util.debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
 				pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
 				if (pair != null) {
 				  debug("\tadded result!");
@@ -333,49 +336,19 @@ public class Rule extends RuleLike implements CanBeCase {
 	private Pair<Term, Substitution> checkRuleApplication(Term term,
 			Term ruleTerm, Term appliedTerm) {
 		Substitution sub = null;
-		Term fixedRuleTerm = null;
 		try {
-			//sub = ruleTerm.unify(appliedTerm);
-			sub = ruleTerm.unifyAllowingBVs(appliedTerm);
-
-			//Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
-			// a free variable in term should not, in its substitution result, have any free bound variables
-			// TODO: really should build up substitution, rather than just replacing each one piecemeal
-			// this version could be buggy.
-			Set<FreeVar> freeVars = term.getFreeVariables();
-			Substitution removeBVSub = new Substitution();
-			for (FreeVar v : freeVars) {
-				Term substituted = sub.getSubstituted(v);
-				if (substituted != null && substituted.hasBoundVarAbove(0)) {
-				  debug("has bad binding: " + v + " to " + substituted);
-					// try to remove it
-					//Term newSubstituted1 = substituted.removeBoundVarsAbove(0);
-					substituted.removeBoundVarsAbove(0, removeBVSub);
-					Term newSubstituted = substituted.substitute(removeBVSub);
-					debug("got new substitution: " + newSubstituted);
-					sub.remove(v);
-					sub.add(v, newSubstituted);
-					//throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + sub);
-				}
-			}
-			fixedRuleTerm = appliedTerm.substitute(sub).substitute(removeBVSub);
-			if (!ruleTerm.equals(fixedRuleTerm)) {
-				debug("computed rule term is " + ruleTerm + "\n\tfixed to " + fixedRuleTerm + "\n\tsub is " + sub);
-				sub.compose(removeBVSub);
-			}
-			//System.err.println("rule unified");
+			sub = ruleTerm.unify(appliedTerm);
+			Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
 		} catch (UnificationFailed e) {
-			//System.err.println("rule did not unify");
-			// did not unify, leave sub null
-			debug("unification failed on " + ruleTerm + " and " + appliedTerm);
-			//e.printStackTrace();
+			Util.debug("unification failed on " + ruleTerm + " and " + appliedTerm);
 			sub = null;
 		}
 		if (sub == null)
 			return null;
 		else
-			return new Pair<Term,Substitution>(fixedRuleTerm, sub);
+			return new Pair<Term,Substitution>(ruleTerm, sub);
 	}
+	
 	@Override
 	public String getErrorDescription(Term t, Context ctx) {
 		StringWriter sw = new StringWriter();
