@@ -317,6 +317,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		        TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
 		        missingCaseText = termPrinter.caseToString(missingCase);
 		      } catch (RuntimeException ex) {
+		        System.err.println("Couldn't print term: " + missingCase);
 		        ex.printStackTrace();
 		        ErrorHandler.report(Errors.MISSING_CASE, missingMessage,this);
 		      }
