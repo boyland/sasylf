@@ -75,6 +75,7 @@ public class UnitTests extends SimpleTestSuite {
   protected void testUnification(String description, Substitution expected, Term t1, Term t2) {
     try {
       Substitution actual = t1.unify(t2);
+      assertEqual("unified",t1.substitute(actual),t2.substitute(actual));
       if (expected == null) {
         assertTrue(description + " didn't fail as expected", false);
       } else {
@@ -189,26 +190,39 @@ public class UnitTests extends SimpleTestSuite {
                                            App(v("e19", Abs(e,e)), b(2))),
                                   v("tau16",t)))));
     
+    /*
     t2 = App(hastAppRule, 
              v("has-type-20", Abs(e, Abs(App(hast,b(1),v("tau",t)),
                                          App(hast, v("E1",e), App(arrow, v("T",t), v("T'",t)))))),
              v("has-type-21", Abs(e, Abs(App(hast,b(1),v("tau",t)),
                                          App(hast, v("E2",e), v("T",t))))),
              Abs(e, Abs(App(hast,b(1),v("tau",t)), 
-                        App(hast,v("E",e),v("tau'",t)))));
+                 App(hast,v("E",e),v("tau'",t)))));
+    */
     
-    sub = subst(p("e18",Abs(e,v("E1",e))),
-                p("e19",Abs(e,v("E2",e))),
-                p("tau17", v("T", t)),
-                p("tau16", v("T'", t)),
-                p("E", App(app, v("E1",e), v("E2", e))),
-                p("tau'", v("T'", t)),
+    t2 = App(hastAppRule, 
+        v("has-type-20", Constant.UNKNOWN_TYPE),
+        v("has-type-21", Constant.UNKNOWN_TYPE),
+        Abs(e, Abs(App(hast,b(1),v("tau",t)), 
+                   App(hast,v("E",e),v("tau'",t)))));
+    
+    // Simulate the variables that Unification makes
+    // If other tests come before this one, we need to adjust the
+    // numbers here, or more powerfully, change testUnification to allow
+    // a renaming of stamped free variables.
+    FreeVar e1 = new FreeVar("e18",e,7);
+    FreeVar e2 = new FreeVar("e19",e,6);
+    
+    sub = subst(p("e18",Abs(e,e1)),
+                p("e19",Abs(e,e2)),
+                p("E", App(app, e1, e2)),
+                p("tau'", v("tau16", t)),
                 p("has-type-20", Abs(e, Abs(App(hast,b(1),v("tau",t)), 
-                                            App(hast, v("E1",e), App(arrow, v("T",t), v("T'",t)))))),
+                                            App(hast, e1, App(arrow, v("tau17",t), v("tau16",t)))))),
                 p("has-type-21", Abs(e, Abs(App(hast,b(1),v("tau",t)), 
-                                            App(hast, v("E2",e), v("T",t))))));
+                                            App(hast, e2, v("tau17",t))))));
     
-    testUnification("good16", sub, t1, t2); //XXX Fix result so test succeeds, not fails
+    testUnification("good16", sub, t1, t2); 
     
     t1 = App(tvarRule, Abs(e, Abs(App(hast, b(1), v("tau5",t)), App(hast, b(2),     v("tau5",t)))));
     t2 = App(tvarRule, Abs(e, Abs(App(hast, b(1), v("tau1",t)), App(hast, v("E",e), v("tau2",t)))));
