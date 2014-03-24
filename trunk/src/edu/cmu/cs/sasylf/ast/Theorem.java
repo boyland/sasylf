@@ -131,7 +131,12 @@ public class Theorem extends RuleLike {
 			}
 	
 			exists.typecheck(ctx);
-			exists = (Clause) exists.computeClause(ctx, false);
+			Element computed = exists.computeClause(ctx, false);
+			if (computed instanceof ClauseUse && computed.getType() instanceof Judgment) {
+			  exists = (Clause) computed;
+			} else {
+			  ErrorHandler.recoverableError("'exists' of theorem must be a judgment, not syntax",  computed);
+			}
 			
 			inductionScheme = null;
 			for (Derivation d : derivations) {

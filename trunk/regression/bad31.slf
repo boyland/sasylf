@@ -1,0 +1,16 @@
+package regression;
+
+terminals S
+
+syntax n ::= 0 | S n
+
+judgment eq: n = n
+
+    ----- eq
+    n = n
+
+lemma inhabited:
+    exists n. //! can't "exist" syntax
+    e: n = n by rule eq
+end lemma
+
