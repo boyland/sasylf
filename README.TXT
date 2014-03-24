@@ -1,4 +1,4 @@
-SASyLF version 1.3.1
+SASyLF version 1.3.2a0
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -103,12 +103,13 @@ could use some improvement.
 
 The automated prover ("by solve") works poorly.  It works only
 for straightforward derivations without the use of induction or case
-analysis.  It's use is deprecated.
+analysis.  Its use is deprecated.
 
 
 
 RELEASE HISTORY
 
+1.3.2	(& 1.2.7)
 1.3.1	Extensions (& 1.2.6)
 	Abstract modules
 	"or" judgments
@@ -122,6 +123,8 @@ RELEASE HISTORY
     Eclipse plugin updated to add project and package support and builders
     Editor has fold support
     Resolved issues #45
+1.2.7	Bug fixes to stable 1.2
+    Resolved issues #56
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
     Substitution semantics changed for complex contexts, poplmark-2a proof updated
