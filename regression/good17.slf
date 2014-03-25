@@ -1,0 +1,115 @@
+/*
+ * Bug demonstrating bad pattern generation
+ * Update of good02.slf to add T-Var
+ */
+package regression;
+
+terminals class s in
+
+syntax
+
+CT ::= class C { }
+    |  CT class C { x:C => t[x] }
+
+t  ::= x
+    |  t !
+
+C  ::= n
+
+n ::= 0 | s n
+
+
+Gamma ::= * | Gamma, x:C
+
+
+/*** CLASS TABLES ***/
+
+
+judgment lookup: CT |- class C
+
+
+
+/******** TYPES *************/
+
+
+judgment isvar : t:C in Gamma
+assumes Gamma
+
+------------------- var
+x:C in (Gamma, x:C)
+
+
+judgment type: CT; Gamma |- t : C
+assumes Gamma
+
+t:C in Gamma
+CT |- class C
+---------------------- T-Var
+CT; Gamma |- t : C
+
+CT; Gamma |- t : C
+CT |- class C
+--------------------------- T-Bang
+CT; Gamma |- t ! : C
+
+
+judgment better-type: CT; Gamma |- t : C <: C
+assumes Gamma
+
+CT; Gamma |- t : C
+---------------------------- better
+CT; Gamma |- t : C <: C'
+
+
+/**************** CHECKING CLASSES/METHODS ************/
+
+
+lemma switch:
+    forall c: CT |- class C
+    forall C1
+    exists CT |- class C1.
+    proof by contradiction on c
+end lemma
+
+lemma test:
+    assumes Gamma
+    forall dt: CT; Gamma, x:C |- t[x] : C1
+    exists CT |- class C1 .
+    _: CT |- class C1 by induction on dt:
+        case rule
+            v: t0[x] : C1 in (Gamma, x : C)
+            x: CT |- class C1
+            ---------------------------- T-Var
+            _: CT; (Gamma, x : C) |- t0[x] : C1
+        is
+            proof by case analysis on v:
+                case rule
+                    ------------------------- var
+                    _: x : C1 in ((Gamma', x : C1), x' : C)
+                is
+                    v2: x': C1 in (Gamma', x': C1) by rule var
+                    v2': x': C1 in (Gamma', x': C1, x: C) by weakening on v2
+                    t2: CT; Gamma', x':C1, x : C |- x' : C1 by rule T-Var on v2', x
+                    _: CT |- class C1 by lemma switch on x, C1
+                end case
+
+                case rule
+                    ------------------------- var
+                    _: x : C in (Gamma, x : C)
+                is
+                    proof by x
+                end case
+
+            end case analysis
+        end case
+
+	case rule
+	    dt: CT; Gamma, x:C |- t'[x] : C1
+	    fl: CT |- class C1
+	    ------------------------------------ T-Bang
+	    _:  CT; Gamma, x:C |- t'[x] ! : C1
+	is
+	    _: CT |- class C1 by fl
+	end case
+    end induction
+end lemma
