@@ -505,16 +505,16 @@ public class TermPrinter {
       List<Element> es = ((Clause)e).getElements();
       if (parenthesize && es.size() > 1) sb.append('(');
       int n = es.size();
-      boolean lastWasTerminal = false;
+      String lastTerminal = null;
       for (int i=0; i < n; ++i) {
         Element e2 = es.get(i);
-        boolean thisIsTerminal = e2 instanceof Terminal;
-        if (i > 0 && !(lastWasTerminal && thisIsTerminal)) sb.append(' ');
+        String thisTerminal = e2 instanceof Terminal ? ((Terminal)e2).getSymbol() : null;
+        if (i > 0 && insertSpace(lastTerminal, thisTerminal)) sb.append(' ');
         prettyPrint(sb,e2,true, level+1);
-        lastWasTerminal = thisIsTerminal;
+        lastTerminal = thisTerminal;
         if (e2 instanceof AndTerminal && !parenthesize) {
           sb.append(" _:");
-          lastWasTerminal = false;
+          lastTerminal = null;
         }
       }
       if (parenthesize && es.size() > 1) sb.append(')');
@@ -528,5 +528,22 @@ public class TermPrinter {
     } else {
       throw new RuntimeException("??" + e);
     }
+  }
+
+  /**
+   * Return whether one should insert a space between these two tokens.
+   * By default, we always place spaces between tokens, but if one or both are terminals
+   * we sometimes omit the space.
+   * @param lastTerminal the terminal string before, null if not a terminal
+   * @param thisTerminal the terminal string after, null is not a terminal
+   * @return whether to insert a space between these two
+   */
+  protected static boolean insertSpace(String lastTerminal, String thisTerminal) {
+    if (thisTerminal == null) return true;
+    if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
+    if (lastTerminal == null) return true;
+    if (thisTerminal.isEmpty()) return false;
+    if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
+    return false;
   }
 }
