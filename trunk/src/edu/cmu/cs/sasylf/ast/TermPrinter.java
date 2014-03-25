@@ -260,7 +260,12 @@ public class TermPrinter {
               Element element = vtMap.get(elem.toString());
               if (element != null)
                 bes.set(i,element); 
-              else bes.set(i,context);
+              else {
+                if (i != bu.getConstructor().getAssumeIndex()) {
+                  throw new RuntimeException("didn't find " + elem + " in " + vtMap);
+                }
+                bes.set(i,getContext((NonTerminal)elem));
+              }
             }
           }
           bindingClause = new ClauseUse(location,bes,bu.getConstructor());
@@ -301,7 +306,9 @@ public class TermPrinter {
         v = null; // replace earlier variables with null
       }
     }
-    return new ClauseUse(location,newElems,cd);
+    ClauseUse bindingClause = new ClauseUse(location,newElems,cd);
+    // System.out.println("var binding clause = " + bindingClause);
+    return bindingClause;
   }
 
   private ClauseUse appAsClause(Constant con, List<Element> args) {
@@ -343,12 +350,7 @@ public class TermPrinter {
       for (int i=0; i < n; ++i) {
         Element old = contents.get(i);
         if (i == ai) {
-          Element baseContext = context;
-          if (baseContext == null) {
-            NonTerminal g = (NonTerminal)old;
-            ClauseDef term = g.getType().getTerminalCase();
-            baseContext = new ClauseUse(location,new ArrayList<Element>(term.getElements()),term);
-          }
+          Element baseContext = getContext((NonTerminal)old);
           contents.set(i,baseContext);
         } else if (old instanceof NonTerminal) {
           contents.set(i,actuals.next());
@@ -393,6 +395,21 @@ public class TermPrinter {
       }
     }
     return new ClauseUse(location,contents,cd);
+  }
+
+  /**
+   * Return syntax for the current context, giving a nonterminal for the syntax
+   * in case the context is empty.
+   * @param contextNT
+   * @return clause or non-terminal for the current context, never null.
+   */
+  public Element getContext(NonTerminal contextNT) {
+    Element baseContext = context;
+    if (baseContext == null) {
+      ClauseDef term = contextNT.getType().getTerminalCase();
+      baseContext = new ClauseUse(location,new ArrayList<Element>(term.getElements()),term);
+    }
+    return baseContext;
   }
   
   private ClauseUse replaceAssume(ClauseUse repl, Element old) {
