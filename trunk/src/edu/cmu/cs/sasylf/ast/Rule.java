@@ -346,7 +346,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (sub == null)
 			return null;
 		else
-			return new Pair<Term,Substitution>(ruleTerm, sub);
+			return new Pair<Term,Substitution>(ruleTerm.substitute(sub), sub);
 	}
 	
 	@Override
