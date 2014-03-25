@@ -31,6 +31,7 @@ public class TermPrinter {
   private final Location location;
   private final Map<FreeVar,NonTerminal> varMap = new HashMap<FreeVar,NonTerminal>();
   private final Set<FreeVar> used = new HashSet<FreeVar>();
+  private final Set<String> variableNames = new HashSet<String>();
   
   public TermPrinter(Context ctx, Element gamma, Location loc) {
     this.ctx = ctx;
@@ -64,6 +65,7 @@ public class TermPrinter {
   }
   
   public ClauseUse asClause(Term x) {
+    variableNames.clear(); // every clause can reuse variables
     return asClause(x, new ArrayList<Variable>());
   }
   
@@ -208,11 +210,17 @@ public class TermPrinter {
       if (p != null && p.getType() != null && p.getType().equals(s)) ++count;
     }
     StringBuilder sb = new StringBuilder(s.getVariable().toString());
+    int len = sb.length();
     while (count > 0) {
       sb.append("'");
       --count;
     }
-    return sb.toString();
+    if (variableNames.add(sb.toString())) return sb.toString();
+    for (int i=0; true; ++i) {
+      sb.setLength(len);
+      sb.append(i);
+      if (variableNames.add(sb.toString())) return sb.toString();
+    }
   }
   
   /**
