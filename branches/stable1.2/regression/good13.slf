@@ -1,0 +1,16 @@
+package regression;
+
+terminals z s
+
+syntax 
+
+n ::= z | s n 
+
+/* SASyLF's Eclipse plugin (I haven't tested the command-line version)
+ * reports a "Lexical error" in line 16.
+ * Wrapping the theorem stub inside multi-line comments suppresses
+ * the error (with and without, respectively, the single-line comments).
+ */
+
+// theorem test:
+// end theorem.

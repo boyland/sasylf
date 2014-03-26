@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -8,6 +9,7 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
@@ -56,7 +58,12 @@ public class Main {
 				try {
 					cu = DSLToolkitParser.read(file);
 				} catch (ParseException e) {
-					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, false);
+					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
+				} catch (TokenMgrError e) {
+				  ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
+				} catch (FileNotFoundException ex) {
+				  System.err.println("Could not open file " + filename);
+				  System.exit(-1);
 				}
 				cu.typecheck();
 			} catch (SASyLFError e) {

@@ -40,6 +40,23 @@ public abstract class Element extends Node {
 	public abstract void prettyPrint(PrintWriter out, PrintContext ctx);
 	
 	/**
+	 * Compute a fact for this element.
+	 * This method is used to handle an argument to a Derivation,
+	 * and also to identify sub-terms of an inductive syntax term.
+	 * <p>
+	 * It can handle syntax, perhaps with an assumption,
+	 * and can handle existing derivations, but cannot handle
+	 * a written out judgment, because this would be a derivation without a
+	 * justification.
+	 * @param ctx global information
+	 * @param assumes context in which this element is seen.
+	 * One of: (a) null, (b) a NonTerminal, (c) a ClauseUse.
+	 * @return fact for this argument
+	 * @throws SASyLFError if this element is a Clause for a Judgment.
+	 */
+	public abstract Fact asFact(Context ctx, Element assumes);
+	
+	/**
 	 * For each binding in this clause, check that the list of element types bound in
 	 * the variable is consistent with what the map says.  If the variable is not already
 	 * in the map, we add it.
@@ -47,6 +64,12 @@ public abstract class Element extends Node {
 	 * default empty implementation for Terminal and Variable
 	 */
 	void checkBindings(Map<String, List<ElemType>> bindingTypes, Node nodeToBlame) {}
+	/**
+	 * For each Variable in this clause check that it is bound exactly once.
+	 * @param bound set of variables that are already found to be bound.
+	 * @param defining true if this element is a defining occurrence.
+	 */
+	void checkVariables(Set<String> bound, boolean defining) {}
 	public Term getTypeTerm() { throw new UnsupportedOperationException(this.getClass().toString()); }
 	protected abstract Term computeTerm(List<Pair<String, Term>> varBindings);
 

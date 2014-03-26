@@ -64,7 +64,7 @@ end lemma
 
 theorem impossible:
     exists contradiction.
-    v: x in (Gamma,x) by rule var
-    b: Gamma,x |- x by rule B-Var on v
+    v: x in (*,x) by rule var
+    b: *,x |- x by rule B-Var on v
     _: contradiction by lemma label-impossible on b
 end theorem

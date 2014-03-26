@@ -37,9 +37,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		
     // make sure the number of arguments is correct
     RuleLike ruleLike = getRule(ctx);
-    if (getArgs().size() != ruleLike.getPremises().size())
-      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
-
+    if (getArgs().size() != ruleLike.getPremises().size()) {
+      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, ruleLike.getKind()+" "+getRuleName(), this);
+    }
     boolean contextCheckNeeded = false;
 		
 		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(ruleLike.getAssumes())) {
@@ -171,6 +171,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
         ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided.iterator().next() + ")", this, "\t(could not remove variables "+unavoided+ " from sub " + sub + ")");
 			}			
 
+			ctx.composeSub(sub);
 		} catch (UnificationFailed e) {
 			Term explanationTerm = null;
 			try {
@@ -209,4 +210,37 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
       checkRootMatch(ctx,ruleLike.getConclusion(),this.getElement(),this);
     }
 	}
+
+  /**
+   * Check inductive calls.
+   * @param ctx global context
+   * @param self caller theorem
+   * @param other callee theorem
+   */
+  protected void checkInduction(Context ctx, Theorem self, Theorem other) {
+    Fact inductiveArg = getArgs().get(other.getInductionIndex());
+    if (!ctx.subderivations.contains(inductiveArg)) {
+      Fact inductionVariable = self.getForalls().get(self.getInductionIndex());
+      if (inductiveArg.equals(inductionVariable)) {
+        if (self.getGroupIndex() <= other.getGroupIndex()) {
+          if (self != other) {
+            ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+          } else {
+            ErrorHandler.report(Errors.NOT_SUBDERIVATION, inductionVariable + " is unchanged", this);
+          }
+        }
+      } else if (inductiveArg instanceof NonTerminalAssumption) {
+        Term inductionTerm = inductionVariable.getElement().asTerm();
+        Term inductiveTerm = inductiveArg.getElement().asTerm();
+        Term inductionSub = inductionTerm.substitute(ctx.currentSub);
+        Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
+        // System.out.println("Is " + inductiveSub + " subterm of " + inductionSub + "?");
+        if (!inductionSub.containsProper(inductiveSub)) {
+          ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
+        }
+      } else {
+        ErrorHandler.report(Errors.MUTUAL_NOT_SUBDERIVATION, this);
+      }
+    }
+  }
 }

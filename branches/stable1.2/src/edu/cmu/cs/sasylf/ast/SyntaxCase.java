@@ -9,11 +9,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -23,6 +19,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class SyntaxCase extends Case {
@@ -39,9 +36,9 @@ public class SyntaxCase extends Case {
 		super.prettyPrint(out);
 	}
 
-	public void typecheck(Context ctx, boolean isSubderivation) {
+	public void typecheck(Context parent, boolean isSubderivation) {
+	  Context ctx = parent.clone();
 		debug("    ******* case line " + getLocation().getLine());
-		Map<String, List<ElemType>> oldBindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
     conclusion.typecheck(ctx);
 
     // make sure we were case-analyzing a nonterminal
@@ -50,7 +47,7 @@ public class SyntaxCase extends Case {
       ErrorHandler.report(SYNTAX_CASE_FOR_DERIVATION, this);
     
     NonTerminal caseNT;
-    Clause caseAssumptions = null; // These may be unnecessary
+    Element caseAssumptions = null; // These may be unnecessary
     if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
       AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
       Element base = ae.getBase();
@@ -65,9 +62,10 @@ public class SyntaxCase extends Case {
     Clause concDef = null;
     
     if (assumes != null) {
-		  assumes = (Clause) assumes.typecheck(ctx);
-		  Element assumeE = assumes.computeClause(ctx,false);
-		  if (assumeE instanceof ClauseUse) assumes = (Clause)assumeE;
+      assumes = assumes.typecheck(ctx);
+      if (assumes instanceof Clause) {
+        assumes = ((Clause)assumes).computeClause(ctx,false);
+      }
     }
     
     if (concElem instanceof Variable) {
@@ -85,11 +83,14 @@ public class SyntaxCase extends Case {
       concUse.checkBindings(ctx.bindingTypes, this);
       concDef = concUse.getConstructor();
       if (caseAssumptions == null) {
+        //XXX: can't we add an assumption for a variable?
         if (assumes != null) ErrorHandler.report(Errors.INVALID_CASE, "Cannot add assumptions in case", this);
       } else if (assumes == null) {
         boolean lostAssumptions = false;
-        for (Element ea: caseAssumptions.getElements()) {
-          if (ea instanceof Variable) lostAssumptions = true;
+        if (caseAssumptions instanceof Clause) {
+          for (Element ea: ((Clause)caseAssumptions).getElements()) {
+            if (ea instanceof Variable) lostAssumptions = true;
+          }
         }
         if (lostAssumptions) {
           ErrorHandler.report(Errors.INVALID_CASE, "Cannot change assumptions in case", this);
@@ -146,11 +147,6 @@ public class SyntaxCase extends Case {
     if (computedCaseTerm == null) {
       ErrorHandler.report(EXTRA_CASE, this);
     }
-		
-    Substitution oldAdaptationSub = ctx.adaptationSub;
-    Map<NonTerminal, AdaptationInfo> oldAdaptationMap = new HashMap<NonTerminal, AdaptationInfo>(ctx.adaptationMap);
-    NonTerminal oldInnermostGamma = ctx.innermostGamma;
-    Term oldMatchTerm = ctx.matchTermForAdaptation;
 
     Term adaptedCaseAnalysis = ctx.currentCaseAnalysis;
 
@@ -197,7 +193,6 @@ public class SyntaxCase extends Case {
 		}
 		
 		// update the current substitution
-		Substitution oldSub = new Substitution(ctx.currentSub);
 		ctx.currentSub.compose(unifyingSub); // modifies in place
 		
 		// update the set of free variables
@@ -210,29 +205,38 @@ public class SyntaxCase extends Case {
 		}
 
 		// update the set of subderivations
-		List<Fact> oldSubderivations = new ArrayList<Fact>(ctx.subderivations);
-		if (isSubderivation && concElem instanceof ClauseUse) {
-			// add each part of the clause to the list of subderivations
-			ctx.subderivations.addAll(((ClauseUse)concElem).getNonTerminals());
+		if (isSubderivation) {
+		  Element base = concElem.asFact(ctx, caseAssumptions).getElement();
+		  Element assumes = null;
+		  if (base instanceof AssumptionElement) {
+		    AssumptionElement ae = (AssumptionElement)base;
+		    base = ae.getBase();
+		    assumes = ae.getAssumes();
+		  }
+		  if (base instanceof ClauseUse) {
+		    // add each part of the clause to the list of subderivations
+		    ctx.subderivations.addAll(((ClauseUse)base).getNonTerminals(ctx, assumes));
+		  }
 		}
 		
-		try {
+		// update varFree
+		if (ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
+		  if (concElem instanceof ClauseUse) {
+		    for (Fact f : ((ClauseUse)concElem).getNonTerminals(ctx, null)) {
+		      Element e = f.getElement();
+		      if (e instanceof NonTerminal) {
+		        Util.debug("Adding var free: " + e);
+		        ctx.varfreeNTs.add((NonTerminal)e);
+		      }
+		    }
+		  }
+		}
+		
 		super.typecheck(ctx, isSubderivation);
 
-		} finally {
-		// restore the current substitution and input vars
-		ctx.currentSub = oldSub;
-		ctx.inputVars = oldInputVars;
-		ctx.subderivations = oldSubderivations;
-		ctx.bindingTypes = oldBindingTypes;
-    ctx.adaptationSub = oldAdaptationSub;
-    ctx.adaptationMap = oldAdaptationMap;
-    ctx.innermostGamma = oldInnermostGamma;
-    ctx.matchTermForAdaptation = oldMatchTerm;
-		}
 	}
 
 	private Clause conclusion;
-	private Clause assumes;
+	private Element assumes;
 }
 

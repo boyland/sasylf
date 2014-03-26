@@ -78,10 +78,7 @@ public class TermPrinter {
       String base = ty.toString();
       for (int i=0; true; ++i) {
         FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
-        // System.out.println("Checking " + v + " against " + ctx.inputVars);
-        if (ctx.inputVars.contains(v)) continue;
-        if (ctx.outputVars.contains(v)) continue;
-        if (ctx.currentSub.getSubstituted(v) != null) continue;
+        if (ctx.isKnown(base + i)) continue;
         if (used.contains(v)) continue;
         used.add(v);
         NonTerminal result = new NonTerminal(v.toString(),location);
@@ -148,25 +145,17 @@ public class TermPrinter {
       Variable v = new Variable(createVarName(syn,vars),location);
       v.setType(syn);
       vars.add(v);
-      Term body1 = abs.getBody();
-      if (body1 instanceof Abstraction) {
-        Abstraction abs2 = (Abstraction)body1;
-        ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
-        vars.add(new Variable("<internal>",location));
-        Element bodyElem = asCaseElement(abs2.getBody(),vars);
-        vars.remove(vars.size()-1);
-        vars.remove(vars.size()-1);
-        // System.out.println("Insert variable " + v + " in " + bodyElem);
-        // System.out.println("  using binding clause: " + bindingClause);
-        if (bodyElem instanceof AssumptionElement) {
-          AssumptionElement ae = (AssumptionElement)bodyElem;
-          replaceAssume(bindingClause,ae.getAssumes());
-          return bodyElem;
-        } else {
-          return new AssumptionElement(location,bodyElem,bindingClause);
-        }
+      ClauseUse bindingClause = variableAsBindingClause(v);
+      Element bodyElem = asCaseElement(abs.getBody(),vars);
+      vars.remove(vars.size()-1);
+      // System.out.println("Insert variable " + v + " in " + bodyElem);
+      // System.out.println("  using binding clause: " + bindingClause);
+      if (bodyElem instanceof AssumptionElement) {
+        AssumptionElement ae = (AssumptionElement)bodyElem;
+        replaceAssume(bindingClause,ae.getAssumes());
+        return bodyElem;
       } else {
-        throw new RuntimeException("abstraction with only one arg?: " + x);
+        return new AssumptionElement(location,bodyElem,bindingClause);
       }
     } else return asElement(x,vars);
   }
@@ -205,8 +194,10 @@ public class TermPrinter {
       } else {
         throw new RuntimeException("abstraction with only one arg?: " + x);
       }
+    } else if (x instanceof Constant) {
+      return appAsClause((Constant)x,Collections.<Element>emptyList());
     } else {
-      throw new RuntimeException("unknown element: " + x);
+      throw new RuntimeException("unknown element: " + x + " of class " + x.getClass());
     }
   }
   
@@ -292,7 +283,16 @@ public class TermPrinter {
       Element e = newElems.get(i);
       if (e instanceof NonTerminal) {
         NonTerminal nt = (NonTerminal)e;
-        NonTerminal copy = new NonTerminal(nt.getSymbol()+"_"+i, location);
+        NonTerminal copy;
+        for (int j=0; true; ++j) {
+          String newName = nt.getSymbol() + j;
+          if (ctx.isKnown(newName)) continue;
+          FreeVar fake = new FreeVar(newName,nt.getTypeTerm());
+          if (used.contains(fake)) continue;
+          used.add(fake);
+          copy = new NonTerminal(newName, location);
+          break;
+        }
         copy.setType(nt.getType());
         newElems.set(i, copy);
       } else if (e instanceof Variable) {
@@ -306,8 +306,12 @@ public class TermPrinter {
   private ClauseUse appAsClause(Constant c, List<Element> args) {
     String fname = c.getName();
     ClauseDef cd = ctx.prodMap.get(fname);
-    if (cd != null) {
+    if (cd == null) {
+      throw new RuntimeException("no cd for " + fname);
+    }
+    {
       List<Element> contents = new ArrayList<Element>(cd.getElements());
+
       // System.out.println("In " + contents);
       int n = contents.size();
       int ai = cd.getAssumeIndex();
@@ -366,7 +370,6 @@ public class TermPrinter {
       }
       return new ClauseUse(location,contents,cd);
     }
-    throw new RuntimeException("no cd for " + fname);
   }
   
   private ClauseUse replaceAssume(ClauseUse repl, Element old) {

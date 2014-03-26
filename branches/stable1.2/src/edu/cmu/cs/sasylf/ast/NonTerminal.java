@@ -20,7 +20,12 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
 	public NonTerminal(String s, Location l) { super(l); symbol = s; }
-
+	public NonTerminal(String s, Location l, Syntax ty) {
+	  super(l);
+	  symbol = s;
+	  type = ty;
+	}
+	
 	public String getSymbol() { return symbol; }
 	public Syntax getType() { return type; }
 	public ElemType getElemType() { return type; }
@@ -136,6 +141,19 @@ public class NonTerminal extends Element {
 	}
 
 	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+	  if (ctx.bindingTypes.containsKey(symbol) &&
+	      !ctx.bindingTypes.get(symbol).isEmpty()) {
+	    ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
+	  }
+	  // System.out.println(this+".asFact(_," + assumes + ")");
+	  if (ctx.varfreeNTs.contains(this) || assumes == null ||
+	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+	    return new NonTerminalAssumption(this);
+	  else return new NonTerminalAssumption(this,assumes);
+	}
+
+  @Override
 	public FreeVar computeTerm(List<Pair<String, Term>> varBindings) {
 		return new FreeVar(symbol, type.typeTerm());
 	}

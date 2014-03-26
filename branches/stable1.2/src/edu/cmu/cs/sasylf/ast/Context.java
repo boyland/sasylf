@@ -33,7 +33,6 @@ public class Context implements Cloneable {
   public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
   public Map<String,Variable> varMap = new HashMap<String, Variable>();
   public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
-  public Map<String,Fact> derivationMap = new HashMap<String, Fact>();
   public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
   public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
 
@@ -41,6 +40,7 @@ public class Context implements Cloneable {
 
   public Map<String, Theorem> recursiveTheorems; // only changes with theorems
   
+  public Map<String,Fact> derivationMap = new HashMap<String, Fact>();
   public Map<String, List<ElemType>> bindingTypes;
   public Substitution currentSub = new Substitution();
   public Fact inductionVariable;
@@ -76,6 +76,7 @@ public class Context implements Cloneable {
     } catch (CloneNotSupportedException ex) {
       return null;
     }
+    if (derivationMap != null) result.derivationMap = new HashMap<String,Fact>(derivationMap);
     if (bindingTypes != null) result.bindingTypes = new HashMap<String, List<ElemType>>(bindingTypes);
     result.currentSub = new Substitution(currentSub);
     if (adaptationMap != null) result.adaptationMap = new HashMap<NonTerminal, AdaptationInfo>(adaptationMap);
@@ -85,7 +86,7 @@ public class Context implements Cloneable {
     if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
     if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varfreeNTs = new HashSet<NonTerminal>(varfreeNTs);
-    
+
     return result;
   }
   
@@ -108,6 +109,40 @@ public class Context implements Cloneable {
       }
     }
     return false;
+  }
+  
+  /**
+   * Return true if the given string has some sort of mapping out there.
+   * Such a name is not suitable for a fresh variable.
+   * @param s string to look up, must not be null
+   * @return whether the context is aware of anything with this name
+   */
+  public boolean isKnown(String s) {
+    FreeVar fake = new FreeVar(s,null);
+    return synMap.containsKey(s) ||
+        judgMap.containsKey(s) ||
+        prodMap.containsKey(s) ||
+        varMap.containsKey(s) ||
+        ruleMap.containsKey(s) ||
+        recursiveTheorems.containsKey(s) ||
+        derivationMap.containsKey(s) ||
+        bindingTypes.containsKey(s) ||
+        inputVars.contains(fake) ||
+        outputVars.contains(fake) ||
+        currentSub.getMap().containsKey(fake);
+  }
+  
+  /**
+   * Generate an identifier with the given prefix.
+   * The result will not be known {@link #isKnown(String)}.
+   * @param prefix string to start names with, must not be null
+   * @return fresh identifier
+   */
+  public String genFresh(String prefix) {
+    for (int i=0; true; ++i) {
+      String s = prefix + i;
+      if (!isKnown(s)) return s;
+    }
   }
   
   public void checkConsistent(Node here) {
@@ -138,6 +173,20 @@ public class Context implements Cloneable {
       ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
     } 
     removeUnreachableVariables();
+  }
+  
+  public void composeSub(Substitution sub) {
+    // System.out.println("ctx(" + currentSub + ").composeSub(" + sub + ")");
+    Set<FreeVar> unavoidableInputVars = sub.selectUnavoidable(inputVars);
+    // System.out.println("unavoidable = " + unavoidableInputVars);
+    inputVars.removeAll(unavoidableInputVars);
+    currentSub.compose(sub);  // modifies in place
+    Set<FreeVar> newVars = new HashSet<FreeVar>();
+    for (Map.Entry<Atom,Term> e : sub.getMap().entrySet()) {
+      newVars.addAll(e.getValue().getFreeVariables());
+    }
+    // System.out.println("new vars = " + newVars);
+    inputVars.addAll(newVars);
   }
   
   public void removeUnreachableVariables() {

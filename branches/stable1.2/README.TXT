@@ -1,4 +1,4 @@
-SASyLF version 1.2.5
+SASyLF version 1.2.6
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -107,6 +107,12 @@ analysis.  It's use is deprecated.
 RELEASE HISTORY
 
 
+1.2.6   Bug fixes to stable 1.2
+    Unproved warning now gives derivation to prove
+    Substitution semantics changed for complex contexts, poplmark-2a proof updated
+    'use induction on' syntax added
+    "by inversion" cleaned-up
+    Resolved issues #47, #48, #49, #52, #54
 1.2.5   Bug fixes to stable 1.2
     Resolves issues #43, #44, #46
 1.2.4	Minor bug fixes and plugin enhancements

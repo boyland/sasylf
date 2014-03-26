@@ -9,6 +9,7 @@ import org.sasylf.util.PositionComparator;
 public class ProofElement implements Comparable<ProofElement> {
 	private String category;
 	private String content;
+	private String lexicalInfo;
 	private ProofElement parentElement;
 	private List<ProofElement> children;
 	private int start;
@@ -20,6 +21,12 @@ public class ProofElement implements Comparable<ProofElement> {
 		this.content = content;
 	}
 	
+	ProofElement(Position p) {
+	  category = "<none>";
+	  content = "<none>";
+	  lexicalInfo = "";
+	  this.position = p;
+	}
 	
 
 	public String getCategory() {
@@ -36,6 +43,14 @@ public class ProofElement implements Comparable<ProofElement> {
 	
 	public void setContent(String content) {
 		this.content = content;
+	}
+	
+	public String getLexicalInfo() {
+	  return lexicalInfo;
+	}
+	
+	public void setLexicalInfo(String info) {
+	  lexicalInfo = info;
 	}
 	
 	public void addChild(ProofElement element) {

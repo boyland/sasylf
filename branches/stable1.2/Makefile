@@ -37,7 +37,7 @@ ADDTESTS= \
 test:
 	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
-	  ./sasylf.local $$f 2>&1 | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
+	  ./sasylf.local $$f 2>&1 | sed "s#Internal SASyLF error!#$$f:0:Internal error#" | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
 	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
 	done
 	@echo "  Done."

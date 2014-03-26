@@ -1,12 +1,9 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -45,72 +42,32 @@ abstract public class DerivationWithArgs extends Derivation {
     
     for (int i = 0; i < argStrings.size(); ++i) {
 			Clause c = argStrings.get(i);
-			// remove all (c) parens:
-			while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
-			  argStrings.set(i,c = (Clause)c.getElements().get(0));
-			}
-			Fact f = null;
-			// TODO: lots of duplicated code.
-			if (c.getElements().size() == 1) {
-			  Element e = c.getElements().get(0);
-			  Clause assumes = null;
-			  if (e instanceof AssumptionElement) {
-			    assumes = ((AssumptionElement)e).getAssumes();
-			    assumes = (Clause)assumes.typecheck(ctx);
-			    assumes = (Clause)assumes.computeClause(ctx, false);
-			    e = ((AssumptionElement)e).getBase();
-			  }
-			  if (e instanceof Binding) {
-			    Binding b = (Binding)e;
-			    f = new BindingAssumption(b,assumes);
-			    f.typecheck(ctx);		    
-			  } else if (e instanceof NonTerminal) {
-			    // case for a reference to a derivation 
-			    String s = e.toString();
-			    f = ctx.derivationMap.get(s);
-			    if (f == null) {
-			      FreeVar fake = new FreeVar(s,null);
-			      if (ctx.varMap.containsKey(s) || ctx.synMap.containsKey(s) || ctx.inputVars.contains(fake) ||
-			          ctx.currentSub.getMap().containsKey(fake)) {
-			        // case for a use of a one element clause
-			        f = new SyntaxAssumption(s, getLocation(),assumes);
-			        f.typecheck(ctx);
-			      } else {
-			        ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
-			      }
-			    } 
-			  } else if (e instanceof Clause) {
-			    c = (Clause)e.typecheck(ctx);
-			    c = (Clause)c.computeClause(ctx, false);
-			    if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
-	          ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
-	        }
-	        argStrings.set(i,c);
-	        f = new ClauseAssumption(c, getLocation(), assumes);
-	        // f.typecheck(ctx, false);
-			  } else if (e instanceof Terminal) {
-			    c = (Clause)c.typecheck(ctx);
-			    c = (Clause)c.computeClause(ctx, false);
-			    if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
-            ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+      // remove all (c) parens:
+      while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
+        argStrings.set(i,c = (Clause)c.getElements().get(0));
+      }
+      Fact f = null;
+      // special case for a reference to a derivation 
+      if (c.getElements().size() == 1 && c.getElements().get(0) instanceof NonTerminal) {
+        String s = ((NonTerminal)c.getElements().get(0)).getSymbol();
+        f = ctx.derivationMap.get(s);
+        if (f == null && !ctx.isKnown(s)) {
+          ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
+        }
+        // fall through: handle as a nonterminal
+      }
+      if (f == null) {
+        Element e = c.typecheck(ctx);
+        if (e instanceof Clause) {
+          Clause cl = (Clause)e;
+          if (cl.getElements().size() == 1 && cl.getElements().get(0) instanceof NonTerminal) {
+            e = cl.getElements().get(0);
+          } else {
+            e = cl.computeClause(ctx, false);
           }
-          argStrings.set(i,c);
-          f = new ClauseAssumption(c, getLocation(), assumes);
-			  } else {
-          throw new InternalError("What sort of arg is this ? " + e + " : " + e.getClass());
-        } 
-			} else {
-				// case for a clause given directly
-			  c = (Clause)c.typecheck(ctx);
-				debug("computing fact for " + c + " of class " + c.getClass().getName());
-				c = (Clause) c.computeClause(ctx, false);
-				if (!(((ClauseUse)c).getConstructor().getType() instanceof Syntax)) {
-				  ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
-				}
-				argStrings.set(i,c);
-				f = new ClauseAssumption(c, getLocation());
-				f.typecheck(ctx);
-			}
+        }
+        f = e.asFact(ctx, ctx.innermostGamma);
+      }
 			args.add(f);
 		}
 	}

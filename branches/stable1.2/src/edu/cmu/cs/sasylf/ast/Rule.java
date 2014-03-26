@@ -23,6 +23,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class Rule extends RuleLike implements CanBeCase {
 	public Rule(Location loc, String n, List<Clause> l, Clause c) { super(n, loc); premises=l; conclusion=c; }
@@ -75,6 +76,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		
     try {
       computeAssumption(ctx);
+      myConc.checkVariables(new HashSet<String>(), false);
     } catch (SASyLFError ex) {
       // continue
     }
@@ -88,6 +90,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			}
 			premiseClause.checkBindings(bindingTypes, this);
 			premises.set(i, premiseClause);
+			premiseClause.checkVariables(new HashSet<String>(), false);
 			//premises.set(i, new ClauseUse(c, ctx.parseMap));
 			NonTerminal nt = premiseClause.getRoot();
 			if (nt != null) {
@@ -157,6 +160,9 @@ public class Rule extends RuleLike implements CanBeCase {
 		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
 		assumeClause.getConstructor().assumptionRule = this;
 
+		/* I don't see this as something we have to check.
+		 * Any nonterminal that occurs is simply free to be anything.
+		 * - JTB (2014/03/05)
 		// should not have more nonterminals in the body than we have in the assumption clause
 		//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
 		//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
@@ -173,7 +179,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (numBodyNonTerminals>numAssumptionNonTerminals)
 		  ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
 		// TODO: should check that the sets are the same
-
+		*/
 	}
 	
 	public boolean isAssumption() {
@@ -182,11 +188,23 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	/** Returns a fresh term for the rule and a substitution that matches the term.
 	 * sub will be null if no case analysis is possible
+	 * @param term2 TODO
+	 * @param clauseUse TODO
 	 */
-	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx) {
-		Term term = ctx.currentCaseAnalysis;
-		ClauseUse clause = (ClauseUse) ctx.currentCaseAnalysisElement;
-		Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, ClauseUse clause) {
+    Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
+
+    // Special case: if the variable is known to be var-free, we can't match this rule
+		if (isAssumption()) {
+		  int n=conclusion.getElements().size();
+		  for (int i=0; i < n; ++i) {
+		    if (conclusion.getElements().get(i) instanceof Variable &&
+		        ctx.varfreeNTs.contains(clause.getElements().get(i))) {
+		      Util.debug("no vars in " + clause);
+		      return result;
+		    }
+		  }
+		}
 		
 		// compute term for rule
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
@@ -212,6 +230,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		
 		if (isAssumption()) {
+		  
 			// see how deep the assumptions are in term
 			int assumptionDepth = term.countLambdas();
 			// System.out.println("In assumption, with depth = " + assumptionDepth);
@@ -279,7 +298,6 @@ public class Rule extends RuleLike implements CanBeCase {
 				if (delta > 0) {
 					if (ctx.matchTermForAdaptation != null) {
 						Substitution adaptationSub = ctx.adaptationSub == null ? new Substitution() : new Substitution(ctx.adaptationSub);
-						debug("adaptationSub = " + adaptationSub);
 						term = ((ClauseUse)conclusion).adaptTermTo(term, ctx.matchTermForAdaptation, adaptationSub);
 					} else
 						term = ((ClauseUse)conclusion).adaptTermTo(term, concTerm, new Substitution());
@@ -304,7 +322,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	
 	/** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
-	 * and appliedTerm is the rule term built up from term.
+	 * and appliedTerm is the rule term built up from term.  
 	 */
 	private Pair<Term, Substitution> checkRuleApplication(Term term,
 			Term ruleTerm, Term appliedTerm) {
@@ -314,7 +332,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			//sub = ruleTerm.unify(appliedTerm);
 			sub = ruleTerm.unifyAllowingBVs(appliedTerm);
 
-			debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
+			//Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
 			// a free variable in term should not, in its substitution result, have any free bound variables
 			// TODO: really should build up substitution, rather than just replacing each one piecemeal
 			// this version could be buggy.
@@ -323,11 +341,13 @@ public class Rule extends RuleLike implements CanBeCase {
 			for (FreeVar v : freeVars) {
 				Term substituted = sub.getSubstituted(v);
 				if (substituted != null && substituted.hasBoundVarAbove(0)) {
+				  debug("has bad binding: " + v + " to " + substituted);
 					// try to remove it
 					//Term newSubstituted1 = substituted.removeBoundVarsAbove(0);
 					substituted.removeBoundVarsAbove(0, removeBVSub);
 					Term newSubstituted = substituted.substitute(removeBVSub);
 					debug("got new substitution: " + newSubstituted);
+					sub.remove(v);
 					sub.add(v, newSubstituted);
 					//throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + sub);
 				}
@@ -375,6 +395,11 @@ public class Rule extends RuleLike implements CanBeCase {
 		}*/
 		return sw.toString();
 	}
+	
+	@Override
+	public int countLambdas(Term t) {
+	  return ((Application)t).getArguments().get(premises.size()).countLambdas();
+	}
 
 	/*public void resolveClauses(Map<List<ElemType>,ClauseDef> parseMap) {
 	for (int i = 0; i < premises.size(); ++i) {
@@ -385,6 +410,11 @@ public class Rule extends RuleLike implements CanBeCase {
 	@Override
 	public boolean isInterfaceOK() {
 	  return ruleIsOk;
+	}
+	
+	@Override
+	public String getKind() {
+	  return "rule";
 	}
 	
 	@Override

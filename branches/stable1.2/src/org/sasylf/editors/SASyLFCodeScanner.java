@@ -62,6 +62,9 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		rules.add (new SingleLineRule ("D","N",comment));
 		rules.add (new SingleLineRule ("P","E",comment));*/
 		rules.add (new EndOfLineRule ("---", rule));
+		rules.add (new EndOfLineRule ("\u2014\u2014\u2014", rule));
+    rules.add (new EndOfLineRule ("\u2015\u2015\u2015", rule));
+    rules.add (new EndOfLineRule ("\u2500\u2500\u2500", rule));
 		
 		rules.add (new WhitespaceRule (new IWhitespaceDetector() {
 			public boolean isWhitespace(char ch){

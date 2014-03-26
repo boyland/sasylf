@@ -157,7 +157,7 @@ public class ProofEditor extends TextEditor {
 	     }});
 	   return result;
 	}
-
+	
   public void doSetInput(IEditorInput input) throws CoreException {
     super.doSetInput(input);
 		if (fOutlinePage != null)

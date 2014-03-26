@@ -183,6 +183,13 @@ public abstract class RuleLike extends Node {
 	 */
 	public abstract boolean isInterfaceOK();
 	
+	
+	/**
+	 * Return the type of thing this is: theorem/lemma/rule.
+	 * @return string naming kind of thing this is.
+	 */
+	public abstract String getKind();
+	
 	/**
 	 * Return the assumes for a judgment / outermostGamma for a theorem.
 	 * @return
