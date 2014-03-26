@@ -1,8 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.Util;
 
 
 public class DerivationByInductionHypothesis extends DerivationByIHRule {
@@ -26,12 +24,7 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
       return;
     }
 
-		Fact inductiveArg = getArgs().get(ctx.inductionPosition);
-		Util.debug("inductionPosition = " + ctx.inductionPosition);
-		debug("subderivations: " + ctx.subderivations);
-		if (!ctx.subderivations.contains(inductiveArg)) {
-			ErrorHandler.report(Errors.NOT_SUBDERIVATION, this);
-		}
+    this.checkInduction(ctx, ctx.currentTheorem, ctx.currentTheorem);
 	}
 	
 }

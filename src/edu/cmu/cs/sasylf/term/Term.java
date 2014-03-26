@@ -109,6 +109,7 @@ public abstract class Term {
 	}
 	
 	// TODO: deprecate - I think no-one should call this
+	// XXX: Rule and ClauseUse both call it.
 	public final Substitution unifyAllowingBVs(Term t) {
 		Substitution current = new Substitution();
 		Queue<Pair<Term,Term>> worklist = new PriorityQueue<Pair<Term,Term>>(11, new PairComparator());
@@ -287,6 +288,35 @@ public abstract class Term {
 		return argTypes;
 	}
 
+	/**
+	 * Compute the type family for this term.
+	 * Ignore dependencies; ignore arguments -- just the type family.
+	 * @return type family of this term
+	 */
+	public Constant getTypeFamily() {
+	  List<Pair<String,Term>> argTypes = new ArrayList<Pair<String,Term>>();
+	  Term type = getType(argTypes);
+	  return type.baseTypeFamily();
+	}
+
+  /**
+   * Compute the family for this type.
+   * @return type family for this type
+   */
+  public Constant baseTypeFamily() {
+    Term type = this;
+    while (type instanceof Abstraction) {
+	    type = ((Abstraction)type).getBody();
+	  }
+	  if (type instanceof Application) {
+	    type = ((Application)type).getFunction();
+	  }
+	  if (type instanceof Constant) {
+	    return (Constant)type;
+	  }
+	  return (Constant) Constant.UNKNOWN_TYPE;
+  }
+	
 	public abstract Term apply(List<? extends Term> arguments, int whichApplied);
 
 	final Term subForBoundVars(Map<Integer, Term> adjustmentMap) {

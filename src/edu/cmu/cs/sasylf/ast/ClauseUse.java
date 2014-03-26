@@ -4,12 +4,15 @@ import static edu.cmu.cs.sasylf.ast.Errors.EXPECTED_VARIABLE;
 import static edu.cmu.cs.sasylf.ast.Errors.MISSING_ASSUMPTION_RULE;
 import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.pair;
-import static edu.cmu.cs.sasylf.util.Util.*;
+import static edu.cmu.cs.sasylf.util.Util.debug;
+import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -20,6 +23,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class ClauseUse extends Clause {
 	public ClauseUse(Location loc, List<Element> elems, ClauseDef cd) {
@@ -76,8 +80,51 @@ public class ClauseUse extends Clause {
 	
 	
 	@Override
+	public Element typecheck(Context c) {
+	  return this; // already done
+	}
+
+  @Override
+  void checkVariables(Set<String> bound, boolean defining) {
+    // we want to handle cases like:
+    //   Gamma, x:(fn X => T[X])
+    //   Gamma, x':T'' |- (fn x : T => t[x][x']) : T -> T'
+    int ai = cons.getAssumeIndex();
+    boolean copied = false;
+    // System.out.println("Checking " + this + " with ai=" + ai + " defining? " + defining);
+    for (int i=0; i < elements.size(); ++i) {
+      if (i == ai || cons.getElements().get(i) instanceof Variable) {
+        if (!copied && !defining) bound = new HashSet<String>(bound);
+        elements.get(i).checkVariables(bound, true);
+      }
+    }
+    for (int i=0; i < elements.size(); ++i) {
+      if (i != ai) {
+        elements.get(i).checkVariables(bound, false);
+      }
+    }
+  }
+	
+	@Override
   public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
     return this; // already done
+  }
+  
+  @Override
+  public Fact asFact(Context ctx, Element assumes) {
+    Element localAssumes = null;
+    // accept assumes only if we have something that the context can affect.
+    if (assumes != null) {
+      Syntax contextSyntax = (Syntax)assumes.getType();
+      for (Element e : getElements()) {
+        if (e instanceof NonTerminal || e instanceof Binding) {
+          if (contextSyntax.canAppearIn(e.getTypeTerm())) {
+            localAssumes = assumes;
+          }
+        }
+      }
+    }
+    return new ClauseAssumption(this,getLocation(),localAssumes);
   }
 
   /** True iff assumptions environment is rooted in a variable */
@@ -103,6 +150,7 @@ public class ClauseUse extends Clause {
 	private NonTerminal computeRootHelper(Element e) {
 	  if (e instanceof NonTerminal) return (NonTerminal)e;
 	  if (e instanceof Terminal) return null;
+	  if (e instanceof Variable) return null; // syntax binder
 	  if (e instanceof ClauseUse) {
 	    for (Element ep : ((ClauseUse) e).getElements()) {
 	      if (ep.getType().equals(e.getType())) {
@@ -233,30 +281,36 @@ public class ClauseUse extends Clause {
 	
 	/**
 	 * Called when checking a syntax case.
+	 * @param assumes TODO
 	 * @return list of nonterminals in something we are case analyzing
 	 */
-	public List<Fact> getNonTerminals() {
+	public List<SyntaxAssumption> getNonTerminals(Context ctx, Element assumes) {
 		int assumeIndex = getConstructor().getAssumeIndex();
-		List<Fact> facts = new ArrayList<Fact>();
+		List<SyntaxAssumption> facts = new ArrayList<SyntaxAssumption>();
 		// JTB: TODO: This method is poorly named,
-		// and it looks at assumeIndex which will never be define for syntax.
+		// and it looks at assumeIndex which will never be defined for (normal) syntax.
 		if (assumeIndex != -1) {
-		  System.out.println("assumeIndex = " + assumeIndex);
+		  throw new RuntimeException("assumeIndex on a syntax clause? " + this);
 		}
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
-			if (! (e instanceof Terminal) && i != assumeIndex 
-					&& !(e instanceof Variable)) {
-				if (e instanceof Binding) {
-          facts.add(new BindingAssumption((Binding)e,new Clause(e.getLocation())));					
-				} else if (e instanceof NonTerminal){
-					facts.add(new SyntaxAssumption((NonTerminal)e,new Clause(e.getLocation())));
-				} else if (e instanceof Clause) {
-					throw new RuntimeException("should be impossible case");
-				} else {
-					throw new RuntimeException("should be impossible case");
-				}
+			if (e instanceof Terminal) continue;
+			if (e instanceof Variable) continue;
+			if (e instanceof Clause) {
+			  throw new RuntimeException("syntax cases shouldn't have nested syntax: " + this);
 			}
+			Fact f;
+			if (e instanceof Binding) {
+			  Binding b = (Binding)e;
+			  Element context = assumes;
+			  for (Element sube : b.getElements()) {
+			    context = ((Variable)sube).genContext(context, ctx);
+			  }
+			  f = e.asFact(ctx, context);
+			} else {
+			  f = e.asFact(ctx, assumes);
+			}
+			facts.add((SyntaxAssumption)f);
 		}
 		return facts;
 	}
@@ -328,25 +382,25 @@ public class ClauseUse extends Clause {
 				List<Term> varTypes = new ArrayList<Term>();
 				for (Pair<String, Term> p : varBindings)
 					varTypes.add(p.second);
-				debug("varTypes = "+ varTypes);
+				Util.debug("varTypes = "+ varTypes);
 				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub, 1);
 				ruleClauseTerm = ruleClauseTerm.substitute(bindingSub);
-				debug("unifying terms " + myClauseTerm + " and " + ruleClauseTerm + " from " + this + " and " + varRuleConcAssumption);
+				Util.debug("unifying terms " + myClauseTerm + " and " + ruleClauseTerm + " from " + this + " and " + varRuleConcAssumption);
 				Substitution adaptationSub = myClauseTerm.unifyAllowingBVs(ruleClauseTerm);
 				// transform adaptationSub to adapt from ruleClauseTerm to myClauseTerm
 				adaptationSub.avoid(myClauseTerm.getFreeVariables());
-				debug("adaptationSub = "+ adaptationSub);
+				Util.debug("adaptationSub = "+ adaptationSub);
 				if (derivTerm != null) {
-					debug("\torig   derivTerm = " + derivTerm);
+					Util.debug("\torig   derivTerm = " + derivTerm);
 					derivTerm.freshSubstitution(ruleFreshSub);
 					derivTerm = derivTerm.substitute(ruleFreshSub);
 					bindingSub.incrFreeDeBruijn(2);
 					derivTerm = derivTerm.substitute(bindingSub);
-					debug("\tmiddle derivTerm = " + derivTerm);
+					Util.debug("\tmiddle derivTerm = " + derivTerm);
 					derivTerm = derivTerm.substitute(adaptationSub);
 					derivTerm = derivTerm.incrFreeDeBruijn(-1);
 				}
-				debug("\tresult derivTerm = " + derivTerm);
+				Util.debug("\tresult derivTerm = " + derivTerm);
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				/* v2 */ varBindings.add(pair(derivSym, derivTerm));

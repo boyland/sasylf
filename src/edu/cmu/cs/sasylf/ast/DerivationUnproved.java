@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 public class DerivationUnproved extends DerivationWithArgs {
@@ -12,8 +13,18 @@ public class DerivationUnproved extends DerivationWithArgs {
 	}
 
 	public void typecheck(Context ctx) {
-		//tdebug("at line: " + this.getLocation().getLine());
-		super.typecheck(ctx);
-		ErrorHandler.warning(Errors.DERIVATION_UNPROVED, this);
+	  super.typecheck(ctx);
+	  Clause cl = getClause();
+	  Term t = DerivationByAnalysis.adapt(cl.asTerm(), cl, ctx, false);
+	  String form = "";
+	  if (cl instanceof ClauseUse) {
+	    try {
+	      TermPrinter termPrinter = new TermPrinter(ctx,((ClauseUse)cl).getRoot(),getLocation());
+	      form = ": " + TermPrinter.toString(termPrinter.asClause(t));
+	    } catch (RuntimeException ex) {
+	      ex.printStackTrace();
+	    }
+	  }
+	  ErrorHandler.warning(Errors.DERIVATION_UNPROVED, form, this, t.toString());
 	}
 }

@@ -1,17 +1,22 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class DerivationBySubstitution extends DerivationWithArgs {
@@ -35,34 +40,22 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		Element arg0 = this.getArgs().get(0).getElement();
 		Element arg1 = this.getArgs().get(1).getElement();
 		
+		if (!(arg0 instanceof ClauseUse)) {
+		  ErrorHandler.report("First argument of substitution must be a judgment instance.",this);
+		}
+		if (!(arg1 instanceof ClauseUse)) {
+		  ErrorHandler.report("Second argument of substitution must be a judgment instance.", this);
+		}
+		
     Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
 		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg0,ctx,false);
 		
-		// System.out.println("subContext = " + subContext);
-		// System.out.println("source = " + source);
+		Util.debug("subContext = " + subContext);
+		Util.debug("source = " + source);
 		
-		// for now, only support substituting for last assumption
+		Term result = doSubst(ctx, subContext, source, new ArrayDeque<Term>());
 		
-		if (!(subContext instanceof Abstraction) ||
-		    !(((Abstraction)subContext).getBody() instanceof Abstraction)) {
-		  ErrorHandler.report(Errors.SUBSTITUTION_NO_CONTEXT, this, "  (no context on " + arg0 + ")");
-		  return;
-		}
-		
-		Term type = ((Abstraction)subContext).varType;
-		FreeVar fv = FreeVar.fresh("subst",type);
-		
-		// verify second is a proof that matches the first's assumption
-		List<Term> subs = new ArrayList<Term>();
-		subs.add(fv);
-		
-		Abstraction result1 = (Abstraction)subContext.apply(subs,0);
-    // System.out.println("result1 = " + result1);
-		
-    Term result = doSubst(result1, source, fv);
-    if (result == null) return; // error found
-		
-    // System.out.println("result = " + result);
+    Util.debug("result = " + result);
 		
     // verify result is the second substituted for (and eliminating) the assumption of the first
     Term claimedResult = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
@@ -83,46 +76,67 @@ public class DerivationBySubstitution extends DerivationWithArgs {
   /**
    * @param func An abstraction we try to call with the arg
    * @param arg A (possibly dependent) term to use as argument
-   * @param fv free variable that may be bound to permit unification to suuceed
-   * @return result term, or null if error found
+   * @param varTypes types of bound variables in scope, pushed on. 
+   * @return result term
+   * @throws SASyLFError if an error is found
    */
-  private Term doSubst(Abstraction func, Term arg, FreeVar fv) {
-    // System.out.println("trying with " + arg);
-    if (arg instanceof Abstraction) {
-      // I have to unpack the body because otherwise fv can't be bound to a variable.
-      // There's probably a better way, but I can't figure it out.
-      Abstraction darg = (Abstraction)arg;
-      FreeVar temp = FreeVar.fresh(darg.varName,darg.varType);
-      List<Term> temps = new ArrayList<Term>();
-      temps.add(temp);
-      Term body = darg.apply(temps, 0);
-      Term result = doSubst(func,body,fv);
-      if (result == null) return result;
-      Substitution sub = new Substitution(new BoundVar(1),temp);
-      return Abstraction.make(darg.varName, darg.varType, result.substitute(sub));
-    } else {
-      Substitution sub;
-      try {
-        sub = func.varType.unify(arg);
-      } catch (UnificationFailed e) {
-        ErrorHandler.report(Errors.SUBSTITUTION_FAILED, this, "  (" + func.varType + " != " + arg + ")");
-        return null;
-      }
-      // System.out.println("sub = " + sub);
-
-      // We check that no variables have been forced together.
-      for (Map.Entry<Atom,Term> e : sub.getMap().entrySet()) {
-        if (e.getKey() == fv) continue;
-        ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution (binds free variable " + e.getKey() + ")",this,
-            "\t(not general enough, in particular " + e.getKey() + " cannot be assumed to be " + e.getValue() + ")");
-        return null;
-      }
-
-      assert !func.getBody().hasBoundVar(1) : "internal derivation used?";
-
-      Term result = func.getBody().incrFreeDeBruijn(-1).substitute(sub);
-      return result;
-    }
-  }
+	private Term doSubst(Context ctx, Term func, Term arg, Deque<Term> varTypes) {
+	  if (func instanceof Abstraction) {
+	    Abstraction f = (Abstraction)func;
+	    if (arg instanceof Abstraction) {
+	      Abstraction a = (Abstraction)arg;
+	      if (!f.varType.equals(a.varType)) {
+	        ErrorHandler.report("Context of first argument to substitution must have as prefix that of second", this);
+	      }
+	      varTypes.push(f.varType);
+	      Term result = doSubst(ctx, f.getBody(),a.getBody(),varTypes);
+	      varTypes.pop();
+	      return Abstraction.make(f.varName, f.varType, result);
+	    } else if (f.varType.equals(arg)){
+	      ErrorHandler.warning("Internal warning: Using a new feature?", this);
+	      if (f.getBody().hasBoundVar(1)) {
+	        ErrorHandler.report("Internal error: uses context derivation?", this);
+	      }
+	      return f.getBody().incrFreeDeBruijn(-1);
+	    } else if (f.getBody() instanceof Abstraction) {
+	      Term tyV = f.varType;
+	      for (Term ty : varTypes) {
+	        tyV = Facade.Abs(ty, tyV);
+	      }
+        FreeVar v = FreeVar.fresh("subst", tyV);
+        int n = varTypes.size();
+        Term app = v;
+        if (n > 0) {
+          List<Term> va = new ArrayList<Term>();
+          for (int i=0; i < n; ++i) {
+            va.add(new BoundVar(n-i));
+          }
+          app = Facade.App(v, va);
+        } 
+	      Term fv = f.apply(Collections.singletonList(app), 0);
+	      Abstraction f2 = (Abstraction)fv;
+	      Util.debug("About to unify " + f2.varType + " and " + arg);
+	      Substitution sub;
+        try {
+          sub = f2.varType.unify(arg);
+        } catch (UnificationFailed e) {
+          ErrorHandler.report(Errors.SUBSTITUTION_FAILED, this, "  (" + f2.varType + " != " + arg + ")");
+          return null;
+        }
+	      Set<FreeVar> unavoided = sub.selectUnavoidable(ctx.inputVars);
+	      if (!unavoided.isEmpty()) {
+	        ErrorHandler.report("Substitution would constrain variables, including " + unavoided.iterator().next(), this);
+	      }
+	      Term result = f2.getBody();
+	      if (result.hasBoundVar(1)) {
+	        ErrorHandler.report("Internal error: uses context derivation?", this);
+	      } 
+	      return result.incrFreeDeBruijn(-1).substitute(sub);
+	    } else {
+	      ErrorHandler.report("Cannot determine where substitution would happen",  this);
+	    }
+	  }
+	  return null;
+	}
 
 }

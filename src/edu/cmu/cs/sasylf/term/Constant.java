@@ -4,8 +4,8 @@ import java.util.Queue;
 
 
 public class Constant extends Atom {
-	public static final Term TYPE = new Constant();
-	public static final Term UNKNOWN_TYPE = new Constant("UNKNOWN_TYPE", TYPE);
+	public static final Constant TYPE = new Constant();
+	public static final Constant UNKNOWN_TYPE = new Constant("UNKNOWN_TYPE", TYPE);
 	
 	public Constant(String n, Term type) { super(n); this.type = type; }
 	@Override

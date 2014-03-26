@@ -1,0 +1,124 @@
+// "Proof" of Cut Elimination for a simple sequent calculus. 
+// Case analysis on use of context is discarded,
+// probably because variables are not used in bounds.
+// SASyLF 1.2.1 - 1.3.0 don't notice any problems.
+// John Boyland, ETHZ, March 2014
+
+package regression;
+
+syntax
+  A ::= A ∧ A | ⊤ | A ⇒ A
+  H ::= h
+  P ::= A | h:A ⊢ P[h]
+  Γ ::= ∅ | Γ, h:A
+  
+judgment var: H:A ∈ Γ
+assumes Γ
+ 
+  ---------------- var
+  h:A ∈ (Γ, h:A)
+  
+judgment conc: Γ ⊢ A
+assumes Γ
+
+  H:A ∈ Γ
+  --------- axiom
+  Γ ⊢ A
+  
+  ----- topR
+  Γ ⊢ ⊤
+  
+  Γ ⊢ A
+  Γ ⊢ A'
+  ---------- andR
+  Γ ⊢ A ∧ A'
+
+  Γ, h:A, h':A' ⊢ A''
+  H:(A ∧ A') ∈ Γ
+  ---------------------- andL
+  Γ ⊢ A''
+
+  Γ, h:A ⊢ A'
+  ---------- impR
+  Γ ⊢ A ⇒ A'
+  
+  Γ ⊢ A
+  Γ, h:A' ⊢ A''
+  H:(A ⇒ A') ∈ Γ
+  ---------------- impL
+  Γ ⊢ A''
+  
+theorem cut-admissible:
+    assumes Γ
+    forall d1: Γ ⊢ A
+    forall d2: Γ, h:A ⊢ A'
+    exists Γ ⊢ A'.
+    proof by induction on d2:
+        case rule //!! Bug should complain that H0 should depend on h
+            v: H0: A' ∈ (Γ, h: A)
+            ---------------------- axiom
+            _: Γ, h: A ⊢ A'
+        is
+            proof by case analysis on v: // Bug: should have two cases (masked by above)
+            end case analysis
+        end case
+
+        case rule
+            --------------- topR
+            _: Γ, h: A ⊢ ⊤
+        is
+            proof by rule topR
+        end case
+
+        case rule
+            d2a: Γ, h : A ⊢ A0
+            d2b: Γ, h : A ⊢ A1
+            --------------- andR
+            _: Γ, h : A ⊢ (A0 ∧ A1)
+        is
+            d3a: Γ ⊢ A0 by induction hypothesis on d1, d2a
+            d3b: Γ ⊢ A1 by induction hypothesis on d1, d2b
+            proof by rule andR on d3a, d3b
+        end case
+    
+        case rule
+            d2': Γ, h: A, h1: A1, h2: A2 ⊢ A'
+            v: H[h]:(A1 ∧ A2) ∈ (Γ, h : A)
+            -------------------------------------- andL
+            _: Γ, h: A ⊢ A'
+        is
+            d2'': Γ, h1: A1, h2: A2, h: A ⊢ A' by exchange on d2'
+            d1': Γ, h1: A1, h2: A2 ⊢ A by weakening on d1
+            d3': Γ, h1: A1, h2: A2 ⊢ A' by induction hypothesis on d1', d2''
+            proof by case analysis on v: //!! Bug: should have two cases
+            end case analysis
+        end case
+
+        case rule
+            d2': Γ, h: A, h1: A1 ⊢ A2
+            ------------------------------- impR
+            _: Γ, h: A ⊢ A1 ⇒ A2
+        is
+            d1':  Γ, h1: A1 ⊢ A by weakening on d1
+            d2'': Γ, h1: A1, h: A ⊢ A2 by exchange on d2'
+            d3':  Γ, h1: A1 ⊢ A2 by induction hypothesis on d1', d2''
+            proof by rule impR on d3'
+        end case
+        
+        case rule //!! Should complain about H
+            d2a: Γ, h: A ⊢ A1
+            d2b: Γ, h: A, h2: A2 ⊢ A'
+            v: H:(A1 ⇒ A2) ∈ (Γ, h: A)
+            ----------------------------- impL
+            _: Γ, h: A ⊢ A'
+        is
+            d3a: Γ ⊢ A1 by induction hypothesis on d1, d2a
+            d1':  Γ, h2: A2 ⊢ A by weakening on d1
+            d2b': Γ, h2: A2, h: A ⊢ A' by exchange on d2b
+            d3b:  Γ, h2: A2 ⊢ A' by induction hypothesis on d1', d2b'
+            proof by case analysis on v: // Bug should have two cases
+            end case analysis
+        end case
+    end induction
+end theorem
+

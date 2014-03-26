@@ -1,0 +1,43 @@
+package regression;
+
+terminals S contradiction
+
+syntax n ::= 0 | S n
+
+judgment absurd: contradiction
+
+judgment eq: n = n
+
+  ------ eq
+  n = n
+
+judgment gt: n > n
+
+  ------- gt-1
+  S n > n
+
+  n1 > n2
+  --------- gt-s
+  S n1 > n2
+
+lemma gt-impossible:
+    forall d: n1 > n2
+    exists contradiction.
+    e: n = 0 by rule eq // new variable n out of nowhere
+    d': n > n2 by d //! allows n1 to be bound
+    proof by case analysis on e:
+        case rule
+            --------------- eq
+            _: 0 = 0
+        is
+            proof by case analysis on d':
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma impossible:
+    exists contradiction.
+    g: (S 0) > 0 by rule gt-1
+    c: contradiction by lemma gt-impossible on g
+end lemma

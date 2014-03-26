@@ -1,0 +1,131 @@
+package regression;
+
+terminals contradiction true false if then else value
+          Bool in λ
+
+syntax
+
+t ::= true 
+  | false
+  | if t then t else t
+  | λ x:T • t[x]
+  | x
+  | t t
+
+T ::= Bool
+  | T → T
+
+Γ ::= *
+    | Γ, x : T
+
+
+judgment absurd: contradiction
+
+
+
+judgment isavalue: t value
+
+
+-------------------- val-λ
+λ x:T • t[x] value
+
+--------------- val-true
+true value
+
+---------------- val-false
+false value
+
+
+judgment eval: t → t
+
+----------------------------- E-IfTrue
+if true then t1 else t2 → t1
+
+------------------------------ E-IfFalse
+if false then t1 else t2 → t2
+
+t1 → t1'
+----------------------------------------------- E-If
+if t1 then t2 else t3 → if t1' then t2 else t3
+
+t1 → t1'
+--------------- E-App1
+t1 t2 → t1' t2
+
+t1 value
+t2 → t2'
+--------------- E-App2
+t1 t2 → t1 t2'
+
+t2 value
+------------------------------ E-AppAbs
+(λ x:T • t1[x]) t2 → t1[t2]
+
+
+judgment isvar: t : T in Γ
+assumes Γ
+
+----------------------- var
+x : T in (Γ, x : T)
+
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+-------------------- T-True
+Γ ⊢ true : Bool
+
+--------------------- T-False
+Γ ⊢ false : Bool
+
+Γ ⊢ t1 : Bool
+Γ ⊢ t2 : T
+Γ ⊢ t3 : T
+---------------------------------- T-If
+Γ ⊢ if t1 then t2 else t3 : T
+
+x : T in Γ //! Should notice bad scoping
+-------------- T-Var 
+Γ ⊢ x : T //! Should notice bad scoping
+
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+
+/* 3.5.7: Non-evaluation of values */
+
+theorem non-eval-values:
+  forall d1: t value
+  forall d2: t → t'
+  exists     contradiction.
+  proof by case analysis on d1:
+    case rule
+      --------------- val-λ
+      _: (λ x : T0 • t0[x]) value
+    is
+      proof by contradiction on d2
+    end case
+
+    case rule
+      --------------- val-true
+      _: true value
+    is
+      proof by contradiction on d2
+    end case
+
+    case rule
+      --------------- val-false
+      _: false value
+    is
+      proof by contradiction on d2
+    end case
+  end case analysis
+end theorem
+

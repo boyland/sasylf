@@ -46,7 +46,13 @@ public class Binding extends Element {
 		//throw new RuntimeException("not implemented");
 	}
 
-	public String getTerminalSymbolString() {
+	@Override
+  public Term getTypeTerm() {
+    return nonTerminal.getTypeTerm();
+  }
+
+
+  public String getTerminalSymbolString() {
 		return nonTerminal.getType().getTermSymbolString();
 	}
 
@@ -76,7 +82,7 @@ public class Binding extends Element {
 	public Element typecheck(Context ctx) {
 		Element e = nonTerminal.typecheck(ctx);
 		if (!(e instanceof NonTerminal))
-			ErrorHandler.report("A binder must have a nonterminal as the thing bound in", nonTerminal);
+			ErrorHandler.report("A binder must have a nonterminal as the thing bound in", this);
 		nonTerminal = (NonTerminal) e;
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e2 = elements.get(i).typecheck(ctx);
@@ -96,7 +102,16 @@ public class Binding extends Element {
 		return this;
 	}
 
-	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+	  if (ctx.varfreeNTs.contains(nonTerminal) || assumes == null ||
+	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+	    return new BindingAssumption(this);
+	  return new BindingAssumption(this,assumes);
+	}
+
+
+  public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		FreeVar t = (FreeVar) nonTerminal.computeTerm(varBindings);
 		List<Term> argList = new ArrayList<Term>();
 		List<Term> argTypes = new ArrayList<Term>();

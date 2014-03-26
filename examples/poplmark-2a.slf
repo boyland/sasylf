@@ -268,7 +268,7 @@ judgment type-equality: T == T
 T == T
 
 
-judgment Tarrow-sub: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
+judgment Tarrow-sub: T'' == T <: T
 
 * |- T11'' <: T11'
 *, X <: T11'' |- T12'[X] <: T12[X]
@@ -492,10 +492,11 @@ is
 			d11: all X <: T11''' => T12''[X] == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X]
 		is
 			d12: * |- T11'' <: T11''' by rule SA-Trans on d5, d9
-			xx1: *, X <: T11'' |- X <: T11'' by rule SA-Var
-			xx2: *, X <: T11'' |- T11'' <: T21' by weakening on d5
-			xx3: *, X <: T11'' |- X <: T21' by rule SA-Trans on xx1, xx2
-			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10, xx3
+			xx1: *, X' <: T11'' |- X' <: T11'' by rule SA-Var
+			xx2: *, X' <: T11'' |- T11'' <: T21' by weakening on d5
+			xx3: *, X' <: T11'' |- X' <: T21' by rule SA-Trans on xx1, xx2
+			d10':*, X' <: T11'', X <: T21' |- T12''[X] <: T22[X] by weakening on d10
+			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10', xx3
 			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule SA-Trans on d13, d6
 			deq: T'' == all X <: T11''' => T12''[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d12, d14
 		end case

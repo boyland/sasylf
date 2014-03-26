@@ -1,0 +1,74 @@
+/*
+ * unification can go bad when there are multiple variables involved. 
+ * See also UnitTests.
+ */ 
+
+package regression;
+
+terminals lambda all Top value stepsorvalue
+
+
+syntax
+
+
+T ::= X
+ | Top
+ | T -> T
+ | all X <: T => T[X]
+
+Gamma ::= *
+      |   Gamma, X <: T
+
+
+
+
+/** The subtyping judgment
+ */
+
+judgment subtyping: Gamma |- T <: T'
+assumes Gamma
+
+
+----------------- SA-Top
+Gamma |- T <: Top
+
+
+----------------------- SA-Var
+Gamma, X <: T |- X <: T
+
+
+----------------------- SA-Refl
+Gamma |- T <: T
+
+
+Gamma |- T1 <: T2
+Gamma |- T2 <: T3
+----------------------- SA-Trans
+Gamma |- T1 <: T3
+
+
+Gamma |- T1 <: T1'
+Gamma |- T2' <: T2
+------------------------------- SA-Arrow
+Gamma |- T1' -> T2' <: T1 -> T2
+
+
+Gamma |- T1 <: T1'
+Gamma, X <: T1 |- T2'[X] <: T2[X]
+------------------------------------------------------- SA-All
+Gamma |- all X' <: T1' => T2'[X'] <: all X <: T1 => T2[X] 
+
+
+
+
+
+lemma L:
+  exists *, X <: Top, X' <: X -> X, X'' <: Top -> X' |- X' <: X -> Top.
+  d1:  *, X <: Top |- X <: Top by rule SA-Var
+  d1a: *, X <: Top, X' <: X -> X |- X <: Top by weakening on d1
+  d2:  *, X <: Top, X' <: X -> X |- X' <: (X -> X) by rule SA-Var
+  d3:  *, X <: Top, X' <: X -> X |- X <: X by rule SA-Refl
+  d4:  *, X <: Top, X' <: X -> X |- (X -> X) <: (X -> Top) by rule SA-Arrow on d3, d1a
+  d5:  *, X <: Top, X' <: X -> X |- X' <: (X -> Top) by rule SA-Trans on d2, d4
+  proof by weakening on d5
+end lemma 

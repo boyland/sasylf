@@ -1,7 +1,9 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -26,8 +28,8 @@ public class Variable extends Element {
 	public String getTerminalSymbolString() {
 		return type.getTermSymbolString();
 	}
-
-	public int hashCode() { return symbol.hashCode(); }
+	
+  public int hashCode() { return symbol.hashCode(); }
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Variable)) return false;
@@ -57,7 +59,21 @@ public class Variable extends Element {
 		return this;
 	}
 
-	private String symbol;
+	@Override
+  void checkVariables(Set<String> bound, boolean defining) {
+	  // System.out.println("Checking " + getSymbol() + " as defining? " + defining);
+	  if (defining) {
+	    if (!bound.add(getSymbol())) {
+	      ErrorHandler.report("Variable bound more than once: " + getSymbol(),this);
+	    }
+	  } else {
+	    if (!bound.contains(getSymbol())) {
+	      ErrorHandler.report("Variable not bound: " + getSymbol(),this);
+	    }
+	  }
+  }
+
+  private String symbol;
 	private Syntax type;
 
 	@Override
@@ -65,18 +81,57 @@ public class Variable extends Element {
 		out.print(symbol);
 	}
 
-	public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
+	@Override
+  public Fact asFact(Context ctx, Element assumes) {
+    return new VariableAssumption(this);
+  }
+	
+	/**
+	 * Generate a context clause for this variable around the given root.
+	 * @return a context clause that binds the variable.  It will have fresh variables.
+	 */
+	public ClauseUse genContext(Element base, Context ctx) {
+    ClauseDef contextClause = getType().getContextClause();
+    Syntax contextSyntax = (Syntax)contextClause.getType();
+	  Location location = getLocation();
+    if (base == null) {
+      ClauseDef termCase = contextSyntax.getTerminalCase();
+	    base = new ClauseUse(location,new ArrayList<Element>(termCase.getElements()),termCase);
+	  }
+	  List<Element> newElements = new ArrayList<Element>();
+	  for (Element e : contextClause.getElements()) {
+	    if (e instanceof NonTerminal) {
+	      NonTerminal nt = (NonTerminal)e;
+	      if (nt.getType() == contextSyntax) {
+	        newElements.add(base);
+	      } else {
+	        newElements.add(new NonTerminal(ctx.genFresh(nt.getSymbol()),location,nt.getType()));
+	      }
+	    } else if (e instanceof Terminal) {
+	      newElements.add(e);
+	    } else if (e instanceof Variable) {
+	      newElements.add(this);
+	    } else {
+	      throw new RuntimeException("internal error: context clause has strange thing it: " + e);
+	    }
+	  }
+	  return new ClauseUse(location,newElements,contextClause);
+	}
+
+  public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
 		int index = -1;
-		for (int i = 0; i < varBindings.size(); ++i)
+		for (int i = 0; i < varBindings.size(); ++i) {
 			if (varBindings.get(i).first.equals(symbol)) {
 				index = i;
 				break;
 			}
+		}
 		
-		if (index == -1)
+		if (index == -1) {
+		  new Throwable("for the trace").printStackTrace();
 			ErrorHandler.report("Variable " + symbol + " is not bound", this);
-
-		//return new BoundVar(index + 1);
+		}
+		
 		return new BoundVar(varBindings.size()-index);
 	}
 }
