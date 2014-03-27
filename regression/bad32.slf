@@ -1,0 +1,62 @@
+/*
+ * Multiple bugs:
+ * (1) causes internal error in 1.2.3, 1.2.5, 1.2.6
+ * (2) various versions complain about the induction--that it doesn't reduce
+ * (3) subordination should realize that u can depend on e, because u[x]
+ */  
+package regression;
+
+terminals OK in unit contradiction
+    
+syntax
+   e ::= x | unit
+   u ::= x => u[x]  //! unihabited type
+
+   Gamma ::= * | Gamma, x
+   
+judgment absurd: contradiction
+
+judgment a-var: e in Gamma
+assumes Gamma
+
+  --------------- var
+  x in (Gamma, x) 
+  
+  
+judgment ok: u OK
+
+  ---- ok-u
+  u OK
+
+
+lemma u-impossible:
+  forall u 
+  exists contradiction.
+  _: contradiction by induction on u:
+      case x => u0[x] is
+          proof by induction hypothesis on u0[unit]
+      end case
+  end induction
+end lemma
+ 
+lemma u-impossible2:
+  assumes Gamma
+  forall u assumes Gamma
+  exists contradiction.
+  _: contradiction by induction on u:
+      case x => u0[x] is
+          proof by induction hypothesis on (u0[x] assumes Gamma, x)
+      end case
+  end induction
+end lemma
+
+lemma u-ok:
+  exists u OK.
+  _: u OK by rule ok-u
+end lemma
+
+theorem impossible:
+  exists contradiction.
+  o: u OK by lemma u-ok
+  _: contradiction by lemma u-impossible on u
+end theorem
