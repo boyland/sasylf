@@ -169,6 +169,9 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	          // System.out.println("  Found unproductive use of " + e);
 	          productive = false;
 	          break;
+	        } else if (e instanceof Binding && !((Binding)e).getType().computeIsProductive()) {
+	          productive = false;
+	          break;
 	        }
 	      }
 	      if (productive) {

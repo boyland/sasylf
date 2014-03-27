@@ -10,7 +10,7 @@ terminals OK in unit contradiction
     
 syntax
    e ::= x | unit
-   u ::= x => u[x]  //! unihabited type
+   u ::= x => u[x]  //! uninhabited type
 
    Gamma ::= * | Gamma, x
    
