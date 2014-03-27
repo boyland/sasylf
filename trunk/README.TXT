@@ -124,7 +124,7 @@ RELEASE HISTORY
     Editor has fold support
     Resolved issues #45
 1.2.7	Bug fixes to stable 1.2
-    Resolved issues #56, #57, #58
+    Resolved issues #53, #56, #57, #58
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
     Substitution semantics changed for complex contexts, poplmark-2a proof updated
