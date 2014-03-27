@@ -236,6 +236,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	/** A context case has a recursive reference to the syntax and a variable
 	 */
 	private boolean isContextCase(Clause c) {
+	  if (c.getElements().size() < 2) return false; // var only case can match otherwise
 		// look for sub-part of gamma clause, a NonTerminal with same type as this
 	  int vars = 0;
 	  int recs = 0;
