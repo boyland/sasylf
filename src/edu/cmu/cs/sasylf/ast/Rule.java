@@ -7,6 +7,8 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -119,7 +121,8 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	private void computeAssumption(Context ctx) {
 		ClauseUse concClauseUse = (ClauseUse)this.getConclusion();
-		Judgment parent = (Judgment)concClauseUse.getConstructor().getType();
+		ClauseDef concClauseDef = concClauseUse.getConstructor();
+    Judgment parent = (Judgment)concClauseDef.getType();
 		// must have no premises, parent must assume something
 		if (premises.size() > 0 || parent.getAssume() == null)
 			return; // default false
@@ -127,65 +130,86 @@ public class Rule extends RuleLike implements CanBeCase {
 		// must have Gamma, E(x) for Gamma in conclusion
 		int assumeIndex = ((ClauseDef)parent.getForm()).getAssumeIndex();
 		Element assumeElement = getConclusion().getElements().get(assumeIndex);
-		if (!(assumeElement instanceof Clause))
+		if (!(assumeElement instanceof ClauseUse))
 			return; // default false
 
 		// look for sub-part of gamma clause, a NonTerminal with same type as gamma
-		ClauseUse assumeClause = (ClauseUse) assumeElement;
-		Syntax gammaType = (Syntax) assumeClause.getConstructor().getType();
-		boolean found = false;
-		for (ElemType eType: assumeClause.getElemTypes()) {
-			if (eType == gammaType)
-				found = true;
-		}
-		if (!found)
-			return; // default false
-
-		// must have x in body
-		// look for sub-part of gamma clause that is a variable
-		Element varElem = null;
-		for (Element e : assumeClause.getElements()) {
-			if (e instanceof Variable)
-				varElem = e;
-		}
-		if (varElem == null)
-			return; // default false
-
-		boolean foundVar = false;
-		for (Element e : getConclusion().getElements()) {
-			if (e.equals(varElem))
-				foundVar = true;
-		}
-		if (!foundVar)
-		    return;
-
+		ClauseUse assumeClauseUse = (ClauseUse) assumeElement;
+		ClauseDef assumeClauseDef = assumeClauseUse.getConstructor();
+    Syntax gammaType = (Syntax) assumeClauseDef.getType();
+		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
+		int n = assumeClauseDef.getElements().size();
+		
 		isAssumpt = true;
-		if (assumeClause.getConstructor().assumptionRule != null &&
-		    assumeClause.getConstructor().assumptionRule != this) // idempotency
-		  // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
-		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
-		assumeClause.getConstructor().assumptionRule = this;
+		// now we generate errors if there is a problem
 
-		/* I don't see this as something we have to check.
-		 * Any nonterminal that occurs is simply free to be anything.
-		 * - JTB (2014/03/05)
-		// should not have more nonterminals in the body than we have in the assumption clause
-		//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
-		//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
-		int numBodyNonTerminals = 0;
-		int numAssumptionNonTerminals = 0;
-		for (Element e : assumeClause.getElements()) {
-		  if (e instanceof NonTerminal)
-		    numAssumptionNonTerminals++;
+    if (assumeClauseDef.assumptionRule != null &&
+        assumeClauseDef.assumptionRule != this) // idempotency
+      // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
+      ErrorHandler.report("Multiple uses of the same assumption not supported", this);
+    assumeClauseDef.assumptionRule = this;
+
+		// now check that assume clause does not bind two NTs together,
+		// or use a clause for a NT.
+		Set<Element> defined = new HashSet<Element>();
+		for (int i=0; i < n; ++i) {
+		  Element u = assumeClauseUse.getElements().get(i);
+		  Element d = assumeClauseDef.getElements().get(i);
+		  if (d.getType() == gammaType) continue;
+		  if (defined.contains(u)) {
+		    ErrorHandler.report("Found duplicate instance of " + u, assumeClauseUse);
+		  }
+		  if (d instanceof Variable) {
+		    if (!(u instanceof Variable)) {
+		      ErrorHandler.report("Expected variable in assumption rule, found " + u, assumeClauseUse);
+		    }
+		    defined.add(u);
+		  } else if (d instanceof NonTerminal) {
+		    if (!(u instanceof NonTerminal)) {
+		      ErrorHandler.report("Expected name in assumption rule, found " + u, assumeClauseUse);
+		    }
+		    defined.add(u);
+		  }
 		}
-		for (Element e : getConclusion().getElements()) {
-		  if (e instanceof NonTerminal)
-		    numBodyNonTerminals++;
+
+		// now check that every NT or Var in the rest of the clause is represented in "unique" Set.
+		Set<Element> used = new HashSet<Element>();
+		// perhaps we need a "getFreeVars" method
+		Deque<Element> worklist = new ArrayDeque<Element>();
+		for (Element e : concClauseUse.getElements()) {
+		  if (e != assumeClauseUse) worklist.add(e);
 		}
-		if (numBodyNonTerminals>numAssumptionNonTerminals)
-		  ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
-		// TODO: should check that the sets are the same
-		*/
+		while (!worklist.isEmpty()) {
+		  Element e = worklist.remove();
+		  if (e instanceof NonTerminal || e instanceof Variable) used.add(e);
+		  if (e instanceof Clause) {
+		    worklist.addAll(((Clause) e).getElements());
+		  }
+		}
+		
+		Set<Element> intersection = new HashSet<Element>(defined);
+		intersection.retainAll(used);
+		defined.removeAll(intersection);
+		used.removeAll(intersection);
+		
+		// If something is used but not defined, it means the translation to LF
+		// doesn't know what to use for the nonterminal when forming the internal derivation
+		if (!used.isEmpty()) {
+		  ErrorHandler.report("assumption rule gives no way to bind " + used, concClauseUse);
+		}
+		
+		// If a nonterminal is defined but not used, it means that we don't know what to choose
+		// for the nonterminal when converting back to LF.  It also means the nonterminal
+		// in the surface syntax is arbitrary which is confusing.
+		// A variable can be unused because the LF has that in the main parameter; 
+		// it isn't needed in the internal derivation, but this violates assumptions made
+		// internally, and it wouldn't make sense to have a variable AND a derivation
+		// that doesn't use it.  Might as well have two separate things, once this
+		// is supported.
+		for (Element e : defined) {
+		  // if (e instanceof Variable) continue;
+		  ErrorHandler.report("assumption rule doesn't use " + e, concClauseUse);
+		}
 	}
 	
 	public boolean isAssumption() {

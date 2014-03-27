@@ -94,11 +94,19 @@ n != n'
 s n != s n'
 
 
+judgment is-var: e : C in G
+assumes G
+
+----------------- var
+x : C in (G, x:C)
+
+
 judgment has-type: CT; G |- e : C
 assumes G
 
+e : C in G
 ------------------- t-var
-CT; G, x:C |- x : C
+CT; G |- e : C
 
 CT; G |- e0 : C0
 CT |- ftype{f, C0} = C
