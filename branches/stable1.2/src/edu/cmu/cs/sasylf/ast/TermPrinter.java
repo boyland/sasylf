@@ -30,6 +30,7 @@ public class TermPrinter {
   private final Location location;
   private final Map<FreeVar,NonTerminal> varMap = new HashMap<FreeVar,NonTerminal>();
   private final Set<FreeVar> used = new HashSet<FreeVar>();
+  private final Set<String> variableNames = new HashSet<String>();
   
   public TermPrinter(Context ctx, Element gamma, Location loc) {
     this.ctx = ctx;
@@ -63,6 +64,7 @@ public class TermPrinter {
   }
   
   public ClauseUse asClause(Term x) {
+    variableNames.clear(); // every clause can reuse variables
     return asClause(x, new ArrayList<Variable>());
   }
   
@@ -207,11 +209,17 @@ public class TermPrinter {
       if (p != null && p.getType() != null && p.getType().equals(s)) ++count;
     }
     StringBuilder sb = new StringBuilder(s.getVariable().toString());
+    int len = sb.length();
     while (count > 0) {
       sb.append("'");
       --count;
     }
-    return sb.toString();
+    if (variableNames.add(sb.toString())) return sb.toString();
+    for (int i=0; true; ++i) {
+      sb.setLength(len);
+      sb.append(i);
+      if (variableNames.add(sb.toString())) return sb.toString();
+    }
   }
   
   /**
@@ -259,7 +267,12 @@ public class TermPrinter {
               Element element = vtMap.get(elem.toString());
               if (element != null)
                 bes.set(i,element); 
-              else bes.set(i,context);
+              else {
+                if (i != bu.getConstructor().getAssumeIndex()) {
+                  throw new RuntimeException("didn't find " + elem + " in " + vtMap);
+                }
+                bes.set(i,getContext((NonTerminal)elem));
+              }
             }
           }
           bindingClause = new ClauseUse(location,bes,bu.getConstructor());
@@ -300,7 +313,9 @@ public class TermPrinter {
         v = null; // replace earlier variables with null
       }
     }
-    return new ClauseUse(location,newElems,cd);
+    ClauseUse bindingClause = new ClauseUse(location,newElems,cd);
+    // System.out.println("var binding clause = " + bindingClause);
+    return bindingClause;
   }
 
   private ClauseUse appAsClause(Constant c, List<Element> args) {
@@ -320,12 +335,7 @@ public class TermPrinter {
       for (int i=0; i < n; ++i) {
         Element old = contents.get(i);
         if (i == ai) {
-          Element baseContext = context;
-          if (baseContext == null) {
-            NonTerminal g = (NonTerminal)old;
-            ClauseDef term = g.getType().getTerminalCase();
-            baseContext = new ClauseUse(location,new ArrayList<Element>(term.getElements()),term);
-          }
+          Element baseContext = getContext((NonTerminal)old);
           contents.set(i,baseContext);
         } else if (old instanceof NonTerminal) {
           contents.set(i,actuals.next());
@@ -370,6 +380,21 @@ public class TermPrinter {
       }
       return new ClauseUse(location,contents,cd);
     }
+  }
+
+  /**
+   * Return syntax for the current context, giving a nonterminal for the syntax
+   * in case the context is empty.
+   * @param contextNT
+   * @return clause or non-terminal for the current context, never null.
+   */
+  public Element getContext(NonTerminal contextNT) {
+    Element baseContext = context;
+    if (baseContext == null) {
+      ClauseDef term = contextNT.getType().getTerminalCase();
+      baseContext = new ClauseUse(location,new ArrayList<Element>(term.getElements()),term);
+    }
+    return baseContext;
   }
   
   private ClauseUse replaceAssume(ClauseUse repl, Element old) {
@@ -467,13 +492,17 @@ public class TermPrinter {
       List<Element> es = ((Clause)e).getElements();
       if (parenthesize && es.size() > 1) sb.append('(');
       int n = es.size();
-      boolean lastWasTerminal = false;
+      String lastTerminal = null;
       for (int i=0; i < n; ++i) {
         Element e2 = es.get(i);
-        boolean thisIsTerminal = e2 instanceof Terminal;
-        if (i > 0 && !(lastWasTerminal && thisIsTerminal)) sb.append(' ');
+        String thisTerminal = e2 instanceof Terminal ? ((Terminal)e2).getSymbol() : null;
+        if (i > 0 && insertSpace(lastTerminal, thisTerminal)) sb.append(' ');
         prettyPrint(sb,e2,true, level+1);
-        lastWasTerminal = thisIsTerminal;
+        lastTerminal = thisTerminal;
+        if (e2 instanceof AndTerminal && !parenthesize) {
+          sb.append(" _:");
+          lastTerminal = null;
+        }
       }
       if (parenthesize && es.size() > 1) sb.append(')');
     } else if (e instanceof AssumptionElement) {
@@ -486,5 +515,22 @@ public class TermPrinter {
     } else {
       throw new RuntimeException("??" + e);
     }
+  }
+
+  /**
+   * Return whether one should insert a space between these two tokens.
+   * By default, we always place spaces between tokens, but if one or both are terminals
+   * we sometimes omit the space.
+   * @param lastTerminal the terminal string before, null if not a terminal
+   * @param thisTerminal the terminal string after, null is not a terminal
+   * @return whether to insert a space between these two
+   */
+  protected static boolean insertSpace(String lastTerminal, String thisTerminal) {
+    if (thisTerminal == null) return true;
+    if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
+    if (lastTerminal == null) return true;
+    if (thisTerminal.isEmpty()) return false;
+    if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
+    return false;
   }
 }

@@ -6,17 +6,14 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 /** Common interface for Rules and Theorems */
@@ -75,6 +72,14 @@ public abstract class RuleLike extends Node {
 		return appliedTerm;*/
 	}
 		
+	// XXX: Currently the TERM is different from LF/Twelf in two ways:
+	// XXX: (1) We represent the conclusion as a separate parameter to the application, and
+	// XXX: (2) if the whole thing is in a non-empty variable context, that context
+	// XXX: is repeated for each argument to the application, so that the TERM
+	// XXX: application doesn't even type check afterwards.  This is a bad idea.
+	// XXX: (1) is a way to convert a rule into a theorem.  Just fine.
+	// XXX: (2) causes us to leave types off of things.
+	
 	/** Computes a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion).
 	 * Also freshens the variables in this term.
 	 */
@@ -136,42 +141,15 @@ public abstract class RuleLike extends Node {
 		args.add(concTerm);
 		Term ruleTerm = App(getRuleAppConstant(), args);
 		
-		// JTB: fix defect #4
-		// We need to determine if any variable was substituted in a wrapping
-		// sub but is still being used under its old name: we need to return it
-		// to the old (unqualified) name.  We painfully substitute it back.
-		Set<FreeVar> ruleFreeVars = ruleTerm.getFreeVariables();
-		Substitution fixSub = null;
-		for (Map.Entry<Atom,Term> e : wrappingSub.getMap().entrySet()) {
-		  if (ruleFreeVars.contains(e.getKey())) {
-		    // ErrorHandler.warning("case for rule was wrong, trying to fix it", this);
-		    if (fixSub == null) fixSub = new Substitution();
-		    // Horrid kludge: fixSub.add(e.getKey(), e.getValue());
-		    Term appl = e.getValue();
-		    Abstraction absMatchTerm = (Abstraction)instanceTerm;
-		    List<Term> varTypes = new ArrayList<Term>();
-		    List<String> varNames = new ArrayList<String>();
-		    
-        List<? extends Term> fixargs = ((Application)appl).getArguments();
-		    ClauseUse.readNamesAndTypes(absMatchTerm, fixargs.size(), varNames, varTypes);
-		    Term body = e.getKey();
-		    for (Term ty : varTypes) {
-		      body = Facade.Abs(ty, body);
-		    }
-		    Atom function = ((Application)appl).getFunction();
-        // System.out.println("substituting " + function + " with " + body);
-		    fixSub.add(function,body);
-		  }
-		}
-		if (fixSub != null) {
-		  ruleTerm = ruleTerm.substitute(fixSub);
-		}
+		// somehow the wrapping sub is not fully substituted. 
+		Util.debug("\twrappingSub = " + wrappingSub);
 
-		/*debug("\tgenerated term before freshification: " + ruleTerm);
-		
-		Substitution ruleSub = new Substitution();			// substitutes fresh vars in rule
-		ruleSub = ruleTerm.freshSubstitution(ruleSub);
-		ruleTerm = ruleTerm.substitute(ruleSub);*/
+		// go back and substitute the wrapping sub in previous places
+		// XXX: This shouldn't be necessary, or maybe it even is a mistake
+		// if the substituted thing shouldn't have been substituted anyway.
+		// The fact we need to do this indicates that the local adaptation 
+		// wasn't being done right.
+		ruleTerm = ruleTerm.substitute(wrappingSub);
 
 		return ruleTerm;
 	}

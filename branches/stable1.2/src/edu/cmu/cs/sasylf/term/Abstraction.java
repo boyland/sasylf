@@ -102,7 +102,14 @@ public class Abstraction extends Term {
 		unifyHelper(current, worklist);
 	}
 
-	public Term apply(List<? extends Term> arguments, int whichApplied) {
+	@Override
+  protected boolean selectUnusablePositions(int bound,
+      Set<Pair<FreeVar, Integer>> unusable) {
+	  return varType.selectUnusablePositions(bound, unusable) &&
+	      body.selectUnusablePositions(bound+1, unusable);
+  }
+
+  public Term apply(List<? extends Term> arguments, int whichApplied) {
 		whichApplied++;
 		List<Term> newArgs = new ArrayList<Term>();
 		for (Term t : arguments) {

@@ -7,6 +7,8 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,7 +116,8 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	private void computeAssumption(Context ctx) {
 		ClauseUse concClauseUse = (ClauseUse)this.getConclusion();
-		Judgment parent = (Judgment)concClauseUse.getConstructor().getType();
+		ClauseDef concClauseDef = concClauseUse.getConstructor();
+    Judgment parent = (Judgment)concClauseDef.getType();
 		// must have no premises, parent must assume something
 		if (premises.size() > 0 || parent.getAssume() == null)
 			return; // default false
@@ -122,64 +125,87 @@ public class Rule extends RuleLike implements CanBeCase {
 		// must have Gamma, E(x) for Gamma in conclusion
 		int assumeIndex = ((ClauseDef)parent.getForm()).getAssumeIndex();
 		Element assumeElement = getConclusion().getElements().get(assumeIndex);
-		if (!(assumeElement instanceof Clause))
+		if (!(assumeElement instanceof ClauseUse))
 			return; // default false
 
 		// look for sub-part of gamma clause, a NonTerminal with same type as gamma
-		ClauseUse assumeClause = (ClauseUse) assumeElement;
-		Syntax gammaType = (Syntax) assumeClause.getConstructor().getType();
-		boolean found = false;
-		for (ElemType eType: assumeClause.getElemTypes()) {
-			if (eType == gammaType)
-				found = true;
-		}
-		if (!found)
-			return; // default false
-
-		// must have x in body
-		// look for sub-part of gamma clause that is a variable
-		Element varElem = null;
-		for (Element e : assumeClause.getElements()) {
-			if (e instanceof Variable)
-				varElem = e;
-		}
-		if (varElem == null)
-			return; // default false
-
-		boolean foundVar = false;
-		for (Element e : getConclusion().getElements()) {
-			if (e.equals(varElem))
-				foundVar = true;
-		}
-		if (!foundVar)
-		    return;
-
+		ClauseUse assumeClauseUse = (ClauseUse) assumeElement;
+		ClauseDef assumeClauseDef = assumeClauseUse.getConstructor();
+    Syntax gammaType = (Syntax) assumeClauseDef.getType();
+		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
+		int n = assumeClauseDef.getElements().size();
+		
 		isAssumpt = true;
-		if (assumeClause.getConstructor().assumptionRule != null)
-		  // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
-		  ErrorHandler.report("Multiple uses of the same assumption not supported", this);
-		assumeClause.getConstructor().assumptionRule = this;
+		// now we generate errors if there is a problem
 
-		/* I don't see this as something we have to check.
-		 * Any nonterminal that occurs is simply free to be anything.
-		 * - JTB (2014/03/05)
-		// should not have more nonterminals in the body than we have in the assumption clause
-		//Set<NonTerminal> bodyNonTerminals = new HashSet<NonTerminal>();
-		//Set<NonTerminal> assumptionNonTerminals = new HashSet<NonTerminal>();
-		int numBodyNonTerminals = 0;
-		int numAssumptionNonTerminals = 0;
-		for (Element e : assumeClause.getElements()) {
-		  if (e instanceof NonTerminal)
-		    numAssumptionNonTerminals++;
+    if (assumeClauseDef.assumptionRule != null &&
+        assumeClauseDef.assumptionRule != this) // idempotency
+      // note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
+      ErrorHandler.report("Multiple uses of the same assumption not supported", this);
+    assumeClauseDef.assumptionRule = this;
+
+		// now check that assume clause does not bind two NTs together,
+		// or use a clause for a NT.
+		Set<Element> defined = new HashSet<Element>();
+		for (int i=0; i < n; ++i) {
+		  Element u = assumeClauseUse.getElements().get(i);
+		  Element d = assumeClauseDef.getElements().get(i);
+		  if (d.getType() == gammaType) continue;
+		  if (defined.contains(u)) {
+		    ErrorHandler.report("Found duplicate instance of " + u, assumeClauseUse);
+		  }
+		  if (d instanceof Variable) {
+		    if (!(u instanceof Variable)) {
+		      ErrorHandler.report("Expected variable in assumption rule, found " + u, assumeClauseUse);
+		    }
+		    defined.add(u);
+		  } else if (d instanceof NonTerminal) {
+		    if (!(u instanceof NonTerminal)) {
+		      ErrorHandler.report("Expected name in assumption rule, found " + u, assumeClauseUse);
+		    }
+		    defined.add(u);
+		  }
 		}
-		for (Element e : getConclusion().getElements()) {
-		  if (e instanceof NonTerminal)
-		    numBodyNonTerminals++;
+
+
+		// now check that every NT or Var in the rest of the clause is represented in "unique" Set.
+		Set<Element> used = new HashSet<Element>();
+		// perhaps we need a "getFreeVars" method
+		Deque<Element> worklist = new ArrayDeque<Element>();
+		for (Element e : concClauseUse.getElements()) {
+		  if (e != assumeClauseUse) worklist.add(e);
 		}
-		if (numBodyNonTerminals>numAssumptionNonTerminals)
-		  ErrorHandler.report("In a variable rule, no nonterminal should be mentioned in the main part of the rule unless it is mentioned in the context assumption", this);
-		// TODO: should check that the sets are the same
-		*/
+		while (!worklist.isEmpty()) {
+		  Element e = worklist.remove();
+		  if (e instanceof NonTerminal || e instanceof Variable) used.add(e);
+		  if (e instanceof Clause) {
+		    worklist.addAll(((Clause) e).getElements());
+		  }
+		}
+		
+		Set<Element> intersection = new HashSet<Element>(defined);
+		intersection.retainAll(used);
+		defined.removeAll(intersection);
+		used.removeAll(intersection);
+		
+		// If something is used but not defined, it means the translation to LF
+		// doesn't know what to use for the nonterminal when forming the internal derivation
+		if (!used.isEmpty()) {
+		  ErrorHandler.report("assumption rule gives no way to bind " + used, concClauseUse);
+		}
+		
+		// If a nonterminal is defined but not used, it means that we don't know what to choose
+		// for the nonterminal when converting back to LF.  It also means the nonterminal
+		// in the surface syntax is arbitrary which is confusing.
+		// A variable can be unused because the LF has that in the main parameter; 
+		// it isn't needed in the internal derivation, but this violates assumptions made
+		// internally, and it wouldn't make sense to have a variable AND a derivation
+		// that doesn't use it.  Might as well have two separate things, once this
+		// is supported.
+		for (Element e : defined) {
+		  // if (e instanceof Variable) continue;
+		  ErrorHandler.report("assumption rule doesn't use " + e, concClauseUse);
+		}
 	}
 	
 	public boolean isAssumption() {
@@ -195,6 +221,9 @@ public class Rule extends RuleLike implements CanBeCase {
     Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
 
     // Special case: if the variable is known to be var-free, we can't match this rule
+    // XXX: This will need to change if we permit variable free assumptions!
+    // Rewrite to not use a special case here, but rather where we try to put variables
+    // into a varFree NTS.
 		if (isAssumption()) {
 		  int n=conclusion.getElements().size();
 		  for (int i=0; i < n; ++i) {
@@ -208,7 +237,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		
 		// compute term for rule
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
-		debug("\tfor rule " + getName() + " computed rule term " + ruleTerm);
+		Util.debug("\tfor rule " + getName() + " computed rule term " + ruleTerm);
 
 		/*List<? extends Term > args = ((Application)ruleTerm).getArguments();
 		Term concTerm = args.get(args.size()-1);
@@ -253,7 +282,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				 * where J is an instance of a judgment form.
 				 * Goal: produce a new term of the form [fn x => fn y => J(x)]
 				 */
-				debug("applied term is " + appliedTerm);
+				Util.debug("applied term is " + appliedTerm);
 								
 				// adapt the rule term
 				Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
@@ -282,8 +311,8 @@ public class Rule extends RuleLike implements CanBeCase {
 				appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
 
 				//now try it out
-				debug("found a term with assumptions!\n\truleTerm2 = " + ruleTerm2 + "\n\tappliedTerm2 = " + appliedTerm2);
-				debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
+				Util.debug("found a term with assumptions!\n\truleTerm2 = " + ruleTerm2 + "\n\tappliedTerm2 = " + appliedTerm2);
+				Util.debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
 				pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
 				if (pair != null) {
 				  debug("\tadded result!");
@@ -327,49 +356,19 @@ public class Rule extends RuleLike implements CanBeCase {
 	private Pair<Term, Substitution> checkRuleApplication(Term term,
 			Term ruleTerm, Term appliedTerm) {
 		Substitution sub = null;
-		Term fixedRuleTerm = null;
 		try {
-			//sub = ruleTerm.unify(appliedTerm);
-			sub = ruleTerm.unifyAllowingBVs(appliedTerm);
-
-			//Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
-			// a free variable in term should not, in its substitution result, have any free bound variables
-			// TODO: really should build up substitution, rather than just replacing each one piecemeal
-			// this version could be buggy.
-			Set<FreeVar> freeVars = term.getFreeVariables();
-			Substitution removeBVSub = new Substitution();
-			for (FreeVar v : freeVars) {
-				Term substituted = sub.getSubstituted(v);
-				if (substituted != null && substituted.hasBoundVarAbove(0)) {
-				  debug("has bad binding: " + v + " to " + substituted);
-					// try to remove it
-					//Term newSubstituted1 = substituted.removeBoundVarsAbove(0);
-					substituted.removeBoundVarsAbove(0, removeBVSub);
-					Term newSubstituted = substituted.substitute(removeBVSub);
-					debug("got new substitution: " + newSubstituted);
-					sub.remove(v);
-					sub.add(v, newSubstituted);
-					//throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + sub);
-				}
-			}
-			fixedRuleTerm = appliedTerm.substitute(sub).substitute(removeBVSub);
-			if (!ruleTerm.equals(fixedRuleTerm)) {
-				debug("computed rule term is " + ruleTerm + "\n\tfixed to " + fixedRuleTerm + "\n\tsub is " + sub);
-				sub.compose(removeBVSub);
-			}
-			//System.err.println("rule unified");
+			sub = ruleTerm.unify(appliedTerm);
+			Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
 		} catch (UnificationFailed e) {
-			//System.err.println("rule did not unify");
-			// did not unify, leave sub null
-			debug("unification failed on " + ruleTerm + " and " + appliedTerm);
-			//e.printStackTrace();
+			Util.debug("unification failed on " + ruleTerm + " and " + appliedTerm);
 			sub = null;
 		}
 		if (sub == null)
 			return null;
 		else
-			return new Pair<Term,Substitution>(fixedRuleTerm, sub);
+			return new Pair<Term,Substitution>(ruleTerm.substitute(sub), sub);
 	}
+	
 	@Override
 	public String getErrorDescription(Term t, Context ctx) {
 		StringWriter sw = new StringWriter();

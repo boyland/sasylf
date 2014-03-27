@@ -1,0 +1,84 @@
+/*
+ * good15.slf
+ * 
+ * SASyLF should not require variables "inside" a gamma,
+ * when they would depend on something out of scope.
+ */
+package regression;
+
+terminals fn in
+
+
+
+syntax
+
+
+e ::= fn x : tau => e[x]
+ | x
+ | e e
+
+tau ::= X
+ | tau -> tau
+
+fake ::= fn X => fake[X] | tau
+
+Gamma ::= *
+      |   Gamma, x : tau
+      |   Gamma, X
+
+
+judgment valid-type: Gamma |- tau
+assumes Gamma
+
+------------- type-var
+Gamma, X |- X
+
+------------ type-taut
+Gamma |- tau
+
+
+judgment has-type: Gamma |- e : tau
+assumes Gamma
+
+------------------------- t-var
+Gamma, x:tau |- x : tau
+
+
+Gamma, x1:tau |- e[x1] : tau'
+--------------------------------------------- t-fn
+Gamma |- fn x : tau => e[x] : tau -> tau'
+
+
+Gamma |- e1 : tau' -> tau
+Gamma |- e2 : tau'
+---------------------------------- t-app
+Gamma |- e1 e2 : tau
+
+
+lemma subst:
+    assumes Gamma
+    forall dt: Gamma, X |- e[X] : X
+    forall tau0
+    exists Gamma |- e[tau0] : tau0.
+    // This lemma is true, but cannot be proved with induction.
+    // But the following case analysis fails in SASyLF through 1.2.6/1.3.1 because
+    // SASyLF requires a t-var case even though that would have
+    // a variable bound to a type out of scope:
+    // t-varTERM [fn x:e => fn INTERNAL_DERIV_x:(has-type [BoundVar1, BoundVar3]) 
+    //         => fn X:tau => fn INTERNAL_DERIV_X:(is-type [BoundVar1]) 
+    //                     => (has-type [BoundVar4, BoundVar2])])
+    // Notice that the INTERNAL_DERIV_x uses BoundVar3! 
+    _: Gamma |- e[tau0] : tau0 by induction on dt:
+         case rule
+            d1: Gamma, X |- e1[X] : tau'[X] -> X
+            d2: Gamma, X |- e2[X] : tau'[X]
+            ---------------------------------- t-app
+            _:  Gamma, X |- e1[X] e2[X] : X
+        is
+            proof by unproved //! expected warning OK
+        end case
+    end induction
+end lemma
+
+
+

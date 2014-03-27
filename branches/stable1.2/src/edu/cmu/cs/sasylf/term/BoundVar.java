@@ -4,6 +4,7 @@ import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -129,8 +130,13 @@ public class BoundVar extends Term {
 		unifyHelper(current, worklist);
 	}
 
-
-	public Term getType(List<Pair<String, Term>> varBindings) {
+	@Override
+  protected boolean selectUnusablePositions(int bound,
+      Set<Pair<FreeVar, Integer>> unsable) {
+    return index <= bound;
+  }
+	
+  public Term getType(List<Pair<String, Term>> varBindings) {
 		int indexToUse = varBindings.size() - index;
 		
 		if (indexToUse < 0 || indexToUse >= varBindings.size())
