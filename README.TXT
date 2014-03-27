@@ -1,4 +1,4 @@
-SASyLF version 1.2.6
+SASyLF version 1.2.7a2
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -100,13 +100,32 @@ could use some improvement.
 
 The automated prover ("by solve") works poorly.  It works only
 for straightforward derivations without the use of induction or case
-analysis.  It's use is deprecated.
+analysis.  Its use is deprecated.
 
 
 
 RELEASE HISTORY
 
+<<<<<<< .working
 
+=======
+1.3.2	(& 1.2.7)
+1.3.1	Extensions (& 1.2.6)
+	Abstract modules
+	"or" judgments
+	"contradiction" is sugar for or[], and or[] can be used as a last derivation 
+	Lexicographic and unordered induction
+	Proof of cut elimination
+	Bug fixes: bad23
+	Resolved issues #33, #50
+1.3.0	Packages and Projects (& 1.2.5)
+    The package declaration has a semantics now and we require folders = packages.
+    Eclipse plugin updated to add project and package support and builders
+    Editor has fold support
+    Resolved issues #45
+>>>>>>> .merge-right.r332
+1.2.7	Bug fixes to stable 1.2
+    Resolved issues #53, #56, #57, #58
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
     Substitution semantics changed for complex contexts, poplmark-2a proof updated

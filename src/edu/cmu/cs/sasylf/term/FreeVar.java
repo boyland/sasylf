@@ -22,15 +22,29 @@ public class FreeVar extends Atom {
 		return super.equals(obj) && ((FreeVar) obj).stamp == stamp;
 	}
 
-	static int freshStamp = 1;
+  private static ThreadLocal<Integer> freshStamp = new ThreadLocal<Integer>() {
+    @Override
+    protected Integer initialValue() {
+      return 1;
+    }
+  };
+
+  private static void resetFreshStamp() {
+    freshStamp.remove();
+  }
+  private static int getFreshStampInc() {
+    int result = freshStamp.get();
+    freshStamp.set(result+1);
+    return result;
+  }
 
 	public static FreeVar fresh(String s, Term t) {
-		FreeVar newV = new FreeVar(s, t, freshStamp++);
+		FreeVar newV = new FreeVar(s, t, getFreshStampInc());
 		return newV;
 	}
 
 	public FreeVar freshify() {
-		FreeVar newV = new FreeVar(getName(), type, freshStamp++);
+		FreeVar newV = new FreeVar(getName(), type, getFreshStampInc());
 		return newV;
 	}
 
@@ -207,7 +221,7 @@ public class FreeVar extends Atom {
 	
 	public static boolean canAppearIn(Term term1, Term term2) {
 		debug("testing if " + term1 + " can appear in " + term2);
-		return appearsIn.contains(term1, term2);
+		return getAppearsIn().contains(term1, term2);
 		// hardcode a result for now
 		/*if (term2.toString().equals("loc"))
 			return false;
@@ -217,7 +231,7 @@ public class FreeVar extends Atom {
 	}
 	
 	public static void setAppearsIn(Term term1, Term term2) {
-		boolean changed = appearsIn.put(term1, term2);
+		boolean changed = getAppearsIn().put(term1, term2);
 		if (changed)
 			enforceTransitivity(term1, term2);
 	}
@@ -245,14 +259,14 @@ public class FreeVar extends Atom {
 	private static void enforceTransitivity(Term t1, Term t2) {
 		debug("added " + t1 + " in " + t2);
 		// if t1 appearsIn t2 and t2 appearsIn t3 then t1 appearsIn t3
-		Set<Term> t3set = appearsIn.getAll(t2);
+		Set<Term> t3set = getAppearsIn().getAll(t2);
 		for (Term t3 : t3set) {
 			if (!canAppearIn(t1, t3))
 				debug("transitivity: " + t1 + " in " + t2 + " in " + t3);
 			setAppearsIn(t1, t3);
 		}
 		// if t0 appearsIn t1 and t1 appearsIn t2 then t0 appearsIn t2
-		Set<Term> t0set = appearsIn.getAllReverse(t1);
+		Set<Term> t0set = getAppearsIn().getAllReverse(t1);
 		for (Term t0 : t0set) {
 			if (!canAppearIn(t0, t2))
 				debug("transitivityBack: " + t0 + " in " + t1 + " in " + t2);
@@ -260,10 +274,23 @@ public class FreeVar extends Atom {
 		}
 	}
 
-	private static Relation<Term,Term> appearsIn = new Relation<Term,Term>();
+	private static Relation<Term,Term> getAppearsIn() {
+    return appearsIn.get();
+  }
+  private static void resetAppearsIn() {
+    FreeVar.appearsIn.remove();
+  }
+
+  private static ThreadLocal<Relation<Term,Term>> appearsIn = new ThreadLocal<Relation<Term,Term>>() {
+    @Override
+    protected Relation<Term, Term> initialValue() {
+      return new Relation<Term,Term>();
+    }    
+  };
 
 	public static void reinit() {
-		appearsIn = new Relation<Term,Term>();
+	  resetFreshStamp();
+		resetAppearsIn();
 	}
 	
 	public static void computeAppearsInClosure() {

@@ -14,16 +14,13 @@ public class ErrorHandler {
 		if (msg == null)
 			msg = "";
 		ErrorReport rep = new ErrorReport(errorType, msg, loc, debugInfo, isError);
-		reports.add(rep);
+		reports.get().add(rep);
 		if (print)
 			System.err.println(rep.getMessage());
 		if (debugInfo != null && edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO)
 			System.err.println(debugInfo);
 		if (isError) {
-			errorCount++;
 			throw new SASyLFError(rep);
-		} else {
-			warningCount++;
 		}
 	}
 	
@@ -142,20 +139,29 @@ public class ErrorHandler {
 		report(errorType, msg, obj.getLocation(), debugInfo, true, true);
 	}
 	
-	public static List<ErrorReport> getReports() { return reports; }
+	public static List<ErrorReport> getReports() { return reports.get(); }
 	public static void clearAll() {
-		reports = new ArrayList<ErrorReport>();
-		errorCount = 0;
-		warningCount = 0;
+		reports.remove();
 		FreeVar.reinit();
 	}
-	public static int getErrorCount() { return errorCount; }
-	public static int getWarningCount() { return warningCount; }
+	public static int getErrorCount() {
+	  int errorCount = 0;
+	  for (ErrorReport r : reports.get()) {
+	    if (r.isError) ++errorCount;
+	  }
+	  return errorCount;
+	}
+	public static int getWarningCount() { 
+	  return reports.get().size() - getErrorCount();
+	}
 
-	private static List<ErrorReport> reports = new ArrayList<ErrorReport>();
+	private static ThreadLocal<List<ErrorReport>> reports = new ThreadLocal<List<ErrorReport>>(){
+    @Override
+    protected List<ErrorReport> initialValue() {
+      return new ArrayList<ErrorReport>();
+    }
+	};
 	
-	private static int errorCount=0;
-	private static int warningCount=0;
   public static Location lexicalErrorAsLocation(String file, String error) {
     try {
       int lind = error.indexOf("line ");

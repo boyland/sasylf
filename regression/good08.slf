@@ -1,6 +1,6 @@
 /* 
  * A detection of variable in a context,
- * doesn't correctly commute with patern matching, before or after.
+ * doesn't correctly commute with pattern matching, before or after.
  */
 
 package regression;
@@ -19,14 +19,14 @@ T ::= Unit
   | T -> T
 
 Gamma ::= *
-  | Gamma, x:T
+  | Gamma, x
 
 
 judgment var: t in Gamma
 assumes Gamma
 
 ------------------ var
-x in Gamma, x:T
+x in Gamma, x
 
 
 // A stripped down, trivial reduction
@@ -78,7 +78,7 @@ lemma reduction-confluent1:
 	    _: Gamma |- t2 -> t3 by case analysis on v:
 		case rule
 		    ------------------ var
-		    _: x in Gamma',x:T
+		    _: x in Gamma',x
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
@@ -110,13 +110,13 @@ lemma reduction-confluent2:
 	    _: Gamma |- t2 -> t3 by case analysis on v:
 		case rule
 		    ------------------ var
-		    _: x in Gamma',x:T
+		    _: x in Gamma',x
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: x in Gamma',x:T
+			    _: x in Gamma',x
 			    ----------------------- R-Var
-			    _: Gamma',x:T |- x -> x
+			    _: Gamma',x |- x -> x
 			is
 			    _: Gamma |- t2 -> t3 by r1
 			end case
@@ -143,13 +143,13 @@ lemma reduction-confluent3:
 	    _: Gamma |- t2 -> t3 by case analysis on v:
 		case rule
 		    ------------------ var
-		    _: x in Gamma',x:T
+		    _: x in Gamma',x
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: t1'[x] in Gamma',x:T
+			    _: t1'[x] in Gamma',x
 			    --------------------------------- R-Var
-			    _: Gamma',x:T |- t1'[x] -> t1'[x]
+			    _: Gamma',x |- t1'[x] -> t1'[x]
 			is
 			    _: Gamma |- t2 -> t3 by r1
 			end case
@@ -175,15 +175,15 @@ lemma reduction-confluent4:
 	    _: Gamma |- t2 -> t3 by case analysis on v:
 		case rule
 		    ------------------ var
-		    _: x in Gamma',x:T
+		    _: x in Gamma',x
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: t1'[x] in Gamma',x:T
+			    _: t1'[x] in Gamma',x
 			    --------------------------------- R-Var
-			    _: Gamma',x:T |- t1'[x] -> t1'[x]
+			    _: Gamma',x |- t1'[x] -> t1'[x]
 			is
-			    _: Gamma',x:T |- t1'[x] -> x by r1
+			    _: Gamma',x |- t1'[x] -> x by r1
 			end case
 		    end case analysis
 		end case

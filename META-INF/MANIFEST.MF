@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: SASyLF Editor
 Bundle-SymbolicName: org.sasylf;singleton:=true
-Bundle-Version: 1.2.6
+Bundle-Version: 1.2.7
 Bundle-Activator: org.sasylf.Activator
 Bundle-Vendor: sasylf.org
 Main-Class: edu.cmu.cs.sasylf.Main

@@ -1,13 +1,12 @@
 package edu.cmu.cs.sasylf.term;
 
-import java.util.ArrayList;
-import java.util.List;
 import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.App;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.cmu.cs.sasylf.util.SimpleTestSuite;
-import edu.cmu.cs.sasylf.util.Util;
 
 public class UnitTests extends SimpleTestSuite {
 
@@ -34,19 +33,33 @@ public class UnitTests extends SimpleTestSuite {
   Constant b2 = new Constant("b2", Facade.Abs(Facade.App(b, new FreeVar("A",a)), 
                                               Facade.App(b, Facade.App(a2, new FreeVar("A",a)))));
   
+  Constant e = new Constant("e", Constant.TYPE);
+  Constant app = new Constant("app", Abs(e,Abs(e,e)));
+  
   Constant t = new Constant("t", Constant.TYPE);
   Constant top = new Constant("Top", t);
   Constant arrow = new Constant("->", Abs(t,Abs(t,t)));
   
   Constant subt = new Constant("subt", Abs(t,Abs(t,Constant.TYPE)));
-  // SASyLF's term system doesn't check the application of RuleLike terms
-  // because the way the handle assumed contexts.
   Constant subtTransFamily = new Constant("SA-TransTYPE", Constant.TYPE);
   Constant subtTransRule = 
        new Constant("SA-TransTERM", Abs(App(subt,v("T1",t),v("T2",t)),
                                     Abs(App(subt,v("T2",t),v("T3",t)),
                                     Abs(App(subt,v("T1",t),v("T3",t)),
                                         subtTransFamily))));
+  
+  Constant hast = new Constant("has-type", Abs(e, Abs(t, Constant.TYPE)));
+  Constant hastAppFamily = new Constant("T-App", Constant.TYPE);
+  Constant hastAppRule =
+      new Constant("T-AppTERM", Abs(App(hast, v("E1",e), App(arrow, v("T",t), v("T'",t))),
+                                Abs(App(hast, v("E2",e), v("T",t)),
+                                Abs(App(hast, App(app, v("E1",e), v("E2",e)), v("T'",t)),
+                                    hastAppFamily))));
+  
+  Constant tvarFamily = new Constant("T-Var", Constant.TYPE);
+  Constant tvarRule =
+      new Constant("T-VarTERM", Abs(Abs(e, Abs(App(hast, b(1), v("T",t)), App(hast, b(2), v("T",t)))),
+                                    tvarFamily));
   
   static Substitution subst(Pair<String,? extends Term>... pairs) {
     List<FreeVar> vars = new ArrayList<FreeVar>();
@@ -62,6 +75,7 @@ public class UnitTests extends SimpleTestSuite {
   protected void testUnification(String description, Substitution expected, Term t1, Term t2) {
     try {
       Substitution actual = t1.unify(t2);
+      assertEqual("unified",t1.substitute(actual),t2.substitute(actual));
       if (expected == null) {
         assertTrue(description + " didn't fail as expected", false);
       } else {
@@ -161,9 +175,60 @@ public class UnitTests extends SimpleTestSuite {
                 p("T435",Abs(t,Abs(t,App(arrow,b(2),b(2))))),
                 p("T436",Abs(t,Abs(t,App(arrow,b(2),top)))));
 
-    Util.DEBUG=true;
+    // Util.DEBUG=true;
     testUnification("BIG",sub,t1,t2);
+    
+    t1 = App(hastAppRule,
+             Abs(e, Abs(App(hast,b(1),v("tau",t)),
+                        App(hast, App(v("e18", Abs(e,e)), b(2)),
+                                  App(arrow, v("tau17",t), v("tau16",t))))),
+             Abs(e, Abs(App(hast,b(1),v("tau",t)),
+                        App(hast, App(v("e19", Abs(e,e)), b(2)),
+                                  v("tau17",t)))),
+             Abs(e, Abs(App(hast,b(1),v("tau",t)),
+                        App(hast, App(app, App(v("e18", Abs(e,e)), b(2)),
+                                           App(v("e19", Abs(e,e)), b(2))),
+                                  v("tau16",t)))));
+    
+    /*
+    t2 = App(hastAppRule, 
+             v("has-type-20", Abs(e, Abs(App(hast,b(1),v("tau",t)),
+                                         App(hast, v("E1",e), App(arrow, v("T",t), v("T'",t)))))),
+             v("has-type-21", Abs(e, Abs(App(hast,b(1),v("tau",t)),
+                                         App(hast, v("E2",e), v("T",t))))),
+             Abs(e, Abs(App(hast,b(1),v("tau",t)), 
+                 App(hast,v("E",e),v("tau'",t)))));
+    */
+    
+    t2 = App(hastAppRule, 
+        v("has-type-20", Constant.UNKNOWN_TYPE),
+        v("has-type-21", Constant.UNKNOWN_TYPE),
+        Abs(e, Abs(App(hast,b(1),v("tau",t)), 
+                   App(hast,v("E",e),v("tau'",t)))));
+    
+    // Simulate the variables that Unification makes
+    // If other tests come before this one, we need to adjust the
+    // numbers here, or more powerfully, change testUnification to allow
+    // a renaming of stamped free variables.
+    FreeVar e1 = new FreeVar("e18",e,7);
+    FreeVar e2 = new FreeVar("e19",e,6);
+    
+    sub = subst(p("e18",Abs(e,e1)),
+                p("e19",Abs(e,e2)),
+                p("E", App(app, e1, e2)),
+                p("tau'", v("tau16", t)),
+                p("has-type-20", Abs(e, Abs(App(hast,b(1),v("tau",t)), 
+                                            App(hast, e1, App(arrow, v("tau17",t), v("tau16",t)))))),
+                p("has-type-21", Abs(e, Abs(App(hast,b(1),v("tau",t)), 
+                                            App(hast, e2, v("tau17",t))))));
+    
+    testUnification("good16", sub, t1, t2); 
+    
+    t1 = App(tvarRule, Abs(e, Abs(App(hast, b(1), v("tau5",t)), App(hast, b(2),     v("tau5",t)))));
+    t2 = App(tvarRule, Abs(e, Abs(App(hast, b(1), v("tau1",t)), App(hast, v("E",e), v("tau2",t)))));
 
+    // Util.DEBUG = true;
+    testUnification("bad", null, t1, t2);
   }
   
   public static void main(String[] args) {
