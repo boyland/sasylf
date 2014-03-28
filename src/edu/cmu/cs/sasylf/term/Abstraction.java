@@ -294,11 +294,11 @@ public class Abstraction extends Term {
       Application a = (Application) t;
       if (a.getArguments().size() != argCount)
         return null;
-      Util.debug("Checking whether " + src + " is a permutation of another free var");
+      Util.debug("Checking whether ", src, " is a permutation of another free var");
       // doesn't take into account arguments being eta-long
       // but then again neither does getEtaEquivFreeVar
       if (!(a.getFunction() instanceof FreeVar)) {
-        Util.debug("  Not a free var: " + a.getFunction());
+        Util.debug("  Not a free var: ", a.getFunction());
         return null;
       }
       int[] indices = new int[argCount];
@@ -306,7 +306,7 @@ public class Abstraction extends Term {
       for (int i = 0; i < argCount; ++i) {
         Term arg = a.getArguments().get(i);
         if (!(arg instanceof BoundVar)) {
-          Util.debug("  Arg #" + i + " is not a bound var: " + arg);
+          Util.debug("  Arg #", i, " is not a bound var: ", arg);
           return null;
         }
         int index = ((BoundVar)arg).getIndex();
@@ -359,10 +359,10 @@ public class Abstraction extends Term {
 	    if (app.getFunction().equals(this.getEtaEquivFreeVar())) {
 	      Util.debug("found eta-equiv function application");
 	      if (!FreeVar.canAppearIn(app.getFunction().getTypeFamily(), varType.baseTypeFamily())) {
-	        Util.debug("Yes! " + app.getFunction().getTypeFamily() + " /< " + varType.baseTypeFamily());
+	        Util.debug("Yes! ", app.getFunction().getTypeFamily(), " /< ", varType.baseTypeFamily());
 	        return true;
 	      }
-	      Util.debug("Nope " + app.getFunction().getTypeFamily() + " < " + varType.baseTypeFamily());
+	      Util.debug("Nope ", app.getFunction().getTypeFamily(), " < ", varType.baseTypeFamily());
 	    }
 	  }
 	  return false;

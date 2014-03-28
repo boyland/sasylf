@@ -109,7 +109,9 @@ analysis.  Its use is deprecated.
 
 RELEASE HISTORY
 
-1.3.2	(& 1.2.7)
+1.3.2	Cleanup
+    Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)
+    Resolved issues #53, #56, #57, #58
 1.3.1	Extensions (& 1.2.6)
 	Abstract modules
 	"or" judgments
@@ -123,8 +125,6 @@ RELEASE HISTORY
     Eclipse plugin updated to add project and package support and builders
     Editor has fold support
     Resolved issues #45
-1.2.7	Bug fixes to stable 1.2
-    Resolved issues #53, #56, #57, #58
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
     Substitution semantics changed for complex contexts, poplmark-2a proof updated

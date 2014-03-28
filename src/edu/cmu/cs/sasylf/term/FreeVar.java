@@ -220,7 +220,7 @@ public class FreeVar extends Atom {
 	}
 	
 	public static boolean canAppearIn(Term term1, Term term2) {
-		debug("testing if " + term1 + " can appear in " + term2);
+		debug("testing if ", term1, " can appear in ", term2);
 		return getAppearsIn().contains(term1, term2);
 		// hardcode a result for now
 		/*if (term2.toString().equals("loc"))
@@ -257,19 +257,19 @@ public class FreeVar extends Atom {
 	}*/
 
 	private static void enforceTransitivity(Term t1, Term t2) {
-		debug("added " + t1 + " in " + t2);
+		debug("added ", t1, " in ", t2);
 		// if t1 appearsIn t2 and t2 appearsIn t3 then t1 appearsIn t3
 		Set<Term> t3set = getAppearsIn().getAll(t2);
 		for (Term t3 : t3set) {
 			if (!canAppearIn(t1, t3))
-				debug("transitivity: " + t1 + " in " + t2 + " in " + t3);
+				debug("transitivity: ", t1, " in ", t2, " in ", t3);
 			setAppearsIn(t1, t3);
 		}
 		// if t0 appearsIn t1 and t1 appearsIn t2 then t0 appearsIn t2
 		Set<Term> t0set = getAppearsIn().getAllReverse(t1);
 		for (Term t0 : t0set) {
 			if (!canAppearIn(t0, t2))
-				debug("transitivityBack: " + t0 + " in " + t1 + " in " + t2);
+				debug("transitivityBack: ", t0, " in ", t1, " in ", t2);
 			setAppearsIn(t0, t2);
 		}
 	}
@@ -322,7 +322,7 @@ public class FreeVar extends Atom {
 			Term newT = this.apply(args, 0);
 			for (int i = numLambdas-1; i >= 0; --i)
 				newT = Facade.Abs(types.get(i), newT);
-			debug("converted to eta long - from " + this + " to " + newT);
+			debug("converted to eta long - from ", this, " to ", newT);
 			return newT;
 		} else {
 			return this;

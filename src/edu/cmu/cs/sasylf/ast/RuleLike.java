@@ -53,7 +53,7 @@ public abstract class RuleLike extends Node {
 		//Term concTerm = getConclusion().asTerm();
 		// TODO: not sure if I need adaptation here, disabling it until I'm sure I do need it
 		int adaptation = 0;//((ClauseUse)getConclusion()).getAdaptationNumber(concTerm, instanceTerm);
-		debug("adaptation: " + adaptation);
+		debug("adaptation: ", adaptation);
 				
 		List<Term> termArgs = new ArrayList<Term>();
 		for (int i = 0; i < this.getPremises().size(); ++i) {
@@ -62,9 +62,9 @@ public abstract class RuleLike extends Node {
 			Term type = Constant.UNKNOWN_TYPE; //clauseDef.getTypeTerm();
 			String name = clauseDef.getConstructorName();
 			Term argTerm = Facade.FreshVar(name, type);
-			debug("before: " + argTerm);
+			debug("before: ", argTerm);
 			argTerm = clauseUse.wrapWithOuterLambdas(argTerm, instanceTerm, adaptation);
-			debug("after: " + argTerm);
+			debug("after: ", argTerm);
 			termArgs.add(argTerm);
 		}
 		return termArgs;
@@ -86,7 +86,7 @@ public abstract class RuleLike extends Node {
 	 * @param wrappingSub <i>output</i>
 	 */
 	public Term getFreshRuleAppTerm(Term instanceTerm, Substitution wrappingSub, List<Term> termArgsIfKnown /* may be null */) {
-		debug("getting conclusion term for rule " + getName());
+		debug("getting conclusion term for rule ", getName());
 		Term concTerm = getConclusion().asTerm();
 		Substitution ruleSub = new Substitution();			// substitutes fresh vars in rule
 		ruleSub = concTerm.freshSubstitution(ruleSub);
@@ -103,7 +103,7 @@ public abstract class RuleLike extends Node {
 			if (elem instanceof ClauseUse) {
 				ClauseUse clause = (ClauseUse) elem;
 				// only adapt if elem has a Gamma variable at its root
-				debug("\tgenerated argterm before adaptation: " + argTerm);
+				debug("\tgenerated argterm before adaptation: ", argTerm);
 				if (clause.isRootedInVar()) {
 					int localAdaptation = adaptation;
 					Term localInstanceTerm = instanceTerm;
@@ -111,41 +111,41 @@ public abstract class RuleLike extends Node {
 						localInstanceTerm = termArgsIfKnown.get(i);
 						localAdaptation = clause.getAdaptationNumber(argTerm, localInstanceTerm, false);
 					}
-					debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
+					debug("adaptation of ", argTerm, " to ", localInstanceTerm, " is ", localAdaptation);
 					argTerm = clause.wrapWithOuterLambdas(argTerm, localInstanceTerm, localAdaptation, wrappingSub, false);
 					// System.out.println("    wrapping sub = " + wrappingSub);
-					debug("\tresult is " + argTerm);
+					debug("\tresult is ", argTerm);
 				}
 			} else if (elem instanceof AssumptionElement) {
 			  // TODO: merge with previous branch to avoid duplicate code
 			  //Clause clause = ((AssumptionElement)elem).getAssumes();
-        debug("\tgenerated argterm before adaptation: " + argTerm);
+        debug("\tgenerated argterm before adaptation: ", argTerm);
         {
           int localAdaptation = adaptation;
           Term localInstanceTerm = instanceTerm;
           if (termArgsIfKnown != null && !((ClauseUse)getConclusion()).isRootedInVar()) {
             localInstanceTerm = termArgsIfKnown.get(i);
             localAdaptation = localInstanceTerm.countLambdas() - argTerm.countLambdas();
-            Util.debug("  localAdaptation = " + localAdaptation);
+            Util.debug("  localAdaptation = ", localAdaptation);
           }
-          Util.debug("adaptation of " + argTerm + " to " + localInstanceTerm + " is " + localAdaptation);
+          Util.debug("adaptation of ", argTerm, " to ", localInstanceTerm, " is ", localAdaptation);
           argTerm = ClauseUse.wrapWithOuterLambdas(argTerm, localInstanceTerm, localAdaptation, wrappingSub);
           // System.out.println("    wrapping sub = " + wrappingSub);
-          Util.debug("\tresult argTerm is " + argTerm);
+          Util.debug("\tresult argTerm is ", argTerm);
         }
       }
 			args.add(argTerm);
 		}
-		Util.debug("\tgenerated concterm before adaptation: " + concTerm);
-		Util.debug("adaptation of " + concTerm + " to " + instanceTerm + " is " + adaptation);
-		Util.debug("\twrappingSub = " + wrappingSub);
+		Util.debug("\tgenerated concterm before adaptation: ", concTerm);
+		Util.debug("adaptation of ", concTerm, " to ", instanceTerm, " is ", adaptation);
+		Util.debug("\twrappingSub = ", wrappingSub);
 		concTerm = ((ClauseUse)getConclusion()).wrapWithOuterLambdas(concTerm, instanceTerm, adaptation, wrappingSub, false); 
-		Util.debug("\tresult concTerm is " + concTerm);
+		Util.debug("\tresult concTerm is ", concTerm);
 		args.add(concTerm);
 		Term ruleTerm = App(getRuleAppConstant(), args);
 		
 		// somehow the wrapping sub is not fully substituted. 
-		Util.debug("\twrappingSub = " + wrappingSub);
+		Util.debug("\twrappingSub = ", wrappingSub);
 
 		// go back and substitute the wrapping sub in previous places
 		// XXX: This shouldn't be necessary, or maybe it even is a mistake

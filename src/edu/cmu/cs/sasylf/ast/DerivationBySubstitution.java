@@ -50,12 +50,12 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
 		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg0,ctx,false);
 		
-		Util.debug("subContext = " + subContext);
-		Util.debug("source = " + source);
+		Util.debug("subContext = ", subContext);
+		Util.debug("source = ", source);
 		
 		Term result = doSubst(ctx, subContext, source, new ArrayDeque<Term>());
 		
-    Util.debug("result = " + result);
+    Util.debug("result = ", result);
 		
     // verify result is the second substituted for (and eliminating) the assumption of the first
     Term claimedResult = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
@@ -113,7 +113,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
         } 
 	      Term fv = f.apply(Collections.singletonList(app), 0);
 	      Abstraction f2 = (Abstraction)fv;
-	      Util.debug("About to unify " + f2.varType + " and " + arg);
+	      Util.debug("About to unify ", f2.varType, " and ", arg);
 	      Substitution sub;
         try {
           sub = f2.varType.unify(arg);

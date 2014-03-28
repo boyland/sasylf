@@ -24,11 +24,11 @@ public abstract class Term {
 	// only for free variables
 	public final Substitution freshSubstitution(Substitution s) {
 		Set<FreeVar> vars = getFreeVariables();
-		debug("free vars for freshening: " + vars);
+		debug("free vars for freshening: ", vars);
 		for (FreeVar v : vars) {
 			if (!s.getMap().keySet().contains(v)) {
 				FreeVar vfresh = v.freshify();
-				debug("freshened " + v + " with " + vfresh);
+				debug("freshened ", v, " with ", vfresh);
 				s.add(v, vfresh);
 			}
 		}
@@ -103,8 +103,8 @@ public abstract class Term {
 	/** constructs a pair with the terms in order
 	 */
 	static Pair<Term, Term> makePair(Term t1, Term t2) {
-		debug("    pair " + t1 + " order " + t1.getOrder());
-		debug("    pair " + t2 + " order " + t2.getOrder());
+		debug("    pair ", t1, " order ", t1.getOrder());
+		debug("    pair ", t2, " order ", t2.getOrder());
 		if (t1.getOrder() < t2.getOrder())
 			return new Pair<Term,Term>(t1, t2);
 		else 
@@ -135,7 +135,7 @@ public abstract class Term {
 		for (FreeVar v : freeVars) {
 			Term substituted = current.getSubstituted(v);
 			if (substituted != null && !substituted.selectUnusablePositions(0, unusable)) {
-				debug("Could not eliminate bound variables from substitution " + substituted + " for var " + v);
+				debug("Could not eliminate bound variables from substitution ", substituted, " for var ", v);
 				throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + current);
 			}
 		}
@@ -199,14 +199,14 @@ public abstract class Term {
 		Pair<Term,Term> p = worklist.poll();
 		if (p != null) {
 			if (!typesCompatible(p.first.getType(new ArrayList<Pair<String,Term>>()), p.second.getType(new ArrayList<Pair<String,Term>>()))) {
-				debug("tried to unify " + p.first.substitute(current) + " with " + p.second.substitute(current) +" but types didn't match:");
-				debug("\ttypes were " + p.first.getType(new ArrayList<Pair<String,Term>>()) + " and " + p.second.getType(new ArrayList<Pair<String,Term>>()));
+				debug("tried to unify ", p.first.substitute(current), " with ", p.second.substitute(current)," but types didn't match:");
+				debug("\ttypes were ", p.first.getType(new ArrayList<Pair<String,Term>>()), " and ", p.second.getType(new ArrayList<Pair<String,Term>>()));
 				throw new UnificationFailed("unifying things whose types don't match");
 			}
-			debug("subtask: unify " + p.first.substitute(current) + " with " + p.second.substitute(current));
-			debug("    raw " + p.first + " with " + p.second);
-			debug("    substitution: " + current);
-			debug("    worklist: " + worklist);
+			debug("subtask: unify ", p.first.substitute(current), " with ", p.second.substitute(current));
+			debug("    raw ", p.first, " with ", p.second);
+			debug("    substitution: ", current);
+			debug("    worklist: ", worklist);
 			p.first.unifyCase(p.second, current, worklist);
 		}
 	}
@@ -318,7 +318,7 @@ public abstract class Term {
   
 	public static List<Term> getArgTypes(Term varType, int count) {
 		List<Term> argTypes = new ArrayList<Term>();
-		debug("getting " + count + " args from " + varType);
+		debug("getting ", count, " args from ", varType);
 		for (int i = 0; i < count; ++i) {
 			argTypes.add(((Abstraction)varType).varType);
 			varType = ((Abstraction)varType).getBody();
@@ -328,7 +328,7 @@ public abstract class Term {
 
 	public static List<Term> getArgTypes(Term varType) {
 		List<Term> argTypes = new ArrayList<Term>();
-		debug("getting all args from " + varType);
+		debug("getting all args from ", varType);
 		while (varType instanceof Abstraction) {
 			argTypes.add(((Abstraction)varType).varType);
 			varType = ((Abstraction)varType).getBody();
@@ -391,7 +391,7 @@ public abstract class Term {
 		}
 		
 		Term result = wrappedTerm.apply(argList, 0);
-		debug("\tadjusting " + this + " to " + result);
+		debug("\tadjusting ", this, " to ", result);
 		return result;
 	}
 
@@ -492,7 +492,7 @@ public abstract class Term {
 	 * @return whether the other term is a (possibly improper) subterm of this one.
 	 */
 	public boolean contains(Term other) {
-	  Util.debug(this+" >?= "+other);
+	  Util.debug(this, " >?= ", other);
 	  return this.equals(other) || containsProper(other);
 	}
 }

@@ -39,7 +39,7 @@ public class SyntaxCase extends Case {
 
 	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 	  Context ctx = parent.clone();
-		debug("    ******* case line " + getLocation().getLine());
+		debug("    ******* case line ", getLocation().getLine());
     conclusion.typecheck(ctx);
 
     // make sure we were case-analyzing a nonterminal
@@ -114,7 +114,7 @@ public class SyntaxCase extends Case {
     // reuse code:
     if (assumes != null) concElem = new AssumptionElement(getLocation(),concElem,assumes);
     Term concTerm = concElem.asTerm();
-    Util.debug("concTerm = " + concTerm);
+    Util.debug("concTerm = ", concTerm);
     
     for (FreeVar fv : concTerm.getFreeVariables()) {
       if (ctx.inputVars.contains(fv)) {
@@ -133,9 +133,9 @@ public class SyntaxCase extends Case {
     
     for (Pair<Term, Substitution> pair : caseResult) {
       try {
-        debug("case unify " + concTerm + " and " + pair.first);
+        debug("case unify ", concTerm, " and ", pair.first);
         Substitution computedSub = pair.first.instanceOf(concTerm);
-        debug("result is " + computedSub);
+        debug("result is ", computedSub);
       } catch (UnificationFailed uf) {
         System.out.println("Case " + this + " does not apply to " + ctx.currentCaseAnalysisElement);
         continue;
@@ -178,8 +178,8 @@ public class SyntaxCase extends Case {
       // adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
       AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);
       adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
-      Util.debug("adaptedCaseAnalysis = " + adaptedCaseAnalysis);
-      Util.debug("new adaptationSub = " + adaptationSub);
+      Util.debug("adaptedCaseAnalysis = ", adaptedCaseAnalysis);
+      Util.debug("new adaptationSub = ", adaptationSub);
       
       
       //ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference*2, info.varNames, info.varTypes, null);
@@ -209,7 +209,7 @@ public class SyntaxCase extends Case {
 		Set<FreeVar> oldInputVars = ctx.inputVars;
 		ctx.inputVars = new HashSet<FreeVar>(oldInputVars);
 		ctx.inputVars.addAll(concTerm.getFreeVariables());
-		debug("current case analysis: " + ctx.currentCaseAnalysis);
+		debug("current case analysis: ", ctx.currentCaseAnalysis);
 		for (FreeVar fv : ctx.currentCaseAnalysis.getFreeVariables()) {
 			ctx.inputVars.remove(fv);
 		}
@@ -235,7 +235,7 @@ public class SyntaxCase extends Case {
 		    for (Fact f : ((ClauseUse)concElem).getNonTerminals(ctx, null)) {
 		      Element e = f.getElement();
 		      if (e instanceof NonTerminal) {
-		        Util.debug("Adding var free: " + e);
+		        Util.debug("Adding var free: ", e);
 		        ctx.varfreeNTs.add((NonTerminal)e);
 		      }
 		    }

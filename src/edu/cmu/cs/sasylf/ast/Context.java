@@ -103,7 +103,7 @@ public class Context implements Cloneable {
     }
     for (NonTerminal vfnt : varfreeNTs) {
       Term vft = vfnt.asTerm().substitute(currentSub);
-      debug(vft + " contains " + t + " ?");
+      debug(vft, " contains ", t, " ?");
       if (vft.contains(t)) {
         return true;
       }
@@ -210,7 +210,7 @@ public class Context implements Cloneable {
       if (key instanceof FreeVar) {
         FreeVar fv = (FreeVar)key;
         if (fv.getStamp() != 0) {
-          debug("removing unreachable variable binding: " + fv + " = " + e.getValue());
+          debug("removing unreachable variable binding: ", fv, " = ", e.getValue());
           changed = true;
         } else {
           newSub.add(key, e.getValue());

@@ -36,7 +36,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	 */ 
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		debug("line: " + this.getLocation().getLine());
+		debug("line: ", this.getLocation().getLine());
 		
     // make sure the number of arguments is correct
     RuleLike ruleLike = getRule(ctx);
@@ -117,14 +117,14 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		
     Substitution wrappingSub = new Substitution();		
 		Term ruleTerm = ruleLike.getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
-		Util.debug("wrappingSub for rule application is " + wrappingSub);
+		Util.debug("wrappingSub for rule application is ", wrappingSub);
 
 		// unify the two terms, and check that the appropriate instance relationships hold
 		Substitution sub;
 		try {
-		  Util.debug("appliedTerm = "+ appliedTerm + ", ruleTerm = " + ruleTerm);
+		  Util.debug("appliedTerm = "+ appliedTerm, ", ruleTerm = ", ruleTerm);
 			sub = appliedTerm.unify(ruleTerm);
-			Util.debug("  gets sub = " + sub);
+			Util.debug("  gets sub = ", sub);
 
 			// check to make sure the user didn't assume too much in derivTerm
 			// for RULES, this is already covered
@@ -154,7 +154,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					FreeVar t = v.substitute(sub).getEtaEquivFreeVar();
 					// TODO: JTB: I think this error is redundant; it will be detected below if not here
 					if (t == null  /*!(t instanceof FreeVar) -- without calling getEta... above*/) {
-						debug("conclusion " + ruleConcTerm + " ruleConcVarSet was " + ruleConcVarSet + " problem with " + v);
+						debug("conclusion ", ruleConcTerm, " ruleConcVarSet was ", ruleConcVarSet, " problem with ", v);
 						ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying theorem " + getRuleName()
 								+ " to the argument", this, "incorrectly instantiated an output variable " + v + " with a term " + v.substitute(sub) + "\n\twhile unifying " + appliedTerm + " with rule term " + ruleTerm);
 					}
@@ -166,7 +166,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				//intersectSet.retainAll(ctx.outputVars);
 				//if (!intersectSet.isEmpty())
 				//	ErrorHandler.report("cannot use variable name(s) " + intersectSet + " that is an output of the theorem", this);
-				debug("line " + this.getLocation() + " adds vars " + freshVarSet);
+				debug("line ", this.getLocation(), " adds vars ", freshVarSet);
 				ctx.inputVars.addAll(freshVarSet);
 			} else if (contextCheckNeeded) {
 			  for (FreeVar v : ruleConcVarSet) {
@@ -182,9 +182,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			}
 			
 			if (!sub.avoid(mustAvoid)) {
-				debug("while unifying " + appliedTerm + " with " + ruleTerm + " and sub " + sub + "\n\ttrying to avoid " + mustAvoid);
-				debug("\tctx.inputVars = " + ctx.inputVars);
-				debug("\tctx.currentSub = " + ctx.currentSub);
+				debug("while unifying ", appliedTerm, " with ", ruleTerm, " and sub ", sub, "\n\ttrying to avoid ", mustAvoid);
+				debug("\tctx.inputVars = ", ctx.inputVars);
+				debug("\tctx.currentSub = ", ctx.currentSub);
 				Set<FreeVar> unavoided = sub.selectUnavoidable(mustAvoid);
         ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided.iterator().next() + ")", this, "\t(could not remove variables "+unavoided+ " from sub " + sub + ")");
 			}			
@@ -199,13 +199,13 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			} catch (UnificationFailed e2) {
 				// do nothing; can't give good error message
 			}
-			debug("\tctx.currentSub = " + ctx.currentSub);
-			debug("\tctx.adaptationSub = " + ctx.adaptationSub);
+			debug("\tctx.currentSub = ", ctx.currentSub);
+			debug("\tctx.adaptationSub = ", ctx.adaptationSub);
 			if (explanationTerm == null)
 				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The rule cannot legally be applied to the arguments", this,
 						"(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);
 			else {
-				debug("(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);
+				debug("(was checking ", appliedTerm, " instance of ", ruleTerm, ",\n got exception ", e);
 				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments", this,
 						"SASyLF computed that result LF term should be " + explanationTerm);
 			}

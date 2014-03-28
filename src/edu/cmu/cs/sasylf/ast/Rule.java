@@ -233,7 +233,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		  for (int i=0; i < n; ++i) {
 		    if (conclusion.getElements().get(i) instanceof Variable &&
 		        ctx.varfreeNTs.contains(clause.getElements().get(i))) {
-		      Util.debug("no vars in " + clause);
+		      Util.debug("no vars in ", clause);
 		      return result;
 		    }
 		  }
@@ -241,7 +241,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		
 		// compute term for rule
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
-		Util.debug("\tfor rule " + getName() + " computed rule term " + ruleTerm);
+		Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
 
 		/*List<? extends Term > args = ((Application)ruleTerm).getArguments();
 		Term concTerm = args.get(args.size()-1);
@@ -258,7 +258,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		// see if the rule applies
 		Pair<Term, Substitution> pair = checkRuleApplication(term, ruleTerm, appliedTerm);
 		if (pair != null) {
-			debug("\tadding " + pair.first);
+			debug("\tadding ", pair.first);
 			result.add(pair);
 		}
 		
@@ -286,7 +286,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				 * where J is an instance of a judgment form.
 				 * Goal: produce a new term of the form [fn x => fn y => J(x)]
 				 */
-				Util.debug("applied term is " + appliedTerm);
+				Util.debug("applied term is ", appliedTerm);
 								
 				// adapt the rule term
 				Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
@@ -315,8 +315,8 @@ public class Rule extends RuleLike implements CanBeCase {
 				appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
 
 				//now try it out
-				Util.debug("found a term with assumptions!\n\truleTerm2 = " + ruleTerm2 + "\n\tappliedTerm2 = " + appliedTerm2);
-				Util.debug("\n\truleTerm = " + ruleTerm + "\n\tappliedTerm = " + appliedTerm);
+				Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
+				Util.debug("\n\truleTerm = ", ruleTerm, "\n\tappliedTerm = ", appliedTerm);
 				pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
 				if (pair != null) {
 				  debug("\tadded result!");
@@ -344,7 +344,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				// see if the rule applies
 				pair = checkRuleApplication(term, ruleTerm, appliedTerm);
 				if (pair != null) {
-				  debug("\tadding " + pair.first);
+				  debug("\tadding ", pair.first);
 					result.add(pair);
 				}
 				
@@ -362,9 +362,9 @@ public class Rule extends RuleLike implements CanBeCase {
 		Substitution sub = null;
 		try {
 			sub = ruleTerm.unify(appliedTerm);
-			Util.debug("found sub " + sub + " for case analyzing " + term + " with rule " + getName());
+			Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
 		} catch (UnificationFailed e) {
-			Util.debug("unification failed on " + ruleTerm + " and " + appliedTerm);
+			Util.debug("unification failed on ", ruleTerm, " and ", appliedTerm);
 			sub = null;
 		}
 		if (sub == null)

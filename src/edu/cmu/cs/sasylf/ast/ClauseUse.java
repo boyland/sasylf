@@ -217,8 +217,8 @@ public class ClauseUse extends Clause {
 					for (Element boundVarElem : defB.getElements()) {
 						int varIndex = cons.getIndexOf((Variable)boundVarElem);
 						if (varIndex == -1)
-							debug("could not find " + boundVarElem + " in clause " + cons
-									+ "\n    context is " + this);
+							debug("could not find ", boundVarElem, " in clause ", cons,
+									  "\n    context is ", this);
 						Element varElement = getElements().get(varIndex);
 						if (!(varElement instanceof Variable))
 							ErrorHandler.report(EXPECTED_VARIABLE, "Expected variable matching " + boundVarElem + " but found the non-variable " + varElement, varElement);
@@ -383,26 +383,26 @@ public class ClauseUse extends Clause {
 				List<Term> varTypes = new ArrayList<Term>();
 				for (Pair<String, Term> p : varBindings)
 					varTypes.add(p.second);
-				Util.debug("varTypes = "+ varTypes);
+				Util.debug("varTypes = ", varTypes);
 				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub, 1);
 				ruleClauseTerm = ruleClauseTerm.substitute(bindingSub);
-				Util.debug("unifying terms " + myClauseTerm + " and " + ruleClauseTerm + " from " + this + " and " + varRuleConcAssumption);
+				Util.debug("unifying terms ", myClauseTerm, " and ", ruleClauseTerm, " from ", this, " and ", varRuleConcAssumption);
 				Substitution adaptationSub = myClauseTerm.unifyAllowingBVs(ruleClauseTerm);
 				// transform adaptationSub to adapt from ruleClauseTerm to myClauseTerm
 				adaptationSub.avoid(myClauseTerm.getFreeVariables());
-				Util.debug("adaptationSub = "+ adaptationSub);
-				Util.debug("\tand bindingSub = " + bindingSub);
+				Util.debug("adaptationSub = ", adaptationSub);
+				Util.debug("\tand bindingSub = ", bindingSub);
 				if (derivTerm != null) {
-					Util.debug("\torig   derivTerm = " + derivTerm);
+					Util.debug("\torig   derivTerm = ", derivTerm);
 					derivTerm.freshSubstitution(ruleFreshSub);
 					derivTerm = derivTerm.substitute(ruleFreshSub);
 					bindingSub.incrFreeDeBruijn(1); //XXX: This is unclear (JTB)
 					derivTerm = derivTerm.substitute(bindingSub);
-					Util.debug("\tmiddle derivTerm = " + derivTerm);
+					Util.debug("\tmiddle derivTerm = ", derivTerm);
 					derivTerm = derivTerm.substitute(adaptationSub);
 					// derivTerm = derivTerm.incrFreeDeBruijn(-1);  <-- KLUDGE no longer needed since this method corrected
 				}
-				Util.debug("\tresult derivTerm = " + derivTerm);
+				Util.debug("\tresult derivTerm = ", derivTerm);
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				if (derivTerm != null) {
@@ -426,7 +426,7 @@ public class ClauseUse extends Clause {
 
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub, boolean wrapUnrooted) {
 		Term result = wrapWithOuterLambdas(term, matchTerm, getAdaptationNumber(term, matchTerm, wrapUnrooted), sub, wrapUnrooted);
-		debug("adapation of " + term + " to " + result + " with sub " + sub + "\n\tsub applied is: " + term.substitute(sub));
+		debug("adapation of ", term, " to ", result, " with sub ", sub, "\n\tsub applied is: ", term.substitute(sub));
 		return result;
 	}
 
@@ -494,7 +494,7 @@ public class ClauseUse extends Clause {
 	      varTypes.add(absMatchTerm.varType);
 	      varNames.add(absMatchTerm.varName);
 	    } else {
-	      Util.debug("Skipping dependency on variable " + absMatchTerm.varName + " for " + base);
+	      Util.debug("Skipping dependency on variable ", absMatchTerm.varName, " for ", base);
 	    }
       if (j < i-1)
         absMatchTerm = (Abstraction) absMatchTerm.getBody();
@@ -533,14 +533,14 @@ public class ClauseUse extends Clause {
 	public static Term doWrap(Term term, List<String> varNames, List<Term> varTypes, Substitution sub) {
 
 		// bind in free vars
-		debug("before binding in free vars: " + term + " with types " + varTypes);
+		debug("before binding in free vars: ", term, " with types ", varTypes);
 		term.bindInFreeVars(varTypes, sub, 1);
 		term = term.substitute(sub);
 		/*for (int j = i-1; j >= 0; --j) {
 			term.bindInFreeVars(varTypes.get(j), sub, i-j);
 			term = term.substitute(sub);
 		}*/
-		debug("after binding in free vars: " + term + " with sub " + sub);
+		debug("after binding in free vars: ", term, " with sub ", sub);
 
 		// do the wrapping
 		Constant typeFamily = term.getTypeFamily();
@@ -552,9 +552,9 @@ public class ClauseUse extends Clause {
 		    term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
 		    typeFamily = varFamily;
 		  } else {
-		    Util.debug("Skipping " + varNames.get(j) + " in " + term);
+		    Util.debug("Skipping ", varNames.get(j), " in ", term);
 		    term = term.incrFreeDeBruijn(-1);
-		    Util.debug("  term is now " + term);
+		    Util.debug("  term is now ", term);
 		  }
 		}
 
@@ -570,10 +570,10 @@ public class ClauseUse extends Clause {
 			return term;
 		Abstraction absMatchTerm = (Abstraction) matchTerm;
 		term = oldWrapWithOuterLambdas(term, absMatchTerm.getBody(), i-1, sub);
-		debug("before binding in free vars: " + term.substitute(sub));
+		debug("before binding in free vars: ", term.substitute(sub));
 		term.bindInFreeVars(absMatchTerm.varType, sub);
 		term = term.substitute(sub);
-		debug("after binding in free vars: " + term + " with sub " + sub);
+		debug("after binding in free vars: ", term, " with sub ", sub);
 		return Abstraction.make(absMatchTerm.varName, absMatchTerm.varType, term);
 	}
 	

@@ -98,7 +98,7 @@ public class AssumptionElement extends Element {
 
   @Override
   protected Term computeTerm(List<Pair<String, Term>> varBindings) {
-    debug("Compute: " + this);
+    debug("Compute: ", this);
     int initialBindingSize = varBindings.size();
     if (context instanceof ClauseUse)
       ((ClauseUse)context).readAssumptions(varBindings, base.getType() instanceof Judgment);
@@ -107,7 +107,7 @@ public class AssumptionElement extends Element {
     while (varBindings.size() > initialBindingSize) {
       varBindings.remove(varBindings.size()-1);
     }
-    Util.debug("  result = " + t);
+    Util.debug("  result = ", t);
     return t;
   }
   

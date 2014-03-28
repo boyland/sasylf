@@ -171,7 +171,7 @@ public class NonTerminal extends Element {
 	void checkBindings(Map<String, List<ElemType>> bindingTypes, Node nodeToBlame) {
 		List<ElemType> myType = new ArrayList<ElemType>();
 		List<ElemType> prevType = bindingTypes.get(getSymbol());
-		debug("binding for " + this + " is " + bindingTypes);
+		debug("binding for ", this, " is ", bindingTypes);
 		if (prevType == null) {
 			bindingTypes.put(getSymbol(), myType);
 		} else {

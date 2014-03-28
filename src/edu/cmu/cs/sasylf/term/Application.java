@@ -431,7 +431,7 @@ public class Application extends Term {
 				for (int i = 0; i < sizeDelta; ++i)
 					myNewArgs.add(arguments.get(i));
 				Application newMe = (Application) function.apply(myNewArgs, 0);
-				debug("fixing up eta long case in pattern unification: " + otherVar + " ==> " + newMe);
+				debug("fixing up eta long case in pattern unification: ", otherVar, " ==> ", newMe);
 				current.add(otherVar, newMe);
 	
 				unifyHelper(current, worklist);
