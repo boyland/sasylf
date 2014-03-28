@@ -5,6 +5,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -20,6 +21,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.sasylf.project.MyNature;
 import org.sasylf.project.ProofBuilder;
 
 /**
@@ -122,6 +124,18 @@ public class NewProofPackageWizardPage extends WizardPage {
 		  updateStatus("Project is closed.  Can't create SASyLF Proof package");
 		  return;
 		}
+		
+		try {
+      if (!project.hasNature(MyNature.NATURE_ID)) {
+        updateStatus("Can only create proof packages in SASyLF Projects");
+        return;
+      }
+    } catch (CoreException e) {
+      // should never happen
+      e.printStackTrace();
+      updateStatus(e.toString());
+      return;
+    }
 		
 		if (packageName.length() == 0) {
 			updateStatus("Need to specify package name");

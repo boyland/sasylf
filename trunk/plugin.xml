@@ -297,9 +297,17 @@
                tooltip="Create a new SASyLF proof package">
             <visibleWhen
                   checkEnabled="false">
-               <reference
-                     definitionId="org.sasylf.inPerspective">
-               </reference>
+               <and>
+                    <reference definitionId="org.sasylf.inPerspective"/>
+                    <with variable="selection">
+      				    <iterate ifEmpty="false">
+      				        <adapt type="org.eclipse.core.resources.IResource">
+          						<test property="org.eclipse.core.resources.projectNature" 
+                					  value="org.sasylf.nature"/>
+       						</adapt>
+         			    </iterate>
+         		    </with>
+               </and>
             </visibleWhen>
          </command>
          <command
