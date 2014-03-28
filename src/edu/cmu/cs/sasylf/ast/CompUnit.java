@@ -102,8 +102,7 @@ public class CompUnit extends Node {
 		Context ctx = new Context(this);
 		try {
 			getVariables(ctx);
-			checkFilename(filename);
-			typecheck(ctx);
+			typecheck(ctx,filename);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
 			//e.printStackTrace();
@@ -112,16 +111,7 @@ public class CompUnit extends Node {
 	}
 	
 	public boolean typecheck() {
-    int oldCount = ErrorHandler.getErrorCount();
-    Context ctx = new Context(this);
-    try {
-      getVariables(ctx);
-      typecheck(ctx);
-    } catch (SASyLFError e) {
-      // ignore the error; it has already been reported
-      //e.printStackTrace();
-    }
-    return ErrorHandler.getErrorCount() == oldCount;	  
+	  return typecheck((String)null);  
 	}
 
 	private void checkFilename(String filename) {
@@ -156,7 +146,8 @@ public class CompUnit extends Node {
 	// computes Syntax for each NonTerminal
 	// converts NonTerminal into Variable where appropriate
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
-	public void typecheck(Context ctx) {
+	public void typecheck(Context ctx, String filename) {
+    if (filename != null) checkFilename(filename);
 		for (Syntax syn: syntax) {
 			if (declaredTerminals.contains(syn.getNonTerminal().getSymbol()))
 				ErrorHandler.report("Syntax nonterminal " + syn.getNonTerminal().getSymbol() + " may not appear in the terminals list", syn);
