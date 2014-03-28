@@ -21,8 +21,8 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.sasylf.Activator;
-import org.sasylf.editors.propertyOutline.ProofElement;
-import org.sasylf.editors.propertyOutline.ProofOutline;
+import org.sasylf.views.ProofElement;
+import org.sasylf.views.ProofOutline;
 
 /**
  * @author boyland

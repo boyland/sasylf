@@ -30,10 +30,10 @@ import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.Marker;
 import org.sasylf.Preferences;
 import org.sasylf.ProofChecker;
-import org.sasylf.editors.propertyOutline.ProofElement;
 import org.sasylf.util.CompletionProposal;
 import org.sasylf.util.CompletionProposalMarkerResolution;
 import org.sasylf.util.EclipseUtil;
+import org.sasylf.views.ProofElement;
 
 import edu.cmu.cs.sasylf.ast.Errors;
 

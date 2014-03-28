@@ -11,8 +11,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.sasylf.editors.ProofEditor;
-import org.sasylf.editors.propertyOutline.ProofElement;
-import org.sasylf.editors.propertyOutline.ProofOutline;
+import org.sasylf.views.ProofElement;
+import org.sasylf.views.ProofOutline;
 
 /**
  * Context menu handler for "Open Declaration" 

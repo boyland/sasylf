@@ -36,10 +36,10 @@ import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.sasylf.ProofChecker;
-import org.sasylf.editors.propertyOutline.ProofOutline;
 import org.sasylf.handlers.QuickFixHandler;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
+import org.sasylf.views.ProofOutline;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.CompUnit;
