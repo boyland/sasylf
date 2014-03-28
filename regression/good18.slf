@@ -1,0 +1,138 @@
+/** or stopped working */
+package regression;
+
+terminals S
+
+syntax
+   n ::= 0 | S n
+
+judgment nat-eq: n = n
+
+    ----- eq
+    n = n   
+    
+judgment gt: n > n
+
+    ------- gt-1
+    S n > n
+    
+     n1 > n2
+    --------- gt-s
+    S n1 > n2
+
+    
+lemma succ-preserves-eq:
+  forall d: n1 = n2
+  exists S n1 = S n2.
+  use inversion of eq on d
+  proof by rule eq
+end lemma
+    
+    
+lemma succ-implies-gt-zero:
+  forall n
+  exists S n > 0.
+  proof by induction on n:
+    case 0 is
+      proof by rule gt-1
+    end case
+    case S n' is
+      d': S n' > 0 by induction hypothesis on n'
+      _: S S n' > 0 by rule gt-s on d'
+    end case
+  end induction
+end lemma
+
+lemma succ-preserves-gt:
+  forall d1: n1 > n2
+  exists S n1 > S n2.
+  proof by induction on d1:
+    case rule
+      ------------ gt-1
+      _: S n2 > n2
+    is
+      _: S S n2 > S n2 by rule gt-1
+    end case
+    case rule
+      d1: n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+    is
+      d2: S n1' > S n2 by induction hypothesis on d1
+      proof by rule gt-s on d2
+    end case
+  end induction
+end lemma
+
+lemma succ-preserves-gt-converse:
+  forall d1: S n1 > S n2
+  exists n1 > n2.
+  proof by induction on d1:
+    case rule
+      -------------- gt-1
+      _: S S n2 > S n2
+    is
+      _: S n2 > n2 by rule gt-1
+    end case
+    case rule
+      d1: n1 > S n2
+      --------------- gt-s
+      _: (S n1) > S n2
+    is
+      proof by case analysis on n1:
+        case S n1' is
+          d':  n1' > n2 by induction hypothesis on d1
+          _: S n1' > n2 by rule gt-s on d' 
+        end case
+        case 0 is
+          proof by contradiction on d1
+        end case
+      end case analysis
+    end case
+  end induction
+end lemma
+
+theorem classify:
+  forall n1
+  forall n2
+  exists n2 > n1 or n1 = n2 or n1 > n2.
+  proof by induction on n1:
+    case 0 is
+      proof by case analysis on n2:
+        case 0 is
+          t: 0 = 0 by rule eq
+          proof by t
+        end case
+        case S n2' is
+          d: S n2' > 0 by lemma succ-implies-gt-zero on n2'
+          proof by d
+        end case
+      end case analysis
+    end case
+    case S n1' is
+      proof by case analysis on n2:
+        case 0 is
+          d: S n1' > 0 by lemma succ-implies-gt-zero on n1'
+          proof by d
+        end case
+        case S n2' is
+          d1: n2' > n1' or n1' = n2' or n1' > n2' by induction hypothesis on n1', n2'
+          proof by case analysis on d1:
+            case or d2: n2' > n1' is
+              d3: S n2' > S n1' by lemma succ-preserves-gt on d2
+              proof by d3
+            end case
+            case or d4: n1' > n2' is
+              d5: S n1' > S n2' by lemma succ-preserves-gt on d4
+              proof by d5
+            end case
+            case or d6: n1' = n2' is
+              d7: S n1' = S n2' by lemma succ-preserves-eq on d6
+              proof by d7
+            end case
+          end case analysis
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
