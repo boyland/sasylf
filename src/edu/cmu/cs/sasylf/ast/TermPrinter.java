@@ -73,18 +73,19 @@ public class TermPrinter {
     // System.out.println("as element : " + x);
     if (x instanceof FreeVar) {
       if (varMap.containsKey(x)) return varMap.get(x);
-      if (ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location);
       Term ty = ((FreeVar) x).getBaseType();
       if (!(ty instanceof Constant)) {
         throw new RuntimeException("base type of " + x + " = " + ty);
       }
       String base = ty.toString();
+      Syntax syn = ctx.synMap.get(base);
+      if (ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location, syn);
       for (int i=0; true; ++i) {
         FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
         if (ctx.isKnown(base + i)) continue;
         if (used.contains(v)) continue;
         used.add(v);
-        NonTerminal result = new NonTerminal(v.toString(),location);
+        NonTerminal result = new NonTerminal(v.toString(),location, syn);
         varMap.put((FreeVar)x, result);
         return result;
       }
@@ -304,10 +305,9 @@ public class TermPrinter {
           FreeVar fake = new FreeVar(newName,nt.getTypeTerm());
           if (used.contains(fake)) continue;
           used.add(fake);
-          copy = new NonTerminal(newName, location);
+          copy = new NonTerminal(newName, location, nt.getType());
           break;
         }
-        copy.setType(nt.getType());
         newElems.set(i, copy);
       } else if (e instanceof Variable) {
         newElems.set(i, v);
