@@ -23,6 +23,8 @@ public class DerivationUnproved extends DerivationWithArgs {
 	      form = ": " + TermPrinter.toString(termPrinter.asClause(t));
 	    } catch (RuntimeException ex) {
 	      ex.printStackTrace();
+	      form = ": (internal) " + t;
+	      // ErrorHandler.report(Errors.INTERNAL_ERROR, ": Couldn't print " + t, this);
 	    }
 	  }
 	  ErrorHandler.warning(Errors.DERIVATION_UNPROVED, form, this, t.toString());
