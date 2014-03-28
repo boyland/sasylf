@@ -1,4 +1,4 @@
-package org.sasylf.editors.propertyOutline;
+package org.sasylf.views;
 
 import java.util.ArrayList;
 import java.util.List;
