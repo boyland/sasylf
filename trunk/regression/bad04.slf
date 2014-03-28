@@ -2,7 +2,7 @@
  * sasylf says you don't need to include variable cases
  */
  
-package edu.uwm.cs.structural; //! testing package warning
+package edu.uwm.cs.structural;
  
 
 terminals fn in Fn Unit unit contradiction
