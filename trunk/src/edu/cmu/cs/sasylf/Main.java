@@ -31,7 +31,7 @@ public class Main {
 			System.err.println("   --help      print this message");
 			System.err.println("   --verbose   prints out theorem names as it checks them");
 			System.err.println("   --LF        extra info about LF terms in certain error messages");
-			System.err.println("   --root=dir  change to this directory before reading files.");
+			System.err.println("   --root=dir  use the given directory for package/module checking.");
 			return;
 		}
 		int oldErrorCount = 0;
@@ -88,7 +88,8 @@ public class Main {
 				  System.err.println("Could not open file " + filename);
 				  System.exit(-1);
 				}
-				cu.typecheck(filename);
+				if (dir == null) cu.typecheck();
+				else cu.typecheck(filename);
 			} catch (SASyLFError e) {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();

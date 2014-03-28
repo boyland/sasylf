@@ -10,6 +10,7 @@ import java.util.Collections;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -20,6 +21,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.osgi.framework.Bundle;
 import org.sasylf.editors.MarkerResolutionGenerator;
+import org.sasylf.project.MyNature;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.EclipseUtil;
 
@@ -156,8 +158,16 @@ public class ProofChecker  {
   }
 	
   public static String getProofFolderRelativePathString(IResource res) {
-    IPath rpath = ProofBuilder.getProofFolderRelativePath(res);
-    return rpath.toOSString();
+    IProject p = res.getProject();
+    try {
+      if (p.hasNature(MyNature.NATURE_ID)) {
+        IPath rpath = ProofBuilder.getProofFolderRelativePath(res);
+        return rpath.toOSString();
+      }
+    } catch (CoreException e) {
+      // Apparently not.
+    }
+    return null;
   }
 
   private static CompUnit analyzeSlf(IResource res, Reader contents) {
