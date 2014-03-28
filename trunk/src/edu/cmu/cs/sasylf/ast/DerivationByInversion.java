@@ -70,12 +70,12 @@ public class DerivationByInversion extends DerivationWithArgs {
           // TODO: refactor this with DerivationByAnalysis
           Pair<Term,Substitution> newPair;
           try {
-            Util.debug("term = " + p.first);
-            Util.debug("sub = " + p.second);
-            Util.debug("current = " + ctx.currentSub);
+            Util.debug("term = ", p.first);
+            Util.debug("sub = ", p.second);
+            Util.debug("current = ", ctx.currentSub);
             Substitution newSubstitution = new Substitution(p.second);
             newSubstitution.compose(ctx.currentSub);
-            Util.debug("newSub = " + newSubstitution);
+            Util.debug("newSub = ", newSubstitution);
             newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
           } catch (UnificationFailed ex) {
             Util.debug("case no longer feasible.");
@@ -89,14 +89,14 @@ public class DerivationByInversion extends DerivationWithArgs {
       if (caseResult.isEmpty()) continue;
       Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
       if (rule == rulel) {
-        Util.debug("inversion: caseResult = " + caseResult);
+        Util.debug("inversion: caseResult = ", caseResult);
         Pair<Term,Substitution> pair = iterator.next();
         if (iterator.hasNext()) {
           ErrorHandler.report("Cannot use inversion: two or more instance of '" + ruleName + "' apply.", this);
         }
         Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
         result = result.substitute(pair.second);
-        Util.debug("  after adapt/subst, result = " + result);
+        Util.debug("  after adapt/subst, result = ", result);
         ctx.composeSub(pair.second);
         Application ruleInstance = (Application)pair.first;
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());

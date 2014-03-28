@@ -36,7 +36,7 @@ public abstract class AndOrJudgment extends Judgment {
       r.typecheck(ctx, this);
     }
     for (Judgment j : getJudgments()) {
-      Util.debug("subordination: " + j.typeTerm() + " < " + typeTerm());
+      Util.debug("subordination: ", j.typeTerm(), " < ", typeTerm());
       FreeVar.setAppearsIn(j.typeTerm(), typeTerm());
     }
   }

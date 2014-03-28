@@ -186,7 +186,7 @@ public class CompUnit extends Node {
 			debug2(ent.toString());
 		}
 		for (GrmRule r : ctx.ruleSet) {
-			debug_parse(r.toString());
+			debug_parse(r);
 		}
 
 		for (Judgment j: judgments) {
@@ -221,10 +221,10 @@ public class CompUnit extends Node {
 					Term typeTerm = constant.getType();
 					while (typeTerm instanceof Abstraction) {
 						Abstraction abs = (Abstraction)typeTerm;
-						Util.debug(abs.varType.baseTypeFamily() + " < " + synType);
+						Util.debug(abs.varType.baseTypeFamily(), " < ", synType);
 						FreeVar.setAppearsIn(abs.varType.baseTypeFamily(), synType);
 						for (Term t = abs.varType; t instanceof Abstraction; t = ((Abstraction)t).getBody()){
-	            Util.debug(((Abstraction)t).varType.baseTypeFamily() + " < " + t.baseTypeFamily());
+	            Util.debug(((Abstraction)t).varType.baseTypeFamily(), " < ", t.baseTypeFamily());
 						  FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
 						}
 						typeTerm = abs.getBody();
@@ -240,22 +240,22 @@ public class CompUnit extends Node {
 	    for (Element e : j.getForm().getElements()) {
 	      if (e instanceof NonTerminal) {
 	        Term nType = ((NonTerminal)e).getTypeTerm();
-	        Util.debug("subordination: " + nType + " < " + jType);
+	        Util.debug("subordination: ", nType, " < ", jType);
           FreeVar.setAppearsIn(nType, jType);
 	      }
 	    }
 	    for (Rule r : j.getRules()) {
 	      if (r.isAssumption()) {
-	        Util.debug("subordination: " + jType + " < " + jType + " forced");
+	        Util.debug("subordination: ", jType, " < ", jType, " forced");
 	        FreeVar.setAppearsIn(jType,jType);
 	        Term cType = r.getAssumes().getTypeTerm();
-	        Util.debug("subordination: " + jType + " < " + cType + " forced.");
+	        Util.debug("subordination: ", jType, " < ", cType, " forced.");
           FreeVar.setAppearsIn(jType,cType);
 	      }
 	      for (Clause cl : r.getPremises()) {
 	        if (!(cl instanceof ClauseUse)) continue; // avoid recovered error -> internal error
 	        Term pType = ((ClauseUse)cl).getTypeTerm();
-	        Util.debug("subordination: " + pType + " < " + jType);
+	        Util.debug("subordination: ", pType, " < ", jType);
           FreeVar.setAppearsIn(pType, jType);
 	      }
 	    }

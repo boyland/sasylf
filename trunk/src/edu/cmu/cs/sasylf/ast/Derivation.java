@@ -134,24 +134,24 @@ public abstract class Derivation extends Fact {
 	 */
 	public static boolean checkMatch(Node node, Context ctx, Term matchTerm, Term suppliedTerm, String errorMsg) {
     try {
-      debug("check match = " + matchTerm + ", supplied = " + suppliedTerm);
-      debug("  current sub = " + ctx.currentSub);
-      debug("  wrapping sub = " + ctx.adaptationSub);
-      debug("  current inputVars = " + ctx.inputVars);
+      debug("check match = ", matchTerm, ", supplied = ", suppliedTerm);
+      debug("  current sub = ", ctx.currentSub);
+      debug("  wrapping sub = ", ctx.adaptationSub);
+      debug("  current inputVars = ", ctx.inputVars);
       Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
-      debug("  instance sub = " + instanceSub);
+      debug("  instance sub = ", instanceSub);
       // must not require instantiating free variables
       if (!instanceSub.avoid(ctx.inputVars)) {
         Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
         if (errorMsg == null) return false;
         ErrorHandler.report(errorMsg,node,"  could not avoid vars " + unavoidable);
       }
-      debug("Adding to ctx: " + instanceSub);
+      debug("Adding to ctx: ", instanceSub);
       ctx.currentSub.compose(instanceSub);
       // we need to update input vars with new variables:
       for (FreeVar v : matchTerm.getFreeVariables()) {
         if (ctx.currentSub.getSubstituted(v) == null && !ctx.inputVars.contains(v)) {
-          debug("Adding new free variable: " + v);
+          debug("Adding new free variable: ", v);
           ctx.inputVars.add(v);
         }
       }

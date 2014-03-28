@@ -232,7 +232,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		}
 		boolean isContext = terminalCaseCount == 1 && contextCaseCount > 0; 
 		if (isContext)
-			debug("Found a context: " + this.getNonTerminal());
+			debug("Found a context: ", this.getNonTerminal());
 		return isContext ? contextCaseCount : 0;
   }
 
@@ -248,7 +248,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 			if (eType == this) ++recs;
 		}
 		if (recs != 1) {
-			debug("Not found: " + c + " has wrong number of recursive references: " + recs);
+			debug("Not found: ", c, " has wrong number of recursive references: ", recs);
 			return false;
 		}
 		
@@ -256,12 +256,12 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		for (Element e : c.getElements()) {
 			if (e instanceof Variable) ++vars;
 			if (e instanceof Binding) {
-			  debug("not found: " + c + " has a binding " + e);
+			  debug("not found: ", c, " has a binding ", e);
 			  return false;
 			}
 		}
 		if (vars != 1) {
-		  debug("Not found: " + c + " has wrong number of variables: " + vars);
+		  debug("Not found: ", c, " has wrong number of variables: ", vars);
       return false;
     }
 		

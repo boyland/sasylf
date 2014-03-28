@@ -55,8 +55,8 @@ public class RuleCase extends Case {
 
 	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 	  Context ctx = parent.clone();
-		debug("line "+ this.getLocation().getLine() + " case " + ruleName);
-		debug("    currentSub = "+ ctx.currentSub);
+		debug("line "+ this.getLocation().getLine(), " case ", ruleName);
+		debug("    currentSub = ", ctx.currentSub);
 		rule = (Rule) ctx.ruleMap.get(ruleName);
 		if (rule == null)
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
@@ -108,7 +108,7 @@ public class RuleCase extends Case {
 		concTerm = concTerm.substitute(ctx.currentSub);
 		Substitution adaptationSub = new Substitution();
 		Term adaptedCaseAnalysis = ctx.currentCaseAnalysisElement.adaptTermTo(ctx.currentCaseAnalysis, concTerm, adaptationSub);
-		debug("adapation: " + adaptationSub + "\n\tapplied to " + ctx.currentCaseAnalysis + "\n\tis " + ctx.currentCaseAnalysis.substitute(adaptationSub));
+		debug("adapation: ", adaptationSub, "\n\tapplied to ", ctx.currentCaseAnalysis, "\n\tis ", ctx.currentCaseAnalysis.substitute(adaptationSub));
 		
 		// did we increase the number of lambdas?
 		int lambdaDifference =  adaptedCaseAnalysis.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
@@ -143,23 +143,23 @@ public class RuleCase extends Case {
 			ctx.innermostGamma = info.nextContext;
 			verify(info.nextContext != null, "internal invariant violated");
 		}
-		debug("concTerm: " + concTerm);
+		debug("concTerm: ", concTerm);
 		Term adaptedConcTerm = DerivationByAnalysis.adapt(concTerm, conclusion.getElement(), ctx, false); //concTerm.substitute(adaptationSub);
-		debug("adapted concTerm: " + adaptedConcTerm);
+		debug("adapted concTerm: ", adaptedConcTerm);
 
 		
 		// find the conclusion term from the matched case term
 		//Term concTerm = ((Application)computedCaseTerm).getArguments().get(((Application)computedCaseTerm).getArguments().size()-1);
 		Substitution unifyingSub = null;
 		try {
-			debug("case unify " + adaptedConcTerm + " with " + adaptedCaseAnalysis);
+			debug("case unify ", adaptedConcTerm, " with ", adaptedCaseAnalysis);
 			unifyingSub = adaptedConcTerm.unify(adaptedCaseAnalysis);
 		} catch (EOCUnificationFailed uf) {
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 								+ "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);			
 		} catch (UnificationFailed uf) {
 			//uf.printStackTrace();
-			debug(this.getLocation() + ": was unifying " + adaptedConcTerm + " and " + adaptedCaseAnalysis);
+			debug(this.getLocation(), ": was unifying ", adaptedConcTerm, " and ", adaptedCaseAnalysis);
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedCaseAnalysis + " for the conclusion");
 		} catch (SASyLFError error) {
 			throw error;
@@ -187,24 +187,24 @@ public class RuleCase extends Case {
 		for (Pair<Term,Substitution> pair : caseResult)
 		  try {
 				pairSub = new Substitution(pair.second);
-				debug("\tpair.second was " + pairSub);
+				debug("\tpair.second was ", pairSub);
 				pairSub.selectUnavoidable(ctx.inputVars);
 				candidate = pair.first.substitute(pairSub);
 				
 				// Apply the unifying substitution to caseTerm before comparing, in case caseTerm uses a variable it unifies elsewhere inappropriately (see homework8.slf file from Boyland) 
-				debug("\tunifying sub = " + unifyingSub);
+				debug("\tunifying sub = ", unifyingSub);
 				caseTerm = caseTerm.substitute(unifyingSub);
-				debug("case analysis: does " + caseTerm + " generalize " + candidate);
-				debug("\tpair.second is now " + pairSub);
+				debug("case analysis: does ", caseTerm, " generalize ", candidate);
+				debug("\tpair.second is now ", pairSub);
 				
 				
 				Substitution computedSub = candidate.instanceOf(caseTerm);//caseTerm.unify(computedCaseTerm1);
 				computedCaseTerm = candidate;
-				debug("\told input vars = " + newInputVars);
-				debug("\tcomputed sub = " + computedSub);
+				debug("\told input vars = ", newInputVars);
+				debug("\tcomputed sub = ", computedSub);
 				Set<FreeVar> unavoidableInputVars = pairSub.selectUnavoidable(newInputVars);
 				if (!unavoidableInputVars.isEmpty())
-				  debug("\tremoving input vars " + unavoidableInputVars);
+				  debug("\tremoving input vars ", unavoidableInputVars);
 				newInputVars.removeAll(unavoidableInputVars);
 				Set<Term> computedSubDomain = new HashSet<Term>(computedSub.getMap().keySet());
 				computedSubDomain.retainAll(newInputVars);
@@ -214,7 +214,7 @@ public class RuleCase extends Case {
 				verify(caseResult.remove(pair), "internal invariant broken");
 				break;
 			} catch (UnificationFailed uf) {
-			  debug("candidate " + candidate + " is not an instance of " + caseTerm);
+			  debug("candidate ", candidate, " is not an instance of ", caseTerm);
 				//uf.printStackTrace();
 				continue;
 			}/* catch (RuntimeException rt) {
@@ -225,10 +225,10 @@ public class RuleCase extends Case {
 		if (computedCaseTerm == null) {
 			// there must have been a candidate, but it didn't unify or wasn't an instance
 			String errorDescription = rule.getErrorDescription(candidate, ctx);
-			debug("Expected case:\n" + errorDescription);
-			debug("Your case roundtripped:\n" + rule.getErrorDescription(caseTerm, ctx));
-			debug("SASyLF generated the LF term: " + candidate);
-			debug("You proposed the LF term: " + caseTerm);
+			debug("Expected case:\n", errorDescription);
+			debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
+			debug("SASyLF generated the LF term: ", candidate);
+			debug("You proposed the LF term: ", caseTerm);
 			ErrorHandler.report(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 			// TODO: explain WHY!!!
 		}
@@ -254,8 +254,8 @@ public class RuleCase extends Case {
 		 *     6) if LHS of subOfSubs in inputVar then ERROR
 		 */
 		
-		debug("unifyingSub: " + unifyingSub);
-		debug("pairSub: " + pairSub);
+		debug("unifyingSub: ", unifyingSub);
+		debug("pairSub: ", pairSub);
 
 		for (Atom pairSubKey : pairSub.getMap().keySet()) {
 			if (unifyingSub.getMap().containsKey(pairSubKey)) {
@@ -263,9 +263,9 @@ public class RuleCase extends Case {
 				Term em = unifyingSub.getSubstituted(pairSubKey);
 				Substitution subOfSubs = null;
 				try {
-					debug("trying " + pairSubKey + ": " + ec + " instanceof " + em);
+					debug("trying ", pairSubKey, ": ", ec, " instanceof ", em);
 					subOfSubs = ec.instanceOf(em); // should never fail if checks above succeeded
-					debug("subOfSubs: " + subOfSubs + " for " + pairSubKey);
+					debug("subOfSubs: ", subOfSubs, " for ", pairSubKey);
 				} catch (Exception e) {
 					ErrorHandler.report(INVALID_CASE, "The rule case given is invalid, perhaps due to introducing a fresh variable in the wrong order into a term", this, "SASyLF considered the LF term " + candidate);
 					//verify(false, "internal invariant violated");
@@ -293,10 +293,10 @@ public class RuleCase extends Case {
 		// CHANGED
 		//ctx.currentSub.compose(adaptationSub);  // modifies in place
 		// TODO: may want to replace adaptationSub with adaptation info in Context
-		debug("composing " + ctx.currentSub + " with " + unifyingSub);
-		debug("old sub: " + oldSub);
+		debug("composing ", ctx.currentSub, " with ", unifyingSub);
+		debug("old sub: ", oldSub);
 		ctx.currentSub.compose(unifyingSub);  // modifies in place
-		debug("result: " + ctx.currentSub);
+		debug("result: ", ctx.currentSub);
 		
 		// update the set of free variables
 		ctx.inputVars = newInputVars;
@@ -314,7 +314,7 @@ public class RuleCase extends Case {
 		
 		addedInputVars.removeAll(newInputVars);
 		if (!addedInputVars.isEmpty())
-			debug("\tadding new input vars " + addedInputVars);
+			debug("\tadding new input vars ", addedInputVars);
 		ctx.inputVars.addAll(addedInputVars);
     // System.out.println("RuleCase.java:330: checking ctx");
     ctx.checkConsistent(this);
@@ -349,7 +349,7 @@ public class RuleCase extends Case {
 		args.add(concTerm);
 		Term ruleTerm = App(getRule().getRuleAppConstant(), args);
 
-		debug("new term = " + ruleTerm);
+		debug("new term = ", ruleTerm);
 
 		return ruleTerm;
 	}

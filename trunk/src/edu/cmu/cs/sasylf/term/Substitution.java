@@ -79,18 +79,18 @@ public class Substitution {
 				  Substitution revSub = new Substitution();
 				  fv = t.getEtaPermutedEquivFreeVar((FreeVar)v, revSub);
 				  if (fv != null && !vars.contains(fv)) {
-				    Util.debug("Found permuted var: " + v);
+				    Util.debug("Found permuted var: ", v);
 				    varMap.remove(v);
 				    this.compose(revSub);
 				  } else {
 				    // can't avoid
 				    result.add(v);
-				    Util.debug("could not avoid " + v + " because it is equal to non-FreeVar expression " + t);
+				    Util.debug("could not avoid ", v, " because it is equal to non-FreeVar expression ", t);
 				  }
 				} else if (vars.contains(fv)) {
 					// can't avoid
 					result.add(v);
-					Util.debug("could not avoid " + v +" because it is equal to another thing we must avoid, " + fv);
+					Util.debug("could not avoid ", v," because it is equal to another thing we must avoid, ", fv);
 				} else {
 					// switch a and t
 					varMap.remove(v);
@@ -110,7 +110,7 @@ public class Substitution {
    * @throws UnificationFailed two binding for the variable failed to unify.
    */
 	public void add(Atom var, Term t) {
-		debug("substituting " + t + " for " + var + " adding to " + this);
+		debug("substituting ", t, " for ", var, " adding to ", this);
 
 		// perform the substitution on t
 		Term tSubstituted;
@@ -125,7 +125,7 @@ public class Substitution {
 		if (tSubstituted.equals(var) || (subFreeVar != null && subFreeVar.equals(var)))
 			return;
 
-		debug("tSubstituted is " + tSubstituted);
+		debug("tSubstituted is ", tSubstituted);
 		
 		// ensure var is not free in tSubstituted
 		Set<FreeVar> freeVars = tSubstituted.getFreeVariables();

@@ -49,7 +49,7 @@ public class Theorem extends RuleLike {
 	public List<Derivation> getDerivations() { return derivations; }
 	
 	public void setAnd(Theorem next) {
-		debug("setting and of "+this.getName() + " to " + next.getName());
+		debug("setting and of ", this.getName(), " to ", next.getName());
 		andTheorem = next;
 		andTheorem.firstInGroup = firstInGroup;
 		andTheorem.indexInGroup = indexInGroup+1;
@@ -180,7 +180,7 @@ public class Theorem extends RuleLike {
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
 		try {
-		debug("checking "+kind+" "+this.getName());
+		debug("checking ", kind, " ", this.getName());
 		
 		ctx.derivationMap = new HashMap<String, Fact>();
 		ctx.inputVars = new HashSet<FreeVar>();
@@ -282,15 +282,15 @@ public class Theorem extends RuleLike {
 			  return;
 			}
 			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
-			Util.debug("orig theoremTerm: "+theoremTerm);
-			Util.debug("orig derivTerm: "+derivTerm);
+			Util.debug("orig theoremTerm: ", theoremTerm);
+			Util.debug("orig derivTerm: ", derivTerm);
 			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx, errorNode);
-			Util.debug("adapted theoremTerm: " + theoremTerm);
+			Util.debug("adapted theoremTerm: ", theoremTerm);
 
 			try {
-				debug("end of theorem ("+last.getLocation().getLine()+"): unifying " + derivTerm + " to match " + theoremTerm);
-				debug("current sub = " + ctx.currentSub);
-				debug("wrapping sub = " + ctx.adaptationSub);
+				debug("end of theorem (", last.getLocation().getLine(), "): unifying ", derivTerm, " to match ", theoremTerm);
+				debug("current sub = ", ctx.currentSub);
+				debug("wrapping sub = ", ctx.adaptationSub);
 				Substitution instanceSub = derivTerm.instanceOf(theoremTerm);
 				// must not require instantiating free variables
 				if (!instanceSub.avoid(ctx.inputVars)) {

@@ -139,7 +139,7 @@ public class Binding extends Element {
 			e.checkBindings(bindingTypes, nodeToBlame);
 		}
 		List<ElemType> prevType = bindingTypes.get(this.getNonTerminal().getSymbol());
-		debug("binding for " + this + " is " + bindingTypes);
+		debug("binding for ", this, " is ", bindingTypes);
 		if (prevType == null) {
 			bindingTypes.put(this.getNonTerminal().getSymbol(), myType);
 		} else {
