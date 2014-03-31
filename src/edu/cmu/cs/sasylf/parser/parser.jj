@@ -1476,6 +1476,8 @@ CompUnit CompilationUnit() :
   }
 }
 
+void matchEOF() : {} { <EOF> { return; } }
+
 PackageDeclaration PackageDeclaration() :
 { Token t, u; List<String> l; }
 {
@@ -1500,19 +1502,18 @@ Token Operator() :
 
 Token Keyword() :
 { Token t; }
-{   (		t=< AND >
-    |   t=< CASE >
+{   (    t=< CASE >
     |  	t=< END >
     |   t=< CONTRADICTION >
+    |   t=< CONTRACTION >
     |   t=< INVERSION >
-    |   t=< IS >
     |   t=< WEAKENING >
+    |   t=< SUBSTITUTION >
     |   t=< MODULE >
-    |   t=< NOT >
-    |   t=< OR >
     |   t=< REQUIRES >
     |   t=< PROVIDES >
     |   t=< EXTENDS >
+    |   t=< USE >
   ) { return t; }}
  
 List<String> Name() :
@@ -1531,12 +1532,14 @@ List<String> Name() :
 String RuleName() :
 {Token t, t1; String s; }
 {
-  (t1=<IDENTIFIER> | t1= Keyword()) { s = t1.image; }
+  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT>) { s = t1.image; }
   ( LOOKAHEAD({ isRulePart() }) (
       t=<MINUS>
     | t=<OPERATOR>
     | t=<IDENTIFIER>
     | t=<INTEGER_LITERAL> 
+    | t=<NOT>
+    | t=<IS>
     | t=Keyword()) { s += t.image; }
   )*
   { if (!(notNL(t1.specialToken))) {
