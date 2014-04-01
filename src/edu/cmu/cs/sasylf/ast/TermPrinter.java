@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +13,8 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.AndJudgment.AndTerminal;
 import edu.cmu.cs.sasylf.ast.OrJudgment.OrTerminal;
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
+import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -19,6 +22,7 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Util;
 
 /**
  * A class to convert terms back into elements
@@ -494,13 +498,13 @@ public class TermPrinter {
   
   private static int SUSPECT_INFINITE_RECURSION = 100;
   
-  public static String toString(Element e) {
+  public String toString(Element e) {
     StringBuilder sb = new StringBuilder();
     prettyPrint(sb,e,false,0);
     return sb.toString();
   }
   
-  private static void prettyPrint(StringBuilder sb, Element e, boolean parenthesize, int level) {
+  private void prettyPrint(StringBuilder sb, Element e, boolean parenthesize, int level) {
     if (level > SUSPECT_INFINITE_RECURSION) {
       sb.append("#");
       return;
@@ -516,7 +520,14 @@ public class TermPrinter {
     } else if (e instanceof OrTerminal) {
       sb.append("or");
     } else if (e instanceof Terminal) {
-      sb.append(((Terminal)e).getTerminalSymbolString());
+      String str = ((Terminal)e).getTerminalSymbolString();
+      if (isTerminal(str)) {
+      sb.append(str);
+      } else {
+        sb.append('"');
+        sb.append(str);
+        sb.append('"');
+      }
     } else if (e instanceof Binding) {
       Binding b = (Binding)e;
       sb.append(b.getNonTerminal());
@@ -570,5 +581,51 @@ public class TermPrinter {
     if (thisTerminal.isEmpty()) return false;
     if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
     return false;
+  }
+  
+  
+  /**
+   * Is the string a legal terminal, e.g. an operator or 
+   * @param s
+   * @return
+   */
+  public boolean isTerminal(String s) {
+    return isTerminal(ctx,s);
+  }
+  
+  public static boolean isTerminal(Context ctx, String s) {
+    if (ctx.compUnit.getDeclaredTerminals().contains(s)) return true;
+    return isParseTerminal(s);
+  }
+
+  /**
+   * Does the string parse as a terminal?
+   * @param s string to examine, must not be null
+   * @return whether the string is a terminal.
+   */
+  public static synchronized boolean isParseTerminal(String s) {
+    Boolean result = parseTerminals.get(s);
+    if (result != null) return result;
+    DSLToolkitParser p = new DSLToolkitParser(new StringReader(s));
+    try {
+      Element res = p.Term();
+      p.matchEOF();
+      result = res instanceof Terminal;
+    } catch (ParseException er) {
+      result = Boolean.FALSE;
+    }
+    parseTerminals.put(s, result);
+    return result;
+  }
+  
+  private static Map<String,Boolean> parseTerminals = new HashMap<String,Boolean>();
+  
+  public static void main(String[] args) {
+    Util.verify(isParseTerminal("{"), "braces are terminals");
+    Util.verify(!isParseTerminal("("), "parens are not terminals");
+    Util.verify(!isParseTerminal("["), "brackets are not terminals");
+    Util.verify(isParseTerminal("|-"), "'|-' is a terminal");
+    Util.verify(!isParseTerminal("and"),"'and' is not a terminal");
+    Util.verify(isParseTerminal("+"), "operators are terminals");
   }
 }

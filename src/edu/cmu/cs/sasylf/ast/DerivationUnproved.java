@@ -20,7 +20,7 @@ public class DerivationUnproved extends DerivationWithArgs {
 	  if (cl instanceof ClauseUse) {
 	    try {
 	      TermPrinter termPrinter = new TermPrinter(ctx,((ClauseUse)cl).getRoot(),getLocation());
-	      form = ": " + TermPrinter.toString(termPrinter.asClause(t));
+	      form = ": " + termPrinter.toString(termPrinter.asClause(t));
 	    } catch (RuntimeException ex) {
 	      ex.printStackTrace();
 	      form = ": (internal) " + t;
