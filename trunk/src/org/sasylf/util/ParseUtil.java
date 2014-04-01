@@ -23,6 +23,10 @@ public class ParseUtil {
         t2.kind == DSLToolkitParserConstants.EOF;
   }
   
+  public static boolean isBarChar(char ch) {
+    return ch == '-' || ch == '\u2500' || ch == '\u2014' || ch == '\u2015';
+  }
+  
   public static void main(String[] args) {
     for (String a : args) {
       System.out.println(a + " is legal? " + isLegalIdentifier(a));

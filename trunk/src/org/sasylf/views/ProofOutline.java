@@ -37,10 +37,12 @@ import org.sasylf.Activator;
 import org.sasylf.ProofChecker;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
+import org.sasylf.util.ParseUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
@@ -96,6 +98,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			if(cu == null) {
 				return;
 			}
+			TermPrinter printer = new TermPrinter(new Context(cu), null, cu.getLocation());
 			
 			ProofElement pe = null;
 			
@@ -105,7 +108,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			  pe.setPosition(convertLocToPos(document,syn.getLocation()));
 			  pList.add(pe);
 			  for (Clause c : syn.getClauses()) {
-			    ProofElement ce = new ProofElement("Clause",TermPrinter.toString(c));
+			    ProofElement ce = new ProofElement("Clause",printer.toString(c));
 			    Location loc = c.getLocation();
 			    ce.setPosition(convertLocToPos(document, loc));
 			    pe.addChild(ce);
@@ -115,22 +118,27 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			//judgments
 			for (Judgment judg : cu.getJudgments()) {
 			  if (!inResource(judg.getLocation(), documentFile)) continue;
-				pe = new ProofElement("Judgment", (judg.getName() + ": " + TermPrinter.toString(judg.getForm())));
+				pe = new ProofElement("Judgment", (judg.getName() + ": " + printer.toString(judg.getForm())));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
 				for (Rule r : judg.getRules()) {
 				  StringBuilder sb = new StringBuilder();
 				  sb.append(r.getName()).append(": ");
 				  for (Clause cl : r.getPremises()) {
-				    sb.append(FORALL).append(TermPrinter.toString(cl)).append(" ");
+				    sb.append(FORALL).append(printer.toString(cl)).append(" ");
 				  }
 				  sb.append(EXISTS);
-				  sb.append(TermPrinter.toString(r.getConclusion()));
+				  sb.append(printer.toString(r.getConclusion()));
 				  ProofElement re = new ProofElement("Rule", sb.toString());
 				  Location loc = r.getLocation();
 				  Position barPos = convertLocToPos(document, loc);
 				  try {
-            re.setLexicalInfo(document.get(barPos.getOffset(), barPos.getLength()).trim().split(" ")[0]);
+            String barPlusName = document.get(barPos.getOffset(), barPos.getLength()).trim();
+            int n = 0;
+            while (n < barPlusName.length() && ParseUtil.isBarChar(barPlusName.charAt(n))) {
+              ++n;
+            }
+            re.setLexicalInfo(barPlusName.substring(0,n));
           } catch (BadLocationException e) {
             // muffle;
           }
@@ -150,10 +158,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				sb.append(": ");
 				for(Fact fact : theo.getForalls()) {
 	        sb.append(FORALL);
-					sb.append(TermPrinter.toString(fact.getElement())).append(" ");
+					sb.append(printer.toString(fact.getElement())).append(" ");
 				}
 				sb.append(EXISTS);
-				sb.append(TermPrinter.toString(theo.getExists()));
+				sb.append(printer.toString(theo.getExists()));
 				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}*/
