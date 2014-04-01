@@ -1,0 +1,32 @@
+// default package
+
+terminals S
+
+syntax
+   n ::= 0 | S n
+
+
+judgment eq: n = n
+
+  ----- eq
+  n = n
+  
+  
+judgment gt: n > n
+
+  ------- gt-one
+  S n > n
+
+  n1 > n2
+  ---------- gt-more-broken
+  S n1 < n2 //!! broken rule
+  
+  
+theorem test:
+    forall d: n1 > n2
+    exists n1 = S n2.
+    use inversion of gt-one on d
+    proof by rule eq
+end theorem
+        
+         

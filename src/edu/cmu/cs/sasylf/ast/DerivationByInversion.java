@@ -63,6 +63,7 @@ public class DerivationByInversion extends DerivationWithArgs {
     
     // see if each rule, in turn, applies
     for (Rule rule : judge.getRules()) {
+      if (!rule.isInterfaceOK()) continue; // avoid these
       Set<Pair<Term,Substitution>> caseResult;
       if (ctx.savedCaseMap != null && ctx.savedCaseMap.containsKey(inputName)) {
         caseResult = new HashSet<Pair<Term,Substitution>>();
