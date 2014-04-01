@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Variable extends Element {
@@ -39,10 +40,11 @@ public class Variable extends Element {
 
 	
 	public void setType(Syntax t) {
+	  if (type != null && type == t) return; // idempotency
 		if (type != null)
-			ErrorHandler.report("The same variable may not appear in multiple syntax definitions", this);
+			ErrorHandler.report(Errors.SYNTAX_VARIABLE_TWICE, this);
 		if (t == null)
-			ErrorHandler.report("No type can be found for variable " + symbol + ": did you forget to make it a case of a BNF syntax definition?", this);
+			ErrorHandler.report(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
 		type = t;
 	}
 	
@@ -53,7 +55,7 @@ public class Variable extends Element {
 			if (var != null) {
 				setType(var.getType());
 			} else {
-				ErrorHandler.report("No type can be found for variable " + symbol + ": did you forget to make it a case of a BNF syntax definition?", this);
+				ErrorHandler.report(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
 			}
 		}
 		return this;
@@ -64,11 +66,11 @@ public class Variable extends Element {
 	  // System.out.println("Checking " + getSymbol() + " as defining? " + defining);
 	  if (defining) {
 	    if (!bound.add(getSymbol())) {
-	      ErrorHandler.report("Variable bound more than once: " + getSymbol(),this);
+	      ErrorHandler.report(Errors.VAR_REBOUND, getSymbol(),this);
 	    }
 	  } else {
 	    if (!bound.contains(getSymbol())) {
-	      ErrorHandler.report("Variable not bound: " + getSymbol(),this);
+	      ErrorHandler.report(Errors.VAR_UNBOUND, getSymbol(),this);
 	    }
 	  }
   }

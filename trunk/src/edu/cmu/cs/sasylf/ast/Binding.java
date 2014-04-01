@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.BINDING_INCONSISTENT;
+import static edu.cmu.cs.sasylf.util.Errors.BINDING_INCONSISTENT;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class Binding extends Element {
 	public Binding(Location loc, NonTerminal nt, List<Element> l) {
@@ -82,7 +83,7 @@ public class Binding extends Element {
 	public Element typecheck(Context ctx) {
 		Element e = nonTerminal.typecheck(ctx);
 		if (!(e instanceof NonTerminal))
-			ErrorHandler.report("A binder must have a nonterminal as the thing bound in", this);
+			ErrorHandler.report(Errors.BINDER_MUST_BE_NT, this);
 		nonTerminal = (NonTerminal) e;
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e2 = elements.get(i).typecheck(ctx);

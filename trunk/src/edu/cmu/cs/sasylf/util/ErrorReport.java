@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Location;
 
 public class ErrorReport {

@@ -12,6 +12,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
@@ -73,9 +74,9 @@ public abstract class Derivation extends Fact {
 
     Element newClause = clause.computeClause(ctx, false);
     if (!(newClause instanceof Clause))
-      ErrorHandler.report("Expected a judgment, but found a nonterminal.  Did you forget to name the derivation?", this);
+      ErrorHandler.report(Errors.DERIVATION_SYNTAX, this);
     else if (!(newClause.getType() instanceof Judgment))
-      ErrorHandler.report("Expected a judgment, but found syntax.",this);
+      ErrorHandler.report(Errors.DERIVATION_SYNTAX,this);
     clause = (Clause) newClause;
     clause.checkBindings(ctx.bindingTypes, this);
     clause.checkVariables(Collections.<String>emptySet(), false);

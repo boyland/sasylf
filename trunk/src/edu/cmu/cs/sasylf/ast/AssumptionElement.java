@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -91,7 +92,7 @@ public class AssumptionElement extends Element {
       sa.setContext(context);
       return sa;
     } else {
-      ErrorHandler.report("'assumes' can only be used with syntax", this);
+      ErrorHandler.report(Errors.ASSUMES_FOR_SYNTAX, this);
     }
     return null;
   }

@@ -37,7 +37,6 @@ import org.sasylf.Activator;
 import org.sasylf.ProofChecker;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
-import org.sasylf.util.ParseUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
@@ -53,6 +52,7 @@ import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
 import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
+import edu.cmu.cs.sasylf.util.ParseUtil;
 
 /**
  * A content outline page which summarizes the structure of a proof file.

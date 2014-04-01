@@ -26,13 +26,13 @@ import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.EclipseUtil;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**

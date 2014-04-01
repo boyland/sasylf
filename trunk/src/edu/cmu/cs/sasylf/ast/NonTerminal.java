@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.BINDING_INCONSISTENT;
+import static edu.cmu.cs.sasylf.util.Errors.BINDING_INCONSISTENT;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
@@ -16,6 +16,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {

@@ -1,10 +1,10 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.EXTRA_CASE;
-import static edu.cmu.cs.sasylf.ast.Errors.INVALID_CASE;
-import static edu.cmu.cs.sasylf.ast.Errors.NONTERMINAL_CASE;
-import static edu.cmu.cs.sasylf.ast.Errors.REUSED_CONTEXT;
-import static edu.cmu.cs.sasylf.ast.Errors.SYNTAX_CASE_FOR_DERIVATION;
+import static edu.cmu.cs.sasylf.util.Errors.EXTRA_CASE;
+import static edu.cmu.cs.sasylf.util.Errors.INVALID_CASE;
+import static edu.cmu.cs.sasylf.util.Errors.NONTERMINAL_CASE;
+import static edu.cmu.cs.sasylf.util.Errors.REUSED_CONTEXT;
+import static edu.cmu.cs.sasylf.util.Errors.SYNTAX_CASE_FOR_DERIVATION;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -108,6 +109,7 @@ public class SyntaxCase extends Case {
       // must have been analyzing a nonterminal n and case analyzed with a case of n'
       ErrorHandler.report(NONTERMINAL_CASE, "Case " + conclusion + " is a nonterminal; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
     } else {
+      // not clear when this error happens
       ErrorHandler.report("Case analysis of syntax may only be a syntax clause, not a variable, nonterminal, or binding", this);
     }		  
 	

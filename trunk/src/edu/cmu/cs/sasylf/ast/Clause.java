@@ -24,6 +24,7 @@ import edu.cmu.cs.sasylf.grammar.TerminalNode;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
@@ -135,7 +136,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				    key = nt.getSymbol();
 				    v = new Variable(key, nt.getLocation());
 				  } else {
-						ErrorHandler.report("Only variables are permitted inside a binding on the right hand side of a syntax definition", e2);
+						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, e2);
 						throw new RuntimeException("should not get here");
 				  }
 					if (!map.containsKey(key)) {
