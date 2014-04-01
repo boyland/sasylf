@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class DerivationUnproved extends DerivationWithArgs {
 	public DerivationUnproved(String n, Location l, Clause c) {

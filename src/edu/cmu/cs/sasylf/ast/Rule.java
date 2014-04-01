@@ -1,8 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.JUDGMENT_EXPECTED;
-import static edu.cmu.cs.sasylf.ast.Errors.WRONG_JUDGMENT;
 import static edu.cmu.cs.sasylf.term.Facade.App;
+import static edu.cmu.cs.sasylf.util.Errors.JUDGMENT_EXPECTED;
+import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
@@ -24,6 +24,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 

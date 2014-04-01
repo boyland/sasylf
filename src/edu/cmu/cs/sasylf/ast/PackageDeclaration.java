@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class PackageDeclaration extends Node {
   private String[] pieces;

@@ -18,6 +18,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -135,7 +136,7 @@ public class Theorem extends RuleLike {
 			if (computed instanceof ClauseUse && computed.getType() instanceof Judgment) {
 			  exists = (Clause) computed;
 			} else {
-			  ErrorHandler.recoverableError("'exists' of theorem must be a judgment, not syntax",  computed);
+			  ErrorHandler.recoverableError(Errors.EXISTS_SYNTAX,  computed);
 			}
 			
 			inductionScheme = null;

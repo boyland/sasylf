@@ -35,7 +35,7 @@ import org.sasylf.util.CompletionProposalMarkerResolution;
 import org.sasylf.util.EclipseUtil;
 import org.sasylf.views.ProofElement;
 
-import edu.cmu.cs.sasylf.ast.Errors;
+import edu.cmu.cs.sasylf.util.Errors;
 
 /**
  * Resolution of SASyLF problems.

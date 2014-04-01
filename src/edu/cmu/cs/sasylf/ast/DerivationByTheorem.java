@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class DerivationByTheorem extends DerivationByIHRule {
 

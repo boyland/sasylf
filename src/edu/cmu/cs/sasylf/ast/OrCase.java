@@ -9,6 +9,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class OrCase extends Case {
 
@@ -33,12 +34,12 @@ public class OrCase extends Case {
     premise.getClause().checkBindings(ctx.bindingTypes, this);
     
     if (!(ctx.currentCaseAnalysisElement instanceof OrClauseUse)) {
-      ErrorHandler.report("'case or' can only be used with a disjunction", this);
+      ErrorHandler.report(Errors.OR_CASE_NOT_APPLICABLE, this);
     }
     
     Clause cl = premise.getClause();
     if (!(cl instanceof ClauseUse) || !(cl.getType() instanceof Judgment)) {
-      ErrorHandler.report("'case or' must give a derivation", this);
+      ErrorHandler.report(Errors.OR_SYNTAX, this);
     }
     
     Term t = cl.asTerm();

@@ -25,10 +25,10 @@ import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.sasylf.project.ProofBuilder;
-import org.sasylf.util.ParseUtil;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Location;
+import edu.cmu.cs.sasylf.util.ParseUtil;
 
 public class RenameProofModule extends RenameParticipant {
 

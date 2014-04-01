@@ -1,8 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.INVALID_CASE;
-import static edu.cmu.cs.sasylf.ast.Errors.REUSED_CONTEXT;
 import static edu.cmu.cs.sasylf.term.Facade.App;
+import static edu.cmu.cs.sasylf.util.Errors.INVALID_CASE;
+import static edu.cmu.cs.sasylf.util.Errors.REUSED_CONTEXT;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
@@ -22,6 +22,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
@@ -80,7 +81,7 @@ public class RuleCase extends Case {
 		
 		// make sure we were case-analyzing a derivation, not a nonterminal
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
-			ErrorHandler.report("When case-analyzing a non-terminal, must use syntax cases, not rule cases", this);
+			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
 
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);

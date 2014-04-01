@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 public class ClauseDef extends Clause {
 	public ClauseDef(Clause copy, ClauseType type) {
@@ -172,7 +173,7 @@ public class ClauseDef extends Clause {
 					if (boundE instanceof Variable)
 						boundVars.add((Variable) boundE);
 					else
-						ErrorHandler.report("Syntax and judgment definitions may only have variables inside bindings", boundE);
+						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, boundE);
 				}
 			}
 		}

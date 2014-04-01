@@ -1,9 +1,9 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.ast.Errors.EXPECTED_VARIABLE;
-import static edu.cmu.cs.sasylf.ast.Errors.MISSING_ASSUMPTION_RULE;
 import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.pair;
+import static edu.cmu.cs.sasylf.util.Errors.EXPECTED_VARIABLE;
+import static edu.cmu.cs.sasylf.util.Errors.MISSING_ASSUMPTION_RULE;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class ClauseUse extends Clause {

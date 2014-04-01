@@ -1,4 +1,4 @@
-package org.sasylf.util;
+package edu.cmu.cs.sasylf.util;
 
 import java.io.StringReader;
 

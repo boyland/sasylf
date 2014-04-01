@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.reduction;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.ast.Context;
-import edu.cmu.cs.sasylf.ast.Errors;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.SyntaxAssumption;
@@ -11,6 +10,7 @@ import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 /**
  * Structural induction on a term or a derivation

@@ -1,0 +1,33 @@
+$ time make test
+............................................................  Done.
+
+real	0m16.702s
+user	0m23.907s
+sys	0m2.648s
+
+$ time ./sasylf.local ../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf
+../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf:3099: warning: derivation unproved: CT ⊢ (C1 (new C2 { tt })) -> t0
+../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf: No errors and 1 warning reported.
+
+real	0m2.089s
+user	0m5.207s
+sys	0m0.171s
+
+
+AFTER changing all Util.debug calls:
+$ time make test
+............................................................  Done.
+
+real	0m15.021s
+user	0m20.269s
+sys	0m2.461s
+
+
+time ./sasylf.local ../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf
+../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf:3099: warning: derivation unproved: CT ⊢ (C1 (new C2 { tt })) -> t0
+../../sasylf-workspace/ts2014/slf/ch/ethz/inf/ts/hw9/fj.slf: No errors and 1 warning reported.
+
+real	0m1.427s
+user	0m3.421s
+sys	0m0.099s
+
