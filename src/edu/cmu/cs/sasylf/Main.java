@@ -50,6 +50,10 @@ public class Main {
 				edu.cmu.cs.sasylf.util.Util.VERBOSE = true;
 				continue;
 			}
+			if (args[i].equals("--debug")) {
+			  edu.cmu.cs.sasylf.util.Util.DEBUG = true;
+			  continue;
+			}
 			if (args[i].startsWith("--root=")) {
 			  dir = args[i].substring(7);
         File root = new File(dir); 
