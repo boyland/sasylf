@@ -1539,6 +1539,7 @@ String RuleName() :
     | t=<IDENTIFIER>
     | t=<INTEGER_LITERAL> 
     | t=<NOT>
+    | t=<OR>
     | t=<IS>
     | t=Keyword()) { s += t.image; }
   )*
