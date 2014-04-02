@@ -161,7 +161,8 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
       return;
     case LONG:
       doDefaultNewlineAutoIndent(d, c);
-      c.text += "* ";
+      if (line.startsWith("/*")) c.text += " * "; 
+      else c.text += "* ";
       return;
     default:
       break;
