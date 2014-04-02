@@ -77,7 +77,7 @@ public class SASyLFIndentStrategy extends DefaultIndentLineAutoEditStrategy {
 
   protected CommentStatus inComment(String line) {
     if (line.startsWith("*")) { // require /* comments to have * leaders on lines for indenting to work
-      line = "/" + line;
+      line = "/*" + line;
     }
     int i = 0;
     do {
