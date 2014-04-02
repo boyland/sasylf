@@ -95,7 +95,7 @@ The following three justifications concern contexts and bindings:
 
 == Cases ==
  
-There are two forms for cases: those for syntax and those for judgments.
+There are three forms for cases: those for syntax, those for judgments, and those for disjunctions.
 
 === Syntax Case ===
 
@@ -134,11 +134,21 @@ One may also assume the unification implied by the pattern match.  All uses insi
 If, because of pattern matching, only one case is possible, _inversion_ (q.v.) may be a good option to use.
 If _no_ case applies at all, then the case analysis can be empty.  This allows us to justify any (type valid) judgment at all.
 
-=== Context Cases ===
+==== Context Cases ====
 
 _TODO_
 
-== Special cases ==
+=== Disjunction Cases ===
+
+If the derivation being matched is a disjunction (using the `or` syntax of SASyLF 1.3.1 and later), then the case has the form
+
+    `case or` _name_ `:` _premise_ `is`
+        _proof_
+    `end case`
+
+A disjunction derivation is true if there is a derivation for one of the parts; the case handles this one.  To cover all cases, one must have a case for each part.
+
+== Partial Case Analysis ==
 
 When writing a proof, one may wish to handle certain situations up-front in a partial case analysis.  Starting in SASyLF 1.3.1, one can write
 
