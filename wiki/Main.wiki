@@ -7,7 +7,7 @@ We are using this Wiki format to create a manual of use.
 This documentation covers SASyLF 1.1.0 and later releases.
 
 
-= Structure of SASyLF FIles =
+= Structure of SASyLF Files =
 
 A SASyLF file consists of the following parts:
  * An optional package declaration
@@ -63,7 +63,7 @@ SASyLF files support both kinds of C++ comments: line comments starting with `//
 
 == Packages ==
 
-Starting in 1.3.0, the package declaration must match the directory in which the SASyLF proof file is located, in the same way as in Java.  The base directory may be specified with a command-line argument.  With the Eclipse plugin, the base directory is the project, or if the project has SASyLF "nature" and the file is nested in the "Proof Folder" (a project property), then the proof folder is the base directory.
+Starting in 1.3.0, if a proof file is in a project with SASyLF "nature", or if on the command line, a base directory is specified (with `--root=DIR`, then the package declaration must match the directory in which the SASyLF proof file is located, in the same way as in Java.  A project with SASyLF nature may specify what the base directory is; by default it is `slf`. 
 
 If the proof file is directly in the base directory, then no package declaration should be used, again as with Java.
 
@@ -106,6 +106,20 @@ Judgments and syntax are parsed using a GLR parser that finds all legal parses; 
 
 Every binding of a variable in a context should be associated with exactly one rule
 which may have no premises in which the conclusion has one instance of the context binding production and one additional instance of the variable.
+
+=== And/Or Judgments ===
+
+Since 1.1.0, SASyLF creates `and` judgments on demand, and since 1.3.1 `or` judgments are created in a similar way.  For example a theorem may have
+        `exists (n1 > 0 and n2 > 0) or (n1 == 0 and n2 == 0).`
+In both cases, if the judgments assume contexts, all the assumptions must be the same, and the contexts for the joined judgments must be the same.  Thus one *cannot* write
+        `exists Gamma |- t1 : T and Gamma, x:T |- t[x] : T`
+The `and` construct is not allowed at the outer level of a premise or a `forall` argument to a theorem; it would be simpler anyway to separate such a judgment into separate premises or arguments.
+
+If a derivation being proved is an `and` judgment, the derivation should be written as conjoined named derivations, as in:
+    `g1: n1 + n2 = n3 and g2: n3 + n4 = n7 by ...`
+Then one can refer to each name individually.
+
+Disjunctions are treated more like normal judgments, except SASyLF provides a special case analysis form for them.
 
 == Theorems ==
 
