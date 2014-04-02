@@ -51,7 +51,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
       Element formal = ruleLike.getPremises().get(i);
       Element actual = getArgs().get(i).getElement();
       if (formal.getType() != actual.getType()) {
-        ErrorHandler.report("argument #" + (i+1) + "to " + ruleLike.getKind()+" "+getRuleName()+" is wrong type", this);
+        ErrorHandler.report("argument #" + (i+1) + " to " + ruleLike.getKind()+" "+getRuleName()+" is wrong type", this);
       }
     }
 

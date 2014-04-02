@@ -51,6 +51,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
 		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg0,ctx,false);
 		
+		Util.debug(this.getLocation());
 		Util.debug("subContext = ", subContext);
 		Util.debug("source = ", source);
 		
@@ -60,7 +61,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		
     // verify result is the second substituted for (and eliminating) the assumption of the first
     Term claimedResult = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
-    //System.out.println("claimed = " + claimedResult);
+    Util.debug("claimed = ", claimedResult);
 
     if (!result.equals(claimedResult)) {
       ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution",this,
@@ -120,7 +121,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
           sub = f2.varType.unify(arg);
         } catch (UnificationFailed e) {
           ErrorHandler.report(Errors.SUBSTITUTION_FAILED, this, "  (" + f2.varType + " != " + arg + ")");
-          return null;
+          return null; //NOTREACHED
         }
 	      Set<FreeVar> unavoided = sub.selectUnavoidable(ctx.inputVars);
 	      if (!unavoided.isEmpty()) {
@@ -135,6 +136,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 	      ErrorHandler.report("Cannot determine where substitution would happen",  this);
 	    }
 	  }
+	  ErrorHandler.report("target of substitution does not have more assumptions than argument.", this);
 	  return null;
 	}
 
