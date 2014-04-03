@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
@@ -24,6 +23,7 @@ import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class RuleCase extends Case {
@@ -243,22 +243,23 @@ public class RuleCase extends Case {
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 					+ "\n    The term given requires instantiating the following variable(s) that should be free: " + unavoidable, this);
 
-
-		/*
-		 * How to fix HW1Bogus issue
-		 * 
-		 * 1) compute computedCaseTerm, pairSub = unify with case analysis, substitute with pairSub
-		 * 2) extract caseTerm, unifyingSub = unify with case analysis, substitute with unifyingSub
-		 * 3) ensure computedCaseTerm instanceof caseTerm
-		 * 4) for all LHS E that pairSub and unifyingSub map to Ec and Em:
-		 *     5) subOfSubs = Ec instanceof Em
-		 *     6) if LHS of subOfSubs in inputVar then ERROR
-		 */
 		
-		debug("unifyingSub: ", unifyingSub);
-		debug("pairSub: ", pairSub);
+		Util.debug("unifyingSub: ", unifyingSub);
+		Util.debug("pairSub: ", pairSub);
 
-		for (Atom pairSubKey : pairSub.getMap().keySet()) {
+		// JTB: I've never seen this code generate any errors.
+		// I'm assuming it is extraneous now.
+    /*
+     * How to fix HW1Bogus issue
+     * 
+     * 1) compute computedCaseTerm, pairSub = unify with case analysis, substitute with pairSub
+     * 2) extract caseTerm, unifyingSub = unify with case analysis, substitute with unifyingSub
+     * 3) ensure computedCaseTerm instanceof caseTerm
+     * 4) for all LHS E that pairSub and unifyingSub map to Ec and Em:
+     *     5) subOfSubs = Ec instanceof Em
+     *     6) if LHS of subOfSubs in inputVar then ERROR
+     */
+		/*for (Atom pairSubKey : pairSub.getMap().keySet()) {
 			if (unifyingSub.getMap().containsKey(pairSubKey)) {
 				Term ec = pairSub.getSubstituted(pairSubKey);
 				Term em = unifyingSub.getSubstituted(pairSubKey);
@@ -266,10 +267,10 @@ public class RuleCase extends Case {
 				try {
 					debug("trying ", pairSubKey, ": ", ec, " instanceof ", em);
 					subOfSubs = ec.instanceOf(em); // should never fail if checks above succeeded
-					debug("subOfSubs: ", subOfSubs, " for ", pairSubKey);
+					Util.tdebug("subOfSubs: ", subOfSubs, " for ", pairSubKey);
 				} catch (Exception e) {
+          verify(false, "internal invariant violated");
 					ErrorHandler.report(INVALID_CASE, "The rule case given is invalid, perhaps due to introducing a fresh variable in the wrong order into a term", this, "SASyLF considered the LF term " + candidate);
-					//verify(false, "internal invariant violated");
 				}
 				for (Atom subOfSubsKey : subOfSubs.getMap().keySet()) {
 					if (ctx.inputVars.contains(subOfSubsKey)) {
@@ -277,7 +278,10 @@ public class RuleCase extends Case {
 					}
 				}
 			}
-		}
+		}*/
+		
+		pairSub.compose(unifyingSub);
+		Util.debug("Unifed pairSub = ", pairSub);
 		
 		ClauseUse targetClause = (ClauseUse)ctx.currentCaseAnalysisElement;
     if (targetClause.isRootedInVar()) {
@@ -290,36 +294,13 @@ public class RuleCase extends Case {
 
 		
 		// update the current substitution
-		Substitution oldSub = new Substitution(ctx.currentSub);
-		// CHANGED
-		//ctx.currentSub.compose(adaptationSub);  // modifies in place
-		// TODO: may want to replace adaptationSub with adaptation info in Context
-		debug("composing ", ctx.currentSub, " with ", unifyingSub);
-		debug("old sub: ", oldSub);
-		ctx.currentSub.compose(unifyingSub);  // modifies in place
-		debug("result: ", ctx.currentSub);
-		
-		// update the set of free variables
-		ctx.inputVars = newInputVars;
-		// System.out.println("RuleCase.java:314: checking ctx");
-		ctx.checkConsistent(this);
-		// NB: originally, we just used adpatedConcTerm, but since it was adapted, perhaps
-		// other things changed.
-		Set<FreeVar> addedInputVars = adaptedConcTerm.substitute(ctx.currentSub).getFreeVariables();
-		
-		for (Derivation d : premises) {
-			Term premiseTerm = d.getElement().asTerm();
-			premiseTerm = premiseTerm.substitute(ctx.currentSub);
-			addedInputVars.addAll(premiseTerm.getFreeVariables());
-		}
-		
-		addedInputVars.removeAll(newInputVars);
-		if (!addedInputVars.isEmpty())
-			debug("\tadding new input vars ", addedInputVars);
-		ctx.inputVars.addAll(addedInputVars);
-    // System.out.println("RuleCase.java:330: checking ctx");
-    ctx.checkConsistent(this);
-
+    ctx.composeSub(unifyingSub);
+    
+    Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
+    if (!overlyGeneral.isEmpty()) {
+      ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
+    }
+    
 		// update the set of subderivations
 		if (isSubderivation != null) {
 		  Pair<Fact,Integer> newSub = new Pair<Fact,Integer>(isSubderivation.first,isSubderivation.second+1);
