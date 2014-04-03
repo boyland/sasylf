@@ -85,13 +85,25 @@ This section described each of the ways in which derivations can be justified:
 
 The following three justifications concern contexts and bindings:
   * `by weakening on` _name_
-     This justification applies if the derivation can be proved from an existing derivation by adding    additional variables/assumptions.
+     This justification applies if the derivation can be proved from an existing derivation by adding additional variables/assumptions.  The names of variables must not change.
 
   * `by exchange on` _name_
-    This justification applies if the derivation can be proved from an existing derivation by reordering variable bindings and/or assumptions.  The new derivation must not move uses of a variable out of scope.
+    This justification applies if the derivation can be proved from an existing derivation by reordering variable bindings and/or assumptions. The names of variables must not change. The new derivation must not move uses of a variable out of scope.
 
   * `by substitution on`  _name_`,` _name_
     This justification applies if the derivation can be proved from an existing derivation (first argument) with an assumption supplied (second argument).  The assumption must be an instance of the special rule related to the binding being replaced.  It is not a syntax term to substitute for the bound variable.
+
+        Substitution was given a cleaner semantics in 1.2.6/1.3.1. Assuming we have
+            `d1:` _bindings_`, x : T,` _other bindings_ `|- t[x] : T'`<br>
+            `d2:` _bindings_ `|- t2 : T`
+        then `substitution on d1, d2` will give us
+            _bindings_`,` _other bindings_ `|- t[t2] : T'`
+
+        Substitution requires that the second argument be an instance of the judgment which has the special rule for the binding.  The _bindings_ of the second derivation must appear in the same order at the start of the second derivation. Different than `weakening` or `exchange` above, the _bindings_ in common _may_ have different variable names.  This ability is important when performing contraction like operations:
+             `d1 : Gamma, x1 : T, x : T |- t[x,x1] : T'`<br>
+             `d2 : Gamma, x : T |- x : T`
+        yields
+             `Gamma, x : T |- t[x,x] : T'` 
 
 == Cases ==
  
