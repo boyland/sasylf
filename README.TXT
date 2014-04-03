@@ -1,4 +1,4 @@
-SASyLF version 1.3.2a3
+SASyLF version 1.3.2a4
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -113,6 +113,7 @@ RELEASE HISTORY
     Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)
     Fix missing case insertion to quote special terminals
     Code reorganization / speedup
+    Warn about overly general cases (see bad35.slf)
     Resolved issues #53, #56, #57, #58
 1.3.1	Extensions (& 1.2.6)
 	Abstract modules

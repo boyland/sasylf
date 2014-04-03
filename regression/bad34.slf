@@ -1,0 +1,46 @@
+// default package
+
+terminals fn Unit unit in
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x]
+    
+    T ::= Unit | T -> T
+    
+    Gamma ::= * | Gamma, x:T
+
+
+judgment isvar : t:T in Gamma
+assumes Gamma
+
+  ------------------- var
+  x:T in (Gamma, x:T) 
+
+
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    t:T in Gamma
+    ------------- T-Var
+    Gamma |- t:T
+    
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma |- t1 : T -> T'
+    Gamma |- t2 : T
+    ---------------------- T-App
+    Gamma |- t1 t2 : T'
+    
+    Gamma, x:T |- t[x] : T'
+    --------------------------------- T-Abs
+    Gamma |- fn x:T => t[x] : T -> T'
+    
+lemma badsubst :
+    assumes Gamma
+    forall d1: Gamma, x1 : T1 |- t[x1] : T2
+    forall d2: Gamma, x1 : T1 |- t2 : T1
+    exists Gamma, x1 : T1 |- t[t2] : T2.
+    proof by substitution on d1, d2 //! Crashed in 1.2.X
+end lemma
+

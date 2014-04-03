@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 /** Represents a typing context */
@@ -170,6 +171,17 @@ public class Context implements Cloneable {
       }
     }
     
+    for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+      Set<FreeVar> free = e.getValue().getFreeVariables();
+      if (adaptationSub != null) free.removeAll(adaptationSub.getMap().keySet());
+      if (!inputVars.containsAll(free)) {
+        free.removeAll(inputVars);
+        System.out.println("Internal error: missing input vars: " + free);
+        new Throwable("for the trace").printStackTrace();
+        problem = true;
+      }
+    }
+
     if (problem) {
       ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
     } 
@@ -186,6 +198,7 @@ public class Context implements Cloneable {
     for (Map.Entry<Atom,Term> e : sub.getMap().entrySet()) {
       newVars.addAll(e.getValue().getFreeVariables());
     }
+    if (adaptationSub != null) newVars.removeAll(adaptationSub.getMap().keySet());
     // System.out.println("new vars = " + newVars);
     inputVars.addAll(newVars);
   }
@@ -210,7 +223,7 @@ public class Context implements Cloneable {
       if (key instanceof FreeVar) {
         FreeVar fv = (FreeVar)key;
         if (fv.getStamp() != 0) {
-          debug("removing unreachable variable binding: ", fv, " = ", e.getValue());
+          Util.debug("removing unreachable variable binding: ", fv, " = ", e.getValue());
           changed = true;
         } else {
           newSub.add(key, e.getValue());

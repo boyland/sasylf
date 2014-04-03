@@ -1,0 +1,29 @@
+// If you give an overly general pattern,
+// SASyLF accepts it (fine), but this means
+// one cannot use the hidden information.
+
+package regression;
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+
+judgment nateq: n = n
+
+    ------ eq
+    n = n
+    
+lemma fails:
+    forall d: n1 = n2
+    exists n2 = n1.
+    proof by case analysis on d:
+        case rule //! Warning: overly general pattern
+            ---------- eq
+            _: n1 = n2 
+        is
+            proof by rule eq //! cannot apply since pattern too general
+        end case
+    end case analysis
+end lemma
+
