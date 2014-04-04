@@ -121,6 +121,8 @@ Then one can refer to each name individually.
 
 Disjunctions are treated more like normal judgments, except SASyLF provides a special case analysis form for them.
 
+The empty disjunction is written `contradiction` unless a judgment for this form is already defined.
+
 == Theorems ==
 
 A theorem has inputs (`forall`) and outputs (`exists`).
