@@ -171,3 +171,8 @@ When writing a proof, one may wish to handle certain situations up-front in a pa
     `end case analysis`
 
 Each case should prove the statement required by the context. The case analysis need not be complete, and this form cannot be used as the last statement in a series precisely because it doesn't finish the proof.  But the cases that are handled here will not need to be handled later.  This can reduce a Cartesian product of cases to a more manageable number, as seen in the proof of cut elimination.
+
+== Last Derivation ==
+
+The last derivation of a block should be for the judgment being proved.  As a special case (since 1.3.1), if this is an empty disjunction (`contradiction`) it is accepted as a proof for anything.
+This last judgment must be the empty disjunction, not a judgment that case analysis can show is uninhabited; for the latter case, you must continue to use a case analysis, for example `by contradiction on`.
