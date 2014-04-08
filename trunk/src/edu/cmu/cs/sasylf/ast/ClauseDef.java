@@ -22,6 +22,7 @@ public class ClauseDef extends Clause {
 	}
 	public ClauseDef(Clause copy, ClauseType type, String cName) {
 		super(copy.getLocation());
+		setEndLocation(copy.getEndLocation());
 		getElements().addAll(copy.getElements());
 		this.type = type;
 		if (cName != null) {

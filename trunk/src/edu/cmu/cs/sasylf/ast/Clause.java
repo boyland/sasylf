@@ -28,8 +28,22 @@ import edu.cmu.cs.sasylf.util.Errors;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
-	public Clause(Element e) { super(e.getLocation()); verify(getLocation() != null, "location null for " + e + " of type " + e.getClass()); }
+	public Clause(Element e) { 
+	  super(e.getLocation()); 
+	  verify(getLocation() != null, "location null for " + e + " of type " + e.getClass()); 
+	  super.setEndLocation(e.getEndLocation());
+	}
 
+	/**
+	 * Add an element at the end of the clause, updating endLocation, if it would increase.
+	 * @param e
+	 */
+	public void add(Element e) {
+	  elements.add(e);
+	  Location l = e.getEndLocation();
+	  if (l != null) setEndLocation(l);
+	}
+	
 	public List<Element> getElements() { return elements; }
 
 	protected List<Element> elements = new ArrayList<Element>();
