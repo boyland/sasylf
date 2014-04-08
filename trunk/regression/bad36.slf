@@ -1,0 +1,104 @@
+package regression;
+
+terminals S contradiction
+
+syntax
+  n ::= 0 | S n
+
+
+judgment absurd: contradiction
+
+judgment nat-equal: n = n
+
+   ------ nat-eq
+   n = n
+   
+   
+judgment plus : n + n = n
+
+   --------- plus-0
+   0 + n = n
+
+   n1 + n2 = n3
+   ---------------- plus-S
+   S n1 + n2 = S n3
+   
+
+judgment times: n * n = n
+
+    ---------- times-0
+    0 * n = 0
+    
+    n1 * n2 = n3
+    n3 + n2 = n4
+    ------------- times-S
+    S n1 * n2 = n4
+    
+theorem plus-unique:
+    forall d3: n1 + n2 = n3
+    forall d4: n1 + n2 = n4
+    exists n3 = n4.
+    proof by induction on d3:
+        case rule
+            --------------- plus-0
+            _: 0 + n2 = n2
+        is
+            proof by case analysis on d4:
+                case rule
+                    --------------- plus-0
+                    _: 0 + n2 = n2
+                is
+                    proof by rule nat-eq
+                end case
+            end case analysis
+        end case
+        case rule
+            d1: n1' + n2 = n3'
+            --------------------- plus-S
+            _: S n1' + n2 = S n3'
+        is
+            d2: n1' + n2 = n4' by inversion of plus-S on d4
+            e: n3' = n4' by induction hypothesis on d1, d2
+            use inversion of nat-eq on e
+            proof by rule nat-eq
+        end case
+    end induction
+end theorem
+    
+lemma wrong:
+    forall t:  S n1  * n2 = n3
+    forall t': S n1' * n2 = n3'
+    exists n3 = n3'.
+    proof by case analysis on t:
+        case rule
+            _: n1 * n2 = n0
+            p: n0 + n2 = n3
+            ------------------- times-S
+            _: (S n1) * n2 = n3
+        is
+            proof by case analysis on t':
+                case rule //! rebinding n0
+                    _: n1' * n2 = n0
+                    p': n0 + n2 = n3'
+                    ------------------- times-S
+                    _: (S n1') * n2 = n3'
+                is
+                    proof by theorem plus-unique on p, p'
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma impossible:
+    exists contradiction.
+    t010: 0 * S 0 = 0 by rule times-0
+    p011: 0 + S 0 = S 0 by rule plus-0
+    t111: S 0 * S 0 = S 0 by rule times-S on t010, p011
+    p112: S 0 + S 0 = S S 0 by rule plus-S on p011
+    t212: S S 0 * S 0 = S S 0 by rule times-S on t111, p112
+    eq12: S 0 = S S 0 by lemma wrong on t111, t212
+    proof by case analysis on eq12:
+    end case analysis
+end lemma
+    

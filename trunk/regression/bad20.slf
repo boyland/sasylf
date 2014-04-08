@@ -39,8 +39,8 @@ theorem times-left-cancels:
   forall t1: (S n1) * n2 = n3
   forall t2: (S n1) * n2' = n3
   exists n2 = n2'.
-  t2': n1 * n2' = n3'' and //! bindings [n1]
-  p2': n3'' + n1 = n3 by inversion of times-s on t2
+  t2': n1 * n2' = n3'' and 
+  p2': n3'' + n1 = n3 by inversion of times-s on t2 //! rebound n1
   proof by unproved //! warning only
 end theorem
 
