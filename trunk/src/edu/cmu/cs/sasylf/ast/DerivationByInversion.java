@@ -162,8 +162,10 @@ public class DerivationByInversion extends DerivationWithArgs {
     }
     
     // Permit induction on this term if source was a subderivation
-    //XXX: This probably should handle an AndClause differently
-    if (ctx.subderivations.containsKey(targetDerivation))
-      ctx.subderivations.put(this,ctx.subderivations.get(targetDerivation));
-    }
+    if (ctx.subderivations.containsKey(targetDerivation)) {
+      Pair<Fact, Integer> pair = ctx.subderivations.get(targetDerivation);
+      Pair<Fact, Integer> newPair = new Pair<Fact,Integer>(pair.first,pair.second+1);
+      ctx.subderivations.put(this,newPair);
+    } 
+  }
 }

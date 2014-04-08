@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -60,9 +61,14 @@ public abstract class Derivation extends Fact {
       if (clauses.size() != names.length) {
         ErrorHandler.recoverableError("unequal number of conjuncts", this);
       }
+      Pair<Fact,Integer> derivationInfo = ctx.subderivations.get(this);
       for (int i=0; i < names.length; ++i) {
         if (i == clauses.size()) break;
-        new DerivationByAssumption(names[i],this.getLocation(),clauses.get(i)).addToDerivationMap(ctx);
+        Fact fact = new DerivationByAssumption(names[i],this.getLocation(),clauses.get(i));
+        fact.addToDerivationMap(ctx);
+        if (derivationInfo != null) {
+          ctx.subderivations.put(fact,derivationInfo);
+        }
       }
     }
     return result;

@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 
@@ -75,5 +76,8 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);		
 		Derivation.checkMatch(this, ctx, derivTerm, argTerm, "Derivation " + getElement() + " is not equivalent to the previous derivation: " + getArgs().get(0));
     checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
+    
+    Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
+    if (p != null) ctx.subderivations.put(this, p);
 	}
 }

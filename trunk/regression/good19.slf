@@ -1,0 +1,90 @@
+// default package
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+
+
+judgment nat-equal: n = n
+
+   ------ nat-eq
+   n = n
+   
+
+judgment plus : n + n = n
+
+   --------- plus-0
+   0 + n = n
+
+   n1 + n2 = n3
+   ---------------- plus-S
+   S n1 + n2 = S n3
+   
+
+judgment times: n * n = n
+
+    ---------- times-0
+    0 * n = 0
+    
+    n1 * n2 = n3
+    n3 + n2 = n4
+    ------------- times-S
+    S n1 * n2 = n4
+    
+    
+theorem plus-unique:
+    forall d3: n1 + n2 = n3
+    forall d4: n1 + n2 = n4
+    exists n3 = n4.
+    use induction on d4  // Unusual, but should be legal
+    proof by case analysis on d3:
+        case rule
+            --------------- plus-0
+            _: 0 + n2 = n2
+        is
+            use inversion of plus-0 on d4
+            proof by rule nat-eq
+        end case
+        case rule
+            d1: n1' + n2 = n3'
+            --------------------- plus-S
+            _: S n1' + n2 = S n3'
+        is
+            d2: n1' + n2 = n4' by inversion of plus-S on d4
+            d2': n1' + n2 = n4' by d2 // silly but legal
+            e: n3' = n4' by induction hypothesis on d1, d2'
+            use inversion of nat-eq on e
+            proof by rule nat-eq
+        end case
+    end case analysis
+end theorem
+    
+theorem times-unique:
+    forall t3: n1 * n2 = n3
+    forall t4: n1 * n2 = n4
+    exists n3 = n4.
+    use induction on t4
+    proof by case analysis on t3:
+        case rule
+            t3': n1' * n2 = n5
+            p3: n5 + n2 = n3
+            --------------- times-S
+            _: (S n1') * n2 = n3
+        is
+            t4': n1' * n2 = n6 and
+            p4: n6 + n2 = n4 by inversion of times-S on t4
+            e: n5 = n6 by induction hypothesis on t3', t4'
+            use inversion of nat-eq on e
+            proof by theorem plus-unique on p3, p4
+        end case
+        case rule
+            --------------- times-0
+            _: 0 * n2 = 0
+        is
+            use inversion of times-0 on t4
+            proof by rule nat-eq
+        end case
+    end case analysis
+end theorem 
+

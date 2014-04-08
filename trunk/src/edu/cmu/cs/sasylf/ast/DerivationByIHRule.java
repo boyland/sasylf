@@ -248,7 +248,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
           if (self != other) {
             ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
           } else {
-            ErrorHandler.report(Errors.NOT_SUBDERIVATION, mySchema + " is unchanged", this);
+            ErrorHandler.report(Errors.NOT_SUBDERIVATION, " " + mySchema + " is unchanged", this);
           }
         }        
       }
