@@ -128,6 +128,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
     case WRONG_PACKAGE: return true;
     case EXTRA_CASE: return true;
     case PARTIAL_CASE_ANALYSIS: return true;
+    case OTHER_JUSTIFIED: return true;
     }
     // NO_DERIVATION
     return false;
@@ -354,6 +355,24 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
               break;
             }
           }
+        }
+        break;
+      case OTHER_JUSTIFIED:
+        if (lineInfo != null) {
+          newText = " " + split[1];
+          int holeStart = split[0].indexOf("...");
+          String startPat = split[0].substring(0, holeStart);
+          String endPat = split[0].substring(holeStart+3);
+          int findStart = lineText.indexOf(startPat);
+          // System.out.println("indexOf(" + startPat + ") = " + findStart + " in " + lineText);
+          if (findStart < 0) break;
+          int findEnd = lineText.indexOf(endPat, findStart);
+          // System.out.println("indexOf(" + endPat + ") = " + findEnd + " in " + lineText);
+          if (findEnd < 0) break;
+          int oldStart = findStart + startPat.length();
+          String oldText = lineText.substring(oldStart, findEnd);
+          proposals.add(new MyCompletionProposal(res, newText, lineInfo.getOffset() + oldStart, oldText.length(), 0, null,
+              "replace '" + oldText + "' with '" + newText + "'", null, null));
         }
         break;
       }

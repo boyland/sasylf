@@ -3,6 +3,8 @@ package edu.cmu.cs.sasylf.ast;
 import static edu.cmu.cs.sasylf.util.Errors.DERIVATION_NOT_FOUND;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -106,14 +108,16 @@ public class DerivationByInversion extends DerivationWithArgs {
         // If there are multiple clauses, or if 
         if (pieces.size() <= 1 || this.getClause() instanceof AndClauseUse) {
           List<ClauseUse> clauses;
+          List<String> names;
           if (this.getClause() instanceof AndClauseUse) {
             clauses = ((AndClauseUse)this.getClause()).getClauses();
+            names = Arrays.asList(super.getName().split(","));
           } else {
-            clauses = new ArrayList<ClauseUse>();
-            clauses.add((ClauseUse)this.getClause());
+            clauses = Collections.singletonList((ClauseUse)this.getClause());
+            names = Collections.singletonList(super.getName());
           }
           if (pieces.size() != clauses.size()) {
-            // If clauses.size9) == 0, we are "use inversion" which can
+            // If clauses.size() == 0, we are "use inversion" which can
             // ignore all results.
             if (clauses.size() > 0) { 
               ErrorHandler.report("inversion yields " + pieces.size() + " but only accepting " + clauses.size(), this);
@@ -122,8 +126,14 @@ public class DerivationByInversion extends DerivationWithArgs {
           for (int i=0; i < clauses.size(); ++i) {
             ClauseUse cu = clauses.get(i);
             Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
-            Derivation.checkMatch(cu, ctx, mt, pieces.get(i).substitute(ctx.currentSub), 
-                  "inversion result #" + (i+1) + " does not match given derivation");
+            Term piece = pieces.get(i).substitute(ctx.currentSub);
+            if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
+              TermPrinter tp = new TermPrinter(ctx,targetClause.getAssumes(), cu.getLocation());
+              Element pieceTerm = tp.asClause(piece);
+              String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
+              String justified = tp.toString(pieceTerm);
+              ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
+            }
             // If the derivation has no implicit context, we
             // skip the context check
             if (targetClause.isRootedInVar()) {

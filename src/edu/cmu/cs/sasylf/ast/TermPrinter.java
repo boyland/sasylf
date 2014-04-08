@@ -83,7 +83,7 @@ public class TermPrinter {
       }
       String base = ty.toString();
       Syntax syn = ctx.synMap.get(base);
-      if (ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location, syn);
+      if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location, syn);
       for (int i=0; true; ++i) {
         FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
         if (ctx.isKnown(base + i)) continue;
