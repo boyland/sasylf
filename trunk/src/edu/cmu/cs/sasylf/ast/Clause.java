@@ -257,6 +257,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
       Element sharedContext = null;
       for (List<GrmTerminal> sublist : symLists) {
         stripParens(sublist);
+        // The following crashes if it starts with a paren:
+        // Clause subClause = new Clause(sublist.isEmpty() ? this.getLocation() : sublist.get(0).getElement().getLocation()); 
         Clause subClause = new Clause(this.getLocation()); 
         for (GrmTerminal t : sublist) {
           subClause.elements.add(t.getElement());
@@ -265,6 +267,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
         Element e = subClause.parseClause(ctx,inBinding,g,sublist);
         if (e instanceof ClauseUse) {
           ClauseUse cu = (ClauseUse)e;
+          if (!clauses.isEmpty() && cu.getElements().size() > 0) {
+            // set location, which otherwise refers to the whole thing
+            cu.setLocation(cu.getElements().get(0).getLocation());
+          }
           ClauseType ty = cu.getConstructor().getType();
           if (ty instanceof Judgment) types.add((Judgment)ty);
           else ErrorHandler.report("cannot '"+sepList.get(0)+"' syntax only judgments", this);

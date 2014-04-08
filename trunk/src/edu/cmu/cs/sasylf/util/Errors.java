@@ -32,6 +32,7 @@ public enum Errors {
 	INDUCTION_REPEAT ("can't nest induction analysis inside existing induction"),
 	INDUCTION_NOT_INPUT,
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
+	OTHER_JUSTIFIED   ("Claimed fact is not the one justified"),
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	MISSING_CASE			("must provide a case for "),
 	EXTRA_CASE				("case is redundant or unnecessary"),
