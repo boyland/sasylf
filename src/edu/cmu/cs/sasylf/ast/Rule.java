@@ -29,7 +29,13 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Rule extends RuleLike implements CanBeCase {
-	public Rule(Location loc, String n, List<Clause> l, Clause c) { super(n, loc); premises=l; conclusion=c; }
+	public Rule(Location loc, String n, List<Clause> l, Clause c) { 
+	  super(n, loc); 
+	  premises=l; 
+	  conclusion=c; 
+	  super.setEndLocation(c.getEndLocation());
+	}
+	
 	public List<Clause> getPremises() { return premises; }
 	public Clause getConclusion() { return conclusion; }
 	

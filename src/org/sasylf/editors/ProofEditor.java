@@ -45,6 +45,7 @@ import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
+import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
 
@@ -290,6 +291,10 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
       List<Position> positions = new ArrayList<Position>();
       
       try {
+        for (Judgment j : cu.getJudgments()) {
+          Position p = DocumentUtil.getNodePositionToNextLine(j, doc);
+          positions.add(p);
+        }
         for (Theorem th : cu.getTheorems()) {
           Position p = DocumentUtil.getNodePosition(th, doc);
           positions.add(p);

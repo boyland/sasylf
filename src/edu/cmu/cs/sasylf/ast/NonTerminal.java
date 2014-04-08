@@ -25,6 +25,7 @@ public class NonTerminal extends Element {
 	  super(l);
 	  symbol = s;
 	  type = ty;
+	  super.setEndLocation(l.add(s.length()));
 	}
 	
 	public String getSymbol() { return symbol; }

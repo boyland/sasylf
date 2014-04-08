@@ -34,9 +34,13 @@ public class ClauseUse extends Clause {
 		elements = elems;
 		cons = cd;
     root = computeRoot();
+    if (!elems.isEmpty()) {
+      super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
+    }
 	}
 	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
 		super(copy.getLocation());
+		setEndLocation(copy.getEndLocation());
 		getElements().addAll(copy.getElements());
 
 		List<ElemType> elemTypes = new ArrayList<ElemType>();

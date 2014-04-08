@@ -54,4 +54,11 @@ public class DocumentUtil {
     int off2 = getOffset(node.getEndLocation(),doc);
     return new Position(off1,off2-off1);
   }
+  
+  public static Position getNodePositionToNextLine(Node node, IDocument doc) throws BadLocationException {
+    int off1 = getOffset(node.getLocation(),doc);
+    Location l = node.getEndLocation();
+    int off2 = getOffset(new Location(l.getFile(),l.getLine()+1,1),doc);
+    return new Position(off1,off2-off1);
+  }
 }

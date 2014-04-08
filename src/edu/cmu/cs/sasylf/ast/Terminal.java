@@ -8,7 +8,11 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 
 public class Terminal extends Element implements ElemType {
-	public Terminal(String s, Location l) { super(l); symbol = s; }
+	public Terminal(String s, Location l) { 
+	  super(l); 
+	  symbol = s; 
+	  super.setEndLocation(l.add(s.length()));
+	}
 
 	public int hashCode() { return symbol.hashCode(); }
 	public boolean equals(Object obj) {

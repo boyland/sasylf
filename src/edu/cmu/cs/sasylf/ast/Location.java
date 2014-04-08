@@ -35,6 +35,10 @@ public class Location {
 	  return file;
 	}
 	
+	public Location add(int cs) {
+	  return new Location(file,beginLine,beginColumn+cs);
+	}
+	
 	private int beginLine, beginColumn /*, endLine, endColumn*/;
 	private String file;
 

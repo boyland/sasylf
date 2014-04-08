@@ -12,7 +12,14 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class Judgment extends Node implements ClauseType {
-	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { super(loc); name=n; rules=l; form=c; assume = a; }
+	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
+	  super(loc); 
+	  name=n; 
+	  rules=l; 
+	  form=c; 
+	  assume = a; 
+	  setEndLocation();
+	}
 	public Judgment(Location loc, String n, Clause s, NonTerminal a) {
 	  super(loc);
 	  name = n;
@@ -20,9 +27,20 @@ public class Judgment extends Node implements ClauseType {
 	  form = s;
 	  assume = a;
 	  isAbstract = true;
+	  setEndLocation();
 	}
 	
-	public List<Rule> getRules() { return rules; }
+	protected void setEndLocation() {
+	  if (!rules.isEmpty()) {
+	    super.setEndLocation(rules.get(rules.size()-1).getEndLocation());
+	  } else if (assume != null) {
+	    super.setEndLocation(assume.getEndLocation());
+	  } else {
+	    super.setEndLocation(form.getEndLocation());
+	  }
+	}
+
+  public List<Rule> getRules() { return rules; }
 	public Clause getForm() { return form; }
 	public String getName() { return name; }
 	public NonTerminal getAssume() { return assume; }

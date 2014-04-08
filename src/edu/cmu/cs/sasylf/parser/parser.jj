@@ -199,7 +199,7 @@ public class DSLToolkitParser {
     Clause clauseFor(Token t) {
     	Element e = getElement(t);
    	  	Clause cl = new Clause(e);
-   	  	cl.getElements().add(e);
+   	  	cl.add(e);
    	  	return cl;
     }
     Terminal addTerminal(Token t) {
@@ -1615,7 +1615,7 @@ Clause Clause() :
     {
 		if (c == null)
 			c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
     }
   )+
   { return c; }
@@ -1676,23 +1676,23 @@ Clause ExprToNL() :
   ( <LPAREN> e=Expr() <RPAREN>
 	{
 		c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
 	}
     | e=Term()
 	{
 		c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
 	}
   )
   (
     LOOKAHEAD({ isTermNoNL() }) e=Term()
 	{
-		c.getElements().add(e);
+		c.add(e);
 	}
     | LOOKAHEAD({ lParenNoNL() })
     <LPAREN> e=Expr() <RPAREN>
 	{
-		c.getElements().add(e);
+		c.add(e);
 	}
   )*
   { return c; }
@@ -1706,19 +1706,19 @@ Clause Expr() :
 	{
 		if (c == null)
 			c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
 	}
 	| (t=<OR>|t=<NOT>) 
 		{ 
 			if (c == null) c = new Clause(new Location(t));
-			c.getElements().add(getElement(t));
+			c.add(getElement(t));
 	    }
     | <LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,new Location(t),a); a = null; } )*
       <RPAREN>
 	{
 		if (c == null)
 			c = new Clause(c2);
-		c.getElements().add(c2);
+		c.add(c2);
 	}
   )+
   { return c; }
@@ -1731,28 +1731,28 @@ Clause SimpleExpr() :
     LOOKAHEAD(<IDENTIFIER>) e=Term()
 	{
 		c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
 	}
     | <LPAREN> e=Expr()
       [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(new Location(t), e, a); } ]
       <RPAREN>
 	{
 		c = new Clause(e);
-		c.getElements().add(e);
+		c.add(e);
 	}
 	| t=<INTEGER_LITERAL>
 	{  
 		e = addTerminal(t, t.image);
 		c = new Clause(e);
-		c.getElements().add(e); 
+		c.add(e); 
 	}
 	| t="{" { c = new Clause(new Location(t)); 
-	          c.getElements().add(new Terminal("{",new Location(t))); }
+	          c.add(new Terminal("{",new Location(t))); }
 	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <OPERATOR> | <LPAREN>) 
-	   e=Term() { c.getElements().add(e); } ) * 
+	   e=Term() { c.add(e); } ) * 
 	  t2="}"
 	{
-	     c.getElements().add(new Terminal("}",new Location(t2)));
+	     c.add(new Terminal("}",new Location(t2)));
 	}
   )
   { return c; }
