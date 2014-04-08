@@ -296,6 +296,14 @@ public class RuleCase extends Case {
 		// update the current substitution
     ctx.composeSub(unifyingSub);
     
+    newInputVars.clear();
+    for (Derivation d : premises) {     
+      Term premiseTerm = d.getElement().asTerm();     
+      premiseTerm = premiseTerm.substitute(ctx.currentSub);     
+      newInputVars.addAll(premiseTerm.getFreeVariables());    
+    }
+    ctx.inputVars.addAll(newInputVars);
+    
     Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
     if (!overlyGeneral.isEmpty()) {
       ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
