@@ -71,12 +71,10 @@ public class RuleCase extends Case {
 		ctx.bindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
 		for (Derivation d : premises) {
 			d.typecheck(ctx);
-			d.addToDerivationMap(ctx);
 			d.getClause().checkBindings(ctx.bindingTypes, this);
 		}
 
 		conclusion.typecheck(ctx);
-    conclusion.addToDerivationMap(ctx);
 		conclusion.getClause().checkBindings(ctx.bindingTypes, this);
 		
 		// make sure we were case-analyzing a derivation, not a nonterminal
@@ -296,13 +294,10 @@ public class RuleCase extends Case {
 		// update the current substitution
     ctx.composeSub(unifyingSub);
     
-    newInputVars.clear();
-    for (Derivation d : premises) {     
-      Term premiseTerm = d.getElement().asTerm();     
-      premiseTerm = premiseTerm.substitute(ctx.currentSub);     
-      newInputVars.addAll(premiseTerm.getFreeVariables());    
+    for (Derivation d : premises) { 
+      d.addToDerivationMap(ctx);
     }
-    ctx.inputVars.addAll(newInputVars);
+    conclusion.addToDerivationMap(ctx);
     
     Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
     if (!overlyGeneral.isEmpty()) {

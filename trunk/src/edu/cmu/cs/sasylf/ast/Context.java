@@ -181,6 +181,18 @@ public class Context implements Cloneable {
         problem = true;
       }
     }
+    
+    for (Fact d : derivationMap.values()) {
+      Set<FreeVar> free = d.getElement().asTerm().getFreeVariables();
+      free.removeAll(inputVars);
+      free.removeAll(outputVars);
+      free.removeAll(currentSub.getMap().keySet());
+      if (adaptationSub != null) free.removeAll(adaptationSub.getMap().keySet());
+      if (!free.isEmpty()) {
+        System.out.println("Internal error: missing input vars in " + d.getName() + ": " + free);
+        problem = true;
+      }
+    }
 
     if (problem) {
       ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
