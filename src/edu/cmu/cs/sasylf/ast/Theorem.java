@@ -16,11 +16,9 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Theorem extends RuleLike {
@@ -260,56 +258,6 @@ public class Theorem extends RuleLike {
 		
 		if (andTheorem != null) {
 			andTheorem.addToMap(ctx);
-		}
-	}
-
-	/**
-	 * Verifies that the last derivation is what this theorem requires
-	 * 
-	 * @param ctx
-	 * @param theoremTerm
-	 */
-	public static void verifyLastDerivation(Context ctx, Term theoremTerm, Element theoremElem, List<Derivation> derivs, Node errorNode) {
-		// verify: that last derivation is what theorem requires
-		if (derivs.size() == 0)
-			ErrorHandler.report(Errors.NO_DERIVATION, errorNode);
-		else {
-			Derivation last = derivs.get(derivs.size()-1);
-			if (last instanceof PartialCaseAnalysis) {
-			  ErrorHandler.report(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
-			}
-			if (last.getClause() instanceof OrClauseUse && ((OrClauseUse)last.getClause()).getClauses().isEmpty()) {
-			  // proving contradiction is sufficient
-			  return;
-			}
-			Term derivTerm = DerivationByAnalysis.adapt(last.getElement().asTerm(), ((ClauseUse)last.getElement()).getRoot(), ctx, last);
-			Util.debug("orig theoremTerm: ", theoremTerm);
-			Util.debug("orig derivTerm: ", derivTerm);
-			theoremTerm = DerivationByAnalysis.adapt(theoremTerm, ((ClauseUse)theoremElem).getRoot(), ctx, errorNode);
-			Util.debug("adapted theoremTerm: ", theoremTerm);
-
-			try {
-				debug("end of theorem (", last.getLocation().getLine(), "): unifying ", derivTerm, " to match ", theoremTerm);
-				debug("current sub = ", ctx.currentSub);
-				debug("wrapping sub = ", ctx.adaptationSub);
-				Substitution instanceSub = derivTerm.instanceOf(theoremTerm);
-				// must not require instantiating free variables
-				if (!instanceSub.avoid(ctx.inputVars)) {
-					Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
-					ErrorHandler.report(Errors.WRONG_RESULT,"\n    could not avoid vars " + unavoidable, last);
-				}
-				// TODO: probably should add to currentSub for DerivationByAnalysis, but it's not clear this is necessary for soundness
-				// important - would need to do it BEFORE analyzing the cases, then take it out of currentSub.  So it doesn't work to put it here, as below.
-				/*if (!instanceSub.getMap().isEmpty() && last instanceof DerivationByAnalysis) {
-					// could support this by adding to currentSub and replacing in outputVars, but for now just say it's an error
-					//ctx.currentSub.compose(instanceSub);
-					tdebug("instanceSub = " + instanceSub);
-					ErrorHandler.report(Errors.WRONG_RESULT,"\n    SASyLF does not currently support substituting one variable with another in the expected result during case analysis", last);
-				}*/
-			} catch (UnificationFailed e) {
-				ErrorHandler.report(Errors.WRONG_RESULT, last, "\twas checking " + derivTerm + " instance of " + theoremTerm);
-			}
-
 		}
 	}
 

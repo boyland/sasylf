@@ -97,7 +97,11 @@ public abstract class Derivation extends Fact {
 	
 	public static void typecheck(Node node, Context ctx, List<Derivation> derivations) {
 	  int n = derivations.size();
-	  boolean finalOK = false;
+    if (n == 0) {
+      ErrorHandler.report(Errors.NO_DERIVATION, node);
+    }
+
+    boolean finalOK = false;
 	  for (int i=0; i < n; ++i) {
 	    Derivation d = derivations.get(i);
 	    if (d.clause == null) {
@@ -105,27 +109,52 @@ public abstract class Derivation extends Fact {
 	      d.clause = ctx.currentGoalClause.clone();
 	      d.clause.setLocation(d.getLocation());
 	    }
-	    // JTB: Unfortunately we can't do this yet because it may instantiate
-	    // outputVars and we don't want this side-effect to happen yet.
-	    // else if (i == n-1) do a check match NOW
 	    finalOK = d.typecheckAndAssume(ctx);
 	  }
-	  if (n == 0) {
-	    ErrorHandler.report(Errors.NO_DERIVATION, node);
-	  }
-	  // JTB: TODO: change to use local version:
-	  if (finalOK) Theorem.verifyLastDerivation(ctx, ctx.currentGoal, ctx.currentGoalClause, derivations, node);
-	}
-	
-	// JTB: This has DIFFERENT failure modes than Theorem.verifyLastDerivation
-	@SuppressWarnings("unused")
-  private static void verifyLastDerivation(Context ctx, Term goalTerm, Clause goalClause, List<Derivation> derivations, Node node) {
+	  if (!finalOK) return;
+	  
 	  Derivation last = derivations.get(derivations.size()-1);
-    checkMatch(last,ctx,goalClause,last.getElement(), Errors.WRONG_RESULT.getText());
+	  if (last instanceof PartialCaseAnalysis) {
+	    ErrorHandler.report(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
+	  }
+	  Derivation.checkMatchWithImplicitCoercions(last, ctx, ctx.currentGoalClause, last.getElement(), Errors.WRONG_RESULT.getText());	  
 	}
 	
-	public static boolean checkMatchIncludingOr(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
-	  return false;
+  /**
+	 * Check that the supplied derivation matches what is required.
+	 * In the process, permit implicit coercions:
+	 * <ol>
+	 * <li> An empty 'or' clause can satisfy anything
+	 * <li> A single derivation can satisfy an 'or' clause including it
+	 * <li> An 'or' clause can satisfy another 'or' clause if everything it has
+	 *      is included.
+	 * </ol>
+	 * @param node location in program where error should be reported.  May be null if errorMsg is null.
+	 * @param ctx global information, must not be null
+	 * @param match requirement
+	 * @param supplied what is provided
+	 * @param errorMsg error message to print if there is no match.  If null, no error printing.
+	 *                 Just return null.
+	 * @throws SASyLFError if there is an error and errorMsg is not null.
+	 * @return
+	 */
+	public static boolean checkMatchWithImplicitCoercions(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
+	  if (supplied instanceof OrClauseUse) {
+	    for (ClauseUse provided : ((OrClauseUse)supplied).getClauses()) {
+	      boolean result = checkMatchWithImplicitCoercions(node,ctx,match,provided,errorMsg);
+	      if (result == false) return false;
+	    }
+	    return true;
+	  }
+	  if (match instanceof OrClauseUse) {
+	    for (ClauseUse required : ((OrClauseUse)match).getClauses()) {
+	      boolean result = checkMatchWithImplicitCoercions(node,ctx,required,supplied,null);
+	      if (result == true) return true;
+	    }
+	    if (errorMsg == null) return false;
+	    // fall through
+	  }
+	  return checkMatch(node,ctx,match,supplied,errorMsg);
 	}
 	
 	public static boolean checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
