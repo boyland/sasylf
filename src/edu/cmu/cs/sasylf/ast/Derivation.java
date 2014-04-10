@@ -54,6 +54,7 @@ public abstract class Derivation extends Fact {
 	  if (!clauseChecked) return result;
 	  
     this.addToDerivationMap(ctx);
+    
     if (clause instanceof AndClauseUse) {
       String[] names = super.getName().split(",");
       if (names.length == 1) return result;
@@ -121,6 +122,10 @@ public abstract class Derivation extends Fact {
   private static void verifyLastDerivation(Context ctx, Term goalTerm, Clause goalClause, List<Derivation> derivations, Node node) {
 	  Derivation last = derivations.get(derivations.size()-1);
     checkMatch(last,ctx,goalClause,last.getElement(), Errors.WRONG_RESULT.getText());
+	}
+	
+	public static boolean checkMatchIncludingOr(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
+	  return false;
 	}
 	
 	public static boolean checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {

@@ -1,0 +1,59 @@
+/*
+ * SASyLF through 1.3.2 don't bind variables in output of case analysis.
+ */
+package regression;
+
+terminals S
+
+syntax
+   n ::= 0 | S n
+
+judgment eq : n = n
+
+    ------ eq
+    n = n
+
+theorem eq-transitive:
+    forall e1: n1 = n2
+    forall e2: n2 = n3
+    exists n1 = n3.
+    proof by case analysis on e1:
+        case rule
+            --------------- eq
+            _: n1 = n1
+        is
+            proof by case analysis on e2:
+                case rule
+                    --------------- eq
+                    _: n1 = n1
+                is
+                    proof by rule eq
+                end case
+            end case analysis
+        end case
+    end case analysis
+end theorem
+
+theorem impossible:
+    exists 0 = S 0 .
+    e0: 0 = 0 by rule eq
+    e1: 0 = n by case analysis on e0:
+        case rule
+            -------- eq
+            _: 0 = 0
+        is
+            proof by rule eq
+        end case
+    end case analysis
+    e2: n = S 0 by case analysis on e0:
+        case rule
+            -------- eq
+            _: 0 = 0
+        is
+            proof by rule eq //! n can't be rebound
+        end case
+    end case analysis
+    proof by theorem eq-transitive on e1, e2
+end theorem
+                
+

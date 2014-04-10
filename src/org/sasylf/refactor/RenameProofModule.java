@@ -127,13 +127,13 @@ public class RenameProofModule extends RenameParticipant {
       moduleLoc = new Region(line.getOffset()+loc.getColumn()-1,6);
       String text = doc.get(moduleLoc.getOffset(), moduleLoc.getLength());
       if (!text.equals("module")) {
-        System.out.println("expected 'module', found '" + text + "'");
+        // System.out.println("expected 'module', found '" + text + "'");
         return;
       }
     } else {
       moduleLoc = new FindReplaceDocumentAdapter(doc).find(0,"module",true,true,true,false);
       if (moduleLoc == null) {
-        System.out.println("Found no 'module' keyword");
+        // System.out.println("Found no 'module' keyword");
         return;
       }
     }
