@@ -104,8 +104,7 @@ that are instances of that judgment.
 
 Judgments and syntax are parsed using a GLR parser that finds all legal parses; an error is signaled if there are more than one possible parse.  It may be necessary to use parentheses to make the structure unambiguous; sometimes parentheses are used to help the human reader as well.
 
-Every binding of a variable in a context should be associated with exactly one rule
-which may have no premises in which the conclusion has one instance of the context binding production and one additional instance of the variable.
+Every binding of a variable in a context should be associated with exactly one rule which has no premises and in which the conclusion has one instance of the context binding production and one additional instance of the variable.  Every non-terminal that occurs in the context binding must occur elsewhere in the conclusion, and every non-terminal that occurs elsewhere in the conclusion must occur also in the context binding.
 
 === And/Or Judgments ===
 
