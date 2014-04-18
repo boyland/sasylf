@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import static edu.cmu.cs.sasylf.term.Facade.App;
 import static edu.cmu.cs.sasylf.util.Errors.JUDGMENT_EXPECTED;
 import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
-import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -14,9 +13,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
@@ -250,13 +251,6 @@ public class Rule extends RuleLike implements CanBeCase {
 		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
 		Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
 
-		/*List<? extends Term > args = ((Application)ruleTerm).getArguments();
-		Term concTerm = args.get(args.size()-1);
-		int delta = clause.getAdaptationNumber(term, concTerm);
-		if (delta > 0) {
-			term = ((ClauseUse)conclusion).adaptTermTo(term, concTerm, new Substitution());
-		}*/
-
 		// compute term to check against rule
 		List<Term> termArgs = this.getFreeVarArgs(term);
 		termArgs.add(term);
@@ -265,7 +259,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		// see if the rule applies
 		Pair<Term, Substitution> pair = checkRuleApplication(term, ruleTerm, appliedTerm);
 		if (pair != null) {
-			debug("\tadding ", pair.first);
+			Util.debug("\tadding (1) ", pair.first);
 			result.add(pair);
 		}
 		
@@ -273,91 +267,77 @@ public class Rule extends RuleLike implements CanBeCase {
 		  
 			// see how deep the assumptions are in term
 			int assumptionDepth = term.countLambdas();
-			// System.out.println("In assumption, with depth = " + assumptionDepth);
+      if (assumptionDepth > 2) {
+        // XXX: This error is not relevant to the case analysis about to produced
+        // here.  Already we have handled the case that the last binding is
+        // the variable in question.  Below, we handle that we have to dig into Gamma
+        // to find a further binding.  So this error message is about not
+        // handling everything in between, which shouldn't be too hard.
+        ErrorHandler.report("Sorry, haven't yet implemented case analysis when there is more than one variable in scope", this);
+      }
+      
+      if (!clause.isRootedInVar()) {
+        Util.debug("cannot find a variable since not in variable context");
+        return result;
+      }
+      
+      // Consider the possibility that the context is binding the result
+      
+      // First disassemble the rule term to get the base.
+      // XXX: If we add non-variable assumptions, we need to change this
+      Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
+      Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
+      Term ruleConcBodyTerm = ruleConcTermInner.getBody();
+      // XXX: boundVarIndex only exists if we have a variable
+      int boundVarIndex = ((Application)ruleConcBodyTerm).getArguments().indexOf(new BoundVar(2));
+      Util.debug("boundVarIndex = ",boundVarIndex);
 
-			/*int assumeIndex = ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getAssumeIndex();
-			List<Variable> assumedVars = new ArrayList<Variable>();
-			List<Pair<String, Term>> varBindings = new ArrayList<Pair<String, Term>>();
-			Element gammaClause =((ClauseUse)ctx.currentCaseAnalysisElement).getElements().get(assumeIndex);
-			gammaClause.readAssumptions(varBindings, assumedVars);*/
-			
-			if (assumptionDepth > 0) {				
-				// TODO: Here, we need to specialize the assumption rule for each element (except the last) that is visible in Gamma
-				// TODO: we also need to consider inserting the new variable in multiple places if subordination means it's different
-				if (assumptionDepth > 2) {
-					ErrorHandler.report("Sorry, haven't yet implemented case analysis when there is more than one variable in scope", this);
-				}
-				
-				// Also specialize the assumption rule for the next element in Gamma that is not currently visible
-				/* Invariant: appliedTerm is of the form ruleConstructor [fn x => J(x)]
-				 * where J is an instance of a judgment form.
-				 * Goal: produce a new term of the form [fn x => fn y => J(x)]
-				 */
-				Util.debug("applied term is ", appliedTerm);
-								
-				// adapt the rule term
-				Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
-				/* v2 */ Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
-				Term ruleConcBodyTerm = /* v2 */ruleConcTermInner /* v1 ruleConcTerm*/.getBody();
-				// increment de Bruijn
-				Term ruleTerm2 = ruleConcBodyTerm.incrFreeDeBruijn(/* v2 */ 2 /* v1 1 */);
-				// add the top two variables from term
-				Abstraction termAsAbstraction = (Abstraction) term;
-				/* v2 */ Abstraction termAsAbstraction2 = (Abstraction) termAsAbstraction.getBody();
-				/* v2 */ ruleTerm2 =  Facade.Abs(termAsAbstraction2.varName, termAsAbstraction2.varType, ruleTerm2);
-				ruleTerm2 =  Facade.Abs(termAsAbstraction.varName, termAsAbstraction.varType, ruleTerm2);
-				// add back the rule variables
-				/* v2 */ ruleTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, ruleTerm2);
-				ruleTerm2 =  Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, ruleTerm2);
-				// put it in a rule
-				ruleTerm2 = Facade.App(((Application)ruleTerm).getFunction(), ruleTerm2);
-				
-				// adapt the applied term
-				Substitution sub = new Substitution();
-				term.bindInFreeVars(ruleConcTerm.varType, sub);
-				Term appliedTerm2 = term.substitute(sub);
-				/* v2 */appliedTerm2 = appliedTerm2.incrFreeDeBruijn(1);
-				/* v2 */appliedTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, appliedTerm2);
-				appliedTerm2 = Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, appliedTerm2);
-				appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
+      // now collect all variables from term 
+      Stack<Abstraction> outer = new Stack<Abstraction>();
+      Term t;
+      for (t = term; t instanceof Abstraction; t = ((Abstraction)t).getBody()) {
+        outer.push((Abstraction)t);
+      }
+      int abstractionDepth = outer.size();
+      Term destinedVar = ((Application)t).getArguments().get(boundVarIndex);
+      Util.debug("term destined to be a variable: " + destinedVar);
+      
+      // now reassemble the rule term after inserting all outer bindings
+      Term ruleTerm2 = ruleConcBodyTerm.incrFreeDeBruijn(abstractionDepth);
+      while (!outer.isEmpty()) {
+        Abstraction a = outer.pop();
+        ruleTerm2 = Facade.Abs(a.varName,a.varType,ruleTerm2);
+      }
+      // add back the rule variables
+      ruleTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, ruleTerm2);
+      ruleTerm2 =  Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, ruleTerm2);
+      // put it in a rule
+      ruleTerm2 = Facade.App(((Application)ruleTerm).getFunction(), ruleTerm2);
 
-				//now try it out
-				Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
-				Util.debug("\n\truleTerm = ", ruleTerm, "\n\tappliedTerm = ", appliedTerm);
-				pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
-				if (pair != null) {
-				  debug("\tadded result!");
-					result.add(pair);
-				}
-			} else {
-				// what if assumptionDepth == 0 but rule has assumptions?
+      // now figure out how to change the applied term to handle variables.
+      // We use the blunt instrument of bindInFreeVars
+      // We could rather see if the destinedVar is a variable or an application
+      // of a variable, and if so, construct a substitution, and if not, give up.
+      Substitution varSubst = new Substitution();
+      destinedVar.bindInFreeVars(ruleConcTerm.varType, varSubst);
+      varSubst.incrFreeDeBruijn(1);
+      Util.debug("varSubst = ",varSubst);
 
-				List<? extends Term > args = ((Application)ruleTerm).getArguments();
-				Term concTerm = args.get(args.size()-1);
-				int delta = clause.getAdaptationNumber(term, concTerm, false);
-				if (delta > 0) {
-					if (ctx.matchTermForAdaptation != null) {
-						Substitution adaptationSub = ctx.adaptationSub == null ? new Substitution() : new Substitution(ctx.adaptationSub);
-						term = ((ClauseUse)conclusion).adaptTermTo(term, ctx.matchTermForAdaptation, adaptationSub);
-					} else
-						term = ((ClauseUse)conclusion).adaptTermTo(term, concTerm, new Substitution());
-				}
+      // adapt the applied term
+      Term appliedTerm2 = term.substitute(varSubst);
+      appliedTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, appliedTerm2);
+      appliedTerm2 = Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, appliedTerm2);
+      appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
 
-				// compute term to check against rule
-				termArgs = this.getFreeVarArgs(term);
-				termArgs.add(term);
-				appliedTerm = App(this.getRuleAppConstant(), termArgs);
-			
-				// see if the rule applies
-				pair = checkRuleApplication(term, ruleTerm, appliedTerm);
-				if (pair != null) {
-				  debug("\tadding ", pair.first);
-					result.add(pair);
-				}
-				
-			}
+      //now try it out
+      Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
+      Util.debug("\truleTerm = ", ruleTerm, "\n\tappliedTerm = ", appliedTerm);
+      pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
+      if (pair != null) {
+        Util.debug("\tadded result! (2) ", pair.first,", ",pair.second);
+        result.add(pair);
+      }
 		}
-		
 		return result;
 	}
 	
