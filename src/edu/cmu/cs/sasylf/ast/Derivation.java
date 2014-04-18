@@ -181,6 +181,8 @@ public abstract class Derivation extends Fact {
       debug("  current inputVars = ", ctx.inputVars);
       Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
       debug("  instance sub = ", instanceSub);
+      // try to use the provided variable in preference
+      instanceSub.avoid(matchTerm.getFreeVariables());
       // must not require instantiating free variables
       if (!instanceSub.avoid(ctx.inputVars)) {
         Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
@@ -188,14 +190,7 @@ public abstract class Derivation extends Fact {
         ErrorHandler.report(errorMsg,node,"  could not avoid vars " + unavoidable);
       }
       debug("Adding to ctx: ", instanceSub);
-      ctx.currentSub.compose(instanceSub);
-      // we need to update input vars with new variables:
-      for (FreeVar v : matchTerm.getFreeVariables()) {
-        if (ctx.currentSub.getSubstituted(v) == null && !ctx.inputVars.contains(v)) {
-          debug("Adding new free variable: ", v);
-          ctx.inputVars.add(v);
-        }
-      }
+      ctx.composeSub(instanceSub);
     } catch (UnificationFailed e) {
       if (errorMsg == null) return false;
       ErrorHandler.report(errorMsg, node, "\twas checking " + suppliedTerm + " instance of " + matchTerm);
