@@ -1,0 +1,40 @@
+package regression;
+
+terminals All in Top contradiction tautology
+
+syntax
+    T ::= X | Top | T -> T | All X <: T => T[X]
+
+    Gamma ::= * | Gamma, X <: T
+
+
+judgment trivial: tautology
+
+  ------------- taut
+    tautology
+
+judgment type-eq: Gamma |- T = T
+assumes Gamma
+
+     -------------- eq
+     Gamma |- T = T
+     
+judgment type-var: T <: T in Gamma
+assumes Gamma
+
+    ------------------------- tvar
+    X <: T in (Gamma, X <: T)
+
+lemma innocent:
+    assumes Gamma
+    forall s: T1 <: T2 in Gamma
+    exists tautology.
+    _: tautology by case analysis on s:
+        case rule
+            ------------------------------- tvar
+            _: X <: T2 in (Gamma', X <: T2)
+        is
+            proof by rule taut
+        end case
+    end case analysis
+end lemma   
