@@ -3,11 +3,13 @@ package edu.cmu.cs.sasylf.term;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Relation;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class FreeVar extends Atom {
@@ -167,12 +169,20 @@ public class FreeVar extends Atom {
 		if (bVarList.size() == 0)
 			return;
 
+		Collections.reverse(bVarList);
+		
 		// create a fresh free variable
 		FreeVar newVar = this.freshify();
 		newVar.type = newVarType;		
+    Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
 
 		// add new bound variables and fill in substitution
 		Term appTerm = Facade.App(newVar, bVarList);
+		List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
+		for (Term ty : typeTerms) {
+		  varBindings.add(new Pair<String,Term>("_",ty));
+		}
+		Util.verify(type.equals(appTerm.getType(varBindings)), "replacement has wrong type");
 		sub.add(this, appTerm);
 	}
 
