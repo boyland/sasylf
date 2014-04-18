@@ -86,6 +86,11 @@ public class Judgment extends Node implements ClauseType {
 		GrmRule r = new GrmRule(GrmUtil.getStartSymbol(), cd.getSymbols(), cd);
 		ctx.ruleSet.add(r);
 
+		if (ctx.judgMap.get(name) != null) {
+		  if (ctx.judgMap.get(name) != this) { // idempotency
+		    ErrorHandler.recoverableError(Errors.DUPLICATE_JUDGMENT, this);
+		  }
+		}
 		ctx.judgMap.put(name, this);
 	}
 	
