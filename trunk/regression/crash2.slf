@@ -1,0 +1,51 @@
+package regression;
+
+terminals All in Top contradiction
+
+syntax
+    T ::= X | Top | T -> T | All X <: T => T[X]
+
+    Gamma ::= * | Gamma, X <: T
+
+
+judgment absurd: contradiction
+
+judgment type-eq: Gamma |- T = T
+assumes Gamma
+
+     -------------- eq
+     Gamma |- T = T
+     
+judgment type-var: T <: T in Gamma
+assumes Gamma
+
+    ------------------------- tvar
+    X <: T in (Gamma, X <: T)
+
+
+lemma exploit:
+    assumes Gamma
+    forall s1: T1 <: T in Gamma
+    forall s2: T <: T2 in Gamma
+    exists contradiction.
+    
+    proof by case analysis on s2:
+        case rule
+            ------------------------------- tvar
+            _: X <: T0 in (Gamma', X <: T0)
+        is
+            s1': T1'[X] <: X in (Gamma', X <: T0) by s1
+            proof by case analysis on s1':
+            end case analysis 
+        end case
+    end case analysis
+end lemma
+
+lemma impossible:
+    exists contradiction.
+    d1: X1 <: Top in (*, X1 <: Top) by rule tvar
+    d2: X2 <: X1 in  (*, X1 <: Top, X2 <: X1) by rule tvar
+    d3: X1 <: Top in (*, X1 <: Top, X2 <: X1) by weakening on d1
+    proof by lemma exploit on d2, d3
+end lemma
+
