@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Pair;
@@ -63,7 +64,6 @@ public class RuleCase extends Case {
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
 		if (!rule.isInterfaceOK()) return;
 		
-		// TODO: add premises to context anyway.
 		if (rule.getPremises().size() != getPremises().size())
 			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
 			//ErrorHandler.report("Expected " + rule.getPremises().size() + " premises for rule " + ruleName + " but " + getPremises().size() + " were given", this);	
@@ -205,11 +205,13 @@ public class RuleCase extends Case {
 				if (!unavoidableInputVars.isEmpty())
 				  debug("\tremoving input vars ", unavoidableInputVars);
 				newInputVars.removeAll(unavoidableInputVars);
-				Set<Term> computedSubDomain = new HashSet<Term>(computedSub.getMap().keySet());
+				// Set<FreeVar> computedSubDomain = computedSub.selectUnavoidable(newInputVars);
+				Set<Atom> computedSubDomain = new HashSet<Atom>(computedSub.getMap().keySet());
 				computedSubDomain.retainAll(newInputVars);
 				if (!computedSubDomain.isEmpty())
 					ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
-							+ "\n    The case given requires instantiating the following variable(s) that should be free: " + computedSubDomain, this);
+							+ "\n    The case given requires instantiating the following variable(s) that should be free: " + computedSubDomain, this,
+							"SASyLF computes that " + computedSubDomain.iterator().next() + " needs to be " + computedSub.getSubstituted(computedSubDomain.iterator().next()));
 				verify(caseResult.remove(pair), "internal invariant broken");
 				break;
 			} catch (UnificationFailed uf) {
