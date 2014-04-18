@@ -7,13 +7,13 @@ import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -247,33 +247,64 @@ public class Rule extends RuleLike implements CanBeCase {
 		  }
 		}
 		
-		// compute term for rule
-		Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
-		Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
+    // compute term to check against rule
+    List<Term> termArgs = this.getFreeVarArgs(term);
+    termArgs.add(term);
+    Term appliedTerm = App(this.getRuleAppConstant(), termArgs);
 
-		// compute term to check against rule
-		List<Term> termArgs = this.getFreeVarArgs(term);
-		termArgs.add(term);
-		Term appliedTerm = App(this.getRuleAppConstant(), termArgs);
-	
-		// see if the rule applies
-		Pair<Term, Substitution> pair = checkRuleApplication(term, ruleTerm, appliedTerm);
-		if (pair != null) {
-			Util.debug("\tadding (1) ", pair.first);
-			result.add(pair);
+    Pair<Term, Substitution> pair ;
+    
+    if (!isAssumption()) {
+		  // compute term for rule
+		  Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
+		  Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
+
+		  // see if the rule applies
+		  pair = checkRuleApplication(term, ruleTerm, appliedTerm);
+		  if (pair != null) {
+		    Util.debug("\tadding (1) ", pair.first);
+		    result.add(pair);
+		  }
 		}
 		
 		if (isAssumption()) {
+      // First disassemble the rule term to get the base.
+      // XXX: If we add non-variable assumptions, we need to change this
+      Abstraction ruleConcTerm = (Abstraction)conclusion.asTerm();
+      ruleConcTerm = (Abstraction)ruleConcTerm.substitute(ruleConcTerm.freshSubstitution(new Substitution()));
+      Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
+      Term ruleConcBodyTerm = ruleConcTermInner.getBody();
+      // XXX: boundVarIndex only exists if we have a variable
+      int boundVarIndex = ((Application)ruleConcBodyTerm).getArguments().indexOf(new BoundVar(2));
+      Util.debug("boundVarIndex = ",boundVarIndex);
 		  
-			// see how deep the assumptions are in term
-			int assumptionDepth = term.countLambdas();
-      if (assumptionDepth > 2) {
-        // XXX: This error is not relevant to the case analysis about to produced
-        // here.  Already we have handled the case that the last binding is
-        // the variable in question.  Below, we handle that we have to dig into Gamma
-        // to find a further binding.  So this error message is about not
-        // handling everything in between, which shouldn't be too hard.
-        ErrorHandler.report("Sorry, haven't yet implemented case analysis when there is more than one variable in scope", this);
+      // Collect all variables from term 
+      List<Abstraction> outer = new ArrayList<Abstraction>();
+      Term base = Term.getWrappingAbstractions(term,outer);
+      int abstractionDepth = outer.size();
+      Term destinedVar = ((Application)base).getArguments().get(boundVarIndex);
+      Util.debug("term destined to be a variable: ",destinedVar);
+		  
+      // First we go through all variables in the current context
+      // to see if they could be the one we are matching here
+      for (int i=0; i < outer.size(); ++i) {
+        Abstraction a = outer.get(i);
+        if (a.varType instanceof Application) {
+          System.out.println("is " + a.varType + " an application of " + judgment.typeTerm());
+          if (((Application)a.varType).getFunction().equals(judgment.typeTerm())) {
+            Term ruleTerm2 = a.varType.incrFreeDeBruijn(outer.size()-i);
+            ruleTerm2 = Term.wrapWithLambdas(outer,ruleTerm2);
+            // put it in a rule
+            ruleTerm2 = Facade.App(getRuleAppConstant(), ruleTerm2);
+            Util.tdebug("Constructed ruleTerm2 = ", ruleTerm2);
+            Util.tdebug("\tappliedTerm = ", appliedTerm);
+            pair = checkRuleApplication(term, ruleTerm2, appliedTerm);
+            if (pair != null) {
+              Util.tdebug("\tadded result! (2a) ", pair.first,", ",pair.second);
+              result.add(pair);
+            }
+          }
+        }
       }
       
       if (!clause.isRootedInVar()) {
@@ -283,36 +314,15 @@ public class Rule extends RuleLike implements CanBeCase {
       
       // Consider the possibility that the context is binding the result
       
-      // First disassemble the rule term to get the base.
-      // XXX: If we add non-variable assumptions, we need to change this
-      Abstraction ruleConcTerm = (Abstraction)((Application)ruleTerm).getArguments().get(0);
-      Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
-      Term ruleConcBodyTerm = ruleConcTermInner.getBody();
-      // XXX: boundVarIndex only exists if we have a variable
-      int boundVarIndex = ((Application)ruleConcBodyTerm).getArguments().indexOf(new BoundVar(2));
-      Util.debug("boundVarIndex = ",boundVarIndex);
-
-      // now collect all variables from term 
-      Stack<Abstraction> outer = new Stack<Abstraction>();
-      Term t;
-      for (t = term; t instanceof Abstraction; t = ((Abstraction)t).getBody()) {
-        outer.push((Abstraction)t);
-      }
-      int abstractionDepth = outer.size();
-      Term destinedVar = ((Application)t).getArguments().get(boundVarIndex);
-      Util.debug("term destined to be a variable: " + destinedVar);
-      
+     
       // now reassemble the rule term after inserting all outer bindings
       Term ruleTerm2 = ruleConcBodyTerm.incrFreeDeBruijn(abstractionDepth);
-      while (!outer.isEmpty()) {
-        Abstraction a = outer.pop();
-        ruleTerm2 = Facade.Abs(a.varName,a.varType,ruleTerm2);
-      }
+      ruleTerm2 = Term.wrapWithLambdas(outer,ruleTerm2);
       // add back the rule variables
       ruleTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, ruleTerm2);
       ruleTerm2 =  Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, ruleTerm2);
       // put it in a rule
-      ruleTerm2 = Facade.App(((Application)ruleTerm).getFunction(), ruleTerm2);
+      ruleTerm2 = Facade.App(getRuleAppConstant(), ruleTerm2);
 
       // now figure out how to change the applied term to handle variables.
       // We use the blunt instrument of bindInFreeVars
@@ -331,10 +341,10 @@ public class Rule extends RuleLike implements CanBeCase {
 
       //now try it out
       Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
-      Util.debug("\truleTerm = ", ruleTerm, "\n\tappliedTerm = ", appliedTerm);
+      Util.debug("\tappliedTerm = ", appliedTerm);
       pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
       if (pair != null) {
-        Util.debug("\tadded result! (2) ", pair.first,", ",pair.second);
+        Util.debug("\tadded result! (2b) ", pair.first,", ",pair.second);
         result.add(pair);
       }
 		}

@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -334,6 +335,23 @@ public abstract class Term {
 			varType = ((Abstraction)varType).getBody();
 		}
 		return argTypes;
+	}
+	
+	public static Term wrapWithLambdas(List<Abstraction> abs, Term t) {
+	  for (ListIterator<Abstraction> it = abs.listIterator(abs.size()); it.hasPrevious(); ) {
+	    Abstraction a = it.previous();
+	    t = Abstraction.make(a.varName, a.varType, t);
+	  }
+	  return t;
+	}
+	
+	public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
+	  while (t instanceof Abstraction) {
+	    Abstraction a = (Abstraction)t;
+	    abs.add(a);
+	    t = a.getBody();
+	  }
+	  return t;
 	}
 
 	/**
