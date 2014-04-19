@@ -16,6 +16,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
@@ -191,6 +192,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			}			
 
 			ctx.composeSub(sub);
+		} catch (UnificationIncomplete e) {
+      ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "SASyLF ran into incompleteness of unification while checking this rule", this,
+          "(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);		  
 		} catch (UnificationFailed e) {
 			Term explanationTerm = null;
 			try {

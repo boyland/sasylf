@@ -144,6 +144,7 @@ public class FreeVar extends Atom {
 			newVar.type = Abstraction.make("extendedTypeArg", typeTerm, type);			
 		//}
 		Term appTerm = new Application(newVar, new BoundVar(1));
+    Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
 		sub.add(this, appTerm);
 	}
 

@@ -24,6 +24,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -226,10 +227,11 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	/** Returns a fresh term for the rule and a substitution that matches the term.
 	 * sub will be null if no case analysis is possible
+	 * @param source TODO
 	 * @param term2 TODO
 	 * @param clauseUse TODO
 	 */
-	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, ClauseUse clause) {
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, ClauseUse clause, Node source) {
     Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
 
     // Special case: if the variable is known to be var-free, we can't match this rule
@@ -260,7 +262,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		  Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
 
 		  // see if the rule applies
-		  pair = checkRuleApplication(term, ruleTerm, appliedTerm);
+		  pair = checkRuleApplication(term, ruleTerm, appliedTerm, source);
 		  if (pair != null) {
 		    Util.debug("\tadding (1) ", pair.first);
 		    result.add(pair);
@@ -290,17 +292,17 @@ public class Rule extends RuleLike implements CanBeCase {
       for (int i=0; i < outer.size(); ++i) {
         Abstraction a = outer.get(i);
         if (a.varType instanceof Application) {
-          System.out.println("is " + a.varType + " an application of " + judgment.typeTerm());
+          Util.debug("is ",a.varType, " an application of ", judgment.typeTerm());
           if (((Application)a.varType).getFunction().equals(judgment.typeTerm())) {
             Term ruleTerm2 = a.varType.incrFreeDeBruijn(outer.size()-i);
             ruleTerm2 = Term.wrapWithLambdas(outer,ruleTerm2);
             // put it in a rule
             ruleTerm2 = Facade.App(getRuleAppConstant(), ruleTerm2);
-            Util.tdebug("Constructed ruleTerm2 = ", ruleTerm2);
-            Util.tdebug("\tappliedTerm = ", appliedTerm);
-            pair = checkRuleApplication(term, ruleTerm2, appliedTerm);
+            Util.debug("Constructed ruleTerm2 = ", ruleTerm2);
+            Util.debug("\tappliedTerm = ", appliedTerm);
+            pair = checkRuleApplication(term, ruleTerm2, appliedTerm, source);
             if (pair != null) {
-              Util.tdebug("\tadded result! (2a) ", pair.first,", ",pair.second);
+              Util.debug("\tadded result! (2a) ", pair.first,", ",pair.second);
               result.add(pair);
             }
           }
@@ -342,7 +344,7 @@ public class Rule extends RuleLike implements CanBeCase {
       //now try it out
       Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
       Util.debug("\tappliedTerm = ", appliedTerm);
-      pair = checkRuleApplication(term, ruleTerm2, appliedTerm2);
+      pair = checkRuleApplication(term, ruleTerm2, appliedTerm2, source);
       if (pair != null) {
         Util.debug("\tadded result! (2b) ", pair.first,", ",pair.second);
         result.add(pair);
@@ -353,13 +355,17 @@ public class Rule extends RuleLike implements CanBeCase {
 	
 	/** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
 	 * and appliedTerm is the rule term built up from term.  
+	 * @param source TODO
 	 */
 	private Pair<Term, Substitution> checkRuleApplication(Term term,
-			Term ruleTerm, Term appliedTerm) {
+			Term ruleTerm, Term appliedTerm, Node source) {
 		Substitution sub = null;
 		try {
 			sub = ruleTerm.unify(appliedTerm);
 			Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
+		} catch (UnificationIncomplete e) {
+		  Util.debug("unification incomplete on ", ruleTerm, " and ", appliedTerm);
+		  ErrorHandler.recoverableError("Unification incomplete for case " + getName(), source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
 		} catch (UnificationFailed e) {
 			Util.debug("unification failed on ", ruleTerm, " and ", appliedTerm);
 			sub = null;

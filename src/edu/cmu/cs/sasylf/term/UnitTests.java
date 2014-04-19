@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.SimpleTestSuite;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class UnitTests extends SimpleTestSuite {
 
@@ -82,6 +83,18 @@ public class UnitTests extends SimpleTestSuite {
         assertTrue(description + " result was " + actual + ", but expected " + expected,
             actual.containsAll(expected));
       }
+    } catch (UnificationIncomplete ex) {
+      System.out.println(ex.getMessage());
+      if (expected != null) {
+        Term t12 = t1.substitute(expected);
+        Term t21 = t2.substitute(expected);
+        if (t12.equals(t21)) {
+          System.out.println("BTW: expected substitution does work.");
+        } else {
+          System.err.println("Test case is suspect: expected substitution didn't work.");
+          System.err.println(t12+" != " + t21);
+        }    
+      }
     } catch (UnificationFailed ex) {
       assertTrue(description + " failed unexpectedly: " +ex.getMessage(), expected == null);
       if (expected != null) {
@@ -135,9 +148,7 @@ public class UnitTests extends SimpleTestSuite {
     // Not implemented: not in the pattern set.
     Substitution sub = subst(p("A",Abs(a,App(a2,b(1))))); 
     Application t1 = App(v("A",Abs(a,a)),a1);
-    // testUnification("match function", sub, t1, t2);
-    testUnification("match function", null, t1, t2);
-    assertEqual("hand-unification",t1.substitute(sub),t2.substitute(sub));
+    testUnification("match function", sub, t1, t2);
 
     t1 = 
         App(subtTransRule,
@@ -229,6 +240,19 @@ public class UnitTests extends SimpleTestSuite {
 
     // Util.DEBUG = true;
     testUnification("bad", null, t1, t2);
+    
+    t1 = App(v("F", Abs(a,a)), v("X",a));
+    t2 = App(a2,a1);
+    sub = subst(p("F",a2),p("X",a1));
+    testUnification("non-pattern", sub, t1, t2);
+    
+    // make sure not eagerly binding things:
+    Constant ax = new Constant("ax",Abs(a,Abs(Abs(a,a),Abs(Abs(a,a),Abs(a,Constant.TYPE)))));
+    t1 = App(ax, App(v("F",Abs(a,a)),v("X",a)), Abs(a,App(v("F",Abs(a,a)),b(1))), Abs(a,a1), App(v("F",Abs(a,a)),v("X",a)));
+    t2 = App(ax, App(v("G",Abs(a,a)),v("X",a)), Abs(a,b(1)), Abs(a,App(v("G",Abs(a,a)),b(1))), App(v("G",Abs(a,a)),v("X",a)));
+    sub = subst(p("F",Abs(a,b(1))), p("G",Abs(a,a1)), p("X",a1));
+    Util.DEBUG=true;
+    testUnification("eventual pattern", sub, t1, t2);
   }
   
   public static void main(String[] args) {
