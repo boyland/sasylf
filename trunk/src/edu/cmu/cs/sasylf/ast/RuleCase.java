@@ -21,6 +21,7 @@ import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -156,7 +157,10 @@ public class RuleCase extends Case {
 		} catch (EOCUnificationFailed uf) {
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 								+ "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);			
-		} catch (UnificationFailed uf) {
+		} catch (UnificationIncomplete uf) {
+      ErrorHandler.report(INVALID_CASE, "Case too complex for SASyLF to check; consider sending this example to the maintainers", this,
+          "SASyLF was trying to unify " + uf.term1 + " and " + uf.term2);
+ 		} catch (UnificationFailed uf) {
 			//uf.printStackTrace();
 			debug(this.getLocation(), ": was unifying ", adaptedConcTerm, " and ", adaptedCaseAnalysis);
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedCaseAnalysis + " for the conclusion");
@@ -280,9 +284,6 @@ public class RuleCase extends Case {
 			}
 		}*/
 		
-		pairSub.compose(unifyingSub);
-		Util.debug("Unifed pairSub = ", pairSub);
-		
 		ClauseUse targetClause = (ClauseUse)ctx.currentCaseAnalysisElement;
     if (targetClause.isRootedInVar()) {
       int n = premises.size();
@@ -301,9 +302,22 @@ public class RuleCase extends Case {
     }
     conclusion.addToDerivationMap(ctx);
     
-    Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
-    if (!overlyGeneral.isEmpty()) {
-      ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
+    // check whether the pattern is overly general requires that we first
+    // compose the pairSub with the unifyingSub, which sometimes can fail
+    // with a non-pattern substitution.  I probably could figure out how to
+    // see how to avoid this problem, but it's easier simply to give up trying
+    // to check the warning
+    
+    try {
+      pairSub.compose(unifyingSub);
+      Util.debug("Unifed pairSub = ", pairSub);
+      Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
+      if (!overlyGeneral.isEmpty()) {
+        ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
+      }
+    } catch (UnificationFailed ex) {
+      Util.debug("pairSub unification failed ", ex.term1, " = ", ex.term2, 
+          " while trying to compose ", pairSub, " with ", unifyingSub);
     }
     
 		// update the set of subderivations

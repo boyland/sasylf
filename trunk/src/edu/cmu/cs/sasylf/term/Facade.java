@@ -34,7 +34,7 @@ public class Facade {
 	public static Application App(Atom f, Term a1, Term a2, Term a3) {
 		return App(f, new Term[] { a1, a2, a3 });
 	}
-	public static Application App(Atom f, Term [] args) {
+	public static Application App(Atom f, Term... args) {
 		return new Application(f, Arrays.asList(args));
 	}
 	public static Application App(Atom f, List<Term> args) {

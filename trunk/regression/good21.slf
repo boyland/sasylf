@@ -1,0 +1,108 @@
+// default package
+
+terminals fn All
+
+syntax
+    t ::= x | t t | fn x : T => t[x] | t T | fn X => t[X]
+
+    T ::= X | T -> T | All X => T[X]
+
+    Gamma ::= * | Gamma, x : T | Gamma, X
+
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var
+    Gamma, x:T |- x : T
+
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+
+    Gamma, X |- t[X] : T'[X]
+    ------------------------------------------- T-TAbs
+    Gamma |- fn X => t[X] : All X => T'[X]
+
+    Gamma |- t1 : All X => T1[X]
+    ---------------------------------- T-TApp
+    Gamma |- t1 T : T1[T]
+
+
+judgment is-type: Gamma |- T
+assumes Gamma
+
+     ------------- I-TVar
+     Gamma, X |- X 
+
+lemma silly:
+    assumes Gamma
+    forall d1: Gamma, x : T1, X |- t[x][X] : T2[X]
+    forall d2: Gamma |- t1 : T1
+    exists Gamma, X |- t[t1][X] : T2[X].
+    proof by induction on d1:
+        case rule
+            ---------------------------------------- T-Var
+            _: Gamma', x' : T0, x : T1, X |- x' : T0
+        is
+            d3: Gamma', x': T0 |- x' : T0 by rule T-Var
+            proof by weakening on d3
+        end case
+
+        case rule
+            d4: Gamma, x : T1, X, x' : T0[X] |- t0[x][X][x'] : T3[X]
+            ------------------------------------------------- T-Abs
+            _ : Gamma, x : T1, X |- (fn x' : T0[X] => t0[x][X][x']) : (T0[X] -> T3[X])
+        is
+            // can't exchange around the X
+            d4':Gamma, X, x': T0[X] |- t0[t1][X][x'] : T3[X] by substitution on d4, d2
+            d1':Gamma, X |- (fn x': T0[X] => t0[t1][X][x']) : T0[X] -> T3[X] by rule T-Abs on d4'
+            proof by d1'
+        end case
+
+        case rule
+            d5: Gamma, x : T1, X |- t0[x][X] : (T0[X] -> T3[X])
+            d6: Gamma, x : T1, X |- t2[x][X] : T0[X]
+            ---------------------------------------- T-App
+            _: Gamma, x : T1, X |- (t0[x][X] t2[x][X]) : T3[X]
+        is
+            d5': Gamma, X |- t0[t1][X] : (T0[X] -> T3[X]) by substitution on d5, d2
+            d6': Gamma, X |- t2[t1][X] : T0[X] by substitution on d6, d2
+            proof by rule T-App on d5',d6'
+        end case
+
+        case rule
+            d7: Gamma, x : T1, X, X' |- t0[x][X][X'] : T0[X][X']
+            --------------------------------------------------------------------- T-TAbs
+            _: Gamma, x : T1, X |- (fn X' => t0[x][X][X']) : (All X0 => T0[X][X0])
+        is
+            d7': Gamma, X', x : T1, X |- t0[x][X][X'] : T0[X][X'] by exchange on d7
+            d2': Gamma, X' |- t1 : T1 by weakening on d2
+            d1': Gamma, X', X |- t0[t1][X][X'] : T0[X][X'] by induction hypothesis on d7', d2'
+            d1'':Gamma, X, X' |- t0[t1][X][X'] : T0[X][X'] by exchange on d1'
+            proof by rule T-TAbs on d1''
+        end case
+
+        case rule
+            d8: Gamma, x : T1, X |- t0[x][X] : (All X' => T0[X][X'])
+            --------------------------------------------------------- T-TApp
+            _: Gamma, x : T1, X |- (t0[x][X] T3[X]) : T0[X][T3[X]]
+        is
+            d8': Gamma, X |- t0[t1][X] : (All X' => T0[X][X']) by induction hypothesis on d8, d2
+            proof by rule T-TApp on d8'
+        end case
+
+        case rule
+            ----------------------------- T-Var
+            _: Gamma, x : T1, X |- x : T1
+        is
+            proof by weakening on d2
+        end case
+
+    end induction
+end lemma

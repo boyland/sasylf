@@ -1,13 +1,16 @@
 package edu.cmu.cs.sasylf.term;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+
+import edu.cmu.cs.sasylf.util.Util;
 
 public class Application extends Term {
 	public Application(Atom f, List<? extends Term> a) {
@@ -144,6 +147,11 @@ public class Application extends Term {
 			for (Term t : args)
 				if (!(t instanceof BoundVar))
 					return false;
+			if (args.size() < 2) return true;
+			Set<Integer> s = new HashSet<Integer>();
+			for (Term t : args) {
+			  if (!s.add(((BoundVar)t).getIndex())) return false;
+			}
 			return true;
 		} else
 			return false;
@@ -182,11 +190,11 @@ public class Application extends Term {
 	}
 
 	void unifyFlexApp(FreeVar otherVar, List<? extends Term> otherArgs, Substitution current, Queue<Pair<Term,Term>> worklist) {
+    Application otherApp =  new Application(otherVar, otherArgs);
 		if (function instanceof Constant) {
 			// avoid infinite loop
 			if (this.getFreeVariables().contains(otherVar)) {
-				Application errorApp =  new Application(otherVar, otherArgs);
-				throw new UnificationFailed("recursion detected", errorApp, this);
+				throw new UnificationFailed("recursion detected", otherApp, this);
 			}
 
 			/* case: C e1...en = E e1'...em'
@@ -200,6 +208,10 @@ public class Application extends Term {
 			 * in above, E is otherVar, e1'...em' is otherArgs, C is function, e1..en is arguments
 			 * e1''...em'' is xm...x1.
 			 */
+			
+			if (!otherApp.isPattern()) {
+			  throw new UnificationIncomplete("Not in pattern subset: " + this + " ?=? " + otherApp,this,otherApp);
+			}
 
 			List<Term> helperArgs = new ArrayList<Term>();
 			int m = otherArgs.size();
@@ -264,17 +276,17 @@ public class Application extends Term {
 				// quick fix for supporting eta-long forms better
 				// TODO: is this general enough?
 				
-				
-				Application errorApp =  new Application(otherVar, otherArgs);
 
 				// verify that this is a pattern
-				if (!errorApp.isPattern()) {
-					errorApp.tryEtaLongCase(this, current, worklist);
+				if (!otherApp.isPattern()) {
+				  Util.debug("not pattern: ", otherApp);
+					otherApp.tryEtaLongCase(this, current, worklist);
 					return;
 				}
 
 				if (!isPattern()) {
-					tryEtaLongCase(errorApp, current, worklist);
+          Util.debug("not pattern: ", this);
+					tryEtaLongCase(otherApp, current, worklist);
 					return;
 				}
 
@@ -285,9 +297,12 @@ public class Application extends Term {
 
 				// create a new free variable
 				// result type is same as function after arguments applied (or G after y1...ym applied)
-				// but takes arguments from commonargs 
+				// but takes arguments from commonArgs 
 
-				List<BoundVar> commonArgs = new ArrayList<BoundVar>((List) arguments);
+				List<BoundVar> commonArgs = new ArrayList<BoundVar>(arguments.size());
+				for (Term arg : arguments) {
+				  commonArgs.add((BoundVar)arg);
+				}
 				//commonArgs.retainAll((List) otherArgs);
 				List<Term> functionArgTypes = getArgTypes(function.getType(), arguments.size());
 				Term residualType = function.getType();
@@ -306,9 +321,12 @@ public class Application extends Term {
 				Term HType = wrapWithLambdas(residualType, functionArgTypes);
 				FreeVar H = FreeVar.fresh("H", HType);
 
-				Term varMatch = computeVarMatch(H, commonArgs, (List)arguments, getArgTypes(function.getType(), arguments.size()), current, errorApp);
-				Term otherVarMatch = computeVarMatch(H, commonArgs, (List)otherArgs, getArgTypes(otherVar.getType(), otherArgs.size()), current, errorApp);
+				Term varMatch = computeVarMatch(H, commonArgs, arguments, getArgTypes(function.getType(), arguments.size()), current, otherApp);
+				Term otherVarMatch = computeVarMatch(H, commonArgs, otherArgs, getArgTypes(otherVar.getType(), otherArgs.size()), current, otherApp);
 
+				if (Util.DEBUG && varMatch.equals(otherVarMatch)) {       
+				  Util.debug("pointless substitution for ",function," and ",otherVar);
+				}
 				current.add(function, varMatch);
 				current.add(otherVar, otherVarMatch);
 
@@ -359,98 +377,103 @@ public class Application extends Term {
 	}
 
 	private void tryEtaLongCase(Application application, Substitution current, Queue<Pair<Term, Term>> worklist) {
-		// we know both are freevars
-		// this is not a pattern--but are application's args a sequence of BoundVars that are the same as the end of my arguments, due to an eta-long form?
+	  // This code tries to find a sound way to handle an otherwise illegal flexflex case.
+	  // In the past this code was hardly ever used and harbored major errors.
+	  Util.verify(function instanceof FreeVar, "tryEtaLongCase requires flexflex, function is " + function);
+	  Util.verify(application.getFunction() instanceof FreeVar, "tryEtaLongCase requires flexflex, application is "+application);
+	  Util.verify(!isPattern(), "tryEtaLongCase should only be called if this is not a pattern: " + this);
+
+	  // We have to be very careful in our heuristics.  SASyLF relies on unification.
+	  // If we report an ordinary unification failure for a case, this means the
+	  // case can be omitted.
+	  
+	  // Case:
+	  //    F x1 ... xn = G y1 ... ym
+	  // where y1 ... ym are distinct bound variables (G y1 ... ym is a pattern)
+	  // and x1 ... xn use only bound variables from y1 ... ym
+	  // We bind G to \m...\1 . F x'1 ... x'n
+	  // where in x'i, we replace every yj with j.  This is accomplished by applying
+	  //     (\N...\1 . F x1 ... xn) y-1_N .. y-1_1
+	  // where N = max yj and 
+	  //       y-1_i 
+	  //
+	  // If F took other bound variables, then G would be bound to something with variables
+	  // which will cause problems eventually.
+	  case1: if (application.isPattern()) {
+	    // Compute N and the y's
+	    int m = application.arguments.size();
+	    int N = 0;
+	    for (Term t : application.arguments) {
+	      int i = ((BoundVar)t).getIndex();
+	      if (i > N) N = i;
+	    }
+	    int[] inverse = new int[N];
+	    for (int j=0; j < m; ++j) {
+	      BoundVar bv = (BoundVar)application.arguments.get(j);
+	      int i = bv.getIndex();
+	      Util.verify(inverse[i-1] == 0, "not really a pattern");
+	      inverse[i-1] = m-j;
+	    }
+      Util.debug("Potential eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
+	    
+	    // Check condition
+	    if (this.hasBoundVarAbove(N)) {
+	      Util.debug("  has BV over " + N);
+	      break case1;
+	    }
+	    for (int i=0; i < N; ++i) {
+	      if (inverse[i] == 0 && this.hasBoundVar(i+1)) {
+	        Util.debug("  ",this,".hasBoundVar(" + (i+1) + ")");
+	        break case1;
+	      }
+	    }
+	    
+	    Util.debug("Found eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
+	    // Construct the binding
+	    List<Abstraction> abs = new ArrayList<Abstraction>();
+	    getWrappingAbstractions(application.function.getType(),abs);
+	    List<Term> tempTypes = new ArrayList<Term>();
+	    for (int i=0; i < N; ++i) {
+	      int j = inverse[i]-1;
+	      if (j < 0) tempTypes.add(Constant.UNKNOWN_TYPE);
+	      else tempTypes.add(abs.get(j).varType);
+	    }
+	    Collections.reverse(tempTypes);
+	    Term converted = wrapWithLambdas(this,tempTypes);
+	    Util.debug("  converted = ",converted);
+	    List<Term> tempArgs = new ArrayList<Term>();
+	    for (int i=0; i < N; ++i) {
+	      int j = inverse[i]-1;
+	      if (j < 0) tempArgs.add(this);
+	      else tempArgs.add(new BoundVar(j+1));
+	    }
+	    Collections.reverse(tempArgs);
+	    Util.debug("  tempArgs = " + tempArgs);
+	    converted = converted.apply(tempArgs, 0);
+	    Util.debug("  body = " + converted);
+	    converted = Term.wrapWithLambdas(abs, converted);
+	    Util.debug("  result = " + converted);
+      Util.debug("fixing up eta long case in pattern unification: ", application.function, " ==> ", converted);
+      current.add((FreeVar)application.getFunction(), converted);
+      unifyHelper(current, worklist);
+      return;
+	  }
+
+	  // Some previous unsound heuristics:
+	  // 
+	  // @ If the applications were the same size, equate everything:
+	  //    (F X) = (G X) ==> F = G
+	  //   Not sound: this doesn't include the solution
+	  //     F = \x.x,  G = \x.a,  X = a
+	  //
+	  // @ If one application has all the arguments of the other, then bind the shorter
+	  //   variable to the longer one.  This doesn't work for the same reason as above.
+	  
+		throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + application + " and " + this, application, this);
 		
-		int sizeDelta = arguments.size() - application.arguments.size();
-		if (sizeDelta > 0) {
-			// check for the same tail
-			boolean argTailIdentical = true;
-			for (int i = 0; i < application.arguments.size(); ++i) {
-				if (! arguments.get(i + sizeDelta).equals(application.arguments.get(i)))
-					argTailIdentical = false;
-			}
-			
-			// check for the case where one is a pattern and the other not, but has the same bound variables			
-			Application thePattern = null;
-			Application theOther = null;
-			if (isPattern()) {
-				thePattern = this;
-				theOther = application;
-			}
-			if (application.isPattern()) {
-				thePattern = application;
-				theOther = this;
-			}
-
-			
-			if (thePattern != null) {
-				// assume we have F(x_i) = G(...)
-				
-				List<BoundVar> patternArgs = new ArrayList<BoundVar>((List) thePattern.getArguments());
-				
-				// maxIndex is x_n where n is the max of the i
-				int maxIndex = patternArgs.get(0).getIndex();
-				List<Integer> indexes = new ArrayList<Integer>(); 
-				for (BoundVar v : patternArgs) {
-					int index = v.getIndex();
-					indexes.add(index);
-					if (index > maxIndex)
-						maxIndex = index;
-				}
-
-				// resultTerm = lambda x1...lambda xn . G(...)
-				Term resultTerm = theOther;
-				for (int i = 0; i < maxIndex; ++i) {
-					resultTerm = Abstraction.make("x", Constant.UNKNOWN_TYPE, resultTerm);
-				}
-
-				// apply args to resultTerm
-				List<Term> argList = new ArrayList<Term>();
-				for (int i = 0; i < maxIndex; ++i) {
-					if (indexes.contains(i)) {
-						int currIndex = indexes.indexOf(i);
-						argList.add(Facade.BVar(currIndex));
-					} else {
-						argList.add(Facade.BVar(i+indexes.size()));
-					}
-				}
-				resultTerm = resultTerm.apply(argList, 0);
-				List<Term> functionArgTypes = getArgTypes(thePattern.getFunction().getType(), thePattern.getArguments().size());
-				for (int i = 0; i < patternArgs.size(); ++i) {
-					resultTerm = Abstraction.make("x", functionArgTypes.get(i), resultTerm);
-				}
-
-				current.add(thePattern.getFunction(), resultTerm);
-				unifyHelper(current, worklist);
-				
-			} else if (argTailIdentical) {
-				// OK, we can fix it!!!
-				FreeVar otherVar = (FreeVar) application.function;
-				List<Term> myNewArgs = new ArrayList<Term>();
-				for (int i = 0; i < sizeDelta; ++i)
-					myNewArgs.add(arguments.get(i));
-				Application newMe = (Application) function.apply(myNewArgs, 0);
-				debug("fixing up eta long case in pattern unification: ", otherVar, " ==> ", newMe);
-				current.add(otherVar, newMe);
-	
-				unifyHelper(current, worklist);
-			} else {
-				throw new UnificationFailed("not implemented: non-pattern unification case after delay: " + application + " and " + this, application, this);
-			}
-		} else {
-			worklist.add(makePair(function, application.function));
-			
-			for (int i = 0; i < arguments.size(); ++i)
-				worklist.add(makePair(application.arguments.get(i), arguments.get(i)));
-
-			unifyHelper(current, worklist);
-
-			//throw new UnificationFailed("not implemented: non-pattern unification case after delay: " + application + " and " + this, application, this);
-		}
 	}
 
-	private  Term computeVarMatch(FreeVar H, List<BoundVar> commonArgs, List<BoundVar> arguments2, List<Term> arguments2Types, Substitution current, Application errorApp) {
+	private  Term computeVarMatch(FreeVar H, List<BoundVar> commonArgs, List<? extends Term> arguments2, List<Term> arguments2Types, Substitution current, Application errorApp) {
 		// otherArgs => arguments2?
 		// arguments => commonArgs?
 		

@@ -88,7 +88,7 @@ public class DerivationByInversion extends DerivationWithArgs {
           caseResult.add(newPair);
         }
       } else {
-        caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause);
+        caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause, this);
       }
       if (caseResult.isEmpty()) continue;
       Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();

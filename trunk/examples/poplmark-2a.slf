@@ -238,22 +238,6 @@ Gamma |- all X' <: T1' => T2'[X'] <: all X <: T1 => T2[X]
 
 
 
-/** We don't have logical and or or operators built-in, so we define the logical
- * or used in progress (steps OR is a value) using its own judgment, with one
- * rule for each disjunct.  Twelf uses the same trick for encoding "or."
- */
-
-judgment stepsorvalue: t stepsorvalue
-
-t value
---------------- stepsorvalue-value
-t stepsorvalue
-
-t -> t'
---------------- stepsorvalue-steps
-t stepsorvalue
-
-
 /** equality judgment, used in canonical forms lemma */
 
 judgment equality: t == t
@@ -274,15 +258,6 @@ judgment Tarrow-sub: T'' == T <: T
 *, X <: T11'' |- T12'[X] <: T12[X]
 ---------------------------------------------------------------------------------- Tarrow-sub
 (all X <: T11' => T12'[X]) == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
-
-
-judgment app-sub: t : T t : T -> T <: T
-
-* |- t2 : T2
-* |- t1 : T2 -> T1
-* |- T1 <: T
--------------------------- app-sub
-t2 : T2 t1 : T2 -> T1 <: T
 
 
 
@@ -383,76 +358,60 @@ end lemma
 
 lemma canonical-form-lambda : forall dtv : t value forall dtt: * |- t : T1 -> T2
 						      exists t == lambda x : T1' => t'[x].
+						      
+/* We wish to prove by induction on dtt, but case-analyze on dtv.
+ * In early versions of SASyLF these were always linked, 
+ * but now one can specify the induction separately:
+ */ 
+use induction on dtt
 
-deq : t == lambda x : T1' => t'[x] by induction on dtt :
-	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
-	 * we built case analysis in to induction.  TODO: revisit this decision!
-	 */
-	case rule
-	
-		dtt'' : *, x:T1 |- t'[x] : T2
-		--------------------------------------------- T-Abs
-		dtt' : * |- lambda x : T1 => t'[x] : T1 -> T2
-	
-	is
-	
-		deq : t == lambda x : T1 => t'[x] by rule equality
-		
-	end case
-	
-	case rule
-	
-		dtt1' : (*) |- t1 : T'' -> (T1 -> T2)
-		dtt2' : (*) |- t2 : T''
-		--------------------------------------------- T-App
-		dtt' : (*) |- t1 t2 : T1 -> T2
-	
-	is
+// The keyword "proof" refers to whatever we are trying to prove: 
+proof by case analysis on dtv:
+    case rule
+        ----------------------------- V-Abs
+        _: (lambda x : T0 => t0[x]) value
+    is
+        proof by rule equality
+    end case
 
-		deq : t == lambda x : T1' => t'[x] by case analysis on dtv :
-		
-		end case analysis
-						
-	end case
-	case rule
-	
-		dp1t1': * |- t'' : all X <: T'' => T'''[X]
-		dp1t2': * |- T' <: T''
-		---------------------------------------- T-Tapp
-		dp1t': * |- t'' "[" T' "]" : T'''[T']
-	
-	is
+    // This case actually is a contradiction case, but this fact
+    // is concelaed by T-Sub
+    case rule
+        -------------------------------- V-Tabs
+        _: (lambda X <: T0 => t0[X]) value
+    is
+        proof by case analysis on dtt:
+            case rule
+                dtt1: * |- (lambda X <: T0 => t0[X]) : T3
+                dts1: * |- T3 <: (T1 -> T2)
+                ---------------------------------------------- T-Sub
+                _: * |- (lambda X <: T0 => t0[X]) : (T1 -> T2)
+            is
+                // even at this point, we don't see a contradiction
+                // so we just go ahead with induction
+                d4: T' == T1'' -> T2' and
+                d5: * |- T1 <: T1'' and
+                d6: * |- T2' <: T2 by lemma arrow-sub-arrow on dts1
+                use inversion of type-equality on d4
+                // now dtt1 has the right shape for the induction hypothesis
+                proof by induction hypothesis on dtv, dtt1
+            end case
+        // other cases don't unify with conclusion
+        end case analysis
+    end case
 
-		deq : t == lambda x : T1' => t'[x] by case analysis on dtv :
-		
-		end case analysis
-						
-	end case
-
-	case rule
-
-		d1': * |- t : T'
-		d2': * |- T' <: T1 -> T2
-		------------------------ T-Sub
-		d3': * |- t : T1 -> T2
-
-	is
-		d4: T' == T1'' -> T2' and
-		d5: * |- T1 <: T1'' and
-		d6: * |- T2' <: T2 by lemma arrow-sub-arrow on d2'
-		use inversion of type-equality on d4
-		d8: t == lambda x : T1''' => t''[x] by induction hypothesis on dtv, d1'		
-	end case
-
-	// other cases don't unify with conclusion
-
-end induction
+end case analysis
 end lemma
 
 
 lemma Tarrow-sub-Tarrow: 
     forall dsub: * |- T'' <: all X <: T11'' => T12[X]
     exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
+    
+    /* Currently in SASyLF, "and" can't be used to conjoin statements with 
+     * different Gamma contexts, and so we can't use the more natural output
+     * seen here:
+     */
     // exists T'' == all X <: T11' => T12'[X] and * |- T11'' <: T11' and *, X <: T11'' |- T12'[X] <: T12[X].
 	
 
@@ -495,6 +454,7 @@ is
 			xx1: *, X' <: T11'' |- X' <: T11'' by rule SA-Var
 			xx2: *, X' <: T11'' |- T11'' <: T21' by weakening on d5
 			xx3: *, X' <: T11'' |- X' <: T21' by rule SA-Trans on xx1, xx2
+			// the following two steps replace the need for a narrowing lemma
 			d10':*, X' <: T11'', X <: T21' |- T12''[X] <: T22[X] by weakening on d10
 			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10', xx3
 			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule SA-Trans on d13, d6
@@ -524,88 +484,62 @@ end lemma
 lemma canonical-form-Lambda : forall dtv : t value forall dtt: * |- t : all X <: T1 => T2[X]
 							  exists t == lambda X <: T1' => t2[X].
 
-deq : t == lambda X <: T1' => t2[X] by induction on dtt :
-	/** ugh--problem with SASyLF here.  We'd like to case analyze on dtv first, but
-	 * we built case analysis in to induction.  TODO: revisit this decision!
-	 */
-	case rule
-	
-		d1: *, X <: T1 |- t2[X] : T2[X]
-		--------------------------------------------------- T-Tabs
-		d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
-	
-	is
-	
-		deq : t == lambda X <: T1 => t2[X] by rule equality
-		
-	end case
-	
-	case rule
-	
-		dtt1' : (*) |- t1 : T'' -> (all X <: T1 => T2[X])
-		dtt2' : (*) |- t2' : T''
-		--------------------------------------------- T-App
-		dtt' : (*) |- t1 t2' : all X <: T1 => T2[X]
-	
-	is
+use induction on dtt
 
-		deq : t == lambda X <: T1' => t2[X] by case analysis on dtv :
-		
-		end case analysis
-						
-	end case
-	case rule
-	
-		dp1t1': * |- t' : all X <: T'' => T'''[X]
-		dp1t2': * |- T' <: T''
-		---------------------------------------- T-Tapp
-		dp1t': * |- t' "[" T' "]" : T'''[T']
-	
-	is
+proof by case analysis on dtv:
+    case rule
+        -------------------------------- V-Tabs
+        _: (lambda X <: T0 => t0[X]) value
+    is
+        proof by rule equality
+    end case
 
-		deq : t == lambda X <: T1' => t2[X] by case analysis on dtv :
-		
-		end case analysis
-						
-	end case
+    case rule
+        ----------------------------- V-Abs
+        _: (lambda x : T0 => t0[x]) value
+    is
+        proof by case analysis on dtt:
+            case rule
+		         d1': * |- t : T'
+		         d2': * |- T' <: all X <: T1 => T2[X]
+		         ------------------------------------ T-Sub
+		         d3': * |- t : all X <: T1 => T2[X]
+	        is
+		        d4: T' == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X] by lemma Tarrow-sub-Tarrow on d2'
+                proof by case analysis on d4:
+                    case rule
+                        _: * |- T1 <: T1''
+                        _: (*, X <: T1) |- T2'[X] <: T2[X]
+                        ----------------------------------- Tarrow-sub
+                        _: (all X <: T1'' => T2'[X]) == (all X <: T1'' => T2'[X]) <: (all X <: T1 => T2[X])
+                    is
+                        proof by induction hypothesis on dtv, d1'
+                    end case
 
-	case rule
-
-		d1': * |- t : T'
-		d2': * |- T' <: all X <: T1 => T2[X]
-		------------------------------------ T-Sub
-		d3': * |- t : all X <: T1 => T2[X]
-
-	is
-		d4: T' == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X] by lemma Tarrow-sub-Tarrow on d2'
-		deq : t == lambda X <: T1' => t2[X] by case analysis on d4:
-
-		case rule
-			d5: * |- T1 <: T1''
-			d6: *, X <: T1 |- T2'[X] <: T2[X]
-			------------------------------------------------------------------------------------- Tarrow-sub
-			d7: all X <: T1'' => T2'[X] == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X]
-		is
-			deq : t == lambda X <: T1''' => t2'[X] by induction hypothesis on dtv, d1'
-		end case
-		
-		end case analysis	
-	end case
-
-	// other cases don't unify with conclusion
-
-end induction
+                end case analysis
+            end case	
+	    end case analysis	
+    end case
+end case analysis
 end lemma
 
+/* The result of progress is an "or" of two judgments.
+ * Since t' is not bound in the "forall" (inputs) part of the theorem,
+ * it is assumed existentially qualified. 
+ */
 
-theorem progress : forall dt : * |- t : T exists t stepsorvalue.
+/* Technically, the t' must be produced even when the first disjunct is proved,
+ * but since SASyLF requires all syntax (not judgments) to be inhabited,
+ * this is done automatically.
+ */
+theorem progress : forall dt : * |- t : T exists t value or t -> t'.
 
 /** Now the real fun begins--a proof by induction.  We use a "by induction on X :"
  * justification, where X is the derivation or syntax that we are doing induction
- * over.
+ * over.  This does a case analysis as well as marking the induction argument.
  */
 
-dsv : t stepsorvalue by induction on dt :
+proof by induction on dt :
 
 /** Inside the induction proof, we do a case analysis, with one case for each rule
  * that could have been used to produce the indicated judgment.  If we are doing
@@ -630,10 +564,9 @@ case rule
 	d2: * |- lambda x:T1 => t2[x] : T1 -> T2
 
 is
-
+    // we prove that the term is a value, which is sufficient for the proof
+    // of the "or" result of the theorem because it is the first disjunct.
 	d3 : lambda x:T1 => t2[x] value by rule V-Abs
-	d4 : lambda x:T1 => t2[x] stepsorvalue by rule stepsorvalue-value on d3
-	
 end case
 
 
@@ -647,74 +580,48 @@ case rule
 is
 
 	/** This example shows how we can use the induction hypothesis.
-	 * Note that this is only legal because dp1t is a subderivation of dt.
+	 * Note that these are only legal because dp1t/dp2t are subderivations of dt.
 	 */
 
-	dp1sv: t1 stepsorvalue by induction hypothesis on dp1t
-	dp2sv: t2 stepsorvalue by induction hypothesis on dp2t
+	dp1sv: t1 value or t1 -> t1' by induction hypothesis on dp1t
+	dp2sv: t2 value or t2 -> t2' by induction hypothesis on dp2t
 	
-	dsv : t stepsorvalue by case analysis on dp1sv :
+	// We now start a case analysis on results from the induction hypothesis.
+	// An "or" judgment uses special "or" cases:
+	proof by case analysis on dp1sv :
 
-	case rule
-
-		dp1s : t1 -> t1'
-		---------------------- stepsorvalue-steps
-		dp1sv' : t1 stepsorvalue
-
+	case or dp1s : t1 -> t1'
 	is
 	
 		ds : t1 t2 -> t1' t2 by rule E-CtxApp1 on dp1s
-		dsv : t1 t2 stepsorvalue by rule stepsorvalue-steps on ds
 	
 	end case
-	case rule
-
-		dp1v : t1 value
-		---------------------- stepsorvalue-value
-		dp1sv' : t1 stepsorvalue
+	case or dp1v : t1 value
 
 	is
 	
-		dsv : t stepsorvalue by case analysis on dp2sv :
+		proof by case analysis on dp2sv :
 	
-		case rule
-		
-			dp2v : t2 value
-			---------------------- stepsorvalue-value
-			dp2sv' : t2 stepsorvalue
-		
+		case or dp2v : t2 value
 		is
-			deq : t1 == lambda x : T11' => t1'[x] by lemma canonical-form-lambda on dp1v, dp1t
-		
-			dsv : t stepsorvalue by case analysis on deq :
-			
-			case rule
-			
-				------------------------------------- equality
-				deq' : lambda x : T11' => t1'[x] == lambda x : T11' => t1'[x]
-				
-			is
+			deq : t1 == lambda x : T11' => t11[x] by lemma canonical-form-lambda on dp1v, dp1t
 
-				dsteps : t1 t2 -> t1'[t2] by rule E-AppAbs on dp2v				
-				dsv : t stepsorvalue by rule stepsorvalue-steps on dsteps
-				
-			end case
-			
-			end case analysis
+            // we do a case analysis on deq so that now SASyLF
+            // knows that t1 is actually a lambda expression.
+            // "use inversion" is used when we aren't interested
+            // in the premises of the rule, but here there are not
+            // premises in any case.
+		    use inversion of equality on deq
 
+            // now we can use E-AppAbs
+		    dsteps : t1 t2 -> t11[t2] by rule E-AppAbs on dp2v
 		end case
 		
-		case rule
-		
-			dp2s : t2 -> t2'
-			------------------------- stepsorvalue-steps
-			dp2sv' :  t2 stepsorvalue
-		
+		case or dp2s : t2 -> t2'
 		is
 		
 			ds : t1 t2 -> t1 t2' by rule E-CtxApp2 on dp1v, dp2s
-			dsv : t1 t2 stepsorvalue by rule stepsorvalue-steps on ds
-		
+			
 		end case
 		end case analysis
 	end case
@@ -730,7 +637,6 @@ case rule
 is
 
 	d3 : lambda X <: T1 => t2[X] value by rule V-Tabs
-	d4 : lambda X <: T1 => t2[X] stepsorvalue by rule stepsorvalue-value on d3
 
 end case
 
@@ -741,46 +647,23 @@ case rule
 	----------------------------------- T-Tapp
 	d3: * |- t1 "[" T2 "]" : T12[T2]
 is
-	d1sv: t1 stepsorvalue by induction hypothesis on d1
+	d1sv: t1 value or t1 -> t1' by induction hypothesis on d1
 	
-	dsv : t stepsorvalue by case analysis on d1sv :
+	proof by case analysis on d1sv :
 
-	case rule
-
-		d1s : t1 -> t1'
-		----------------------- stepsorvalue-steps
-		d1sv' : t1 stepsorvalue
-
-	is
+	case or d1s : t1 -> t1' is
 	
 		ds : t1 "[" T2 "]" -> t1' "[" T2 "]" by rule E-CtxTapp on d1s
-		dsv : t1 "[" T2 "]" stepsorvalue by rule stepsorvalue-steps on ds
 	
 	end case
-	case rule
-
-		d1v : t1 value
-		----------------------- stepsorvalue-value
-		d1sv' : t1 stepsorvalue
-
-	is
 	
-		deq : t1 == lambda X <: T11' => t1'[X] by lemma canonical-form-Lambda on d1v, d1
+	case or d1v : t1 value is
 	
-		dsv : t stepsorvalue by case analysis on deq :
+		deq : t1 == lambda X <: T11' => t11[X] by lemma canonical-form-Lambda on d1v, d1
+	
+		use inversion of equality on deq
 		
-		case rule
-		
-			------------------------------------------------------------- equality
-			deq' : lambda X <: T11' => t1'[X] == lambda X <: T11' => t1'[X]
-			
-		is
-
-			dsteps : t1 "[" T2 "]" -> t1'[T2] by rule E-TappTabs
-			dsv : t stepsorvalue by rule stepsorvalue-steps on dsteps
-			
-		end case
-		end case analysis
+	    dsteps : t1 "[" T2 "]" -> t11[T2] by rule E-TappTabs
 
 	end case
 	end case analysis
@@ -794,7 +677,7 @@ case rule
 	d3: * |- t : T
 is
 
-	dsv : t stepsorvalue by induction hypothesis on d1
+	proof by induction hypothesis on d1
 
 end case
 end induction
@@ -907,6 +790,8 @@ case rule
 
 is
 	dt' : * |- t' : T by case analysis on ds:
+	    // There are no cases, because nothing matches.
+	    // An empty case analysis can prove anything.
 	end case analysis
 end case
 
@@ -942,7 +827,6 @@ is
 		------------------------------------- E-AppAbs
 		d5: (lambda x:T11 => t12[x]) t2 -> t12[t2]
 	is
-		//d6: *, x:T1 |- t12[x] : T by lemma invert-lambda on d1
 		d6: * |- T1 <: T1 by rule SA-Refl
 		d7: * |- t12[t2] : T by lemma invert-lambda on d1, d2, d6
 	end case

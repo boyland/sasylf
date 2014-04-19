@@ -127,8 +127,13 @@ public abstract class Term {
 	/** Sets up worklist and calls unifyHelper
 	 */
 	public final Substitution unify(Term t) {
-		Substitution current = unifyAllowingBVs(t);
-
+	  Substitution current;
+	  try {
+	    current = unifyAllowingBVs(t);
+	  } catch (UnificationIncomplete ex) {
+	    Util.debug("Was trying to unify ",this," and ", t);
+	    throw ex;
+	  }
 		// a free variable in the input to unify() should not, in its substitution result, have any free bound variables
 		Set<FreeVar> freeVars = getFreeVariables();
 		freeVars.addAll(t.getFreeVariables());
@@ -140,6 +145,7 @@ public abstract class Term {
 				throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + current);
 			}
 		}
+		// The following code is suspect; it isn't clear that it is sound.
 		if (!unusable.isEmpty()) {
 		  // restructure set as map:
 		  Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
@@ -150,6 +156,7 @@ public abstract class Term {
 		    map.get(p.first).add(p.second);
 		  }
 		  for (Map.Entry<FreeVar, Set<Integer>> replace : map.entrySet()) {
+		    Util.debug("need to replace: ",replace);
 		    FreeVar v = replace.getKey();
 		    Term type = v.getType();
 		    List<Term> oldTypes = new ArrayList<Term>();
@@ -289,7 +296,7 @@ public abstract class Term {
 		// TODO: should enforce that args are in proper order of binding, and that they include *all* the free "bound" vars in the unified thing
 		for (Term t : arguments)
 			if (!(t instanceof BoundVar))
-				throw new UnificationFailed("not implemented: non-pattern unification case after delay: " + errorApp + " and " + this, errorApp, this);
+				throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + errorApp + " and " + this, errorApp, this);
 
 		Term wrappedThis = this;
 		Term varType = function.getType();
