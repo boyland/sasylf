@@ -1,4 +1,4 @@
-SASyLF version 1.3.3a4
+SASyLF version 1.3.3a5
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -112,6 +112,8 @@ RELEASE HISTORY
 1.3.3   Enhancements and Bug fixes
     Fixed input var bugs (bad36.slf, bad37.slf)
     An 'or' goal can be proven by proving a subset, or an individual element.
+    Pattern matching of judgments with contexts > 1 is now supported.
+    Higher-order unification doesn't make greedy (unsound) assumptions, more failures now
     Resolved issue #59
 1.3.2	Cleanup
     Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)
