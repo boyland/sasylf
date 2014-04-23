@@ -34,7 +34,7 @@ public class StructuralInduction extends InductionSchema {
       }
     }
     if (errorPoint != null) {
-      ErrorHandler.recoverableError(Errors.INDUCTION_NOT_INPUT, errorPoint);
+      ErrorHandler.recoverableError(Errors.INDUCTION_NOT_INPUT, "Induction item should be a theorem input",errorPoint);
     }
     return null;
   }
