@@ -54,11 +54,11 @@ lemma succ-preserves-gt:
       _: S S n2 > S n2 by rule gt-1
     end case
     case rule
-      d1: n1' > n2
+      d1': n1' > n2
       --------------- gt-s
       _: (S n1') > n2
     is
-      d2: S n1' > S n2 by induction hypothesis on d1
+      d2: S n1' > S n2 by induction hypothesis on d1'
       proof by rule gt-s on d2
     end case
   end induction
@@ -75,17 +75,17 @@ lemma succ-preserves-gt-converse:
       _: S n2 > n2 by rule gt-1
     end case
     case rule
-      d1: n1 > S n2
+      d1': n1 > S n2
       --------------- gt-s
       _: (S n1) > S n2
     is
       proof by case analysis on n1:
         case S n1' is
-          d':  n1' > n2 by induction hypothesis on d1
+          d':  n1' > n2 by induction hypothesis on d1'
           _: S n1' > n2 by rule gt-s on d' 
         end case
         case 0 is
-          proof by contradiction on d1
+          proof by contradiction on d1'
         end case
       end case analysis
     end case

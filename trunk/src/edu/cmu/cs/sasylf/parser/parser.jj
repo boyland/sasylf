@@ -1828,7 +1828,7 @@ Derivation Derivation() :
       if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
-   	  d = new DerivationByInversion(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
+   	  d = new DerivationByInversion("_", new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
     }
     { return d; } 
 |  t=<USE> <INDUCTION> <ON> c2=SimpleExpr()

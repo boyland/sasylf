@@ -78,7 +78,7 @@ lemma test:
     _: CT |- class C1 by induction on dt:
         case rule
             v: t0[x] : C1 in (Gamma, x : C)
-            x: CT |- class C1
+            c: CT |- class C1
             ---------------------------- T-Var
             _: CT; (Gamma, x : C) |- t0[x] : C1
         is
@@ -89,22 +89,22 @@ lemma test:
                 is
                     v2: x': C1 in (Gamma', x': C1) by rule var
                     v2': x': C1 in (Gamma', x': C1, x: C) by weakening on v2
-                    t2: CT; Gamma', x':C1, x : C |- x' : C1 by rule T-Var on v2', x
-                    _: CT |- class C1 by lemma switch on x, C1
+                    t2: CT; Gamma', x':C1, x : C |- x' : C1 by rule T-Var on v2', c
+                    _: CT |- class C1 by lemma switch on c, C1
                 end case
 
                 case rule
                     ------------------------- var
                     _: x : C in (Gamma, x : C)
                 is
-                    proof by x
+                    proof by c
                 end case
 
             end case analysis
         end case
 
 	case rule
-	    dt: CT; Gamma, x:C |- t'[x] : C1
+	    dt1: CT; Gamma, x:C |- t'[x] : C1
 	    fl: CT |- class C1
 	    ------------------------------------ T-Bang
 	    _:  CT; Gamma, x:C |- t'[x] ! : C1

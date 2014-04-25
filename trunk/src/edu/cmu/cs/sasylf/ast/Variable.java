@@ -130,7 +130,6 @@ public class Variable extends Element {
 		}
 		
 		if (index == -1) {
-		  new Throwable("for the trace").printStackTrace();
 			ErrorHandler.report("Variable " + symbol + " is not bound", this);
 		}
 		

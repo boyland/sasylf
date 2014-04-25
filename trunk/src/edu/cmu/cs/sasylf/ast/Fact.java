@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 
 /**
  * Common superclass of Derivation, SyntaxAssumption, and ClauseAssumption
@@ -22,7 +23,12 @@ public abstract class Fact extends Node {
     public void printReference(PrintWriter out) { out.print(getName()); }
     public abstract void typecheck(Context ctx);
 	  public void addToDerivationMap(Context ctx) {
-		  ctx.derivationMap.put(getName(), this);  
+	    boolean wasKnown = ctx.isLocallyKnown(getName());
+		  Fact old = ctx.derivationMap.put(getName(), this);  
+		  if (wasKnown && !(this instanceof SyntaxAssumption) && 
+		      old != this && !getName().equals("_") && !getName().equals("proof")) {
+		    ErrorHandler.warning("Reusing derivation identifier " + getName(), this);
+		  }
 		  Set<FreeVar> free = getElement().asTerm().getFreeVariables();
 		  free.removeAll(ctx.currentSub.getMap().keySet());
 		  if (ctx.adaptationSub != null) free.removeAll(ctx.adaptationSub.getMap().keySet());
