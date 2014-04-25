@@ -321,11 +321,11 @@ dwf' : (*), st |- e' by induction on de:
 		d6 : (*), st |- (fn x => e3[x])	by induction hypothesis on d4, d1
 		d7 : (* , var x), st |- e3[x]	by case analysis on d6:
 		    case rule
-		        d6: (*, var x), st |- e3[x] 
+		        d8: (*, var x), st |- e3[x] 
 		        ---------------------------- wf-fn
 		        _: *, st |- fn x => e3[x]
 		    is
-		        proof by d6
+		        proof by d8
 		    end case
 		    case  rule
                 v: * |- var (fn x => e3[x])

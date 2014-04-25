@@ -119,19 +119,29 @@ public class Context implements Cloneable {
    * @return whether the context is aware of anything with this name
    */
   public boolean isKnown(String s) {
-    FreeVar fake = new FreeVar(s,null);
     return synMap.containsKey(s) ||
         judgMap.containsKey(s) ||
         prodMap.containsKey(s) ||
         varMap.containsKey(s) ||
         ruleMap.containsKey(s) ||
         recursiveTheorems.containsKey(s) ||
-        derivationMap.containsKey(s) ||
-        bindingTypes.containsKey(s) ||
-        inputVars.contains(fake) ||
-        outputVars.contains(fake) ||
-        currentSub.getMap().containsKey(fake) ||
-        adaptationMap.containsKey(new NonTerminal(s,null));
+        isLocallyKnown(s);
+  }
+
+  /**
+   * Is this identifier known locally as a nonterminal or derivation?
+   * SImilar to {@link #isKnown(String)} but doesn't include global tables.
+   * @param s string to look up
+   * @return boolean if something is around using this name already.
+   */
+  public boolean isLocallyKnown(String s) {
+    FreeVar fake = new FreeVar(s,null);
+    return derivationMap.containsKey(s) ||
+      bindingTypes.containsKey(s) ||
+      inputVars.contains(fake) ||
+      outputVars.contains(fake) ||
+      currentSub.getMap().containsKey(fake) ||
+      adaptationMap.containsKey(new NonTerminal(s,null));
   }
   
   /**

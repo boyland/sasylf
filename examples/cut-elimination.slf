@@ -370,7 +370,7 @@ theorem cut-admissible:
                             // accept A0[I0] as a subterm of (∀ i • A0[i])
                             // which is permitted as in Twelf.
                             // See Section 8.3 of Twelf User Manual.
-                            d21': Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3
+                            _: Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3
                         end case
                     end case analysis
                 end case

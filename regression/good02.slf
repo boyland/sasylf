@@ -62,7 +62,7 @@ lemma test:
     exists CT |- class C1 .
     _: CT |- class C1 by induction on dt:
 	case rule
-	    dt: CT; Gamma, x:C |- t'[x] : C1
+	    dt1: CT; Gamma, x:C |- t'[x] : C1
 	    fl: CT |- class C1
 	    ------------------------------------ T-Bang
 	    _:  CT; Gamma, x:C |- t'[x] ! : C1
