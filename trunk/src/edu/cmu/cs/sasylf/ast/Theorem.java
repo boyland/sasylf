@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Theorem extends RuleLike {
@@ -219,15 +220,31 @@ public class Theorem extends RuleLike {
 			f.addToDerivationMap(ctx);
 			ctx.subderivations.put(f, new Pair<Fact,Integer>(f,0));
 			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
-			// determine var free nonterminals
-			if (f instanceof DerivationByAssumption) {
-        ClauseUse cu = (ClauseUse)f.getElement();
-        int assumeIndex = cu.getConstructor().getAssumeIndex();
-        if (assumeIndex >= 0) continue; // not varFree
-        // System.out.println("var free: " + cu);
-        for (Element e : cu.getElements()) {
-          if (e instanceof NonTerminal) ctx.varfreeNTs.add((NonTerminal)e);
-        }
+			if (this.assumes != null) {
+			  // determine var free nonterminals if we have a context around
+			  if (f instanceof NonTerminalAssumption) {
+			    NonTerminalAssumption nta = (NonTerminalAssumption)f;
+			    if (nta.getContext() == null) {
+			      Util.debug("var free: ",nta);
+			      ctx.varfreeNTs.add(nta.getRoot());
+			    }
+			  } else if (f instanceof DerivationByAssumption) {
+			    ClauseUse cu = (ClauseUse)f.getElement();
+			    int assumeIndex = cu.getConstructor().getAssumeIndex();
+			    if (cu.isRootedInVar()) continue; // definitely has variables
+			    hasAssume: if (assumeIndex >= 0) {
+			      Element e = cu.getAssumes();
+			      if (e instanceof ClauseUse) {
+			        ClauseUse au = (ClauseUse)e;
+			        if (!au.hasVariables()) break hasAssume;
+			      }
+			      continue; // not varFree
+			    }
+			    Util.debug("var free: ", cu);
+			    for (Element e : cu.getElements()) {
+			      ctx.addVarFree(e);
+			    }
+			  }
 			}
 		}
 

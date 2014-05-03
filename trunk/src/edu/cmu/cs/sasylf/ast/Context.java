@@ -255,6 +255,15 @@ public class Context implements Cloneable {
     if (changed) currentSub = newSub;
   }
   
+  public void addVarFree(Element e) {
+    if (e instanceof NonTerminal) {
+      varfreeNTs.add((NonTerminal) e);
+    } else if (e instanceof Clause) {
+      for (Element e1: ((Clause)e).elements) {
+        addVarFree(e1);
+      }
+    }
+  }
   /*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {
 		if (g == null) {
 			g = new edu.cmu.cs.sasylf.grammar.Grammar(GrmUtil.getStartSymbol(), ruleSet);
