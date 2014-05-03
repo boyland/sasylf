@@ -1,0 +1,30 @@
+// Internal error
+// and "do case analysis" should not instantiate output variables
+package regression;
+
+terminals S
+
+syntax
+   n ::= 0 | S n
+
+
+judgment nat-eq: n = n
+
+    ------ eq
+    n = n
+
+
+theorem trivial:
+  forall n
+  exists n = n'.
+  do case analysis on n:
+    case 0 is
+       proof by rule eq
+    end case
+  end case analysis
+  proof by case analysis on n:
+    case S n0 is
+      proof by rule eq
+    end case
+  end case analysis
+end theorem
