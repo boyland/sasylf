@@ -1,0 +1,25 @@
+package regression;
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+
+
+judgment nat-eq: n = n
+
+    ------ eq
+    n = n
+
+
+theorem impossible:
+  forall n
+  exists n = 0.
+  do case analysis on n:
+    case 0 is
+       proof by rule eq
+    end case
+  end case analysis
+  proof by _ //! should be illegal
+end theorem
+

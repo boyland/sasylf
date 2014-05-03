@@ -23,6 +23,7 @@ public abstract class Fact extends Node {
     public void printReference(PrintWriter out) { out.print(getName()); }
     public abstract void typecheck(Context ctx);
 	  public void addToDerivationMap(Context ctx) {
+	    if (this instanceof PartialCaseAnalysis) return; // do NOT add to map
 	    boolean wasKnown = ctx.isLocallyKnown(getName());
 		  Fact old = ctx.derivationMap.put(getName(), this);  
 		  if (wasKnown && !(this instanceof SyntaxAssumption) && 

@@ -216,6 +216,8 @@ public class Rule extends RuleLike implements CanBeCase {
 		// that doesn't use it.  Might as well have two separate things, once this
 		// is supported.
 		for (Element e : defined) {
+		  // The following exception cannot be permitted:
+		  // case analysis will crash with an internal error (see later in this file)
 		  // if (e instanceof Variable) continue;
 		  ErrorHandler.report("assumption rule doesn't use " + e, concClauseUse);
 		}
@@ -276,9 +278,13 @@ public class Rule extends RuleLike implements CanBeCase {
       ruleConcTerm = (Abstraction)ruleConcTerm.substitute(ruleConcTerm.freshSubstitution(new Substitution()));
       Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
       Term ruleConcBodyTerm = ruleConcTermInner.getBody();
-      // XXX: boundVarIndex only exists if we have a variable
+      // XXX: boundVarIndex only exists if we have a variable "if (x instanceof Variable) continue;" above
       int boundVarIndex = ((Application)ruleConcBodyTerm).getArguments().indexOf(new BoundVar(2));
       Util.debug("boundVarIndex = ",boundVarIndex);
+      if (boundVarIndex < 0) {
+        Util.verify(ErrorHandler.getErrorCount()>0, "should have been caught already");
+        return result;
+      }
 		  
       // Collect all variables from term 
       List<Abstraction> outer = new ArrayList<Abstraction>();
