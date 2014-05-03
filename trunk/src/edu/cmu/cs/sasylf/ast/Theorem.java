@@ -227,7 +227,7 @@ public class Theorem extends RuleLike {
 			    NonTerminalAssumption nta = (NonTerminalAssumption)f;
 			    if (nta.getContext() == null) {
 			      Util.debug("var free: ",nta);
-			      ctx.varfreeNTs.add(nta.getRoot());
+			      ctx.addVarFree(nta.getElementBase());
 			    }
 			  } else if (f instanceof DerivationByAssumption) {
 			    ClauseUse cu = (ClauseUse)f.getElement();
