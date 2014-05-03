@@ -431,7 +431,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
   }
 	
   public Term computeTerm(List<Pair<String, Term>>  varBindings) {
-		throw new RuntimeException("internal error: can't compute the term before typechecking");
+		throw new RuntimeException("internal error: can't compute the term before typechecking, at line " + getLocation().getLine());
 	}
 
 	@Override

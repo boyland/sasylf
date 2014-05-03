@@ -1,0 +1,52 @@
+// Sometimes, a mutual lemma got names leaked from an earlier.
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x] 
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x
+    
+
+judgment equal: t = t
+
+    ----- eq
+    t = t
+    
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+    ------------- B-Var
+    Gamma, x |- x
+    
+    ---------- B-Taut
+    Gamma |- t
+    
+theorem trivial:
+  forall db: * |- t t'
+  exists * |- t t'.
+  proof by rule B-Taut
+end theorem
+  and
+theorem trivial2:
+  forall dbx: *, x |- t'[x] t'[x]
+  exists      *, x |- t'[x] t'[x].
+  proof by rule B-Taut
+end theorem
+  
+// The bug didn't notice this, and therefore, not other BindingAssumption related bugs.
+lemma irrelevant:
+  forall t
+  exists t = t.
+  proof by rule eq
+end lemma
+  and
+lemma irrelevant2:
+  forall t[x] assumes (*, x)
+  exists fn x:Unit => t[x] = fn x:Unit => t[x].
+  proof by rule eq
+end lemma   

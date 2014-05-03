@@ -1,0 +1,36 @@
+// Need to check consistency of binding in syntax
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x] 
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x
+    
+
+judgment equal: t = t
+
+    ----- eq
+    t = t
+    
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+    ------------- B-Var
+    Gamma, x |- x
+    
+    ---------- B-Taut
+    Gamma |- t
+    
+theorem trivial:
+  forall b1: * |- t
+  forall t[x] assumes *,x
+  exists fn x:Unit => t[x] = fn x:Unit => t[x].
+  proof by rule eq 
+end theorem
+  
+  
