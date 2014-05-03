@@ -10,7 +10,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 public class BindingAssumption extends NonTerminalAssumption {
 
   public BindingAssumption(Binding b, Element assumes) {
-    super(b.getNonTerminal(), assumes);
+    super(b.getNonTerminal(), b.getLocation(), assumes);
     binding = b;
   }
   
@@ -25,8 +25,8 @@ public class BindingAssumption extends NonTerminalAssumption {
   
   @Override
   public void typecheck(Context ctx) {
-    super.typecheck(ctx);
     binding.typecheck(ctx);
+    super.typecheck(ctx);
     if (ctx == null) { // XXX: Not sure if this should always happen.  Originally only if being added to map.
       for (Element e : binding.getElements()) {
         if (!(e instanceof Variable)) {

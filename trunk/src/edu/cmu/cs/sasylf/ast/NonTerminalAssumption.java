@@ -14,6 +14,10 @@ public class NonTerminalAssumption extends SyntaxAssumption {
   public NonTerminalAssumption(String n, Location l, Element assumes) {
     this(new NonTerminal(n, l),assumes);
   }
+  public NonTerminalAssumption(NonTerminal nt, Location l, Element assumes) {
+    super(nt.getSymbol(), l, assumes);
+    nonTerminal = nt;
+  }
   public NonTerminalAssumption(NonTerminal nt, Element assumes) {
     super(nt.getSymbol(), nt.getLocation(),assumes);
     nonTerminal = nt;
@@ -32,6 +36,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		if (e != nonTerminal)
 			ErrorHandler.report("No syntax match for " + getName(), this);
 		nonTerminal = (NonTerminal)e;
+		getElementBase().checkBindings(ctx.bindingTypes, this);
 		/*String strippedName = Util.stripId(getName());
 		syntax = ctx.synMap.get(strippedName);
 		if (syntax == null)*/

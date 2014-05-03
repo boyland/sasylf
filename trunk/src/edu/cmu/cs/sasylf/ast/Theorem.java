@@ -93,6 +93,7 @@ public class Theorem extends RuleLike {
 	
 	public void checkInterface(Context ctx) {
 		if (!interfaceChecked) {
+		  ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 		  int oldErrors = ErrorHandler.getErrorCount();
 			interfaceChecked = true;
 			if (assumes != null) {
@@ -187,7 +188,6 @@ public class Theorem extends RuleLike {
 		ctx.outputVars = new HashSet<FreeVar>();
 		ctx.currentSub = new Substitution();
 		ctx.currentTheorem = this;
-		ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 		ctx.adaptationMap = new HashMap<NonTerminal,AdaptationInfo>();
 		ctx.innermostGamma = null;
 		
@@ -197,7 +197,7 @@ public class Theorem extends RuleLike {
 		  return;
 		}
 		
-		if (ErrorHandler.getErrorCount() > oldErrorCount) {
+		if (!interfaceOK || ErrorHandler.getErrorCount() > oldErrorCount) {
 		  return;
 		}
 
@@ -217,6 +217,7 @@ public class Theorem extends RuleLike {
 		ctx.varfreeNTs.clear();
 		
 		for (Fact f : foralls) {
+		  f.typecheck(ctx);
 			f.addToDerivationMap(ctx);
 			ctx.subderivations.put(f, new Pair<Fact,Integer>(f,0));
 			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
