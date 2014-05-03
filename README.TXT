@@ -113,6 +113,7 @@ RELEASE HISTORY
     Fixed input var bugs (bad36.slf, bad37.slf)
     Fixed partial case analysis bugs (bad39.slf, good22.slf)
     Added bug test for issue #51 (bad38.slf) 
+    Fixed theorem interface bugs (good23.slf)
     An 'or' goal can be proven by proving a subset, or an individual element.
     Pattern matching of judgments with contexts > 1 is now supported.
     Higher-order unification doesn't make greedy (unsound) assumptions, more failures now

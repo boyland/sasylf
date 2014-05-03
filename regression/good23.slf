@@ -1,0 +1,45 @@
+// Prior to 1.3.3, we didn't look inside of var free judgments to find all nonterminals
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x] 
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x
+    
+
+judgment equal: t = t
+
+    ----- eq
+    t = t
+    
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+    ------------- B-Var
+    Gamma, x |- x
+    
+    ---------- B-Taut
+    Gamma |- t
+    
+theorem trivial:
+  assumes Gamma
+  forall t1: Gamma |- t
+  forall e1: t t' = t''
+  exists t' = t'.
+  proof by rule eq // should be ok
+end theorem
+  
+theorem trivial2:
+  assumes Gamma
+  forall t1: Gamma |- t
+  forall b: * |- t'
+  exists t' = t'.
+  proof by rule eq // should be ok
+end theorem
+  
+  

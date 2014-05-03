@@ -136,8 +136,8 @@ public class ClauseUse extends Clause {
 
   /**
    * Return the assumptions/context for this instance of a judgment.
-   * @return null if no assumption or empty assumption, a non-terminal if no local bindings,
-   * a clause use if assumption has local bindings. 
+   * @return null if no assumption, a non-terminal if no local bindings,
+   * a clause use if assumption has local bindings, or no bindings. 
    */
   public Element getAssumes() {
     int ai = cons.getAssumeIndex();
