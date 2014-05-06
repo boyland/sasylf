@@ -104,7 +104,7 @@ public class Context implements Cloneable {
     t = t.substitute(currentSub);
     for (NonTerminal vfnt : varfreeNTs) {
       Term vft = vfnt.asTerm().substitute(currentSub);
-      Util.tdebug(vft, " contains ", t, " ?");
+      Util.debug(vft, " contains ", t, " ?");
       if (vft.contains(t)) {
         return true;
       }
