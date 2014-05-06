@@ -103,6 +103,10 @@ public class Judgment extends Node implements ClauseType {
 
 		Syntax contextSyntax = null;
 		
+		if (assume != null) {
+		  assume.typecheck(ctx);
+		}
+		
 		for (Element f : form.getElements()) {
 		  if (f instanceof NonTerminal) {
 		    Syntax s = ((NonTerminal)f).getType();

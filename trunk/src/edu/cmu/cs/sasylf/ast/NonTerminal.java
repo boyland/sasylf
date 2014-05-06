@@ -20,12 +20,14 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
-	public NonTerminal(String s, Location l) { super(l); symbol = s; }
+	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, Syntax ty) {
 	  super(l);
 	  symbol = s;
 	  type = ty;
-	  super.setEndLocation(l.add(s.length()));
+	  if (l != null) {
+	    super.setEndLocation(l.add(s.length()));
+	  }
 	}
 	
 	public String getSymbol() { return symbol; }

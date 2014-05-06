@@ -176,11 +176,12 @@ public class DSLToolkitParser {
     }
 
     NonTerminal getNonTerminal(Token t) {
-		NonTerminal nt = nts.get(t.image);
+		/*NonTerminal nt = nts.get(t.image);
 		if (nt == null) {
 		    nt = new NonTerminal(t.image, new Location(t));
 		    nts.put(t.image, nt);
-		}
+		}*/
+		NonTerminal nt = new NonTerminal(t.image, new Location(t));
 		return nt;
     }
     Element getElement(Token t) {
