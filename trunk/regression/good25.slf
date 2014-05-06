@@ -1,0 +1,61 @@
+// parsing didn't terminate until 1.3.3
+
+package ch.ethz.inf.ts.hw10;
+
+terminals λ µ fold unfold Top
+
+
+syntax
+
+t ::= 
+    λ x:T • t[x]
+  | x
+  | t t
+
+T ::= X
+  | U
+  
+U ::= 
+    T → T
+  | µ X • U[X]
+  | Top
+
+Γ ::= *
+      | Γ, x : T
+
+// SASyLF requires a context for a variable:
+
+Σ ::= *
+      | Σ, X
+
+
+
+judgment equality: t == t
+
+------ eq
+t == t
+
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+lemma harmless:
+  forall U
+  exists U == U.
+  proof by case analysis on U:
+    case T0 → T1 is
+      proof by rule type-eq
+    end case
+
+    case µ X • U0[X] is
+      proof by rule type-eq
+    end case
+
+    case Top is
+      proof by rule type-eq
+    end case
+  end case analysis
+end lemma
