@@ -130,7 +130,7 @@ public class Context implements Cloneable {
 
   /**
    * Is this identifier known locally as a nonterminal or derivation?
-   * SImilar to {@link #isKnown(String)} but doesn't include global tables.
+   * Similar to {@link #isKnown(String)} but doesn't include global tables.
    * @param s string to look up
    * @return boolean if something is around using this name already.
    */
@@ -141,7 +141,12 @@ public class Context implements Cloneable {
       inputVars.contains(fake) ||
       outputVars.contains(fake) ||
       currentSub.getMap().containsKey(fake) ||
-      adaptationMap.containsKey(new NonTerminal(s,null));
+      adaptationMap.containsKey(new NonTerminal(s,null)) ||
+      isTerminalString(s); // terminals are pervavise
+  }
+  
+  public boolean isTerminalString(String s) {
+    return compUnit.getDeclaredTerminals().contains(s);
   }
   
   /**

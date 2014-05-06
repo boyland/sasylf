@@ -1,0 +1,21 @@
+// default package
+
+terminals s
+
+syntax
+   n ::= 0 | s n
+
+
+judgment nat-equal: n = n
+
+    ----- eq
+    n = n
+    
+lemma harmless:
+  forall n
+  exists n = n.
+  s : n = n by rule eq //! should complain about use of "s"
+  proof by s //! may complain here too
+end lemma
+
+
