@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
@@ -102,9 +101,10 @@ public class Context implements Cloneable {
     if (innermostGamma == null) {
       throw new RuntimeException("Internal error: isVarFree doesn't make sense with no context");
     }
+    t = t.substitute(currentSub);
     for (NonTerminal vfnt : varfreeNTs) {
       Term vft = vfnt.asTerm().substitute(currentSub);
-      debug(vft, " contains ", t, " ?");
+      Util.tdebug(vft, " contains ", t, " ?");
       if (vft.contains(t)) {
         return true;
       }
