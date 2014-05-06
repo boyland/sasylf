@@ -1,0 +1,44 @@
+// making sure weakening doesn't let discard a context
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x] 
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x
+    
+
+judgment equal: t = t
+
+    ----- eq
+    t = t
+    
+
+judgment bound: Gamma |- t
+assumes Gamma
+
+    ------------- B-Var
+    Gamma, x |- x
+    
+    ---------- B-Taut
+    Gamma |- t
+    
+theorem trivial:
+  assumes Gamma
+  forall t1: Gamma |- t
+  exists * |- t
+  proof by weakening on t1 //! cannot discard context this way
+end theorem
+  
+theorem trivial2:
+  assumes Gamma
+  forall t1: Gamma |- t
+  forall b: * |- t'
+  exists t' = t'.
+  proof by rule eq // should be ok
+end theorem
+  
+  
