@@ -146,8 +146,14 @@ public class Grammar {
 						continue;
 				}
 			} catch (AmbiguousSentenceException e) { //If we encountered a conflict...
+        //Create a new automaton for each possible action we can take
 				for(Action action: e.getConflict().getActions()) {
-					//Create a new automaton for each possible action we can take
+				  // accept actions have to be acted upon now since "act" ignores ACCEPT
+				  if (action.getType() == ActionType.ACCEPT) {
+				    done.add(a); 
+	          parseTrees.add(a.results());
+	          continue;
+				  }
 					Automaton clone = new Automaton(a);
 					clone.act(action);
 					queue.offer(clone);
