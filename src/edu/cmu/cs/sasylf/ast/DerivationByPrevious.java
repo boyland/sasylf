@@ -54,29 +54,12 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		    ClauseUse source = sourceClauses.get(i);
 		    ClauseUse result = results.get(i);
 		    Derivation.checkMatch(this,ctx,result,source,"Claimed conjunct #" + (i+1) + " is not equivalent to previous");
-		    checkRootMatch(ctx,source,result,this);
+		    checkRootMatch("conjunction",source,result);
 		  }
 		  return;
 		}
 		
-		if (cl instanceof OrClauseUse) {
-		  Element source = getArgs().get(0).getElement();
-		  List<ClauseUse> results = ((OrClauseUse)cl).getClauses();
-		  for (ClauseUse possibleResult : results) {
-		    if (Derivation.checkMatch(this, ctx, possibleResult, source, null) &&
-		        Derivation.checkRootMatch(ctx, source, possibleResult, null)) {
-		      // OK
-		      return;
-		    }
-		  }
-		  // fall through: permit copy through.
-		  // ErrorHandler.report("Argument doesn't match any of the disjoined clauses", this);
-		}
-		
-		Term derivTerm = DerivationByAnalysis.adapt(getElement().asTerm(), getElement(), ctx, false);		
-		Derivation.checkMatch(this, ctx, derivTerm, argTerm, "Derivation " + getElement() + " is not equivalent to the previous derivation: " + getArgs().get(0));
-    checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
-    
+		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, getArgs().get(0).getElement(), "Derivation " + getElement() + " is not equivalent to the previous derivation: " + getArgs().get(0));
     Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
     if (p != null) ctx.subderivations.put(this, p);
 	}

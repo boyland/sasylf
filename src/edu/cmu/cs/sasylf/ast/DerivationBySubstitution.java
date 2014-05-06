@@ -48,6 +48,9 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		  ErrorHandler.report("Second argument of substitution must be a judgment instance.", this);
 		}
 		
+    checkRootMatch("exchange", (ClauseUse)arg0, (ClauseUse)getClause());
+    checkRootMatch("exchange", (ClauseUse)arg1, (ClauseUse)getClause());
+
     Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
 		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg0,ctx,false);
 		

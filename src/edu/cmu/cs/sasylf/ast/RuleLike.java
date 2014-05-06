@@ -97,6 +97,7 @@ public abstract class RuleLike extends Node {
 		List<Term> args = new ArrayList<Term>();
 		for (int i = 0; i < getPremises().size(); ++i) {
 			Element elem = getPremises().get(i);
+			Util.debug("arg = ", elem);
 			Term argTerm = elem.asTerm();
 			ruleSub = argTerm.freshSubstitution(ruleSub);
 			argTerm = argTerm.substitute(ruleSub);
@@ -136,6 +137,7 @@ public abstract class RuleLike extends Node {
       }
 			args.add(argTerm);
 		}
+		Util.debug("generated args = ",args);
 		Util.debug("\tgenerated concterm before adaptation: ", concTerm);
 		Util.debug("adaptation of ", concTerm, " to ", instanceTerm, " is ", adaptation);
 		Util.debug("\twrappingSub = ", wrappingSub);
