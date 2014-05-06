@@ -100,7 +100,7 @@ public class Theorem extends RuleLike {
 			  assumes.typecheck(ctx);
 			  Syntax syntax = assumes.getType();
 			  if (syntax == null || !syntax.isInContextForm()) {
-			    ErrorHandler.recoverableError(Errors.ILLEGAL_ASSUMES, this);
+			    ErrorHandler.recoverableError(Errors.ILLEGAL_ASSUMES, assumes);
 			  }
 			}
 			List<String> inputNames = new ArrayList<String>();
