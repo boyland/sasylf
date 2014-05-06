@@ -54,7 +54,7 @@ public class Rule extends RuleLike implements CanBeCase {
     
 	private List<Clause> premises;
 	private Clause conclusion;
-	private boolean isAssumpt = false; // default: false
+	private int isAssumpt = 0; // 0 = not an assumption, > 0 number of abstractions represented
 
 	public void prettyPrint(PrintWriter out) {
 		for (Clause c : premises) {
@@ -116,7 +116,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			}
 		}
 		
-    if (judge.getAssume() != null && !isAssumpt) { // bad15
+    if (judge.getAssume() != null && !isAssumption()) { // bad15
       NonTerminal nt = myConc.getRoot();
       if (nt == null) {
         ErrorHandler.report(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
@@ -149,7 +149,12 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
 		int n = assumeClauseDef.getElements().size();
 		
-		isAssumpt = true;
+		int countVariables = 0;
+		for (Element e : assumeClauseUse.elements) {
+		  if (e instanceof Variable) ++countVariables;
+		}
+		
+		isAssumpt = 1 + countVariables;
 		// now we generate errors if there is a problem
 
     if (assumeClauseDef.assumptionRule != null &&
@@ -224,7 +229,10 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	
 	public boolean isAssumption() {
-		return isAssumpt ;
+		return isAssumpt>0 ;
+	}
+	public int isAssumptionSize() {
+	  return isAssumpt;
 	}
 	
 	/** Returns a fresh term for the rule and a substitution that matches the term.

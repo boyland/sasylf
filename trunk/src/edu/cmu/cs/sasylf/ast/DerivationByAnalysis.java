@@ -444,17 +444,19 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			Set<FreeVar> varSet = term.getFreeVariables();
 			varSet.retainAll(ctx.adaptationSub.getMap().keySet());
 			if (!varSet.isEmpty()) {
+	      // ErrorHandler.warning("Here! with oc = " + originalContext + ", tc = " + targetContext + " and adaptationRoot = " + ctx.adaptationRoot, errorPoint);
 				//TODO: make this more principled (e.g. work for more than one adaptation -- see code below)
-				debug("adaptation sub = ", ctx.adaptationSub, " applied inside ", ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
-				debug("current sub = ", ctx.currentSub);
+				Util.debug("adaptation sub = ", ctx.adaptationSub, " applied inside ", ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
+				Util.debug("current sub = ", ctx.currentSub);
 				if (term instanceof Application) {
 	        // System.out.println("term is " + term);
 	        // System.out.println("current sub = " + ctx.currentSub);
 	        // new RuntimeException("for trace").printStackTrace();
 				  ErrorHandler.report("Using variables with a judgment '" + ((Application)term).getFunction() + "' that doesn't assume context", errorPoint);
 				}
+				Util.debug("before term = ", term);
 				term = ((Abstraction)term).subInside(ctx.adaptationSub, ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
-				debug("term = ", term);
+				Util.debug("after term = ", term);
 			}
 			
 			/*NonTerminal checkContext = ctx.adaptationRoot;

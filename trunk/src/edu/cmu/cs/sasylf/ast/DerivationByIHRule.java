@@ -57,14 +57,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
     }
 
     boolean contextCheckNeeded = false;		
-		if (ctx.innermostGamma != null && !ctx.innermostGamma.equals(ruleLike.getAssumes())) {
-		  NonTerminal nt = ruleLike.getAssumes();
-		  if (nt == null) {
-		    contextCheckNeeded = true;
-		  } else if (ctx.innermostGamma.getType() != nt.getType()) { 
-		    // XXX: if we have more than one type of context, we're in trouble anyway
-		    contextCheckNeeded = true;
-		  }
+		if (ctx.innermostGamma != null) {
+		  contextCheckNeeded = true;
+		  
 		  // JTB: There are two possible problems:
 		  // 1. An explicit syntactic parameter to a lemma when that param could depend on our Gamma
 		  // 2. An implicit syntactic parameter to a rule conclusion where again the param could depend on Gamma
@@ -87,7 +82,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	          Element f = getArgs().get(ruleLike.getPremises().indexOf(e)).getElement();
 	          if (ctx.isVarFree(f.asTerm())) continue;
 	          // Detect bad4.slf
-	          ErrorHandler.recoverableError("Passing " + e + " to " + ruleLike.getName() + " could conceal context", this);
+	          ErrorHandler.recoverableError("Passing " + f + " to " + ruleLike.getName() + " could conceal context", this);
 	        }
 	      }		    
 		  }
@@ -103,6 +98,40 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		List<Term> termArgs = new ArrayList<Term>();
 		List<Term> termArgsWithVar = new ArrayList<Term>();
 		Set<FreeVar> argFreeVars = new HashSet<FreeVar>();
+		
+		/*
+		 * We just fixed a minor problem that masked a major problem.
+		 * Minor problem:
+		 * We didn't check about losing context for an explicit syntax parameter
+		 * and we didn't correctly avoid complaining about losing context for an implicit
+		 * parameter of the conclusion.
+		 * 
+		 * Major problem:
+		 * if the actual parameter is syntax that could depend on a variable
+		 * in the target context, but is NOT in the target context, then 
+		 * getFreshRuleAppTerm will (correctly) generate a function for it,
+		 * but the callee doesn't make a function unless there is an assumes
+		 * in the actual parameter. We need to regularize what is happening.
+		 * 
+		 * Maybe we will need to fix the way rule applications are generated to
+		 * out the context on the outside, in one place, where it belongs.
+		 * 
+		 * And all this is so that adaptation can be understood/cleaned up so
+		 * we can start the new adaptation technique that goes the other way,
+		 * and adapts Gamma' to Gamma and never changes innermostGamma.
+		 * I put in some print statements to print out what this would be and
+		 * found some surprising adaptations: 
+		 * If Gamma' is found when the subject context is Gamma, x:T
+		 * then Gamma', x':T, x:T is the pattern context (so far so good)
+		 * but the adaptation from Gamma', x':T to Gamma is [t[x],_]
+		 * where "x" is out of scope.  Hmm.  Better would be to assign t[x] to a new
+		 * free variable t_24, and then bind x to t_24.  This means that RuleCase
+		 * will need to figure out carefully how to adapt the subject to get
+		 * a function with the same number of lambdas.
+		 */
+		
+		
+		
 		for (int i = 0; i < getArgs().size(); ++i) {
 			Term argTerm = getAdaptedArg(ctx,i);
 			termArgs.add(argTerm);
@@ -117,7 +146,8 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		termArgsWithVar.add(concTermVar);
 		Term appliedTermWithVar = App(ruleLike.getRuleAppConstant(), termArgsWithVar);
 		
-    Substitution wrappingSub = new Substitution();		
+    Substitution wrappingSub = new Substitution();	
+    Util.debug("termArgs = ",termArgs);
 		Term ruleTerm = ruleLike.getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
 		Util.debug("wrappingSub for rule application is ", wrappingSub);
 
@@ -170,7 +200,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				//	ErrorHandler.report("cannot use variable name(s) " + intersectSet + " that is an output of the theorem", this);
 				debug("line ", this.getLocation(), " adds vars ", freshVarSet);
 				ctx.inputVars.addAll(freshVarSet);
-			} else if (contextCheckNeeded) {
+			} else if (contextCheckNeeded && (ruleLike.getAssumes() == null || !ctx.innermostGamma.getType().equals(ruleLike.getAssumes().getType()))) {
 			  for (FreeVar v : ruleConcVarSet) {
 			    if (v.getType() instanceof Constant) {
             if (!ctx.innermostGamma.getType().canAppearIn(v.getType())) continue;
@@ -205,7 +235,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				// do nothing; can't give good error message
 			}
 			debug("\tctx.currentSub = ", ctx.currentSub);
-			debug("\tctx.adaptationSub = ", ctx.adaptationSub);
 			if (explanationTerm == null)
 				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The rule cannot legally be applied to the arguments", this,
 						"(was checking " + appliedTerm + " instance of " + ruleTerm + ",\n got exception " + e);

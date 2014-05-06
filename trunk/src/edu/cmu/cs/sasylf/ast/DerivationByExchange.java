@@ -27,8 +27,12 @@ public class DerivationByExchange extends DerivationWithArgs {
     }
 
     Fact arg = getArgs().get(0);
-    //System.out.println("Exchange arg = " + arg);
     Element e = arg.getElement();
+    if (!(e instanceof ClauseUse)) {
+      ErrorHandler.report("exchange argument should be a judgment, not syntax", this);
+    }
+    checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause());
+    
     Term adapted = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
     //System.out.println("Exchange arg, adapted = " + adapted);
     Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
@@ -42,8 +46,8 @@ public class DerivationByExchange extends DerivationWithArgs {
 		if (ctx.subderivations.containsKey(arg))
 			ctx.subderivations.put(this,ctx.subderivations.get(arg));
 	}
-	
-	private static boolean checkExchange(Term t1, Term t2) {
+
+  private static boolean checkExchange(Term t1, Term t2) {
 	  // NB: If the following line is uncommented,
 	  // exchange will be (safely) allowed in more situations
 	  // but the cases where it works will be harder to explain.

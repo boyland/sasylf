@@ -90,8 +90,44 @@ public class RuleCase extends Case {
 			//ErrorHandler.report("Rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
 			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
-
+		// check conclusion returns the right type of thing
+		ClauseUse concClause = (ClauseUse)conclusion.getClause();
+		if (concClause.getType() != rule.getJudgment()) {
+      ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + concClause.asTerm() + " for the conclusion");
+		}
 		
+		// find out if the pattern increases the context size
+		ClauseUse newContext = null;
+		if (concClause.getAssumes() instanceof ClauseUse) {
+		  ClauseUse cu = (ClauseUse)concClause.getAssumes();
+		  Syntax gamma = rule.getAssumes().getType();
+		  if (cu.getConstructor() != gamma.getTerminalCase()) {
+		    newContext = (ClauseUse)concClause.getAssumes();
+		    Element oldContext = ((ClauseUse)ctx.currentCaseAnalysisElement).getAssumes();
+		    while (newContext != null && oldContext instanceof ClauseUse) {
+		      Util.debug("old = ",oldContext);
+		      Util.debug("new = ",newContext);
+		      cu = (ClauseUse)oldContext;
+		      if (cu.getConstructor() != newContext.getConstructor()) {
+		        ErrorHandler.report("context for conclusion doesn't match subject", conclusion);
+		      }
+		      int i,n = cu.elements.size();
+		      for (i=0; i < n; ++i) {
+		        if (cu.elements.get(i).getType() == gamma) break;
+		      }
+		      Util.verify(i < n, "can't find nested gamma");
+		      oldContext = cu.elements.get(i);
+		      Element e = newContext.elements.get(i);
+		      newContext = null;
+		      if (e instanceof ClauseUse) {
+		        cu = (ClauseUse)e;
+		        if (cu.getConstructor() != gamma.getTerminalCase()) {
+		          newContext = cu;
+		        }
+		      }
+		    }
+		  }
+		}
 		
 		
 		
@@ -111,19 +147,31 @@ public class RuleCase extends Case {
 		debug("adapation: ", adaptationSub, "\n\tapplied to ", ctx.currentCaseAnalysis, "\n\tis ", ctx.currentCaseAnalysis.substitute(adaptationSub));
 		
 		// did we increase the number of lambdas?
-		int lambdaDifference =  adaptedCaseAnalysis.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
+		int lambdaDifference =  concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 
 		if (lambdaDifference > 0) {
-			if (ctx.adaptationSub != null)
-				if (ctx.matchTermForAdaptation.countLambdas() == adaptedCaseAnalysis.countLambdas()) {
-					// we're just re-doing the same adaptation we did before
-					// TODO: more principled approach is to adapt the ctx.currentCaseAnalysis in DerivationByAnalysis before we even get here
-					adaptationSub = new Substitution(ctx.adaptationSub);
-					adaptedCaseAnalysis = ctx.currentCaseAnalysisElement.adaptTermTo(ctx.currentCaseAnalysis, concTerm, adaptationSub);
-				} else {
-					ErrorHandler.report("Sorry, more than one nested variable rule case analysis is not yet supported", this);
-				}
-			ctx.adaptationSub = new Substitution(adaptationSub);
+		  if (!rule.isAssumption()) {
+		    ErrorHandler.report("Context must remain the same in case except for the special assumption rule", this);
+		  }
+		  if (rule.isAssumptionSize() != lambdaDifference) {
+		    Util.debug("aca = ",adaptedCaseAnalysis);
+		    Util.debug("cca = ",ctx.currentCaseAnalysis);
+		    ErrorHandler.report("Context increase doesn't fit context supported by this rule: " + rule.isAssumptionSize() + " != " + lambdaDifference, this);
+		  }
+		  ClauseUse subClause = (ClauseUse)ctx.currentCaseAnalysisElement;
+		  ClauseUse patClause = (ClauseUse)conclusion.getClause();
+		  Util.debug(getLocation().getLine() + " means we need to determine how to convert " + patClause.getRoot() + " to " + subClause.getRoot());
+		  int n = subClause.elements.size();
+		  for (int i=0; i < n; ++i) {
+		    if (i == subClause.getConstructor().getAssumeIndex()) continue;
+		    if (rule.getConclusion().getElements().get(i) instanceof Variable) {
+		      Util.debug("  binding ",patClause.getElements().get(i)," to ",subClause.getElements().get(i));
+		    }
+		  }
+		  if (ctx.adaptationSub != null) {
+		    ErrorHandler.report("Sorry, more than one nested variable rule case analysis is not yet supported", this);
+		  }
+		  ctx.adaptationSub = new Substitution(adaptationSub);
 			
 			// decrement the free bound vars in adaptationSub by the difference
 			adaptationSub.incrFreeDeBruijn(-lambdaDifference);

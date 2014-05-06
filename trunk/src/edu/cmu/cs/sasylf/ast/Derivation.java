@@ -160,7 +160,8 @@ public abstract class Derivation extends Fact {
 	public static boolean checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
 	  Term matchTerm = DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false);
     Term suppliedTerm = DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false);
-    return checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg);
+    return checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg) &&
+        checkRootMatch(ctx, supplied, match, errorMsg == null ? null : node);
 	}
 	
 	/**
@@ -177,7 +178,6 @@ public abstract class Derivation extends Fact {
     try {
       debug("check match = ", matchTerm, ", supplied = ", suppliedTerm);
       debug("  current sub = ", ctx.currentSub);
-      debug("  wrapping sub = ", ctx.adaptationSub);
       debug("  current inputVars = ", ctx.inputVars);
       Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
       debug("  instance sub = ", instanceSub);
@@ -199,6 +199,23 @@ public abstract class Derivation extends Fact {
 	}
 	
 	/**
+   * Give an error for this node if copying from the source to the target
+   * involves changing the variable context.
+   * @param kind name action of this node
+   * @param srcClause clause being used
+   * @param trgClause clause being defined
+   */
+  public void checkRootMatch(String kind, ClauseUse srcClause, ClauseUse trgClause) {
+    if (srcClause.getRoot() == null) {
+      if (trgClause.getRoot() != null) {
+        ErrorHandler.report(kind+" cannot be used to weaken to variable context", this);
+      }
+    } else if (!srcClause.getRoot().equals(trgClause.getRoot())) {
+      ErrorHandler.report(kind+" cannot be used to change variable context",this);
+    }
+  }
+
+  /**
 	 * Type checking cannot check whether an implicit context is discarded.
 	 * This methods checks this situation.
 	 * @param ctx global definitions (not used)
