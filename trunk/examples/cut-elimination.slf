@@ -89,7 +89,7 @@ assumes Γ
 lemma subst-individ:
     assumes Γ
     forall d: Γ, i ⊢ A[i]
-    forall I
+    forall I assumes Γ
     exists Γ ⊢ A[I].
     // we prove an intermediate derivation:
     v: I ∈ Γ by case analysis on I:
@@ -104,7 +104,7 @@ end lemma
 // The main theorem: cut admissibility
 theorem cut-admissible:
     assumes Γ // This line means that Γ is (part of) the LF context
-    forall A
+    forall A assumes Γ
     forall d1: Γ ⊢ A
     forall d2: Γ, h:A ⊢ A'
     exists Γ ⊢ A'.
