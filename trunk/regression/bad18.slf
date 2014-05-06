@@ -12,8 +12,8 @@ assumes Gamma
    --------------- var
    x in (Gamma, x)
    
-judgment bound: Gamma |- t //! Would crash SASyLF 1.2.3
-assumes Hamma 
+judgment bound: Gamma |- t 
+assumes Hamma //! Would crash SASyLF 1.2.3
 
     t in Gamma
     ----------- B-var
