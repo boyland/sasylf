@@ -28,7 +28,7 @@ assumes Gamma
     
 theorem trivial:
   forall b1: * |- t
-  forall t[x] assumes *,x
+  forall t[x] assumes *,x //! bad binding
   exists fn x:Unit => t[x] = fn x:Unit => t[x].
   proof by rule eq 
 end theorem
