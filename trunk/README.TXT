@@ -115,8 +115,10 @@ RELEASE HISTORY
     Added bug test for issue #51 (bad38.slf) 
     Fixed theorem interface bugs (bad40.slf, good23.slf, good24.slf)
     An 'or' goal can be proven by proving a subset, or an individual element.
+    warning when identifier for derivation already declared.
     Pattern matching of judgments with contexts > 1 is now supported.
     Higher-order unification doesn't make greedy (unsound) assumptions, more failures now
+    nontermination issue in GLR(0) parser fixed (see good25.slf)
     Resolved issues #59, #61
 1.3.2	Cleanup
     Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)
