@@ -19,8 +19,8 @@ judgment isvalue : t value
 ---------------------- val-abs
 (fn x => t[x]) value
 
-judgment eval: t -> t //! extraneous assumes
-assumes Gamma
+judgment eval: t -> t
+assumes Gamma //! extraneous assumes
 
 t1 -> t1'
 ----------------- E-App1
