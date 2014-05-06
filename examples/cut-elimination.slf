@@ -104,7 +104,7 @@ end lemma
 // The main theorem: cut admissibility
 theorem cut-admissible:
     assumes Γ // This line means that Γ is (part of) the LF context
-    forall A assumes Γ
+    forall A
     forall d1: Γ ⊢ A
     forall d2: Γ, h:A ⊢ A'
     exists Γ ⊢ A'.
