@@ -253,6 +253,11 @@ public abstract class Term {
 		return type.equals(type2);
 	}
 
+	/**
+	 * Return true if this bound var is used in this term.
+	 * @param i index of bound variable to check
+	 * @return true bound variable is used.
+	 */
 	public boolean hasBoundVar(int i) {
 		return false;
 	}
@@ -500,6 +505,28 @@ public abstract class Term {
 		return this;
 	}
 
+	/**
+	 * Remove any unused lambda bindings around the syntax term.
+	 * We only remove outer level binders.
+	 * Unused means unused except in the types of other unused lambda bindings. 
+	 * We currently do this before checking reduction.  
+	 * It should only be applied to fully bound terms,
+	 * because it checks multiple variables at once.
+	 * This method is a NOP for everything except abstractions.
+	 * @return term unchanged or with fewer abstraction layers.
+	 */
+	public final Term stripUnusedLambdas() {
+	  Term result = this;
+	  Term t = this;
+	  for (;;) {
+	    if (!t.hasBoundVarAbove(0)) result = t;
+	    if (!(t instanceof Abstraction)) break;
+	    Abstraction a = (Abstraction)t;
+	    t = a.getBody();
+	  }
+	  return result;
+	}
+	
 	// reduce() is unnecessary - terms are always in normal form
 
 	/**

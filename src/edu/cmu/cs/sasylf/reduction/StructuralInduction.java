@@ -64,8 +64,8 @@ public class StructuralInduction extends InductionSchema {
     if (subject instanceof SyntaxAssumption) {
       Term inductionTerm = source.getElement().asTerm();
       Term inductiveTerm = subject.getElement().asTerm();
-      Term inductionSub = inductionTerm.substitute(ctx.currentSub);
-      Term inductiveSub = inductiveTerm.substitute(ctx.currentSub);
+      Term inductionSub = inductionTerm.substitute(ctx.currentSub).stripUnusedLambdas();
+      Term inductiveSub = inductiveTerm.substitute(ctx.currentSub).stripUnusedLambdas();
       // System.out.println("Is " + inductiveSub + " subterm of " + inductionSub + "?");
       if (inductionSub.equals(inductiveSub)) return Reduction.EQUAL;
       if (inductionSub.containsProper(inductiveSub)) return Reduction.LESS;
