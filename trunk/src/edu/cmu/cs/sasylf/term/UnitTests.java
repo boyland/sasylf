@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.SimpleTestSuite;
-import edu.cmu.cs.sasylf.util.Util;
 
 public class UnitTests extends SimpleTestSuite {
 
@@ -114,6 +113,8 @@ public class UnitTests extends SimpleTestSuite {
     testType();
     testTypeFamily();
     testUnify();
+    // new tests must be after testUnify because of fragile assignment of fresh variables
+    testStripLambdas();
   }
 
   private void testType() {
@@ -138,6 +139,16 @@ public class UnitTests extends SimpleTestSuite {
     assertEqual("a2.etaLong.typeFamily",a,a2etaLong.getTypeFamily());
   }
 
+  private void testStripLambdas() {
+    assertEqual("not abstraction",a,a.stripUnusedLambdas());
+    assertEqual("used abstraction",Abs(a,b(1)),Abs(a,b(1)).stripUnusedLambdas());
+    assertEqual("didn't used",a1,Abs(a,a1).stripUnusedLambdas());
+    assertEqual("used first",Abs(a,Abs(a,b(2))), Abs(a,Abs(a,b(2))).stripUnusedLambdas());
+    assertEqual("used second",Abs(a,b(1)), Abs(a,Abs(a,b(1))).stripUnusedLambdas());
+    assertEqual("unused except in unused",a1, Abs(a,Abs(App(b,b(1)),a1)).stripUnusedLambdas());
+    assertEqual("unused except in unused",Abs(a,App(a2,b(1))), Abs(a,Abs(App(b,b(1)),Abs(a,App(a2,b(1))))).stripUnusedLambdas());
+  }
+  
   @SuppressWarnings("unchecked")
   private void testUnify() {
     testUnification("var to constant", subst(p("A",a1)), v("A",a), a1);
@@ -221,8 +232,8 @@ public class UnitTests extends SimpleTestSuite {
     // If other tests come before this one, we need to adjust the
     // numbers here, or more powerfully, change testUnification to allow
     // a renaming of stamped free variables.
-    FreeVar e1 = new FreeVar("e18",e,7);
-    FreeVar e2 = new FreeVar("e19",e,6);
+    FreeVar e1 = new FreeVar("e18",e,6);
+    FreeVar e2 = new FreeVar("e19",e,5);
     
     sub = subst(p("e18",Abs(e,e1)),
                 p("e19",Abs(e,e2)),
@@ -251,7 +262,7 @@ public class UnitTests extends SimpleTestSuite {
     t1 = App(ax, App(v("F",Abs(a,a)),v("X",a)), Abs(a,App(v("F",Abs(a,a)),b(1))), Abs(a,a1), App(v("F",Abs(a,a)),v("X",a)));
     t2 = App(ax, App(v("G",Abs(a,a)),v("X",a)), Abs(a,b(1)), Abs(a,App(v("G",Abs(a,a)),b(1))), App(v("G",Abs(a,a)),v("X",a)));
     sub = subst(p("F",Abs(a,b(1))), p("G",Abs(a,a1)), p("X",a1));
-    Util.DEBUG=true;
+    // Util.DEBUG=true;
     testUnification("eventual pattern", sub, t1, t2);
   }
   
