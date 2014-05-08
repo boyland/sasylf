@@ -210,6 +210,8 @@ public abstract class Derivation extends Fact {
       if (trgClause.getRoot() != null) {
         ErrorHandler.report(kind+" cannot be used to weaken to variable context", this);
       }
+    } else if (trgClause.getRoot() == null) {
+      ErrorHandler.report(Errors.CONTEXT_DISCARDED, this);
     } else if (!srcClause.getRoot().equals(trgClause.getRoot())) {
       ErrorHandler.report(kind+" cannot be used to change variable context",this);
     }
