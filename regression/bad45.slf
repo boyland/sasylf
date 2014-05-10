@@ -1,0 +1,105 @@
+// demonstrate unsoundness with greedy unification in SASyLF 1.2.6/1.3.1 and 1.3.2
+// Previous versions don't accept this example because of other confounding differences,
+// but accepted an even worse looking case analysis.  See bad46.slf 
+
+package regression;
+
+terminals value λ unit Unit contradiction
+
+
+syntax
+
+t ::= λ x:T • t[x]
+   | x
+   | t t
+   | λ X • t[X]
+   | t T
+   | unit
+   | ⊥
+
+T ::= T → T
+   | ∀ X • T[X]
+   | X
+   | Unit
+
+Γ ::= *
+       | Γ, x : T
+       | Γ, X
+
+
+
+judgment absurd: contradiction
+   
+   
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+
+judgment bound: Γ ⊢ T
+assumes Γ
+
+------------- B-Var
+Γ,X ⊢ X
+
+----- B-Any
+Γ ⊢ T
+
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+-------------- T-Var
+Γ, x:T ⊢ x : T
+
+--------------- T-Unit
+Γ ⊢ unit : Unit
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+Γ, X ⊢ t[X] : T[X]
+--------------------------------------- T-TAbs
+Γ ⊢ (λ X • t[X]) : ∀ X • T[X]
+
+Γ ⊢ t1 : ∀ X • T1[X]
+---------------------------- T-TApp
+Γ ⊢ t1(T2) : T1[T2]
+
+---------------- T-Bot
+Γ ⊢ ⊥ : ∀ X • X
+
+lemma bad-invert:
+  forall dt: * ⊢ t(T) : T1 → T2
+  exists * ⊢ t : ∀ X • (T1'[X] → T2'[X]) and T1 == T1'[T] and T2 == T2'[T].
+  proof by case analysis on dt: //! Case analysis is impossible because there is no m.g.u.
+    case rule //! in 1.3.3, complains about redundant case
+      d: * ⊢ t : ∀ X • (T1'[X] → T2'[X])
+      -------------------------------------- T-TApp
+      _: * ⊢ t (T) : (T1'[T] → T2'[T])
+    is
+      e1: T1 == T1'[T] by rule type-eq
+      e2: T2 == T2'[T] by rule type-eq
+      proof by d, e1, e2
+    end case
+  end case analysis
+end lemma
+
+lemma exploit:
+  exists contradiction.
+  d1: * ⊢ ⊥ : ∀ X • X by rule T-Bot
+  d2: * ⊢ ⊥ (Unit → Unit) : Unit → Unit by rule T-TApp on d1
+  dt: * ⊢ ⊥ : (∀ X • (T1'[X] → T2'[X])) and
+  e1: Unit == T1'[Unit → Unit] and
+  e2: Unit == T2'[Unit → Unit] by lemma bad-invert on d2
+  proof by case analysis on dt:
+  end case analysis
+end lemma
