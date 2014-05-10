@@ -1,0 +1,33 @@
+// crashes with an internal error if rule matched is actually a lemma
+package regression;
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+
+
+judgment nat-equal: n = n
+
+   ----- nat-eq
+   n = n
+   
+lemma eq-reflexive:
+  forall n
+  exists n = n.
+  proof by rule nat-eq
+end lemma
+
+lemma eq-symmetric:
+  forall e: n1 = n2
+  exists n2 = n1.
+  proof by case analysis on e:
+    case rule //! used a lemma rather than a rule
+      ------- eq-reflexive
+      _: n = n
+    is
+      proof by rule eq-reflexive on n
+    end case
+  end case analysis
+end lemma
+
