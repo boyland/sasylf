@@ -35,9 +35,14 @@ public class ClauseDef extends Clause {
 					//if (Character.isLetter(t.getSymbol().charAt(0))) {
 						consName += '_' + t.getSymbol();
 					//}
-				}
+				} 
 			}
 			consName = uniqueify(consName);
+		}
+		for (Element e : getElements()) {
+		  if (e instanceof Clause) {
+        ErrorHandler.report("judgment/syntax must not include parenthesized expressions",copy);
+      }
 		}
 	}
 
