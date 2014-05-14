@@ -2,7 +2,6 @@
  * SASyLF sticks in extra bindings that shouldn't be there
  * when pattern matching a variable binding in a scope already
  * with a binding in it.
- * See also good12.slf which gives an example of something that should work.
  */ 
 
 package regression;
@@ -90,8 +89,9 @@ d1 : Gamma |- e[e'] : tau by induction on dt :
 		is
 		
 		d3 : Gamma', x1:tau |- x1 : tau		by rule t-var // WORKS
-		d3a: Gamma', x1:tau |- e[e'] : tau by rule t-var  // SHOULD WORK
-        proof by rule t-var                               // SHOULD ALSO WORK
+		// the following cases don't work with the new adaptation semantics
+		// d3a: Gamma', x1:tau |- e[e'] : tau by rule t-var
+        // proof by rule t-var          
 	end case
 
 end induction
