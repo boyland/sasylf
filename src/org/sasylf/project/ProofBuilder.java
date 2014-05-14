@@ -82,7 +82,8 @@ public class ProofBuilder extends IncrementalProjectBuilder {
             bcell.wait();
           } catch (InterruptedException e) {
             e.printStackTrace();
-            break; // only one level of loop....
+            Thread.currentThread().interrupt();
+            return;
           }
         }
       }
@@ -113,8 +114,10 @@ public class ProofBuilder extends IncrementalProjectBuilder {
   }
 
   public static ProofBuilder getProofBuilder(IProject p) {
+    // System.out.println("getProofBuilder(" + p + ")");
     ensureBuilding(p);
     ProofBuilder pb = (ProofBuilder)builders.get(p);
+    // System.out.println("pb = " + pb);
     return pb;
   }
   
