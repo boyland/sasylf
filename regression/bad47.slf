@@ -1,0 +1,14 @@
+// putting a clause in a judgment caused an internal error
+
+package regression;
+
+terminals S
+
+syntax
+    n ::= 0 | S n
+    
+judgment big: n = (S n) //! judgment shouldn't include parens
+
+   ------------- big-one
+   (S n) = (S n)
+   
