@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -97,7 +98,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	}
 	
 	public ElemType getElemType() {
-		throw new RuntimeException("should only call getElemTypes on syntax def clauses which don't have sub-clauses; can't call getElemType() on a Clause");
+		throw new RuntimeException(getLocation().getLine() + ": should only call getElemTypes on syntax def clauses which don't have sub-clauses; can't call getElemType() on a Clause");
 	}
 
 	public Symbol getGrmSymbol() {
@@ -274,8 +275,20 @@ public class Clause extends Element implements CanBeCase, Cloneable {
         // The following crashes if it starts with a paren:
         // Clause subClause = new Clause(sublist.isEmpty() ? this.getLocation() : sublist.get(0).getElement().getLocation()); 
         Clause subClause = new Clause(this.getLocation()); 
+        Stack<Clause> stack = new Stack<Clause>();
         for (GrmTerminal t : sublist) {
-          subClause.elements.add(t.getElement());
+          Element element = t.getElement();
+          if (element == null) {
+            if (t == GrmUtil.getLeftParen()) {
+              stack.push(subClause);
+              subClause = new Clause(this.getLocation());
+              continue;
+            } else if (t == GrmUtil.getRightParen()) {
+              element = subClause;
+              subClause = stack.pop();
+            }
+          }
+          subClause.elements.add(element);
         }
         // using a subClause forces the error to print correctly.
         Element e = subClause.parseClause(ctx,inBinding,g,sublist);
