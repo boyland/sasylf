@@ -73,6 +73,10 @@ public abstract class Element extends Node {
 	public Term getTypeTerm() { throw new UnsupportedOperationException(this.getClass().toString()); }
 	protected abstract Term computeTerm(List<Pair<String, Term>> varBindings);
 
+	public NonTerminal getRoot() {
+	  throw new UnsupportedOperationException("need to type check first before calling getRoot()");
+	}
+	
 	public Term asTerm() {
 		if (term == null)
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
