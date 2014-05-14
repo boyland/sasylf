@@ -3,6 +3,8 @@ package org.sasylf.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.SwingUtilities;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.CoreException;
@@ -44,15 +46,19 @@ public class ProjectProperties {
   }
 
   protected void informListeners(IProject project, String localName, Object oldValue, Object newValue) {
-    PropertyChangeEvent event = new PropertyChangeEvent(project,Activator.PLUGIN_ID+"."+localName,oldValue,newValue);
-    Collection<IPropertyChangeListener> listenersCopy;
+    final PropertyChangeEvent event = new PropertyChangeEvent(project,Activator.PLUGIN_ID+"."+localName,oldValue,newValue);
+    final Collection<IPropertyChangeListener> listenersCopy;
     synchronized (this) {
       if (listeners.isEmpty()) return;
       listenersCopy = new ArrayList<IPropertyChangeListener>(listeners);
     }
-    for (IPropertyChangeListener l : listenersCopy) {
-      l.propertyChange(event);
-    }
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        for (IPropertyChangeListener l : listenersCopy) {
+          l.propertyChange(event);
+        } 
+      }
+    });
   }
   
   private static final String PROJECT_BUILD_PATH_LOCAL_NAME = "project.buildPath";
