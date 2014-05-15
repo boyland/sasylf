@@ -136,12 +136,15 @@ public class DSLToolkitParser {
 		   t.kind == IDENTIFIER || 
 		   t.kind == INTEGER_LITERAL ||
 		   t.kind == OPERATOR ||
+		   t.kind == THEOREM ||
+		   t.kind == LEMMA ||
 		   // list every keyword from Keyword():
 		   t.kind == AND || 
 		   t.kind == CASE ||
 		   t.kind == CONTRADICTION ||
 		   t.kind == DO ||
 		   t.kind == END ||
+		   t.kind == EXCHANGE ||
 		   t.kind == EXTENDS ||
 		   t.kind == IS || 
 		   t.kind == INVERSION ||
@@ -150,6 +153,7 @@ public class DSLToolkitParser {
 		   t.kind == OR ||
 		   t.kind == PROVIDES ||
 		   t.kind == REQUIRES ||
+		   t.kind == SUBSTITUTION ||
 		   t.kind == USE || 
 		   t.kind == WEAKENING);
     }
@@ -1509,6 +1513,7 @@ Token Keyword() :
     |   t=< CONTRACTION >
     |   t=< INVERSION >
     |   t=< WEAKENING >
+    |   t=< EXCHANGE >
     |   t=< SUBSTITUTION >
     |   t=< MODULE >
     |   t=< REQUIRES >
@@ -1541,7 +1546,12 @@ String RuleName() :
     | t=<INTEGER_LITERAL> 
     | t=<NOT>
     | t=<OR>
+    | t=<AND>
     | t=<IS>
+    | t=<DO>
+    | t=<CASE>
+    | t=<LEMMA>
+    | t=<THEOREM>
     | t=Keyword()) { s += t.image; }
   )*
   { if (!(notNL(t1.specialToken))) {
