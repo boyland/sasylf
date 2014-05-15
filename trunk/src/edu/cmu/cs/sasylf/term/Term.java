@@ -366,7 +366,31 @@ public abstract class Term {
 	  return t;
 	}
 
-	/**
+  public static Term getWrappingAbstractions(Term t, List<Abstraction> abs, int n) {
+    while (n > 0) {
+      Abstraction a = (Abstraction)t;
+      abs.add(a);
+      t = a.getBody();
+      --n;
+    }
+    return t;
+  }
+
+  public static String wrappingAbstractionsToString(List<Abstraction> abs) {
+    StringBuilder sb = null;
+    for (Abstraction a : abs) {
+      if (sb == null) sb = new StringBuilder("{");
+      else sb.append(", ");
+      sb.append(a.varName);
+      sb.append(":");
+      sb.append(a.varType);
+    }
+    if (sb == null) return "{}";
+    else sb.append("}");
+    return sb.toString();
+  }
+  
+  /**
 	 * Compute the type family for this term.
 	 * Ignore dependencies; ignore arguments -- just the type family.
 	 * @return type family of this term
@@ -452,6 +476,8 @@ public abstract class Term {
 	 */
 	public void bindInFreeVars(Term typeTerm, Substitution sub) {}
 	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {}
+	// NB: The idx is always 1.  We actually don't need it paradoxically even for
+	// Abstraction because the substitution will be applied to the outside.
 	public void bindInFreeVars(List<Term> typeTerms, Substitution sub, int idx) {}
 	
 	/** Binds the ith bound variable in all free variables, where the variable type is possible.
