@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.term;
 
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -152,6 +153,10 @@ public class Substitution {
 
 	public Term remove(Atom v) {
 	  return varMap.remove(v);
+	}
+	
+	public void removeAll(Collection<? extends Atom> col) {
+	  varMap.entrySet().removeAll(col);
 	}
 	
 	/**
