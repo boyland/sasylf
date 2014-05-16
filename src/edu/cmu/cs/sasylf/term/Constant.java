@@ -2,6 +2,8 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.Queue;
 
+import edu.cmu.cs.sasylf.util.Pair;
+
 
 public class Constant extends Atom {
 	public static final Constant TYPE = new Constant();

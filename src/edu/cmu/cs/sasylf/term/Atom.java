@@ -2,6 +2,8 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.List;
 
+import edu.cmu.cs.sasylf.util.Pair;
+
 
 public abstract class Atom extends Term {
 	protected Atom(String name) { this.name = name; }

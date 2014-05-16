@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Application extends Term {
@@ -249,18 +250,72 @@ public class Application extends Term {
 				unifyHelper(current, worklist);
 				return;
 			}
-
-			if (otherVar.equals(function.substitute(current))) {
+			
+      if (otherVar.equals(function.substitute(current))) {
 				verify(arguments.size() == otherArgs.size(), "internal invariant: args to var must be of equal length");
-
-				// assume all args are used
-				// TODO: is this an assumption we really want? 
-				// Safe if existential variable is universally quantified, otherwise not!
-				// certainly OK for vars - in that case we are in Nipkow flexflex1
-				// unify all args
-				for (int i = 0; i < arguments.size(); ++i)
-					worklist.add(makePair(otherArgs.get(i), arguments.get(i)));
-
+				/* case: F t1 ... tn = F t1' ... tn'
+				 * 
+				 * We determine for each j whether:
+				 *   ti = ti'  always
+				 *   ti = ti'  never
+				 *   ti = ti'  maybe
+				 *   
+				 * If there are any maybes we give up with unification-incomplete.
+				 * If there are no nevers, the terms are equal and we can continue
+				 * Otherwise, we can bind F to a new function that ignores the unequal parameters.
+				 * 
+				 * F = \x1...\xn . G <"true" args>
+				 */
+				Term varType = otherVar.getType();
+				List<Abstraction> trueFormals = new ArrayList<Abstraction>();
+				List<Term> newArgs = new ArrayList<Term>();
+				String failure = null;
+				for (int i=0; i < arguments.size(); ++i) {
+				  Abstraction currentAbs = (Abstraction)varType;
+				  varType = currentAbs.getBody();
+				  Term a = arguments.get(i).substitute(current);
+				  Term b = otherArgs.get(i).substitute(current);
+				  if (a.equals(b)) {
+				    trueFormals.add(currentAbs);
+				    newArgs.add(new BoundVar(arguments.size()-i));
+				  } else {
+				    // recursive unification...
+				    try {
+				      a.unify(b);
+				      // they unify but are not identical.  Oh well
+				      failure = a + " conditionally equal " + b;
+				      break;
+				    } catch (UnificationIncomplete ex) {
+              failure = a + " maybe equal " + b;
+				      break;
+				    } catch (UnificationFailed ex) {
+				      // Good!
+				    }
+				    varType.incrFreeDeBruijn(-1);
+				  }
+				}
+				if (failure != null) {
+				  throw new UnificationIncomplete("Failed with self non-pattern unification: " + failure,this,otherApp);
+				}
+				varType = Term.wrapWithLambdas(trueFormals, varType);
+				if (newArgs.size() == arguments.size()) {
+				  // all equal
+				  Util.debug("equal: ",this," and ",otherApp);
+				  unifyHelper(current,worklist);
+				  return;
+				}
+				
+				List<Abstraction> allAbs = new ArrayList<Abstraction>();
+				getWrappingAbstractions(otherVar.getType(), allAbs);
+				FreeVar g = FreeVar.fresh("G", varType);
+				Term replacement = g;
+				if (!newArgs.isEmpty()) {
+				  replacement = Facade.App(g,newArgs);
+				}
+				replacement = Term.wrapWithLambdas(allAbs, replacement);
+				Util.debug("For ",this," ?=? ",otherApp);
+				Util.debug("  current gets ", otherVar, " -> ", replacement);
+				current.add(otherVar,replacement);
 				unifyHelper(current, worklist);
 			} else {
 				/* case: F x1...xn = G y1...ym
@@ -273,22 +328,18 @@ public class Application extends Term {
 				 * in above, E is otherVar, e1'...em' is otherArgs, C is function, e1..en is arguments
 				 */ 
 
-				// quick fix for supporting eta-long forms better
-				// TODO: is this general enough?
-				
+	      // verify that this is a pattern
+	      if (!otherApp.isPattern()) {
+	        Util.debug("not pattern: ", otherApp);
+	        otherApp.tryEtaLongCase(this, current, worklist);
+	        return;
+	      }
 
-				// verify that this is a pattern
-				if (!otherApp.isPattern()) {
-				  Util.debug("not pattern: ", otherApp);
-					otherApp.tryEtaLongCase(this, current, worklist);
-					return;
-				}
-
-				if (!isPattern()) {
-          Util.debug("not pattern: ", this);
-					tryEtaLongCase(otherApp, current, worklist);
-					return;
-				}
+	      if (!isPattern()) {
+	        Util.debug("not pattern: ", this);
+	        tryEtaLongCase(otherApp, current, worklist);
+	        return;
+	      }
 
 
 				// invariant (of Queue): if we get here, all other things are flex-flex patterns (Nipkow flexflex2)
@@ -469,7 +520,10 @@ public class Application extends Term {
 	  // @ If one application has all the arguments of the other, then bind the shorter
 	  //   variable to the longer one.  This doesn't work for the same reason as above.
 	  
-		throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + application + " and " + this, application, this);
+	  Term thisTerm = this.substitute(current);
+	  Term otherTerm = application.substitute(current);
+	  Util.debug("incomplete. this = " + thisTerm + " =?= " + otherTerm + " current = ",current,", worklist = ", worklist);
+		throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + otherTerm + " and " + thisTerm, otherTerm, thisTerm);
 		
 	}
 
