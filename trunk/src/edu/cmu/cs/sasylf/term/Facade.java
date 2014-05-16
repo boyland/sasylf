@@ -3,6 +3,8 @@ package edu.cmu.cs.sasylf.term;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.util.Pair;
+
 public class Facade {
 	public static Substitution Sub(Term t, FreeVar v) {
 		return new Substitution(t, v);

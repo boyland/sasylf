@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class BoundVar extends Term {

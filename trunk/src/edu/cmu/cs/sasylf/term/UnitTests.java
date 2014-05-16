@@ -6,6 +6,7 @@ import static edu.cmu.cs.sasylf.term.Facade.App;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SimpleTestSuite;
 
 public class UnitTests extends SimpleTestSuite {
@@ -72,22 +73,30 @@ public class UnitTests extends SimpleTestSuite {
     return new Substitution(terms,vars);
   }
 
+  static final Substitution NO_MGU = new Substitution();
+  
   protected void testUnification(String description, Substitution expected, Term t1, Term t2) {
     try {
       Substitution actual = t1.unify(t2);
       assertEqual("unified",t1.substitute(actual),t2.substitute(actual));
       if (expected == null) {
         assertTrue(description + " didn't fail as expected", false);
+      } else if (expected == NO_MGU) {
+        assertTrue(description + " should have failed due to incompleteness", false);
       } else {
         assertTrue(description + " result was " + actual + ", but expected " + expected,
             actual.containsAll(expected));
       }
     } catch (UnificationIncomplete ex) {
-      System.out.println(ex.getMessage());
-      if (expected != null) {
+      if (expected == null) {
+        assertTrue(description + " should have fully failed, not " + ex.getMessage(), false);
+      } else if (expected == NO_MGU) {
+        assertTrue("correct",true);
+      } else {
         Term t12 = t1.substitute(expected);
         Term t21 = t2.substitute(expected);
         if (t12.equals(t21)) {
+          assertTrue(description + " should have succeeded, not " + ex.getMessage(), false);
           System.out.println("BTW: expected substitution does work.");
         } else {
           System.err.println("Test case is suspect: expected substitution didn't work.");
@@ -96,7 +105,7 @@ public class UnitTests extends SimpleTestSuite {
       }
     } catch (UnificationFailed ex) {
       assertTrue(description + " failed unexpectedly: " +ex.getMessage(), expected == null);
-      if (expected != null) {
+      if (expected != null && expected != NO_MGU) {
         Term t12 = t1.substitute(expected);
         Term t21 = t2.substitute(expected);
         if (t12.equals(t21)) {
@@ -152,14 +161,14 @@ public class UnitTests extends SimpleTestSuite {
   @SuppressWarnings("unchecked")
   private void testUnify() {
     testUnification("var to constant", subst(p("A",a1)), v("A",a), a1);
-    Application t2 = App(a2,a1);
+    Term t2 = App(a2,a1);
     testUnification("var to structure", subst(p("A",t2)), v("A",a), t2);
     testUnification("match structure", subst(p("A",a1)), App(a2,v("A",a)), t2);
     
     // Not implemented: not in the pattern set.
     Substitution sub = subst(p("A",Abs(a,App(a2,b(1))))); 
-    Application t1 = App(v("A",Abs(a,a)),a1);
-    testUnification("match function", sub, t1, t2);
+    Term t1 = App(v("A",Abs(a,a)),a1);
+    testUnification("match function", NO_MGU, t1, t2);
 
     t1 = 
         App(subtTransRule,
@@ -255,7 +264,7 @@ public class UnitTests extends SimpleTestSuite {
     t1 = App(v("F", Abs(a,a)), v("X",a));
     t2 = App(a2,a1);
     sub = subst(p("F",a2),p("X",a1));
-    testUnification("non-pattern", sub, t1, t2);
+    testUnification("non-pattern", NO_MGU, t1, t2);
     
     // make sure not eagerly binding things:
     Constant ax = new Constant("ax",Abs(a,Abs(Abs(a,a),Abs(Abs(a,a),Abs(a,Constant.TYPE)))));
@@ -264,6 +273,36 @@ public class UnitTests extends SimpleTestSuite {
     sub = subst(p("F",Abs(a,b(1))), p("G",Abs(a,a1)), p("X",a1));
     // Util.DEBUG=true;
     testUnification("eventual pattern", sub, t1, t2);
+    
+    t1 = App(v("F", Abs(a,a)), v("X1",a));
+    t2 = App(v("F", Abs(a,a)), v("X1",a));
+    testUnification("identical", subst(), t1, t2);
+    
+    t1 = App(v("F", Abs(a,a)), v("X1",a));
+    t2 = App(v("F", Abs(a,a)), v("X2",a));
+    testUnification("not rigid", NO_MGU, t1, t2);
+    
+    t1 = App(v("F", Abs(a,a)), a1);
+    t2 = App(v("F", Abs(a,a)), App(a2,a1));
+    FreeVar g7 = new FreeVar("G",a,7);
+    testUnification("not pattern", subst(p("F",Abs(a,g7))), t1, t2);
+    
+    Constant ay = new Constant("ay", Abs(a,Abs(a,Abs(a,Constant.TYPE))));
+    Term t11 = App(v("F", Abs(a,a)), App(v("G", Abs(a,a)), v("X1",a)));
+    t1 = App(ay, t11, App(v("G",Abs(a,a)),v("X1",a)), t11);
+    Term t22 = App(v("F", Abs(a,a)), v("X2",a));
+    t2 = App(ay, t22, v("X2",a), t22);
+    testUnification("eventually identical", subst(p("X2",App(v("G",Abs(a,a)),v("X1",a)))), t1, t2);
+    
+    t1 = Abs(a,Abs(a,Abs(a,App(v("F",Abs(a,Abs(a,Abs(a,a)))),b(1),b(2),b(3)))));
+    t2 = Abs(a,Abs(a,Abs(a,App(v("F",Abs(a,Abs(a,Abs(a,a)))),b(3),b(2),b(1)))));
+    FreeVar g8 = new FreeVar("G",Abs(a,a),8);
+    testUnification("switched", subst(p("F",Abs(a,Abs(a,Abs(a,App(g8,b(2))))))),t1,t2);
+    
+    t1 = Abs(a,Abs(a,App(v("F",Abs(a,Abs(a,a))),b(1),b(2))));
+    t2 = Abs(a,Abs(a,App(v("F",Abs(a,Abs(a,a))),b(2),b(1))));
+    FreeVar g9 = new FreeVar("G",a,9);
+    testUnification("all-never-eq", subst(p("F",Abs(a,Abs(a,g9)))),t1,t2);
   }
   
   public static void main(String[] args) {

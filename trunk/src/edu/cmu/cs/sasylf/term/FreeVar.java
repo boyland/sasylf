@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Relation;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -299,6 +300,13 @@ public class FreeVar extends Atom {
     }    
   };
 
+  public static void printSubordination() {
+    Relation<Term,Term> rel = appearsIn.get();
+    for (Pair<Term,Term> p : rel) {
+      System.out.println(p.first + " < " + p.second);
+    }
+  }
+  
 	public static void reinit() {
 	  resetFreshStamp();
 		resetAppearsIn();

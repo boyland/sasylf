@@ -1,4 +1,4 @@
-package edu.cmu.cs.sasylf.term;
+package edu.cmu.cs.sasylf.util;
 
 public class Pair<S,T> {
 	public Pair(S f, T s) { first = f; second = s; }

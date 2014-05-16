@@ -8,12 +8,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -94,12 +94,20 @@ public abstract class Term {
 	//compare in order of pair elements, put in opposite order of terms
 	static class PairComparator implements Comparator<Pair<Term,Term>> {
 		public int compare(Pair<Term, Term> t1, Pair<Term, Term> t2) {
-			return t1.first.oneIfNonPatFreeVarApp(t1.second) - t2.first.oneIfNonPatFreeVarApp(t2.second);
-			/*int t1Order = t1.first.getOrder()*10 + t1.second.getOrder();
-			int t2Order = t2.first.getOrder()*10 + t2.second.getOrder();
-			
-			return t2Order - t1Order;*/
+			return toPriority(t1) - toPriority(t2);
 		}
+    /**
+     * Compute priority of a pair.
+     * 1 point for each non-pattern free application.
+     * Previously, max was 1.  But we want to make sure that
+     * T2 =?= T22[T23] has higher priority than T1[T2] =?= T1[T22[T23]]
+     * Eventually, we may want to count "bad" applications. 
+     * @param t1 pair to evaluate
+     * @return priority (greater is lower priority...)
+     */
+    protected int toPriority(Pair<Term, Term> t1) {
+      return t1.first.oneIfNonPatFreeVarApp() + t1.second.oneIfNonPatFreeVarApp();
+    }
 	}
 	/** constructs a pair with the terms in order
 	 */
@@ -350,14 +358,18 @@ public abstract class Term {
 	}
 	
 	public static Term wrapWithLambdas(List<Abstraction> abs, Term t) {
-	  for (ListIterator<Abstraction> it = abs.listIterator(abs.size()); it.hasPrevious(); ) {
-	    Abstraction a = it.previous();
-	    t = Abstraction.make(a.varName, a.varType, t);
-	  }
-	  return t;
+	  return wrapWithLambdas(abs,t,abs.size());
 	}
 	
-	public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
+  public static Term wrapWithLambdas(List<Abstraction> abs, Term t, int n) {
+    for (int i=n-1; i >= 0; --i) {
+      Abstraction a = abs.get(i);
+      t = Abstraction.make(a.varName, a.varType, t);
+    }
+    return t;
+  }
+
+  public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
 	  while (t instanceof Abstraction) {
 	    Abstraction a = (Abstraction)t;
 	    abs.add(a);
@@ -462,6 +474,10 @@ public abstract class Term {
 	 */
 	public final Term incrFreeDeBruijn(int amount) { return incrFreeDeBruijn(0, amount); }
 
+	/**
+	 * Add any free variables to the given set.
+	 * @param s set to add to, never null
+	 */
 	void getFreeVariables(Set<FreeVar> s) {}
 
 	/** returns the number of enclosing Abstractions in the term */

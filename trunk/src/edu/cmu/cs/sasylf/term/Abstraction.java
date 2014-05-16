@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Abstraction extends Term {
@@ -75,19 +76,12 @@ public class Abstraction extends Term {
 	 */
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		if (other instanceof Abstraction) {
-			// see if one is eta-equivalent to a free variable
-			Term myVar = getEtaEquivFreeVar();
-			Term otherVar = other.getEtaEquivFreeVar();
-			
-			if (myVar != null || otherVar != null) {
-				worklist.add(makePair(myVar == null ? this : myVar, otherVar == null ? other : otherVar));
-			} else {
-				worklist.add(makePair(body, ((Abstraction)other).body));
-				worklist.add(makePair(varType, ((Abstraction)other).varType));
-			}
-			unifyHelper(current, worklist);
+		  // Earlier, we would test to see if one was eta-equivalent to a free var
+		  // but that causes problems if both mentioned the same variable.
+		  worklist.add(makePair(body, ((Abstraction)other).body));
+		  worklist.add(makePair(varType, ((Abstraction)other).varType));
+		  unifyHelper(current, worklist);
 		} else
-			// TODO: eta-normalize on the fly where necessary
 			throw new UnificationFailed(other.toString() + " is not an instance of " + this + " (may need to implement eta-normalization)", this, other);
 	}
 

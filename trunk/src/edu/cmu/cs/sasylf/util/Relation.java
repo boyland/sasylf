@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.util;
 
 import java.util.*;
 
-public class Relation<T1, T2> {
+public class Relation<T1, T2> implements Iterable<Pair<T1,T2>> {
 	private Map<T1,Set<T2>> forwardMap = new HashMap<T1,Set<T2>>();
 	private Map<T2,Set<T1>> reverseMap = new HashMap<T2,Set<T1>>();
 	
@@ -38,4 +38,40 @@ public class Relation<T1, T2> {
 		}
 		return set;
 	}
+
+	private class PairIterator implements Iterator<Pair<T1,T2>> {
+	  private Iterator<Map.Entry<T1, Set<T2>>> iterator1 = forwardMap.entrySet().iterator();
+	  private Iterator<T2> iterator2 = null;
+	  private T1 currentKey1 = null;
+	  private T2 currentKey2 = null;
+	  
+    @Override
+    public boolean hasNext() {
+      if (iterator2 != null && iterator2.hasNext()) return true;
+      if (!iterator1.hasNext()) return false;
+      Map.Entry<T1, Set<T2>> entry = iterator1.next();
+      currentKey1 = entry.getKey();
+      iterator2 = entry.getValue().iterator();
+      return hasNext();
+    }
+    
+    @Override
+    public Pair<T1, T2> next() {
+      if (!hasNext()) throw new NoSuchElementException("no more pairs in relation");
+      currentKey2 = iterator2.next();
+      return new Pair<T1, T2>(currentKey1, currentKey2);
+    }
+    
+    @Override
+    public void remove() {
+      // Not hard to implement if we want it...
+      throw new UnsupportedOperationException("remove not yet implemented for relation iterator");
+    }
+	}
+	
+  @Override
+  public Iterator<Pair<T1, T2>> iterator() {
+    return new PairIterator();
+  }
+	
 }
