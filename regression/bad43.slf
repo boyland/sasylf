@@ -74,7 +74,7 @@ assumes Γ
   
   Γ, h:A[I] ⊢ A'
   H:(∀ i • A[i]) ∈ Γ
-  ------------------ forallL
+  ------------------ forallL //! warning about non-rigid I
   Γ ⊢ A'
   
 /*
@@ -146,7 +146,7 @@ theorem cut-admissible:
             proof by rule impL on d1a, d3, v1
         end case
 
-        case rule
+        case rule //! unification incomplete (non-rigid I1)
             d1a: Γ, h1: A0[I1] ⊢ A
             v1: H0 : (∀ i • A0[i]) ∈ Γ
             ----------------------------- forallL
@@ -233,7 +233,7 @@ theorem cut-admissible:
                 -------------------------------------- var
                 _: h : (A1 ∧ A2) ∈ (Γ , h : (A1 ∧ A2))
               is
-                proof by case analysis on d1:
+                proof by case analysis on d1: //! cascade error
                   case rule
                     v1: H0 : (A1 ∧ A2) ∈ Γ
                     ---------------------- axiom
@@ -294,7 +294,7 @@ theorem cut-admissible:
                 --------------- var
                 _: h : (A1 ⇒ A2) ∈ (Γ, h : (A1 ⇒ A2))
               is
-                proof by case analysis on d1:
+                proof by case analysis on d1: //! cascade error
                   case rule
                     v': H0 : (A1 ⇒ A2) ∈ Γ
                     --------------- axiom
@@ -328,7 +328,7 @@ theorem cut-admissible:
             proof by rule forallR on d3 
         end case
 
-        case rule
+        case rule //! cascade error
             d21: Γ, h: A, h' : A0[I0] ⊢ A'
             v2: H[h] : (∀ i • A0[i]) ∈ (Γ, h: A)
             ------------------------------------- forallL
@@ -370,7 +370,7 @@ theorem cut-admissible:
                             // accept A0[I0] as a subterm of (∀ i • A0[i])
                             // which is permitted as in Twelf.
                             // See Section 8.3 of Twelf User Manual.
-                            _: Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3 //! loses context on A0[I0]
+                            _: Γ ⊢ A' by induction hypothesis on (A0[I0]), d11', d3 // lost due to cascde, loses context on A0[I0]
                         end case
                     end case analysis
                 end case

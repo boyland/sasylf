@@ -1,0 +1,50 @@
+// "avoid" doesn't avoid if the arguments are in an unexpected order.
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x]
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x:T
+    
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var
+    Gamma, x:T |- x : T
+
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+
+    
+lemma gen-term:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists    Gamma |- t' : T.
+    proof by d
+end lemma
+
+lemma innocous:
+    exists *, x1:Unit -> Unit, x2: Unit |- t[x1][x2] : Unit.
+    dt1:   *, x1:Unit -> Unit |- x1 : Unit -> Unit by rule T-Var
+    dt2:   *, x1:Unit -> Unit, x2: Unit |- x1 : Unit -> Unit by weakening on dt1
+    dt3:   *, x1:Unit -> Unit, x2: Unit |- x2 : Unit by rule T-Var
+    dt4:   *, x1:Unit -> Unit, x2: Unit |- x1 x2 : Unit by rule T-App on dt2, dt3
+    // the following both should be OK.
+    dt5:   *, x1:Unit -> Unit, x2: Unit |- t1[x1][x2] : Unit by lemma gen-term on dt4
+    dt6:   *, x1:Unit -> Unit, x2: Unit |- t2[x2][x1] : Unit by lemma gen-term on dt4
+end lemma
+

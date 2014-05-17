@@ -1,0 +1,42 @@
+// assumption rule should not be for wrong type.
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= v | unit | t t | fn x:T => t[x]
+
+    v ::= x
+    
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x:T
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var //! assumption rule cannot have variable on different type
+    Gamma, x:T |- x : T
+
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+    
+lemma gen-term:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists    Gamma |- t' : T.
+    // the following causes a case analysis internally, but does nothing
+    // this is what I want to have something that has no errors of its own.
+    do case analysis on d:
+    end case analysis
+    proof by d
+end lemma
