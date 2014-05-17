@@ -1,7 +1,7 @@
 /* 
  * Annotated solution to POPLMark Challenge 2a
  *
- * Author: Jonathan Aldrich
+ * Author: Jonathan Aldrich and John Boyland
  * 
  * This file defines System F_sub and proves type safety as specified in POPLMark
  * challenge problem 2a.
@@ -21,7 +21,7 @@ package examples;
  * that do not themselves denote syntactic classes.  Symbols like
  * + or |- do not need to be declared, even if they are terminals.
  */
-terminals lambda all Top value stepsorvalue
+terminals lambda all Top value
 
 
 /************************ SYNTAX **************************************/
@@ -252,6 +252,11 @@ judgment type-equality: T == T
 T == T
 
 
+/*
+ * Inverting the subtyping of a forall type has two judgments,
+ * that have different contexts, which SASyLF's "and" semantics cannot
+ * handle, so we define a helper judgment:
+ */
 judgment Tarrow-sub: T'' == T <: T
 
 * |- T11'' <: T11'
@@ -288,9 +293,8 @@ theorem identity-behavior : forall dv : t value exists (lambda x : T => x) t -> 
  * The most common justification is "by rule <rule-name> on <name1>, <name2>, ..., <name_k>"
  * This means that we conclude the judgment on the left by applying rule <rule-name> to the
  * (ordered) list of premises <name1>, <name2>, ..., <name_k>.  Each <name> must be either
- * one of the foralls (we don't have any for this theorem) or one of the earlier things we
- * concluded.  If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..."
- * part.
+ * one of the foralls or one of the earlier things we concluded.  
+ * If the rule has no premises (i.e. it's an axiom) we leave out the "on <name1>..." part.
  */
 
 d1 : (lambda x : T => x) t -> t by rule E-AppAbs on dv
@@ -305,10 +309,18 @@ end theorem
 
 /************************ PROGRESS **************************************/
 
+/*
+ * A lemma for inverting subtyping where the upper type is an arrow type.
+ * We use SASyLF's "and" syntax because we have multiple results/outputs.  
+ */
 lemma arrow-sub-arrow: 
     forall dsub: * |- T <: T1 -> T2
 	exists T == (T1' -> T2') and * |- T1 <: T1' and * |- T2' <: T2 .								
 
+// "proof" is short for "_: <judgment>" where <judgment> is what is needed to be proved.
+// "by induction" means structural induction on the given derivation/syntax,
+// and a case analysis on the thing on which induction is done. 
+// See below "theorem progress" for more explanation of case analysis.
 proof by induction on dsub:
 
 case rule
@@ -318,6 +330,7 @@ is
     deq: T1 -> T2 == T1 -> T2 by rule type-equality
 	dsub1: * |- T1 <: T1 by rule SA-Refl
 	dsub2: * |- T2 <: T2 by rule SA-Refl
+	// An "and" judgment is justified by each of the pieces
 	proof by deq, dsub1, dsub2
 end case
 	
@@ -327,11 +340,13 @@ case rule
 	---------------------------- SA-Trans
 	d3: * |- T <: T1 -> T2
 is
+    // The induction hypothesis gives us back an and judgment with three results,
+    // in SASyLF each is named:
 	d4: T' == T21' -> T22' and 
 	d5: * |- T1 <: T21' and
 	d6: * |- T22' <: T2 by induction hypothesis on d2
 	// d4 has only one case which unifies the two types.  We want the unification
-	// and so use the following special case proof step:
+	// and so use the following special case proof step: "use inversion of"
 	use inversion of type-equality on d4
 	d8: T == T1'' -> T3 and
 	d9: * |- T21' <: T1'' and
@@ -375,7 +390,7 @@ proof by case analysis on dtv:
     end case
 
     // This case actually is a contradiction case, but this fact
-    // is concelaed by T-Sub
+    // is concealed by T-Sub
     case rule
         -------------------------------- V-Tabs
         _: (lambda X <: T0 => t0[X]) value
@@ -388,7 +403,7 @@ proof by case analysis on dtv:
                 _: * |- (lambda X <: T0 => t0[X]) : (T1 -> T2)
             is
                 // even at this point, we don't see a contradiction
-                // so we just go ahead with induction
+                // so we just go ahead inverting the subtyping relation and using the I.H.
                 d4: T' == T1'' -> T2' and
                 d5: * |- T1 <: T1'' and
                 d6: * |- T2' <: T2 by lemma arrow-sub-arrow on dts1
@@ -586,13 +601,15 @@ is
 	dp1sv: t1 value or t1 -> t1' by induction hypothesis on dp1t
 	dp2sv: t2 value or t2 -> t2' by induction hypothesis on dp2t
 	
-	// We now start a case analysis on results from the induction hypothesis.
+	// We now start a case analysis on the results from the induction hypothesis.
 	// An "or" judgment uses special "or" cases:
 	proof by case analysis on dp1sv :
 
+    // The "or" case names one of the disjuncts:
 	case or dp1s : t1 -> t1'
 	is
 	
+	    // now we prove the second disjunct of the theorem output
 		ds : t1 t2 -> t1' t2 by rule E-CtxApp1 on dp1s
 	
 	end case
@@ -609,7 +626,7 @@ is
             // we do a case analysis on deq so that now SASyLF
             // knows that t1 is actually a lambda expression.
             // "use inversion" is used when we aren't interested
-            // in the premises of the rule, but here there are not
+            // in the premises of the rule. Here there are not
             // premises in any case.
 		    use inversion of equality on deq
 
@@ -689,7 +706,7 @@ end theorem
 /************************ PRESERVATION **************************************/
 
 
-
+/* Inversion of the typing relation when the type is an arrow type: */
 lemma invert-lambda: forall dt: * |- lambda x:T11 => t12[x] : T1 -> T
 					forall dt2: * |- t2 : T2
 					forall dsub: * |- T2 <: T1
@@ -727,7 +744,7 @@ end lemma
 
 
 
-
+/* inverting the typing relation when the type is an "all" type: */
 lemma invert-lambda2: forall dt: * |- lambda X <: T11 => t12[X] : all X <: T11'' => T12[X]
 					forall dsub1: * |- T2 <: T11''
 					exists * |- t12[T2] : T12[T2].
@@ -840,8 +857,8 @@ case rule
 	d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
 
 is
-	dt' : * |- t' : T by case analysis on ds:
-	end case analysis
+    // We have syntactic sugar for an empty case analysis:
+	dt' : * |- t' : T by contradiction on ds
 end case
 
 case rule
