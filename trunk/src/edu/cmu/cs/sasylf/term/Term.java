@@ -297,27 +297,23 @@ public abstract class Term {
 	 *  Application, Abstraction, BoundVar cases separate
 	 */
 	void unifyFlexApp(FreeVar function, List<? extends Term> arguments, Substitution current, Queue<Pair<Term,Term>> worklist) {
-		// code below is OK if arguments are bound variables
-		//throw new UnificationFailed("flex-flex case against constant or BoundVar or Abstraction not supported", function, this);
-
-		/* case: C = E x1...xn
+	  Util.verify(this instanceof Constant, "This case only for constants");
+	  
+		/* case: C = E t1...tn
+		 * where each ti is a bound variable
 		 * 
 		 * set E = \x1...\xn . C
 		 */ 
 
 		Application errorApp =  new Application(function, arguments);
-		// TODO: should enforce that args are in proper order of binding, and that they include *all* the free "bound" vars in the unified thing
 		for (Term t : arguments)
 			if (!(t instanceof BoundVar))
 				throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + errorApp + " and " + this, errorApp, this);
 
-		Term wrappedThis = this;
-		Term varType = function.getType();
-		//List<Term> argTypes = getArgTypes(varType, arguments.size());
-		List<Term> argTypes = getArgTypes(varType);
-		//wrappedThis = wrappedThis.incrFreeDeBruijn(argTypes.size()); - don't do this, want to implicitly capture vars
-		wrappedThis = wrapWithLambdas(wrappedThis, argTypes);
-		current.add(function, wrappedThis);
+		Util.debug("unifyFlexApp: ", this, " ?=? ",errorApp);
+		Term replacement = wrapWithLambdas(this, getArgTypes(function.getType()));
+		Util.debug("  " + function + " -> " + replacement);
+		current.add(function, replacement);
 
 		// continue unifying
 		unifyHelper(current, worklist);
