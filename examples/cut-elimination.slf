@@ -5,6 +5,7 @@
 package examples;
 
 // For simplicity, we have and (but not or), true (but not false) and forall (but not exists)
+// We use Unicode for better readability.
 
 syntax
   A ::= A ∧ A | ⊤ | A ⇒ A | ∀ i • A[i]    // Formulae
@@ -16,7 +17,7 @@ syntax
   
   // A fake syntax so that SASyLF can see that "h" is a variable.
   // The first production ensures that the type is inhabited (required in SASyLF)
-  Fake ::= A◊ | h:A ⊢ Fake[h]
+  Fake ::= A ◊ | h:A ⊢ Fake[h]
 
 // SASyLF requires that every variable bound in a context be associated
 // with a rule of some judgment.  Here, for cleanliness, we use a different
@@ -75,11 +76,24 @@ assumes Γ
   -------------- forallR
   Γ ⊢ ∀ i • A[i]
   
+  I ∈ Γ
   Γ, h:A[I] ⊢ A'
   H:(∀ i • A[i]) ∈ Γ
   ------------------ forallL
   Γ ⊢ A'
   
+lemma individ-in-context:
+    assumes Γ
+    forall I assumes Γ
+    exists I ∈ Γ
+    proof by case analysis on I:
+        case i assumes Γ', i is // Γ', i is a subcontext (but not equal to) Γ
+            v: i ∈ (Γ', i) by rule indiv
+            _: I ∈ Γ by v // implicit weakening to Γ
+        end case
+    end case analysis
+end lemma
+
 /*
  * The following lemma uses SASyLF's built-in substitution,
  * which requires that the special rule for variable binding to be available.
@@ -92,19 +106,16 @@ lemma subst-individ:
     forall I assumes Γ
     exists Γ ⊢ A[I].
     // we prove an intermediate derivation:
-    v: I ∈ Γ by case analysis on I:
-        case i assumes Γ', i is
-            // "proof" means whatever we're trying to prove.
-            proof by rule indiv
-        end case
-    end case analysis
+    v: I ∈ Γ by lemma individ-in-context on I
+    // "proof" means whatever we're trying to prove.
+    // "substitution" is built-in SASyLF use of context.
     proof by substitution on d,v
 end lemma
 
 // The main theorem: cut admissibility
 theorem cut-admissible:
-    assumes Γ // This line means that Γ is (part of) the LF context
-    forall A
+    assumes Γ // This line means that Γ is (part of) the LF context, that is implicit in uses of this theorem
+    forall A assumes Γ // This means A may be dependent on variables in context Γ
     forall d1: Γ ⊢ A
     forall d2: Γ, h:A ⊢ A'
     exists Γ ⊢ A'.
@@ -122,7 +133,10 @@ theorem cut-admissible:
     // does a case analysis that proves the result, and then remembers
     // for the later part of the proof that these cases don't need to be
     // handled again.  Without using this feature, our proof would be O(n^2)
-    // in length for the number of kinds of formulae.
+    // in length for the number of kinds of formulae.  We have a stripped-down
+    // sequent calculus here, but we have also written cut-admissibility for 
+    // a much larger calculus and the "do case analysis" feature is very important
+    // to keep the proof not too long.
     
     // Handle all "L" cases for d1.
     do case analysis on d1:
@@ -133,7 +147,7 @@ theorem cut-admissible:
             _: Γ ⊢ A
         is
             d2': Γ, h1 : A1, h2 : A2, h:A ⊢ A' by weakening on d2
-            d3: Γ, h : A1, h' : A2 ⊢ A' by induction hypothesis on A, d1a, d2'
+            d3:  Γ, h1 : A1, h2 : A2 ⊢ A' by induction hypothesis on A, d1a, d2'
             proof by rule andL on d3, v1
         end case
 
@@ -150,6 +164,7 @@ theorem cut-admissible:
         end case
 
         case rule
+            iin: I1 ∈ Γ
             d1a: Γ, h1: A0[I1] ⊢ A
             v1: H0 : (∀ i • A0[i]) ∈ Γ
             ----------------------------- forallL
@@ -157,7 +172,7 @@ theorem cut-admissible:
         is
             d2': Γ, h1: A0[I1], h: A ⊢ A' by weakening on d2
             d3:  Γ, h1: A0[I1] ⊢ A' by induction hypothesis on A, d1a, d2'
-            proof by rule forallL on d3, v1
+            proof by rule forallL on iin, d3, v1
         end case
     
     end case analysis
@@ -228,7 +243,8 @@ theorem cut-admissible:
                 _: h': (A1 ∧ A2) ∈ (Γ', h': (A1 ∧ A2), h : A)
               is
                 v': h' : (A1 ∧ A2) ∈ (Γ', h' : (A1 ∧ A2)) by rule var
-                proof by rule andL on d3', v'
+                v'':H' : (A1 ∧ A2) ∈ Γ by v' 
+                proof by rule andL on d3', v''
               end case
 
               case rule
@@ -288,7 +304,8 @@ theorem cut-admissible:
                 _: h': (A1 ⇒ A2) ∈ (Γ', h': (A1 ⇒ A2), h : A)
               is
                 v': h': (A1 ⇒ A2) ∈ (Γ', h': (A1 ⇒ A2)) by rule var
-                proof by rule impL on d3a, d3b, v'
+                v'': H':(A1 ⇒ A2) ∈ Γ by v'
+                proof by rule impL on d3a, d3b, v''
               end case
 
               case rule
@@ -323,18 +340,20 @@ theorem cut-admissible:
             ------------------------------ forallR
             _: Γ , h: A ⊢ ∀ i • A1[i]
         is
-            d1': Γ, i ⊢ A by weakening on d1
+            d1':  Γ, i ⊢ A by weakening on d1
             d21': Γ, i, h: A ⊢ A1[i] by exchange on d21
-            d3: Γ, i ⊢ A1[i] by induction hypothesis on A, d1', d21'
+            d3:   Γ, i ⊢ A1[i] by induction hypothesis on A, d1', d21'
             proof by rule forallR on d3 
         end case
 
         case rule
+            iin': I0 ∈ (Γ, h: A)
             d21: Γ, h: A, h' : A0[I0] ⊢ A'
             v2: H[h] : (∀ i • A0[i]) ∈ (Γ, h: A)
             ------------------------------------- forallL
             _: Γ, h: A ⊢ A'
         is
+            iin: I0 ∈ Γ by lemma individ-in-context on I0
             d1': Γ, h' : A0[I0] ⊢ A by weakening on d1
             d21':Γ, h' : A0[I0], h: A ⊢ A' by exchange on d21
             d3:  Γ, h' : A0[I0] ⊢ A' by induction hypothesis on A, d1', d21'
@@ -344,7 +363,8 @@ theorem cut-admissible:
                     _: h : (∀ i • A0[i]) ∈ ((Γ' , h : (∀ i • A0[i])) , h' : A)
                 is
                     v':  h : (∀ i • A0[i]) ∈ (Γ', h : (∀ i • A0[i])) by rule var
-                    proof by rule forallL on d3, v'
+                    v'': H': (∀ i • A0[i]) ∈ Γ by v'
+                    proof by rule forallL on iin, d3, v''
                 end case
     
                 case rule
@@ -357,7 +377,7 @@ theorem cut-admissible:
                             ------------------------- axiom
                             _: Γ ⊢ (∀ i • A0[i])
                         is
-                            proof by rule forallL on d3, v'
+                            proof by rule forallL on iin,d3, v'
                         end case
 
                         case rule
