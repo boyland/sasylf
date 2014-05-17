@@ -1,4 +1,4 @@
-SASyLF version 1.3.3a6
+SASyLF version 1.3.3a7
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -113,11 +113,12 @@ RELEASE HISTORY
     Fixed input var bugs (bad36.slf, bad37.slf)
     Fixed partial case analysis bugs (bad39.slf, good22.slf)
     Added bug test for issue #51 (bad38.slf) 
-    Fixed theorem interface bugs (bad40.slf, good23.slf, good24.slf)
+    Fixed theorem interface bugs (bad40.slf, good23.slf, good24.slf, good26.slf, good27.slf)
+    Fixed nested clause bugs (bad47.slf bad48.slf)
     An 'or' goal can be proven by proving a subset, or an individual element.
     warning when identifier for derivation already declared.
     Pattern matching of judgments with contexts > 1 is now supported.
-    Higher-order unification doesn't make greedy (unsound) assumptions, more failures now
+    Higher-order unification doesn't make greedy (unsound) assumptions (bad45.slf, bad46.slf)
     nontermination issue in GLR(0) parser fixed (see good25.slf)
     Resolved issues #59, #61
 1.3.2	Cleanup
