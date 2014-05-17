@@ -1,0 +1,89 @@
+// If we call a lemma with an explicit syntax parameter
+// and that parameter is dependent on a context
+// and the result of the lemma has a bigger context still,
+// then the formal parameter is converted into a function
+// with all the parameters and the actual parameter is not converted
+// into a function, causing a mismatch.
+// This was not fixed yet by 1.3.3a6
+package regression;
+
+terminals fn unit Unit
+
+syntax
+  t ::= x | t t | fn x : T => t[x] | unit
+  
+  T ::= T -> T | Unit
+
+  G ::= * | G, x : T
+
+
+judgment term-equal: G |- t = t
+assumes G
+
+    ---------- term-eq
+    G |- t = t
+
+judgment typing: G |- t : T
+assumes G
+
+    ----------------- T-Var
+    G, x : T |- x : T
+    
+    
+lemma eq-reflexive:
+    assumes G
+    forall t assumes G
+    exists G |- t = t.
+    proof by rule term-eq
+end lemma
+
+lemma eq-reflexive-again:
+    assumes G
+    forall t assumes G
+    exists G |- t = t.
+    proof by lemma eq-reflexive on t
+end lemma
+
+
+
+lemma no-problem:
+    assumes G
+    forall t[x] assumes G, x:Unit
+    exists G, x:Unit |- t[x] = t[x].
+    _: G, x : Unit |- t[x] = t[x] by rule term-eq
+end lemma
+
+lemma should-be-ok:
+    assumes G
+    forall t
+    exists G, x:Unit |- t = t.
+    _: G, x : Unit |- t = t by rule term-eq
+end lemma
+
+lemma also-harmless:
+    assumes G
+    forall t assumes G
+    exists G, x:Unit |- t = t.
+    _: G, x:Unit |- t = t by rule term-eq
+end lemma
+
+lemma no-problem-again:
+    assumes G
+    forall t[x] assumes G, x:Unit
+    exists G, x:Unit |- t[x] = t[x].
+    _: G, x : Unit |- t[x] = t[x] by lemma eq-reflexive on t
+end lemma
+
+lemma should-be-ok-again:
+    assumes G
+    forall t
+    exists G, x:Unit |- t = t.
+    _: G, x : Unit |- t = t by lemma eq-reflexive on t
+end lemma
+
+lemma also-harmless-again:
+    assumes G
+    forall t assumes G
+    exists G, x:Unit |- t = t.
+    _: G, x:Unit |- t = t by lemma eq-reflexive on t
+end lemma

@@ -1,0 +1,54 @@
+// SASyLF would crash if a syntax pattern used a meta-variable
+// with inconsistent bindings.
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x]
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x:T
+    
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var
+    Gamma, x:T |- x : T
+
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+
+judgment term-equal: t = t
+
+    ----- term-eq
+    t = t
+
+lemma eq-reflexive:
+    forall t
+    exists t = t.
+    proof by case analysis on t:
+        case unit is
+            proof by rule term-eq
+        end case
+
+        case t0 t1 is
+            proof by rule term-eq
+        end case
+
+        case fn x : T => t[x] is //! bad pattern
+            proof by rule term-eq
+        end case
+
+    end case analysis
+end lemma

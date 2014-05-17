@@ -1,0 +1,66 @@
+// a development version permitted contexts to be switched when calling a theorem/lemma
+package regression;
+
+terminals fn Unit unit contradiction
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x]
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x:T
+    
+judgment absurd: contradiction
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var
+    Gamma, x:T |- x : T
+
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+
+lemma illegal:
+    forall dt: *, x:T |- t1[x] t2[x] : T'
+    exists *, x:T' |- t1[x] t2[x] : T'.
+    proof by case analysis on dt:
+        case rule
+            d1: (*, x : T) |- t1[x] : (T0 -> T')
+            d2: (*, x : T) |- t2[x] : T0
+            ---------------------------------------- T-App
+            _: (*, x : T) |- (t1[x] t2[x]) : T'
+        is
+            proof by rule T-App on d1, d2 //! changed context 
+        end case
+    end case analysis
+end lemma
+
+lemma exploit:
+    exists contradiction.
+    d1: *, x: Unit->Unit |- x:Unit -> Unit by rule T-Var
+    d2: *, x: Unit->Unit |- unit:Unit by rule T-Unit
+    d3: *, x: Unit->Unit |- x unit : Unit by rule T-App on d1, d2
+    d4: *, x: Unit       |- x unit : Unit by lemma illegal on d3 
+    proof by case analysis on d4:
+        case rule
+            d: *, x : Unit |- x : (T -> Unit)
+            _: *, x : Unit |- unit : T
+            ---------------------------------------- T-App
+            _: *, x : Unit |- (x unit) : Unit
+        is
+            proof by case analysis on d:
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
