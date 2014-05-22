@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Pair;
 
 public class Terminal extends Element implements ElemType {
 	public Terminal(String s, Location l) { 
@@ -14,6 +14,8 @@ public class Terminal extends Element implements ElemType {
 	  super.setEndLocation(l.add(s.length()));
 	}
 
+	public String getName() { return symbol; }
+	
 	public int hashCode() { return symbol.hashCode(); }
 	public boolean equals(Object obj) {
 		if (this == obj) return true;

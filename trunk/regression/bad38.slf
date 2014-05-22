@@ -1,4 +1,4 @@
-// adaptation assumes no internediate bindings
+// adaptation assumes no intermediate bindings
 package regression;
 
 terminals All in Top contradiction
@@ -31,13 +31,13 @@ lemma exploit:
     exists contradiction.
     
     proof by case analysis on s2:
-        case rule
+        case rule // bug through 1.3.2 requires we choose a new name, not T2
             ------------------------------- tvar
-            _: X <: T2 in (Gamma', X <: T2)
+            _: X <: T0 in (Gamma', X <: T0)
         is
-            s1': T1 <: X in (Gamma', X <: T2) by s1 //! cannot assume G=G',X<:T2
+            s1': T1 <: T in (Gamma', X <: T0) by s1 //! cannot assume G=G',X<:T0
             proof by case analysis on s1':
-            end case analysis 
+            end case analysis
         end case
     end case analysis
 end lemma

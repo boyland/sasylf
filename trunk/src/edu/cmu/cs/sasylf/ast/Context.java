@@ -14,10 +14,10 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -59,7 +59,7 @@ public class Context implements Cloneable {
   public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap; // entries mutable
   public Map<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>> savedCaseMap; // entries immutable
   public Substitution adaptationSub;
-  public Set<NonTerminal> varfreeNTs = new HashSet<NonTerminal>();
+  HashMap<String,NonTerminal> varFreeNTmap= new HashMap<String,NonTerminal>(); 
 
   public Context(CompUnit cu) {
     compUnit = cu;
@@ -85,9 +85,36 @@ public class Context implements Cloneable {
     if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
     if (result.savedCaseMap != null) result.savedCaseMap = new HashMap<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>>(savedCaseMap);
     if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
-    result.varfreeNTs = new HashSet<NonTerminal>(varfreeNTs);
+    result.varFreeNTmap = new HashMap<String,NonTerminal>(varFreeNTmap);
 
     return result;
+  }
+  
+  public boolean isVarFree(NonTerminal nt) {
+    return varFreeNTmap.get(nt.getSymbol()) != null;
+  }
+  
+  public boolean isVarFree(Element e) {
+    if (e instanceof Terminal) return true;
+    if (e instanceof NonTerminal) return varFreeNTmap.get(e.toString()) != null;
+    else if (e instanceof Binding) {
+      Binding b = (Binding)e;
+      if (!isVarFree(b.getNonTerminal())) return false;
+      for (Element a : b.getElements()) {
+        if (!isVarFree(a)) return false;
+      }
+      return true;
+    } else if (e instanceof Clause) {
+      for (Element a : ((Clause)e).getElements()) {
+        if (!isVarFree(a)) return false;
+      }
+      return true;
+    } else if (e instanceof AssumptionElement) {
+      AssumptionElement ae = (AssumptionElement)e;
+      return ae.getRoot() == null;
+    } else {
+      throw new RuntimeException("Internal error: what sort of elemnt is this ? " + e);
+    }
   }
   
   /**
@@ -101,15 +128,14 @@ public class Context implements Cloneable {
     if (innermostGamma == null) {
       throw new RuntimeException("Internal error: isVarFree doesn't make sense with no context");
     }
-    t = t.substitute(currentSub);
-    for (NonTerminal vfnt : varfreeNTs) {
-      Term vft = vfnt.asTerm().substitute(currentSub);
-      Util.debug(vft, " contains ", t, " ?");
-      if (vft.contains(t)) {
-        return true;
+    if (t instanceof FreeVar) {
+      return varFreeNTmap.get(t.toString()) != null;
+    } else {
+      for (FreeVar fv : t.getFreeVariables()) {
+        if (varFreeNTmap.get(fv.toString()) == null) return false; 
       }
+      return true;
     }
-    return false;
   }
   
   /**
@@ -223,7 +249,14 @@ public class Context implements Cloneable {
     currentSub.compose(sub);  // modifies in place
     Set<FreeVar> newVars = new HashSet<FreeVar>();
     for (Map.Entry<Atom,Term> e : sub.getMap().entrySet()) {
-      newVars.addAll(e.getValue().getFreeVariables());
+      Set<FreeVar> freeVariables = e.getValue().getFreeVariables();
+      newVars.addAll(freeVariables);
+      if (varFreeNTmap != null && varFreeNTmap.containsKey(e.getKey().toString())) {
+        for (FreeVar fv : freeVariables) {
+          NonTerminal fake = new NonTerminal(fv.toString(),null); //XXX put in information from existing
+          varFreeNTmap.put(fv.toString(), fake);
+        }
+      }
     }
     if (adaptationSub != null) newVars.removeAll(adaptationSub.getMap().keySet());
     // System.out.println("new vars = " + newVars);
@@ -262,13 +295,18 @@ public class Context implements Cloneable {
   
   public void addVarFree(Element e) {
     if (e instanceof NonTerminal) {
-      varfreeNTs.add((NonTerminal) e);
+      varFreeNTmap.put(e.toString(),(NonTerminal) e);
     } else if (e instanceof Clause) {
       for (Element e1: ((Clause)e).elements) {
         addVarFree(e1);
       }
     }
   }
+  
+  public boolean isKnownContext(NonTerminal root) {
+    return root == null || root.equals(innermostGamma) || adaptationMap.containsKey(root);
+  }
+  
   /*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {
 		if (g == null) {
 			g = new edu.cmu.cs.sasylf.grammar.Grammar(GrmUtil.getStartSymbol(), ruleSet);

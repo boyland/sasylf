@@ -527,7 +527,7 @@ d1 : Gamma |- e[e'] : tau by induction on dt :
 	case rule
 	
 		-------------------------------------------- t-var
-		d2 : (Gamma', x1:tau, x:tau') |- x1 : tau
+		_ : (Gamma', x1:tau, x:tau') |- x1 : tau
 
 		is
 		

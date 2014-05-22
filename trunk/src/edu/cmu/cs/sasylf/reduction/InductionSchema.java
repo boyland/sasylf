@@ -11,8 +11,8 @@ import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.Theorem;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Pair;
 
 /**
  * A reduction schema; how to permit "recursion" in theorems.

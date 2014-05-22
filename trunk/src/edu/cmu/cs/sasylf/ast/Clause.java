@@ -22,10 +22,10 @@ import edu.cmu.cs.sasylf.grammar.ParseNode;
 import edu.cmu.cs.sasylf.grammar.RuleNode;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
@@ -162,6 +162,13 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 	}
 
+	@Override
+	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+	  for (Element e: elements) {
+	    e.getFree(freeSet, rigidOnly);
+	  }
+	}
+	
 	// computes Syntax type for each variable
 	public void computeVarTypes(Syntax parent, Map<String,Variable> varMap) {
 

@@ -13,11 +13,11 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -215,7 +215,7 @@ public class Theorem extends RuleLike {
 		  ctx.innermostGamma = assumes;
 		  ctx.adaptationRoot = assumes;
 		}
-		ctx.varfreeNTs.clear();
+		ctx.varFreeNTmap.clear();
 		
 		for (Fact f : foralls) {
 		  f.typecheck(ctx);

@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
@@ -202,19 +202,24 @@ public abstract class Derivation extends Fact {
    * Give an error for this node if copying from the source to the target
    * involves changing the variable context.
    * @param kind name action of this node
-   * @param srcClause clause being used
-   * @param trgClause clause being defined
+	 * @param srcClause clause being used
+	 * @param trgClause clause being defined
+	 * @param errorPoint TODO
    */
-  public void checkRootMatch(String kind, ClauseUse srcClause, ClauseUse trgClause) {
+  public static boolean checkRootMatch(String kind, ClauseUse srcClause, ClauseUse trgClause, Node errorPoint) {
     if (srcClause.getRoot() == null) {
       if (trgClause.getRoot() != null) {
-        ErrorHandler.report(kind+" cannot be used to weaken to variable context", this);
+        if (errorPoint == null) return false;
+        ErrorHandler.report(kind+" cannot be used to weaken to variable context", errorPoint);
       }
     } else if (trgClause.getRoot() == null) {
-      ErrorHandler.report(Errors.CONTEXT_DISCARDED, this);
+      if (errorPoint == null) return false;
+      ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
     } else if (!srcClause.getRoot().equals(trgClause.getRoot())) {
-      ErrorHandler.report(kind+" cannot be used to change variable context",this);
+      if (errorPoint == null) return false;
+      ErrorHandler.report(kind+" cannot be used to change variable context",errorPoint);
     }
+    return true;
   }
 
   /**
@@ -226,14 +231,14 @@ public abstract class Derivation extends Fact {
 	 * @param errorPoint point where to mention an error.
 	 */
 	public static boolean checkRootMatch(Context ctx, Element source, Element dest, Node errorPoint) {
-	  if (source instanceof ClauseUse && dest instanceof ClauseUse) {
+	  /*if (source instanceof ClauseUse && dest instanceof ClauseUse) {
 	    ClauseUse src = (ClauseUse) source;
-	    ClauseUse dst = (ClauseUse) dest;
-	    if (src.getRoot() != null && dst.getRoot() == null) {
+	    ClauseUse dst = (ClauseUse) dest;*/
+	    if (source.getRoot() != null && dest.getRoot() == null) {
 	      if (errorPoint == null) return false;
 	      ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
 	    }
-	  }
+	  //}
 	  return true;
 	}
 }

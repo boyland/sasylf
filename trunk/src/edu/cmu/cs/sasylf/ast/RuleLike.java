@@ -5,14 +5,21 @@ import static edu.cmu.cs.sasylf.term.Facade.Const;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -32,20 +39,28 @@ public abstract class RuleLike extends Node {
 
 	public Constant getRuleAppConstant() {
 		if (ruleAppConstant == null) {
-			Term typeTerm = Const(getName() + "BASE", Constant.TYPE);
-			List<Term> argTypes = new ArrayList<Term>();
-
-			for (int i = 0; i < getPremises().size(); ++i) {
-				argTypes.add(getPremises().get(i).getTypeTerm());
-			}
-
-			argTypes.add(((ClauseUse)getConclusion()).getConstructor().asTerm());
-			
-			typeTerm = Term.wrapWithLambdas(typeTerm, argTypes);
-			ruleAppConstant = Const(name + "TERM", typeTerm);
+			createRuleAppConstant();
 		}
 		return ruleAppConstant;
 	}
+	
+  /**
+   * Create the typed constant for this rule.
+   */
+  protected void createRuleAppConstant() {
+    Term typeTerm = Const(getName() + "BASE", Constant.TYPE);
+    List<Term> argTypes = new ArrayList<Term>();
+
+    for (int i = 0; i < getPremises().size(); ++i) {
+    	argTypes.add(getPremises().get(i).getTypeTerm());
+    }
+
+    argTypes.add(((ClauseUse)getConclusion()).getConstructor().asTerm());
+    
+    typeTerm = Term.wrapWithLambdas(typeTerm, argTypes);
+    ruleAppConstant = Const(name + "TERM", typeTerm);
+    Util.debug(ruleAppConstant,": ",typeTerm);
+  }
 	
 	/** Computes a mutable list of free variables that are suitable as premises for this rule */
 	public List<Term> getFreeVarArgs(Term instanceTerm) {
@@ -158,6 +173,331 @@ public abstract class RuleLike extends Node {
 
 		return ruleTerm;
 	}
+	
+	/**
+	 * Generate a term for the application of this rule/theorem with the given
+	 * inputs and outputs.   We also return the implied binding of the assumed
+	 * context as a list of wrapping abstractions.
+	 * @param ctx
+	 * @param inputs
+	 * @param output
+	 * @param addedContext Output parameter:
+	 * what context do the actuals (inputs and outputs) 
+	 * assume is passed implicitly.
+	 * @param errorPoint
+	 * @param isPattern
+	 * @return
+	 */
+	public Application checkApplication(Context ctx, List<? extends Fact> inputs, Fact output, List<Abstraction> addedContext, Node errorPoint, boolean isPattern) {
+	  Util.verify(addedContext != null && addedContext.isEmpty(), "output parameter should be empty");
+	  int n = getPremises().size();
+	  if (inputs.size() != n) {
+      ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getKind()+" "+getName()+", which expects "+n, errorPoint);
+    }
+    
+    // For better error reporting, do a first stab at type-checking the arguments and result
+    for (int i=0; i < n; ++i) {
+      Element formal = getPremises().get(i);
+      Fact input = inputs.get(i);
+      Element actual = input.getElement();
+      if (formal.getType() != actual.getType()) {
+        ErrorHandler.report("argument #" + (i+1) + " to "+getName()+" is wrong type", isPattern ? input : errorPoint);
+      }
+    }
+    Element concElem = output.getElement();
+    if (concElem.getType() != getConclusion().getType()) {
+      ErrorHandler.report(getName() + " can't produce any instance of the claimed judgment\n\t"+
+          concElem.getType().getName() + " != " + getConclusion().getType().getName(), errorPoint);
+    }
+    
+    List<Term> allArgs = new ArrayList<Term>();
+    
+    // we now go through the arguments and match each against the corresponding formal
+    // and split each into the context that needs to be split off to match the formal
+    // and a term (with bindings into the context).
+    List<List<Abstraction>> allContexts = new ArrayList<List<Abstraction>>();
+    for (int i=0; i < n; ++i) {
+      Element formal = getPremises().get(i);
+      Fact input = inputs.get(i);
+      Element actual = input.getElement();
+      String name = "argument #"+ (i+1);
+      if (isPattern) { // flow complex
+        if (formal.getRoot() != null && concElem.getRoot() != null) {
+          if (!concElem.getRoot().equals(actual.getRoot())) {
+            ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),input);
+          }
+        }
+      } else if (!Derivation.checkRootMatch(ctx,actual,formal,null)) {
+        ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),errorPoint);
+      }
+      getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint);
+    }
+    getArgContextAndTerm(ctx, "conclusion", getConclusion(), concElem, allContexts, allArgs, output);
+
+    addedContext.addAll(unionContexts(ctx,allContexts, errorPoint));
+
+
+    // Now weaken all premises to fit the combined context
+    // Except (1) the conclusion cannot be weakened to fit because it's an output
+    //        (2) In general, we want to force the user to explicitly weaken all derivations
+    //            so only syntax can be explicitly weakened.
+    //        (3) We don't need to weaken things that don't have a root in the rule.
+    // If this is a rule pattern match, we can't allow any weakenings, but since we currently
+    // only weaken SyntaxAssumptions and rules don't have these, we are fine.  
+    // Then we use a different error message however.
+    for (int i=0; i < n; ++i) {
+      Element formal = getPremises().get(i);
+      String name = "argument #"+ (i+1);
+      if (formal.getRoot() == null) continue;
+      if (formal.getType() instanceof Syntax) {
+        List<Abstraction> abs = allContexts.get(i);
+        Term t = allArgs.get(i);
+        allArgs.set(i,weakenArg(abs,addedContext,t));
+      } else if (allContexts.get(i).size() != addedContext.size()) {
+        if (isPattern)
+          ErrorHandler.report("all derivations in the rule pattern must add the same bindings", inputs.get(i));
+        else
+          ErrorHandler.report(name + " requires weakening to be used for " + getName(), errorPoint,
+              "SASyLF computed needed context as " + Term.wrappingAbstractionsToString(addedContext));
+      }
+    }
+    if (getConclusion().getRoot() != null &&
+        allContexts.get(n).size() != addedContext.size()) {
+      if (isPattern)
+        ErrorHandler.report("all derivations in the rule pattern must add the same bindings", output);
+      else
+        ErrorHandler.report("Claimed result omits required bindings in the context", output,
+            "SASyLF computed needed context as " + Term.wrappingAbstractionsToString(addedContext));
+    }
+    
+    
+	  return Facade.App(getRuleAppConstant(), allArgs);
+	}
+	
+  /**
+   * @param name
+   * @param formal
+   * @param actual
+   * @param allContexts
+   * @param allArgs
+   */
+  protected void getArgContextAndTerm(Context ctx, String name, Element formal,
+      Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs, Node errorPoint) {
+    Term f = formal.asTerm();
+    Term a = actual.asTerm().substitute(ctx.currentSub);
+    int diff = a.countLambdas() - f.countLambdas();
+    if (diff < 0) {
+      ErrorHandler.report(name + " to " + getName() + " expects more in context than given",errorPoint,
+          "SASyLF expected the " + name + " to be " +f+ " but was given " + a + " from " + actual);
+    } else if (diff == 0) {
+      allContexts.add(Collections.<Abstraction>emptyList());
+      allArgs.add(a);
+    } else {
+      if (formal.getRoot() == null) {
+        ErrorHandler.report(name + " to " + getName() + " doesn't expect/permit extra bindings", errorPoint,
+            "SASyLF computed the " + name + " supplied as " + a); 
+      }
+      List<Abstraction> context = new ArrayList<Abstraction>();
+      allContexts.add(context);
+      allArgs.add(Term.getWrappingAbstractions(a, context, diff));
+    }
+  }
+
+  protected List<Abstraction> unionContexts(Context ctx, List<List<Abstraction>> contexts, Node errorPoint) {
+    List<Abstraction> result = Collections.<Abstraction>emptyList();
+    Set<String> argNames = new HashSet<String>();
+    boolean copied = false;
+    for (List<Abstraction> con : contexts) {
+      if (con.size() > 0) {
+        if (result.size() == 0) {
+          result = con;
+          for (Abstraction a : result) {
+            argNames.add(a.varName);
+          }
+        } else {
+          // merge any new things from con into result
+          int i=0,j=0;
+          Set<String> seen = new HashSet<String>();
+          while (j < con.size()) {
+            Abstraction b = con.get(j);
+            if (seen.contains(b.varName)) {
+              ErrorHandler.report("Computed context for " + getName() + " has inconsistent placement of " + b.varName, errorPoint);
+            }
+            if (!argNames.add(b.varName)) {
+              while (!result.get(i).varName.equals(b.varName)) {
+                ++i;
+              }
+            } else {
+              if (!copied) {
+                result = new ArrayList<Abstraction>(result);
+                copied = true;
+              }
+              result.add(i, b);
+            }
+            // invariant i and j both point ton abstraction with the name b.varName
+            if (!result.get(i).varType.equals(b.varType)) {
+              // see bad50.slf
+              ErrorHandler.report("Context differs for use of " + getName() + ": (" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")", errorPoint);
+            }
+            ++i; ++j;
+            seen.add(b.varName);
+          }
+        }
+      }
+    }
+    if (copied && Util.DEBUG) {
+      System.out.println("On line " + errorPoint.getLocation().getLine() + " Merging ");
+      for (List<Abstraction> abs : contexts) {
+        System.out.println("  " + Term.wrappingAbstractionsToString(abs));
+      }
+      System.out.println("= " + Term.wrappingAbstractionsToString(result));
+    }
+    return result;
+  }
+  
+  protected String assumeTypeToString(Context ctx, List<Abstraction> context, int i) {
+    Term t = Term.wrapWithLambdas(context, context.get(i).varType.incrFreeDeBruijn(1), 0, i+1);
+    TermPrinter tp = new TermPrinter(ctx,ctx.innermostGamma,this.getLocation());
+    ClauseUse e = tp.asClause(t);
+    int a = e.getConstructor().getAssumeIndex();
+    return tp.toString(e.getElements().get(a));
+  }
+  
+  protected Term weakenArg(List<Abstraction> current, List<Abstraction> desired, Term t) {
+    int i=current.size()-1, j=desired.size()-1;
+    while (j >= 0) {
+      Abstraction b = desired.get(j);
+      if (i >= 0 && current.get(i).varName.equals(b.varName)) {
+        --i; --j;
+      } else {
+        t = t.incrFreeDeBruijn(1);
+        --j;
+      }
+    }
+    return t;
+  }
+
+  /** Computes a mutable list of free variables that are suitable as premises for this rule
+   * The variable will be applied to variables from the context that make sense.
+   * @deprecated this code doesn't work.
+   */
+  public List<Term> getFreeVarPremises(List<Abstraction> context) {
+    int m = context.size();
+    
+    List<Term> termArgs = new ArrayList<Term>();
+    for (int i = 0; i < this.getPremises().size(); ++i) {
+      ClauseUse clauseUse = (ClauseUse) this.getPremises().get(i);
+      ClauseDef clauseDef = clauseUse.getConstructor(); 
+      //XXX Two serioues problems:
+      //XXX (1) the variables in the type aren't fresh
+      //XXX (2) the variables in the type aren't substituted to handle possible
+      ///       dependencies in context.
+      Term type = clauseUse.asTerm().getType();
+      String name = clauseDef.getConstructorName();
+      List<Abstraction> relevant = new ArrayList<Abstraction>();
+      List<BoundVar> actuals = new ArrayList<BoundVar>();
+      for (int j=0; j < m; ++j) {
+        Abstraction a = context.get(j);
+        if (FreeVar.canAppearIn(a.getArgType().getTypeFamily(),type.getTypeFamily())) {
+          relevant.add(a);
+          actuals.add(new BoundVar(m-j));
+        }
+      }
+      type = Term.wrapWithLambdas(relevant, type);
+      FreeVar argTerm = Facade.FreshVar(name, type);
+      Util.debug("type of ",argTerm," is ",type);
+      if (actuals.isEmpty()) termArgs.add(argTerm);
+      else termArgs.add(Facade.App(argTerm,actuals));
+    }
+    return termArgs;
+  }
+
+  /**
+	 * Return a fresh application of the rule or theorem in a particular given context.
+	 * We copy the premises and conclusion, given them fresh havriables, including
+	 * possible dependencies on the given context (adaptation) and return an application
+	 * of the "AppConstant" to these parts.  We do not wrap the result into the context;
+	 * the caller may do so if desired.  We return (via the concFreeVars parameter) if desired
+	 * the unique free variables of the conclusion.  For Rule applications this is used to
+	 * find what variables we need to check for context loss for.  For Theorem application,
+	 * this set includes things that should not be bound by the caller.
+	 * @param context      List of binders that are in scope at this use
+	 * @param concFreeVars null or empty list; if not null, then it will have all variables
+	 *        that occur free in the conclusion that do not occur in the premises.
+	 * @return fresh adapted rule application in the given context
+	 */
+	public Application getFreshAdaptedRuleTerm(List<Abstraction> context, Set<FreeVar> concFreeVars) {
+	  Util.verify(concFreeVars == null || concFreeVars.isEmpty(), "concFreeVars is output only");
+	  Util.verify(context != null, "context must be a list");
+
+	  List<Term> ruleArgs = new ArrayList<Term>();
+	  
+	  // the substitution to get fresh variables
+    Substitution freshSub = new Substitution();
+    
+    // the substitution to handle possible dependencies on the context
+    // (this cannot be used until we have removed bindimngs of variable free NTs)
+    Substitution adaptSub = new Substitution();
+    
+    // the variable-free NTs that should not be adapted:
+    Set<FreeVar> varFree = new HashSet<FreeVar>();
+    
+    // after adaptation, the free variables in the premises 
+    Set<FreeVar> freeVars = new HashSet<FreeVar>();
+    
+    List<Term> addedTypes = new ArrayList<Term>();
+    int n = getPremises().size();
+    for (Abstraction a : context) {
+      addedTypes.add(a.varType);
+    }
+    
+    // freshen each premise, and start to find adaptation
+    for (int i=0; i < n; ++i) {
+      Element element = this.getPremises().get(i);      
+      Term f = getFreshAdaptedTerm(element, addedTypes, freshSub, adaptSub, varFree);
+      ruleArgs.add(f);
+    }
+    ruleArgs.add(getFreshAdaptedTerm(this.getConclusion(), addedTypes,freshSub, adaptSub, varFree));
+    
+    // now remove any variable that should not be adapted, and then perform adaptation
+    adaptSub.removeAll(varFree);
+    for (int i=0; i <= n; ++i) { // including the conclusion!
+      Term adapted = ruleArgs.get(i).substitute(adaptSub);
+      if (concFreeVars != null) { // caller wants these
+        Set<FreeVar> fvs = adapted.getFreeVariables();
+        if (i < n) {
+          freeVars.addAll(fvs);
+        } else {
+          fvs.removeAll(freeVars);
+          concFreeVars.addAll(fvs);
+        }
+      }
+      ruleArgs.set(i, adapted);
+    }
+    
+    return Facade.App(this.getRuleAppConstant(), ruleArgs);
+	}
+	
+  /**
+   * @param element
+   * @param addedTypes
+   * @param freshSub
+   * @param adaptSub
+   * @param varFree
+   * @return
+   */
+  protected Term getFreshAdaptedTerm(Element element, List<Term> addedTypes,
+      Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
+    Term f = element.asTerm();
+    f.freshSubstitution(freshSub);
+    f = f.substitute(freshSub);
+    if (element.getRoot() == null) {
+      varFree.addAll(f.getFreeVariables());
+    } else {
+      f.bindInFreeVars(addedTypes, adaptSub, 1);
+    }
+    return f;
+  }
 
 	/**
 	 * Return whether this rule-like entity has a sensible interface that can be checked.

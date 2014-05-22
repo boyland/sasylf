@@ -3,9 +3,9 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Pair;
 
 
 public class DerivationByPrevious extends DerivationWithArgs {
@@ -54,7 +54,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		    ClauseUse source = sourceClauses.get(i);
 		    ClauseUse result = results.get(i);
 		    Derivation.checkMatch(this,ctx,result,source,"Claimed conjunct #" + (i+1) + " is not equivalent to previous");
-		    checkRootMatch("conjunction",source,result);
+		    checkRootMatch("conjunction",source,result, this);
 		  }
 		  return;
 		}

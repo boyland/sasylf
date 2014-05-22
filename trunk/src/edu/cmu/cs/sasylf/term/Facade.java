@@ -39,7 +39,7 @@ public class Facade {
 	public static Application App(Atom f, Term... args) {
 		return new Application(f, Arrays.asList(args));
 	}
-	public static Application App(Atom f, List<Term> args) {
+	public static Application App(Atom f, List<? extends Term> args) {
 		return new Application(f, args);
 	}
 	public static BoundVar BVar(int i) {

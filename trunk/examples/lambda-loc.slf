@@ -126,7 +126,7 @@ is
 	
 	case rule
 		------------------------------------- t-var
-		d4: (Gamma', var x1, var x) |- var x1
+		_: (Gamma', var x1, var x) |- var x1
 	is
 		d5: Gamma', var x1 |- var x1 by rule t-var
 		d6: Gamma', var x1, st |- x1 by rule wf-var on d5
@@ -250,12 +250,11 @@ dwf' : Gamma, st |- e1[e2] by induction on dwf1:
 		case rule
 	
 			------------------------------------ t-var
-			d4: (Gamma', var x1, var x) |- var x1
+			_: (Gamma', var x1, var x) |- var x1
 			
 		is
-			d5: (Gamma', var x1, var x), st |- x1	by rule wf-var on d4
-			d6: (Gamma', var x1), st |- x1			by lemma strengthen-wf on d5
-				
+			d7: (Gamma', var x1) |- var x1          by rule t-var
+			d8: (Gamma', var x1), st |- x1          by rule wf-var on d7	
 		end case
 
 		end case analysis	

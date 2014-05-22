@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.cs.sasylf.term.Pair;
+import edu.cmu.cs.sasylf.util.Pair;
 
 
 public class Case extends Node {

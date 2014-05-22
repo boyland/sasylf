@@ -2,29 +2,27 @@ package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.term.Facade.App;
 import static edu.cmu.cs.sasylf.util.Errors.INVALID_CASE;
-import static edu.cmu.cs.sasylf.util.Errors.REUSED_CONTEXT;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
-import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -60,16 +58,16 @@ public class RuleCase extends Case {
 	  Context ctx = parent.clone();
 		debug("line "+ this.getLocation().getLine(), " case ", ruleName);
 		debug("    currentSub = ", ctx.currentSub);
-		rule = (Rule) ctx.ruleMap.get(ruleName);
-		if (rule == null)
-			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+		
+		RuleLike x = ctx.ruleMap.get(ruleName);
+		if (x == null) {
+		  ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+		} else if (!(x instanceof Rule)) {
+		  ErrorHandler.report(Errors.THEOREM_NOT_RULE, ruleName, this);
+		}
+		rule = (Rule)x;
 		if (!rule.isInterfaceOK()) return;
 		
-		if (rule.getPremises().size() != getPremises().size())
-			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getRuleName(), this);
-			//ErrorHandler.report("Expected " + rule.getPremises().size() + " premises for rule " + ruleName + " but " + getPremises().size() + " were given", this);	
-		
-		ctx.bindingTypes = new HashMap<String, List<ElemType>>(ctx.bindingTypes);
 		for (Derivation d : premises) {
 			d.typecheck(ctx);
 			d.getClause().checkBindings(ctx.bindingTypes, this);
@@ -77,11 +75,115 @@ public class RuleCase extends Case {
 
 		conclusion.typecheck(ctx);
 		conclusion.getClause().checkBindings(ctx.bindingTypes, this);
+		ClauseUse concClause = (ClauseUse)conclusion.getClause();
+    NonTerminal thisRoot = concClause.getRoot();
 		
-		// make sure we were case-analyzing a derivation, not a nonterminal
-		if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
-			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
+    // make sure we were case-analyzing a derivation, not a nonterminal
+    if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
+      ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
+    Term subjectTerm = ctx.currentCaseAnalysisElement.asTerm().substitute(ctx.currentSub);
+    NonTerminal subjectRoot = ctx.currentCaseAnalysisElement.getRoot();
+    int numPremises = premises.size();
+    Substitution adaptSub = new Substitution();
+    Term adaptedSubjectTerm = subjectTerm;
+    // Technically the conclusion is unsound if we are using
+    // the assumption rule and unrolling the context.
+    // When     Gamma', x': T, x : T |- x' : T'
+    // is used to match Gamma, x : T |- t : T'
+    // then this implies T is bound only in Gamma', when it may actually
+    // have other dependencies.
+    boolean conclusionIsUnsound = false;
+    
+    List<Abstraction> addedContext = new ArrayList<Abstraction>();
+		Application appliedTerm = rule.checkApplication(ctx, premises, conclusion, addedContext, this, true);
+		Term patternConc = Term.wrapWithLambdas(addedContext, appliedTerm.getArguments().get(numPremises));
 
+		// find all free variables NOT bound in the conclusion:
+		Set<FreeVar> newVars = new HashSet<FreeVar>();
+		for (int i=0; i < numPremises; ++i) {
+		  newVars.addAll(appliedTerm.getArguments().get(i).getFreeVariables());
+		}
+		newVars.removeAll(appliedTerm.getArguments().get(numPremises).getFreeVariables());
+		// and then make sure that they are not already in use:
+		for (FreeVar v : newVars) {
+		  if (ctx.currentSub.getSubstituted(v) != null || ctx.inputVars.contains(v)) {
+		    ErrorHandler.report(Errors.INVALID_CASE, "Case should not reuse binding for " + v, this);
+		  }
+		  if (ctx.derivationMap.containsKey(v.toString())) {
+		    ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this);
+		  }
+		}
+		
+		// Check context changes.  The root and number of "lambdas".
+		if (subjectRoot == null) {
+		  if (thisRoot != null) {
+		    ErrorHandler.report("Case should not use named context " + thisRoot, this);
+		  }
+      if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
+        Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
+        ErrorHandler.report("Should not add to context in case analysis",this);
+      }
+		} else if (subjectRoot.equals(thisRoot)) {
+		  if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
+		    Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
+		    ErrorHandler.report("Should not add to context in case analysis",this);
+		  }
+		} else {
+		  if (thisRoot == null) {
+		    ErrorHandler.report(Errors.CONTEXT_DISCARDED,this);
+		  }
+		  if (!rule.isAssumption()) {
+		    ErrorHandler.report("Only assumption rules can change context: " + subjectRoot + " -> " + thisRoot, this);
+		  }
+		  if (ctx.isKnownContext(thisRoot)) {
+		    ErrorHandler.report("Context already in use: " + thisRoot, this);
+		  }
+		  int diff = patternConc.countLambdas() - subjectTerm.countLambdas();
+		  if (diff != rule.isAssumptionSize()) {
+		    Util.debug("diff = ", diff, "assumption size = ", rule.isAssumptionSize());
+		    ErrorHandler.report("assumption rule should introduce exactly one level of context",this);
+		  }
+
+		  if (ctx.adaptationSub != null) {
+        ErrorHandler.report("Sorry, more than one nested variable rule case analysis is not yet supported", this);
+      }
+		  
+		  List<Abstraction> newWrappers = new ArrayList<Abstraction>();
+		  Term.getWrappingAbstractions(patternConc, newWrappers, diff);
+		  Util.debug("Introducing ",thisRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
+		  
+		  adaptedSubjectTerm = ClauseUse.wrapWithOuterLambdas(subjectTerm, patternConc, diff, adaptSub);
+		  Util.debug("adaptSub = ", adaptSub);
+		  
+		  AdaptationInfo info = new AdaptationInfo(newWrappers,thisRoot);
+		  // set up context
+		  ctx.adaptationSub = adaptSub;
+		  ctx.matchTermForAdaptation = adaptedSubjectTerm;
+      ctx.adaptationMap.put(ctx.innermostGamma, info);
+      ctx.innermostGamma = info.nextContext;		
+      conclusionIsUnsound = true; // not always, but safer this way
+		}
+
+		// Now create the "unifyingSub"
+		Substitution sub = null;
+		try {
+		  sub = patternConc.unify(adaptedSubjectTerm);
+    } catch (EOCUnificationFailed uf) {
+      ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
+                + "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);     
+    } catch (UnificationIncomplete uf) {
+      ErrorHandler.report(INVALID_CASE, "Case too complex for SASyLF to check; consider sending this example to the maintainers", this,
+          "SASyLF was trying to unify " + uf.term1 + " and " + uf.term2);
+    } catch (UnificationFailed uf) {
+      //uf.printStackTrace();
+      debug(this.getLocation(), ": was unifying ",patternConc, " and ", adaptedSubjectTerm);
+      ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedSubjectTerm + " for the conclusion");
+		}
+		if (adaptedSubjectTerm != subjectTerm) {
+		  Util.debug("pattern = ",patternConc," adaptedSubject = ",adaptedSubjectTerm);
+		  Util.debug("sub = ",sub);
+		}
+		
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
 		if (caseResult == null)
@@ -90,52 +192,10 @@ public class RuleCase extends Case {
 			//ErrorHandler.report("Rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
 			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
-		// check conclusion returns the right type of thing
-		ClauseUse concClause = (ClauseUse)conclusion.getClause();
-		if (concClause.getType() != rule.getJudgment()) {
-      ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + concClause.asTerm() + " for the conclusion");
-		}
-		
-		// find out if the pattern increases the context size
-		ClauseUse newContext = null;
-		if (concClause.getAssumes() instanceof ClauseUse) {
-		  ClauseUse cu = (ClauseUse)concClause.getAssumes();
-		  Syntax gamma = rule.getAssumes().getType();
-		  if (cu.getConstructor() != gamma.getTerminalCase()) {
-		    newContext = (ClauseUse)concClause.getAssumes();
-		    Element oldContext = ((ClauseUse)ctx.currentCaseAnalysisElement).getAssumes();
-		    while (newContext != null && oldContext instanceof ClauseUse) {
-		      Util.debug("old = ",oldContext);
-		      Util.debug("new = ",newContext);
-		      cu = (ClauseUse)oldContext;
-		      if (cu.getConstructor() != newContext.getConstructor()) {
-		        ErrorHandler.report("context for conclusion doesn't match subject", conclusion);
-		      }
-		      int i,n = cu.elements.size();
-		      for (i=0; i < n; ++i) {
-		        if (cu.elements.get(i).getType() == gamma) break;
-		      }
-		      Util.verify(i < n, "can't find nested gamma");
-		      oldContext = cu.elements.get(i);
-		      Element e = newContext.elements.get(i);
-		      newContext = null;
-		      if (e instanceof ClauseUse) {
-		        cu = (ClauseUse)e;
-		        if (cu.getConstructor() != gamma.getTerminalCase()) {
-		          newContext = cu;
-		        }
-		      }
-		    }
-		  }
-		}
 		
 		
 		
-		
-		
-		
-		
-		
+		/*
 		
 		
 		
@@ -150,33 +210,22 @@ public class RuleCase extends Case {
 		int lambdaDifference =  concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 
 		if (lambdaDifference > 0) {
-		  if (!rule.isAssumption()) {
-		    ErrorHandler.report("Context must remain the same in case except for the special assumption rule", this);
-		  }
-		  if (rule.isAssumptionSize() != lambdaDifference) {
-		    Util.debug("aca = ",adaptedCaseAnalysis);
-		    Util.debug("cca = ",ctx.currentCaseAnalysis);
-		    ErrorHandler.report("Context increase doesn't fit context supported by this rule: " + rule.isAssumptionSize() + " != " + lambdaDifference, this);
-		  }
 		  ClauseUse subClause = (ClauseUse)ctx.currentCaseAnalysisElement;
 		  ClauseUse patClause = (ClauseUse)conclusion.getClause();
 		  Util.debug(getLocation().getLine() + " means we need to determine how to convert " + patClause.getRoot() + " to " + subClause.getRoot());
-		  int n = subClause.elements.size();
-		  for (int i=0; i < n; ++i) {
-		    if (i == subClause.getConstructor().getAssumeIndex()) continue;
-		    if (rule.getConclusion().getElements().get(i) instanceof Variable) {
-		      Util.debug("  binding ",patClause.getElements().get(i)," to ",subClause.getElements().get(i));
-		    }
-		  }
 		  if (ctx.adaptationSub != null) {
 		    ErrorHandler.report("Sorry, more than one nested variable rule case analysis is not yet supported", this);
 		  }
+		  Util.debug("adaptationSUb = ",adaptationSub);
 		  ctx.adaptationSub = new Substitution(adaptationSub);
 			
 			// decrement the free bound vars in adaptationSub by the difference
-			adaptationSub.incrFreeDeBruijn(-lambdaDifference);
+			// adaptationSub.incrFreeDeBruijn(-lambdaDifference);
+			adaptationSub = null;
 			
 			// store the adapted term to keep track of how we unrolled the context
+			Util.debug(adaptedCaseAnalysis," =?= ");
+			Util.debug(adaptedSubjectTerm);
 			ctx.matchTermForAdaptation = adaptedCaseAnalysis;
 			AdaptationInfo info = new AdaptationInfo(((ClauseUse)conclusion.getClause()).getRoot());
 			ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference, info.varNames, info.varTypes, null);
@@ -191,6 +240,8 @@ public class RuleCase extends Case {
 			ctx.innermostGamma = info.nextContext;
 			verify(info.nextContext != null, "internal invariant violated");
 		}
+		
+		
 		debug("concTerm: ", concTerm);
 		Term adaptedConcTerm = DerivationByAnalysis.adapt(concTerm, conclusion.getElement(), ctx, false); //concTerm.substitute(adaptationSub);
 		debug("adapted concTerm: ", adaptedConcTerm);
@@ -221,8 +272,10 @@ public class RuleCase extends Case {
 		}
 
 		
+		*/
 		
-		
+		// bridge:
+		Substitution unifyingSub = sub;
 		
 		
 		
@@ -230,26 +283,45 @@ public class RuleCase extends Case {
 		
 		
 		// find the computed case that matches the given rule
-		Term caseTerm = computeTerm(ctx);
+		// OLD: Term caseTerm = computeTerm(ctx).substitute(unifyingSub);
+		Term caseTerm = Term.wrapWithLambdas(addedContext,canonRuleApp(appliedTerm));
 		Term computedCaseTerm = null;
 		Term candidate = null;
 		Substitution pairSub = null;
-		Set<FreeVar> newInputVars = new HashSet<FreeVar>(ctx.inputVars);
 		for (Pair<Term,Substitution> pair : caseResult)
 		  try {
 				pairSub = new Substitution(pair.second);
 				debug("\tpair.second was ", pairSub);
-				pairSub.selectUnavoidable(ctx.inputVars);
-				candidate = pair.first.substitute(pairSub);
-				
-				// Apply the unifying substitution to caseTerm before comparing, in case caseTerm uses a variable it unifies elsewhere inappropriately (see homework8.slf file from Boyland) 
-				debug("\tunifying sub = ", unifyingSub);
-				caseTerm = caseTerm.substitute(unifyingSub);
+				Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
+				candidate = pair.first.substitute(pairSub); // reorganized and so much re-sub.
+
 				debug("case analysis: does ", caseTerm, " generalize ", candidate);
-				debug("\tpair.second is now ", pairSub);
+				Util.debug("\tpair.second is now ", pairSub);
+
+				Set<FreeVar> patternFree = candidate.getFreeVariables();
+				Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
+				inputVars.removeAll(boundInputVars);
+				Util.debug("removing ",boundInputVars);
+				patternFree.addAll(inputVars);
 				
-				
+				Substitution computedSub = caseTerm.unify(candidate);
+				Set<FreeVar> problems = computedSub.selectUnavoidable(patternFree);
+				if (!problems.isEmpty()) {
+				  // TODO: make a recoverable error
+				  Util.debug("Candidate = ", candidate);
+				  Util.debug("caseTerm = ", caseTerm);
+				  Util.debug("computedSUb = ", computedSub);
+				  Util.debug("patternFree = ", patternFree);
+				  ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
+				      + "\n    The case given requires instantiating the following variable(s) that should be free: " + problems, this,
+				      "SASyLF computes that " + problems.iterator().next() + " needs to be " + computedSub.getSubstituted(problems.iterator().next()));
+				}
+				computedCaseTerm = candidate;
+        verify(caseResult.remove(pair), "internal invariant broken");
+        
+        /*
 				Substitution computedSub = candidate.instanceOf(caseTerm);//caseTerm.unify(computedCaseTerm1);
+
 				computedCaseTerm = candidate;
 				debug("\told input vars = ", newInputVars);
 				debug("\tcomputed sub = ", computedSub);
@@ -264,10 +336,16 @@ public class RuleCase extends Case {
 					ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 							+ "\n    The case given requires instantiating the following variable(s) that should be free: " + computedSubDomain, this,
 							"SASyLF computes that " + computedSubDomain.iterator().next() + " needs to be " + computedSub.getSubstituted(computedSubDomain.iterator().next()));
-				verify(caseResult.remove(pair), "internal invariant broken");
+				verify(caseResult.remove(pair), "internal invariant broken");*/
 				break;
+		  } catch (UnificationIncomplete e) {
+	      String extraInfo = "\n\tcouldn't unify " + e.term1 + " and " + e.term2;
+	      ErrorHandler.report(Errors.INVALID_CASE, "SASyLF ran into incompleteness of unification while checking this rule" + extraInfo, this,
+	          "(was checking " + candidate + " instance of " + caseTerm + ",\n got exception " + e);      
+	      return; // tell Java we're gone.
+		    
 			} catch (UnificationFailed uf) {
-			  debug("candidate ", candidate, " is not an instance of ", caseTerm);
+			  Util.debug("candidate ", candidate, " is not an instance of ", caseTerm);
 				//uf.printStackTrace();
 				continue;
 			}/* catch (RuntimeException rt) {
@@ -278,23 +356,24 @@ public class RuleCase extends Case {
 		if (computedCaseTerm == null) {
 			// there must have been a candidate, but it didn't unify or wasn't an instance
 			String errorDescription = rule.getErrorDescription(candidate, ctx);
-			debug("Expected case:\n", errorDescription);
-			debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
-			debug("SASyLF generated the LF term: ", candidate);
-			debug("You proposed the LF term: ", caseTerm);
+			Util.debug("Expected case:\n", errorDescription);
+			Util.debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
+			Util.debug("SASyLF generated the LF term: ", candidate);
+			Util.debug("You proposed the LF term: ", caseTerm);
 			ErrorHandler.report(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 			// TODO: explain WHY!!!
 		}
 		
 		
 		
-		
+		/*XXX: we have to find out what check is really needed here:
 		// check that none of the newInputVars are substituted for
 		Set<FreeVar> unavoidable = unifyingSub.selectUnavoidable(newInputVars);
+		Util.debug("unfiyingSUb now = ",unifyingSub);
 		if (!unavoidable.isEmpty())
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 					+ "\n    The term given requires instantiating the following variable(s) that should be free: " + unavoidable, this);
-
+    */
 		
 		Util.debug("unifyingSub: ", unifyingSub);
 		Util.debug("pairSub: ", pairSub);
@@ -319,7 +398,7 @@ public class RuleCase extends Case {
 				try {
 					debug("trying ", pairSubKey, ": ", ec, " instanceof ", em);
 					subOfSubs = ec.instanceOf(em); // should never fail if checks above succeeded
-					Util.tdebug("subOfSubs: ", subOfSubs, " for ", pairSubKey);
+					Util.debug("subOfSubs: ", subOfSubs, " for ", pairSubKey);
 				} catch (Exception e) {
           verify(false, "internal invariant violated");
 					ErrorHandler.report(INVALID_CASE, "The rule case given is invalid, perhaps due to introducing a fresh variable in the wrong order into a term", this, "SASyLF considered the LF term " + candidate);
@@ -332,6 +411,7 @@ public class RuleCase extends Case {
 			}
 		}*/
 		
+		/* redundant now?
 		ClauseUse targetClause = (ClauseUse)ctx.currentCaseAnalysisElement;
     if (targetClause.isRootedInVar()) {
       int n = premises.size();
@@ -339,7 +419,7 @@ public class RuleCase extends Case {
         Derivation.checkRootMatch(ctx,rule.getPremises().get(i),premises.get(i).getElement(),premises.get(i));
       }
       Derivation.checkRootMatch(ctx,rule.getConclusion(), conclusion.getElement(), conclusion);
-    }
+    }*/
 
 		
 		// update the current substitution
@@ -348,7 +428,13 @@ public class RuleCase extends Case {
     for (Derivation d : premises) { 
       d.addToDerivationMap(ctx);
     }
-    conclusion.addToDerivationMap(ctx);
+    if (conclusionIsUnsound) {
+      if (!conclusion.getName().equals("_")) {
+        ErrorHandler.warning("Conclusion in pattern matching of assumption rule cannot be used", conclusion);
+      }
+    } else {
+      conclusion.addToDerivationMap(ctx);
+    }
     
     // check whether the pattern is overly general requires that we first
     // compose the pairSub with the unifyingSub, which sometimes can fail
@@ -360,6 +446,7 @@ public class RuleCase extends Case {
       pairSub.compose(unifyingSub);
       Util.debug("Unifed pairSub = ", pairSub);
       Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
+      overlyGeneral.removeAll(adaptSub.getMap().keySet());
       if (!overlyGeneral.isEmpty()) {
         ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
       }
@@ -384,6 +471,31 @@ public class RuleCase extends Case {
 		
 	}
 
+	/**
+	 * We take a rule application and if (as is the case with the assumption rule)
+	 * the conclusion has a context, we move that context outside.  This is because
+	 * The syntax for an assumption rule doesn't reflect how it can be pattern matched:
+	 * <pre>
+	 *     Gamma, x:T |- x:T
+	 * </pre>
+	 * can be matched by
+	 * <pre>
+	 *     Gamma, x:T, x':T' |- x:T
+	 * </pre>
+	 * So we need the whole context to be outside of the application.    
+	 * @param app
+	 * @return
+	 */
+	private Term canonRuleApp(Application app) {
+	  if (app.getArguments().size() == 1 && app.getArguments().get(0) instanceof Abstraction) {
+	    List<Abstraction> abs = new ArrayList<Abstraction>();
+	    Term bare = Term.getWrappingAbstractions(app.getArguments().get(0), abs);
+	    app = Facade.App(app.getFunction(), bare);
+	    return Term.wrapWithLambdas(abs, app);
+	  }
+	  return app;
+	}
+	
 	/** Computes a term representing the current rule case, with actual premises and conclusion */
 	private Term computeTerm(Context ctx) {
 		Term concTerm = conclusion.getElement().asTerm();

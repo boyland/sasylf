@@ -31,7 +31,7 @@ public class DerivationByExchange extends DerivationWithArgs {
     if (!(e instanceof ClauseUse)) {
       ErrorHandler.report("exchange argument should be a judgment, not syntax", this);
     }
-    checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause());
+    checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause(), this);
     
     Term adapted = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
     //System.out.println("Exchange arg, adapted = " + adapted);

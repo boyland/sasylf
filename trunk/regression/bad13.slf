@@ -55,9 +55,8 @@ theorem bad-logic-1:
     forall i: t in Gamma
     exists contradiction.
     proof by case analysis on p:
-        case rule
-            q: t in * //! discarding context
-            
+        case rule //! discard context
+            q: t in *
             ---------- B-Var
             _: * |- t
         is

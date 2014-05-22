@@ -5,9 +5,9 @@ import java.io.*;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Pair;
 
 /*
  * Concrete subclasses include Clause, Terminal, NonTerminal, Variable, and Binding
@@ -73,6 +73,29 @@ public abstract class Element extends Node {
 	public Term getTypeTerm() { throw new UnsupportedOperationException(this.getClass().toString()); }
 	protected abstract Term computeTerm(List<Pair<String, Term>> varBindings);
 
+	/**
+	 * Return the nonterminals in this element.
+	 * These correspond to the free variable in the LF term,
+	 * but this method can be called on non-type-checked elements.
+	 * @param rigidOnly if true, only find occurrences in rigid position
+	 * @return set of nonterminals in this element (perhaps restricted to rigid positions)
+	 */
+	public Set<NonTerminal> getFree(boolean rigidOnly) {
+	  Set<NonTerminal> result = new HashSet<NonTerminal>();
+	  getFree(result,rigidOnly);
+	  return result;
+	}
+	
+	/**
+	 * Add variables that occur in this element to the set
+	 * if it is a rigid position or rigidOnly is not set.
+	 * @param freeSet set of free nonterminals, never null
+	 * @param rigidOnly
+	 */
+	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+	  // do nothing by default
+	}
+	
 	public NonTerminal getRoot() {
 	  throw new UnsupportedOperationException("need to type check first before calling getRoot()");
 	}

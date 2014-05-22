@@ -17,6 +17,10 @@ public class Abstraction extends Term {
 	public String varName;
 	private Term body;
 	
+	public Term getArgType() {
+	  return varType;
+	}
+	
 	public static Term make(String var, Term type, Term body) {
 		if (body instanceof Application && !((Application)body).isFullyAppliedFreeVar()) {
 			Application bodyApp = (Application) body;
