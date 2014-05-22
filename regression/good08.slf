@@ -114,11 +114,11 @@ lemma reduction-confluent2:
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: x in Gamma',x
+			    _: t1 in Gamma
 			    ----------------------- R-Var
-			    _: Gamma',x |- x -> x
+			    _: Gamma |- t1 -> t1
 			is
-			    _: Gamma |- t2 -> t3 by r1
+			    _: Gamma |- t1 -> t1 by r1
 			end case
 		    end case analysis
 		end case
@@ -147,11 +147,11 @@ lemma reduction-confluent3:
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: t1'[x] in Gamma',x
+			    _: t1 in Gamma
 			    --------------------------------- R-Var
-			    _: Gamma',x |- t1'[x] -> t1'[x]
+			    _: Gamma |- t1 -> t1
 			is
-			    _: Gamma |- t2 -> t3 by r1
+			    _: Gamma |- t1 -> t1 by r1
 			end case
 		    end case analysis
 		end case
@@ -179,11 +179,11 @@ lemma reduction-confluent4:
 		is
 		    _: Gamma |- t2 -> t3 by case analysis on r2:
 			case rule
-			    _: t1'[x] in Gamma',x
+			    _: t1 in Gamma
 			    --------------------------------- R-Var
-			    _: Gamma',x |- t1'[x] -> t1'[x]
+			    _: Gamma |- t1 -> t1
 			is
-			    _: Gamma',x |- t1'[x] -> x by r1
+			    _: Gamma |- t1 -> t1 by r1
 			end case
 		    end case analysis
 		end case

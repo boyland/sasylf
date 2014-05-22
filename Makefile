@@ -5,7 +5,9 @@
 # where VERSION string is a valid Eclipse Version, e.g. 1.1.3
 
 VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y%m%d'`
-.PHONY: build build-plugin test
+.PHONY: build build-plugin test default unit-test regression-test
+
+default: test
 
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
@@ -35,7 +37,13 @@ ADDTESTS= \
 	examples/test-mutual.slf \
 	examples/test-structural.slf
 	
-test:
+test: unit-test regression-test
+
+unit-test:
+	java -cp bin edu/cmu/cs/sasylf/term/UnitTests
+	
+regression-test:
+	@echo "Regression Tests: " `echo regression/*.slf ${ADDTESTS} | wc -w`
 	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
 	  ./sasylf.local $$f 2>&1 | sed "s#Internal SASyLF error!#$$f:0:Internal error#" | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \

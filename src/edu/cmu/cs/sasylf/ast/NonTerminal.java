@@ -7,16 +7,17 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
@@ -155,7 +156,7 @@ public class NonTerminal extends Element {
 	    ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
 	  }
 	  // System.out.println(this+".asFact(_," + assumes + ")");
-	  if (ctx.varfreeNTs.contains(this) || assumes == null ||
+	  if (ctx.isVarFree(this) || assumes == null ||
 	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
 	    return new NonTerminalAssumption(this);
 	  else return new NonTerminalAssumption(this,assumes);
@@ -183,4 +184,16 @@ public class NonTerminal extends Element {
 				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + this + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame);
 		}
 	}
+  @Override
+  public NonTerminal getRoot() {
+    // This is correct if this element came by way of a Fact,
+    // otherwise it would have the correct context.
+    return null;
+  }
+  @Override
+  void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+    freeSet.add(this);
+  }
+	
+	
 }

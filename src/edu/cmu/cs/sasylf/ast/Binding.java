@@ -7,15 +7,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 
 public class Binding extends Element {
 	public Binding(Location loc, NonTerminal nt, List<Element> l) {
@@ -105,7 +106,7 @@ public class Binding extends Element {
 
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
-	  if (ctx.varfreeNTs.contains(nonTerminal) || assumes == null ||
+	  if (assumes == null || ctx.isVarFree(this) ||
 	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
 	    return new BindingAssumption(this);
 	  return new BindingAssumption(this,assumes);
@@ -149,4 +150,22 @@ public class Binding extends Element {
 				    "(" + prevType + " != " + myType + ")");
 		}
 	}
+
+
+  @Override
+  public NonTerminal getRoot() {
+    return null; // same reason as for NonTerminal (q.v.)
+  }
+
+
+  @Override
+  void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+    super.getFree(freeSet, rigidOnly);
+    if (!rigidOnly) {
+      for (Element e:elements) {
+        e.getFree(freeSet, rigidOnly);
+      }
+    }
+  }
+	
 }

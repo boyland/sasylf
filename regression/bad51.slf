@@ -1,0 +1,96 @@
+// assumption rule doesn't require bindings where it should
+package regression;
+
+terminals All in Top contradiction
+
+syntax
+    T ::= X | Top | T -> T | All X <: T => T[X]
+
+    Gamma ::= * | Gamma, X <: T
+
+
+judgment absurd: contradiction
+
+judgment type-eq: Gamma |- T = T
+assumes Gamma
+
+     -------------- eq
+     Gamma |- T = T
+     
+judgment type-var: T <: T in Gamma
+assumes Gamma
+
+    ------------------------- tvar
+    X <: T in (Gamma, X <: T)
+
+judgment type-bound: Gamma |- T
+assumes Gamma
+
+    ---------- B-Taut
+    Gamma |- T
+    
+
+lemma eq-strengthen:
+    assumes Gamma
+    forall d1: Gamma, X <: T |- T1 = T2
+    exists Gamma |- T1 = T2.
+    proof by case analysis on d1:
+        case rule
+            -------------------- eq
+            _: (Gamma, X <: T) |- T1 = T1
+        is
+            proof by rule eq
+        end case
+    end case analysis
+end lemma
+
+lemma helper:
+    assumes Gamma
+    forall d1: Gamma, X <: T0 |- X = T1
+    exists contradiction.
+    proof by case analysis on d1:
+    end case analysis
+end lemma
+
+lemma exploit_to_1_2_3:
+    assumes Gamma
+    forall s1: T' <: T in (Gamma, X1 <: T1)
+    forall e1: Gamma, X1 <: T1 |- T' = T1
+    exists contradiction.
+    
+    proof by case analysis on s1:
+        case rule //! should complain that T1 doesn't depend on X
+            ------------------------------------------- tvar
+            _: X <: T0 in ((Gamma', X <: T0), X1 <: T1)
+        is
+            // In SASyLF after 1.2.3, T1 is bound to T1_68[X] internally,
+            // by adaptation, and so this exploit doesn't work.
+            e2: Gamma', X <: T0, X1 <: T1 |- X = T1 by e1
+            e3: Gamma', X <: T0 |- X = T1 by lemma eq-strengthen on e2
+            // if we grant e3, we should be able to prove things with them.
+            // But in the transition to 1.3.3, contexts changed greatly
+            proof by lemma helper on e3
+            d4: Gamma' |- T1 by rule B-Taut
+            proof by case analysis on e3:
+                /*case rule
+                    -------------------- eq
+                    _: (Gamma', X <: T0) |- X = X
+                is
+                    proof by case analysis on d4:
+                    end case analysis
+                end case*/
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+
+lemma impossible:
+    exists contradiction.
+    d1: X1 <: Top in (*, X1 <: Top) by rule tvar
+    d2: X2 <: X1 in  (*, X1 <: Top, X2 <: X1) by rule tvar
+    d3: X1 <: Top in (*, X1 <: Top, X2 <: X1) by weakening on d1
+    e4: *, X1 <: Top, X2 <: X1 |- X1 = X1 by rule eq
+    proof by lemma exploit_to_1_2_3 on d3, e4
+end lemma
+

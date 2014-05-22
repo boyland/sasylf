@@ -69,6 +69,9 @@ abstract public class DerivationWithArgs extends Derivation {
         }
         f = e.asFact(ctx, ctx.innermostGamma);
       }
+      if (!ctx.isKnownContext(f.getElement().getRoot())) {
+        ErrorHandler.report(Errors.UNKNOWN_CONTEXT,  "The context variable " + f.getElement().getRoot() + " is undefined.",this);
+      }
 			args.add(f);
 		}
 	}

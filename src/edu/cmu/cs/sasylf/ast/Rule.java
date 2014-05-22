@@ -18,15 +18,16 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -125,6 +126,11 @@ public class Rule extends RuleLike implements CanBeCase {
       }
     }
     
+    Set<NonTerminal> neverRigid = getNeverRigid();
+    if (!neverRigid.isEmpty()) {
+      ErrorHandler.warning("The following meta-variables never occur outside of a binding: " + neverRigid + 
+          "\nThis is likely to lead to incomplete unification later on.", this);
+    }
     ruleIsOk = true;
 	}
 	
@@ -195,7 +201,13 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		while (!worklist.isEmpty()) {
 		  Element e = worklist.remove();
-		  if (e instanceof NonTerminal || e instanceof Variable) used.add(e);
+		  if (e instanceof NonTerminal || 
+		      e instanceof Variable) used.add(e);
+		  if (e instanceof Variable) {
+		    if (conclusion.getElements().indexOf(e) < 0) {
+		      ErrorHandler.report("Variable in assumption rule must be at top-level.",this);
+		    }
+		  }
 		  if (e instanceof Clause) {
 		    worklist.addAll(((Clause) e).getElements());
 		  }
@@ -235,6 +247,24 @@ public class Rule extends RuleLike implements CanBeCase {
 	  return isAssumpt;
 	}
 	
+	/**
+	 * Return true if the rule has some free variables that never occur in rigid positions.
+	 */
+	public Set<NonTerminal> getNeverRigid() {
+	  Set<NonTerminal> nts = new HashSet<NonTerminal>();
+	  for (Clause p : premises) {
+	    p.getFree(nts, true);
+	  }
+	  conclusion.getFree(nts, true);
+	  Set<NonTerminal> rigid = new HashSet<NonTerminal>(nts);
+    for (Clause p : premises) {
+      p.getFree(nts, false);
+    }
+    conclusion.getFree(nts, false);
+    nts.removeAll(rigid);
+	  return nts;
+	}
+	
 	/** Returns a fresh term for the rule and a substitution that matches the term.
 	 * sub will be null if no case analysis is possible
 	 * @param source TODO
@@ -252,12 +282,65 @@ public class Rule extends RuleLike implements CanBeCase {
 		  int n=conclusion.getElements().size();
 		  for (int i=0; i < n; ++i) {
 		    if (conclusion.getElements().get(i) instanceof Variable &&
-		        ctx.varfreeNTs.contains(clause.getElements().get(i))) {
+		        clause.getElements().get(i) instanceof NonTerminal &&
+		        ctx.isVarFree((NonTerminal)clause.getElements().get(i))) {
 		      Util.debug("no vars in ", clause);
 		      return result;
 		    }
 		  }
 		}
+		
+		/// NEW CODE
+    Set<Pair<Term,Substitution>> pairs = new HashSet<Pair<Term,Substitution>>();
+		
+		List<Abstraction> abs = new ArrayList<Abstraction>();
+		Term bare = Term.getWrappingAbstractions(term, abs);
+    Application appTerm = this.getFreshAdaptedRuleTerm(abs, null);
+    Term goalTerm = appTerm.getArguments().get(premises.size());
+		if (isAssumption()) {
+      Util.debug("** On line (for assumption) ", source.getLocation().getLine());
+      // assumption rules, unlike all other rules,
+      // have abstractions in the goal:
+      List<Abstraction> newAbs = new ArrayList<Abstraction>();
+      Term bareGoal = Term.getWrappingAbstractions(goalTerm, newAbs);
+      Term subject = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bare));
+		  if (clause.getRoot() != null) {
+		    // pattern = \assumpt . \context . goal(^size(context))
+		    Term pattern = Term.wrapWithLambdas(newAbs, Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size()))));
+	      List<Constant> typeFams = new ArrayList<Constant>();
+		    for (Abstraction a : newAbs) {
+		      typeFams.add(a.getArgType().baseTypeFamily());
+		    }
+		    Substitution adaptSub = new Substitution();
+		    term.bindInFreeVars(new ArrayList<Term>(typeFams), adaptSub, 1);
+		    Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
+		    Util.debug("adaptSub = ", adaptSub);
+		    checkCaseApplication(pairs,adaptedSubject, pattern,adaptedSubject, adaptSub, source);
+		  } else {
+		    Util.debug("no root, so no special assumption rule");
+		  }
+      /* now we try to find the assumption goals inside the existing context */
+      tryInsert: for (int i = abs.size() - newAbs.size(); i >=0; --i) {
+        // make sure types match:
+        for (int k=0; k < newAbs.size(); ++k) {
+          Constant oldFam = abs.get(k+i).getArgType().baseTypeFamily();
+          Constant newFam = newAbs.get(k).getArgType().baseTypeFamily();
+          if (!newFam.equals(oldFam)) {
+            // incompatible: don't even try (can get type error during unification)
+            continue tryInsert;
+          }
+        }
+        int j = i + newAbs.size();
+        Term shiftedGoal = Facade.App(getRuleAppConstant(),bareGoal.incrFreeDeBruijn(abs.size()-j));
+        Term pattern = Term.wrapWithLambdas(abs,Term.wrapWithLambdas(newAbs, Term.wrapWithLambdas(abs, shiftedGoal,j,abs.size())),0,i);
+        checkCaseApplication(pairs,subject, pattern,subject, null, source);
+      }		  
+		} else { // not assumption
+      Util.debug("** On line (non assumption) ",source.getLocation().getLine());
+      checkCaseApplication(pairs, Term.wrapWithLambdas(abs, appTerm), goalTerm, bare, null, source);
+		}
+		
+		/// OLD CODE
 		
     // compute term to check against rule
     List<Term> termArgs = this.getFreeVarArgs(term);
@@ -364,10 +447,43 @@ public class Rule extends RuleLike implements CanBeCase {
         result.add(pair);
       }
 		}
-		return result;
+		if (pairs.size() != result.size()) {
+		  Util.debug("result = ",result);
+		  Util.debug("pairs = ",pairs);
+		  ErrorHandler.report("new pattern matching gives different number of patterns", source);
+		}
+		return pairs;
 	}
 	
-	/** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
+  /** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
+   * and appliedTerm is the rule term built up from term.  
+   * @param adaptSub TODO
+   * @param source TODO
+   */
+  private void checkCaseApplication(Set<Pair<Term,Substitution>> result, Term term,
+      Term pattern, Term subject, Substitution adaptSub, Node source) {
+    Util.debug("pattern ", pattern);
+    Util.debug("subject ",subject);
+    Substitution sub = null;
+    try {
+      sub = pattern.unify(subject);
+      Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
+    } catch (UnificationIncomplete e) {
+      Util.debug("unification incomplete on ", pattern, " and ", subject);
+      ErrorHandler.recoverableError("Unification incomplete for case " + getName(), source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
+    } catch (UnificationFailed e) {
+      Util.debug("failure: " + e.getMessage());
+      Util.debug("unification failed on ", pattern, " and ", subject);
+      sub = null;
+    }
+    if (sub != null) {
+      if (adaptSub != null) sub.compose(adaptSub);
+      Util.debug("\t added result: ", term, sub);
+      result.add(new Pair<Term,Substitution>(term.substitute(sub),sub));
+    }
+  }
+
+  /** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
 	 * and appliedTerm is the rule term built up from term.  
 	 * @param source TODO
 	 */
@@ -381,6 +497,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		  Util.debug("unification incomplete on ", ruleTerm, " and ", appliedTerm);
 		  ErrorHandler.recoverableError("Unification incomplete for case " + getName(), source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
 		} catch (UnificationFailed e) {
+		  Util.debug("failure: " + e.getMessage());
 			Util.debug("unification failed on ", ruleTerm, " and ", appliedTerm);
 			sub = null;
 		}

@@ -38,6 +38,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	  isAbstract = true;
 	}
 	
+	public String getName() { return nonTerminal.getSymbol(); }
 	public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Clause> getClauses() { return elements; }
 	public boolean isAbstract() { return isAbstract; }

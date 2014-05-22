@@ -354,11 +354,19 @@ public abstract class Term {
 	}
 	
 	public static Term wrapWithLambdas(List<Abstraction> abs, Term t) {
-	  return wrapWithLambdas(abs,t,abs.size());
+	  return wrapWithLambdas(abs,t,0,abs.size());
 	}
 	
-  public static Term wrapWithLambdas(List<Abstraction> abs, Term t, int n) {
-    for (int i=n-1; i >= 0; --i) {
+  /**
+   * Wrap abstractions from the given list around the term.
+   * @param abs list of abstractions giving name and type.
+   * @param t term to wrap
+   * @param start inclusive lower bound
+   * @param stop exclusive upper bound
+   * @return wrapped term.
+   */
+  public static Term wrapWithLambdas(List<Abstraction> abs, Term t, int start, int stop) {
+    for (int i=stop-1; i >= start; --i) {
       Abstraction a = abs.get(i);
       t = Abstraction.make(a.varName, a.varType, t);
     }
@@ -368,7 +376,7 @@ public abstract class Term {
   public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
 	  while (t instanceof Abstraction) {
 	    Abstraction a = (Abstraction)t;
-	    abs.add(a);
+	    if (abs != null) abs.add(a);
 	    t = a.getBody();
 	  }
 	  return t;
@@ -377,7 +385,7 @@ public abstract class Term {
   public static Term getWrappingAbstractions(Term t, List<Abstraction> abs, int n) {
     while (n > 0) {
       Abstraction a = (Abstraction)t;
-      abs.add(a);
+      if (abs != null) abs.add(a);
       t = a.getBody();
       --n;
     }
@@ -481,10 +489,16 @@ public abstract class Term {
 		return 0;
 	}
 
-	public abstract Term getType(List<Pair<String, Term>> varBindings);
+	public Term getType() {
+	  List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
+	  return getType(varBindings);
+	}
+	
+ 	public abstract Term getType(List<Pair<String, Term>> varBindings);
 
 	/** Produces a substitution that will bind an outer bound variable in all free variables.
 	 * In Term we implement the default case (which does nothing) for Constant and BoundVar.
+	 * TODO: get rid of int arguments (redundant and confusing)
 	 */
 	public void bindInFreeVars(Term typeTerm, Substitution sub) {}
 	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {}

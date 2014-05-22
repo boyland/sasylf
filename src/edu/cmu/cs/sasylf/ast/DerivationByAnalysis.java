@@ -18,12 +18,12 @@ import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Pair;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -91,8 +91,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		
 		try {
 		ctx.currentCaseAnalysis = adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
-		debug("setting current case analysis to ", ctx.currentCaseAnalysis);
-		//ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
+		ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
+    debug("setting current case analysis to ", ctx.currentCaseAnalysis);
 		ctx.currentCaseAnalysisElement = targetDerivation.getElement();
 		ctx.currentGoal = getElement().asTerm().substitute(ctx.currentSub);
 		ctx.currentGoalClause = getClause();
@@ -120,7 +120,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  // now we need to check that the assumptions INCLUDE the current context, if it could influence the NT
       if (ctx.innermostGamma != null &&
           ctx.innermostGamma.getType().canAppearIn(caseNT.getType().typeTerm()) &&
-          !ctx.varfreeNTs.contains(caseNT)) {
+          !ctx.isVarFree(caseNT)) {
         NonTerminal root = ae.getRoot();
         if (root == null || !root.equals(ctx.innermostGamma)) {
           ErrorHandler.report("Case analysis target cannot assume less than context does",this);
@@ -176,7 +176,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				    // not dependent on context, no problem
 				    if (!ctx.innermostGamma.getType().canAppearIn(syntax.typeTerm())) continue;
 				    // if known to be variable free, no problem
-				    if (ctx.varfreeNTs.contains(caseNT)) continue;
+				    if (ctx.isVarFree(caseNT)) continue;
 				    root = ctx.innermostGamma;
 				  }
 				  Util.debug("Adding variable cases for ", syntax, " with root = ", root);
@@ -262,13 +262,13 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		    error = ex;
 		  }
 		}
-		if (error != null) throw error;
 		
 		if (this instanceof PartialCaseAnalysis) {
 		  if (ctx.savedCaseMap == null) ctx.savedCaseMap = new HashMap<String,Map<CanBeCase,Set<Pair<Term,Substitution>>>>();
 		  ctx.savedCaseMap.put(targetDerivation.getName(), ctx.caseTermMap);
 		  return;
 		}
+    if (error != null) throw error;
 		
 		StringBuilder missingMessages = null;
 		StringBuilder missingCaseTexts = null;
@@ -298,11 +298,11 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		      } else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
 		        targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
 		      } else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
-		        if (!ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
+		        if (!ctx.isVarFree((NonTerminal)ctx.currentCaseAnalysisElement)) {
 		          targetGamma = ctx.innermostGamma;
 		        }
 		      }
-		      if (ctx.currentCaseAnalysis.countLambdas() < cbc.countLambdas(missingCase)) {
+		      if (ctx.currentCaseAnalysis.countLambdas() < missingCase.countLambdas()) {
             if (targetGamma instanceof ClauseUse) {
               targetGamma = ((ClauseUse)targetGamma).getRoot();
             }
