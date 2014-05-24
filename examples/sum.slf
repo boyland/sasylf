@@ -142,14 +142,14 @@ end theorem
 
 theorem one_plus_1_equals_s_n : exists (s (z)) + (s (z)) = (s s z).
 
-d1: (s (z)) + (s (z)) = (s s z) by lemma n_plus_1_equals_s_n on (s z)	// test calling a theorem with literal syntax
+d1: (s (z)) + (s (z)) = (s s z) by theorem n_plus_1_equals_s_n on (s z)	// test calling a theorem with literal syntax
 
 end theorem
 
 
 theorem sn_plus_1_equals_ss_n : forall n exists (s (z)) + (s (n)) = (s s n).
 
-d1: (s (z)) + (s (n)) = (s s n) by lemma n_plus_1_equals_s_n on (s n)
+d1: (s (z)) + (s (n)) = (s s n) by theorem n_plus_1_equals_s_n on (s n)
 
 end theorem
 
