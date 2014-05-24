@@ -228,7 +228,7 @@ PARSER_END(DSLToolkitParser)
 
 SPECIAL_TOKEN :
 {
-  < WHITESPACE: ( " " | "\t" | "\f" | "\r" )+ >
+  < WHITESPACE: ( " " | "\t" | "\f" | "\r" | "\u00a0")+ >
 }
 
 SPECIAL_TOKEN : 
