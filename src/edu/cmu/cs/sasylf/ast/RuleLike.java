@@ -453,7 +453,7 @@ public abstract class RuleLike extends Node {
     if (element.getRoot() == null) {
       varFree.addAll(f.getFreeVariables());
     } else {
-      f.bindInFreeVars(addedTypes, adaptSub, 1);
+      f.bindInFreeVars(addedTypes, adaptSub);
     }
     return f;
   }

@@ -150,7 +150,7 @@ public class FreeVar extends Atom {
 	}
 
 	@Override
-	public void bindInFreeVars(List<Term> typeTerms, Substitution sub, int idx) {
+	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {
 		Term earlierSub = sub.getSubstituted(this);
 		if (earlierSub != null || typeTerms.size() == 0)
 			return;
@@ -159,7 +159,7 @@ public class FreeVar extends Atom {
 		Term baseType = getBaseType();
 		Term newVarType = type;
 		List<Term> bVarList = new ArrayList<Term>();
-		int currIdx = idx+typeTerms.size(); // idx-1 because we will increment it before executing main body of loop
+		int currIdx = 1+typeTerms.size(); // because we will decrement it before executing main body of loop
 		for (Term typeTerm : typeTerms) {
 			currIdx--;
 			if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
@@ -186,49 +186,6 @@ public class FreeVar extends Atom {
 		}
 		Util.verify(type.equals(appTerm.getType(varBindings)), "replacement has wrong type");
 		sub.add(this, appTerm);
-	}
-
-	@Override
-	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {
-		Term earlierSub = sub.getSubstituted(this);
-		if (earlierSub != null)
-			return;
-
-		Term baseType = getBaseType();
-		
-		if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
-			return;
-		
-		FreeVar newVar = this.freshify();
-		newVar.type = Abstraction.make("extendedTypeArg", typeTerm, type);			
-		Term appTerm = new Application(newVar, new BoundVar(i));
-		sub.add(this, appTerm);
-	}
-
-	/** Binds the ith bound variable in all free variables.
-	 * Modifies the substitution to reflect changes.
-	 * We return a fresh free variable with a type that has one more argument,
-	 * and then we apply it to the appropriate bound variable.
-	 * 
-	 * BUT--we only bind the fresh variable if typeTerm can appear in the base type of this FreeVar.
-	 */
-	@Override
-	@Deprecated
-	public Term oldBindInFreeVars(int i, Term typeTerm, Substitution sub) {
-		Term earlierSub = sub.getSubstituted(this);
-		if (earlierSub != null)
-			return earlierSub;
-		
-		Term baseType = getBaseType();
-		
-		if (!canAppearIn(typeTerm, baseType))
-			return this;
-		
-		FreeVar newVar = this.freshify();
-		newVar.type = Abstraction.make("extendedTypeArg", typeTerm, type);
-		Term appTerm = new Application(newVar, new BoundVar(i));
-		sub.add(this, appTerm);
-		return appTerm;
 	}
 	
 	public static boolean canAppearIn(Term term1, Term term2) {

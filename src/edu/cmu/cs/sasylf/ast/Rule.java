@@ -357,7 +357,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		    }
 	      if (oldTypes != null && oldTypes.get(0).equals(newTypes.get(0))) {
 	        Substitution adaptSub = new Substitution();
-	        term.bindInFreeVars(newTypes, adaptSub, 1);
+	        term.bindInFreeVars(newTypes, adaptSub);
 	        Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
 	        // pattern = \assumpt . \context . goal(^size(context))
 	        Term newGoal = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size())));

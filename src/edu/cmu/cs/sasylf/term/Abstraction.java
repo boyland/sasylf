@@ -202,43 +202,9 @@ public class Abstraction extends Term {
 	}
 
 	@Override
-	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {
-		body.bindInFreeVars(typeTerm, sub, i);
-		varType.bindInFreeVars(typeTerm, sub, i);
-	}
-
-	@Override
-	public void bindInFreeVars(List<Term> typeTerms, Substitution sub, int idx) {
-		body.bindInFreeVars(typeTerms, sub, idx);
-		varType.bindInFreeVars(typeTerms, sub, idx);
-	}
-
-	/** Binds the ith bound variable in all free variables.
-	 * Modifies the substitution to reflect changes.
-	 * We just recurse down into the body, with an incremented i
-	 */
-	@Override
-	@Deprecated
-	public Term oldBindInFreeVars(int i, Term typeTerm, Substitution sub) {
-		Term newBody = body.oldBindInFreeVars(i+1, typeTerm, sub);
-		if (newBody == body)
-			return this;
-		else
-			return make(varName, varType, newBody);
-	}
-
-	/** Attempts to remove all bound variables above index i and above from the expression.
-	 * If this is impossible a UnificationFailedException is thrown.
-	 * We just recurse down into the body, with an incremented i
-	 */
-	@Deprecated
-	@Override
-	public Term removeBoundVarsAbove(int i) {
-		Term newBody = body.removeBoundVarsAbove(i+1);
-		if (newBody == body)
-			return this;
-		else
-			return make(varName, varType, newBody);
+	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {
+		body.bindInFreeVars(typeTerms, sub);
+		varType.bindInFreeVars(typeTerms, sub);
 	}
 
 	/** Attempts to remove all bound variables above index i and above from the expression.
