@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -102,9 +103,13 @@ public class DerivationByInversion extends DerivationWithArgs {
         result = result.substitute(pair.second);
         Util.debug("  after adapt/subst, result = ", result);
         ctx.composeSub(pair.second);
-        Application ruleInstance = (Application)pair.first;
+        List<Abstraction> outer = new ArrayList<Abstraction>();
+        Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
         pieces.remove(pieces.size()-1);
+        for (int i=0; i < pieces.size(); ++i) {
+          pieces.set(i,Term.wrapWithLambdas(outer, pieces.get(i)));
+        }
         // If there are multiple clauses, or if 
         if (pieces.size() <= 1 || this.getClause() instanceof AndClauseUse) {
           List<ClauseUse> clauses;
