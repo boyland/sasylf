@@ -185,24 +185,6 @@ public class SyntaxCase extends Case {
       adaptedCaseAnalysis.bindInFreeVars(varBind.second, adaptSub, 1);
       adaptedCaseAnalysis = adaptedCaseAnalysis.substitute(adaptSub);
       adaptedCaseAnalysis = Facade.Abs(varBind.first,varBind.second, adaptedCaseAnalysis);
-      
-      
-      // JTB: The following ran into problems because of new subordination fixes:
-      // adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
-      /*AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);*/
-      // adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
-      Util.debug("adaptedCaseAnalysis = ", adaptedCaseAnalysis);
-      /*Util.debug("new adaptationSub = ", adaptationSub);
-      */
-      
-      //ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference*2, info.varNames, info.varTypes, null);
-      /*
-      ctx.adaptationSub = adaptationSub;
-      ctx.adaptationMap.put(ctx.innermostGamma, info);
-      ctx.innermostGamma = info.nextContext;
-      ctx.matchTermForAdaptation = adaptedCaseAnalysis;*/
-      
-      // ErrorHandler.report("Cannot yet handle case with exposed variables", this);
     }
 
 		// make sure rule's conclusion unifies with the thing we're doing case analysis on
@@ -218,44 +200,7 @@ public class SyntaxCase extends Case {
 		Util.debug("  unifyingSub = ",unifyingSub);
 		
 		// update the current substitution
-		ctx.composeSub(unifyingSub); // modifies in place
-		
-		/* update the set of free variables
-		Set<FreeVar> oldInputVars = ctx.inputVars;
-		ctx.inputVars = new HashSet<FreeVar>(oldInputVars);
-		ctx.inputVars.addAll(concTerm.getFreeVariables());*/
-		/*debug("current case analysis: ", ctx.currentCaseAnalysis);
-		for (FreeVar fv : ctx.currentCaseAnalysis.getFreeVariables()) {
-			ctx.inputVars.remove(fv);
-		}*/
-
-		/* / update the set of subderivations
-		if (isSubderivation) {
-		  Element base = concElem.asFact(ctx, caseAssumptions).getElement();
-		  Element assumes = null;
-		  if (base instanceof AssumptionElement) {
-		    AssumptionElement ae = (AssumptionElement)base;
-		    base = ae.getBase();
-		    assumes = ae.getAssumes();
-		  }
-		  if (base instanceof ClauseUse) {
-		    // add each part of the clause to the list of subderivations
-		    ctx.subderivations.addAll(((ClauseUse)base).getNonTerminals(ctx, assumes));
-		  }
-		}*/
-		
-		/* update varFree
-		if (ctx.varfreeNTs.contains(ctx.currentCaseAnalysisElement)) {
-		  if (concElem instanceof ClauseUse) {
-		    for (Fact f : ((ClauseUse)concElem).getNonTerminals(ctx, null)) {
-		      Element e = f.getElement();
-		      if (e instanceof NonTerminal) {
-		        Util.debug("Adding var free: ", e);
-		        ctx.varfreeNTs.add((NonTerminal)e);
-		      }
-		    }
-		  }
-		}*/
+		ctx.composeSub(unifyingSub); // modifies in place		
 		
 		super.typecheck(ctx, isSubderivation);
 

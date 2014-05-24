@@ -466,7 +466,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		if (t != null) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
-			this.prettyPrint(pw, new PrintContext(t, ctx.inputVars, ctx.innermostGamma));
+			this.prettyPrint(pw, new PrintContext(t, ctx.inputVars, ctx.assumedContext));
 			return sw.toString();
 		} else {
 			return toString();

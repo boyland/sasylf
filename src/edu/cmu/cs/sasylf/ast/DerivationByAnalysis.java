@@ -115,11 +115,11 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
       if (e instanceof Binding) caseNT = ((Binding)e).getNonTerminal();
       else caseNT = (NonTerminal)e;
 		  // now we need to check that the assumptions INCLUDE the current context, if it could influence the NT
-      if (ctx.innermostGamma != null &&
-          ctx.innermostGamma.getType().canAppearIn(caseNT.getType().typeTerm()) &&
+      if (ctx.assumedContext != null &&
+          ctx.assumedContext.getType().canAppearIn(caseNT.getType().typeTerm()) &&
           !ctx.isVarFree(caseNT)) {
         NonTerminal root = ae.getRoot();
-        if (root == null || !root.equals(ctx.innermostGamma)) {
+        if (root == null || !root.equals(ctx.assumedContext)) {
           ErrorHandler.report("Case analysis target cannot assume less than context does",this);
         }
       }
@@ -169,12 +169,12 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				    root = ae.getRoot();
 				  } else {
 				    // no context, no problem
-				    if (ctx.innermostGamma == null) continue;
+				    if (ctx.assumedContext == null) continue;
 				    // not dependent on context, no problem
-				    if (!ctx.innermostGamma.getType().canAppearIn(syntax.typeTerm())) continue;
+				    if (!ctx.assumedContext.getType().canAppearIn(syntax.typeTerm())) continue;
 				    // if known to be variable free, no problem
 				    if (ctx.isVarFree(caseNT)) continue;
-				    root = ctx.innermostGamma;
+				    root = ctx.assumedContext;
 				  }
 				  Util.debug("Adding variable cases for ", syntax, " with root = ", root);
 				  // XXX: The following loop is dead code: varBindings is still empty!
@@ -300,7 +300,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		        targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
 		      } else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
 		        if (!ctx.isVarFree((NonTerminal)ctx.currentCaseAnalysisElement)) {
-		          targetGamma = ctx.innermostGamma;
+		          targetGamma = ctx.assumedContext;
 		        }
 		      }
 		      if (ctx.currentCaseAnalysis.countLambdas() < missingCase.countLambdas()) {

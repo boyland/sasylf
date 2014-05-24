@@ -48,18 +48,13 @@ public class Context implements Cloneable {
   public Term currentCaseAnalysis;
   public Term currentGoal;
   public Clause currentGoalClause;
-  public NonTerminal innermostGamma;
-  public Map<NonTerminal, AdaptationInfo> adaptationMap; // Gamma -> AdaptationInfo
-  public NonTerminal adaptationRoot; // TODO: generalize next three into a map from adaptationRoot to the others
-  public Term matchTermForAdaptation; // TODO: set these elements of the context when unwrapping Gamma in var rule
-  //public int adaptationNumber = 0;
+  public NonTerminal assumedContext;
   public Element currentCaseAnalysisElement;
   public Set<FreeVar> inputVars;
   public Set<FreeVar> outputVars;
   public Map<Fact,Pair<Fact,Integer>> subderivations = new HashMap<Fact,Pair<Fact,Integer>>();
   public Map<CanBeCase, Set<Pair<Term, Substitution>>> caseTermMap; // entries mutable
   public Map<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>> savedCaseMap; // entries immutable
-  public Substitution adaptationSub;
   HashMap<String,NonTerminal> varFreeNTmap= new HashMap<String,NonTerminal>(); 
   HashMap<NonTerminal,Relaxation> relaxationMap;
   public Set<FreeVar> relaxationVars;
@@ -86,7 +81,6 @@ public class Context implements Cloneable {
     result.subderivations = new HashMap<Fact,Pair<Fact,Integer>>(subderivations);
     if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
     if (result.savedCaseMap != null) result.savedCaseMap = new HashMap<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>>(savedCaseMap);
-    if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varFreeNTmap = new HashMap<String,NonTerminal>(varFreeNTmap);
     if (relaxationMap != null) result.relaxationMap = new HashMap<NonTerminal,Relaxation>(relaxationMap);
     if (relaxationVars != null) result.relaxationVars = new HashSet<FreeVar>(relaxationVars);
@@ -138,7 +132,7 @@ public class Context implements Cloneable {
    * recognized "var free NT".
    */
   public boolean isVarFree(Term t) {
-    if (innermostGamma == null) {
+    if (assumedContext == null) {
       throw new RuntimeException("Internal error: isVarFree doesn't make sense with no context");
     }
     if (t instanceof FreeVar) {
@@ -181,7 +175,7 @@ public class Context implements Cloneable {
       outputVars.contains(fake) ||
       currentSub.getMap().containsKey(fake) ||
       relaxationMap != null && relaxationMap.containsKey(new NonTerminal(s,null)) ||
-      isTerminalString(s); // terminals are pervavise
+      isTerminalString(s); // terminals are pervasive
   }
   
   public boolean isTerminalString(String s) {
@@ -292,17 +286,6 @@ public class Context implements Cloneable {
   }
   
   public boolean canCompose(Substitution sub) {
-    /*if (adaptationSub != null) {
-      Util.debug("checking ",sub, " against ", adaptationSub);
-      for (Atom adapted : adaptationSub.getMap().keySet()) {
-        Term subbed = sub.getSubstituted(adapted);
-        Util.debug(adapted," -> ",subbed);
-        if (subbed instanceof Application && ((Application)subbed).getFunction() instanceof Constant || subbed instanceof Constant) {
-          Util.debug("non-viable substition of ", adapted, " with ",subbed);
-          return false;
-        }
-      }
-    }*/
     if (relaxationVars != null) {
       for (FreeVar relax : relaxationVars) {
         Term subbed = sub.getSubstituted(relax);
@@ -334,7 +317,6 @@ public class Context implements Cloneable {
         }
       }
     }
-    if (adaptationSub != null) newVars.removeAll(adaptationSub.getMap().keySet());
     if (relaxationMap != null) {
       relaxationVars.clear();
       for (Map.Entry<NonTerminal, Relaxation> e : relaxationMap.entrySet()) {
@@ -349,18 +331,6 @@ public class Context implements Cloneable {
   }
   
   public void removeUnreachableVariables() {
-    if (adaptationSub != null) {
-      boolean changed = false;
-      Substitution newAdaptSub = new Substitution();
-      for (Map.Entry<Atom, Term> e : adaptationSub.getMap().entrySet()) {
-        Term newTerm = e.getValue().substitute(currentSub);
-        newAdaptSub.add(e.getKey(),newTerm);
-        if (newTerm != e.getValue()) {
-          changed = true;
-        }
-      }
-      if (changed) adaptationSub = newAdaptSub;
-    }
     boolean changed = false;
     Substitution newSub = new Substitution();
     for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
@@ -390,7 +360,7 @@ public class Context implements Cloneable {
   
   public boolean isKnownContext(NonTerminal root) {
     return root == null || 
-        root.equals(innermostGamma) || 
+        root.equals(assumedContext) || 
         relaxationMap != null && relaxationMap.containsKey(root);
   }
   

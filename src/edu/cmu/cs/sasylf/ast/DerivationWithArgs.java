@@ -67,10 +67,10 @@ abstract public class DerivationWithArgs extends Derivation {
             e = cl.computeClause(ctx, false);
           }
         }
-        f = e.asFact(ctx, ctx.innermostGamma);
+        f = e.asFact(ctx, ctx.assumedContext);
       }
       if (!ctx.isKnownContext(f.getElement().getRoot())) {
-        System.out.println("innermostGamma = " + ctx.innermostGamma);
+        System.out.println("innermostGamma = " + ctx.assumedContext);
         ErrorHandler.report(Errors.UNKNOWN_CONTEXT,  "The context variable " + f.getElement().getRoot() + " is undefined.",this);
       }
 			args.add(f);
