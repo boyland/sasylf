@@ -49,7 +49,7 @@ judgment lookup: E{x} = nat
 judgment set: E{x -> nat} = E
 
 judgment add: nat1 math:+ nat2 = nat3
-judgment add: nat1 math:- nat2 = nat3
+judgment sub: nat1 math:- nat2 = nat3
 judgment times: nat1 math:* nat2 = nat3
 judgment less: nat1 math:< nat2
 judgment greaterequal: nat1 math:>= nat2
