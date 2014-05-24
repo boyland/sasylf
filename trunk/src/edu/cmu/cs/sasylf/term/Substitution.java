@@ -12,12 +12,17 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Util;
 
+/**
+ * A mutable class of term substitutions, substuting arbitrary terms for variables.
+ * An earlier design permitted substitution of constants too, but this is being
+ * changed.
+ */
 public class Substitution {
 	public Substitution() { }
 
 	/** var may not be free in term
 	 */
-	public Substitution(Term term, Atom var) {
+	public Substitution(Term term, FreeVar var) {
 		add(var, term);
 	}
 	public Substitution(List<? extends Term> terms, List<? extends Atom> vars) {
@@ -43,26 +48,6 @@ public class Substitution {
 	/** returns true if could avoid all atoms */
 	public boolean avoid(Set<? extends Atom> atoms) {
 		return selectUnavoidable(atoms).isEmpty();
-		/*boolean result = true;
-		
-		for (Atom a : atoms) {
-			Term t = varMap.get(a);
-			if (t != null) {
-				if (!(t instanceof FreeVar)) {
-					result = false;
-					debug("could not avoid " + a + " because it is equal to non-FreeVar expression " + t);
-				} else if (atoms.contains(t)) {
-						result = false;
-						debug("could not avoid " + a +" because it is equal to another thing we must avoid, " + t);
-				} else {
-					// switch a and t
-					varMap.remove(a);
-					add((Atom)t,a);
-				}
-			}
-		}
-		
-		return result;*/
 	}
 
 	/** Modifies the substitution to avoid each of these vars if possible.
@@ -110,9 +95,11 @@ public class Substitution {
    * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
    * @throws UnificationFailed two binding for the variable failed to unify.
    */
-	public void add(Atom var, Term t) {
-		debug("substituting ", t, " for ", var, " adding to ", this);
-
+	public void add(Atom atom, Term t) {
+		debug("substituting ", t, " for ", atom, " adding to ", this);
+		if (atom instanceof Constant) throw new RuntimeException("InternaError: substituting constant " + atom);
+		FreeVar var = (FreeVar)atom;
+		
 		// perform the substitution on t
 		Term tSubstituted;
 		if (varMap.isEmpty())
@@ -166,12 +153,6 @@ public class Substitution {
 	 */
 	public Term getSubstituted(Atom var) {
 		return varMap.get(var);
-		/*Term t = varMap.get(var);
-		if (t == null)
-			return null;
-		if (t == var)
-			return var;
-		return t.substitute(this);*/
 	}
 
 	/** Modifies this substitution to incorporate the existing
@@ -192,26 +173,6 @@ public class Substitution {
 			varMap.put(v, varMap.get(v).incrFreeDeBruijn(amount));
 		}
 	}
-
-	/** Not needed now
-    // eliminates vars from domain of the substitution without changing substitution semantics
-    // returns null if vars can't be eliminated, or the new substitution (which may be this)
-    public Substitution eliminate(Set<Variable> vars) {
-	for (Variable v : vars) {
-	    Term t = map.get(v);
-	    if (t == null)
-		continue;
-	    t = t.reduce();
-	    if (! (t instanceof Atom))
-		return null;
-	    if (vars.contains((Atom)t))
-		return null;
-	    map.remove(v);
-	    map.put((Atom)t, v);
-	}
-	return this;
-    }
-	 */
 
 	private Map<Atom, Term> varMap = new HashMap<Atom, Term>();
 	private Map<Atom, Term> unmodifiableMap;
@@ -235,16 +196,6 @@ public class Substitution {
 	  return varMap.entrySet().containsAll(other.varMap.entrySet());
 	}
 	
-	/*
-    public Set<Atom> getAtomiables() {
-	Set<Variable> s = new HashSet<Variable>();
-	s.addAll(map.keySet());
-	for (Term t : map.values()) {
-	    t.getAtomiables(s);
-	}
-	return s;
-    }*/
-
 	public String toString() {
 		return getMap().toString();
 	}

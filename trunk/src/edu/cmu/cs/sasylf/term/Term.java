@@ -120,9 +120,7 @@ public abstract class Term {
 			return new Pair<Term,Term>(t2, t1);
 	}
 	
-	// TODO: deprecate - I think no-one should call this
-	// XXX: ClauseUse calls it.
-	public final Substitution unifyAllowingBVs(Term t) {
+	private final Substitution unifyAllowingBVs(Term t) {
 		Substitution current = new Substitution();
 		Queue<Pair<Term,Term>> worklist = new PriorityQueue<Pair<Term,Term>>(11, new PairComparator());
 		worklist.add(makePair(this, t));
@@ -153,7 +151,6 @@ public abstract class Term {
 				throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + current);
 			}
 		}
-		// The following code is suspect; it isn't clear that it is sound.
 		if (!unusable.isEmpty()) {
 		  // restructure set as map:
 		  Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
@@ -498,32 +495,10 @@ public abstract class Term {
 
 	/** Produces a substitution that will bind an outer bound variable in all free variables.
 	 * In Term we implement the default case (which does nothing) for Constant and BoundVar.
-	 * TODO: get rid of int arguments (redundant and confusing)
 	 */
 	public void bindInFreeVars(Term typeTerm, Substitution sub) {}
-	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {}
-	// NB: The idx is always 1.  We actually don't need it paradoxically even for
-	// Abstraction because the substitution will be applied to the outside.
-	public void bindInFreeVars(List<Term> typeTerms, Substitution sub, int idx) {}
+	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {}
 	
-	/** Binds the ith bound variable in all free variables, where the variable type is possible.
-	 * Modifies the substitution to reflect changes.
-	 * In Term we implement the default case (which does nothing) for Constant and BoundVar.
-	 */
-	@Deprecated
-	public Term oldBindInFreeVars(int i, Term typeTerm, Substitution sub) {
-		return this;
-	}
-
-	/** Attempts to remove all bound variables above index i and above from the expression.
-	 * If this is impossible a UnificationFailedException is thrown.
-	 * In Term we implement the default case (which does nothing) for Constant and FreeVar
-	 */
-	@Deprecated
-	public Term removeBoundVarsAbove(int i) {
-		return this;
-	}
-
 	/** Attempts to remove all bound variables above index i and above from the expression.
 	 * Modifies the input substitution to effect the change.
 	 * If this is impossible a UnificationFailedException is thrown.

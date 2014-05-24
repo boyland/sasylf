@@ -57,17 +57,6 @@ public class BoundVar extends Term {
 	 * we throw a UnificationFailedException because it can't be done.
 	 */
 	@Override
-	public Term removeBoundVarsAbove(int i) {
-		if (index > i)
-			throw new UnificationFailed("could not eliminate variable binding");
-		return this;
-	}
-
-	/** Attempts to remove all bound variables above index i and above from the expression.
-	 * If we get here it's too late; if the index is in range,
-	 * we throw a UnificationFailedException because it can't be done.
-	 */
-	@Override
 	public void removeBoundVarsAbove(int i, Substitution sub) {
 		if (index > i)
 			throw new UnificationFailed("could not eliminate variable binding");

@@ -644,104 +644,10 @@ public class Application extends Term {
 	}
 
 	@Override
-	public void bindInFreeVars(Term typeTerm, Substitution sub, int i) {
-		function.bindInFreeVars(typeTerm, sub, i);
+	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {
+		function.bindInFreeVars(typeTerms, sub);
 		for (Term a : arguments) {
-			a.bindInFreeVars(typeTerm, sub, i);
-		}
-	}
-
-	@Override
-	public void bindInFreeVars(List<Term> typeTerms, Substitution sub, int idx) {
-		function.bindInFreeVars(typeTerms, sub, idx);
-		for (Term a : arguments) {
-			a.bindInFreeVars(typeTerms, sub, idx);
-		}
-	}
-
-	/** Binds the ith bound variable in all free variables.
-	 * Modifies the substitution to reflect changes.
-	 * We just recurse down into the function and arguments
-	 */
-	@Override
-	@Deprecated
-	public Term oldBindInFreeVars(int i, Term typeTerm, Substitution sub) {
-		boolean isNew = false;
-		Term newFunction = function.oldBindInFreeVars(i, typeTerm, sub);
-		if (newFunction != function)
-			isNew = true;
-
-		List<Term> newArgs = new ArrayList<Term>();
-		for (Term a : arguments) {
-			Term t = a.oldBindInFreeVars(i, typeTerm, sub);
-			newArgs.add(t);
-			if (t != a)
-				isNew = true;
-		}
-
-		if (isNew) {
-			return newFunction.apply(newArgs, 0);
-		} else {
-			return this;
-		}
-	}
-
-	/** Attempts to remove all bound variables above index i and above from the expression.
-	 * If this is impossible a UnificationFailedException is thrown.
-	 * We recurse down into the function and arguments.
-	 * If the function is a free variable, we try to perform elimination as necessary.
-	 */
-	@Override
-	@Deprecated
-	public Term removeBoundVarsAbove(int i) {
-		boolean isNew = false;
-		Atom theFunction = function;
-		List<? extends Term> theArguments = arguments;
-		
-		// is the function a free variable?  If so, let's try to do elimination of unwanted arguments
-		if (theFunction instanceof FreeVar) {
-			// get argument types for function
-			List<Term> argTypes = getArgTypes(theFunction.getType());
-			
-			// build up a new set of arguments and argument types
-			List<Term> newArgs = new ArrayList<Term>();
-			List<Term> newArgTypes = new ArrayList<Term>();
-			for (int j = 0; j < theArguments.size(); ++j) {
-				Term a = theArguments.get(j);
-				if (!(a instanceof BoundVar && ((BoundVar)a).getIndex() > i)) {
-					// keep this argument
-					newArgs.add(a);
-					newArgTypes.add(argTypes.get(j));
-				}
-			}
-			
-			// if we replaced anything, update theFunction and theArguments
-			if (newArgs.size() != theArguments.size()) {
-				// TODO: replace getBaseType() with this.getType()
-				Term newType = wrapWithLambdas(((FreeVar)theFunction).getBaseType(), newArgTypes);
-				theFunction = Facade.FreshVar(((FreeVar)theFunction).getName(), newType);
-				theArguments = newArgs;
-				isNew = true;
-			}
-		}
-		
-		// now, recurse down into the (possibly new) function and arguments.
-		Term newFunction = theFunction.removeBoundVarsAbove(i);
-		if (newFunction != theFunction)
-			isNew = true;
-
-		List<Term> newArgs = new ArrayList<Term>();
-		for (Term a : theArguments) {
-			Term t = a.removeBoundVarsAbove(i);
-			newArgs.add(t);
-			if (t != a)
-				isNew = true;
-		}
-
-		if (isNew) {
-			return newFunction.apply(newArgs, 0);
-		} else {
-			return this;
+			a.bindInFreeVars(typeTerms, sub);
 		}
 	}
 

@@ -400,25 +400,25 @@ public class ClauseUse extends Clause {
 				for (Pair<String, Term> p : varBindings)
 					varTypes.add(p.second);
 				Util.debug("varTypes = ", varTypes);
-				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub, 1);
+				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub);
 				ruleClauseTerm = ruleClauseTerm.substitute(bindingSub);
 				Util.debug("unifying terms ", myClauseTerm, " and ", ruleClauseTerm, " from ", this, " and ", varRuleConcAssumption);
-				Substitution adaptationSub = myClauseTerm.unifyAllowingBVs(ruleClauseTerm);
+				Substitution adaptationSub = myClauseTerm.unify(ruleClauseTerm);
 				// transform adaptationSub to adapt from ruleClauseTerm to myClauseTerm
 				adaptationSub.avoid(myClauseTerm.getFreeVariables());
-				Util.debug("adaptationSub = ", adaptationSub);
-				Util.debug("\tand bindingSub = ", bindingSub);
+				Util.tdebug("adaptationSub = ", adaptationSub);
+				Util.tdebug("\tand bindingSub = ", bindingSub);
 				if (derivTerm != null) {
-					Util.debug("\torig   derivTerm = ", derivTerm);
+					Util.tdebug("\torig   derivTerm = ", derivTerm);
 					derivTerm.freshSubstitution(ruleFreshSub);
 					derivTerm = derivTerm.substitute(ruleFreshSub);
 					bindingSub.incrFreeDeBruijn(1); //XXX: This is unclear (JTB)
 					derivTerm = derivTerm.substitute(bindingSub);
-					Util.debug("\tmiddle derivTerm = ", derivTerm);
+					Util.tdebug("\tmiddle derivTerm = ", derivTerm);
 					derivTerm = derivTerm.substitute(adaptationSub);
 					// derivTerm = derivTerm.incrFreeDeBruijn(-1);  <-- KLUDGE no longer needed since this method corrected
 				}
-				Util.debug("\tresult derivTerm = ", derivTerm);
+				Util.tdebug("\tresult derivTerm = ", derivTerm);
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				if (derivTerm != null) {
@@ -550,7 +550,7 @@ public class ClauseUse extends Clause {
 
 		// bind in free vars
 		debug("before binding in free vars: ", term, " with types ", varTypes);
-		term.bindInFreeVars(varTypes, sub, 1);
+		term.bindInFreeVars(varTypes, sub);
 		term = term.substitute(sub);
 		/*for (int j = i-1; j >= 0; --j) {
 			term.bindInFreeVars(varTypes.get(j), sub, i-j);

@@ -182,7 +182,7 @@ public class SyntaxCase extends Case {
       
       Pair<String,Term> varBind = varBindings.get(0);
       Substitution adaptSub = new Substitution();
-      adaptedCaseAnalysis.bindInFreeVars(varBind.second, adaptSub, 1);
+      adaptedCaseAnalysis.bindInFreeVars(varBind.second, adaptSub);
       adaptedCaseAnalysis = adaptedCaseAnalysis.substitute(adaptSub);
       adaptedCaseAnalysis = Facade.Abs(varBind.first,varBind.second, adaptedCaseAnalysis);
     }
