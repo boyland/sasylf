@@ -1520,6 +1520,7 @@ Token Keyword() :
     |   t=< PROVIDES >
     |   t=< EXTENDS >
     |   t=< USE >
+    |   t=< DO >
   ) { return t; }}
  
 List<String> Name() :
