@@ -242,6 +242,7 @@ public class RuleCase extends Case {
 		if (caseResult.isEmpty())
 			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
+		Util.debug("caseResult = ",caseResult);
 		
 		// find the computed case that matches the given rule
 		Term caseTerm = Term.wrapWithLambdas(addedContext,canonRuleApp(appliedTerm));
@@ -252,27 +253,30 @@ public class RuleCase extends Case {
 		  try {
 				pairSub = new Substitution(pair.second);
 				debug("\tpair.second was ", pairSub);
-				Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
-				candidate = pair.first.substitute(pairSub); // reorganized and so much re-sub.
+				// Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
+				candidate = pair.first; // .substitute(pairSub); // reorganized and so much re-sub.
 
-				debug("case analysis: does ", caseTerm, " generalize ", candidate);
+				Util.debug("case analysis: does ", caseTerm, " generalize ", candidate);
 				Util.debug("\tpair.second is now ", pairSub);
 
 				Set<FreeVar> patternFree = candidate.getFreeVariables();
-				Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
-				inputVars.removeAll(boundInputVars);
-				Util.debug("removing ",boundInputVars);
-				patternFree.addAll(inputVars);
+				//Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
+				//inputVars.removeAll(boundInputVars);
+				//Util.debug("removing ",boundInputVars);
+				//patternFree.addAll(inputVars);
+				Util.debug("patternFree = ",patternFree);
 				
 				Substitution computedSub = caseTerm.unify(candidate);
 				Set<FreeVar> problems = computedSub.selectUnavoidable(patternFree);
 				if (!problems.isEmpty()) {
-				  // TODO: make a recoverable error
 				  Util.debug("Candidate = ", candidate);
 				  Util.debug("caseTerm = ", caseTerm);
 				  Util.debug("computedSUb = ", computedSub);
 				  Util.debug("patternFree = ", patternFree);
-				  ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
+				  // if we ever decide to have mutually compatible patterns
+				  // without a MGU, we will need to change this error into something
+				  // more sophisticated
+				  ErrorHandler.recoverableError(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 				      + "\n    The case given requires instantiating the following variable(s) that should be free: " + problems, this,
 				      "SASyLF computes that " + problems.iterator().next() + " needs to be " + computedSub.getSubstituted(problems.iterator().next()));
 				}

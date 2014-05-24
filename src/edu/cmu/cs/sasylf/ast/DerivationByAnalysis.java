@@ -90,8 +90,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		}
 		
 		try {
-		ctx.currentCaseAnalysis = adapt(targetDerivation.getElement().asTerm(), targetDerivation.getElement(), ctx, true);
-		ctx.currentCaseAnalysis = targetDerivation.getElement().asTerm().substitute(ctx.currentSub);
+		ctx.currentCaseAnalysis = ctx.toTerm(targetDerivation.getElement());
     debug("setting current case analysis to ", ctx.currentCaseAnalysis);
 		ctx.currentCaseAnalysisElement = targetDerivation.getElement();
 		ctx.currentGoal = getElement().asTerm().substitute(ctx.currentSub);
@@ -376,6 +375,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 	 */
 	public static Term adapt(Term term, Element element, Context ctx, boolean wrapUnrooted) {
 
+	  return ctx.toTerm(element);
+	  /*
 	  if (element instanceof ClauseUse) {
 	    return adapt(term,((ClauseUse)element).getRoot(),ctx,element);
 	  }
@@ -416,7 +417,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
-		return term.substitute(ctx.currentSub);
+		return term.substitute(ctx.currentSub);*/
+	  
 	}
 
 	/** Adapts this term using the current context

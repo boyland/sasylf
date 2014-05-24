@@ -25,12 +25,33 @@ public class DerivationByWeakening extends DerivationWithArgs {
     Fact arg = getArgs().get(0);
     // System.out.println("Weakening arg = " + arg);
     Element e = arg.getElement();
-    Term adapted = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
-    // System.out.println("Weakening arg, adapted = " + adapted);
+    
+    if (!(e instanceof ClauseUse)) {
+      ErrorHandler.report("Do not weaken syntax using 'weakening'\nWeakening is implicit for syntax", this);
+    }
+    
+    NonTerminal srcRoot = e.getRoot();
+    NonTerminal trgRoot = getClause().getRoot();
+    Term source = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
     Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
-    // System.out.println("Weakening result: " + result);
-    while (adapted instanceof Abstraction) {
-      Abstraction ab1 = (Abstraction)adapted;
+
+    // perform relaxation first
+    while (srcRoot != null && !srcRoot.equals(trgRoot)) {
+      Relaxation r;
+      if (ctx.relaxationMap == null || (r = ctx.relaxationMap.get(srcRoot)) == null) {
+        ErrorHandler.report("No way known to relax " + srcRoot + " to " + trgRoot, this);    
+        return;
+      }
+      Term relaxed = r.relax(source);
+      if (relaxed == null) {
+        ErrorHandler.report("Can only relax " + srcRoot + " to " + trgRoot + " if one uses the exact same same variable and assumptions", this);
+      }
+      source = relaxed;
+      srcRoot = r.getResult();
+    }
+    
+    while (source instanceof Abstraction) {
+      Abstraction ab1 = (Abstraction)source;
       if (!(result instanceof Abstraction)) {
         ErrorHandler.report(Errors.BAD_WEAKENING, this); // missing variable binding for ab1.varName in result
         return;
@@ -41,7 +62,7 @@ public class DerivationByWeakening extends DerivationWithArgs {
           ErrorHandler.report(Errors.BAD_WEAKENING, this); // variable binding for ab1.varName different in result
           return;
         }
-        adapted = ab1.getBody();
+        source = ab1.getBody();
         result = ab2.getBody();
       } else {
         result = ab2.getBody();
@@ -58,7 +79,7 @@ public class DerivationByWeakening extends DerivationWithArgs {
       }*/
       result = result.incrFreeDeBruijn(-1); // remove variable      
     }
-    if (!result.equals(adapted)) {
+    if (!result.equals(source)) {
       ErrorHandler.report(Errors.BAD_WEAKENING, this); // main part of derivation is different
       return;
     }

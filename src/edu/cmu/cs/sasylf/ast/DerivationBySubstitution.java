@@ -52,7 +52,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     checkRootMatch("exchange", (ClauseUse)arg1, (ClauseUse)getClause(), this);
 
     Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
-		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg0,ctx,false);
+		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg1,ctx,false);
 		
 		Util.debug(this.getLocation());
 		Util.debug("subContext = ", subContext);

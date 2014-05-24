@@ -61,7 +61,7 @@ public class DerivationByInversion extends DerivationWithArgs {
     
     // Do a mini-case analysis, and see if we find result in premises
         
-    Term targetTerm = DerivationByAnalysis.adapt(targetClause.asTerm(), targetClause, ctx, true);
+    Term targetTerm = ctx.toTerm(targetClause);
     
     boolean found_rulel = false;
     
@@ -99,9 +99,10 @@ public class DerivationByInversion extends DerivationWithArgs {
         if (iterator.hasNext()) {
           ErrorHandler.report("Cannot use inversion: two or more instance of '" + ruleName + "' apply.", this);
         }
-        Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
+        Term result = ctx.toTerm(getClause());
         result = result.substitute(pair.second);
         Util.debug("  after adapt/subst, result = ", result);
+        Util.debug("inversion gets substitution ",pair.second);
         ctx.composeSub(pair.second);
         List<Abstraction> outer = new ArrayList<Abstraction>();
         Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
@@ -130,7 +131,7 @@ public class DerivationByInversion extends DerivationWithArgs {
           }
           for (int i=0; i < clauses.size(); ++i) {
             ClauseUse cu = clauses.get(i);
-            Term mt = DerivationByAnalysis.adapt(cu.asTerm(), cu, ctx, false);
+            Term mt = ctx.toTerm(cu);
             Term piece = pieces.get(i).substitute(ctx.currentSub);
             if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
               TermPrinter tp = new TermPrinter(ctx,targetClause.getAssumes(), cu.getLocation());

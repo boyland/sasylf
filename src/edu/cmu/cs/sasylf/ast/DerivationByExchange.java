@@ -33,9 +33,9 @@ public class DerivationByExchange extends DerivationWithArgs {
     }
     checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause(), this);
     
-    Term adapted = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
+    Term adapted = ctx.toTerm(e);
     //System.out.println("Exchange arg, adapted = " + adapted);
-    Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
+    Term result = ctx.toTerm(getClause());
     //System.out.println("Exchange result: " + result);
     
     if (!checkExchange(result,adapted)) {

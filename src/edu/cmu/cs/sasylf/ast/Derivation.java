@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public abstract class Derivation extends Fact {
@@ -154,12 +155,38 @@ public abstract class Derivation extends Fact {
 	    if (errorMsg == null) return false;
 	    // fall through
 	  }
+	  if (checkRelax(ctx,match,supplied)) return true;
 	  return checkMatch(node,ctx,match,supplied,errorMsg);
 	}
 	
+	public static boolean checkRelax(Context ctx, Element match, Element supplied) {
+	  if (ctx.relaxationMap == null) return false;
+	  NonTerminal srcRoot = supplied.getRoot();
+	  NonTerminal trgRoot = match.getRoot();
+	  if (srcRoot == null || trgRoot == null) return false;
+    Term source = supplied.asTerm().substitute(ctx.currentSub);
+    Term target = match.asTerm().substitute(ctx.currentSub);
+	  while (!srcRoot.equals(trgRoot)) {
+	    Relaxation r = ctx.relaxationMap.get(srcRoot);
+	    if (r == null) return false;
+	    Util.debug(supplied.getLocation().getLine()," ********* Found a relaxation ",r,", when currentSub = ",ctx.currentSub);
+	    Term newSource = r.relax(source);
+	    if (newSource == null) return false;
+	    source = newSource;
+	    srcRoot = r.getResult();
+	  }
+	  if (checkMatch(null,ctx, target, source, null)) {
+      Util.debug("could relax ",source," to ",target);
+      return true;
+	  } else {
+      Util.debug("couldn't relax ",source," to ",target);
+      return false;
+	  }
+	}
+	
 	public static boolean checkMatch(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
-	  Term matchTerm = DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false);
-    Term suppliedTerm = DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false);
+	  Term matchTerm = match.asTerm().substitute(ctx.currentSub); // DerivationByAnalysis.adapt(match.asTerm(), match, ctx, false);
+    Term suppliedTerm = supplied.asTerm().substitute(ctx.currentSub); // DerivationByAnalysis.adapt(supplied.asTerm(), supplied, ctx, false);
     return checkMatch(node,ctx,matchTerm,suppliedTerm,errorMsg) &&
         checkRootMatch(ctx, supplied, match, errorMsg == null ? null : node);
 	}
