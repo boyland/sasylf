@@ -120,7 +120,8 @@ RELEASE HISTORY
     Pattern matching of judgments with contexts > 1 is now supported.
     Higher-order unification doesn't make greedy (unsound) assumptions (bad45.slf, bad46.slf)
     nontermination issue in GLR(0) parser fixed (see good25.slf)
-    Resolved issues #59, #61
+    relaxation of Gamma' to Gamma is used instead of adaptation of Gamma to Gamma'
+    Resolved issues #51, #55, #59, #61
 1.3.2	Cleanup
     Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)
     Fix missing case insertion to quote special terminals

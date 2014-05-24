@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -93,6 +94,16 @@ public class Context implements Cloneable {
     if (relaxationMap != null) result.relaxationMap = new HashMap<NonTerminal,Relaxation>(relaxationMap);
     if (relaxationVars != null) result.relaxationVars = new HashSet<FreeVar>(relaxationVars);
     return result;
+  }
+  
+  /**
+   * get the representation of this element as an LF term,
+   * substituting with the current substitution.
+   * @param e element to convert.  Must have been type-checked already
+   * @return LF term for this element
+   */
+  public Term toTerm(Element e) {
+    return e.asTerm().substitute(currentSub);
   }
   
   public boolean isVarFree(NonTerminal nt) {
@@ -201,8 +212,9 @@ public class Context implements Cloneable {
       relaxationVars = new HashSet<FreeVar>();
     }
     relaxationMap.put(key, relax);
-    relax.getFreeVars(relaxationVars);
-    inputVars.addAll(relaxationVars);
+    Set<FreeVar> newVars = relax.getRelaxationVars();
+    relaxationVars.addAll(newVars);
+    relax.getFreeVars(inputVars);
     Util.debug("ctx.relaxationVars = ", relaxationVars);
   }
   
@@ -302,10 +314,10 @@ public class Context implements Cloneable {
         Term subbed = sub.getSubstituted(relax);
         if (subbed == null) continue;
         Util.debug(relax," -> ",subbed);
-        if (!(subbed instanceof FreeVar)) {
-          Util.debug("non-viable substition of ", relax, " with ",subbed);
-          return false;
-        }        
+        if (subbed instanceof BoundVar) continue;
+        if (subbed instanceof FreeVar) continue;
+        Util.debug("non-viable substition of ", relax, " with ",subbed);
+        return false;
       }
     }
     return true;
@@ -383,7 +395,36 @@ public class Context implements Cloneable {
   }
   
   public boolean isKnownContext(NonTerminal root) {
-    return root == null || root.equals(innermostGamma) || adaptationMap.containsKey(root);
+    return root == null || 
+        root.equals(innermostGamma) || 
+        adaptationMap != null && adaptationMap.containsKey(root) ||
+        relaxationMap != null && relaxationMap.containsKey(root);
+  }
+  
+  /**
+   * Return true if the argument is a relaxation variable for a variable already
+   * visible inside the scope.  If so, this means this variable cannot refer to
+   * anything outside the scope.
+   * @param root context nonterminal
+   * @param fv relaxation variable (should be a member of ctx.relaxationVars)
+   * @return if the variable is bound already
+   */
+  public boolean isRelaxationInScope(NonTerminal root, FreeVar fv) {
+    Relaxation r;
+    while ((r = relaxationMap.get(root)) != null) {
+      if (r.getRelaxationVars().contains(fv)) return true;
+      root = r.getResult();
+    }
+    return false;
+  }
+  
+  public List<Term> getRelaxationTypes(FreeVar relaxVar) {
+    for (Relaxation r : relaxationMap.values()) {
+      if (r.getRelaxationVars().contains(relaxVar)) {
+        return r.getTypes();
+      }
+    }
+    return null;
   }
   
   /*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {

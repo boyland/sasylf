@@ -35,7 +35,7 @@ lemma exploit:
             ------------------------------- tvar
             _: X <: T0 in (Gamma', X <: T0)
         is
-            s1': T1 <: T in (Gamma', X <: T0) by s1 //! cannot assume G=G',X<:T0
+            s1': T1 <: X in (Gamma', X <: T0) by s1 //! cannot assume G=G',X<:T0
             proof by case analysis on s1':
             end case analysis
         end case

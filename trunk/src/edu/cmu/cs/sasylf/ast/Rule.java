@@ -54,7 +54,9 @@ public class Rule extends RuleLike implements CanBeCase {
 	private List<Clause> premises;
 	private Clause conclusion;
 	private int isAssumpt = 0; // 0 = not an assumption, > 0 number of abstractions represented
-
+  private int clauseVarIndex = -1; // where is variable in the judgment clause
+  private int appVarIndex = -1; // where is variable in the judgment term
+	
 	public void prettyPrint(PrintWriter out) {
 		for (Clause c : premises) {
 			out.print("premise ");
@@ -154,8 +156,20 @@ public class Rule extends RuleLike implements CanBeCase {
 		int n = assumeClauseDef.getElements().size();
 		
 		int countVariables = 0;
-		for (Element e : assumeClauseUse.elements) {
-		  if (e instanceof Variable) ++countVariables;
+		int countNTs = 0;
+		int concSize = conclusion.getElements().size();
+		for (int i=0; i < concSize; ++i) {
+		  if (i == assumeIndex) continue;
+		  Element e = conclusion.getElements().get(i);
+		  if (e instanceof Variable) {
+		    Util.verify(countVariables==0, "can't handle more than one variable binding at a time");
+		    clauseVarIndex = i;
+		    appVarIndex = countNTs;
+        ++countVariables;
+		    ++countNTs;
+		  } else if (e instanceof NonTerminal) {
+		    ++countNTs;
+		  }
 		}
 		
 		isAssumpt = 1 + countVariables;
@@ -246,6 +260,25 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	
 	/**
+	 * Return the index of the variable in the clause if this is an assumption rule
+	 * with a variable.  Otherwise return -1
+	 * @return index of variable in the clause
+	 */
+	public int getClauseVarIndex() {
+	  return clauseVarIndex;
+	}
+	
+	/**
+	 * Return the index of the variable in the application arguments of the judgment
+	 * term constant if this is an assumption rule with a variable.
+	 * Otherwise return -1.
+	 * @return index of the variable in the judgment term application arguments
+	 */
+	public int getAppVarIndex() {
+	  return appVarIndex;
+	}
+	
+	/**
 	 * Return true if the rule has some free variables that never occur in rigid positions.
 	 */
 	public Set<NonTerminal> getNeverRigid() {
@@ -302,18 +335,37 @@ public class Rule extends RuleLike implements CanBeCase {
       Term bareGoal = Term.getWrappingAbstractions(goalTerm, newAbs);
       Term subject = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bare));
 		  if (clause.getRoot() != null) {
-		    // pattern = \assumpt . \context . goal(^size(context))
-		    Term pattern = Term.wrapWithLambdas(newAbs, Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size()))));
-	      List<Constant> typeFams = new ArrayList<Constant>();
-		    for (Abstraction a : newAbs) {
-		      typeFams.add(a.getArgType().baseTypeFamily());
+        List<Term> newTypes = new ArrayList<Term>();
+        for (Abstraction a : newAbs) {
+          newTypes.add(a.getArgType());
+        }
+        List<Term> oldTypes = newTypes;
+		    if (appVarIndex >= 0) { // if no variables (error, or extension, don't try
+		      Util.debug("** bare = ", bare, ", appVarIndex = ", appVarIndex);
+		      Term wouldBeVar = ((Application)bare).getArguments().get(appVarIndex);
+		      if (ctx.relaxationVars != null && ctx.relaxationVars.contains(wouldBeVar)) {
+		        Util.debug("\t !! would be var: ",wouldBeVar," is already identified as a relax var.");
+		        if (ctx.isRelaxationInScope(clause.getRoot(), (FreeVar)wouldBeVar)) {
+		          Util.debug("cannot match newly because variable is already matched: ",wouldBeVar);
+		          oldTypes = null; // i.e. not possible, skip this possibility
+		        } else { 
+		          oldTypes = ctx.getRelaxationTypes((FreeVar)wouldBeVar);
+		          Util.debug("newTypes = ",newTypes);
+		          Util.debug("oldTypes = ",oldTypes);
+		        }
+		      }
 		    }
-		    Substitution adaptSub = new Substitution();
-		    term.bindInFreeVars(new ArrayList<Term>(typeFams), adaptSub, 1);
-		    Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
-		    Util.debug("adaptSub = ", adaptSub);
-		    checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
-		  } else {
+	      if (oldTypes != null && oldTypes.get(0).equals(newTypes.get(0))) {
+	        Substitution adaptSub = new Substitution();
+	        term.bindInFreeVars(newTypes, adaptSub, 1);
+	        Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
+	        // pattern = \assumpt . \context . goal(^size(context))
+	        Term newGoal = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size())));
+	        Term pattern = Term.wrapWithLambdas(newGoal.substitute(adaptSub),oldTypes);
+	        Util.debug("adaptSub = ", adaptSub);
+	        checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
+	      }
+	   } else {
 		    Util.debug("no root, so no special assumption rule");
 		  }
       /* now we try to find the assumption goals inside the existing context */
@@ -366,7 +418,8 @@ public class Rule extends RuleLike implements CanBeCase {
       sub = null;
     }
     if (sub != null) {
-      if (adaptSub != null) sub.compose(adaptSub);
+      // if (adaptSub != null) sub.compose(adaptSub);
+      Util.debug("at check, adaptSub = ",adaptSub);
       if (!ctx.canCompose(sub)) return;
       Util.debug("\t added result: ", term, sub);
       result.add(new Pair<Term,Substitution>(term.substitute(sub),sub));

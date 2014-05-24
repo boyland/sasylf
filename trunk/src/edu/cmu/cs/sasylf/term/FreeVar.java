@@ -162,7 +162,7 @@ public class FreeVar extends Atom {
 		int currIdx = idx+typeTerms.size(); // idx-1 because we will increment it before executing main body of loop
 		for (Term typeTerm : typeTerms) {
 			currIdx--;
-			if (!canAppearIn(typeTerm, baseType))
+			if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
 				continue;
 			newVarType = Abstraction.make("extendedTypeArg", typeTerm, newVarType);
 			bVarList.add(new BoundVar(currIdx));
@@ -196,7 +196,7 @@ public class FreeVar extends Atom {
 
 		Term baseType = getBaseType();
 		
-		if (!canAppearIn(typeTerm, baseType))
+		if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
 			return;
 		
 		FreeVar newVar = this.freshify();
@@ -234,12 +234,6 @@ public class FreeVar extends Atom {
 	public static boolean canAppearIn(Term term1, Term term2) {
 		debug("testing if ", term1, " can appear in ", term2);
 		return getAppearsIn().contains(term1, term2);
-		// hardcode a result for now
-		/*if (term2.toString().equals("loc"))
-			return false;
-		if (term2.toString().equals("tau"))
-			return false;
-		return true;*/
 	}
 	
 	public static void setAppearsIn(Term term1, Term term2) {

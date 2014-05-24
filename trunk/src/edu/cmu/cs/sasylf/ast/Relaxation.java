@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,6 +55,10 @@ public class Relaxation {
     }
   }
   
+  public NonTerminal getResult() {
+    return result;
+  }
+  
   /**
    * Relax a term using this relaxation, 
    * or return null if relaxation doesn't apply.
@@ -61,33 +66,25 @@ public class Relaxation {
    * @param res new context to relax to
    * @return relaxed term, or null
    */
-  public Term relax(Term t, NonTerminal res) {
-    if (res == null) {
-      Util.tdebug("cannot relax because result needs to be null");
-      return null;
-    }
-    if (!res.equals(result)) {
-      Util.tdebug("cannot relax because ",res," != ",result);
-      return null;
-    }
+  public Term relax(Term t) {
     int n = types.size();
     List<Term> tempTypes = new ArrayList<Term>(types);
     for (int i=0; i < n; ++i) {
       Term ty = tempTypes.get(i);
       if (!(t instanceof Abstraction)) {
-        Util.tdebug("cannot relax because after ",i," terms, term to relax is ",t);
+        Util.debug("cannot relax because after ",i," terms, term to relax is ",t);
         return null;
       }
       Abstraction a = (Abstraction)t;
       if (!(ty.equals(a.getArgType()))) {
-        Util.tdebug("cannot relax because type ", a.getArgType(), " != ", ty);
+        Util.debug("cannot relax because type ", a.getArgType(), " != ", ty);
         return null;
       }
       Term val = values.get(i);
       if (val == null) {
         t = a.getBody();
         if (t.hasBoundVar(1)) {
-          Util.tdebug("cannot relax because no replacement for ",a.varName," is available");
+          Util.debug("cannot relax because no replacement for ",a.varName," is available");
         }
         t = t.incrFreeDeBruijn(-1);
       } else {
@@ -96,9 +93,8 @@ public class Relaxation {
         tempList.add(val);
         for (int j=i+1; j < n; ++j) {
           Term oldType = tempTypes.get(j);
-          tempList.add(0,null);
-          Term newType = oldType.apply(tempList, j-i);
-          Util.tdebug("relax type ",oldType," replaced with ",newType);
+          Term newType = oldType.apply(tempList, j-i).incrFreeDeBruijn(-1);
+          Util.debug("relax type ",oldType," replaced with ",newType);
           tempTypes.set(j, newType);
         }
       }
@@ -131,6 +127,16 @@ public class Relaxation {
       return new Relaxation(newTypes,newValues,result,false);
     }
     return this;
+  }
+  
+  public Set<FreeVar> getRelaxationVars() {
+    Set<FreeVar> result = new HashSet<FreeVar>(values);
+    result.remove(null);
+    return result;
+  }
+  
+  public List<Term> getTypes() {
+    return types;
   }
   
   public void getFreeVars(Set<FreeVar> container) {

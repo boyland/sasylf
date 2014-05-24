@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Pair;
 
@@ -24,10 +23,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 
     Clause cl = this.getClause();
     
-		Term argTerm;
-		if (this.getArgStrings().size() == 1) {
-		  argTerm = getAdaptedArg(ctx, 0);
-		} else {
+		if (this.getArgStrings().size() > 1) {
 		  if (!(cl instanceof AndClauseUse)) {
 		    ErrorHandler.report("Claimed fact is not a conjunction, remove extra arguments", this);
 		  }

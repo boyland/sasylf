@@ -59,7 +59,7 @@ theorem cut-admissible:
             ---------------------- axiom
             _: Γ, h: A ⊢ A'
         is
-            proof by case analysis on v: // Bug: should have two cases (masked by above)
+            proof by case analysis on v: //! Bug: should have two cases
             end case analysis
         end case
 
@@ -116,7 +116,7 @@ theorem cut-admissible:
             d1':  Γ, h2: A2 ⊢ A by weakening on d1
             d2b': Γ, h2: A2, h: A ⊢ A' by exchange on d2b
             d3b:  Γ, h2: A2 ⊢ A' by induction hypothesis on d1', d2b'
-            proof by case analysis on v: // Bug should have two cases
+            proof by case analysis on v: //! Bug should have two cases
             end case analysis
         end case
     end induction
