@@ -150,6 +150,9 @@ public class TermPrinter {
       Abstraction abs = (Abstraction)x;
       Term ty = abs.varType;
       Syntax syn = ctx.synMap.get(ty.toString());
+      if (syn == null) {
+        System.out.println("No syntax for " + ty);
+      }
       Variable v = new Variable(createVarName(syn,vars),location);
       v.setType(syn);
       vars.add(v);
@@ -460,8 +463,10 @@ public class TermPrinter {
    */
   public String caseToString(Term caseTerm) {
     StringBuilder sb = new StringBuilder();
-    if (caseTerm instanceof Application) {
-      Application app = (Application)caseTerm;
+    List<Abstraction> abs = new ArrayList<Abstraction>();
+    Term bareTerm = Term.getWrappingAbstractions(caseTerm, abs);
+    if (bareTerm instanceof Application) {
+      Application app = (Application)bareTerm;
       if (app.getFunction() instanceof Constant) {
         String funcName = app.getFunction().getName();
         if (funcName.endsWith("TERM")) {
@@ -472,7 +477,7 @@ public class TermPrinter {
             if (j instanceof OrJudgment) {
               sb.append("or _: ");              
               Term disj = app.getArguments().get(0);
-              ClauseUse clause = asClause(disj); 
+              ClauseUse clause = asClause(Term.wrapWithLambdas(abs, disj)); 
               prettyPrint(sb,clause,false,0);
             } else {
               int n = app.getArguments().size();
@@ -482,7 +487,7 @@ public class TermPrinter {
                   sb.append(rName);
                   sb.append("\n");
                 }
-                ClauseUse u = asClause(app.getArguments().get(i));
+                ClauseUse u = asClause(Term.wrapWithLambdas(abs, app.getArguments().get(i)));
                 prettyPrint(sb,u,false, 0);
                 sb.append('\n');
               }
