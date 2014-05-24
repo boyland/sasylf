@@ -189,7 +189,7 @@ public class Theorem extends RuleLike {
 		ctx.outputVars = new HashSet<FreeVar>();
 		ctx.currentSub = new Substitution();
 		ctx.currentTheorem = this;
-		ctx.innermostGamma = null;
+		ctx.assumedContext = null;
 		
 		checkInterface(ctx);
 		
@@ -211,8 +211,7 @@ public class Theorem extends RuleLike {
     ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 		
 		if (assumes != null) {
-		  ctx.innermostGamma = assumes;
-		  ctx.adaptationRoot = assumes;
+		  ctx.assumedContext = assumes;
 		}
 		ctx.varFreeNTmap.clear();
 		

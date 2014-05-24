@@ -105,9 +105,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
     // we still need to worry about an implicit syntactic parameter to a rule conclusion
     boolean contextCheckNeeded = 
         ruleLike instanceof Rule &&   // only rules have implicit parameters only in conclusion
-        ctx.innermostGamma != null && // only if we have a context currently, and
+        ctx.assumedContext != null && // only if we have a context currently, and
         (ruleLike.getAssumes() == null ||       // either the rule has no context, or
-         ctx.innermostGamma.getType() != 
+         ctx.assumedContext.getType() != 
          ruleLike.getAssumes().getType());      // or the type differs
 		
     Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
@@ -115,11 +115,11 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
       mustAvoid.addAll(conclusionFreeVars);
     } else if (contextCheckNeeded) {
       for (FreeVar v : conclusionFreeVars) {
-        if (!ctx.innermostGamma.getType().canAppearIn(v.getType())) continue;
+        if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
         Term actual = v.substitute(callSub);
         if (ctx.isVarFree(actual)) continue;
         ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
-            " discards its context " + ctx.innermostGamma, this, "\t(variable bound to " + actual + ")");
+            " discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
       }
     }
     

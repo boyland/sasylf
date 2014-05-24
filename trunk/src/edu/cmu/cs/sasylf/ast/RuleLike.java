@@ -351,7 +351,7 @@ public abstract class RuleLike extends Node {
   
   protected String assumeTypeToString(Context ctx, List<Abstraction> context, int i) {
     Term t = Term.wrapWithLambdas(context, context.get(i).varType.incrFreeDeBruijn(1), 0, i+1);
-    TermPrinter tp = new TermPrinter(ctx,ctx.innermostGamma,this.getLocation());
+    TermPrinter tp = new TermPrinter(ctx,ctx.assumedContext,this.getLocation());
     ClauseUse e = tp.asClause(t);
     int a = e.getConstructor().getAssumeIndex();
     return tp.toString(e.getElements().get(a));

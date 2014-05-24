@@ -145,10 +145,6 @@ public class RuleCase extends Case {
 		    Util.debug("diff = ", diff, "assumption size = ", rule.isAssumptionSize());
 		    ErrorHandler.report("assumption rule should introduce exactly one level of context",this);
 		  }
-
-		  if (ctx.adaptationSub != null) {
-        ErrorHandler.report("Sorry, more than one nested variable rule case analysis is not yet supported", this);
-      }
 		  
 		  // we need to make sure the subject pattern has a simple variable where
 		  // we are going to have a variable because we need this for the relaxation.
@@ -205,15 +201,7 @@ public class RuleCase extends Case {
 		  
 		  // set up relaxation info
 		  relax = new Relaxation(newWrappers,relaxVars,subjectRoot);
-		  
-		  /*
-		  AdaptationInfo info = new AdaptationInfo(newWrappers,thisRoot);
-		  // set up context
-		  ctx.adaptationSub = adaptSub;
-		  ctx.matchTermForAdaptation = adaptedSubjectTerm;
-      ctx.adaptationMap.put(ctx.innermostGamma, info);
-      ctx.innermostGamma = info.nextContext;		*/
-      conclusionIsUnsound = true; // not always, but safer this way
+		  conclusionIsUnsound = true; // not always, but safer this way
 		}
 
 		// Now create the "unifyingSub"
@@ -261,6 +249,7 @@ public class RuleCase extends Case {
 				Util.debug("\tpair.second is now ", pairSub);
 
 				Set<FreeVar> patternFree = candidate.getFreeVariables();
+				//  JTB: I'm not sure why we did all this...
 				//Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
 				//inputVars.removeAll(boundInputVars);
 				//Util.debug("removing ",boundInputVars);
