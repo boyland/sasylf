@@ -70,6 +70,7 @@ abstract public class DerivationWithArgs extends Derivation {
         f = e.asFact(ctx, ctx.innermostGamma);
       }
       if (!ctx.isKnownContext(f.getElement().getRoot())) {
+        System.out.println("innermostGamma = " + ctx.innermostGamma);
         ErrorHandler.report(Errors.UNKNOWN_CONTEXT,  "The context variable " + f.getElement().getRoot() + " is undefined.",this);
       }
 			args.add(f);
@@ -80,7 +81,7 @@ abstract public class DerivationWithArgs extends Derivation {
 	 */
 	protected Term getAdaptedArg(Context ctx, int i) {
 		Element element = getArgs().get(i).getElement();
-    Term argTerm = DerivationByAnalysis.adapt(element.asTerm(), element, ctx, false);
+    Term argTerm = ctx.toTerm(element);
     return argTerm;
 	}
 	

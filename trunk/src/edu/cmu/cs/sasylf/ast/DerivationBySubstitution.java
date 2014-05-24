@@ -51,8 +51,8 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     checkRootMatch("exchange", (ClauseUse)arg0, (ClauseUse)getClause(), this);
     checkRootMatch("exchange", (ClauseUse)arg1, (ClauseUse)getClause(), this);
 
-    Term subContext = DerivationByAnalysis.adapt(arg0.asTerm(),arg0,ctx,false);
-		Term source = DerivationByAnalysis.adapt(arg1.asTerm(),arg1,ctx,false);
+    Term subContext = ctx.toTerm(arg0);
+		Term source = ctx.toTerm(arg1);
 		
 		Util.debug(this.getLocation());
 		Util.debug("subContext = ", subContext);
@@ -63,7 +63,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
     Util.debug("result = ", result);
 		
     // verify result is the second substituted for (and eliminating) the assumption of the first
-    Term claimedResult = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
+    Term claimedResult = ctx.toTerm(getClause());
     Util.debug("claimed = ", claimedResult);
 
     if (!result.equals(claimedResult)) {

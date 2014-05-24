@@ -206,12 +206,13 @@ public class RuleCase extends Case {
 		  // set up relaxation info
 		  relax = new Relaxation(newWrappers,relaxVars,subjectRoot);
 		  
+		  /*
 		  AdaptationInfo info = new AdaptationInfo(newWrappers,thisRoot);
 		  // set up context
 		  ctx.adaptationSub = adaptSub;
 		  ctx.matchTermForAdaptation = adaptedSubjectTerm;
       ctx.adaptationMap.put(ctx.innermostGamma, info);
-      ctx.innermostGamma = info.nextContext;		
+      ctx.innermostGamma = info.nextContext;		*/
       conclusionIsUnsound = true; // not always, but safer this way
 		}
 

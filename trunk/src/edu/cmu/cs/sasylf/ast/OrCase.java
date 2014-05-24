@@ -43,7 +43,7 @@ public class OrCase extends Case {
     }
     
     Term t = cl.asTerm();
-    t = DerivationByAnalysis.adapt(t, cl, ctx, false);
+    t = ctx.toTerm(cl);
     
     boolean found=false;
     

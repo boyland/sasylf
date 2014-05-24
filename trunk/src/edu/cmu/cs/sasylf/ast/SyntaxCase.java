@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -173,25 +174,33 @@ public class SyntaxCase extends Case {
         ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
       }
 
-      Substitution adaptationSub = new Substitution();
+      // Substitution adaptationSub = new Substitution();
       List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
       assumesClause.readAssumptions(varBindings, true);
       Relaxation relax = new Relaxation(varBindings,(FreeVar)ctx.currentCaseAnalysis,ctx.currentCaseAnalysisElement.getRoot());
       ctx.addRelaxation(newRoot, relax);
       
+      Pair<String,Term> varBind = varBindings.get(0);
+      Substitution adaptSub = new Substitution();
+      adaptedCaseAnalysis.bindInFreeVars(varBind.second, adaptSub, 1);
+      adaptedCaseAnalysis = adaptedCaseAnalysis.substitute(adaptSub);
+      adaptedCaseAnalysis = Facade.Abs(varBind.first,varBind.second, adaptedCaseAnalysis);
+      
+      
       // JTB: The following ran into problems because of new subordination fixes:
       // adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
-      AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);
-      adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
+      /*AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);*/
+      // adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
       Util.debug("adaptedCaseAnalysis = ", adaptedCaseAnalysis);
-      Util.debug("new adaptationSub = ", adaptationSub);
+      /*Util.debug("new adaptationSub = ", adaptationSub);
+      */
       
       //ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference*2, info.varNames, info.varTypes, null);
-
+      /*
       ctx.adaptationSub = adaptationSub;
       ctx.adaptationMap.put(ctx.innermostGamma, info);
       ctx.innermostGamma = info.nextContext;
-      ctx.matchTermForAdaptation = adaptedCaseAnalysis;
+      ctx.matchTermForAdaptation = adaptedCaseAnalysis;*/
       
       // ErrorHandler.report("Cannot yet handle case with exposed variables", this);
     }
@@ -203,7 +212,7 @@ public class SyntaxCase extends Case {
 		try {
 			unifyingSub = concTerm.unify(adaptedCaseAnalysis);
 		} catch (UnificationFailed uf) {
-		  throw new InternalError("Should not have unification error here!\n concTerm = " + concTerm);
+		  throw new InternalError("Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis);
 		}
 		
 		Util.debug("  unifyingSub = ",unifyingSub);

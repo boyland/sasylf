@@ -32,8 +32,8 @@ public class DerivationByWeakening extends DerivationWithArgs {
     
     NonTerminal srcRoot = e.getRoot();
     NonTerminal trgRoot = getClause().getRoot();
-    Term source = DerivationByAnalysis.adapt(e.asTerm(), e, ctx, false);
-    Term result = DerivationByAnalysis.adapt(getClause().asTerm(),getClause(),ctx,false);
+    Term source = ctx.toTerm(e);
+    Term result = ctx.toTerm(getClause());
 
     // perform relaxation first
     while (srcRoot != null && !srcRoot.equals(trgRoot)) {
