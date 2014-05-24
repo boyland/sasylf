@@ -12,7 +12,9 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -60,7 +62,9 @@ public class Context implements Cloneable {
   public Map<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>> savedCaseMap; // entries immutable
   public Substitution adaptationSub;
   HashMap<String,NonTerminal> varFreeNTmap= new HashMap<String,NonTerminal>(); 
-
+  HashMap<NonTerminal,Relaxation> relaxationMap;
+  public Set<FreeVar> relaxationVars;
+  
   public Context(CompUnit cu) {
     compUnit = cu;
   }
@@ -86,7 +90,8 @@ public class Context implements Cloneable {
     if (result.savedCaseMap != null) result.savedCaseMap = new HashMap<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>>(savedCaseMap);
     if (adaptationSub != null) result.adaptationSub = new Substitution(adaptationSub);
     result.varFreeNTmap = new HashMap<String,NonTerminal>(varFreeNTmap);
-
+    if (relaxationMap != null) result.relaxationMap = new HashMap<NonTerminal,Relaxation>(relaxationMap);
+    if (relaxationVars != null) result.relaxationVars = new HashSet<FreeVar>(relaxationVars);
     return result;
   }
   
@@ -167,7 +172,8 @@ public class Context implements Cloneable {
       inputVars.contains(fake) ||
       outputVars.contains(fake) ||
       currentSub.getMap().containsKey(fake) ||
-      adaptationMap.containsKey(new NonTerminal(s,null)) ||
+      adaptationMap != null && adaptationMap.containsKey(new NonTerminal(s,null)) ||
+      relaxationMap != null && relaxationMap.containsKey(new NonTerminal(s,null)) ||
       isTerminalString(s); // terminals are pervavise
   }
   
@@ -186,6 +192,18 @@ public class Context implements Cloneable {
       String s = prefix + i;
       if (!isKnown(s)) return s;
     }
+  }
+  
+  public void addRelaxation(NonTerminal key, Relaxation relax) {
+    Util.debug("Adding relaxation: ",key,"->",relax);
+    if (relaxationMap == null) {
+      relaxationMap = new HashMap<NonTerminal,Relaxation>();
+      relaxationVars = new HashSet<FreeVar>();
+    }
+    relaxationMap.put(key, relax);
+    relax.getFreeVars(relaxationVars);
+    inputVars.addAll(relaxationVars);
+    Util.debug("ctx.relaxationVars = ", relaxationVars);
   }
   
   public void checkConsistent(Node here) {
@@ -235,10 +253,62 @@ public class Context implements Cloneable {
       }
     }
 
+    if (relaxationMap != null) {
+      if (relaxationVars == null) {
+        System.out.println("Internal error: relaxtionvars is null");
+        problem = true;
+      } else {
+        Set<FreeVar> check = new HashSet<FreeVar>();
+        for (Map.Entry<NonTerminal,Relaxation> e : relaxationMap.entrySet()) {
+          if (e.getKey() == null) {
+            System.out.println("Internal error: null key in relaxation map");
+            problem = true;
+          } else {
+            Relaxation r = e.getValue();
+            String s = r.checkConsistent(this);
+            if (s != null) {
+              System.out.println("Internal error: " + s);
+              problem = true;
+            }
+            r.getFreeVars(check);
+          }
+        }
+        if (!check.equals(relaxationVars)) {
+          System.out.println("relaxation vars out of date: " + relaxationVars);
+          problem = true;
+        }
+      }
+    }
     if (problem) {
       ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
     } 
     removeUnreachableVariables();
+  }
+  
+  public boolean canCompose(Substitution sub) {
+    if (adaptationSub != null) {
+      Util.debug("checking ",sub, " against ", adaptationSub);
+      for (Atom adapted : adaptationSub.getMap().keySet()) {
+        Term subbed = sub.getSubstituted(adapted);
+        Util.debug(adapted," -> ",subbed);
+        if (subbed instanceof Application && ((Application)subbed).getFunction() instanceof Constant || subbed instanceof Constant) {
+          Util.debug("non-viable substition of ", adapted, " with ",subbed);
+          return false;
+        }
+      }
+    }
+    if (relaxationVars != null) {
+      for (FreeVar relax : relaxationVars) {
+        Term subbed = sub.getSubstituted(relax);
+        if (subbed == null) continue;
+        Util.debug(relax," -> ",subbed);
+        if (!(subbed instanceof FreeVar)) {
+          Util.debug("non-viable substition of ", relax, " with ",subbed);
+          return false;
+        }        
+      }
+    }
+    return true;
   }
   
   public void composeSub(Substitution sub) {
@@ -259,6 +329,15 @@ public class Context implements Cloneable {
       }
     }
     if (adaptationSub != null) newVars.removeAll(adaptationSub.getMap().keySet());
+    if (relaxationMap != null) {
+      relaxationVars.clear();
+      for (Map.Entry<NonTerminal, Relaxation> e : relaxationMap.entrySet()) {
+        Relaxation r = e.getValue();
+        r = r.substitute(sub);
+        r.getFreeVars(relaxationVars);
+        e.setValue(r);
+      }
+    }
     // System.out.println("new vars = " + newVars);
     inputVars.addAll(newVars);
   }

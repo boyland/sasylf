@@ -235,7 +235,11 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				Term term = ((ClauseDef)clause).getSampleTerm();
 				//System.out.println("  sample term: " + term);
 				Substitution freshSub = term.freshSubstitution(new Substitution());
-				term.substitute(freshSub);
+				term = term.substitute(freshSub);
+				Substitution checkSub = new Substitution();
+				checkSub.add((FreeVar)ctx.currentCaseAnalysis, term);
+				Util.debug("checking checkSub = ",checkSub);
+				if (!ctx.canCompose(checkSub)) continue;
         //System.out.println("  sample term after freshification: " + term);
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
 			}
@@ -347,6 +351,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  if (firstNL > -1) {
 		    missingMessages.insert(0, '\n');
 		  }
+		  Util.debug("adaptationSub = ",ctx.adaptationSub);
 		  ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), this, missingCaseTexts.toString());
 		}
 
