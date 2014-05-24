@@ -101,7 +101,7 @@ lemma lam-type-not-var :
 	    ------------------ Var
 	    _: X in (Gamma',X)
 	is
-	    _: contradiction by case analysis on nv: end case analysis //!! missign cases
+	    _: contradiction by case analysis on nv: end case analysis // actually no missing cases
 	end case
     end case analysis
 end lemma
