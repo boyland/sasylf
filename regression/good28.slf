@@ -1,0 +1,138 @@
+// "inversion" with non-empty context crashed in SVN head sometime after 1.3.3a6
+// "case analysis" doesn't adapt the subject sometime after 1.3.3a6.
+// adaptation didn't affect non-rooted judgments prior to 1.3.3
+package regression;
+
+terminals unit Unit value contradiction
+
+
+syntax
+
+t ::= unit 
+  | x
+
+τ ::= Unit
+  | ⊥
+
+f ::= <> | x => f[x]
+
+Γ ::= *
+  | Γ, x : τ
+
+
+judgment absurd: contradiction
+
+judgment term-equal: Γ ⊢ t = t
+assumes Γ
+
+    --------- term-eq
+    Γ ⊢ t = t
+    
+
+judgment term-equal2: t == t
+
+    ------ term-eq2
+    t == t    
+    
+     
+     
+judgment isavalue: Γ ⊢ t value
+assumes Γ
+
+    -------------- V-Unit
+    Γ ⊢ unit value
+    
+    
+judgment typeequality: τ == τ
+
+------ type-eq
+τ == τ
+
+
+
+judgment type: Γ ⊢ t : τ
+assumes Γ
+
+-------------------- T-Unit
+Γ ⊢ unit : Unit
+
+---------------- T-Var
+Γ, x : τ ⊢ x : τ
+
+
+theorem typing-unique :
+    assumes Γ
+    forall d1: Γ ⊢ t : τ1
+    forall d2: Γ ⊢ t : τ2
+    exists τ1 == τ2.
+
+    _: τ1 == τ2 by case analysis on d1:
+        case rule
+            -------------------- T-Unit
+            _: Γ ⊢ unit : Unit
+        is
+          use inversion of T-Unit on d2
+          _: Unit == Unit by rule type-eq
+        end case
+    
+        case rule
+            ----------------- T-Var
+            _: Γ', x : τ1 ⊢ x : τ1
+        is
+            use inversion of T-Var on d2
+            _: τ1 == τ2 by rule type-eq
+        end case
+
+    end case analysis
+end theorem
+
+lemma unit-only-value:
+    assumes Γ
+    forall d: Γ ⊢ t value
+    exists Γ ⊢ t = unit.
+    proof by case analysis on t:
+        case unit is
+            proof by rule term-eq
+        end case
+
+        case x assumes Γ0, x : τ0 is
+            proof by case analysis on d: // some versions want V-Unit case here
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma unit-only-value2:
+    assumes Γ
+    forall d: Γ ⊢ t value
+    exists t == unit.
+    proof by case analysis on t:
+        case unit is
+            proof by rule term-eq2 // some versions complain about losing context of "unit".
+        end case
+
+        case x assumes Γ0, x : τ0 is
+            proof by case analysis on d: // some versions want V-Unit case here
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma bot-not-equal:
+    assumes Γ
+    forall d1: Γ ⊢ t : ⊥
+    forall d2: Γ ⊢ t value
+    exists contradiction.
+    proof by case analysis on d1:
+        case rule
+            ---------------------- T-Var
+            _: (Γ', x : ⊥) ⊢ x : ⊥
+        is
+            eq: t == unit by lemma unit-only-value2 on d2
+            proof by case analysis on eq: // some versions require term-eq2 case
+            end case analysis    
+        end case
+    end case analysis
+end lemma
