@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.term;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.Pair;
@@ -41,6 +42,12 @@ public class Facade {
 	}
 	public static Application App(Atom f, List<? extends Term> args) {
 		return new Application(f, args);
+	}
+	public static Term App(Term f, Term a1) {
+	  return f.apply(Collections.singletonList(a1), 0);
+	}
+	public static Term App(Term f, Term... args) {
+	  return f.apply(Arrays.asList(args),0);
 	}
 	public static BoundVar BVar(int i) {
 		return new BoundVar(i);

@@ -10,7 +10,6 @@ import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -168,21 +167,24 @@ public class SyntaxCase extends Case {
         ErrorHandler.report("new assumption can only be used with variable", this);
       }
       verify(ae.getAssumes() instanceof ClauseUse, "not a clause use? " + assumes);
-      NonTerminal newRoot = ((ClauseUse)ae.getAssumes()).getRoot();
-      if (newRoot == ctx.innermostGamma || ctx.adaptationMap.containsKey(newRoot)) {
+      ClauseUse assumesClause = (ClauseUse)ae.getAssumes();
+      NonTerminal newRoot = assumesClause.getRoot();
+      if (ctx.isLocallyKnown(newRoot.getSymbol())) {
         ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
       }
-      
+
       Substitution adaptationSub = new Substitution();
       List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
-      ((ClauseUse)ae.getAssumes()).readAssumptions(varBindings, true);
+      assumesClause.readAssumptions(varBindings, true);
+      Relaxation relax = new Relaxation(varBindings,(FreeVar)ctx.currentCaseAnalysis,ctx.currentCaseAnalysisElement.getRoot());
+      ctx.addRelaxation(newRoot, relax);
+      
       // JTB: The following ran into problems because of new subordination fixes:
       // adaptedCaseAnalysis = ae.getAssumes().adaptTermTo(adaptedCaseAnalysis, concTerm, adaptationSub);
       AdaptationInfo info = new AdaptationInfo(newRoot,varBindings);
       adaptedCaseAnalysis = ClauseUse.doWrap(adaptedCaseAnalysis, info.varNames, info.varTypes, adaptationSub);
       Util.debug("adaptedCaseAnalysis = ", adaptedCaseAnalysis);
       Util.debug("new adaptationSub = ", adaptationSub);
-      
       
       //ClauseUse.readNamesAndTypes((Abstraction)adaptedCaseAnalysis, lambdaDifference*2, info.varNames, info.varTypes, null);
 
@@ -204,17 +206,19 @@ public class SyntaxCase extends Case {
 		  throw new InternalError("Should not have unification error here!\n concTerm = " + concTerm);
 		}
 		
-		// update the current substitution
-		ctx.currentSub.compose(unifyingSub); // modifies in place
+		Util.debug("  unifyingSub = ",unifyingSub);
 		
-		// update the set of free variables
+		// update the current substitution
+		ctx.composeSub(unifyingSub); // modifies in place
+		
+		/* update the set of free variables
 		Set<FreeVar> oldInputVars = ctx.inputVars;
 		ctx.inputVars = new HashSet<FreeVar>(oldInputVars);
-		ctx.inputVars.addAll(concTerm.getFreeVariables());
-		debug("current case analysis: ", ctx.currentCaseAnalysis);
+		ctx.inputVars.addAll(concTerm.getFreeVariables());*/
+		/*debug("current case analysis: ", ctx.currentCaseAnalysis);
 		for (FreeVar fv : ctx.currentCaseAnalysis.getFreeVariables()) {
 			ctx.inputVars.remove(fv);
-		}
+		}*/
 
 		/* / update the set of subderivations
 		if (isSubderivation) {

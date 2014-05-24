@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.term.Facade.App;
 import static edu.cmu.cs.sasylf.util.Errors.JUDGMENT_EXPECTED;
 import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
 
@@ -17,7 +16,6 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -290,7 +288,6 @@ public class Rule extends RuleLike implements CanBeCase {
 		  }
 		}
 		
-		/// NEW CODE
     Set<Pair<Term,Substitution>> pairs = new HashSet<Pair<Term,Substitution>>();
 		
 		List<Abstraction> abs = new ArrayList<Abstraction>();
@@ -315,7 +312,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		    term.bindInFreeVars(new ArrayList<Term>(typeFams), adaptSub, 1);
 		    Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
 		    Util.debug("adaptSub = ", adaptSub);
-		    checkCaseApplication(pairs,adaptedSubject, pattern,adaptedSubject, adaptSub, source);
+		    checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
 		  } else {
 		    Util.debug("no root, so no special assumption rule");
 		  }
@@ -333,135 +330,27 @@ public class Rule extends RuleLike implements CanBeCase {
         int j = i + newAbs.size();
         Term shiftedGoal = Facade.App(getRuleAppConstant(),bareGoal.incrFreeDeBruijn(abs.size()-j));
         Term pattern = Term.wrapWithLambdas(abs,Term.wrapWithLambdas(newAbs, Term.wrapWithLambdas(abs, shiftedGoal,j,abs.size())),0,i);
-        checkCaseApplication(pairs,subject, pattern,subject, null, source);
+        checkCaseApplication(ctx,pairs, subject,pattern, subject, null, source);
       }		  
 		} else { // not assumption
       Util.debug("** On line (non assumption) ",source.getLocation().getLine());
-      checkCaseApplication(pairs, Term.wrapWithLambdas(abs, appTerm), goalTerm, bare, null, source);
-		}
-		
-		/// OLD CODE
-		
-    // compute term to check against rule
-    List<Term> termArgs = this.getFreeVarArgs(term);
-    termArgs.add(term);
-    Term appliedTerm = App(this.getRuleAppConstant(), termArgs);
-
-    Pair<Term, Substitution> pair ;
-    
-    if (!isAssumption()) {
-		  // compute term for rule
-		  Term ruleTerm = this.getFreshRuleAppTerm(term, new Substitution(), null);
-		  Util.debug("\tfor rule ", getName(), " computed rule term ", ruleTerm);
-
-		  // see if the rule applies
-		  pair = checkRuleApplication(term, ruleTerm, appliedTerm, source);
-		  if (pair != null) {
-		    Util.debug("\tadding (1) ", pair.first);
-		    result.add(pair);
-		  }
-		}
-		
-		if (isAssumption()) {
-      // First disassemble the rule term to get the base.
-      // XXX: If we add non-variable assumptions, we need to change this
-      Abstraction ruleConcTerm = (Abstraction)conclusion.asTerm();
-      ruleConcTerm = (Abstraction)ruleConcTerm.substitute(ruleConcTerm.freshSubstitution(new Substitution()));
-      Abstraction ruleConcTermInner = (Abstraction)ruleConcTerm.getBody();
-      Term ruleConcBodyTerm = ruleConcTermInner.getBody();
-      // XXX: boundVarIndex only exists if we have a variable "if (x instanceof Variable) continue;" above
-      int boundVarIndex = ((Application)ruleConcBodyTerm).getArguments().indexOf(new BoundVar(2));
-      Util.debug("boundVarIndex = ",boundVarIndex);
-      if (boundVarIndex < 0) {
-        Util.verify(ErrorHandler.getErrorCount()>0, "should have been caught already");
-        return result;
-      }
-		  
-      // Collect all variables from term 
-      List<Abstraction> outer = new ArrayList<Abstraction>();
-      Term base = Term.getWrappingAbstractions(term,outer);
-      int abstractionDepth = outer.size();
-      Term destinedVar = ((Application)base).getArguments().get(boundVarIndex);
-      Util.debug("term destined to be a variable: ",destinedVar);
-		  
-      // First we go through all variables in the current context
-      // to see if they could be the one we are matching here
-      for (int i=0; i < outer.size(); ++i) {
-        Abstraction a = outer.get(i);
-        if (a.varType instanceof Application) {
-          Util.debug("is ",a.varType, " an application of ", judgment.typeTerm());
-          if (((Application)a.varType).getFunction().equals(judgment.typeTerm())) {
-            Term ruleTerm2 = a.varType.incrFreeDeBruijn(outer.size()-i);
-            ruleTerm2 = Term.wrapWithLambdas(outer,ruleTerm2);
-            // put it in a rule
-            ruleTerm2 = Facade.App(getRuleAppConstant(), ruleTerm2);
-            Util.debug("Constructed ruleTerm2 = ", ruleTerm2);
-            Util.debug("\tappliedTerm = ", appliedTerm);
-            pair = checkRuleApplication(term, ruleTerm2, appliedTerm, source);
-            if (pair != null) {
-              Util.debug("\tadded result! (2a) ", pair.first,", ",pair.second);
-              result.add(pair);
-            }
-          }
-        }
-      }
-      
-      if (!clause.isRootedInVar()) {
-        Util.debug("cannot find a variable since not in variable context");
-        return result;
-      }
-      
-      // Consider the possibility that the context is binding the result
-      
-     
-      // now reassemble the rule term after inserting all outer bindings
-      Term ruleTerm2 = ruleConcBodyTerm.incrFreeDeBruijn(abstractionDepth);
-      ruleTerm2 = Term.wrapWithLambdas(outer,ruleTerm2);
-      // add back the rule variables
-      ruleTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, ruleTerm2);
-      ruleTerm2 =  Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, ruleTerm2);
-      // put it in a rule
-      ruleTerm2 = Facade.App(getRuleAppConstant(), ruleTerm2);
-
-      // now figure out how to change the applied term to handle variables.
-      // We use the blunt instrument of bindInFreeVars
-      // We could rather see if the destinedVar is a variable or an application
-      // of a variable, and if so, construct a substitution, and if not, give up.
-      Substitution varSubst = new Substitution();
-      destinedVar.bindInFreeVars(ruleConcTerm.varType, varSubst);
-      varSubst.incrFreeDeBruijn(1);
-      Util.debug("varSubst = ",varSubst);
-
-      // adapt the applied term
-      Term appliedTerm2 = term.substitute(varSubst);
-      appliedTerm2 =  Facade.Abs(ruleConcTermInner.varName, ruleConcTermInner.varType, appliedTerm2);
-      appliedTerm2 = Facade.Abs(ruleConcTerm.varName, ruleConcTerm.varType, appliedTerm2);
-      appliedTerm2 = Facade.App(((Application)appliedTerm).getFunction(), appliedTerm2);
-
-      //now try it out
-      Util.debug("found a term with assumptions!\n\truleTerm2 = ", ruleTerm2, "\n\tappliedTerm2 = ", appliedTerm2);
-      Util.debug("\tappliedTerm = ", appliedTerm);
-      pair = checkRuleApplication(term, ruleTerm2, appliedTerm2, source);
-      if (pair != null) {
-        Util.debug("\tadded result! (2b) ", pair.first,", ",pair.second);
-        result.add(pair);
-      }
-		}
-		if (pairs.size() != result.size()) {
-		  Util.debug("result = ",result);
-		  Util.debug("pairs = ",pairs);
-		  ErrorHandler.report("new pattern matching gives different number of patterns", source);
+      checkCaseApplication(ctx, pairs, Term.wrapWithLambdas(abs, appTerm), goalTerm, bare, null, source);
 		}
 		return pairs;
 	}
 	
   /** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
    * and appliedTerm is the rule term built up from term.  
-   * @param adaptSub TODO
-   * @param source TODO
+   * @param ctx global context: must not be null
+   * @param result place to put any resulting pair
+   * @param term full pattern to use (after substituting with unifier)
+   * @param pattern kernel of pattern
+   * @param subject kernel of subject
+   * @param adaptSub adaptation substitution (may be null if no adaptation)
+   * @param source location to drop errors
    */
-  private void checkCaseApplication(Set<Pair<Term,Substitution>> result, Term term,
-      Term pattern, Term subject, Substitution adaptSub, Node source) {
+  private void checkCaseApplication(Context ctx, Set<Pair<Term,Substitution>> result,
+      Term term, Term pattern, Term subject, Substitution adaptSub, Node source) {
     Util.debug("pattern ", pattern);
     Util.debug("subject ",subject);
     Substitution sub = null;
@@ -478,36 +367,13 @@ public class Rule extends RuleLike implements CanBeCase {
     }
     if (sub != null) {
       if (adaptSub != null) sub.compose(adaptSub);
+      if (!ctx.canCompose(sub)) return;
       Util.debug("\t added result: ", term, sub);
       result.add(new Pair<Term,Substitution>(term.substitute(sub),sub));
     }
   }
 
-  /** Checks if this rule applies to term, assuming ruleTerm is the term for the rule
-	 * and appliedTerm is the rule term built up from term.  
-	 * @param source TODO
-	 */
-	private Pair<Term, Substitution> checkRuleApplication(Term term,
-			Term ruleTerm, Term appliedTerm, Node source) {
-		Substitution sub = null;
-		try {
-			sub = ruleTerm.unify(appliedTerm);
-			Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
-		} catch (UnificationIncomplete e) {
-		  Util.debug("unification incomplete on ", ruleTerm, " and ", appliedTerm);
-		  ErrorHandler.recoverableError("Unification incomplete for case " + getName(), source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
-		} catch (UnificationFailed e) {
-		  Util.debug("failure: " + e.getMessage());
-			Util.debug("unification failed on ", ruleTerm, " and ", appliedTerm);
-			sub = null;
-		}
-		if (sub == null)
-			return null;
-		else
-			return new Pair<Term,Substitution>(ruleTerm.substitute(sub), sub);
-	}
-	
-	@Override
+  @Override
 	public String getErrorDescription(Term t, Context ctx) {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
@@ -533,16 +399,6 @@ public class Rule extends RuleLike implements CanBeCase {
 		return sw.toString();
 	}
 	
-	@Override
-	public int countLambdas(Term t) {
-	  return ((Application)t).getArguments().get(premises.size()).countLambdas();
-	}
-
-	/*public void resolveClauses(Map<List<ElemType>,ClauseDef> parseMap) {
-	for (int i = 0; i < premises.size(); ++i) {
-	    Clause c = premises.get(i);
-	}
-    }*/
 	
 	@Override
 	public boolean isInterfaceOK() {

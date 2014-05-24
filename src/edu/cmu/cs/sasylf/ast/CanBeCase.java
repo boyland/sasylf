@@ -6,6 +6,4 @@ import edu.cmu.cs.sasylf.term.Term;
 public interface CanBeCase {
 
 	String getErrorDescription(Term t, Context ctx);
-
-	int countLambdas(Term missingCase);
 }

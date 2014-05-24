@@ -12,7 +12,6 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -62,7 +61,9 @@ public abstract class RuleLike extends Node {
     Util.debug(ruleAppConstant,": ",typeTerm);
   }
 	
-	/** Computes a mutable list of free variables that are suitable as premises for this rule */
+	/** Computes a mutable list of free variables that are suitable as premises for this rule 
+	 * @deprecated
+	 */
 	public List<Term> getFreeVarArgs(Term instanceTerm) {
 		// compute adaptation amount
 		//Term concTerm = getConclusion().asTerm();
@@ -88,17 +89,10 @@ public abstract class RuleLike extends Node {
 		return appliedTerm;*/
 	}
 		
-	// XXX: Currently the TERM is different from LF/Twelf in two ways:
-	// XXX: (1) We represent the conclusion as a separate parameter to the application, and
-	// XXX: (2) if the whole thing is in a non-empty variable context, that context
-	// XXX: is repeated for each argument to the application, so that the TERM
-	// XXX: application doesn't even type check afterwards.  This is a bad idea.
-	// XXX: (1) is a way to convert a rule into a theorem.  Just fine.
-	// XXX: (2) causes us to leave types off of things.
-	
 	/** Computes a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion).
 	 * Also freshens the variables in this term.
 	 * @param wrappingSub <i>output</i>
+	 * @deprecated call getFreshAdaptedRule instead
 	 */
 	public Term getFreshRuleAppTerm(Term instanceTerm, Substitution wrappingSub, List<Term> termArgsIfKnown /* may be null */) {
 		debug("getting conclusion term for rule ", getName());
@@ -377,41 +371,6 @@ public abstract class RuleLike extends Node {
     return t;
   }
 
-  /** Computes a mutable list of free variables that are suitable as premises for this rule
-   * The variable will be applied to variables from the context that make sense.
-   * @deprecated this code doesn't work.
-   */
-  public List<Term> getFreeVarPremises(List<Abstraction> context) {
-    int m = context.size();
-    
-    List<Term> termArgs = new ArrayList<Term>();
-    for (int i = 0; i < this.getPremises().size(); ++i) {
-      ClauseUse clauseUse = (ClauseUse) this.getPremises().get(i);
-      ClauseDef clauseDef = clauseUse.getConstructor(); 
-      //XXX Two serioues problems:
-      //XXX (1) the variables in the type aren't fresh
-      //XXX (2) the variables in the type aren't substituted to handle possible
-      ///       dependencies in context.
-      Term type = clauseUse.asTerm().getType();
-      String name = clauseDef.getConstructorName();
-      List<Abstraction> relevant = new ArrayList<Abstraction>();
-      List<BoundVar> actuals = new ArrayList<BoundVar>();
-      for (int j=0; j < m; ++j) {
-        Abstraction a = context.get(j);
-        if (FreeVar.canAppearIn(a.getArgType().getTypeFamily(),type.getTypeFamily())) {
-          relevant.add(a);
-          actuals.add(new BoundVar(m-j));
-        }
-      }
-      type = Term.wrapWithLambdas(relevant, type);
-      FreeVar argTerm = Facade.FreshVar(name, type);
-      Util.debug("type of ",argTerm," is ",type);
-      if (actuals.isEmpty()) termArgs.add(argTerm);
-      else termArgs.add(Facade.App(argTerm,actuals));
-    }
-    return termArgs;
-  }
-
   /**
 	 * Return a fresh application of the rule or theorem in a particular given context.
 	 * We copy the premises and conclusion, given them fresh havriables, including
@@ -513,12 +472,6 @@ public abstract class RuleLike extends Node {
 	public abstract NonTerminal getAssumes();
 	
 	/** Returns a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion) */
-	// removed because it now depends on instanceTerm
-	/*public Term getRuleAppTerm(Term instanceTerm) {
-		if (ruleAppTerm == null)
-			ruleAppTerm = computeRuleAppTerm(instanceTerm);
-		return ruleAppTerm;
-	}
-	private Term ruleAppTerm;*/
+
 	private Constant ruleAppConstant;
 }
