@@ -12,10 +12,8 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
-import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
-import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -83,7 +81,6 @@ public class Context implements Cloneable {
     if (derivationMap != null) result.derivationMap = new HashMap<String,Fact>(derivationMap);
     if (bindingTypes != null) result.bindingTypes = new HashMap<String, List<ElemType>>(bindingTypes);
     result.currentSub = new Substitution(currentSub);
-    if (adaptationMap != null) result.adaptationMap = new HashMap<NonTerminal, AdaptationInfo>(adaptationMap);
     if (inputVars != null) result.inputVars = new HashSet<FreeVar>(inputVars);
     if (outputVars != null) result.outputVars = new HashSet<FreeVar>(outputVars);
     result.subderivations = new HashMap<Fact,Pair<Fact,Integer>>(subderivations);
@@ -183,7 +180,6 @@ public class Context implements Cloneable {
       inputVars.contains(fake) ||
       outputVars.contains(fake) ||
       currentSub.getMap().containsKey(fake) ||
-      adaptationMap != null && adaptationMap.containsKey(new NonTerminal(s,null)) ||
       relaxationMap != null && relaxationMap.containsKey(new NonTerminal(s,null)) ||
       isTerminalString(s); // terminals are pervavise
   }
@@ -244,7 +240,6 @@ public class Context implements Cloneable {
     
     for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
       Set<FreeVar> free = e.getValue().getFreeVariables();
-      if (adaptationSub != null) free.removeAll(adaptationSub.getMap().keySet());
       if (!inputVars.containsAll(free)) {
         free.removeAll(inputVars);
         System.out.println("Internal error: missing input vars: " + free);
@@ -258,7 +253,6 @@ public class Context implements Cloneable {
       free.removeAll(inputVars);
       free.removeAll(outputVars);
       free.removeAll(currentSub.getMap().keySet());
-      if (adaptationSub != null) free.removeAll(adaptationSub.getMap().keySet());
       if (!free.isEmpty()) {
         System.out.println("Internal error: missing input vars in " + d.getName() + ": " + free);
         problem = true;
@@ -298,7 +292,7 @@ public class Context implements Cloneable {
   }
   
   public boolean canCompose(Substitution sub) {
-    if (adaptationSub != null) {
+    /*if (adaptationSub != null) {
       Util.debug("checking ",sub, " against ", adaptationSub);
       for (Atom adapted : adaptationSub.getMap().keySet()) {
         Term subbed = sub.getSubstituted(adapted);
@@ -308,7 +302,7 @@ public class Context implements Cloneable {
           return false;
         }
       }
-    }
+    }*/
     if (relaxationVars != null) {
       for (FreeVar relax : relaxationVars) {
         Term subbed = sub.getSubstituted(relax);
@@ -397,7 +391,6 @@ public class Context implements Cloneable {
   public boolean isKnownContext(NonTerminal root) {
     return root == null || 
         root.equals(innermostGamma) || 
-        adaptationMap != null && adaptationMap.containsKey(root) ||
         relaxationMap != null && relaxationMap.containsKey(root);
   }
   

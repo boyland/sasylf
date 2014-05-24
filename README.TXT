@@ -121,6 +121,7 @@ RELEASE HISTORY
     Higher-order unification doesn't make greedy (unsound) assumptions (bad45.slf, bad46.slf)
     nontermination issue in GLR(0) parser fixed (see good25.slf)
     relaxation of Gamma' to Gamma is used instead of adaptation of Gamma to Gamma'
+    pattern match extended to work on derivations with arbitrarily large contexts
     Resolved issues #51, #55, #59, #61
 1.3.2	Cleanup
     Add backward compatibility to give 1.2.X experience (1.2.X no longer maintained)

@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -350,7 +348,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  if (firstNL > -1) {
 		    missingMessages.insert(0, '\n');
 		  }
-		  Util.debug("adaptationSub = ",ctx.adaptationSub);
+		  // Util.debug("adaptationSub = ",ctx.adaptationSub);
 		  ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), this, missingCaseTexts.toString());
 		}
 
@@ -362,121 +360,6 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		ctx.currentGoalClause = oldGoalClause;
 		}
 		// this.addToDerivationMap(ctx);
-	}
-
-	/** Adapts this term using the current context
-	 * This includes substituting with the current sub
-	 * and also adapting the context to include assumptions currently in scope
-	 * XXX This works wrong in some cases, where the next method (with originalContext)
-	 * XXX succeeds.  This is related to the two ways to check the last derivation
-	 * XXX in Theorem.java and Derivation.java.
-	 * TODO: generate good and bad regression tests, then combine these two methods together
-	 * and merge the "last derivation" checks to do the correct thing.
-	 */
-	public static Term adapt(Term term, Element element, Context ctx, boolean wrapUnrooted) {
-
-	  return ctx.toTerm(element);
-	  /*
-	  if (element instanceof ClauseUse) {
-	    return adapt(term,((ClauseUse)element).getRoot(),ctx,element);
-	  }
-	  
-	  if (element instanceof AssumptionElement) {
-	    AssumptionElement ae = (AssumptionElement)element;
-      return adapt(term, ae.getRoot(), ctx, ae.getBase());
-	  }
-	  
-	  // TODO: generalize this to all terms reference in system
-		Util.debug("for element ", element, " term.countLambdas() = ", term.countLambdas());
-		Util.debug("adaptation term = ", ctx.matchTermForAdaptation);
-		if (ctx.adaptationSub != null) debug("ctx.matchTermForAdaptation.countLambdas() = ", ctx.matchTermForAdaptation.countLambdas());
-		try {
-		if (ctx.adaptationSub != null && term.countLambdas() < ctx.matchTermForAdaptation.countLambdas() && element instanceof ClauseUse && !ctx.innermostGamma.equals(((ClauseUse)element).getRoot())) {
-		  // TODO: This whole section needs to be changed.
-		  // JTB: newly added: fix issue #16
-		  debug("term before new sub: ", term);
-		  term = term.substitute(ctx.currentSub);
-      debug("term after new sub: ", term);
-      term = ((ClauseUse)element).adaptTermTo(term, ctx.matchTermForAdaptation, ctx.adaptationSub, wrapUnrooted);
-      debug("term after adapt: ", term);
-      if (((ClauseUse)element).getRoot() == null) {
-		    while (term instanceof Abstraction) {
-		      Abstraction abs = (Abstraction)term;
-		      // Kludge: we assume we always put two things into variables at a time:
-		      Abstraction abs2 = (Abstraction)abs.getBody();
-		      if (abs2.getBody().hasBoundVar(2)) {
-		        debug("uses bound variable wrapped.", term);
-		        break;
-		      } else {
-		        debug("does not use bound variable ", term);
-		        term = abs2.getBody();
-		      }
-		    }
-		  }
-		}
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
-		return term.substitute(ctx.currentSub);*/
-	  
-	}
-
-	/** Adapts this term using the current context
-	 * This includes substituting with the current sub
-	 * and also adapting the context to include assumptions currently in scope
-	 */
-	public static Term adapt(Term term, NonTerminal originalContext, Context ctx, Node errorPoint) {
-	  term = term.substitute(ctx.currentSub); // JTB: Added for Issue #16
-		NonTerminal targetContext = ctx.innermostGamma;
-		Util.debug("adapting from ", originalContext, " to ", targetContext, " on ", term);
-		Util.debug("adaptationSub = ", ctx.adaptationSub);
-		if (originalContext == null) return term; // no context -- nothing to adapt
-		
-		if (originalContext != null && !originalContext.equals(targetContext)) {
-			List<Term> varTypes = new ArrayList<Term>();
-			List<String> varNames = new ArrayList<String>();
-			
-			while (!originalContext.equals(targetContext)) {
-				AdaptationInfo info = ctx.adaptationMap.get(originalContext);
-				if (info == null)
-					ErrorHandler.report(Errors.UNKNOWN_CONTEXT,"The context variable " + originalContext + " is undefined", originalContext);
-				varNames.addAll(info.varNames);
-				varTypes.addAll(info.varTypes);
-				originalContext = info.nextContext;
-			}
-
-			term = ClauseUse.doWrap(term, varNames, varTypes, ctx.adaptationSub == null? new Substitution() : ctx.adaptationSub);
-		}
-		else if (targetContext != null && !targetContext.equals(ctx.adaptationRoot)) {
-			Set<FreeVar> varSet = term.getFreeVariables();
-			varSet.retainAll(ctx.adaptationSub.getMap().keySet());
-			if (!varSet.isEmpty()) {
-	      // ErrorHandler.warning("Here! with oc = " + originalContext + ", tc = " + targetContext + " and adaptationRoot = " + ctx.adaptationRoot, errorPoint);
-				//TODO: make this more principled (e.g. work for more than one adaptation -- see code below)
-				Util.debug("adaptation sub = ", ctx.adaptationSub, " applied inside ", ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
-				Util.debug("current sub = ", ctx.currentSub);
-				if (term instanceof Application) {
-	        // System.out.println("term is " + term);
-	        // System.out.println("current sub = " + ctx.currentSub);
-	        // new RuntimeException("for trace").printStackTrace();
-				  ErrorHandler.report("Using variables with a judgment '" + ((Application)term).getFunction() + "' that doesn't assume context", errorPoint);
-				}
-				Util.debug("before term = ", term);
-				term = ((Abstraction)term).subInside(ctx.adaptationSub, ctx.adaptationMap.get(ctx.adaptationRoot).varTypes.size());
-				Util.debug("after term = ", term);
-			}
-			
-			/*NonTerminal checkContext = ctx.adaptationRoot;
-			while (!checkContext.equals(targetContext)) {
-				AdaptationInfo info = ctx.adaptationMap.get(checkContext);
-				if (info == null)
-					ErrorHandler.report(Errors.UNKNOWN_CONTEXT,"The context variable " + originalContext + " is undefined", originalContext);
-				
-				checkContext = info.nextContext;
-			}*/
-		}
-		
-		return term.substitute(ctx.currentSub);
 	}
 
 	private List<Case> cases = new ArrayList<Case>();

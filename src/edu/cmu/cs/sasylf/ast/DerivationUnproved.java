@@ -16,7 +16,7 @@ public class DerivationUnproved extends DerivationWithArgs {
 	public void typecheck(Context ctx) {
 	  super.typecheck(ctx);
 	  Clause cl = getClause();
-	  Term t = DerivationByAnalysis.adapt(cl.asTerm(), cl, ctx, false);
+	  Term t = ctx.toTerm(cl);
 	  String form = "";
 	  if (cl instanceof ClauseUse) {
 	    try {

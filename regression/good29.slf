@@ -1,0 +1,159 @@
+// demonstrate unsoundness with greedy unification in SASyLF 1.2.5 and earlier
+// Later versions (before 1.3.3) fix a bug that overlooks bad case analysis
+// see bad45.slf for the more interesting test case.
+
+package regression;
+
+terminals value λ unit Unit contradiction Top
+
+
+syntax
+
+t ::= λ x:T • t[x]
+   | x
+   | t t
+   | λ X <: T • t[X]
+   | t T
+   | unit
+
+T ::= T → T
+   | ∀ X <: T • T[X]
+   | X
+   | Unit
+   | Top
+
+Γ ::= *
+       | Γ, x : T
+       | Γ, X <: T
+
+
+
+judgment absurd: contradiction
+   
+   
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+
+judgment subtype: Γ ⊢ T <: T
+assumes Γ
+
+--------------- S-Var
+Γ,X <: T ⊢ X <: T
+
+----------- S-Refl
+Γ ⊢ T <: T
+
+Γ ⊢ T1 <: T2
+Γ ⊢ T2 <: T3
+------------- S-Trans
+Γ ⊢ T1 <: T3
+
+------------- S-Top
+Γ ⊢ T <: Top
+
+Γ ⊢ T1' <: T1
+Γ ⊢ T2 <: T2'
+--------------------- S-Arr
+Γ ⊢ T1→T2 <: T1'→T2'
+
+Γ ⊢ T2' <: T1'
+Γ, X <: T2' ⊢ T1[X] <: T2[X]
+--------------------------------------------- S-All
+Γ ⊢ ∀ X <: T1' • T1[X] <: ∀ X <: T2' • T2[X]
+
+
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+-------------- T-Var
+Γ, x:T ⊢ x : T
+
+--------------- T-Unit
+Γ ⊢ unit : Unit
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+Γ, X <: T' ⊢ t[X] : T[X]
+------------------------------------------- T-TAbs
+Γ ⊢ (λ X <: T' • t[X]) : ∀ X <: T' • T[X]
+
+Γ ⊢ t1 : ∀ X <: T' • T1[X]
+Γ ⊢ T2 <: T'
+---------------------------- T-TApp
+Γ ⊢ t1(T2) : T1[T2]
+
+
+lemma deep-variables:
+    assumes Γ
+    forall dt: Γ, X1 <: Top, x : T', X2 <: X1 ⊢ t[x] : T[X1][X2]
+    exists Γ ⊢ T' <: T'.
+    proof by case analysis on dt:
+        case rule
+            -------------------- T-Var
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ x : T'
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            -------------------- T-Var
+            _: ((((Γ', x : T0), X <: Top), x' : T'), X' <: X) ⊢ x : T0
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            --------------------------------------------------- T-Unit
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ unit : Unit
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            _: ((((Γ, X <: Top), x : T'), X' <: X), x' : T0) ⊢ t0[x][x'] : T1[X][X']
+            ------------------------------------------- T-Abs
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ (λ x' : T0 • t0[x][x']) : (T0 → T1[X][X'])
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ t0[x] : (T0[X'][X] → T1[X][X'])
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ t1[x] : T0[X'][X]
+            ----------------------------- T-App
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ (t0[x] t1[x]) : T1[X][X']
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            _: ((((Γ, X <: Top), x : T'), X' <: X), X'' <: T0) ⊢ t0[x][X''] : T1[X][X'][X'']
+            ------------------------------------------------- T-TAbs
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ (λ X'' <: T0 • t0[x][X'']) : (∀ X0 <: T0 • T1[X][X'][X0])
+        is
+            proof by rule S-Refl
+        end case
+
+        case rule
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ t0[x] : (∀ X'' <: T0[X'][X] • T1[X'][X][X''])
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ T3 <: T0[X'][X]
+            -------------------------------------------------------------------- T-TApp
+            _: (((Γ, X <: Top), x : T'), X' <: X) ⊢ (t0[x] T3) : T1[X'][X][T3]
+        is
+            proof by rule S-Refl
+        end case
+
+    end case analysis
+end lemma
