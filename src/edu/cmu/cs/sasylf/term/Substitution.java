@@ -143,7 +143,7 @@ public class Substitution {
 	}
 	
 	public void removeAll(Collection<? extends Atom> col) {
-	  varMap.entrySet().removeAll(col);
+	  varMap.keySet().removeAll(col);
 	}
 	
 	/**
