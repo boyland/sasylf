@@ -327,6 +327,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		Term bare = Term.getWrappingAbstractions(term, abs);
     Application appTerm = this.getFreshAdaptedRuleTerm(abs, null);
     Term goalTerm = appTerm.getArguments().get(premises.size());
+    
 		if (isAssumption()) {
       Util.debug("** On line (for assumption) ", source.getLocation().getLine());
       // assumption rules, unlike all other rules,
