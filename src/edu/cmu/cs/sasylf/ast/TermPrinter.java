@@ -487,7 +487,11 @@ public class TermPrinter {
                   sb.append(rName);
                   sb.append("\n");
                 }
-                ClauseUse u = asClause(Term.wrapWithLambdas(abs, app.getArguments().get(i)));
+                Judgment pj = (Judgment)((ClauseUse)((i == n-1) ? rule.getConclusion() : rule.getPremises().get(i))).getConstructor().getType();
+                System.out.println("pj = "+pj.getName());
+                Term t = app.getArguments().get(i);
+                if (pj.getAssume() != null && pj.getAssume().equals(j.getAssume())) t = Term.wrapWithLambdas(abs,t);
+                ClauseUse u = asClause(t);
                 prettyPrint(sb,u,false, 0);
                 sb.append('\n');
               }
