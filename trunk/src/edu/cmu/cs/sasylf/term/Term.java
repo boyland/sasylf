@@ -36,34 +36,6 @@ public abstract class Term {
 		return s;
 	}
 
-	/*public final Substitution instanceOfOld(Term t) {
-		Set<FreeVar> freeVars = getFreeVariables();
-		Substitution subFreeVars = new Substitution();
-		Substitution inverseFreeVars = new Substitution();
-		for (FreeVar v : freeVars) {
-			Constant c = new Constant("Const" + constId++ + "_for_" + v, v.getType());
-			subFreeVars.add(v, c);
-			inverseFreeVars.add(c,v);
-		}
-		Term thisWithoutFreeVars = this.substitute(subFreeVars);
-		Substitution unifyingSub = thisWithoutFreeVars.unify(t);
-		Substitution result = new Substitution();
-		for (Atom a : unifyingSub.getMap().keySet()) {
-			debug2("instanceOf: mapping atom " + a + " to " + unifyingSub.getMap().get(a) + " under " + inverseFreeVars);
-			result.add(a, unifyingSub.getMap().get(a).substitute(inverseFreeVars));
-		}
-		//Substitution result = unifyingSub.compose(inverseFreeVars);
-		
-		// verify that domain of substitution has no free variables of this
-		/*freeVars.retainAll(result.getMap().keySet());
-		if (!freeVars.isEmpty()) {
-			FreeVar var = freeVars.iterator().next();
-			throw new UnificationFailed("variable " + var + " is not an instance of " + result.getMap().get(var) + " because " + , var, result.getMap().get(var));
-		}*/
-		/*
-		return result;
-	}*/
-	
 	public final Substitution instanceOf(Term t) {
 		Set<FreeVar> freeVars = getFreeVariables();
 		Substitution unifyingSub = unify(t);
@@ -73,8 +45,6 @@ public abstract class Term {
 			throw new UnificationFailed("terms unify but the instance relationship does not hold");
 	}
 	
-	//static int constId = 0;
-	
 	/** FreeVar order 0
 	 * Application of FreeVar order 1
 	 * others order 2
@@ -83,12 +53,9 @@ public abstract class Term {
 
 	/** returns 1 if this is a non-pattern free variable application, otherwise 0 */
 	final int oneIfNonPatFreeVarApp() { return isNonPatFreeVarApp() ? 1 : 0; }
-	/** returns 1 if this is a non-pattern free variable application, otherwise 0 */
-	final int oneIfNonPatFreeVarApp(Term other) { return isNonPatFreeVarApp(other) ? 1 : 0; }
 	
 	/** true if this is a non-pattern free variable application, otherwise false */
 	boolean isNonPatFreeVarApp() { return false; }
-	boolean isNonPatFreeVarApp(Term other) { return false; }
 
 	/** puts non-pattern free variable applications last */
 	//compare in order of pair elements, put in opposite order of terms
@@ -249,7 +216,6 @@ public abstract class Term {
 	}*/
 
 	/** true if there's hope these types might ever be unified */
-	// TODO: clean this up, it's a bit of a hack (though seems likely it's serviceable)
 	protected static boolean typesCompatible(Term type, Term type2) {
 		if (type == Constant.UNKNOWN_TYPE || type2 == Constant.UNKNOWN_TYPE)
 			return true;
