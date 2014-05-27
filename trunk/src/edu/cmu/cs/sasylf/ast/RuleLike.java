@@ -373,7 +373,7 @@ public abstract class RuleLike extends Node {
 
   /**
 	 * Return a fresh application of the rule or theorem in a particular given context.
-	 * We copy the premises and conclusion, given them fresh havriables, including
+	 * We copy the premises and conclusion, given them fresh variables, including
 	 * possible dependencies on the given context (adaptation) and return an application
 	 * of the "AppConstant" to these parts.  We do not wrap the result into the context;
 	 * the caller may do so if desired.  We return (via the concFreeVars parameter) if desired
@@ -395,7 +395,7 @@ public abstract class RuleLike extends Node {
     Substitution freshSub = new Substitution();
     
     // the substitution to handle possible dependencies on the context
-    // (this cannot be used until we have removed bindimngs of variable free NTs)
+    // (this cannot be used until we have removed bindings of variable free NTs)
     Substitution adaptSub = new Substitution();
     
     // the variable-free NTs that should not be adapted:
