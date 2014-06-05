@@ -11,6 +11,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.Util;
 
 /**
  * Structural induction on a term or a derivation
@@ -66,7 +67,7 @@ public class StructuralInduction extends InductionSchema {
       Term inductiveTerm = subject.getElement().asTerm();
       Term inductionSub = inductionTerm.substitute(ctx.currentSub).stripUnusedLambdas();
       Term inductiveSub = inductiveTerm.substitute(ctx.currentSub).stripUnusedLambdas();
-      // System.out.println("Is " + inductiveSub + " subterm of " + inductionSub + "?");
+      Util.debug("Is ",inductiveSub," subterm of ",inductionSub,"?");
       if (inductionSub.equals(inductiveSub)) return Reduction.EQUAL;
       if (inductionSub.containsProper(inductiveSub)) return Reduction.LESS;
       if (errorPoint != null) {
