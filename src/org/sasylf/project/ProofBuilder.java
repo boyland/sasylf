@@ -76,9 +76,11 @@ public class ProofBuilder extends IncrementalProjectBuilder {
       // System.out.println("still a cell?");
       @SuppressWarnings("unchecked")
       Cell<Boolean> bcell = (Cell<Boolean>)x;
+      // System.out.println("Synching on " + bcell);
       synchronized (bcell) {
         while (!bcell.get()) {
           try {
+            // System.out.println("waiting ...");
             bcell.wait();
           } catch (InterruptedException e) {
             e.printStackTrace();
