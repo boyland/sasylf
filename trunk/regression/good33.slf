@@ -1,0 +1,62 @@
+// testing that exchange on syntax works in induction
+package regression;
+
+terminals fn tautology Top
+    
+syntax
+
+  t ::= x | t t | fn x : T => t[x]
+  
+  T ::= T -> T | Top
+  
+  Gamma ::= * | Gamma, x:T
+  
+  
+judgment true: tautology
+
+    --------- taut
+    tautology
+    
+
+    
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    ------------------- T-Var
+    Gamma, x:T |- x:T
+
+    Gamma, x:T1 |- t2[x] : T2
+    --------------------------------------- T-Abs
+    Gamma |- fn x:T1 => t2[x] : T1 -> T2
+
+
+    Gamma |- t1 : T11 -> T12
+    Gamma |- t2 : T11
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T12
+
+
+lemma test:
+    assumes Gamma
+    forall t[x] assumes Gamma, x:Top
+    exists tautology.
+    proof by induction on (t[x] assumes Gamma, x:Top):
+        case x assumes Gamma, x : T is
+            proof by rule taut
+        end case
+
+        case x assumes (Gamma', x : T0), x' : T is
+            proof by rule taut
+        end case
+
+        case t0[x] t1[x] assumes Gamma, x : T is
+            proof by induction hypothesis on (t0[x] assumes Gamma, x:T)
+        end case
+
+        case fn x' : T' => t0[x][x'] assumes Gamma, x : Top is
+            proof by induction hypothesis on (t0[x][x'] assumes Gamma, x':T', x:Top)
+        end case
+
+    end induction
+end lemma
+     

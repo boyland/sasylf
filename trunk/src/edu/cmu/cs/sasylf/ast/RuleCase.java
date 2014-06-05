@@ -194,9 +194,10 @@ public class RuleCase extends Case {
 		  Term.getWrappingAbstractions(patternConc, newWrappers, diff);
 		  Util.debug("Introducing ",thisRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
 		  
+		  //XXX: the following statement should use new techniques, not the old one.
 		  adaptedSubjectTerm = ClauseUse.wrapWithOuterLambdas(subjectTerm, patternConc, diff, adaptSub);
-		  Util.debug("subject = ", subjectTerm)
-;     Util.debug("adapted is ", adaptedSubjectTerm);
+		  Util.debug("subject = ", subjectTerm);
+      Util.debug("adapted is ", adaptedSubjectTerm);
 		  Util.debug("adaptSub = ", adaptSub);
 		  
 		  // set up relaxation info

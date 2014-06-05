@@ -126,6 +126,7 @@ public abstract class Element extends Node {
 	 * Also changes free variables so they bind new the new bound variables in them
 	 * Modifies the substitution to reflect changes.
 	 * Only ClauseUse actually does adaptation; the other cases simply return term.
+	 * @deprecated
 	 */
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return term;

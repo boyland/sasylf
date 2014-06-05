@@ -3,8 +3,6 @@
  */
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
-
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -63,6 +61,12 @@ public class AssumptionElement extends Element {
       context = ((Clause)context).computeClause(ctx, false);
     }
     base = base.typecheck(ctx);
+    if (base instanceof Terminal) {
+      Element oldBase = base;
+      base = new Clause(base.getLocation());
+      ((Clause)base).add(oldBase);
+      base = base.typecheck(ctx);
+    }
     if (base instanceof Clause) {
       base = ((Clause)base).computeClause(ctx,false);
     }
@@ -99,10 +103,11 @@ public class AssumptionElement extends Element {
 
   @Override
   protected Term computeTerm(List<Pair<String, Term>> varBindings) {
-    debug("Compute: ", this);
+    Util.debug("Compute: ", this);
     int initialBindingSize = varBindings.size();
+    //XXX: use "true" instead "instanceof Judgment" to that we always have the assumptions terms
     if (context instanceof ClauseUse)
-      ((ClauseUse)context).readAssumptions(varBindings, base.getType() instanceof Judgment);
+      ((ClauseUse)context).readAssumptions(varBindings, true /*base.getType() instanceof Judgment*/);
     Term t = base.computeTerm(varBindings);
     t = ClauseUse.newWrap(t, varBindings, initialBindingSize);
     while (varBindings.size() > initialBindingSize) {
@@ -113,6 +118,9 @@ public class AssumptionElement extends Element {
   }
   
   
+  /**
+   * @deprecated
+   */
   @Override
   public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
     return super.adaptTermTo(term, matchTerm, sub);

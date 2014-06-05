@@ -97,7 +97,7 @@ lemma lam-type-not-var :
     ee: T == T by rule type-eq //! discard context
     nv: T! by lemma type-never-var on ee //X uses T in wrong context
     _: contradiction by case analysis on v:
-	case rule
+	case rule //! T is var free now, so we this case is redundant.
 	    ------------------ Var
 	    _: X in (Gamma',X)
 	is

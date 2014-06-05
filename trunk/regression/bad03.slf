@@ -76,7 +76,7 @@ lemma lam-type-not-var :
 	  end case
     end case analysis    
     _: contradiction by case analysis on v:
-	case rule
+	case rule //! This case is redundant now that we have "proved" that T is var free.
 	    ------------------ Var
 	    _: X in (Gamma',X)
 	is

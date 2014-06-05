@@ -1,0 +1,151 @@
+// testing various aspects of var-free pattern variables
+package regression;
+
+terminals fn All tautology Top
+    
+syntax
+
+  t ::= x | t t | fn x : T => t[x] | fn X <: T => t[X] | t T
+  
+  T ::= X | T -> T | All X <: T => T[X] | Top
+  
+  Gamma ::= * | Gamma, x:T | Gamma, X <: T
+  
+  
+judgment true: tautology
+
+    --------- taut
+    tautology
+    
+    
+judgment subtyping: Gamma |- T <: T
+assumes Gamma
+
+    ----------------------- S-Var
+    Gamma, X <: T |- X <: T
+    
+    Gamma |- T1 <: T2
+    Gamma |- T2 <: T3
+    ------------------ S-Trans
+    Gamma |- T1 <: T3
+
+    ----------------- S-Top
+    Gamma |- T <: Top
+
+    Gamma |- T1' <: T1
+    Gamma |- T2 <: T2'
+    -------------------------- S-Arr
+    Gamma |- T1->T2 <: T1'->T2'
+
+    Gamma, X <: T |- T1[X] <: T2[X]
+    -------------------------------------------------- S-All
+    Gamma |- All X <: T => T1[X] <: All X <: T => T2[X]
+    
+    
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    ------------------- T-Var
+    Gamma, x:T |- x:T
+
+    Gamma, x:T1 |- t2[x] : T2
+    --------------------------------------- T-Abs
+    Gamma |- fn x:T1 => t2[x] : T1 -> T2
+
+
+    Gamma |- t1 : T11 -> T12
+    Gamma |- t2 : T11
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T12
+
+
+    Gamma, X <: T1 |- t2[X] : T2[X]
+    ------------------------------------------------------- T-Tabs
+    Gamma |- fn X <: T1 => t2[X] : All X <: T1 => T2[X]
+
+
+    Gamma |- t1 : All X <: T11 => T12[X]
+    Gamma |- T2 <: T11
+    ----------------------------------- T-Tapp
+    Gamma |- t1 ( T2 ) : T12[T2]
+
+
+    Gamma |- t : T'
+    Gamma |- T' <: T
+    ---------------- T-Sub
+    Gamma |- t : T
+
+
+lemma test1:
+    assumes Gamma
+    forall d: *, x : Top |- t[x] : T
+    forall d': Gamma |- t' : T'
+    exists tautology.
+    proof by case analysis on T:
+        case T0 -> T1 is
+            proof by rule taut
+        end case
+
+        case All X <: T0 => T1[X] is
+            proof by rule taut
+        end case
+
+        case Top is
+            proof by rule taut
+        end case
+    end case analysis
+end lemma
+    
+lemma test2:
+    assumes Gamma
+    forall d: *, x : Top |- t : T
+    forall d': Gamma |- t' : T'
+    exists tautology.
+    proof by case analysis on t:
+        case t0 t1 is
+            proof by rule taut
+        end case
+
+        case fn x : T0 => t0[x] is
+            proof by rule taut
+        end case
+
+        case fn X <: T0 => t0[X] is
+            proof by rule taut
+        end case
+
+        case t0 T0 is
+            proof by rule taut
+        end case
+
+    end case analysis
+end lemma
+
+lemma test3:
+    assumes Gamma
+    forall d: *, x : Top |- t[x] : T
+    forall d': Gamma |- t3 : T3
+    exists tautology.
+    proof by case analysis on (t[x] assumes *, x:Top):
+        case t0[x] t1[x] assumes *, x:Top is
+            proof by rule taut
+        end case
+
+        case fn x' : T' => t'[x][x'] assumes *, x:Top is
+            proof by rule taut
+        end case
+
+        case fn X <: T' => t'[x][X] assumes *, x:Top is
+            proof by rule taut
+        end case
+
+        case t0[x] T0 assumes *, x:Top is
+            proof by rule taut
+        end case
+
+        case x assumes *, x:Top is
+            proof by rule taut
+        end case
+    end case analysis
+end lemma
+    

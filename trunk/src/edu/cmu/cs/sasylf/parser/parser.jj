@@ -1875,8 +1875,8 @@ Derivation Justification(Token startT, Clause c) :
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     ]
     { return d; }
-  | LOOKAHEAD(2) <INDUCTION> <ON> t=<IDENTIFIER>
-    { d = di = new DerivationByInduction(startT.image, new Location(startT), c, t.image); }
+  | LOOKAHEAD(2) <INDUCTION> <ON> cl=SimpleExpr()
+    { d = di = new DerivationByInduction(startT.image, new Location(startT), c, cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
@@ -1887,8 +1887,8 @@ Derivation Justification(Token startT, Clause c) :
        if (wrong.equals("analysis")) wrong = "case analysis";
        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end induction'",new Location(t),wrong+"\ninduction"); } )
     { di.setEndLocation(Location.endOf(t)); return di; }
-  | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> t=<IDENTIFIER>
-    { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); }
+  | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> cl=SimpleExpr()
+    { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, cl); }
       ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*

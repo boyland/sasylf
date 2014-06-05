@@ -1,0 +1,109 @@
+// testing various aspects of var-free pattern variables
+package regression;
+
+terminals fn All tautology Top
+    
+syntax
+
+  t ::= x | t t | fn x : T => t[x] | fn X <: T => t[X] | t T
+  
+  T ::= X | T -> T | All X <: T => T[X] | Top
+  
+  Gamma ::= * | Gamma, x:T | Gamma, X <: T
+  
+  
+judgment true: tautology
+
+    --------- taut
+    tautology
+    
+    
+judgment subtyping: Gamma |- T <: T
+assumes Gamma
+
+    ----------------------- S-Var
+    Gamma, X <: T |- X <: T
+    
+    Gamma |- T1 <: T2
+    Gamma |- T2 <: T3
+    ------------------ S-Trans
+    Gamma |- T1 <: T3
+
+    ----------------- S-Top
+    Gamma |- T <: Top
+
+    Gamma |- T1' <: T1
+    Gamma |- T2 <: T2'
+    -------------------------- S-Arr
+    Gamma |- T1->T2 <: T1'->T2'
+
+    Gamma, X <: T |- T1[X] <: T2[X]
+    -------------------------------------------------- S-All
+    Gamma |- All X <: T => T1[X] <: All X <: T => T2[X]
+    
+    
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    ------------------- T-Var
+    Gamma, x:T |- x:T
+
+    Gamma, x:T1 |- t2[x] : T2
+    --------------------------------------- T-Abs
+    Gamma |- fn x:T1 => t2[x] : T1 -> T2
+
+
+    Gamma |- t1 : T11 -> T12
+    Gamma |- t2 : T11
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T12
+
+
+    Gamma, X <: T1 |- t2[X] : T2[X]
+    ------------------------------------------------------- T-Tabs
+    Gamma |- fn X <: T1 => t2[X] : All X <: T1 => T2[X]
+
+
+    Gamma |- t1 : All X <: T11 => T12[X]
+    Gamma |- T2 <: T11
+    ----------------------------------- T-Tapp
+    Gamma |- t1 ( T2 ) : T12[T2]
+
+
+    Gamma |- t : T'
+    Gamma |- T' <: T
+    ---------------- T-Sub
+    Gamma |- t : T
+
+
+lemma bad1:
+    assumes Gamma
+    forall dt: Gamma, x:T0 |- t[x] : T
+    exists tautology.
+    proof by case analysis on (t[x] assumes Gamma, x:T0):
+        case x assumes Gamma0, x : T0 is //! Gamma0 is undefined
+            proof by rule taut
+        end case
+
+        case x assumes (Gamma0, x : T), x' : T2 is //! Cannot assume x's type is T
+            proof by rule taut
+        end case
+
+        case t0[x] t0[x] assumes Gamma, x : T1 is //! can't reuse name t0
+            proof by rule taut
+        end case
+
+        case fn x' : T' => t0[x][x'] assumes Gamma, x : T is //! T cannot be assumed to be T0
+            proof by rule taut
+        end case
+
+        case fn X <: T2 => t0[X] assumes Gamma, x : T0 is //! t0 needs to be adapted
+            proof by rule taut
+        end case
+
+        case t0 T assumes Gamma, x : T1 is //! T reuses variable
+            proof by rule taut
+        end case
+
+    end case analysis
+end lemma

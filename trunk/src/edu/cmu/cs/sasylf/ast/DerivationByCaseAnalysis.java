@@ -8,6 +8,9 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
     public DerivationByCaseAnalysis(String n, Location l, Clause c, String derivName) {
     	super(n,l,c, derivName);
     }
+    public DerivationByCaseAnalysis(String n, Location l, Clause c, Clause subject) {
+      super(n,l,c,subject);
+    }
 
     public String byPhrase() { return "case analysis"; }
 
