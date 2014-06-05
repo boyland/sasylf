@@ -400,6 +400,7 @@ public class Rule extends RuleLike implements CanBeCase {
    * @param pattern kernel of pattern
    * @param subject kernel of subject
    * @param adaptSub adaptation substitution (may be null if no adaptation)
+   *    currently not used.
    * @param source location to drop errors
    */
   private void checkCaseApplication(Context ctx, Set<Pair<Term,Substitution>> result,
@@ -420,6 +421,7 @@ public class Rule extends RuleLike implements CanBeCase {
     }
     if (sub != null) {
       // if (adaptSub != null) sub.compose(adaptSub);
+      sub.avoid(ctx.inputVars); // try to avoid so we don't unnecessarily replace input vars
       Util.debug("at check, adaptSub = ",adaptSub);
       if (!ctx.canCompose(sub)) return;
       Util.debug("\t added result: ", term, sub);
