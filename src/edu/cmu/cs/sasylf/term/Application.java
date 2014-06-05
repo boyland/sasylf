@@ -714,6 +714,18 @@ public class Application extends Term {
 	}
 
   @Override
+  public boolean contains(Term other) {
+    if (super.contains(other)) return true;
+    if (other instanceof Application) {
+      Application o = (Application)other;
+      if (getFunction().equals(o.getFunction())) {
+        System.out.println("maybe ? "+o);
+      }
+    }
+    return false;
+  }
+
+  @Override
   public boolean containsProper(Term other) {
     if (function.contains(other)) return true;
     for (Term arg : arguments) {

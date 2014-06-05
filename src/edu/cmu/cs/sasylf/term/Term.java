@@ -336,6 +336,12 @@ public abstract class Term {
     return t;
   }
 
+  /**
+   * Unwrap any abstractions from the term and return the center term (not an Abstraction).
+   * @param t term to unwrap, if null, returned unchanged
+   * @param abs list of abstractions to add to (if not null)
+   * @return term after all wrappers removed.
+   */
   public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
 	  while (t instanceof Abstraction) {
 	    Abstraction a = (Abstraction)t;
@@ -500,24 +506,11 @@ public abstract class Term {
 
 	/**
 	 * Remove any unused lambda bindings around the syntax term.
-	 * We only remove outer level binders.
-	 * Unused means unused except in the types of other unused lambda bindings. 
-	 * We currently do this before checking reduction.  
-	 * It should only be applied to fully bound terms,
-	 * because it checks multiple variables at once.
 	 * This method is a NOP for everything except abstractions.
 	 * @return term unchanged or with fewer abstraction layers.
 	 */
-	public final Term stripUnusedLambdas() {
-	  Term result = this;
-	  Term t = this;
-	  for (;;) {
-	    if (!t.hasBoundVarAbove(0)) result = t;
-	    if (!(t instanceof Abstraction)) break;
-	    Abstraction a = (Abstraction)t;
-	    t = a.getBody();
-	  }
-	  return result;
+	public Term stripUnusedLambdas() {
+	  return this;
 	}
 	
 	// reduce() is unnecessary - terms are always in normal form
@@ -537,7 +530,9 @@ public abstract class Term {
 	 * @return whether the other term is a (possibly improper) subterm of this one.
 	 */
 	public boolean contains(Term other) {
-	  Util.debug(this, " >?= ", other);
+	  Util.tdebug(this, " >?= ", other);
+	  FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
+	  if (fv != null) return contains(fv);
 	  return this.equals(other) || containsProper(other);
 	}
 }
