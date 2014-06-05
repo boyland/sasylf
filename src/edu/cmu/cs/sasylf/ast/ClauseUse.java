@@ -388,8 +388,10 @@ public class ClauseUse extends Clause {
 				ClauseUse varRuleConc = (ClauseUse) cons.assumptionRule.getConclusion();
 				Term derivTerm = includeAssumptionTerm ? varRuleConc.getBaseTerm() : null;
 
+				Util.debug("getting derivTerm for " + this);
 				// Adapt derivTerm to the particular form of the assumption clause used here
 				Term myClauseTerm = computeBasicTerm(varBindings, true);
+				Util.debug("myClauseTerm = ",myClauseTerm);
 				ClauseUse varRuleConcAssumption = (ClauseUse) varRuleConc.getElements().get(varRuleConc.cons.getAssumeIndex());
 				Term ruleClauseTerm = varRuleConcAssumption.getBaseTerm(); // need to call computeBasicTerm instead with true arg?
 				Substitution ruleFreshSub = new Substitution();
@@ -400,25 +402,26 @@ public class ClauseUse extends Clause {
 				for (Pair<String, Term> p : varBindings)
 					varTypes.add(p.second);
 				Util.debug("varTypes = ", varTypes);
+				Util.debug("ruleClauseTerm = ",ruleClauseTerm);
 				ruleClauseTerm.bindInFreeVars(varTypes, bindingSub);
 				ruleClauseTerm = ruleClauseTerm.substitute(bindingSub);
 				Util.debug("unifying terms ", myClauseTerm, " and ", ruleClauseTerm, " from ", this, " and ", varRuleConcAssumption);
 				Substitution adaptationSub = myClauseTerm.unify(ruleClauseTerm);
 				// transform adaptationSub to adapt from ruleClauseTerm to myClauseTerm
 				adaptationSub.avoid(myClauseTerm.getFreeVariables());
-				Util.tdebug("adaptationSub = ", adaptationSub);
-				Util.tdebug("\tand bindingSub = ", bindingSub);
+				Util.debug("adaptationSub = ", adaptationSub);
+				Util.debug("\tand bindingSub = ", bindingSub);
 				if (derivTerm != null) {
-					Util.tdebug("\torig   derivTerm = ", derivTerm);
+					Util.debug("\torig   derivTerm = ", derivTerm);
 					derivTerm.freshSubstitution(ruleFreshSub);
 					derivTerm = derivTerm.substitute(ruleFreshSub);
 					bindingSub.incrFreeDeBruijn(1); //XXX: This is unclear (JTB)
 					derivTerm = derivTerm.substitute(bindingSub);
-					Util.tdebug("\tmiddle derivTerm = ", derivTerm);
+					Util.debug("\tmiddle derivTerm = ", derivTerm);
 					derivTerm = derivTerm.substitute(adaptationSub);
 					// derivTerm = derivTerm.incrFreeDeBruijn(-1);  <-- KLUDGE no longer needed since this method corrected
 				}
-				Util.tdebug("\tresult derivTerm = ", derivTerm);
+				Util.debug("\tresult derivTerm = ", derivTerm);
 				
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				if (derivTerm != null) {
@@ -434,12 +437,21 @@ public class ClauseUse extends Clause {
 	/** If environment is a variable, add lambdas to term to make it match matchTerm.
 	 * Modifies the substitution to reflect changes.
 	 * Also changes free variables so they bind new the new bound variables in them
+	 * @deprecated
 	 */
 	@Override
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return adaptTermTo(term, matchTerm, sub, false);
 	}
 
+	/**
+	 * @deprecated
+	 * @param term
+	 * @param matchTerm
+	 * @param sub
+	 * @param wrapUnrooted
+	 * @return
+	 */
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub, boolean wrapUnrooted) {
 		Term result = wrapWithOuterLambdas(term, matchTerm, getAdaptationNumber(term, matchTerm, wrapUnrooted), sub, wrapUnrooted);
 		debug("adapation of ", term, " to ", result, " with sub ", sub, "\n\tsub applied is: ", term.substitute(sub));

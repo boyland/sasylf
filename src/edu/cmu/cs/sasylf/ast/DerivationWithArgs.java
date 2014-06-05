@@ -70,7 +70,6 @@ abstract public class DerivationWithArgs extends Derivation {
         f = e.asFact(ctx, ctx.assumedContext);
       }
       if (!ctx.isKnownContext(f.getElement().getRoot())) {
-        System.out.println("innermostGamma = " + ctx.assumedContext);
         ErrorHandler.report(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
       }
 			args.add(f);

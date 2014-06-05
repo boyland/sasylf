@@ -19,7 +19,6 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Theorem extends RuleLike {
@@ -219,33 +218,8 @@ public class Theorem extends RuleLike {
 		  f.typecheck(ctx);
 			f.addToDerivationMap(ctx);
 			ctx.subderivations.put(f, new Pair<Fact,Integer>(f,0));
-			ctx.inputVars.addAll(f.getElement().asTerm().getFreeVariables());
-			if (this.assumes != null) {
-			  // determine var free nonterminals if we have a context around
-			  if (f instanceof NonTerminalAssumption) {
-			    NonTerminalAssumption nta = (NonTerminalAssumption)f;
-			    if (nta.getContext() == null) {
-			      Util.debug("var free: ",nta);
-			      ctx.addVarFree(nta.getElementBase());
-			    }
-			  } else if (f instanceof DerivationByAssumption) {
-			    ClauseUse cu = (ClauseUse)f.getElement();
-			    int assumeIndex = cu.getConstructor().getAssumeIndex();
-			    if (cu.isRootedInVar()) continue; // definitely has variables
-			    hasAssume: if (assumeIndex >= 0) {
-			      Element e = cu.getAssumes();
-			      if (e instanceof ClauseUse) {
-			        ClauseUse au = (ClauseUse)e;
-			        if (!au.hasVariables()) break hasAssume;
-			      }
-			      continue; // not varFree
-			    }
-			    Util.debug("var free: ", cu);
-			    for (Element e : cu.getElements()) {
-			      ctx.addVarFree(e);
-			    }
-			  }
-			}
+			Set<FreeVar> freeVariables = f.getElement().asTerm().getFreeVariables();
+      ctx.inputVars.addAll(freeVariables);
 		}
 
 		Term theoremTerm = exists.asTerm();

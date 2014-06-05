@@ -33,5 +33,8 @@ public abstract class Fact extends Node {
 		  Set<FreeVar> free = getElement().asTerm().getFreeVariables();
 		  free.removeAll(ctx.currentSub.getMap().keySet());
 		  ctx.inputVars.addAll(free);
+      if (getElement().getRoot() == null) {
+        ctx.addVarFree(free,getLocation());
+      }
     }
 }

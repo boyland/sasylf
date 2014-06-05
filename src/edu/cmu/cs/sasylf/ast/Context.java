@@ -12,12 +12,14 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
+import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -97,6 +99,28 @@ public class Context implements Cloneable {
     return e.asTerm().substitute(currentSub);
   }
   
+  /**
+   * Adapt the given term to 
+   * @param t
+   * @param abs
+   * @param doWrap
+   * @return
+   */
+  public Term adapt(Term t, List<Abstraction> abs, boolean doWrap) {
+    List<Term> types = new ArrayList<Term>();
+    for (Abstraction a : abs) {
+      types.add(a.varType);
+    }
+    Substitution adaptSub = new Substitution();
+    t.bindInFreeVars(types, adaptSub);
+    for (NonTerminal nt : varFreeNTmap.values()) {
+      adaptSub.remove((FreeVar)nt.asTerm());
+    }
+    t = t.substitute(adaptSub);
+    if (doWrap) t = Term.wrapWithLambdas(abs, t);
+    return t;
+  }
+  
   public boolean isVarFree(NonTerminal nt) {
     return varFreeNTmap.get(nt.getSymbol()) != null;
   }
@@ -170,9 +194,9 @@ public class Context implements Cloneable {
   public boolean isLocallyKnown(String s) {
     FreeVar fake = new FreeVar(s,null);
     return derivationMap.containsKey(s) ||
-      bindingTypes.containsKey(s) ||
+      // bindingTypes.containsKey(s) ||
       inputVars.contains(fake) ||
-      outputVars.contains(fake) ||
+      // outputVars.contains(fake) ||
       currentSub.getMap().containsKey(fake) ||
       relaxationMap != null && relaxationMap.containsKey(new NonTerminal(s,null)) ||
       isTerminalString(s); // terminals are pervasive
@@ -311,10 +335,7 @@ public class Context implements Cloneable {
       Set<FreeVar> freeVariables = e.getValue().getFreeVariables();
       newVars.addAll(freeVariables);
       if (varFreeNTmap != null && varFreeNTmap.containsKey(e.getKey().toString())) {
-        for (FreeVar fv : freeVariables) {
-          NonTerminal fake = new NonTerminal(fv.toString(),null); //XXX put in information from existing
-          varFreeNTmap.put(fv.toString(), fake);
-        }
+        addVarFree(freeVariables,varFreeNTmap.get(e.getKey().toString()).getLocation());
       }
     }
     if (relaxationMap != null) {
@@ -348,9 +369,22 @@ public class Context implements Cloneable {
     if (changed) currentSub = newSub;
   }
   
+  public void addVarFree(Set<FreeVar> vars, Location l) {
+    for (FreeVar f : vars) {
+      Syntax syn = synMap.get(f.getType().baseTypeFamily().toString());
+      if (syn == null) {
+        ErrorHandler.report(Errors.INTERNAL_ERROR, "no syntactic type for "+f, l);
+      }
+      varFreeNTmap.put(f.toString(),new NonTerminal(f.toString(),l,syn));
+    }
+  }
+  
   public void addVarFree(Element e) {
     if (e instanceof NonTerminal) {
       varFreeNTmap.put(e.toString(),(NonTerminal) e);
+    } else if (e instanceof Binding) {
+      NonTerminal nt = ((Binding)e).getNonTerminal();
+      varFreeNTmap.put(nt.getSymbol(), nt);
     } else if (e instanceof Clause) {
       for (Element e1: ((Clause)e).elements) {
         addVarFree(e1);
@@ -388,6 +422,47 @@ public class Context implements Cloneable {
       }
     }
     return null;
+  }
+  
+  /**
+   * Return whether the first context is part of the second context
+   * @param n1 first context, may be null
+   * @param n2 second context, may be null
+   * @return whether weakening from n1 to n2 is legal.
+   */
+  public boolean canRelaxTo(NonTerminal n1, NonTerminal n2) {
+    if (n1 == null) return true;
+    if (n2 == null) return false;
+    if (n1.equals(n2)) return true;
+    if (relaxationMap == null) return false;
+    Relaxation r = relaxationMap.get(n1);
+    if (r == null) return false;
+    return canRelaxTo(r.getResult(),n2);
+  }
+  
+  /**
+   * Return the context that binds any variables inside this free variable.
+   * Null means the variable is var free 
+   * (has no variables except those already handled by the binding parameters).
+   * @param fv variable to check, must not be null 
+   * @return context for this variable, or null if defined in the empty context.
+   */
+  public NonTerminal getContext(FreeVar fv) {
+    if (varFreeNTmap.containsKey(fv.toString())) return null;
+    if (relaxationMap != null) {
+      for (Map.Entry<NonTerminal, Relaxation> p : relaxationMap.entrySet()) {
+        Relaxation r = p.getValue();
+        if (r.getRelaxationVars().contains(fv)) return r.getResult();
+        Set<FreeVar> container = new HashSet<FreeVar>();
+        r.getFreeVars(container);
+        if (container.contains(fv)) return p.getKey();
+      }
+    }
+    return assumedContext;
+  }
+  
+  public NonTerminal getContext(NonTerminal nt) {
+    return getContext(new FreeVar(nt.toString(),null));
   }
   
   /*public RuleNode parse(List<? extends Terminal> list) throws NotParseableException, AmbiguousSentenceException {

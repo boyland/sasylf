@@ -6,6 +6,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -13,8 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -32,6 +36,10 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		Clause cl = new Clause(l);
 		cl.getElements().add(new NonTerminal(derivName,l));
 		super.getArgStrings().add(cl);
+	}
+	public DerivationByAnalysis(String n, Location l, Clause c, Clause subject) {
+	  super(n,l,c);
+	  super.getArgStrings().add(subject);
 	}
 	public DerivationByAnalysis(String n, Location l, Clause c) {
 	  super(n,l,c);
@@ -71,6 +79,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
     computeTargetDerivation(ctx);
+    Util.debug("On line ",getLocation().getLine()," varFree = ",ctx.varFreeNTmap.keySet());
+    
 
 		Term oldCase = ctx.currentCaseAnalysis;
 		Element oldElement = ctx.currentCaseAnalysisElement;
@@ -106,23 +116,32 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		// 2. an assumption: e.g. t assumes Gamma
 		// 3. an assumption with a binding: e.g. t[x] assumes (Gamma, x:tau)
 		NonTerminal caseNT = null;
+		NonTerminal caseNTRoot = null;
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
 		  caseNT = (NonTerminal)ctx.currentCaseAnalysisElement;
+		  caseNTRoot = ctx.getContext(caseNT);
 		} else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
 		  // JTB: TODO: Figure out how to avoid the duplicate logic from here and in the next section.
 		  AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
       Element e = ae.getBase();
-      if (e instanceof Binding) caseNT = ((Binding)e).getNonTerminal();
-      else caseNT = (NonTerminal)e;
-		  // now we need to check that the assumptions INCLUDE the current context, if it could influence the NT
-      if (ctx.assumedContext != null &&
-          ctx.assumedContext.getType().canAppearIn(caseNT.getType().typeTerm()) &&
-          !ctx.isVarFree(caseNT)) {
-        NonTerminal root = ae.getRoot();
-        if (root == null || !root.equals(ctx.assumedContext)) {
-          ErrorHandler.report("Case analysis target cannot assume less than context does",this);
+      if (e instanceof Binding) {  
+        Binding b = (Binding)e;
+        Set<Variable> args = new HashSet<Variable>();
+        // savedCase presumes that we only case the pure binder.
+        for (Element arg : b.getElements()) {
+          if (!(arg instanceof Variable) ||
+              !args.add((Variable)arg)) {
+            ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis is only permitted on pure binders, with unique variable arguments", this);
+          }
         }
+        caseNT = b.getNonTerminal();
       }
+      else if (e instanceof NonTerminal) caseNT = (NonTerminal)e;
+      else ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of " + targetDerivation+" is already known",this);
+      if (!ctx.canRelaxTo(ctx.getContext(caseNT), ae.getRoot())) {
+        ErrorHandler.report("Case analysis target cannot assume less than context does",this);        
+      }
+      caseNTRoot = ae.getRoot();
 		}
 
 		if (savedMap != null) {
@@ -153,15 +172,43 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  }
 		} else if (caseNT != null) {
 			Syntax syntax = caseNT.getType();
-			// JTB: TODO: We need to change this check; it's obsolete
-			if (!(ctx.currentCaseAnalysis instanceof FreeVar))
-				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of variable " + ctx.currentCaseAnalysisElement + " is already known and so case analysis is unnecessary (and not currently supported by SASyLF)", this);			
-
 			for (Clause clause : syntax.getClauses()) {
 			  Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
+			  Substitution emptySubstitution = new Substitution();
         ctx.caseTermMap.put(clause, set);
         // and below, we add to the set, as appropriate
+        List<Abstraction> context = new ArrayList<Abstraction>();
+        Term.getWrappingAbstractions(ctx.currentCaseAnalysis, context);
         if (clause.isVarOnlyClause()) {
+          // Special case (1): any of the variables in the context that are relevant.
+          int n = context.size();
+          for (int i=0; i < n; ++i) {
+            Abstraction a = context.get(i);
+            if (a.getArgType().equals(syntax.typeTerm())) {
+              Term term = Term.wrapWithLambdas(context, new BoundVar(n-i));
+              set.add(new Pair<Term,Substitution>(term,emptySubstitution));
+            }
+          }
+          // Special case (2): we have a new variable
+          if (caseNTRoot != null) {
+            ClauseDef contextClause = syntax.getContextClause();
+            Rule assumptionRule = contextClause.assumptionRule;
+            List<Abstraction> newContext = new ArrayList<Abstraction>();
+            if (assumptionRule != null) {
+              Application ruleFresh = assumptionRule.getFreshAdaptedRuleTerm(Collections.<Abstraction>emptyList(), null);
+              Term.getWrappingAbstractions(ruleFresh.getArguments().get(0),newContext);
+            } else {
+              newContext.add((Abstraction) Facade.Abs(syntax.typeTerm(), (Term)new BoundVar(1)));
+            }
+            newContext.addAll(context);
+            Term term = Term.wrapWithLambdas(newContext,  new BoundVar(newContext.size()));
+            Util.debug("adding pattern ",term);
+            set.add(new Pair<Term,Substitution>(term,emptySubstitution));
+          }
+          /*
+          if (targetDerivation instanceof BindingAssumption) {
+            System.out.println("Found a binding: " + targetDerivation);
+          }
           List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
           NonTerminal root = null;
 				  if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
@@ -223,7 +270,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				        }
 				      }
 				    }
-				  }
+				  }*/
 				  // Detect bug3.slf
 				  //ErrorHandler.recoverableError("A variable is a possible case, but (currently) SASyLF has no way to case variables.",this);
 				  continue;
@@ -233,10 +280,25 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				//System.out.println("  sample term: " + term);
 				Substitution freshSub = term.freshSubstitution(new Substitution());
 				term = term.substitute(freshSub);
-				Substitution checkSub = new Substitution();
-				checkSub.add((FreeVar)ctx.currentCaseAnalysis, term);
+				// adaptation!
+				term = ctx.adapt(term, context, true);
+				
+				Util.debug("------Unify?");
+				Util.debug("term = ",term);
+				Util.debug("subj = ",ctx.currentCaseAnalysis);
+        Substitution checkSub;
+        try {
+          checkSub = term.unify(ctx.currentCaseAnalysis);
+        } catch (UnificationFailed ex) {
+          Util.debug("error = ",ex.getMessage());
+          ErrorHandler.report(Errors.INTERNAL_ERROR, "Unification should not fail",this);
+          return;
+        }
 				Util.debug("checking checkSub = ",checkSub);
-				if (!ctx.canCompose(checkSub)) continue;
+				if (!ctx.canCompose(checkSub)) {
+				  Util.debug("can't compose.");
+				  continue;
+				}
         //System.out.println("  sample term after freshification: " + term);
 				set.add(new Pair<Term,Substitution>(term, new Substitution()));
 			}

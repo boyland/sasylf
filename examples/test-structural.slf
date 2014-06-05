@@ -62,3 +62,29 @@ lemma equal-reflexive :
     end induction
 end lemma
 
+lemma equal-reflexive-var :
+    assumes Gamma
+    forall t[x] assumes (Gamma, x)
+    exists Gamma, x |- t[x] = t[x] .
+    _: Gamma, x |- t[x] = t[x] by induction on (t[x] assumes Gamma,x):
+    case x assumes Gamma, x is
+        v: x in (Gamma,x) by rule var
+        a: Gamma, x |- x = x by rule equal-var on v
+    end case
+    case x' assumes Gamma', x', x is
+        v: x' in (Gamma',x') by rule var
+        a: Gamma', x' |- x' = x' by rule equal-var on v
+        proof by weakening on a
+    end case
+    case t1[x] t2[x] assumes Gamma,x is
+        e1: Gamma, x |- t1[x] = t1[x] by induction hypothesis on (t1[x] assumes Gamma, x)
+        e2: Gamma, x |- t2[x] = t2[x] by induction hypothesis on (t2[x] assumes Gamma, x)
+        _ : Gamma, x |- t1[x] t2[x] = t1[x] t2[x] by rule equal-app on e1,e2
+    end case
+    case fn x' => t1[x][x'] assumes Gamma, x is
+        e: Gamma, x, x' |- t1[x][x'] = t1[x][x'] 
+            by induction hypothesis on (t1[x][x'] assumes Gamma,x,x')
+        _: Gamma, x |- fn x' => t1[x][x'] = fn x' => t1[x][x'] by rule equal-fun on e
+    end case
+    end induction
+end lemma

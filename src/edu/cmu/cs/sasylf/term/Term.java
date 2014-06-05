@@ -530,7 +530,7 @@ public abstract class Term {
 	 * @return whether the other term is a (possibly improper) subterm of this one.
 	 */
 	public boolean contains(Term other) {
-	  Util.tdebug(this, " >?= ", other);
+	  Util.debug(this, " >?= ", other);
 	  FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
 	  if (fv != null) return contains(fv);
 	  return this.equals(other) || containsProper(other);

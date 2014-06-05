@@ -10,6 +10,9 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	public DerivationByInduction(String n, Location l, Clause c, String derivName) {
 		super(n,l,c, derivName);
 	}
+  public DerivationByInduction(String n, Location l, Clause c, Clause subject) {
+    super(n,l,c, subject);
+  }
 	public DerivationByInduction(String n, Location l, Clause c) {
 	  super(n,l,c);
 	}

@@ -35,9 +35,12 @@ public class Relaxation {
       types.add(a.getArgType());
     }
     values = new ArrayList<FreeVar>(ts);
+    while (values.size() < types.size()) {
+      values.add(null);
+    }
     result = r;
   }
-
+  
   private Relaxation(List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
     types = ts;
     values = vals;

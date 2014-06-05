@@ -81,7 +81,7 @@ lemma lam-type-not-var :
     exists contradiction .
     nv: T! by lemma type-never-var on T //! discard context
     _: contradiction by case analysis on v:
-	case rule
+	case rule //! T is var free now, so this case is redundant
 	    ------------------ Var
 	    _: X in (Gamma',X)
 	is

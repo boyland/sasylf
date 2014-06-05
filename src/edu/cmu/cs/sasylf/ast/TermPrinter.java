@@ -156,18 +156,25 @@ public class TermPrinter {
       Variable v = new Variable(createVarName(syn,vars),location);
       v.setType(syn);
       vars.add(v);
-      ClauseUse bindingClause = variableAsBindingClause(v);
-      Element bodyElem = asCaseElement(abs.getBody(),vars);
-      vars.remove(vars.size()-1);
-      // System.out.println("Insert variable " + v + " in " + bodyElem);
-      // System.out.println("  using binding clause: " + bindingClause);
-      if (bodyElem instanceof AssumptionElement) {
-        AssumptionElement ae = (AssumptionElement)bodyElem;
-        replaceAssume(bindingClause,ae.getAssumes());
-        return bodyElem;
+      Term body1 = abs.getBody();
+      if (body1 instanceof Abstraction) {
+        Abstraction abs2 = (Abstraction)body1;
+        ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
+        vars.add(new Variable("<internal>",location));
+        Element bodyElem = asCaseElement(abs2.getBody(),vars);
+        vars.remove(vars.size()-1);
+        vars.remove(vars.size()-1);
+        if (bodyElem instanceof AssumptionElement) {
+          AssumptionElement ae = (AssumptionElement)bodyElem;
+          replaceAssume(bindingClause,ae.getAssumes());
+          return bodyElem;
+        } else {
+          return new AssumptionElement(location,bodyElem,bindingClause);
+        }
       } else {
-        return new AssumptionElement(location,bodyElem,bindingClause);
+        throw new RuntimeException("abstraction with only one arg?: " + x);
       }
+
     } else return asElement(x,vars);
   }
 
@@ -488,7 +495,6 @@ public class TermPrinter {
                   sb.append("\n");
                 }
                 Judgment pj = (Judgment)((ClauseUse)((i == n-1) ? rule.getConclusion() : rule.getPremises().get(i))).getConstructor().getType();
-                System.out.println("pj = "+pj.getName());
                 Term t = app.getArguments().get(i);
                 if (pj.getAssume() != null && pj.getAssume().equals(j.getAssume())) t = Term.wrapWithLambdas(abs,t);
                 ClauseUse u = asClause(t);
