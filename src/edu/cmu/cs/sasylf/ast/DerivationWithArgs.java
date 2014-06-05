@@ -71,7 +71,7 @@ abstract public class DerivationWithArgs extends Derivation {
       }
       if (!ctx.isKnownContext(f.getElement().getRoot())) {
         System.out.println("innermostGamma = " + ctx.assumedContext);
-        ErrorHandler.report(Errors.UNKNOWN_CONTEXT,  "The context variable " + f.getElement().getRoot() + " is undefined.",this);
+        ErrorHandler.report(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
       }
 			args.add(f);
 		}
