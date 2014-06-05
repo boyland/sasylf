@@ -67,7 +67,7 @@ public enum Errors {
 	FORWARD_REFERENCE		("mutual induction is unchecked"),
 	UNDECLARED_NONTERMINAL,
 	VAR_STRUCTURE_KNOWN,
-	UNKNOWN_CONTEXT,
+	UNKNOWN_CONTEXT ("unknown context name "),
 	REUSED_CONTEXT,
 	INCONSISTENT_CONTEXTS,
 	CONTEXT_DISCARDED ("context discarded"),
