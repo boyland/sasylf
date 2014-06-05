@@ -152,7 +152,7 @@ public class UnitTests extends SimpleTestSuite {
     assertEqual("not abstraction",a,a.stripUnusedLambdas());
     assertEqual("used abstraction",Abs(a,b(1)),Abs(a,b(1)).stripUnusedLambdas());
     assertEqual("didn't used",a1,Abs(a,a1).stripUnusedLambdas());
-    assertEqual("used first",Abs(a,Abs(a,b(2))), Abs(a,Abs(a,b(2))).stripUnusedLambdas());
+    assertEqual("used first",Abs(a,b(1)), Abs(a,Abs(a,b(2))).stripUnusedLambdas());
     assertEqual("used second",Abs(a,b(1)), Abs(a,Abs(a,b(1))).stripUnusedLambdas());
     assertEqual("unused except in unused",a1, Abs(a,Abs(App(b,b(1)),a1)).stripUnusedLambdas());
     assertEqual("unused except in unused",Abs(a,App(a2,b(1))), Abs(a,Abs(App(b,b(1)),Abs(a,App(a2,b(1))))).stripUnusedLambdas());

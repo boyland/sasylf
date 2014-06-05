@@ -258,7 +258,6 @@ public class Abstraction extends Term {
       Application a = (Application) t;
       if (a.getArguments().size() != argCount)
         return null;
-      Util.debug("Checking whether ", src, " is a permutation of another free var");
       // doesn't take into account arguments being eta-long
       // but then again neither does getEtaEquivFreeVar
       if (!(a.getFunction() instanceof FreeVar)) {
@@ -290,14 +289,16 @@ public class Abstraction extends Term {
         w = (Abstraction)w.body;
         wrappers[i] = w;
       }
-      t = new Application(src,revArgs);
-      for (int i=argCount-1; i >= 0; --i) {
-        String name = wrappers[indices[i]].varName;
-        Term type = wrappers[indices[i]].varType;
-        t = new Abstraction(name,type,t);
-      }
       FreeVar fv = (FreeVar)a.getFunction();
-      revSub.add(fv,t);
+      if (src != null) {
+        t = new Application(src,revArgs);
+        for (int i=argCount-1; i >= 0; --i) {
+          String name = wrappers[indices[i]].varName;
+          Term type = wrappers[indices[i]].varType;
+          t = new Abstraction(name,type,t);
+        }
+        revSub.add(fv,t);
+      }
       return fv;
     } else {
       return null;
@@ -313,6 +314,17 @@ public class Abstraction extends Term {
 	}
 
 	@Override
+  public Term stripUnusedLambdas() {
+	  Term newBody = body.stripUnusedLambdas();
+	  if (newBody.hasBoundVar(1)) {
+	    if (body == newBody) return this;
+	    return make(varName,varType,newBody); 
+	  } else {
+	    return newBody.incrFreeDeBruijn(-1);
+	  }
+  }
+
+  @Override
 	public boolean contains(Term other) {
 	  boolean first = super.contains(other);
 	  if (first) return true;
@@ -334,6 +346,13 @@ public class Abstraction extends Term {
 	
   @Override
   public boolean containsProper(Term other) {
+    // another special case
+    // \x.a[x] >= \x.b[x] if a[x] >= b[x]
+    if (other instanceof Abstraction && varType.equals(((Abstraction)other).varType)) {
+      if (body.containsProper(((Abstraction)other).getBody())) {
+        return true;
+      }
+    }
     return body.contains(other);
   }
 }
