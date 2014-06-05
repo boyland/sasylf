@@ -138,7 +138,11 @@ public class ErrorHandler {
 		report(errorType, msg, obj.getLocation(), debugInfo, true, true);
 	}
 	
-	public static List<ErrorReport> getReports() { return reports.get(); }
+	public static void report(Errors errorType, String msg, Location l) {
+    report(errorType,msg,l, null, true, true);
+  }
+
+  public static List<ErrorReport> getReports() { return reports.get(); }
 	public static void clearAll() {
 		reports.remove();
 		FreeVar.reinit();
