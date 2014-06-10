@@ -106,6 +106,8 @@ Judgments and syntax are parsed using a GLR parser that finds all legal parses; 
 
 Every binding of a variable in a context should be associated with exactly one rule which has no premises and in which the conclusion has one instance of the context binding production and one additional instance of the variable.  Every non-terminal that occurs in the context binding must occur elsewhere in the conclusion, and every non-terminal that occurs elsewhere in the conclusion must occur also in the context binding.
 
+SASyLF uses "higher-order unification" to match rule cases against rules, but higher-order unification is undecidable in general, and thus occasionally SASyLF will report a "unification incomplete" error.  This possibility becomes a near certainty if the rule has terms of the form `T1[T2]` (a term `T1` with a hole in it filled by `T2`) where `T2` has no other occurrence in the rule.  SASyLF will issue a warning on the rule declaration in such situations.
+
 === And/Or Judgments ===
 
 Since 1.1.0, SASyLF creates `and` judgments on demand, and since 1.3.1 `or` judgments are created in a similar way.  For example a theorem may have
