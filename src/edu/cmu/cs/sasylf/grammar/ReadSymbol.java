@@ -14,7 +14,7 @@ class ReadSymbol implements Symbol {
 	/**
 	 * @return a symbol representing a cursor reading this rule.
 	 */
-	public static ReadSymbol getReadSymbol() {
+	public static synchronized ReadSymbol getReadSymbol() {
 		if(any == null) {
 			any = new ReadSymbol();
 		}
