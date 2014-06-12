@@ -14,7 +14,7 @@ class StartSymbol implements NonTerminal {
 	/**
 	 * @return a new symbol for an augmented grammar.
 	 */
-	public static StartSymbol getStartSymbol() {
+	public static synchronized StartSymbol getStartSymbol() {
 		if(any == null) {
 			any = new StartSymbol();
 		}

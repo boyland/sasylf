@@ -27,7 +27,11 @@ class Table {
 	/** Places action in the table at state i under symbol a.
 	 */
 	public void addAction(int i, Symbol s, Action action) {
-		Action a = table[i][header.indexOf(s)];
+		int symIndex = header.indexOf(s);
+		if (symIndex < 0) {
+		  System.out.println("Problem building LR table: cannot find " + s + " in " + header);
+		}
+    Action a = table[i][symIndex];
 		//If there's already a symbol in that slot, we have a conflict!
 		if(a != null){
 			//If there's already a conflict there, just add this to the conflict.
@@ -40,11 +44,11 @@ class Table {
 			//create a new conflict here.
  			if (!a.equals(action)) {
 				Conflict c = new Conflict(a, action);
-				table[i][header.indexOf(s)] = c;
+				table[i][symIndex] = c;
 			}
 			return;
 		}
-		table[i][header.indexOf(s)] = action;
+		table[i][symIndex] = action;
 	}
 	
 	/**

@@ -18,7 +18,7 @@ class AcceptSymbol implements Terminal {
 	/**
 	 * @return A symbol representing the end of a sentence. 
 	 */
-	public static AcceptSymbol getAcceptSymbol() {
+	public static synchronized AcceptSymbol getAcceptSymbol() {
 		if(any == null) {
 			any = new AcceptSymbol();
 		}
