@@ -152,20 +152,20 @@ public class FreeVar extends Atom {
 	@Override
 	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {
 		Term earlierSub = sub.getSubstituted(this);
-		if (earlierSub != null || typeTerms.size() == 0)
+		int n = typeTerms.size();
+    if (earlierSub != null || n == 0)
 			return;
 
 		// compute the new type
 		Term baseType = getBaseType();
 		Term newVarType = type;
 		List<Term> bVarList = new ArrayList<Term>();
-		int currIdx = 1+typeTerms.size(); // because we will decrement it before executing main body of loop
-		for (Term typeTerm : typeTerms) {
-			currIdx--;
-			if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
-				continue;
-			newVarType = Abstraction.make("extendedTypeArg", typeTerm, newVarType);
-			bVarList.add(new BoundVar(currIdx));
+		for (int i=n-1; i >= 0; --i) {
+		  Term typeTerm = typeTerms.get(i);
+      if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
+        continue;
+      newVarType = Abstraction.make("extendedTypeArg", typeTerm, newVarType);
+      bVarList.add(new BoundVar(n-i));
 		}
 		
 		if (bVarList.size() == 0)
