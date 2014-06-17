@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 public class Main {
@@ -34,8 +34,6 @@ public class Main {
 			System.err.println("   --root=dir  use the given directory for package/module checking.");
 			return;
 		}
-		int oldErrorCount = 0;
-		int oldWarnings = 0;
 		if (args.length >= 1 && args[0].equals("--version")) {
       System.out.println(Version.getInstance());
 		  return;
@@ -98,13 +96,11 @@ public class Main {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();
 			} catch (RuntimeException e) {
-				System.err.println("Internal SASyLF error!");
+				System.err.println("Internal SASyLF error analyzing " + filename + " !");
 				e.printStackTrace(); // unexpected exception
 			} finally {
-				int newErrorCount = ErrorHandler.getErrorCount() - oldErrorCount;
-				int newWarnings = ErrorHandler.getWarningCount() - oldWarnings;
-				oldErrorCount = ErrorHandler.getErrorCount();
-				oldWarnings = ErrorHandler.getWarningCount();
+				int newErrorCount = ErrorHandler.getErrorCount();
+				int newWarnings = ErrorHandler.getWarningCount();
 				@SuppressWarnings("resource")
         PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
 				if (newErrorCount == 0)
@@ -122,6 +118,7 @@ public class Main {
 				}
 				ps.println(" reported.");
 			}
+			ErrorHandler.clearAll();
 		}
 	}
 
