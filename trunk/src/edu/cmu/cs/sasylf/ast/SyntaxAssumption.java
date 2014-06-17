@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 
 public abstract class SyntaxAssumption extends Fact {
 
@@ -12,6 +13,9 @@ public abstract class SyntaxAssumption extends Fact {
     context = assumes;
     if (contextIsUnknown()) {
       new Throwable("for trace").printStackTrace();
+    }
+    if (assumes != null) {
+      setEndLocation(assumes.getEndLocation());
     }
   }
   

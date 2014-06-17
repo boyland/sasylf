@@ -1,7 +1,9 @@
 package org.sasylf.editors;
 
+import org.eclipse.jface.text.DefaultTextHover;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
@@ -77,5 +79,8 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
     return assist;
   }
 
-	
+  @Override
+  public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
+    return new DefaultTextHover(sourceViewer);
+  }
 }

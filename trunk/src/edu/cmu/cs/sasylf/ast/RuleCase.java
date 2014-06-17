@@ -22,13 +22,14 @@ import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 
 public class RuleCase extends Case {
-	public RuleCase(Location l, String rn, List<Derivation> ps, Derivation c) {
-		super(l);
+	public RuleCase(Location l, Location l1, String rn, List<Derivation> ps, Derivation c) {
+		super(l,l1,c.getEndLocation());
 		conclusion = c;
 		premises = ps;
 		ruleName = rn;
@@ -110,7 +111,7 @@ public class RuleCase extends Case {
 		    ErrorHandler.report(Errors.INVALID_CASE, "Case should not reuse binding for " + v, this);
 		  }
 		  if (ctx.derivationMap.containsKey(v.toString())) {
-		    ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this);
+		    ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this.getSpan());
 		  }
 		}
 		
@@ -263,12 +264,27 @@ public class RuleCase extends Case {
 				  Util.debug("Candidate = ", candidate);
 				  Util.debug("caseTerm = ", caseTerm);
 				  Util.debug("computedSUb = ", computedSub);
-				  Util.debug("patternFree = ", patternFree);
+				  Util.debug("problems = ", problems);
+				  String explanation = null;
+				  for (FreeVar v : problems) {
+				    Term subbed = computedSub.getSubstituted(v);
+				    Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
+            Util.debug("  binding ",v," to ",subbed);
+            if (explanation == null) {
+              if (subbed == baseSubbed) {
+                explanation = "Perhaps it uses " + baseSubbed + " where it should use another variable.";
+              } else {
+                explanation = "Perhaps " + baseSubbed + " should be replaced with something that could depend on the variable(s) in the context.";
+              }
+            }
+				  }
+				  if (explanation == null) {
+				    explanation = "The case requires instantiating the following variable(s) that should be free: " + problems;
+				  }
 				  // if we ever decide to have mutually compatible patterns
 				  // without a MGU, we will need to change this error into something
 				  // more sophisticated
-				  ErrorHandler.recoverableError(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
-				      + "\n    The case given requires instantiating the following variable(s) that should be free: " + problems, this,
+				  ErrorHandler.recoverableError(INVALID_CASE, "Case is overly strict. " + explanation, this.getSpan(),
 				      "SASyLF computes that " + problems.iterator().next() + " needs to be " + computedSub.getSubstituted(problems.iterator().next()));
 				}
 				computedCaseTerm = candidate;
@@ -337,7 +353,7 @@ public class RuleCase extends Case {
       Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
       overlyGeneral.removeAll(adaptSub.getMap().keySet());
       if (!overlyGeneral.isEmpty()) {
-        ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this);
+        ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this.getSpan());
       }
     } catch (UnificationFailed ex) {
       Util.debug("pairSub unification failed ", ex.term1, " = ", ex.term2, 

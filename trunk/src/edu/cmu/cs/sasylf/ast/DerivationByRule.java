@@ -2,10 +2,13 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.StringSpan;
 
 public class DerivationByRule extends DerivationByIHRule {
-	public DerivationByRule(String n, Location l, Clause c, String rn) {
-		super(n,l,c); ruleName = rn;
+	public DerivationByRule(String n, Location l, Clause c, StringSpan rn) {
+		super(n,l,c); ruleName = rn.toString();
+		setEndLocation(rn.getEndLocation());
 	}
 
 	@Override

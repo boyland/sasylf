@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**

@@ -16,13 +16,15 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class Binding extends Element {
-	public Binding(Location loc, NonTerminal nt, List<Element> l) {
+	public Binding(Location loc, NonTerminal nt, List<Element> l, Location endLoc) {
 		super(loc);
 		nonTerminal = nt;
 		elements = l;
+		setEndLocation(endLoc);
 	}
 
 	

@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -108,8 +109,14 @@ public class DerivationByInversion extends DerivationWithArgs {
         Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
         List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
         pieces.remove(pieces.size()-1);
-        for (int i=0; i < pieces.size(); ++i) {
-          pieces.set(i,Term.wrapWithLambdas(outer, pieces.get(i)));
+        if (outer.size() > 1) {
+          NonTerminal gamma = rule.getConclusion().getRoot();
+          for (int i=0; i < pieces.size(); ++i) {
+            if (gamma.equals(rule.getPremises().get(i).getRoot())) {
+              Util.debug("adding wrappers to ",pieces.get(i));
+              pieces.set(i,Term.wrapWithLambdas(outer, pieces.get(i)));
+            }
+          }
         }
         // If there are multiple clauses, or if 
         if (pieces.size() <= 1 || this.getClause() instanceof AndClauseUse) {
@@ -134,10 +141,8 @@ public class DerivationByInversion extends DerivationWithArgs {
             Term mt = ctx.toTerm(cu);
             Term piece = pieces.get(i).substitute(ctx.currentSub);
             if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
-              TermPrinter tp = new TermPrinter(ctx,targetClause.getAssumes(), cu.getLocation());
-              Element pieceTerm = tp.asClause(piece);
               String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
-              String justified = tp.toString(pieceTerm);
+              String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
               ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
             }
             // If the derivation has no implicit context, we

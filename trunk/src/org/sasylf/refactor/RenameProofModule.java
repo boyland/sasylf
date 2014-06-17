@@ -27,7 +27,7 @@ import org.eclipse.text.edits.TextEdit;
 import org.sasylf.project.ProofBuilder;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Location;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 
 public class RenameProofModule extends RenameParticipant {

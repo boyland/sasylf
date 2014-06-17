@@ -2,12 +2,15 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.StringSpan;
 
 public class DerivationByTheorem extends DerivationByIHRule {
 
-  public DerivationByTheorem(String n, Location l, Clause c, String name, String kind) {
+  public DerivationByTheorem(String n, Location l, Clause c, StringSpan name, String kind) {
     super(n, l, c);
-    theoremName = name;
+    theoremName = name.toString();
+    setEndLocation(name.getEndLocation());
     theoremKind = kind;
   }
 

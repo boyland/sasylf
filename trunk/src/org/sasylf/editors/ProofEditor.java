@@ -292,11 +292,11 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
       
       try {
         for (Judgment j : cu.getJudgments()) {
-          Position p = DocumentUtil.getNodePositionToNextLine(j, doc);
+          Position p = DocumentUtil.getPositionToNextLine(j, doc);
           positions.add(p);
         }
         for (Theorem th : cu.getTheorems()) {
-          Position p = DocumentUtil.getNodePosition(th, doc);
+          Position p = DocumentUtil.getPosition(th, doc);
           positions.add(p);
           findFoldable(doc,th.getDerivations(),positions);
         }
@@ -313,9 +313,9 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
       if (d instanceof DerivationByAnalysis) {
         DerivationByAnalysis dba = (DerivationByAnalysis)d;
         if (dba.getCases().isEmpty()) continue; // no reason to fold
-        positions.add(DocumentUtil.getNodePosition(d, document));
+        positions.add(DocumentUtil.getPosition(d, document));
         for (Case c : dba.getCases()) {
-          positions.add(DocumentUtil.getNodePosition(c, document));
+          positions.add(DocumentUtil.getPosition(c, document));
           findFoldable(document,c.getDerivations(),positions);
         }
       }

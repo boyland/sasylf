@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class AndJudgment extends AndOrJudgment {
   public static class AndTerminal extends Terminal {

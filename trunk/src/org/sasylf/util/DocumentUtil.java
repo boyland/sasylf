@@ -5,8 +5,8 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 
-import edu.cmu.cs.sasylf.ast.Location;
-import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class DocumentUtil {
 
@@ -49,13 +49,17 @@ public class DocumentUtil {
    * @return new position for the extent of this AST.
    * @throws BadLocationException if the locations are wrong for the document.
    */
-  public static Position getNodePosition(Node node, IDocument doc) throws BadLocationException {
+  public static Position getPosition(Span node, IDocument doc) throws BadLocationException {
     int off1 = getOffset(node.getLocation(),doc);
     int off2 = getOffset(node.getEndLocation(),doc);
+    if (off1 > off2) {
+      System.out.println("Bad locations for " + node);
+      return new Position(off1,0);
+    }
     return new Position(off1,off2-off1);
   }
   
-  public static Position getNodePositionToNextLine(Node node, IDocument doc) throws BadLocationException {
+  public static Position getPositionToNextLine(Span node, IDocument doc) throws BadLocationException {
     int off1 = getOffset(node.getLocation(),doc);
     Location l = node.getEndLocation();
     int off2 = getOffset(new Location(l.getFile(),l.getLine()+1,1),doc);

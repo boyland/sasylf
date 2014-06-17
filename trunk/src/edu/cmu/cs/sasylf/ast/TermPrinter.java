@@ -22,6 +22,9 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -36,6 +39,10 @@ public class TermPrinter {
   private final Map<FreeVar,NonTerminal> varMap = new HashMap<FreeVar,NonTerminal>();
   private final Set<FreeVar> used = new HashSet<FreeVar>();
   private final Set<String> variableNames = new HashSet<String>();
+  
+  public static String toString(Context ctx, Element gamma, Location loc, Term term, boolean asClause) {
+    return new TermPrinter(ctx,gamma,loc).toString(term,asClause);
+  }
   
   public TermPrinter(Context ctx, Element gamma, Location loc) {
     this.ctx = ctx;
@@ -58,6 +65,24 @@ public class TermPrinter {
     }
     if (onlyTerminals) return gamma;
     throw new RuntimeException("cannot analyze context: " + gamma);
+  }
+  
+  public String toString(Term x, boolean asClause) {
+    Element e;
+    try {
+      e = asClause ? asClause(x) : asElement(x);
+    } catch (RuntimeException ex) {
+      ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,": Failed to convert "+x, location);
+      ex.printStackTrace();
+      return x.toString();
+    }
+    try {
+      return toString(e);
+    } catch (Exception e1) {
+      ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,": Failed to print "+e, location);
+      e1.printStackTrace();
+      return e.toString();
+    }
   }
   
   public Element asElement(Term x) {
@@ -108,7 +133,7 @@ public class TermPrinter {
       if (func instanceof Constant) {
         return appAsClause((Constant)func,args);
       } else {
-        return new Binding(location,(NonTerminal)asElement(func),args);
+        return new Binding(location,(NonTerminal)asElement(func),args,location);
       }
     } else if (x instanceof Abstraction) {
       Abstraction abs = (Abstraction)x;
@@ -285,7 +310,8 @@ public class TermPrinter {
                 bes.set(i,element); 
               else {
                 if (i != bu.getConstructor().getAssumeIndex()) {
-                  throw new RuntimeException("didn't find " + elem + " in " + vtMap);
+                  // throw new RuntimeException("didn't find " + elem + " in " + vtMap);
+                  continue;
                 }
                 bes.set(i,getContext((NonTerminal)elem));
               }
@@ -384,7 +410,7 @@ public class TermPrinter {
           Element actual = actuals.next();
           // System.out.println("new = " + actual);
           if (actual instanceof NonTerminal) {
-            contents.set(i,new Binding(location,(NonTerminal)actual,b.getElements()));
+            contents.set(i,new Binding(location,(NonTerminal)actual,b.getElements(),location));
           } else if (actual instanceof AssumptionElement) {
             AssumptionElement ae = (AssumptionElement)actual;
             ClauseUse cu = (ClauseUse)ae.getAssumes();

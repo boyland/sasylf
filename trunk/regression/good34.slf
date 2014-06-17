@@ -1,0 +1,106 @@
+package regression;
+
+terminals contradiction unit value
+          Unit λ µ fold unfold inverted
+
+
+syntax
+
+t ::= unit
+  | λ x:T • t[x]
+  | x
+  | t t
+  | fold T t
+  | unfold T t
+
+T ::= ⊤
+  | Unit
+  | T → T
+  | µ X • T[X]
+  | X
+
+Γ ::= *
+      | Γ, x : T
+
+Σ ::= *
+      | Σ, X <: T
+
+
+judgment absurd: contradiction
+
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+
+judgment subtype: Σ ⊢ T <: T
+assumes Σ
+
+
+--------------------------- S-Var
+Σ, X <: T ⊢ X <: T
+
+----------------- S-Top
+Σ ⊢ T <: ⊤
+
+Σ ⊢ T1' <: T1
+Σ ⊢ T2 <: T2'
+--------------------------- S-Arrow
+Σ ⊢ T1→T2 <: T1'→T2'
+
+
+Σ, X2 <: ⊤, X1 <: X2 ⊢ T1[X1] <: T2[X2]
+---------------------------------------------- S-Amber
+Σ ⊢ µ X1 • T1[X1] <: µ X2 • T2[X2]
+
+--------------- S-Refl
+Σ ⊢ T <: T
+
+Σ ⊢ T1 <: T2
+Σ ⊢ T2 <: T3
+----------------- S-Trans
+Σ ⊢ T1 <: T3
+
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+-------------------- T-Unit
+Γ ⊢ unit : Unit
+
+-------------- T-Var
+Γ, x : T ⊢ x : T
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+T == (µ X • T1[X])
+Γ ⊢ t : T1[T]
+----------------------- T-Fold
+Γ ⊢ fold (T) t : T
+
+T == (µ X • T1[X])
+Γ ⊢ t : T
+----------------------------- T-Unfold
+Γ ⊢ unfold (T) t : T1[T]
+
+Γ ⊢ t : Unit
+* ⊢ Unit <: T
+--------------- T-Sub
+Γ ⊢ t : T
+
+lemma innocent:
+  forall d: *, x:Unit ⊢ x : ⊤
+  exists Unit == Unit.
+  test : * ⊢ Unit <: ⊤ by inversion of T-Sub on d
+  proof by rule type-eq
+end lemma

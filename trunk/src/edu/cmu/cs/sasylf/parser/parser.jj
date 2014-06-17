@@ -1536,10 +1536,10 @@ List<String> Name() :
   { return l; }
 }
 
-String RuleName() :
-{Token t, t1; String s; }
+StringSpan RuleName() :
+{Token t, t1; StringSpan s; }
 {
-  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT>) { s = t1.image; }
+  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT>) { s = new StringSpan(t1); }
   ( LOOKAHEAD({ isRulePart() }) (
       t=<MINUS>
     | t=<OPERATOR>
@@ -1553,7 +1553,7 @@ String RuleName() :
     | t=<CASE>
     | t=<LEMMA>
     | t=<THEOREM>
-    | t=Keyword()) { s += t.image; }
+    | t=Keyword()) { s.add(t.image); }
   )*
   { if (!(notNL(t1.specialToken))) {
   		ErrorHandler.recoverableError("Missing a rule name (must be on the same line as the ---)", new Location(t1));
@@ -1645,50 +1645,51 @@ Element Term() :
 }
 
 Binding Binding() :
-{ Token t; Element e; List<Element> l = new ArrayList<Element>(); }
+{ Token t,u; Element e; List<Element> l = new ArrayList<Element>(); }
 {
   t=<IDENTIFIER> "["
   	(LOOKAHEAD({ isVarBindingArg() }) e=Term()
   	 | e=Expr())
-  	"]" { l.add(e); }
-  ( "[" e=Term() { l.add(e); } "]" )*
-  { return new Binding(new Location(t), getNonTerminal(t), l); }
+  	u="]" { l.add(e); }
+  ( "[" e=Term() { l.add(e); } u="]" )*
+  { return new Binding(new Location(t), getNonTerminal(t), l, new Location(u).add(1)); }
 }
 
 Judgment JudgmentDeclaration() :
-{ Token t,t_assume=null; String s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
+{ Token t,t_assume=null; StringSpan s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
 {
   t=<JUDGMENT> s=RuleName() <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
   ( r=RuleDeclaration() { rules.add(r); } )*
-  { return new Judgment(new Location(t), s, rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
+  { return new Judgment(new Location(t), s.toString(), rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
 }
 
 Judgment AbstractJudgmentDeclaration() :
-{ Token t,t_assume=null; String s; Clause c; }
+{ Token t,t_assume=null; StringSpan s; Clause c; }
 {
   t=<JUDGMENT> s=RuleName() <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
-  { return new Judgment(new Location(t), s, c, t_assume==null ? null : getNonTerminal(t_assume)); }
+  { return new Judgment(new Location(t), s.toString(), c, t_assume==null ? null : getNonTerminal(t_assume)); }
 }
 
 Rule RuleDeclaration() :
-{ Token t; String n; Clause c; List<Clause> premises = new ArrayList<Clause>(); }
+{ Token t; StringSpan n; Clause c; List<Clause> premises = new ArrayList<Clause>(); }
 {
   ( [<PREMISE>] c=ExprToNL() { premises.add(c); } )*
   t=<BAR> n=RuleName() 
-  c=ExprToNL() { return new Rule(new Location(t), n, premises, c); }
+  c=ExprToNL() { return new Rule(new Location(t), n.toString(), premises, c); }
 }
 
 Clause ExprToNL() :
-{ Element e; Clause c = null; }
+{ Token t1, t2; Element e; Clause c = null; }
 {
-  ( <LPAREN> e=Expr() <RPAREN>
+  ( t1=<LPAREN> e=Expr() t2=<RPAREN>
 	{
-		c = new Clause(e);
+		c = new Clause(new Location(t1));
 		c.add(e);
+		c.setEndLocation(new Location(t2).add(1));
 	}
     | e=Term()
 	{
@@ -1702,16 +1703,17 @@ Clause ExprToNL() :
 		c.add(e);
 	}
     | LOOKAHEAD({ lParenNoNL() })
-    <LPAREN> e=Expr() <RPAREN>
+    <LPAREN> e=Expr() t2=<RPAREN>
 	{
 		c.add(e);
+		c.setEndLocation(new Location(t2).add(1));
 	}
   )*
   { return c; }
 }
 
 Clause Expr() :
-{ Token t; Element e; Clause c = null, c2, a; }
+{ Token t, t1, t2; Element e; Clause c = null, c2, a; }
 {
   (
     LOOKAHEAD({ isTerm() }) e=Term()
@@ -1725,12 +1727,13 @@ Clause Expr() :
 			if (c == null) c = new Clause(new Location(t));
 			c.add(getElement(t));
 	    }
-    | <LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,new Location(t),a); a = null; } )*
-      <RPAREN>
+    | t1=<LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,new Location(t),a); a = null; } )*
+      t2=<RPAREN>
 	{
 		if (c == null)
-			c = new Clause(c2);
+			c = new Clause(new Location(t1));
 		c.add(c2);
+		c.setEndLocation(new Location(t2).add(1));
 	}
   )+
   { return c; }
@@ -1745,12 +1748,13 @@ Clause SimpleExpr() :
 		c = new Clause(e);
 		c.add(e);
 	}
-    | <LPAREN> e=Expr()
-      [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(new Location(t), e, a); } ]
-      <RPAREN>
+    | t=<LPAREN> e=Expr()
+      [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(e.getLocation(), e, a); } ]
+      t2=<RPAREN>
 	{
-		c = new Clause(e);
+		c = new Clause(new Location(t));
 		c.add(e);
+		c.setEndLocation(new Location(t2).add(1));
 	}
 	| t=<INTEGER_LITERAL>
 	{  
@@ -1771,9 +1775,9 @@ Clause SimpleExpr() :
 }
 
 Theorem TheoremDeclaration() :
-{ Token t0, t, tp; String s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
+{ Token t0, t, tp; StringSpan s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
-  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t0)); }
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s.toString(), new Location(t0)); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
@@ -1798,9 +1802,9 @@ Theorem TheoremDeclaration() :
 }
 
 Theorem AbstractTheoremDeclaration() :
-{ Token t0, t, tp; String s; Clause c; Clause a = null; Binding b; Theorem thm; }
+{ Token t0, t, tp; StringSpan s; Clause c; Clause a = null; Binding b; Theorem thm; }
 {
-  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s, new Location(t0), true); }
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s.toString(), new Location(t0), true); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
@@ -1825,7 +1829,7 @@ Theorem AbstractTheoremDeclaration() :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; String s; Case ca; Clause c; Clause c2; Derivation d; Token of;}
+{ Token t; Token t2; Token a; StringSpan s; Case ca; Clause c; Clause c2; Derivation d; Token of;}
 {
    (     t=<IDENTIFIER> <COLON> c=Expr()
    (a=<AND> t2=<IDENTIFIER> <COLON> c2=Expr()
@@ -1840,13 +1844,13 @@ Derivation Derivation() :
       if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
-   	  d = new DerivationByInversion("_", new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s, t2.image);
+   	  d = new DerivationByInversion("_", new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t)), s.toString(), t2.image);
     }
     { return d; } 
 |  t=<USE> <INDUCTION> <ON> c2=SimpleExpr()
 	{ d = new DerivationByInduction(t.image, new Location(t), AndClauseUse.makeEmptyAndClause(new Location(t))); 
-	  ((DerivationWithArgs)d).getArgStrings().add(c2); }
-	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).getArgStrings().add(c2); } )* 
+	  ((DerivationWithArgs)d).addArgString(c2); }
+	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).addArgString(c2); } )* 
 	{ return d; }
 |  t=<DO> <CASE> <ANALYSIS> <ON> t2=<IDENTIFIER>
      { d = new PartialCaseAnalysis(new Location(t),t2.image); }
@@ -1862,22 +1866,22 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; String s; Element e; Clause cl; Token of;
+  DerivationByCaseAnalysis dca; StringSpan s; Element e; Clause cl; Token of;
 }
 { // args should include expressions
   <RULE> s=RuleName() { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
-    [ <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+    [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
     { return d; }
   | (t=<THEOREM> | t=<LEMMA>) s=RuleName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, t.image); }
-    [ <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+    [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
     { return d; }
   | LOOKAHEAD(2) <INDUCTION> <ON> cl=SimpleExpr()
     { d = di = new DerivationByInduction(startT.image, new Location(startT), c, cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
@@ -1889,7 +1893,7 @@ Derivation Justification(Token startT, Clause c) :
     { di.setEndLocation(Location.endOf(t)); return di; }
   | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> cl=SimpleExpr()
     { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* 
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
@@ -1908,25 +1912,25 @@ Derivation Justification(Token startT, Clause c) :
       } else if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
-   	  d = new DerivationByInversion(startT.image, new Location(startT), c, s, t.image);
+   	  d = new DerivationByInversion(startT.image, new Location(startT), c, s.toString(), t.image);
     }
     { return d; }
     // args should include expressions *****
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
       if (cl != null) {
-          d.getArgStrings().add(cl);
+          d.addArgString(cl);
       } else {
           ErrorHandler.recoverableError("induction hypothesis on what?",new Location(t));
       }    }
-    ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*
+    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
     { return d; }
   | <SUBSTITUTION> <ON> t=<IDENTIFIER>
     { 
       d = new DerivationBySubstitution(startT.image, new Location(startT), c);
-      d.getArgStrings().add(clauseFor(t));
+      d.addArgString(clauseFor(t));
     }
-    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )* 
+    ( <COMMA> t=<IDENTIFIER> { d.addArgString(clauseFor(t)); } )* 
     { return d; }
   | t=<UNPROVED>
     { d = new DerivationUnproved(startT.image, new Location(startT), c);
@@ -1938,35 +1942,35 @@ Derivation Justification(Token startT, Clause c) :
       return d; }
   | <EXCHANGE> <ON> t=<IDENTIFIER>
     { d = new DerivationByExchange(startT.image, new Location(startT), c);
-      d.getArgStrings().add(clauseFor(t));
+      d.addArgString(clauseFor(t));
       d.setEndLocation(Location.endOf(t)); 
       return d; }
   | <WEAKENING> <ON> t=<IDENTIFIER>
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
-      d.getArgStrings().add(clauseFor(t));
+      d.addArgString(clauseFor(t));
       d.setEndLocation(Location.endOf(t)); 
       return d; }
   | LOOKAHEAD({isRulePart2()}) s = RuleName() 
      { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
-     (<ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )* | {} )
+     (<ON> cl=SimpleExpr() { d.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* | {} )
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
        return d;
      }
-  | LOOKAHEAD(2) t=<IDENTIFIER> {s = t.image;} 
+  | LOOKAHEAD(2) t=<IDENTIFIER> {s = new StringSpan(t);} 
      { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
-     <ON> cl=SimpleExpr() { d.getArgStrings().add(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.getArgStrings().add(cl); } )*      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
+     <ON> cl=SimpleExpr() { d.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
        return d;     }
   | t=<IDENTIFIER>
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
       d.setEndLocation(Location.endOf(t)); 
-      d.getArgStrings().add(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.getArgStrings().add(clauseFor(t)); } )*
+      d.addArgString(clauseFor(t));    }    ( <COMMA> t=<IDENTIFIER> { d.addArgString(clauseFor(t)); } )*
 	{ return d; }
 }
 
 Case Case() :
-{ Token t,t2,t3,u,a; String s; Clause cl,ce=null,c2; Case ca; Derivation d;
+{ Token first=null, t,t2,t3,u,a; StringSpan s; Clause cl,ce=null,c2; Case ca; Derivation d;
   List<Derivation> premises = new ArrayList<Derivation>();
 }
 {
@@ -1981,12 +1985,14 @@ Case Case() :
     { ca = new OrCase(new Location(t),new DerivationByAssumption(t3.image, new Location(t3), ce)); }
   | LOOKAHEAD(2) t=<CASE> cl=Expr() [<ASSUMES> ce=Expr()] { ca = new SyntaxCase(new Location(t), cl, ce); }
   | t=<CASE> <RULE>
-    ( [<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()
-      { premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce)); } )*
-    <BAR> s=RuleName()
+    ( [first=<PREMISE>] t3=<IDENTIFIER> <COLON> ce=ExprToNL()
+      { if (first == null) first = t3;
+        premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce)); } )*
+    u=<BAR> s=RuleName()
     t3=<IDENTIFIER> <COLON> ce=Expr()
-    { ca = new RuleCase(new Location(t),
-		   	 s,
+    { if (first == null) first = u;
+      ca = new RuleCase(new Location(t), new Location(first),
+		   	 s.toString(),
 		    	premises,
 		    	new DerivationByAssumption(t3.image, new Location(t3), ce));
     }

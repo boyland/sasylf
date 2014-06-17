@@ -1,9 +1,8 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.ast.Location;
 
 public class ErrorReport {
-	public ErrorReport(Errors errorType, String msg, Location loc, String debugInfo, boolean isError) {
+	public ErrorReport(Errors errorType, String msg, Span loc, String debugInfo, boolean isError) {
 		this.errorType = errorType;
 		this.customMessage = msg;
 		this.loc = loc;
@@ -15,7 +14,7 @@ public class ErrorReport {
 	 * @return The detailed error message including file, line, and actual error text message
 	 */
 	public String getMessage() {
-		String msg = loc == null ? "unknown file: " : loc.toString() + ": ";
+		String msg = loc == null ? "unknown file: " : loc.getLocation().toString() + ": ";
 		if (!isError)
 			msg = msg + "warning: ";
 		msg = msg + getShortMessage();
@@ -38,7 +37,7 @@ public class ErrorReport {
 	
 	public final Errors errorType;
 	public final String customMessage;
-	public final Location loc;
+	public final Span loc;
 	public final String debugInfo;
 	public final boolean isError;
 }

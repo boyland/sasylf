@@ -59,8 +59,8 @@ lemma exploit_to_1_2_3:
     exists contradiction.
     
     proof by case analysis on s1:
-        case rule //! should complain that T1 doesn't depend on X
-            ------------------------------------------- tvar
+        case rule 
+            ------------------------------------------- tvar //! should complain that T1 doesn't depend on X
             _: X <: T0 in ((Gamma', X <: T0), X1 <: T1)
         is
             // In SASyLF after 1.2.3, T1 is bound to T1_68[X] internally,

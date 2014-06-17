@@ -8,6 +8,7 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class DerivationByExchange extends DerivationWithArgs {
 	public DerivationByExchange(String n, Location l, Clause c) {

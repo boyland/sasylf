@@ -1,9 +1,9 @@
-package edu.cmu.cs.sasylf.ast;
+package edu.cmu.cs.sasylf.util;
 
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.Token;
 
-public class Location {
+public class Location implements Span {
 	public Location(Token t) {
 		beginLine = t.beginLine;
 		beginColumn = t.beginColumn;
@@ -45,5 +45,18 @@ public class Location {
 	public String toString() {
 		return file + ":" + beginLine;
 	}
+	
+	
+	/// as a degenerate case: a location is a zero-length span
+	
+  @Override
+  public Location getLocation() {
+    return this;
+  }
+  @Override
+  public Location getEndLocation() {
+    return this;
+  }
 
+	
 }

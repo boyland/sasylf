@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
@@ -385,7 +386,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		      } catch (RuntimeException ex) {
 		        System.err.println("Couldn't print term: " + missingCase);
 		        ex.printStackTrace();
-		        ErrorHandler.report(Errors.MISSING_CASE, missingMessage,this);
+		        ErrorHandler.report(Errors.MISSING_CASE, missingMessage,getArgStrings().get(0));
 		      }
 		      // System.out.println("missing: " + missing);
 		      if (missingCaseText != null) {
@@ -411,7 +412,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		    missingMessages.insert(0, '\n');
 		  }
 		  // Util.debug("adaptationSub = ",ctx.adaptationSub);
-		  ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), this, missingCaseTexts.toString());
+		  ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), getArgStrings().get(0), missingCaseTexts.toString());
 		}
 
 		} finally {

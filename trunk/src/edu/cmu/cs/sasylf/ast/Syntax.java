@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Status;
 
 
@@ -29,6 +30,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	  nonTerminal = nt; 
 	  elements = l; 
 	  isAbstract = false;
+	  setEndLocation(l.get(l.size()-1).getEndLocation());
 	}
 	
 	public Syntax(Location loc, NonTerminal nt) {

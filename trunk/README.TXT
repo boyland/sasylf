@@ -1,4 +1,4 @@
-SASyLF version 1.3.3
+SASyLF version 1.3.4a0
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -109,6 +109,8 @@ analysis.  Its use is deprecated.
 
 RELEASE HISTORY
 
+1.3.4	Plugin improvements
+	underline problems in the text viewer
 1.3.3   Enhancements and Bug fixes
     Fixed input var bugs (bad36.slf, bad37.slf)
     Fixed partial case analysis bugs (bad39.slf, good22.slf)

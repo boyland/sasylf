@@ -9,12 +9,13 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class OrCase extends Case {
 
   public OrCase(Location l, Derivation d) {
-    super(l);
+    super(l,d.getLocation(),d.getEndLocation());
     premise = d;
   }
 

@@ -25,15 +25,26 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 
 public class SyntaxCase extends Case {
-	public SyntaxCase(Location l, Clause c) { super(l); conclusion = c; }
-	public SyntaxCase(Location l, Clause c, Clause ca) { this(l,c); assumes = ca; }
+	public SyntaxCase(Location l, Clause c) { 
+	  super(l,c.getLocation(),c.getEndLocation()); 
+	  conclusion = c; 
+	}
+	public SyntaxCase(Location l, Clause c, Clause ca) { 
+	  this(l,c); 
+	  assumes = ca; 
+	  if (assumes != null) {
+	    ((DefaultSpan)super.getSpan()).setEndLocation(ca.getEndLocation());
+	  }
+	}
 	
 	public Clause getConclusion() { return conclusion; }
 
@@ -83,8 +94,8 @@ public class SyntaxCase extends Case {
 		    }
 		  }
 		  if (concDef == null) {
-		      throw new InternalError("no variable clause for nonterminal: " + 
-		          ctx.currentCaseAnalysisElement);
+		    ErrorHandler.report(Errors.INTERNAL_ERROR,"no variable clause for nonterminal: " + 
+		          ctx.currentCaseAnalysisElement,this);
 		  }
     } else if (concElem instanceof NonTerminal) {
       ErrorHandler.report(NONTERMINAL_CASE, "Case " + conclusion + " is a nonterminal; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
@@ -254,10 +265,9 @@ public class SyntaxCase extends Case {
 		try {
 			unifyingSub = concTerm.unify(adaptedCaseAnalysis);
 		} catch (UnificationFailed uf) {
-		  throw new InternalError("Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis);
+		  uf.printStackTrace();
+		  ErrorHandler.report(Errors.INTERNAL_ERROR,": Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis,this);
 		}
-		
-		Util.debug("  unifyingSub = ",unifyingSub);
 		
 		// update the current substitution
 		ctx.composeSub(unifyingSub); // modifies in place		

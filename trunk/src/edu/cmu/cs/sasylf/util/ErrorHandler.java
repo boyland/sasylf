@@ -3,15 +3,15 @@ package edu.cmu.cs.sasylf.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.ast.Location;
-import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.term.FreeVar;
 
 
 public class ErrorHandler {
-	public static void report(Errors errorType, String msg, Location loc, String debugInfo, boolean isError, boolean print) {
+	public static void report(Errors errorType, String msg, Span loc, String debugInfo, boolean isError, boolean print) {
 		if (msg == null)
 			msg = "";
+		if (loc == null)
+		  loc = lastSpan.get();
 		ErrorReport rep = new ErrorReport(errorType, msg, loc, debugInfo, isError);
 		reports.get().add(rep);
 		if (print)
@@ -23,7 +23,7 @@ public class ErrorHandler {
 		}
 	}
 	
-  public static void recoverableError(Errors x, Node obj) {
+  public static void recoverableError(Errors x, Span obj) {
     try {
       report(x,obj);
     } catch (SASyLFError ex) {
@@ -31,7 +31,7 @@ public class ErrorHandler {
     }
   }
 
-  public static void recoverableError(String msg, Node obj) {
+  public static void recoverableError(String msg, Span obj) {
     try {
       report(msg,obj);
     } catch (SASyLFError x) {
@@ -39,7 +39,7 @@ public class ErrorHandler {
     }
   }
   
-  public static void recoverableError(Errors x, String msg, Node obj) {
+  public static void recoverableError(Errors x, String msg, Span obj) {
     try {
       report(x, msg,obj);
     } catch (SASyLFError ex) {
@@ -47,23 +47,7 @@ public class ErrorHandler {
     }
   }
   
-  public static void recoverableError(Errors error, Location location) {
-    try {
-      report(error,"",location,null,true,true);
-    } catch (SASyLFError x) {
-      // stop throw
-    }
-  }
-
-  public static void recoverableError(String msg, Location obj) {
-    try {
-      report(msg,obj);
-    } catch (SASyLFError x) {
-      // stop throw
-    }
-  }
-  
-	public static void recoverableError(String msg, Node obj, String debugInfo) {
+	public static void recoverableError(String msg, Span obj, String debugInfo) {
 	  try {
 	    report(msg,obj,debugInfo);
 	  } catch (SASyLFError x) {
@@ -71,76 +55,61 @@ public class ErrorHandler {
 	  }
 	}
 
-  public static void recoverableError(Errors errorType, String msg, Node obj, String debugInfo) {
+  public static void recoverableError(Errors errorType, String msg, Span obj, String debugInfo) {
     try {
-      report(errorType, msg, obj.getLocation(), debugInfo, true, true);
+      report(errorType, msg, obj, debugInfo, true, true);
     } catch (SASyLFError x) {
       // stop throw
     }
   }
 
-  public static void recoverableError(Errors errorType, String msg, Location loc, String debugInfo) {
-    try {
-      report(errorType, msg, loc, debugInfo, true, true);
-    } catch (SASyLFError x) {
-      // stop throw
-    }
-  }
 
-	public static void warning(Errors errorType, Node obj) {
-		report(errorType, null, obj.getLocation(), null, false, true);
+	public static void warning(Errors errorType, Span obj) {
+		report(errorType, null, obj, null, false, true);
 	}
 
-	public static void warning(String msg, Node obj) {
-		report(null, msg, obj.getLocation(), null, false, true);
+	public static void warning(String msg, Span obj) {
+		report(null, msg, obj, null, false, true);
 	}
 	
-	public static void warning(Errors errorType, Node obj, String fixInfo) {
-	  report(errorType, null, obj.getLocation(), fixInfo, false, true);
+	public static void warning(Errors errorType, Span obj, String fixInfo) {
+	  report(errorType, null, obj, fixInfo, false, true);
 	}
 
-  public static void warning(Errors errorType, String msg, Node obj, String debugInfo) {
-    report(errorType, msg, obj.getLocation(), debugInfo, false, true);
+  public static void warning(Errors errorType, String msg, Span obj, String debugInfo) {
+    report(errorType, msg, obj, debugInfo, false, true);
   }
 
-  public static void report(Errors errorType, Node obj) {
-		report(errorType, null, obj.getLocation(), null, true, true);
+  public static void report(Errors errorType, Span obj) {
+		report(errorType, null, obj, null, true, true);
 	}
 
-	public static void report(Errors errorType, Node obj, String debugInfo) {
-		report(errorType, null, obj.getLocation(), debugInfo, true, true);
-	}
-
-	// TODO: out of date
-	public static void report(String msg, Node obj) {
-		report(null, msg,obj.getLocation(),null, true, true);
+	public static void report(Errors errorType, Span obj, String debugInfo) {
+		report(errorType, null, obj, debugInfo, true, true);
 	}
 
 	// TODO: out of date
-	public static void report(String msg, Location loc) {
-		report(null, msg,loc,null, true, true);
+	public static void report(String msg, Span obj) {
+		report(null, msg,obj,null, true, true);
 	}
+
 
 	/*
-	 * @deprecated use report(errorType, msg,obj.getLocation(),null, true, true)
+	 * @deprecated use report(errorType, msg,obj,null, true, true)
 	 */
-	public static void report(Errors errorType, String msg, Node obj) {
-		report(errorType, msg,obj.getLocation(),null, true, true);
+	public static void report(Errors errorType, String msg, Span obj) {
+		report(errorType, msg,obj,null, true, true);
 	}
 
 	// TODO: deprecated
-	public static void report(String msg, Node obj, String debugInfo) {
-		report(null, msg, obj.getLocation(), debugInfo, true, true);
+	public static void report(String msg, Span obj, String debugInfo) {
+		report(null, msg, obj, debugInfo, true, true);
 	}
 
 	// TODO: rename error
-	public static void report(Errors errorType, String msg, Node obj, String debugInfo) {
-		report(errorType, msg, obj.getLocation(), debugInfo, true, true);
+	public static void report(Errors errorType, String msg, Span obj, String debugInfo) {
+		report(errorType, msg, obj, debugInfo, true, true);
 	}
-	
-	public static void report(Errors errorType, String msg, Location l) {
-    report(errorType,msg,l, null, true, true);
-  }
 
   public static List<ErrorReport> getReports() { return reports.get(); }
 	public static void clearAll() {
@@ -158,6 +127,14 @@ public class ErrorHandler {
 	  return reports.get().size() - getErrorCount();
 	}
 
+	public static void recordLastSpan(Span s) {
+	  if (s != null) {
+	    lastSpan.set(s);
+	  }
+	}
+	
+	private static ThreadLocal<Span> lastSpan = new ThreadLocal<Span>();
+	
 	private static ThreadLocal<List<ErrorReport>> reports = new ThreadLocal<List<ErrorReport>>(){
     @Override
     protected List<ErrorReport> initialValue() {
