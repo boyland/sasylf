@@ -3,16 +3,20 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
-public abstract class Node {
+
+public abstract class Node implements Span {
 	public Node() {}
 	public Node(Location l) { 
-	  location = l; 
-	  endLocation = l;
+	  this(l,l);
 	}
 	public Node(Location l1, Location l2) {
 	  location = l1;
 	  endLocation = l2;
+    ErrorHandler.recordLastSpan(this);
 	}
 
 	public Location getLocation() { return location; }

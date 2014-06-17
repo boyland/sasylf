@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
@@ -21,6 +22,9 @@ import edu.cmu.cs.sasylf.util.Util;
 public abstract class Derivation extends Fact {
 	public Derivation(String n, Location l, Clause c) {
 		super(n, l); clause = c;
+		if (c != null) {
+		  super.setEndLocation(c.getEndLocation());
+		}
 	}
 
 	public Clause getClause() { return clause; }
@@ -77,6 +81,7 @@ public abstract class Derivation extends Fact {
 	}
 	
 	public void typecheck(Context ctx) {
+	  ErrorHandler.recordLastSpan(this);
 	  ctx.checkConsistent(this);
     clause.typecheck(ctx);
 
@@ -95,6 +100,7 @@ public abstract class Derivation extends Fact {
 	protected Clause clause;
   private boolean clauseChecked = false;
   
+	private static final int PROOF_SIZE = 5; // size of string "proof"
 	
 	public static void typecheck(Node node, Context ctx, List<Derivation> derivations) {
 	  int n = derivations.size();
@@ -109,6 +115,7 @@ public abstract class Derivation extends Fact {
 	      // we copy over to get the right location for things
 	      d.clause = ctx.currentGoalClause.clone();
 	      d.clause.setLocation(d.getLocation());
+	      d.clause.setEndLocation(d.getLocation().add(PROOF_SIZE));
 	    }
 	    finalOK = d.typecheckAndAssume(ctx);
 	  }

@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
@@ -99,6 +100,7 @@ public class CompUnit extends Node {
 	 * false if there were one or more errors.
 	 */
 	public boolean typecheck(String filename) {
+	  ErrorHandler.recordLastSpan(this);
 		int oldCount = ErrorHandler.getErrorCount();
 		Context ctx = new Context(this);
 		try {

@@ -16,23 +16,27 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.Position;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.osgi.framework.Bundle;
 import org.sasylf.editors.MarkerResolutionGenerator;
 import org.sasylf.project.MyNature;
 import org.sasylf.project.ProofBuilder;
+import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.EclipseUtil;
+import org.sasylf.util.ResourceDocument;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -87,13 +91,23 @@ public class ProofChecker  {
 
 	private static final String MARKER_ID = Marker.MARKER_ID;
 
-	private static void reportProblem(ErrorReport report, IResource res) {
+	private static void reportProblem(ErrorReport report, IDocument doc, IResource res) {
 		IMarker marker;
 		try {
 			marker = res.createMarker(MARKER_ID);
 			marker.setAttribute(IMarker.MESSAGE, report.getShortMessage());
-			marker.setAttribute(IMarker.LINE_NUMBER, report.loc.getLine());
-			// marker.setAttribute(IMarker.CHAR_START, report.loc.getColumn());
+			marker.setAttribute(IMarker.LINE_NUMBER, report.loc.getLocation().getLine());
+			try {
+			  if (doc == null) {
+			    doc = new ResourceDocument(res);
+			  }
+			  Position p = DocumentUtil.getPosition(report.loc, doc);
+			  marker.setAttribute(IMarker.CHAR_START, p.offset);
+			  marker.setAttribute(IMarker.CHAR_END, p.offset+p.length);
+			} catch (BadLocationException e) {
+			  System.err.println("bad location? " + e);
+			}
+
 			marker.setAttribute(IMarker.SEVERITY,
 					report.isError ? IMarker.SEVERITY_ERROR
 							: IMarker.SEVERITY_WARNING);
@@ -136,7 +150,7 @@ public class ProofChecker  {
 	    try {
 	      if (doc != null)
           return analyzeSlf(res, doc);
-        else return analyzeSlf(res,new InputStreamReader(f.getContents(),"UTF-8"));
+        else return analyzeSlf(res,doc,new InputStreamReader(f.getContents(),"UTF-8"));
       } catch (UnsupportedEncodingException e) {
         return null;
       } catch (CoreException e) {
@@ -154,7 +168,7 @@ public class ProofChecker  {
    */
   public static CompUnit analyzeSlf(IResource res, IDocument doc) {
     if (res == null) throw new NullPointerException("resource cannot be null");
-    return analyzeSlf(res, new StringReader(doc.get()));
+    return analyzeSlf(res, doc, new StringReader(doc.get()));
   }
 	
   public static String getProofFolderRelativePathString(IResource res) {
@@ -170,7 +184,7 @@ public class ProofChecker  {
     return null;
   }
 
-  private static CompUnit analyzeSlf(IResource res, Reader contents) {
+  private static CompUnit analyzeSlf(IResource res, IDocument doc, Reader contents) {
     CompUnit result = null;
     // int oldErrorCount = 0;
 
@@ -197,7 +211,7 @@ public class ProofChecker  {
 		  if (myBundle != null) {
 		    Platform.getLog(myBundle).log(new Status(Status.ERROR,Activator.PLUGIN_ID,"Internal error",e));
 		  }
-		  ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, new Location(res.getName(),1,1));
+		  ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, null);
 		  e.printStackTrace();
 
 			// unexpected exception
@@ -216,7 +230,7 @@ public class ProofChecker  {
 			// deleteAuditMarkers(IResource);
 			deleteAuditMarkers(res);
 			for (ErrorReport er : ErrorHandler.getReports()) {
-				reportProblem(er, res);
+				reportProblem(er, doc, res);
 			}
 			ErrorHandler.clearAll();
 		}

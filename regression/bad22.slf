@@ -54,8 +54,8 @@ theorem cut-admissible:
     forall d2: Γ, h:A ⊢ A'
     exists Γ ⊢ A'.
     proof by induction on d2:
-        case rule //!! Bug should complain that H0 should depend on h
-            v: H0: A' ∈ (Γ, h: A)
+        case rule 
+            v: H0: A' ∈ (Γ, h: A) //!! Bug should complain that H0 should depend on h
             ---------------------- axiom
             _: Γ, h: A ⊢ A'
         is
@@ -105,8 +105,9 @@ theorem cut-admissible:
             proof by rule impR on d3'
         end case
         
-        case rule //!! Should complain about H
-            d2a: Γ, h: A ⊢ A1
+        case rule 
+            d2a: Γ, h: A ⊢ A1   //!! Should complain about H
+            
             d2b: Γ, h: A, h2: A2 ⊢ A'
             v: H:(A1 ⇒ A2) ∈ (Γ, h: A)
             ----------------------------- impL

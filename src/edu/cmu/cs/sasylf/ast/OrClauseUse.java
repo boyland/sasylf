@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.util.Location;
+
 public class OrClauseUse extends ClauseUse {
 
   public OrClauseUse(Location loc, List<Element> elems, ClauseDef cd, List<ClauseUse> clauses) {

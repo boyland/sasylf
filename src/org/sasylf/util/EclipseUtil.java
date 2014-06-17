@@ -36,6 +36,7 @@ public class EclipseUtil {
         if (!res.equals(resource)) continue;
         IDocument result = textEd.getDocumentProvider().getDocument(iei);
         if (result != null) return result;
+        System.out.println("document in active editor is null? " + res);
       }
     }
     return null;

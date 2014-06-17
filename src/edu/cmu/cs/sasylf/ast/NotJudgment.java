@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class NotJudgment extends Judgment {
   // TODO: Complete implementation of NOT.

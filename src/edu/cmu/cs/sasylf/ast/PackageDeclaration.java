@@ -6,6 +6,7 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class PackageDeclaration extends Node {
   private String[] pieces;

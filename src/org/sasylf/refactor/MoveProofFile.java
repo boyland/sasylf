@@ -30,8 +30,8 @@ import org.eclipse.text.edits.TextEdit;
 import org.sasylf.project.ProofBuilder;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.ast.PackageDeclaration;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class MoveProofFile extends MoveParticipant {
 

@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.util.Location;
+
 /**
  * A case analysis that need not be complete.
  * The remaining cases are saved so that later case analyses don't need to

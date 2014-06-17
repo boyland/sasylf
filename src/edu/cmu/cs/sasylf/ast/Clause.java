@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.grammar.TerminalNode;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class Clause extends Element implements CanBeCase, Cloneable {

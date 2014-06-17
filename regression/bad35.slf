@@ -18,8 +18,8 @@ lemma fails:
     forall d: n1 = n2
     exists n2 = n1.
     proof by case analysis on d:
-        case rule //! Warning: overly general pattern
-            ---------- eq
+        case rule
+            ---------- eq  //! Warning: overly general pattern
             _: n1 = n2 
         is
             proof by rule eq //! cannot apply since pattern too general

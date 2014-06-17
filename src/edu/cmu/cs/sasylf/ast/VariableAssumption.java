@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.util.Location;
+
 public class VariableAssumption extends SyntaxAssumption {
 
   public VariableAssumption(String n, Location l, Element assumes) {

@@ -46,12 +46,12 @@ import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
-import edu.cmu.cs.sasylf.ast.Location;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
 import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 
 /**
@@ -167,7 +167,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}*/
 				pe = new ProofElement(theo.getKindTitle(), sb.toString());
 				try {
-          Position pos = DocumentUtil.getNodePosition(theo, document);
+          Position pos = DocumentUtil.getPosition(theo, document);
           pe.setPosition(pos);
           document.addPosition(pos);
         } catch (BadLocationException e) {

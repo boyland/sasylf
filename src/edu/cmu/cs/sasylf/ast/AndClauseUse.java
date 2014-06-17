@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.util.Location;
+
 public class AndClauseUse extends ClauseUse {
 
   public AndClauseUse(Location loc, List<Element> elems, ClauseDef cd, List<ClauseUse> clauses) {

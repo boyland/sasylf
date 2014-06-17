@@ -10,11 +10,16 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Variable extends Element {
-	public Variable(String s, Location l) { super(l); symbol = s; }
+	public Variable(String s, Location l) { 
+	  super(l); 
+	  symbol = s; 
+	  setEndLocation(l.add(s.length())); 
+	}
 
 	public String getSymbol() { return symbol; }
 	public Syntax getType() { return type; }

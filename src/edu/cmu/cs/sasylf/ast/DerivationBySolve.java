@@ -6,6 +6,7 @@ import edu.cmu.cs.sasylf.prover.Proof;
 import edu.cmu.cs.sasylf.prover.Prover;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 
 public class DerivationBySolve extends DerivationWithArgs {
 	public DerivationBySolve(String n, Location l, Clause c) {

@@ -7,12 +7,21 @@ import java.util.List;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 
 abstract public class DerivationWithArgs extends Derivation {
 	public DerivationWithArgs(String n, Location l, Clause c) {
 		super(n,l,c);
 	}
 
+	public void addArgString(Clause cl) {
+	  argStrings.add(cl);
+	  Location endLocation = cl.getEndLocation();
+	  if (endLocation != null) {
+	    setEndLocation(endLocation);
+	  }
+	}
+	
 	public List<Clause> getArgStrings() { return argStrings; }
 	public List<Fact> getArgs() { return args; }
 
