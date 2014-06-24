@@ -35,6 +35,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
+import org.sasylf.Proof;
 import org.sasylf.ProofChecker;
 import org.sasylf.handlers.QuickFixHandler;
 import org.sasylf.project.ProofBuilder;
@@ -56,7 +57,6 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
   
   public static final String SASYLF_PROOF_CONTEXT = "org.sasylf.context";
   
-	
 	@Override
 	public void doSave(IProgressMonitor progressMonitor) {
 		super.doSave(progressMonitor);
@@ -67,6 +67,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		  if (f != null) {
 		    IProject p = f.getProject();
 		    if (ProofBuilder.getProofBuilder(p) != null) return;
+		    Proof.removeProof(f);
 		    // no proof builder to automatically parse the file, so we do it ourselves:
 		    ProofChecker.analyzeSlf(f, this);
 		  }
@@ -79,6 +80,22 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		setInput(getEditorInput());
 		updateTitle();
 	}
+	
+	@Override
+  public void doRevertToSaved() {
+    IEditorInput iei = getEditorInput();
+    getProofOutline().setInput(iei);
+    if (iei instanceof IFileEditorInput) {
+      IFile f = ((IFileEditorInput)iei).getFile();
+      if (f != null) {
+        Proof.removeProof(f);
+        super.doRevertToSaved();
+        ProofChecker.analyzeSlf(f, this);
+        return;
+      }
+    }
+    super.doRevertToSaved(); 
+  }
 	
 	void updateTitle() {
 		IEditorInput input = getEditorInput();
@@ -284,7 +301,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
   
   
   @Override
-  public void proofChecked(IFile file, CompUnit cu) {
+  public void proofChecked(IFile file, CompUnit cu, int errors) {
     if (file == null || cu == null) return;
     if (getEditorInput().getAdapter(IFile.class) == file) {
       IDocument doc = getDocument();

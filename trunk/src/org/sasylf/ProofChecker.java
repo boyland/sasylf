@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -28,6 +29,7 @@ import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.EclipseUtil;
 import org.sasylf.util.ResourceDocument;
+import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
@@ -45,7 +47,13 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 public class ProofChecker  {
 
   public static interface Listener {
-    public void proofChecked(IFile file, CompUnit cu);
+    /**
+     * We attempted a check of this file.
+     * @param file file checked (perhaps in an editor that hasn't saved yet)
+     * @param cu compilation unit, if any parsed (may be null).
+     * @param errors number of errors found.
+     */
+    public void proofChecked(IFile file, CompUnit cu, int errors);
   }
   
 	/**
@@ -82,9 +90,9 @@ public class ProofChecker  {
     }
   }
   
-  protected void informListeners(IFile source, CompUnit cu) {
+  protected void informListeners(IFile source, CompUnit cu, int errors) {
     for (Listener l : listeners) {
-      l.proofChecked(source, cu);
+      l.proofChecked(source, cu, errors);
     }
   }
   
@@ -98,9 +106,6 @@ public class ProofChecker  {
 			marker.setAttribute(IMarker.MESSAGE, report.getShortMessage());
 			marker.setAttribute(IMarker.LINE_NUMBER, report.loc.getLocation().getLine());
 			try {
-			  if (doc == null) {
-			    doc = new ResourceDocument(res);
-			  }
 			  Position p = DocumentUtil.getPosition(report.loc, doc);
 			  marker.setAttribute(IMarker.CHAR_START, p.offset);
 			  marker.setAttribute(IMarker.CHAR_END, p.offset+p.length);
@@ -186,9 +191,26 @@ public class ProofChecker  {
 
   private static CompUnit analyzeSlf(IResource res, IDocument doc, Reader contents) {
     CompUnit result = null;
-    // int oldErrorCount = 0;
-
+    Proof oldProof = Proof.getProof(res);
+    Proof newProof = new Proof(res,doc);
+    int errors = 0;
+    
     try {
+      if (doc == null) {
+        doc = new ResourceDocument(res);
+      }
+      // eventually we want to do incremental checking.
+      List<IDirtyRegion> dirtyRegions = oldProof == null ? null : oldProof.getChanges(doc);
+      if (dirtyRegions != null) {
+        try {
+          for (IDirtyRegion dr : dirtyRegions) {
+            String newText = doc.get(dr.getOffset(), dr.getLength());
+            System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
+          }
+        } catch (BadLocationException e) {
+          e.printStackTrace();
+        }
+      }
       try {
         result = DSLToolkitParser.read(res.getName(),contents);
       } catch (ParseException e) {
@@ -199,13 +221,13 @@ public class ProofChecker  {
         ErrorHandler.report(null, e.getMessage(), loc, null, true, false);
       }
       if (result != null) {
+        newProof.setCompilation(result);
         String location = getProofFolderRelativePathString(res);
         result.typecheck(location);
       }
 
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
-			// sb.append(e.getMessage() + "\n");
 		} catch (RuntimeException e) {
 		  Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
 		  if (myBundle != null) {
@@ -213,29 +235,27 @@ public class ProofChecker  {
 		  }
 		  ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, null);
 		  e.printStackTrace();
-
 			// unexpected exception
-		} finally {
-			// int newErrorCount = ErrorHandler.getErrorCount() - oldErrorCount;
-			// oldErrorCount = ErrorHandler.getErrorCount();
-			// if (newErrorCount == 0)
-			// sb.append(filename + ": No errors found.\n");
-			// else {
-			// if (newErrorCount == 1)
-			// sb.append(filename + ": 1 error found\n");
-			// else
-			// sb.append(filename + ": " + newErrorCount
-			// + " errors found\n");
-
-			// deleteAuditMarkers(IResource);
+		} catch (CoreException e) {
+      Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
+      if (myBundle != null) {
+        Platform.getLog(myBundle).log(new Status(Status.ERROR,Activator.PLUGIN_ID,"Internal error",e));
+      }
+      e.printStackTrace();
+    } finally {
 			deleteAuditMarkers(res);
 			for (ErrorReport er : ErrorHandler.getReports()) {
 				reportProblem(er, doc, res);
+				++errors;
 			}
 			ErrorHandler.clearAll();
 		}
     
-    if (result != null && res instanceof IFile) getInstance().informListeners((IFile)res,result);
+    if (!Proof.changeProof(oldProof, newProof)) {
+      System.out.println("Concurrent compile got there ahead of us for " + res);
+    } else {
+      if (res instanceof IFile) getInstance().informListeners((IFile)res,result, errors);
+    }
     
 		return result;
 	}
@@ -251,7 +271,6 @@ public class ProofChecker  {
         System.out.println("Marker found with message " + m.getAttribute(IMarker.MESSAGE, "<none>"));
       }
     } catch (CoreException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }

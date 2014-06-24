@@ -465,12 +465,12 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	public void setInput(IEditorInput input) {
 		fInput= input;
 		IFile f = (IFile)fInput.getAdapter(IFile.class);
-		proofChecked(f,ProofBuilder.getCompUnit(f));
+		proofChecked(f,ProofBuilder.getCompUnit(f), 0);
 	}
 	
 	
 	@Override
-  public void proofChecked(final IFile file, final CompUnit cu) {
+  public void proofChecked(final IFile file, final CompUnit cu, int errors) {
 	  if (file == null || cu == null || fInput == null) return;
 	  if (!file.equals(fInput.getAdapter(IFile.class))) return;
 	  final TreeViewer viewer= getTreeViewer();
