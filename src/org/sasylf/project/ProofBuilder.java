@@ -145,6 +145,9 @@ public class ProofBuilder extends IncrementalProjectBuilder {
    */
   
 	class ProofDeltaVisitor implements IResourceDeltaVisitor {
+	  //TODO: Instead of immediately checking proofs, put into a (priority?)queue
+	  // and place into the queue also everything that is dependent on this thing.
+	  // Make sure the dependencies stored are never cyclic.
 		/*
 		 * (non-Javadoc)
 		 * 
