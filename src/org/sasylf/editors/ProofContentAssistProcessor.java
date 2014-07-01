@@ -3,8 +3,11 @@
  */
 package org.sasylf.editors;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
@@ -19,10 +22,19 @@ import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.sasylf.Activator;
-import org.sasylf.views.ProofElement;
-import org.sasylf.views.ProofOutline;
+import org.sasylf.Proof;
+
+import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.Element;
+import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.RuleLike;
+import edu.cmu.cs.sasylf.ast.TermPrinter;
+import edu.cmu.cs.sasylf.ast.Theorem;
 
 /**
  * @author boyland
@@ -57,34 +69,96 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
     return NO_CONTEXTS;
   }
   
-  private ICompletionProposal makeCompletionProposal(String match, int cursor, String prefix) {
-    int colon = match.indexOf(':');
-    String name = (colon < 0) ? match : match.substring(0, colon);
-    String type = (colon < 0) ? "" : match.substring(colon+2);
+  private Proof getProof() {
+    IResource res = ResourceUtil.getResource(editor.getEditorInput());
+    if (res == null) return null;
+    return Proof.getProof(res);
+  }
+  
+  private List<RuleLike> findMatches(String type, String pattern) {
+    Proof p = getProof();
+    if (p == null || p.getCompilation() == null) {
+      return Collections.emptyList();
+    }
+    CompUnit cu = p.getCompilation();
+    List<RuleLike> result = new ArrayList<RuleLike>();
+    if (type.equals("rule")) {
+      for (Judgment j : cu.getJudgments()) {
+        for (Rule r : j.getRules()) {
+          if (r.getName().startsWith(pattern)) result.add(r);
+        }
+      }
+    } else if (type.equals("lemma") || type.equals("theorem")) {
+      for (Theorem th : cu.getTheorems()) {
+        if (th.getName().startsWith(pattern)) result.add(th);
+      }
+    }
+    return result;
+  }
+  
+  private String findPremiseHelp(String type, String name, int numArg) {
+    System.out.println("content assist called for "+type + " " + name);
+    Proof p = getProof();
+    if (p == null || p.getCompilation() == null) {
+      failureReason = "Proof is not checked or has syntax errors";
+      return null;
+    }
+    CompUnit cu = p.getCompilation();
+    RuleLike result = null;
+    if (type.equals("rule")) {
+      for (Judgment j : cu.getJudgments()) {
+        for (Rule r : j.getRules()) {
+          if (r.getName().equals(name)) {
+            result = r;
+            break;
+          }
+        }
+      }
+    } else if (type.equals("lemma") || type.equals("theorem")) {
+      for (Theorem th : cu.getTheorems()) {
+        if (th.getName().startsWith(name)) {
+          result = th;
+          break;
+        }
+      }
+    }
+    if (result == null) {
+      failureReason = "can find no " + type + " named " + name;
+      return null;
+    }
+    if (result.getPremises().size() <= numArg) {
+      failureReason = type + " " + name + " has only " + 
+          result.getPremises().size() + ", can't find " + (numArg+1);
+      return null;
+    }
+    TermPrinter tp = new TermPrinter(new Context(cu), null, result.getLocation());
+    String argString = tp.toString(result.getPremises().get(numArg));
+    if (numArg + 1 < result.getPremises().size()) argString += " ...";
+    return argString;
+  }
+  
+  private ICompletionProposal makeCompletionProposal(RuleLike match, int cursor, String prefix) {
+    String name = match.getName();
     int len = prefix.length();
     int newCursor = name.length();
-    String[] inputs = type.split("forall");
+    List<? extends Element> inputs = match.getPremises();
     // System.out.println("split = " + Arrays.toString(inputs));
     StringBuilder repl = new StringBuilder();
     IContextInformation info = null;
     repl.append(name);
-    if (inputs.length > 1) {
+    if (!inputs.isEmpty()) {
       repl.append(" on ");
       newCursor += 4;
       String extra = " ...";
-      if (inputs.length == 2) {
-        inputs[1] = inputs[1].split("exists")[0];
-        extra = "";
-      }
-      inputs[1] = inputs[1].trim();
-      info = new ContextInformation("input 1", inputs[1] + extra);
+      Element in = inputs.get(0);
+      info = new ContextInformation("input 1", in + extra);
     }
     /*if (info != null) {
       System.out.println("info = (" + info.getContextDisplayString() + "," + info.getInformationDisplayString() + ")");
     } else {
       System.out.println("info = " + info);
     }*/
-    return new CompletionProposal(repl.toString(), cursor-len, len, newCursor, null, name, info, type);
+    return new CompletionProposal(repl.toString(), cursor-len, len, newCursor, null, name, info, match.toString());
   }
   
   /* (non-Javadoc)
@@ -94,7 +168,6 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
   public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer,
       int offset) {
     IDocument doc = viewer.getDocument();
-    ProofOutline outline = editor.getProofOutline();
     try {
       /* Attempt to work around, bug that auto context information doesn't work.
       if (doc.getChar(offset-1) == ',') {
@@ -116,10 +189,10 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
         pieces[pieces.length-1] = "";
       }*/
       //System.out.println("looking for " + pieces[pieces.length-2] + " for '" + pieces[pieces.length-1] + "'");
-      List<String> matches;
+      List<RuleLike> matches;
       String key = pieces[pieces.length-2];
       String prefix = pieces[pieces.length-1];
-      matches = outline.findContentAssist(key, prefix);
+      matches = findMatches(key, prefix);
       if (matches == null || matches.size() == 0) {
         return noProposals("no " + key + " starting with " + prefix + " found");
       }
@@ -142,7 +215,6 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
       int offset) {
     // content assist on parameter values (premises to rules, inputs to theorems)
     IDocument doc = viewer.getDocument();
-    ProofOutline outline = editor.getProofOutline();
     try {
       IRegion lineInfo = doc.getLineInformationOfOffset(offset);
       String line = doc.get(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
@@ -156,12 +228,6 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
         return noInformation("no 'by rule/lemma/theorem on' on line");
       }
       // System.out.println("looking for " + pieces[0] + " for '" + pieces[1] + "'");
-      ProofElement pe = outline.findProofElementByName(pieces[1]);
-      if (pe == null) {
-        return noInformation("no information for " + pieces[1]);
-      }
-      String[] template = pe.getContent().split("forall");
-      template[template.length-1] = template[template.length-1].split("exists")[0];
       int commaCount = 0;
       for (int i=3; i < pieces.length; ++i) {
         int n = pieces[i].length();
@@ -169,11 +235,11 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
           if (pieces[i].charAt(j) == ',') ++commaCount;
         }
       }
-      if (commaCount+1 >= template.length) {
-        return noInformation("Only " + template.length + " parameters expected, not " + (1+commaCount));
+      String argString = findPremiseHelp(pieces[0],pieces[1],commaCount);
+      if (argString == null) {
+        return NO_CONTEXTS;
       }
-      String extra = (commaCount+2 == template.length) ? "" : " ...";
-      ContextInformation info = new ContextInformation("input " + (commaCount+1),template[commaCount+1].trim() + extra);
+      ContextInformation info = new ContextInformation("input " + (commaCount+1),argString);
       // System.out.println("info = (" + info.getContextDisplayString() + "," + info.getInformationDisplayString() + ")");
       failureReason = null;
       return new IContextInformation[]{ info};
