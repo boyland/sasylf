@@ -9,10 +9,11 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class AndJudgment extends AndOrJudgment {
   public static class AndTerminal extends Terminal {
-    public AndTerminal(Location loc) {
+    public AndTerminal(Span loc) {
       super("'and'",loc);
     }
 
@@ -23,16 +24,16 @@ public class AndJudgment extends AndOrJudgment {
     
   }
   
-  private static Terminal makeAndTerminal(Location loc) {
+  private static Terminal makeAndTerminal(Span loc) {
     return new AndTerminal(loc);
   }
   
   @Override
-  public Terminal makeSeparator(Location l) {
+  public Terminal makeSeparator(Span l) {
     return makeAndTerminal(l);
   }
 
-  public static void addAnd(Clause cl, Location and, Clause more) {
+  public static void addAnd(Clause cl, Span and, Clause more) {
     cl.getElements().add(new AndTerminal(and));
     cl.getElements().addAll(more.getElements());
   }

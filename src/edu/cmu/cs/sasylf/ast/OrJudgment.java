@@ -9,10 +9,11 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class OrJudgment extends AndOrJudgment {
   public static class OrTerminal extends Terminal {
-    public OrTerminal(Location loc) {
+    public OrTerminal(Span loc) {
       super("'or'",loc);
     }
 
@@ -23,12 +24,12 @@ public class OrJudgment extends AndOrJudgment {
     
   }
   
-  private static Terminal makeOrTerminal(Location loc) {
+  private static Terminal makeOrTerminal(Span loc) {
     return new OrTerminal(loc);
   }
   
   @Override
-  public Terminal makeSeparator(Location l) {
+  public Terminal makeSeparator(Span l) {
     return makeOrTerminal(l);
   }
 

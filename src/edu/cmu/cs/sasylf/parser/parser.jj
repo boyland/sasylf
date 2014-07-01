@@ -169,56 +169,29 @@ public class DSLToolkitParser {
     boolean isRulePart2() {
         return isRuleNamePiece(getToken(1)) && isRulePartToken(getToken(2)); 
     }
-
-    Variable getVar(Token t) {
-		Variable v = vars.get(t.image);
-		if (v == null) {
-		    v = new Variable(t.image, new Location(t));
-		    vars.put(t.image, v);
-		}
-		return v;
-    }
-
+    
     NonTerminal getNonTerminal(Token t) {
-		/*NonTerminal nt = nts.get(t.image);
-		if (nt == null) {
-		    nt = new NonTerminal(t.image, new Location(t));
-		    nts.put(t.image, nt);
-		}*/
 		NonTerminal nt = new NonTerminal(t.image, new Location(t));
 		return nt;
     }
-    Element getElement(Token t) {
-		Terminal tm = ts.get(t.image);
-		if (tm != null) {
-		    return new Terminal(t.image, new Location(t));
-        } else {
-		    NonTerminal nt_old = nts.get(t.image);
-		    NonTerminal nt = new NonTerminal(t.image, new Location(t));
-		    if (nt_old == null) {
-		    	nts.put(t.image, nt);
-		    }
-		    return nt;
-		}
-    }
     Clause clauseFor(Token t) {
-    	Element e = getElement(t);
+    	Element e = getNonTerminal(t);
    	  	Clause cl = new Clause(e);
    	  	cl.add(e);
    	  	return cl;
     }
-    Terminal addTerminal(Token t) {
-		return addTerminal(t, t.image);
+    Terminal getTerminal(Token t) {
+		return getTerminal(t, t.image);
     }
-    Terminal addTerminal(Token t, String s) {
+    Terminal getTerminal(Token t, String s) {
 		Terminal tm = new Terminal(s, new Location(t));
-		ts.put(s, tm);
 		return tm;
     }
-
-    private Map<String, Variable> vars = new HashMap<String, Variable>();
-    private Map<String, NonTerminal> nts = new HashMap<String, NonTerminal>();
-    private Map<String, Terminal> ts = new HashMap<String, Terminal>();
+    
+    Span makeSpan(Token t) {
+        Location loc = new Location(t);
+        return new DefaultSpan(loc,loc.add(t.image.length()));
+    }
 }
 
 PARSER_END(DSLToolkitParser)
@@ -1582,7 +1555,7 @@ Set<String> TerminalsDeclaration() :
 {Token f; Token t; Set<String> l = new HashSet<String>(); }
 {
   f="terminals"
-  (t=ExtendedIdentifier() { debug2(t.image); l.add(t.image); addTerminal(t); } )+
+  (t=ExtendedIdentifier() { debug2(t.image); l.add(t.image); getTerminal(t); } )+
   { if (firstToken == null) firstToken = f; return l; }
 }
 
@@ -1630,11 +1603,11 @@ Element Term() :
 { Token t; Element e; }
 {
   LOOKAHEAD({ isBinding() }) e=Binding() { return e; }
-  | t=<IDENTIFIER> { return getElement(t); }
-  | t=<STRING_LITERAL> { return addTerminal(t, t.image.substring(1, t.image.length()-1)); }
-  | t=Operator() { return addTerminal(t, t.image); }
-  | t=Keyword() { return addTerminal(t, t.image); }
-  | t=<INTEGER_LITERAL> { return addTerminal(t, t.image); }
+  | t=<IDENTIFIER> { return getNonTerminal(t); }
+  | t=<STRING_LITERAL> { Terminal tm = getTerminal(t, t.image.substring(1, t.image.length()-1)); tm.setMustQuote(); return tm; }
+  | t=Operator() { return getTerminal(t, t.image); }
+  | t=Keyword() { return getTerminal(t, t.image); }
+  | t=<INTEGER_LITERAL> { return getTerminal(t, t.image); }
 }
 
 Binding Binding() :
@@ -1709,9 +1682,9 @@ Clause Expr() :
 	| (t=<OR>|t=<NOT>) 
 		{ 
 			if (c == null) c = new Clause(new Location(t));
-			c.add(getElement(t));
+			c.add(getNonTerminal(t)); // strange, but NonTerminal knows how to handle these keywords
 	    }
-    | t1=<LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,new Location(t),a); a = null; } )*
+    | t1=<LPAREN> c2=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c2,makeSpan(t),a); a = null; } )*
       t2=<RPAREN>
 	{
 		if (c == null)
@@ -1742,7 +1715,7 @@ Clause SimpleExpr() :
 	}
 	| t=<INTEGER_LITERAL>
 	{  
-		e = addTerminal(t, t.image);
+		e = getTerminal(t, t.image);
 		c = new Clause(e);
 		c.add(e); 
 	}
