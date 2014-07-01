@@ -71,19 +71,24 @@ public class Theorem extends RuleLike {
     }
 
 	public void prettyPrint(PrintWriter out) {
-		out.println(getKind() + " " + getName() + ":");
+		out.print(getKind());
+		out.print(' ');
+		out.print(getName());
+		out.println(':');
 		for (Fact forall : getForalls()) {
-			out.print("forall ");
+			out.print("  forall ");
 			forall.prettyPrint(out);
-			out.print(' ');
+			out.println();
 		}
-		out.print("exists ");
+		out.print("  exists ");
 		getExists().prettyPrint(out);
 		out.println(".");
-		for (Derivation d : derivations) {
+		/*for (Derivation d : derivations) {
 			d.prettyPrint(out);
-		}
-		out.println("end theorem\n");
+		}*/
+		out.print("end ");
+		out.print(getKind());
+		out.println();
 	}
 	
 	public void checkInterface(Context ctx) {
