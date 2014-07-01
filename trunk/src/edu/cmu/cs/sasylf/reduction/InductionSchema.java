@@ -117,15 +117,15 @@ public abstract class InductionSchema {
     }
     Element e = parts.get(i);
     InductionSchema result;
-    if (e.toString().equals("\"{\"")) {
+    if (e.toString().equals("{")) {
       result = Unordered.create();
       do {
         Pair<InductionSchema,Integer> p = parse(thm, parts,i+1,errorPoint);
         if (p.first == null) return p;
         i = p.second;
         result = Unordered.create(result,p.first);
-      } while (parts.get(i).toString().equals("\",\""));
-      if (!parts.get(i).toString().equals("\"}\"")) {
+      } while (parts.get(i).toString().equals(","));
+      if (!parts.get(i).toString().equals("}")) {
         ErrorHandler.recoverableError("induction set missing '}'", errorPoint);
         return new Pair<InductionSchema,Integer>(null,i);
       }
