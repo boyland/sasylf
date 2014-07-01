@@ -4,7 +4,6 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,11 +28,7 @@ public class Theorem extends RuleLike {
 	public Theorem(String n, Location l, boolean abs) { 
 	  super(n, l); 
 	  isAbstract = abs; 
-	  if (isAbstract) {
-	    derivations = Collections.emptyList();
-	  } else {
-	    derivations = new ArrayList<Derivation>();
-	  }
+	  derivations = new ArrayList<Derivation>();
 	}
 
 	public List<Fact> getForalls() { return foralls; }
@@ -194,6 +189,9 @@ public class Theorem extends RuleLike {
 		checkInterface(ctx);
 		
 		if (isAbstract) {
+		  if (!derivations.isEmpty()) {
+		    ErrorHandler.recoverableError("abstract " + kind + " should not include proof", this);
+		  }
 		  return;
 		}
 		

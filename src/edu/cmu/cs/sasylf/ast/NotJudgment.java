@@ -30,7 +30,7 @@ public class NotJudgment extends Judgment {
   
   private NotJudgment(Location l, Judgment part) {
     // currently we make 'not' abstract, so people can't case analysis on it.
-    super(null,makeName(part),makeForm(l,part),findAssume(l,part));
+    super(null,makeName(part),null,makeForm(l,part),findAssume(l,part));
     String name = super.getName();
     this.part = part;
     int u = 0;

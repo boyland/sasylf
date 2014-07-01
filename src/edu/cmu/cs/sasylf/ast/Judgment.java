@@ -16,18 +16,14 @@ public class Judgment extends Node implements ClauseType {
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
 	  super(loc); 
 	  name=n; 
-	  rules=l; 
+	  if (l == null) {
+	    isAbstract = true;
+	    rules = Collections.emptyList();
+	  } else {
+	    rules=l;
+	  }
 	  form=c; 
 	  assume = a; 
-	  setEndLocation();
-	}
-	public Judgment(Location loc, String n, Clause s, NonTerminal a) {
-	  super(loc);
-	  name = n;
-	  rules = Collections.emptyList();
-	  form = s;
-	  assume = a;
-	  isAbstract = true;
 	  setEndLocation();
 	}
 	
@@ -106,6 +102,10 @@ public class Judgment extends Node implements ClauseType {
 		
 		if (assume != null) {
 		  assume.typecheck(ctx);
+		}
+		
+		if (isAbstract && !rules.isEmpty()) {
+		  ErrorHandler.recoverableError("abstract judgments should not have rules", this);
 		}
 		
 		for (Element f : form.getElements()) {
