@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -17,7 +18,7 @@ public abstract class AndOrJudgment extends Judgment {
     super(loc, n, l, c, a);
   }
 
-  public abstract Terminal makeSeparator(Location l);
+  public abstract Terminal makeSeparator(Span l);
   
   @Override
   public void defineConstructor(Context ctx) {

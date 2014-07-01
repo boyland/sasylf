@@ -15,7 +15,7 @@ lemma harmless:
   forall n
   exists n = n.
   s : n = n by rule eq //! should complain about use of "s"
-  proof by s //! may complain here too
+  proof by s // may complain here too
 end lemma
 
 

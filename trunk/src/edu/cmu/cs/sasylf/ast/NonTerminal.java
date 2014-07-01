@@ -123,6 +123,9 @@ public class NonTerminal extends Element {
 	}
 
 	public Element typecheck(Context ctx) {
+	  if (ctx.isTerminalString(symbol)) {
+	    return new Terminal(symbol,this);
+	  }
 		NonTerminal nt = this;
 		Element e = this;
 		String strippedName = Util.stripId(nt.getSymbol());
@@ -139,9 +142,9 @@ public class NonTerminal extends Element {
 			if (syn != null) {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {
-			  e = new OrJudgment.OrTerminal(getLocation());
-      } else if (nt.getSymbol().equals("or")) {
-        e = new NotJudgment.NotTerminal(getLocation());
+			  e = new OrJudgment.OrTerminal(this);
+      } else if (nt.getSymbol().equals("not")) {
+        e = new NotJudgment.NotTerminal(this);
 			} else {
 			  e = new Terminal(nt.getSymbol(),nt.getLocation());
 				ErrorHandler.recoverableError(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);

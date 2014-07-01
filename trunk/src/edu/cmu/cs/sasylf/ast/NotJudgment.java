@@ -9,11 +9,12 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class NotJudgment extends Judgment {
   // TODO: Complete implementation of NOT.
   public static class NotTerminal extends Terminal {
-    public NotTerminal(Location loc) {
+    public NotTerminal(Span loc) {
       super("'not'",loc);
     }
 
@@ -24,7 +25,7 @@ public class NotJudgment extends Judgment {
     
   }
   
-  private static Terminal makeOrTerminal(Location loc) {
+  private static Terminal makeOrTerminal(Span loc) {
     return new NotTerminal(loc);
   }
   

@@ -5,14 +5,14 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class Terminal extends Element implements ElemType {
-	public Terminal(String s, Location l) { 
-	  super(l); 
+	public Terminal(String s, Span sp) { 
+	  super(sp.getLocation()); 
 	  symbol = s; 
-	  super.setEndLocation(l.add(s.length()));
+	  super.setEndLocation(sp.getEndLocation());
 	}
 
 	public String getName() { return symbol; }
@@ -27,8 +27,13 @@ public class Terminal extends Element implements ElemType {
 
 	public String getTerminalSymbolString() { return getSymbol(); }
 	public String getSymbol() { return symbol; }
+	
+	public void setMustQuote() {
+	  mustQuote = true;
+	}
+	
 	private String symbol;
-
+	private boolean mustQuote;
 
 	public Symbol getGrmSymbol() {
 		return getTerminalSymbol();
@@ -46,9 +51,9 @@ public class Terminal extends Element implements ElemType {
 		if (symbol.length() == 1 && symbol.equals("\\"))
 			out.print(symbol);
 		else {
-			out.print('\"');
+			if (mustQuote) out.print('\"'); //XXX: doesn't correctly handle nested quotes
 			out.print(symbol);
-			out.print('\"');
+			if (mustQuote) out.print('\"');
 		}
 	}
 	
