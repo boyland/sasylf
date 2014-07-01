@@ -17,10 +17,6 @@ public abstract class AndOrJudgment extends Judgment {
     super(loc, n, l, c, a);
   }
 
-  public AndOrJudgment(Location loc, String n, Clause s, NonTerminal a) {
-    super(loc, n, s, a);
-  }
-
   public abstract Terminal makeSeparator(Location l);
   
   @Override

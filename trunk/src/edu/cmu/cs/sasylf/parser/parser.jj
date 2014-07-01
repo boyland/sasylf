@@ -308,6 +308,7 @@ TOKEN :
 | < PROVIDES: "provides" >
 | < EXTENDS: "extends" >
 | < DO: "do" >
+| < ABSTRACT: "abstract" >
 }
 
 /* LITERALS */
@@ -1442,9 +1443,10 @@ CompUnit CompilationUnit() :
   
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
-    ( s=AbstractSyntaxDeclaration() { syntax.addAll(s); }
-    | j=AbstractJudgmentDeclaration() { judges.add(j); }
-    | thm=AbstractTheoremDeclaration() { theorems.add(thm); }
+    ( LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
+    | LOOKAHEAD(2) s=SyntaxDeclaration() { syntax.addAll(s); }
+    | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
+    | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); }
     )+
   )?
    
@@ -1460,10 +1462,10 @@ CompUnit CompilationUnit() :
   )
   
   (
-    trm=TerminalsDeclaration() { terms.addAll(trm); }
-  | s=SyntaxDeclaration() { syntax.addAll(s); } 
-  | j=JudgmentDeclaration() { judges.add(j); }
-  | thm=TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
+    LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
+  | LOOKAHEAD(2) s=SyntaxDeclaration() { syntax.addAll(s); } 
+  | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
+  | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
       ( "and" 
         thm = TheoremDeclaration()
         { theorems.add(thm);
@@ -1514,11 +1516,8 @@ Token Keyword() :
     |   t=< INVERSION >
     |   t=< WEAKENING >
     |   t=< EXCHANGE >
-    |   t=< SUBSTITUTION >
-    |   t=< MODULE >
-    |   t=< REQUIRES >
-    |   t=< PROVIDES >
     |   t=< EXTENDS >
+    |   t=< SUBSTITUTION >
     |   t=< USE >
     |   t=< DO >
   ) { return t; }}
@@ -1565,16 +1564,10 @@ List<Syntax> SyntaxDeclaration() :
 { 	Token f; Syntax s;
 	List<Syntax> l = new ArrayList<Syntax>(); }
 {
-  f="syntax"
+  f=<SYNTAX>
   ( s=BNFRule() { l.add(s); } )+
   { if (firstToken == null) firstToken =f; return l; }
-}
-
-List<Syntax> AbstractSyntaxDeclaration() :
-{ 	Token f; Syntax s;
-	List<Syntax> l = new ArrayList<Syntax>(); }
-{
-  f="syntax"
+| f=<ABSTRACT> <SYNTAX>
   ( s=AbstractBNFRule() { l.add(s); } )+
   { return l; }
 }
@@ -1658,20 +1651,11 @@ Binding Binding() :
 Judgment JudgmentDeclaration() :
 { Token t,t_assume=null; StringSpan s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
 {
-  t=<JUDGMENT> s=RuleName() <COLON>
+  (t=<ABSTRACT> <JUDGMENT> | t=<JUDGMENT>) s=RuleName() <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
   ( r=RuleDeclaration() { rules.add(r); } )*
-  { return new Judgment(new Location(t), s.toString(), rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
-}
-
-Judgment AbstractJudgmentDeclaration() :
-{ Token t,t_assume=null; StringSpan s; Clause c; }
-{
-  t=<JUDGMENT> s=RuleName() <COLON>
-  c=ExprToNL()
-  [ <ASSUMES> t_assume=<IDENTIFIER> ]
-  { return new Judgment(new Location(t), s.toString(), c, t_assume==null ? null : getNonTerminal(t_assume)); }
+  { return new Judgment(new Location(t), s.toString(), t.image.equals("abstract") ? null : rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
 }
 
 Rule RuleDeclaration() :
@@ -1775,9 +1759,11 @@ Clause SimpleExpr() :
 }
 
 Theorem TheoremDeclaration() :
-{ Token t0, t, tp; StringSpan s; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
+{ Token tinit = null, t0, t, tp=null; StringSpan s, sp=null; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
-  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s.toString(), new Location(t0)); }
+  (tinit=<ABSTRACT>) ?
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { if (tinit == null) tinit = t0;
+                                                     thm = new Theorem(s.toString(), new Location(tinit), tinit != t0); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
@@ -1789,36 +1775,12 @@ Theorem TheoremDeclaration() :
   <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
   (".")? { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
-  <END> (tp=<THEOREM> | tp=<LEMMA>)
+  <END> (tp=<THEOREM> | tp=<LEMMA> | sp=RuleName() { tp = null; } )
   { 
-    if (!tp.image.equals(t0.image)) {
-        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
-        	new Location(tp),tp.image + "\n" + t0.image); 
-    }
-    thm.setKind(t0.image);
-    thm.setEndLocation(Location.endOf(tp));
-    return thm; 
-  }
-}
-
-Theorem AbstractTheoremDeclaration() :
-{ Token t0, t, tp; StringSpan s; Clause c; Clause a = null; Binding b; Theorem thm; }
-{
-  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { thm = new Theorem(s.toString(), new Location(t0), true); }
-  [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
-  ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
-    { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
-  | LOOKAHEAD(3) <FORALL> b=Binding() [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new BindingAssumption(b, a)); a = null; }
-  | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
-    { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
-  )*
-  <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
-  (".")? { thm.setExists(c); }
-  ( Derivation() { ErrorHandler.recoverableError("do not prove required theorems",thm); } )*
-  <END> (tp=<THEOREM> | tp=<LEMMA>)
-  { 
-    if (!tp.image.equals(t0.image)) {
+    if (tp == null) {
+        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + sp.toString() + "'",
+        	sp, sp.toString() + "\n" + t0.image);
+    } else if (!tp.image.equals(t0.image)) {
         ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
         	new Location(tp),tp.image + "\n" + t0.image); 
     }
