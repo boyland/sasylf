@@ -1452,7 +1452,7 @@ CompUnit CompilationUnit() :
   {
     if (pkg == null)
 		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
-    return new CompUnit(pkg, new Location(firstToken), moduleName, terms, syntax, judges, theorems);
+    return new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName, terms, syntax, judges, theorems);
   }
 }
 
@@ -1521,8 +1521,6 @@ StringSpan RuleName() :
     | t=<OR>
     | t=<AND>
     | t=<IS>
-    | t=<DO>
-    | t=<CASE>
     | t=<LEMMA>
     | t=<THEOREM>
     | t=Keyword()) { s.add(t.image); }
@@ -1753,12 +1751,13 @@ Theorem TheoremDeclaration() :
     if (tp == null) {
         ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + sp.toString() + "'",
         	sp, sp.toString() + "\n" + t0.image);
+        thm.setEndLocation(sp.getEndLocation());
     } else if (!tp.image.equals(t0.image)) {
         ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
         	new Location(tp),tp.image + "\n" + t0.image); 
     }
     thm.setKind(t0.image);
-    thm.setEndLocation(Location.endOf(tp));
+    if (tp != null) thm.setEndLocation(Location.endOf(tp));
     return thm; 
   }
 }
