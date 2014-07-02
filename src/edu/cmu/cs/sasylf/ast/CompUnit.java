@@ -3,14 +3,11 @@ package edu.cmu.cs.sasylf.ast;
 import static edu.cmu.cs.sasylf.util.Util.debug2;
 import static edu.cmu.cs.sasylf.util.Util.debug_parse;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -99,13 +96,13 @@ public class CompUnit extends Node {
 	/** typechecks this compilation unit, returning true if the check was successful,
 	 * false if there were one or more errors.
 	 */
-	public boolean typecheck(String filename) {
+	public boolean typecheck(ModuleFinder mf, ModuleId id) {
 	  ErrorHandler.recordLastSpan(this);
 		int oldCount = ErrorHandler.getErrorCount();
-		Context ctx = new Context(this);
+		Context ctx = new Context(mf,this);
 		try {
 			getVariables(ctx);
-			typecheck(ctx,filename);
+			typecheck(ctx,id);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
 			//e.printStackTrace();
@@ -114,32 +111,18 @@ public class CompUnit extends Node {
 	}
 	
 	public boolean typecheck() {
-	  return typecheck((String)null);  
+	  return typecheck(new NullModuleFinder(),(ModuleId)null);  
 	}
 
-	private void checkFilename(String filename) {
-	  File f = new File(filename);
-	  String name = f.getName();
-	  LinkedList<String> dirs = new LinkedList<String>();
-	  for (;;) {
-	    String p = f.getParent();
-	    if (p == null) break;
-	    f = new File(p);
-	    dirs.addFirst(f.getName());
-	  }
-	  packageDecl.typecheck(dirs.toArray(new String[dirs.size()]));
+	private void checkFilename(ModuleId id) {
+	  packageDecl.typecheck(id.packageName);
 	  
 	  if (moduleName != null) {
-	    if (name.endsWith(".slf")) {
-	      name = name.substring(0, name.length()-4);
-	    } else {
-	      ErrorHandler.report(Errors.BAD_FILE_NAME_SUFFIX,this);
-	    } 
-	    if (!ParseUtil.isLegalIdentifier(name)) {
+	    if (!ParseUtil.isLegalIdentifier(id.moduleName)) {
 	      ErrorHandler.report(Errors.BAD_FILE_NAME,this);
 	    }
-	    if (!moduleName.equals(name)) {
-	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+name);
+	    if (!moduleName.equals(id.moduleName)) {
+	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+id.moduleName);
 	    }
 	  }
 	}
@@ -149,8 +132,8 @@ public class CompUnit extends Node {
 	// computes Syntax for each NonTerminal
 	// converts NonTerminal into Variable where appropriate
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
-	public void typecheck(Context ctx, String filename) {
-    if (filename != null) checkFilename(filename);
+	public void typecheck(Context ctx, ModuleId id) {
+    if (id != null) checkFilename(id);
 		for (Syntax syn: syntax) {
 			if (declaredTerminals.contains(syn.getNonTerminal().getSymbol()))
 				ErrorHandler.report(Errors.SYNTAX_TERMINAL, syn, syn.getNonTerminal().getSymbol());

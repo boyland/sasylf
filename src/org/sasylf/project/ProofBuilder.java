@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -19,12 +18,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.sasylf.Marker;
-import org.sasylf.ProofChecker;
+import org.sasylf.Proof;
 import org.sasylf.util.Cell;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.ModuleId;
 
 public class ProofBuilder extends IncrementalProjectBuilder {
 
@@ -124,27 +124,19 @@ public class ProofBuilder extends IncrementalProjectBuilder {
   }
   
   public void dispose() {
-    builtModules.clear();
     builders.remove(this.getProject());
   }
-  
-  private final Map<IFile,CompUnit> builtModules = new ConcurrentHashMap<IFile,CompUnit>();
-  
-  public static CompUnit getCompUnit(IFile f) {
-    ProofBuilder pb = getProofBuilder(f.getProject());
-    if (pb == null) return null;
-    return pb.builtModules.get(f);
+    
+  private ProjectModuleFinder moduleFinder;
+  private ProjectModuleFinder getModuleFinder() {
+    if (moduleFinder == null) {
+      moduleFinder = new ProjectModuleFinder(this.getProject());
+    }
+    return moduleFinder;
   }
   
-  /*
-   * TODO:
-   * Define a per-project dictionary
-   * Each dictionary should look up a module name to a CompUnit.
-   * The Outline view should get its information in this way rather that from the editor.
-   * The dictionary should have an order so that we see things in order. 
-   */
-  
 	class ProofDeltaVisitor implements IResourceDeltaVisitor {
+	  ProjectModuleFinder mf = getModuleFinder();
 	  //TODO: Instead of immediately checking proofs, put into a (priority?)queue
 	  // and place into the queue also everything that is dependent on this thing.
 	  // Make sure the dependencies stored are never cyclic.
@@ -155,21 +147,20 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		 */
 		public boolean visit(IResourceDelta delta) throws CoreException {
 			IResource resource = delta.getResource();
-			// System.out.println("incremental for " + resource);
-			switch (delta.getKind()) {
-			case IResourceDelta.ADDED:
-				// handle added resource
-				checkProof(resource);
-				break;
-			case IResourceDelta.REMOVED:
-				// handle removed resource
-			  builtModules.remove(resource);
-				break;
-			case IResourceDelta.CHANGED:
-				// handle changed resource
-        builtModules.remove(resource);
-				checkProof(resource);
-				break;
+			ModuleId id = getId(resource);
+			if (id != null) {
+			  // System.out.println("incremental for " + resource);
+			  switch (delta.getKind()) {
+        case IResourceDelta.CHANGED:
+			  case IResourceDelta.ADDED:
+			    // handle added resource
+			    mf.recheckNeeded(id);
+			    break;
+			  case IResourceDelta.REMOVED:
+			    // handle removed resource
+			    Proof.removeProof(resource);
+			    break;
+			  }
 			}
 			//return true to continue visiting children.
 			return true;
@@ -177,8 +168,12 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	}
 
 	class ProofResourceVisitor implements IResourceVisitor {
+	  ProjectModuleFinder mf = getModuleFinder();
 		public boolean visit(IResource resource) {
-			checkProof(resource);
+		  ModuleId id = getId(resource);
+		  if (id != null) {
+		    mf.recheckNeeded(id);
+		  }
 			//return true to continue visiting children.
 			return true;
 		}
@@ -194,6 +189,8 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	@Override
 	protected IProject[] build(int kind, Map<String,String> args, IProgressMonitor monitor)
 			throws CoreException {
+	  // we pass on the monitor to the the builder to use.
+	  if (monitor == null) monitor = new NullProgressMonitor();
 		if (kind == FULL_BUILD) {
 			fullBuild(monitor);
 		} else {
@@ -207,62 +204,87 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		return null;
 	}
 
-	void checkProof(IResource resource) {
-		if (resource instanceof IFile && resource.getName().endsWith(".slf")) {
-			CompUnit cu = ProofChecker.analyzeSlf(resource);
-			if (cu != null) {
-			  builtModules.put((IFile)resource,cu);
-			}
-		}
+	public void forceBuild(IResource res) {
+	  ModuleId id = getId(res);
+	  if (id == null) return;
+	  getModuleFinder().recheckNeeded(id);
+	  getModuleFinder().recheckAll(null);
 	}
-
-
+	
 	protected void fullBuild(final IProgressMonitor monitor)
 			throws CoreException {
-    // System.out.println("Doing full build");
-		try {
-			getProject().accept(new ProofResourceVisitor());
-		} catch (CoreException e) {
-		}
+    monitor.beginTask("Full Build", 1000);
+	  try {
+      getModuleFinder().clear();
+      monitor.worked(10);
+      try {
+      	getProject().accept(new ProofResourceVisitor());
+      } catch (CoreException e) {
+      }
+      monitor.worked(90);
+      getModuleFinder().recheckAll(new SubProgressMonitor(monitor,900));
+    } finally {
+      monitor.done();
+    }
 	}
-
 
 	protected void incrementalBuild(IResourceDelta delta,
 			IProgressMonitor monitor) throws CoreException {
-		// the visitor does the work.
-		delta.accept(new ProofDeltaVisitor());
+	  monitor.beginTask("Incremental Build", 1000);
+		try {
+      delta.accept(new ProofDeltaVisitor());
+      monitor.worked(100);
+      getModuleFinder().recheckAll(new SubProgressMonitor(monitor,900));
+    } finally {
+      monitor.done();
+    }
 	}
 
 	@Override
-  protected void clean(IProgressMonitor monitor) throws CoreException {
+	protected void clean(IProgressMonitor monitor) throws CoreException {
 	  super.clean(null);
 	  if (monitor == null) monitor = new NullProgressMonitor();
 	  monitor.beginTask("clean", 100);
-    getProject().deleteMarkers(Marker.MARKER_ID, true, IResource.DEPTH_INFINITE);
-    monitor.worked(90);
-    builtModules.clear();
-    monitor.worked(10);
-    monitor.done();
- }
+	  try {
+	    getProject().deleteMarkers(Marker.MARKER_ID, true, IResource.DEPTH_INFINITE);
+	    monitor.worked(90);
+	    getModuleFinder().clear();
+	    monitor.worked(10);
+	  } finally {
+	    monitor.done();
+	  }
+	}
 
+	public static ModuleId getId(IResource res) {
+	  IPath path = getProofFolderRelativePath(res);
+	  if ("slf".equals(path.getFileExtension())) {
+	    path = path.removeFileExtension();
+	    int n = path.segmentCount();
+	    String[] pkg = new String[n-1];
+	    for (int i=0; i < n-1; ++i) {
+	      pkg[i] = path.segment(i);
+	    }
+	    return new ModuleId(pkg,path.lastSegment());
+	  } else return null;
+	}
 
-  /**
-   * Return the path from the path folder to this resource.
-   * If the resource is not in the proof folder, we instead
-   * return the relative path from the root of the project.
-   * @param res resource to return path for, must not be null
-   * @return relative path from proof folder or project to this resource.
-   */
-  public static IPath getProofFolderRelativePath(IResource res) {
-    IPath p = res.getProjectRelativePath();
-    IPath base = res.getProject().getProjectRelativePath();
-    IContainer pf = getProofFolder(res.getProject());
-    if (pf != null) base = pf.getProjectRelativePath();
-    IPath rpath = p.makeRelativeTo(base);
-    return rpath;
-  }
+	/**
+	 * Return the path from the path folder to this resource.
+	 * If the resource is not in the proof folder, we instead
+	 * return the relative path from the root of the project.
+	 * @param res resource to return path for, must not be null
+	 * @return relative path from proof folder or project to this resource.
+	 */
+	public static IPath getProofFolderRelativePath(IResource res) {
+	  IPath p = res.getProjectRelativePath();
+	  IPath base = res.getProject().getProjectRelativePath();
+	  IContainer pf = getProofFolder(res.getProject());
+	  if (pf != null) base = pf.getProjectRelativePath();
+	  IPath rpath = p.makeRelativeTo(base);
+	  return rpath;
+	}
 
-  public static boolean isProofFolder(Object x) {
+	public static boolean isProofFolder(Object x) {
     if (x instanceof IContainer) {
       IContainer f = (IContainer)x;
       IProject p = f.getProject();

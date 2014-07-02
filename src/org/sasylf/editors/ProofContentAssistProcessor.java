@@ -28,12 +28,10 @@ import org.sasylf.Activator;
 import org.sasylf.Proof;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleLike;
-import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
 /**
@@ -131,8 +129,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
           result.getPremises().size() + ", can't find " + (numArg+1);
       return null;
     }
-    TermPrinter tp = new TermPrinter(new Context(cu), null, result.getLocation());
-    String argString = tp.toString(result.getPremises().get(numArg));
+    String argString = result.getPremises().get(numArg).toString();
     if (numArg + 1 < result.getPremises().size()) argString += " ...";
     return argString;
   }

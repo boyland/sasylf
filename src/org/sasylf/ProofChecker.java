@@ -31,14 +31,13 @@ import org.sasylf.util.EclipseUtil;
 import org.sasylf.util.ResourceDocument;
 import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
+import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
-import edu.cmu.cs.sasylf.parser.ParseException;
-import edu.cmu.cs.sasylf.parser.TokenMgrError;
+import edu.cmu.cs.sasylf.ast.ModuleFinder;
+import edu.cmu.cs.sasylf.ast.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
-import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -136,16 +135,16 @@ public class ProofChecker  {
 		}
 	}
 
-	public static CompUnit analyzeSlf(IResource res, IEditorPart editor) {
+	public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IEditorPart editor) {
     if (editor == null || !(editor instanceof ITextEditor)) {
-      return analyzeSlf(res);
+      return analyzeSlf(mf, id, res);
     }
     ITextEditor ite = (ITextEditor)editor;
     IDocument doc = ite.getDocumentProvider().getDocument(ite.getEditorInput());
-    return analyzeSlf(res, doc);
+    return analyzeSlf(mf, id, res, doc);
   }
 
-  public static CompUnit analyzeSlf(IResource res) {
+  public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res) {
 	  IDocument doc = EclipseUtil.getDocumentFromResource(res);
 	  IFile f = (IFile)res.getAdapter(IFile.class);
 	  if (doc == null && f == null) {
@@ -154,8 +153,8 @@ public class ProofChecker  {
 	  } else {
 	    try {
 	      if (doc != null)
-          return analyzeSlf(res, doc);
-        else return analyzeSlf(res,doc,new InputStreamReader(f.getContents(),"UTF-8"));
+          return analyzeSlf(mf, id, res, doc);
+        else return analyzeSlf(mf,id,res, doc, new InputStreamReader(f.getContents(),"UTF-8"));
       } catch (UnsupportedEncodingException e) {
         return null;
       } catch (CoreException e) {
@@ -166,14 +165,16 @@ public class ProofChecker  {
 	
   /**
    * Check proofs for resource currently being edited as a document. 
+   * @param mf TODO
+   * @param id TODO
    * @param res resource to which to attach error and warning markers.
    * Must not be null
    * @param doc document holding content.  Must not be null.
    * @return compilation unit of the parse, or null (if a serious error)
    */
-  public static CompUnit analyzeSlf(IResource res, IDocument doc) {
+  public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IDocument doc) {
     if (res == null) throw new NullPointerException("resource cannot be null");
-    return analyzeSlf(res, doc, new StringReader(doc.get()));
+    return analyzeSlf(mf, id, res, doc, new StringReader(doc.get()));
   }
 	
   public static String getProofFolderRelativePathString(IResource res) {
@@ -189,7 +190,7 @@ public class ProofChecker  {
     return null;
   }
 
-  private static CompUnit analyzeSlf(IResource res, IDocument doc, Reader contents) {
+  private static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IDocument doc, Reader contents) {
     CompUnit result = null;
     Proof oldProof = Proof.getProof(res);
     Proof newProof = new Proof(res,doc);
@@ -211,21 +212,8 @@ public class ProofChecker  {
           e.printStackTrace();
         }
       }
-      try {
-        result = DSLToolkitParser.read(res.getName(),contents);
-      } catch (ParseException e) {
-        ErrorHandler.report(null, e.getMessage(), new Location(
-            e.currentToken.next), null, true, false);
-      } catch (TokenMgrError e) {
-        Location loc = ErrorHandler.lexicalErrorAsLocation(res.getName(),e.getMessage());
-        ErrorHandler.report(null, e.getMessage(), loc, null, true, false);
-      }
-      if (result != null) {
-        newProof.setCompilation(result);
-        String location = getProofFolderRelativePathString(res);
-        result.typecheck(location);
-      }
-
+      result = Main.parseAndCheck(mf, res.getName(), id, contents);
+      newProof.setCompilation(result);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
 		} catch (RuntimeException e) {

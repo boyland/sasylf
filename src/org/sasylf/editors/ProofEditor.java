@@ -69,7 +69,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		    if (ProofBuilder.getProofBuilder(p) != null) return;
 		    Proof.removeProof(f);
 		    // no proof builder to automatically parse the file, so we do it ourselves:
-		    ProofChecker.analyzeSlf(f, this);
+		    ProofChecker.analyzeSlf(null, null, f, this);
 		  }
 		}
 	}
@@ -90,7 +90,13 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
       if (f != null) {
         Proof.removeProof(f);
         super.doRevertToSaved();
-        ProofChecker.analyzeSlf(f, this);
+        IProject p = f.getProject();
+        ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+        if (pb == null) {
+          ProofChecker.analyzeSlf(null, null, f, this);
+        } else {
+          pb.forceBuild(f);
+        }
         return;
       }
     }

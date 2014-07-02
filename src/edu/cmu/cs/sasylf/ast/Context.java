@@ -31,6 +31,7 @@ public class Context implements Cloneable {
 
   /// The following fields represent global information
   
+  public final ModuleFinder moduleFinder;
   public final CompUnit compUnit;
   public Map<String,Syntax> synMap = new HashMap<String,Syntax>();
   public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
@@ -62,7 +63,8 @@ public class Context implements Cloneable {
   HashMap<NonTerminal,Relaxation> relaxationMap;
   public Set<FreeVar> relaxationVars;
   
-  public Context(CompUnit cu) {
+  public Context(ModuleFinder mf, CompUnit cu) {
+    moduleFinder = mf;
     compUnit = cu;
   }
   

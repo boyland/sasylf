@@ -38,12 +38,11 @@ public class CheckProofsHandler extends AbstractHandler {
 	    TreeSelection tsel = (TreeSelection) sel;
       for (Object seg : tsel.toArray()) {
         if (seg instanceof IResource) {
-          // System.out.println("Found resource: " + seg);
           IResource res = (IResource)seg;
           if ("slf".equals(res.getFileExtension())) {
             IFile f = (IFile)res.getAdapter(IFile.class);
             // System.out.println("  with correct extension");
-            ProofChecker.analyzeSlf(res,ResourceUtil.findEditor(page, f));
+            ProofChecker.analyzeSlf(null,null, res, ResourceUtil.findEditor(page, f));
           }
         }
         // System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
@@ -53,13 +52,13 @@ public class CheckProofsHandler extends AbstractHandler {
 	  IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
 	  IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
 	  if (res != null) {
-	    ProofChecker.analyzeSlf(res, activeEditor);
+	    ProofChecker.analyzeSlf(null, null, res, activeEditor);
 	  }  else {
-		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
-		MessageDialog.openInformation(
-				window.getShell(),
-				"SASyLF Check Proofs ",
-				"Cannot find resource for " + activeEditor);
+	    IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+	    MessageDialog.openInformation(
+	        window.getShell(),
+	        "SASyLF Check Proofs ",
+	        "Cannot find resource for " + activeEditor);
 	  }
 		return null;
 	}
