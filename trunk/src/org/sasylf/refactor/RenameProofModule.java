@@ -24,7 +24,7 @@ import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
-import org.sasylf.project.ProofBuilder;
+import org.sasylf.Proof;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.util.Location;
@@ -116,7 +116,7 @@ public class RenameProofModule extends RenameParticipant {
 
   private void createModuleRenameChange(String newModuleName, IDocument doc, TextFileChange result, RefactoringStatus status) throws BadLocationException {
     // first see if we can get a CompUnit:
-    CompUnit cu = ProofBuilder.getCompUnit(proofFile);
+    CompUnit cu = Proof.getCompUnit(proofFile);
     if (cu == null) {
       status.addWarning("proof file is not syntactically legal; module name may be mislocated");
     }

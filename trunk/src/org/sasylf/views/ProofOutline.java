@@ -34,14 +34,13 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 import org.sasylf.Activator;
+import org.sasylf.Proof;
 import org.sasylf.ProofChecker;
-import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
@@ -49,7 +48,6 @@ import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
-import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
@@ -98,7 +96,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			if(cu == null) {
 				return;
 			}
-			TermPrinter printer = new TermPrinter(new Context(cu), null, cu.getLocation());
 			
 			ProofElement pe = null;
 			
@@ -108,7 +105,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			  pe.setPosition(convertLocToPos(document,syn.getLocation()));
 			  pList.add(pe);
 			  for (Clause c : syn.getClauses()) {
-			    ProofElement ce = new ProofElement("Clause",printer.toString(c));
+			    ProofElement ce = new ProofElement("Clause",c.toString());
 			    Location loc = c.getLocation();
 			    ce.setPosition(convertLocToPos(document, loc));
 			    pe.addChild(ce);
@@ -118,17 +115,17 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			//judgments
 			for (Judgment judg : cu.getJudgments()) {
 			  if (!inResource(judg.getLocation(), documentFile)) continue;
-				pe = new ProofElement("Judgment", (judg.getName() + ": " + printer.toString(judg.getForm())));
+				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
 				pList.add(pe);
 				for (Rule r : judg.getRules()) {
 				  StringBuilder sb = new StringBuilder();
 				  sb.append(r.getName()).append(": ");
 				  for (Clause cl : r.getPremises()) {
-				    sb.append(FORALL).append(printer.toString(cl)).append(" ");
+				    sb.append(FORALL).append(cl).append(" ");
 				  }
 				  sb.append(EXISTS);
-				  sb.append(printer.toString(r.getConclusion()));
+				  sb.append(r.getConclusion());
 				  ProofElement re = new ProofElement("Rule", sb.toString());
 				  Location loc = r.getLocation();
 				  Position barPos = convertLocToPos(document, loc);
@@ -158,10 +155,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				sb.append(": ");
 				for(Fact fact : theo.getForalls()) {
 	        sb.append(FORALL);
-					sb.append(printer.toString(fact.getElement())).append(" ");
+					sb.append(fact.getElement()).append(" ");
 				}
 				sb.append(EXISTS);
-				sb.append(printer.toString(theo.getExists()));
+				sb.append(theo.getExists());
 				/*for(Element element : theo.getExists().getElements()) {
 					sb.append(element).append(" ");
 				}*/
@@ -241,7 +238,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					if(newInput instanceof IFileEditorInput) {
 						//String filePath = ((IFileEditorInput) newInput).getFile().getLocationURI().getPath().replaceFirst("/", "");
 						IFile file = ((IFileEditorInput)newInput).getFile(); // new File(filePath);
-						newCompUnit(file, document, ProofBuilder.getCompUnit(file));
+						newCompUnit(file, document, Proof.getCompUnit(file));
 					}
 				}
 			}
@@ -465,7 +462,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	public void setInput(IEditorInput input) {
 		fInput= input;
 		IFile f = (IFile)fInput.getAdapter(IFile.class);
-		proofChecked(f,ProofBuilder.getCompUnit(f), 0);
+		proofChecked(f,Proof.getCompUnit(f), 0);
 	}
 	
 	

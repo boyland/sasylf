@@ -4,9 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.ModuleFinder;
+import edu.cmu.cs.sasylf.ast.ModuleId;
+import edu.cmu.cs.sasylf.ast.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
@@ -24,6 +29,7 @@ public class Main {
 	public static void main(String[] args) throws ParseException, IOException {
 	  //System.setOut(new PrintStream(System.out, true, "UTF-8"));
 	  //System.setErr(new PrintStream(System.err, true, "UTF-8"));
+	  int exitCode = 0;
 	  if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
 			System.err.println("usage: sasylf [options] file1.slf ...");
 			System.err.println("Options include:");
@@ -39,6 +45,7 @@ public class Main {
 		  return;
 		}
 		String dir = null;
+		ModuleFinder mf = null;
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("--LF")) {
 				edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO = true;
@@ -64,41 +71,48 @@ public class Main {
 			      System.exit(-1);
 			    }
 			  }
+			  mf = new RootModuleFinder(root);
 			  continue;
 			}
 			String filename = args[i];
 			File file;
+			ModuleId id = null;
 			if (dir == null) {
 			  file = new File(filename);
 			} else {
 			  file = new File(dir,filename);
+			  try {
+			    id = new ModuleId(filename);
+			  } catch (RuntimeException ex) {
+			    System.err.println(ex.getMessage());
+			    exitCode = -1;
+			    continue;
+			  }
 			}
 			if (!file.canRead()) {
 				System.err.println("Could not open file " + filename);
-				System.exit(-1);
-				return;
+				exitCode = -1;
+				continue;
+			}
+			Reader r;
+			try {
+			  r = new InputStreamReader(new FileInputStream(file),"UTF-8");
+			} catch(FileNotFoundException ex) {
+			  System.err.println("Could not open file " + filename);
+			  exitCode = -1;
+			  continue;
 			}
 			try {
-				CompUnit cu = null;
-				try {
-					cu = DSLToolkitParser.read(filename,new FileInputStream(file));
-				} catch (ParseException e) {
-					ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
-				} catch (TokenMgrError e) {
-				  ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
-				} catch (FileNotFoundException ex) {
-				  System.err.println("Could not open file " + filename);
-				  System.exit(-1);
-				}
-				if (dir == null) cu.typecheck();
-				else cu.typecheck(filename);
+				parseAndCheck(mf, filename, id, r);
 			} catch (SASyLFError e) {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();
 			} catch (RuntimeException e) {
 				System.err.println("Internal SASyLF error analyzing " + filename + " !");
 				e.printStackTrace(); // unexpected exception
+				exitCode = -1;
 			} finally {
+			  r.close();
 				int newErrorCount = ErrorHandler.getErrorCount();
 				int newWarnings = ErrorHandler.getWarningCount();
 				@SuppressWarnings("resource")
@@ -117,9 +131,38 @@ public class Main {
 				  }
 				}
 				ps.println(" reported.");
+				if (newErrorCount > 0) exitCode = -1;
 			}
 			ErrorHandler.clearAll();
 		}
+		System.exit(exitCode);
 	}
+
+  /**
+   * Analyze the SASyLF code in the reader and return a compilation unit
+   * if no (unrecoverable) errors are found. 
+   * @param mf may be4 null
+   * @param filename must not be null
+   * @param id may be null only if mf is null
+   * @param r contexts: must not be null
+   * @throws SASyLFError is an error is found.
+   */
+  public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
+      ModuleId id, Reader r) {
+    CompUnit cu = null;
+    try {
+    	cu = DSLToolkitParser.read(filename,r);
+    } catch (ParseException e) {
+    	ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
+    } catch (TokenMgrError e) {
+      ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
+    }
+    if (mf == null) cu.typecheck();
+    else {
+      mf.setCurrentPackage(id.packageName);
+      cu.typecheck(mf,id);
+    }
+    return cu;
+  }
 
 }

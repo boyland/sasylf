@@ -104,6 +104,12 @@ public class Proof {
     return proofs.get(res);
   }
   
+  public static CompUnit getCompUnit(IResource res) {
+    Proof p = getProof(res);
+    if (p != null) return p.compilation;
+    return null;
+  }
+  
   /**
    * Remove the proof object for this resource.
    * This turns off incrementality, but does not dispose the current
