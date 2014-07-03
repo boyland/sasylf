@@ -199,13 +199,17 @@ public class ClauseDef extends Clause {
 	
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
+	  if (ctx == null) {
+	    super.prettyPrint(out, null);
+	    return;
+	  }
 		//System.err.println("clausedef.prettyPrint for " + (ctx == null ? "" : ctx.term));
-		Term origT = ctx==null ? null:ctx.term;
+		Term origT = ctx.term;
 		Term t = origT;
-		List<String> origBoundVars = ctx == null ? null : ctx.boundVars;
-		int origBoundVarCount = ctx == null ? 0 : ctx.boundVarCount;
+		List<String> origBoundVars = ctx.boundVars;
+		int origBoundVarCount = ctx.boundVarCount;
 		Set<String> ctxVars = null;
-		if (ctx != null && getAssumeIndex() != -1 && t instanceof Abstraction) {
+		if (getAssumeIndex() != -1 && t instanceof Abstraction) {
 			ctxVars = new HashSet<String>();
 			ctx.boundVars = new ArrayList<String>(ctx.boundVars);
 			while (t instanceof Abstraction) {
@@ -222,7 +226,7 @@ public class ClauseDef extends Clause {
 		}
 		boolean prev = false;
 		Iterator<? extends Term> termIter = null;
-		if (ctx != null && t instanceof Application) {
+		if (t instanceof Application) {
 			List<? extends Term> elemTerms = ((Application)t).getArguments();
 			termIter = elemTerms.iterator();
 		}
@@ -236,7 +240,7 @@ public class ClauseDef extends Clause {
 			if (!(e instanceof Terminal) && !(e instanceof Variable) && termIter != null && termIter.hasNext() && i != getAssumeIndex())
 				t = termIter.next();
 			//System.err.println("type " + e.getClass().getName() + " for " + e + " with term " + t);
-			if (ctx != null && i == getAssumeIndex()) {
+			if (i == getAssumeIndex()) {
 				out.print(ctx.contextVarName);
 				if (origT instanceof Abstraction)
 					out.print("<expanded with vars:"+ ctxVars +">");

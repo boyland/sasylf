@@ -117,17 +117,27 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
-		boolean prev = false;
+		Element prev = null;
 		for (Element e : elements) {
-			if (prev)
+			if (prev != null && addSpace(prev,e))
 				out.print(' ');
 			if (e instanceof Clause)
 				out.print('(');
 			e.prettyPrint(out, null);
 			if (e instanceof Clause)
 				out.print(')');
-			prev = true;
+			prev = e;
 		}
+	}
+	
+	public static boolean addSpace(Element e1, Element e2) {
+	  if (!(e2 instanceof Terminal)) return true;
+	  String thisTerminal = e2.toString();
+    if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
+    if (!(e1 instanceof Terminal)) return true;
+    if (thisTerminal.isEmpty()) return false;
+    if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
+    return false;
 	}
 
 	public Set<Terminal> getTerminals() {
