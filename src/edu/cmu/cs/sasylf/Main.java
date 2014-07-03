@@ -103,7 +103,18 @@ public class Main {
 			  continue;
 			}
 			try {
-				parseAndCheck(mf, filename, id, r);
+			  /* long start = System.nanoTime(); */
+				@SuppressWarnings("unused")
+        CompUnit cu = parseAndCheck(mf, filename, id, r);
+				/*
+				long mid = System.nanoTime();
+				if (cu != null) {
+				  check(mf,id,cu);
+				  long end = System.nanoTime();
+				  System.out.println("Parse and check: " + (mid - start));
+				  System.out.println("        recheck: " + (end-mid));
+				}
+				*/
 			} catch (SASyLFError e) {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();
@@ -157,12 +168,21 @@ public class Main {
     } catch (TokenMgrError e) {
       ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
     }
+    check(mf, id, cu);
+    return cu;
+  }
+
+  /**
+   * @param mf
+   * @param id
+   * @param cu
+   */
+  public static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
     if (mf == null) cu.typecheck();
     else {
       mf.setCurrentPackage(id.packageName);
       cu.typecheck(mf,id);
     }
-    return cu;
   }
 
 }

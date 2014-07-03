@@ -349,6 +349,15 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
     super.doSetInput(input);
 		if (fOutlinePage != null)
 			fOutlinePage.setInput(input);
+    if (input instanceof IFileEditorInput) {
+      IFile f = ((IFileEditorInput)input).getFile();
+      if (f != null) {
+        IProject p = f.getProject();
+        if (p == null) return;
+        ProofBuilder.ensureBuilding(p, false);
+      }
+    }
+
   }
   
   

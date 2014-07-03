@@ -57,11 +57,12 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 
   /**
    * Make sure that the project has been built at some time in the past
-   * or is in the process of being built.  In particular it ensures that 
+   * or is in the process of being built.  In particular, if doWait
+   * is set, it ensures that 
    * if the project has SASyLF nature, that a proof builder is created for it.
    * @param project project to require building of.
    */
-  public static void ensureBuilding(final IProject project) {
+  public static void ensureBuilding(final IProject project, boolean doWait) {
     try {
       if (!project.hasNature(MyNature.NATURE_ID)) return;
     } catch (CoreException e1) {
@@ -71,6 +72,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
     if (builders.putIfAbsent(project, new Cell<Boolean>(false)) == null) {
       forceInitialBuild(project);
     }
+    if (!doWait) return;
     Object x;
     while ((x = builders.get(project)) instanceof Cell<?>) {
       // System.out.println("still a cell?");
@@ -115,9 +117,19 @@ public class ProofBuilder extends IncrementalProjectBuilder {
     initialBuild.schedule();
   }
 
+  /**
+   * Return the instance for this project that has been created,
+   * creating it if necessary.
+   * Warning: because the proof can only be created indirectly, 
+   * and the code (in Eclipse) that leads up to the initialization
+   * performs some locks, this code can lead to a deadlock
+   * if the caller is involved in resource changes.
+   * @param p
+   * @return
+   */
   public static ProofBuilder getProofBuilder(IProject p) {
     // System.out.println("getProofBuilder(" + p + ")");
-    ensureBuilding(p);
+    ensureBuilding(p, true);
     ProofBuilder pb = (ProofBuilder)builders.get(p);
     // System.out.println("pb = " + pb);
     return pb;
@@ -306,7 +318,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
       // Apparently not
       return null;
     }
-    ensureBuilding(project);
+    ensureBuilding(project,false);
     if (buildPath == null) return null;
     String[] pieces = buildPath.split(":");
     String proofFolderName = pieces[0];
