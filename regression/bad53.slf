@@ -1,0 +1,105 @@
+package regression;
+
+terminals let skip if then else in
+
+syntax
+  v ::= x
+  e ::= 0 | 1 | v | e + e
+  s ::= skip | let x = e in s[x] | s; s | if e then s else s | v := e
+  p ::= * | p,s
+  
+  Gamma ::= * | Gamma, x 
+
+judgment boundv: Gamma |- v
+assumes Gamma
+
+    ------------- var
+    Gamma, x |- x  
+    
+    
+judgment bounde: Gamma ||- e
+assumes Gamma
+
+    ---------- B-Zero
+    Gamma ||- 0
+    
+    ---------- B-One
+    Gamma ||- 1
+
+    Gamma |- v    
+    ---------- B-Var
+    Gamma ||- v
+    
+    Gamma ||- e1
+    Gamma ||- e2
+    ----------------- B-Plus
+    Gamma ||- e1 + e2
+    
+judgment bounds: Gamma |||- s
+assumes Gamma
+
+    --------------- B-Skip
+    Gamma |||- skip
+    
+    Gamma ||- e
+    Gamma, x |||- s[x]
+    --------------------------- B-Let
+    Gamma |||- let x=e in s[x]
+
+    Gamma |||- s1
+    Gamma |||- s2
+    ----------------- B-Seq
+    Gamma |||- s1; s2
+    
+    Gamma ||- e
+    Gamma |||- s1
+    Gamma |||- s2
+    -------------------------------- B-If
+    Gamma |||- if e then s1 else s2
+    
+    Gamma |- v
+    Gamma ||- e
+    ------------------ B-Assign
+    Gamma |||- v := e
+    
+judgment boundp: Gamma |- p
+assumes Gamma
+
+    ----------- B-Empty
+    Gamma |- *
+    
+    Gamma |- p
+    Gamma |||- s
+    ------------- B-More
+    Gamma |- p,s
+    
+
+theorem weird:
+  assumes Gamma
+  forall b: Gamma, x |- p[x]
+  exists Gamma |||- skip.
+  proof by case analysis on b:
+    case rule
+      ----------------- B-Empty
+      _: (Gamma, x) |- *
+    is
+      proof by rule B-Skip
+    end case
+
+    case rule
+      _: (Gamma, x) |- p0 //! Should depend on x
+      
+      _: (Gamma, x) |||- s0[x]
+      ------------------- B-More
+      _: (Gamma, x) |- (p0, s0[x])
+    is
+      proof by rule B-Skip
+    end case
+
+  end case analysis
+end theorem
+
+
+
+
+
