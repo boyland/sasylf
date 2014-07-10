@@ -80,6 +80,10 @@ public class ErrorHandler {
     report(errorType, msg, obj, debugInfo, false, true);
   }
 
+  public static void warning(String msg, Span span, String debugInfo) {
+    report(null, msg, span, debugInfo, false, true);
+  }
+  
   public static void report(Errors errorType, Span obj) {
 		report(errorType, null, obj, null, true, true);
 	}

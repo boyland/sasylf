@@ -10,6 +10,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Relation;
+import edu.cmu.cs.sasylf.util.TransitiveRelation;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -194,50 +195,10 @@ public class FreeVar extends Atom {
 	}
 	
 	public static void setAppearsIn(Term term1, Term term2) {
-		boolean changed = getAppearsIn().put(term1, term2);
-		if (changed)
-			enforceTransitivity(term1, term2);
-	}
-	
-	/*private static void enforceTransitivity1(Term term1, Term term2) {
-		Set<Pair<Term, Term>> worklist = new HashSet<Pair<Term, Term>>();
-		worklist.add(new Pair<Term, Term>(term1, term2));
-		while (!worklist.isEmpty()) {
-			Pair<Term, Term> pair = worklist.iterator().next();
-			verify(worklist.remove(pair), "internal invariant violated");
-			Term t1 = pair.first;
-			Term t2 = pair.second;
-			// if t1 appearsIn t2 and t2 appearsIn t3 then t1 appearsIn t3
-			Set<Term> t3set = appearsIn.getAll(t2);
-			for (Term t3 : t3set) {
-				boolean changed = appearsIn.put(t1, t3);
-				if (changed) {
-					
-				}
-			}
-		}
-		
-	}*/
-
-	private static void enforceTransitivity(Term t1, Term t2) {
-		debug("added ", t1, " in ", t2);
-		// if t1 appearsIn t2 and t2 appearsIn t3 then t1 appearsIn t3
-		Set<Term> t3set = getAppearsIn().getAll(t2);
-		for (Term t3 : t3set) {
-			if (!canAppearIn(t1, t3))
-				debug("transitivity: ", t1, " in ", t2, " in ", t3);
-			setAppearsIn(t1, t3);
-		}
-		// if t0 appearsIn t1 and t1 appearsIn t2 then t0 appearsIn t2
-		Set<Term> t0set = getAppearsIn().getAllReverse(t1);
-		for (Term t0 : t0set) {
-			if (!canAppearIn(t0, t2))
-				debug("transitivityBack: ", t0, " in ", t1, " in ", t2);
-			setAppearsIn(t0, t2);
-		}
+		getAppearsIn().put(term1, term2);
 	}
 
-	private static Relation<Term,Term> getAppearsIn() {
+	public static Relation<Term,Term> getAppearsIn() {
     return appearsIn.get();
   }
   private static void resetAppearsIn() {
@@ -247,7 +208,7 @@ public class FreeVar extends Atom {
   private static ThreadLocal<Relation<Term,Term>> appearsIn = new ThreadLocal<Relation<Term,Term>>() {
     @Override
     protected Relation<Term, Term> initialValue() {
-      return new Relation<Term,Term>();
+      return new TransitiveRelation<Term>(false);
     }    
   };
 

@@ -30,13 +30,31 @@ public class Relation<T1, T2> implements Iterable<Pair<T1,T2>> {
 		return result;
 	}
 
+	public void putAll(Relation<T1,T2> relation) {
+	  /*
+	  for (Map.Entry<T1,Set<T2>> forw : relation.forwardMap.entrySet()) {
+	    getAll(forw.getKey()).addAll(forw.getValue());
+	  }
+    for (Map.Entry<T2,Set<T1>> back : relation.reverseMap.entrySet()) {
+      getAllReverse(back.getKey()).addAll(back.getValue());
+    }
+    */
+	  for (Pair<T1,T2> pair : relation) {
+	    put(pair.first,pair.second);
+	  }
+	}
+	
 	private <Ta,Tb> Set<Tb> getSet(Map<Ta, Set<Tb>> map, Ta key) {
 		Set<Tb> set = map.get(key);
 		if (set == null) {
-			set = new HashSet<Tb>();
+			set = makeInitialEdgeSet(key);
 			map.put(key, set);
 		}
 		return set;
+	}
+	
+	protected <Ta,Tb> Set<Ta> makeInitialEdgeSet(Tb key) {
+	  return new HashSet<Ta>();
 	}
 
 	private class PairIterator implements Iterator<Pair<T1,T2>> {
