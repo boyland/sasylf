@@ -55,16 +55,17 @@ public class TrackDirtyRegions implements IDocumentListener {
    * @return fresh list of dirty regions.
    */
   public List<IDirtyRegion> getDirtyRegions() {
-    Util.verify(invariant(), "invariant bad");
     final List<IDirtyRegion> result = new ArrayList<IDirtyRegion>();
     if (Display.getCurrent() == null) {
       Display.getDefault().syncExec(new Runnable() {
         public void run() {
+          Util.verify(invariant(), "invariant bad");
           result.addAll(regions);
           regions.clear();
         }
       });
     } else {
+      Util.verify(invariant(), "invariant bad");
       result.addAll(regions);
       regions.clear();
     }
@@ -121,7 +122,6 @@ public class TrackDirtyRegions implements IDocumentListener {
         // backup
         it.previous();
         it.add(new MutableDirtyRegion(event.fOffset,oldText,eLength));
-        it.next();
         break handleOverlap;
       }
       
