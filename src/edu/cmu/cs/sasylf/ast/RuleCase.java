@@ -345,7 +345,7 @@ public class RuleCase extends Case {
     // compose the pairSub with the unifyingSub, which sometimes can fail
     // with a non-pattern substitution.  I probably could figure out how to
     // see how to avoid this problem, but it's easier simply to give up trying
-    // to check the warning
+    // to check the warning.
     
     try {
       pairSub.compose(unifyingSub);
@@ -353,7 +353,8 @@ public class RuleCase extends Case {
       Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
       overlyGeneral.removeAll(adaptSub.getMap().keySet());
       if (!overlyGeneral.isEmpty()) {
-        ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this.getSpan());
+        ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this.getSpan(),
+            "SASyLF computes the restriction as " + pairSub.getSubstituted(overlyGeneral.iterator().next()));
       }
     } catch (UnificationFailed ex) {
       Util.debug("pairSub unification failed ", ex.term1, " = ", ex.term2, 
