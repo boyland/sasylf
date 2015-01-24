@@ -113,6 +113,7 @@ RELEASE HISTORY
 	Incremental proof checking
 	re-check after revert.
 	underline problems in the text viewer
+	Resolved issue #63
 1.3.3   Enhancements and Bug fixes
     Fixed input var bugs (bad36.slf, bad37.slf)
     Fixed partial case analysis bugs (bad39.slf, good22.slf)

@@ -657,6 +657,7 @@
             id="org.sasylf.refactor.rename"
             name="Rename SASyLF module">
          <enablement>
+            <instanceof value="org.eclipse.core.resources.IFile"/>
             <test
                   property="org.eclipse.core.resources.name"
                   value="*.slf">
