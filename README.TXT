@@ -26,10 +26,12 @@ RUNNING SASyLF
 
 You can run SASyLF within Eclipse by downloading the plugin into
 the "dropins" folder of your Eclipse distribution.
+The plugin is a file of the form org.sasylf_Major.Minor.Release.vDate.jar
+(The SASyLF.jar file will *not* work as a plugin).
  
  
 You can run SASyLF on the command line
-by explicitly invoking java on the SASyLF.jar file,
+by explicitly invoking java on the SASyLF.jar (or plugin) file,
 as in:
 
 java -jar SASyLF.jar <filename>.slf
@@ -67,7 +69,7 @@ Other examples include:
  * object-calculus.slf - Definition of Abadi and Cardelli's Simply Typed Object Calculus
  * featherweight-java.slf - Definition of Featherweight Java (soundness proof to come)
  * lambda-unicode.slf - version of lambda.slf using unicode identifiers and operators
-
+ * cut-elimination - demonstrate some of the more advanced features of SASyLF 1.3
 
 
 
@@ -79,17 +81,18 @@ file with the JavaCC Eclipse plugin, available from update site
 http://eclipse-javacc.sourceforge.net/ (compile the .jj file to .java
 by right-clicking on parser.jj and choosing Compile with JavaCC).
 
-Alternatively, if you fetch the source from SVN, you can build SASyLF
+Alternatively, if you fetch the source from github, you can build SASyLF
 (under Unix) assuming you have java and javacc in your path using
 	make build
 
+CUrrently, there's no easy way to build the Eclipse plugin from the command-line.
 
 
 CONTACT
 
 If you have any trouble installing or running SASyLF, or understanding
 how to use the tool or interpret its output, contact John Boyland
-<boyland@uwm.edu> or else submit an issue report on the Google code site,
+<boyland@uwm.edu> or else submit an issue report on the github site,
 or discuss the problem on the Google group http://groups.google.com/group/sasylf-users
 
 
