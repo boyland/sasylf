@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public abstract class Node implements Span {
@@ -41,4 +42,9 @@ public abstract class Node implements Span {
 	public void setEndLocation(Location l) {
 	  endLocation = l;
 	}
+		
+	protected void tdebug(Object... args) {
+		Util.tdebug(args);
+	}
+
 }

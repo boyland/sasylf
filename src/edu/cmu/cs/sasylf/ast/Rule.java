@@ -421,7 +421,14 @@ public class Rule extends RuleLike implements CanBeCase {
       sub = null;
     }
     if (sub != null) {
-      // if (adaptSub != null) sub.compose(adaptSub);
+      if (adaptSub != null) {
+    	  adaptSub.compose(sub); // see what changes had to be done to adaptations
+    	  adaptSub.avoid(ctx.inputVars); // but also try to avoid binding input variables
+    	  // tdebug("new adaptSub = ",adaptSub);
+    	  sub.compose(adaptSub); // now compose back.  
+    	  // XXX: The substitution may have some weird things in it like X -> BoundVar
+    	  // We should think this through carefully.
+      }
       sub.avoid(ctx.inputVars); // try to avoid so we don't unnecessarily replace input vars
       Util.debug("at check, adaptSub = ",adaptSub);
       if (!ctx.canCompose(sub)) return;

@@ -307,7 +307,6 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
       debug("*********** case analyzing line ", getLocation().getLine());
       // tdebug("    currentCaseAnalysisElement = " + ctx.currentCaseAnalysisElement);
       // tdebug("    sub = " + ctx.currentSub);
-      // tdebug("    adaptationSub = " + ctx.adaptationSub);
 			Judgment judge= (Judgment) ((ClauseUse)ctx.currentCaseAnalysisElement).getConstructor().getType();
 			// see if each rule, in turn, applies
 			for (Rule rule : judge.getRules()) {

@@ -223,8 +223,8 @@ public class RuleCase extends Case {
 		}
 		if (adaptedSubjectTerm != subjectTerm) {
 		  Util.debug("pattern = ",patternConc," adaptedSubject = ",adaptedSubjectTerm);
-		  Util.debug("sub = ",unifyingSub);
 		}
+		Util.debug("  unifyingSub = ",unifyingSub);
 		
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
@@ -243,19 +243,23 @@ public class RuleCase extends Case {
 		for (Pair<Term,Substitution> pair : caseResult)
 		  try {
 				pairSub = new Substitution(pair.second);
+				debug("\tpair.first was ", pair.first);
 				debug("\tpair.second was ", pairSub);
-				// Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
-				candidate = pair.first; // .substitute(pairSub); // reorganized and so much re-sub.
+				Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
+				candidate = pair.first.substitute(pairSub); // reorganized and so must re-sub.
 
 				Util.debug("case analysis: does ", caseTerm, " generalize ", candidate);
 				Util.debug("\tpair.second is now ", pairSub);
+				Util.debug("bound input vars = " + boundInputVars);
 
 				Set<FreeVar> patternFree = candidate.getFreeVariables();
-				//  JTB: I'm not sure why we did all this...
-				//Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
-				//inputVars.removeAll(boundInputVars);
-				//Util.debug("removing ",boundInputVars);
-				//patternFree.addAll(inputVars);
+				//  We have to make sure the user doesn't use an existing
+				//  variable that shouldn't be changed as a new pattern variable.
+				// See bad54.slf
+				Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
+				inputVars.removeAll(boundInputVars);
+				Util.debug("removing ",boundInputVars);
+				patternFree.addAll(inputVars);
 				Util.debug("patternFree = ",patternFree);
 				
 				Substitution computedSub = caseTerm.unify(candidate);
