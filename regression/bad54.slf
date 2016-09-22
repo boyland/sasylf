@@ -1,0 +1,39 @@
+// default package
+
+terminals S contradiction
+
+syntax
+  n ::= 0 
+    | S n
+
+judgment absurd: contradiction
+
+judgment equality: n = n
+
+   ------ eq
+   n = n
+   
+theorem implausible:
+    forall e1: n1 = n2
+    forall e2: n3 = n4
+    exists n1 = n3.
+    _: n1 = n3 by case analysis on e1:
+        case rule 
+            ----------- eq //! shouldn't bind n3 here
+            e3: n3 = n3 
+        is
+            _: n1 = n3 by e3
+        end case
+    end case analysis
+end theorem
+
+theorem impossible:
+    exists contradiction.
+    e1: 0 = 0 by rule eq
+    e2: S 0 = S 0 by rule eq
+    e3: 0 = S 0 by theorem implausible on e1,e2
+    _: contradiction by case analysis on e3:
+    end case analysis
+end theorem
+
+
