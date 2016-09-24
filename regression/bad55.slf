@@ -1,0 +1,26 @@
+// default package
+
+terminals s
+
+syntax
+
+n ::= 0
+  | s n
+
+
+judgment eq: n = n
+
+  -------- eq
+  n = n
+  
+lemma silly:
+  exists 0 = 0 .
+  _: 0 = 0 by case analysis on n: //! n undeclared
+    case 0 is
+      _: 0 = 0 by rule eq
+    end case
+    case s n' is
+      _: 0 = 0 by rule eq
+    end case
+  end case analysis
+end lemma   
