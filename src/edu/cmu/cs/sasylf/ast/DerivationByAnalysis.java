@@ -172,6 +172,9 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		    ctx.caseTermMap.put(e.getKey(), newSet);
 		  }
 		} else if (caseNT != null) {
+			if (!ctx.inputVars.contains(caseNT.computeTerm(null))) {
+				ErrorHandler.report("Undeclared syntax: " + caseNT +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), targetDerivation);
+			}
 			Syntax syntax = caseNT.getType();
 			for (Clause clause : syntax.getClauses()) {
 			  Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
