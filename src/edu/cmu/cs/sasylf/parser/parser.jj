@@ -1773,7 +1773,7 @@ Derivation Derivation() :
      t=<PROOF> { c = null; })
    <BY> d=Justification(t, c)
   { return d; }
-|  LOOKAHEAD(<USE> <INVERSION>) t=<USE> <INVERSION> of=<IDENTIFIER> s=RuleName() <ON> t2=<IDENTIFIER>
+|  LOOKAHEAD(<USE> <INVERSION>) t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] s=RuleName() <ON> t2=<IDENTIFIER>
     {
       if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
@@ -1838,7 +1838,7 @@ Derivation Justification(Token startT, Clause c) :
   | LOOKAHEAD(2) <CONTRADICTION> <ON> t=<IDENTIFIER>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
       dca.setEndLocation(Location.endOf(t)); return dca; }
-  | LOOKAHEAD(2) <INVERSION> of=<IDENTIFIER> s=RuleName() [ <ON> t=<IDENTIFIER> ]
+  | LOOKAHEAD(2) <INVERSION> of=<IDENTIFIER> [<RULE>] s=RuleName() [ <ON> t=<IDENTIFIER> ]
     {
       if (t == null) {
           ErrorHandler.recoverableError("inversion " + of.image + " " + s + " on what?",new Location(of));

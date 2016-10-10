@@ -347,11 +347,11 @@ is
 	d6: * |- T22' <: T2 by induction hypothesis on d2
 	// d4 has only one case which unifies the two types.  We want the unification
 	// and so use the following special case proof step: "use inversion of"
-	use inversion of type-equality on d4
+	use inversion of rule type-equality on d4
 	d8: T == T1'' -> T3 and
 	d9: * |- T21' <: T1'' and
     d10: * |- T3 <: T22' by induction hypothesis on d1
-    use inversion of type-equality on d8
+    use inversion of rule type-equality on d8
     d11: T1'' -> T3 == T1'' -> T3 by rule type-equality
     d12: * |- T1 <: T1'' by rule SA-Trans on d5, d9
 	d13: * |- T3 <: T2 by rule SA-Trans on d10, d6
@@ -407,7 +407,7 @@ proof by case analysis on dtv:
                 d4: T' == T1'' -> T2' and
                 d5: * |- T1 <: T1'' and
                 d6: * |- T2' <: T2 by lemma arrow-sub-arrow on dts1
-                use inversion of type-equality on d4
+                use inversion of rule type-equality on d4
                 // now dtt1 has the right shape for the induction hypothesis
                 proof by induction hypothesis on dtv, dtt1
             end case
@@ -628,7 +628,7 @@ is
             // "use inversion" is used when we aren't interested
             // in the premises of the rule. Here there are not
             // premises in any case.
-		    use inversion of equality on deq
+		    use inversion of rule equality on deq
 
             // now we can use E-AppAbs
 		    dsteps : t1 t2 -> t11[t2] by rule E-AppAbs on dp2v
@@ -678,7 +678,7 @@ is
 	
 		deq : t1 == lambda X <: T11' => t11[X] by lemma canonical-form-Lambda on d1v, d1
 	
-		use inversion of equality on deq
+		use inversion of rule equality on deq
 		
 	    dsteps : t1 "[" T2 "]" -> t11[T2] by rule E-TappTabs
 
@@ -732,7 +732,7 @@ is
 	d4: T'' == T1' -> T' and 
 	d5: * |- T1 <: T1' and
 	d6: * |- T' <: T by lemma arrow-sub-arrow on d2
-	use inversion of type-equality on d4
+	use inversion of rule type-equality on d4
 	d8: * |- T2 <: T1' by rule SA-Trans on dsub, d5
 	d9: * |- t12[t2] : T' by induction hypothesis on d1, dt2, d8
 	dt12: * |- t12[t2] : T by rule T-Sub on d9, d6

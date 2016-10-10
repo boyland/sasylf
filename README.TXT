@@ -116,6 +116,7 @@ RELEASE HISTORY
 	Incremental proof checking
 	re-check after revert.
 	underline problems in the text viewer
+	Added optional "rule" in inversion syntax
 	Resolved issues #63, #64, #66
 1.3.3   Enhancements and Bug fixes
     Fixed input var bugs (bad36.slf, bad37.slf)
