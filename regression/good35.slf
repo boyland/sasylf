@@ -1,0 +1,52 @@
+// "or" with "and" pieces not working in SASyLF 1.3.4a2 and earlier.
+// The "and" judgments in "case or" are ignored, and one is
+// not able to construct proof of the "and" part of the "or".
+terminals S 
+
+syntax
+  n ::= 0
+     | S n
+
+
+judgment eq: n = n
+
+  ------ eq
+  n = n
+
+judgment gt: n > n
+
+  ------- gt-1
+  S n > n
+
+  n1 > n2
+  --------- gt-s
+  S n1 > n2
+
+theorem test:
+    forall n
+    exists (n = S n' and n > 0) or n = 0.
+    proof by induction on n:
+        case 0 is
+            _: 0 = 0 by rule eq
+        end case
+
+        case S n' is
+            eq: n = S n' by rule eq
+            o: (n' = S n'' and n' > 0) or n' = 0 by induction hypothesis on n'
+            g: n > 0 by case analysis on o:
+                case or eq': (n' = (S n'')) and g': (n' > 0) is
+                    _: S n' > 0 by rule gt-s on g' 
+                end case
+
+                case or eq': n' = 0 is
+                    use inversion of eq on eq'
+                    proof by rule gt-1
+                end case
+
+            end case analysis
+            _: n = S n' and _: n > 0 by eq,g
+        end case
+
+    end induction
+end theorem
+

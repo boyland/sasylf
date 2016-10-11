@@ -60,9 +60,16 @@ public abstract class Derivation extends Fact {
 	  
     this.addToDerivationMap(ctx);
     
+    return result;
+	}
+	
+	
+	@Override
+  public void addToDerivationMap(Context ctx) {
+    super.addToDerivationMap(ctx);
     if (clause instanceof AndClauseUse) {
       String[] names = super.getName().split(",");
-      if (names.length == 1) return result;
+      if (names.length == 1) return;
       List<ClauseUse> clauses = ((AndClauseUse)clause).getClauses();
       if (clauses.size() != names.length) {
         ErrorHandler.recoverableError("unequal number of conjuncts", this);
@@ -77,10 +84,9 @@ public abstract class Derivation extends Fact {
         }
       }
     }
-    return result;
-	}
-	
-	public void typecheck(Context ctx) {
+  }
+
+  public void typecheck(Context ctx) {
 	  ErrorHandler.recordLastSpan(this);
 	  ctx.checkConsistent(this);
     clause.typecheck(ctx);
