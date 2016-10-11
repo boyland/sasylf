@@ -1,4 +1,4 @@
-SASyLF version 1.3.4a2
+SASyLF version 1.3.4a3
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland
 
@@ -117,7 +117,7 @@ RELEASE HISTORY
 	re-check after revert.
 	underline problems in the text viewer
 	Added optional "rule" in inversion syntax
-	Resolved issues #63, #64, #66
+	Resolved issues #63, #64, #66, #69
 1.3.3   Enhancements and Bug fixes
     Fixed input var bugs (bad36.slf, bad37.slf)
     Fixed partial case analysis bugs (bad39.slf, good22.slf)
