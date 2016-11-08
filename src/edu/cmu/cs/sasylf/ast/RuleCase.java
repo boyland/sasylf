@@ -259,7 +259,7 @@ public class RuleCase extends Case {
 				Util.debug("bound input vars = " + boundInputVars);
 
 				Set<FreeVar> patternFree = candidate.getFreeVariables();
-				tdebug("pattern free = " + patternFree);
+				debug("pattern free = " + patternFree);
 				//  We have to make sure the user doesn't use an existing
 				//  variable that shouldn't be changed as a new pattern variable.
 				// See bad54.slf
@@ -372,7 +372,7 @@ public class RuleCase extends Case {
           " while trying to compose ", pairSub, " with ", unifyingSub);
     }
     
-    tdebug("current sub = " + ctx.currentSub);
+    // tdebug("current sub = " + ctx.currentSub);
     
 		// update the set of subderivations
 		if (isSubderivation != null) {
