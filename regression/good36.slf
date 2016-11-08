@@ -1,0 +1,62 @@
+// default package
+
+terminals S
+
+syntax
+  n ::= 0 
+     | S n
+     
+judgment eq: n = n
+
+   -------- eq
+    n = n
+    
+    
+judgment equivalent: n == n
+
+   ------- eqv0
+   0 == 0
+   
+   n1 == n2
+   ------------- eqvS
+   S n1 == S n2
+
+
+lemma equiv-reflexive:
+    forall n
+    exists n == n.
+    proof by induction on n:
+        case 0 is
+            proof by rule eqv0
+        end case
+        case S n' is
+            e: n' == n' by induction hypothesis on n'
+            proof by rule eqvS on e
+        end case 
+    end induction
+end lemma
+
+lemma eq-implies-equiv:
+    forall e: n1 = n2
+    exists n1 == n2.
+    proof by case analysis on e:
+        case rule
+            ---------- eq
+            _: n1 = n1
+        is
+            proof by case analysis on n1:
+                case 0 is
+                    proof by rule eqv0
+                end case
+                case S n is
+                    proof by lemma equiv-reflexive on n1
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+// judgment ...
+
+// theorem ...
+

@@ -207,9 +207,15 @@ public class RuleCase extends Case {
 		}
 
 		// Now create the "unifyingSub"
+		// tdebug("Unifying " + patternConc + " " + adaptedSubjectTerm);
 		Substitution unifyingSub = null;
 		try {
-		  unifyingSub = patternConc.unify(adaptedSubjectTerm);
+		  // Don't put patternConc first because this tends to
+		  // force the variables in the conclusion to be substituted in favor
+		  // of the generated code:
+		  //    unifyingSub = patternConc.unify(adaptedSubjectTerm);
+		  // Instead, do it the other way around:
+		  unifyingSub = adaptedSubjectTerm.unify(patternConc);
     } catch (EOCUnificationFailed uf) {
       ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
                 + "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);     
@@ -253,6 +259,7 @@ public class RuleCase extends Case {
 				Util.debug("bound input vars = " + boundInputVars);
 
 				Set<FreeVar> patternFree = candidate.getFreeVariables();
+				tdebug("pattern free = " + patternFree);
 				//  We have to make sure the user doesn't use an existing
 				//  variable that shouldn't be changed as a new pattern variable.
 				// See bad54.slf
@@ -364,6 +371,8 @@ public class RuleCase extends Case {
       Util.debug("pairSub unification failed ", ex.term1, " = ", ex.term2, 
           " while trying to compose ", pairSub, " with ", unifyingSub);
     }
+    
+    tdebug("current sub = " + ctx.currentSub);
     
 		// update the set of subderivations
 		if (isSubderivation != null) {
