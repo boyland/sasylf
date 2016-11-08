@@ -221,6 +221,8 @@ public abstract class RuleLike extends Node {
           if (!concElem.getRoot().equals(actual.getRoot())) {
             ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),input);
           }
+        } else if (concElem.getRoot() == null && actual.getRoot() != null) {
+          ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, input);
         }
       } else if (!Derivation.checkRootMatch(ctx,actual,formal,null)) {
         ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),errorPoint);

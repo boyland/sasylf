@@ -1,0 +1,61 @@
+package regression;
+
+terminals fn Unit unit
+
+syntax
+    t ::= x | unit | t t | fn x:T => t[x]
+
+    T ::= Unit | T -> T
+
+    Gamma ::= * | Gamma, x:T
+    
+
+judgment has-type: Gamma |- t : T
+assumes Gamma
+
+    -------------------- T-Var
+    Gamma, x:T |- x : T
+
+    -------------------- T-Unit
+    Gamma |- unit : Unit
+    
+    Gamma, x:T |- t[x] : T'
+    ------------------------------------------- T-Abs
+    Gamma |- fn x : T => t[x] : T -> T'
+
+    Gamma |- t1 : T' -> T
+    Gamma |- t2 : T'
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T
+
+    
+lemma should-warn:
+    forall d: * |- t : T
+    exists * |- unit : Unit .
+    proof by case analysis on d:
+        case rule
+            -------------------------- T-Unit
+            _: * |- unit : Unit
+        is
+            proof by d
+        end case
+
+        case rule
+            _: (Gamma, x : T0) |- t0[x] : T1 //! should warn
+            ------------------------------------------------- T-Abs
+            _: * |- (fn x : T0 => t0[x]) : (T0 -> T1)
+        is
+            proof by rule T-Unit
+        end case
+
+        case rule
+            _: * |- t0 : (T0 -> T)
+            _: Gamma |- t1 : T0 //! should warn
+            ---------------------------------------- T-App
+            _: * |- (t0 t1) : T
+        is
+            proof by rule T-Unit
+        end case
+
+    end case analysis
+end lemma
