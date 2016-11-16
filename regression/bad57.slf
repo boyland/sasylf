@@ -1,0 +1,37 @@
+// default package
+
+terminals S
+
+syntax
+  n ::= 0 | S n
+
+judgment gt: n > n
+
+   -------- gt-one
+   S n > n
+
+     n1 > n2
+   --------- gt-more
+   S n1 > n2
+   
+lemma gt-everything:
+    forall n1
+    forall n2
+    exists n1 > n2 .
+    proof by case analysis on (n1 > n2): //! should not be allowed
+        case rule
+            -------------- gt-one
+            _: (S n2) > n2
+        is
+            proof by rule gt-one
+        end case
+
+        case rule
+            g: n1' > n2
+            --------------- gt-more
+            _: (S n1') > n2
+        is
+            proof by rule gt-more on g
+        end case
+    end case analysis
+end lemma

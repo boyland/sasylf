@@ -1,0 +1,23 @@
+// default package
+
+terminals S no
+
+syntax
+  n ::= 0 | S n
+
+judgment gt: n > n
+
+   -------- gt-one
+   S n > n
+
+     n1 > n2
+   --------- gt-more
+   S n1 > n2
+   
+judgment absurd: no
+
+lemma impossible:
+    exists no.
+    proof by case analysis on no: //! can't case analysis on syntax of judgment
+    end case analysis
+end lemma

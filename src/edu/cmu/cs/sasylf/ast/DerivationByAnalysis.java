@@ -98,6 +98,12 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		  }
 		}
 		
+		if (caseType instanceof Judgment) {
+		  if (targetDerivation instanceof ClauseAssumption) {
+		    ErrorHandler.report("Cannot perform case analysis on a constructed judgment", targetDerivation);
+		  }
+		}
+		
 		try {
 		ctx.currentCaseAnalysis = ctx.toTerm(targetDerivation.getElement());
     debug("setting current case analysis to ", ctx.currentCaseAnalysis);
