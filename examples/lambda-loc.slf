@@ -70,7 +70,7 @@ Gamma, st |- e
 st{loc} = e
 // The following line forbids cycles.
 // Instead we should have a store typing separate
-*, st |- e
+Gamma, st |- e
 -------------------- wf-loc
 Gamma, st |- (loc)
 
@@ -138,12 +138,13 @@ end case
 case rule
 
 	d1: st{loc} = e'
-	d2: *, st |- e'
+	d2: (Gamma, var x), st |- e'
 	------------------------------------- wf-loc
 	d3: (Gamma, var x), st |- loc
 	
 is
-	d5: Gamma, st |- loc by rule wf-loc on d1, d2
+    d4: Gamma, st |- e' by induction hypothesis on d2
+	d5: Gamma, st |- loc by rule wf-loc on d1, d4
 
 end case
 	
@@ -201,13 +202,13 @@ dwf' : Gamma, st |- e1[e2] by induction on dwf1:
 	case rule
 
 		d1: st{loc} = e 
-		d2: *, st |- e
+		d2: (Gamma, var x), st |- e
 		------------------------------------ wf-loc
 		d3: (Gamma, var x), st |- loc
 		
 	is
-	
-	    proof by rule wf-loc on d1, d2
+	    d4: Gamma, st |- e by lemma strengthen-wf on d2
+	    proof by rule wf-loc on d1, d4
 
 	end case
 
