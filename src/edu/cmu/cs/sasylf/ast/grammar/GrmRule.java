@@ -33,7 +33,7 @@ public class GrmRule implements Rule {
 	}
 
 	public ClauseDef getClauseDef() { return clauseDef; }
-	
+
 	@Override
 	public int hashCode() {
 		return leftSide.hashCode() + rightSide.hashCode();
@@ -46,11 +46,14 @@ public class GrmRule implements Rule {
 		GrmRule other = (GrmRule)o;
 		return other.leftSide.equals(leftSide) && other.rightSide.equals(rightSide);
 	}
-	
+
+	@Override
 	public NonTerminal getLeftSide() { return leftSide; }
 
+	@Override
 	public List<Symbol> getRightSide() { return rightSide; }
-	
+
+	@Override
 	public String toString() {
 		String r = leftSide + " -> ";
 		for(Symbol s: rightSide) {

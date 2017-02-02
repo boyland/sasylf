@@ -20,120 +20,122 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class AssumptionElement extends Element {
 
-  public AssumptionElement(Location l, Element e, Element assumes) {
-    super(l);
-    while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
-      Clause cl = (Clause)e;
-      e = cl.getElements().get(0);
-    }
-    base = e;
-    context = assumes;
-  }
+	public AssumptionElement(Location l, Element e, Element assumes) {
+		super(l);
+		while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
+			Clause cl = (Clause)e;
+			e = cl.getElements().get(0);
+		}
+		base = e;
+		context = assumes;
+	}
 
-  @Override
-  public ElementType getType() {
-    return base.getType();
-  }
-  
-  @Override 
-  public Term getTypeTerm() {
-    return base.getTypeTerm();
-  }
-  
-  @Override
-  public ElemType getElemType() {
-    return base.getElemType();
-  }
+	@Override
+	public ElementType getType() {
+		return base.getType();
+	}
 
-  @Override
-  public Symbol getGrmSymbol() {
-    return base.getGrmSymbol();
-  }
+	@Override 
+	public Term getTypeTerm() {
+		return base.getTypeTerm();
+	}
 
-  @Override
-  protected String getTerminalSymbolString() {
-    return base.getTerminalSymbolString();
-  }
+	@Override
+	public ElemType getElemType() {
+		return base.getElemType();
+	}
 
-  @Override
-  public Element typecheck(Context ctx) {
-    context = context.typecheck(ctx);
-    if (context instanceof Clause) {
-      context = ((Clause)context).computeClause(ctx, false);
-    }
-    base = base.typecheck(ctx);
-    if (base instanceof Terminal) {
-      Element oldBase = base;
-      base = new Clause(base.getLocation());
-      ((Clause)base).add(oldBase);
-      base = base.typecheck(ctx);
-    }
-    if (base instanceof Clause) {
-      base = ((Clause)base).computeClause(ctx,false);
-    }
-    return this;
-  }
+	@Override
+	public Symbol getGrmSymbol() {
+		return base.getGrmSymbol();
+	}
 
-  @Override
-  public void prettyPrint(PrintWriter out, PrintContext ctx) {
-    base.prettyPrint(out,ctx);
-    out.print(" assumes ");
-    context.prettyPrint(out,ctx);
-  }
+	@Override
+	protected String getTerminalSymbolString() {
+		return base.getTerminalSymbolString();
+	}
 
-  public NonTerminal getRoot() {
-    if (context == null) return null;
-    if (context instanceof NonTerminal) return ((NonTerminal)context);
-    if (context instanceof ClauseUse) return ((ClauseUse)context).getRoot();
-    throw new RuntimeException("no root for assumption element: " + this);
-  }
-  
-  @Override
-  public Fact asFact(Context ctx, Element assumes) {
-    Fact f = base.asFact(ctx, null);
-    if (context == null) return f;
-    if (f instanceof SyntaxAssumption) {
-      SyntaxAssumption sa = (SyntaxAssumption)f;
-      sa.setContext(context);
-      return sa;
-    } else {
-      ErrorHandler.report(Errors.ASSUMES_FOR_SYNTAX, this);
-    }
-    return null;
-  }
+	@Override
+	public Element typecheck(Context ctx) {
+		context = context.typecheck(ctx);
+		if (context instanceof Clause) {
+			context = ((Clause)context).computeClause(ctx, false);
+		}
+		base = base.typecheck(ctx);
+		if (base instanceof Terminal) {
+			Element oldBase = base;
+			base = new Clause(base.getLocation());
+			((Clause)base).add(oldBase);
+			base = base.typecheck(ctx);
+		}
+		if (base instanceof Clause) {
+			base = ((Clause)base).computeClause(ctx,false);
+		}
+		return this;
+	}
 
-  @Override
-  protected Term computeTerm(List<Pair<String, Term>> varBindings) {
-    Util.debug("Compute: ", this);
-    int initialBindingSize = varBindings.size();
-    //XXX: use "true" instead "instanceof Judgment" to that we always have the assumptions terms
-    if (context instanceof ClauseUse)
-      ((ClauseUse)context).readAssumptions(varBindings, true /*base.getType() instanceof Judgment*/);
-    Term t = base.computeTerm(varBindings);
-    t = ClauseUse.newWrap(t, varBindings, initialBindingSize);
-    while (varBindings.size() > initialBindingSize) {
-      varBindings.remove(varBindings.size()-1);
-    }
-    Util.debug("  result = ", t);
-    return t;
-  }
-  
-  
-  /**
-   * @deprecated
-   */
-  @Override
-  public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
-    return super.adaptTermTo(term, matchTerm, sub);
-  }
+	@Override
+	public void prettyPrint(PrintWriter out, PrintContext ctx) {
+		base.prettyPrint(out,ctx);
+		out.print(" assumes ");
+		context.prettyPrint(out,ctx);
+	}
 
-  public Element getAssumes() {
-    return context;
-  }
-  public Element getBase() {
-    return base;
-  }
+	@Override
+	public NonTerminal getRoot() {
+		if (context == null) return null;
+		if (context instanceof NonTerminal) return ((NonTerminal)context);
+		if (context instanceof ClauseUse) return ((ClauseUse)context).getRoot();
+		throw new RuntimeException("no root for assumption element: " + this);
+	}
 
-  private Element context;
-  private Element base;
+	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+		Fact f = base.asFact(ctx, null);
+		if (context == null) return f;
+		if (f instanceof SyntaxAssumption) {
+			SyntaxAssumption sa = (SyntaxAssumption)f;
+			sa.setContext(context);
+			return sa;
+		} else {
+			ErrorHandler.report(Errors.ASSUMES_FOR_SYNTAX, this);
+		}
+		return null;
+	}
+
+	@Override
+	protected Term computeTerm(List<Pair<String, Term>> varBindings) {
+		Util.debug("Compute: ", this);
+		int initialBindingSize = varBindings.size();
+		//XXX: use "true" instead "instanceof Judgment" to that we always have the assumptions terms
+		if (context instanceof ClauseUse)
+			((ClauseUse)context).readAssumptions(varBindings, true /*base.getType() instanceof Judgment*/);
+		Term t = base.computeTerm(varBindings);
+		t = ClauseUse.newWrap(t, varBindings, initialBindingSize);
+		while (varBindings.size() > initialBindingSize) {
+			varBindings.remove(varBindings.size()-1);
+		}
+		Util.debug("  result = ", t);
+		return t;
+	}
+
+
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
+	@Override
+	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
+		return super.adaptTermTo(term, matchTerm, sub);
+	}
+
+	public Element getAssumes() {
+		return context;
+	}
+	public Element getBase() {
+		return base;
+	}
+
+	private Element context;
+	private Element base;
 }

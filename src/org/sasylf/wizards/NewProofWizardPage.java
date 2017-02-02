@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -50,6 +51,7 @@ public class NewProofWizardPage extends WizardPage {
 	/**
 	 * @see IDialogPage#createControl(Composite)
 	 */
+	@Override
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
@@ -63,6 +65,7 @@ public class NewProofWizardPage extends WizardPage {
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		containerText.setLayoutData(gd);
 		containerText.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
 			}
@@ -71,6 +74,7 @@ public class NewProofWizardPage extends WizardPage {
 		Button button = new Button(container, SWT.PUSH);
 		button.setText("Browse...");
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				handleBrowse();
 			}
@@ -82,6 +86,7 @@ public class NewProofWizardPage extends WizardPage {
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		fileText.setLayoutData(gd);
 		fileText.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
 			}
@@ -109,10 +114,10 @@ public class NewProofWizardPage extends WizardPage {
 				else
 					container = ((IResource) obj).getParent();
 			} else if (obj instanceof IAdaptable) {
-			  container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
+				container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
 			}
 			if (container != null) {
-			  containerText.setText(container.getFullPath().toString());
+				containerText.setText(container.getFullPath().toString());
 			}
 		}
 		fileText.setText("Test.slf");
@@ -127,7 +132,7 @@ public class NewProofWizardPage extends WizardPage {
 		ContainerSelectionDialog dialog = new ContainerSelectionDialog(
 				getShell(), ResourcesPlugin.getWorkspace().getRoot(), false,
 				"Select new file container");
-		if (dialog.open() == ContainerSelectionDialog.OK) {
+		if (dialog.open() == Window.OK) {
 			Object[] result = dialog.getResult();
 			if (result.length == 1) {
 				containerText.setText(((Path) result[0]).toString());
@@ -167,8 +172,8 @@ public class NewProofWizardPage extends WizardPage {
 		}
 		int dotLoc = fileName.lastIndexOf('.');
 		if (dotLoc < 0) {
-		  updateStatus("Proof file extension of \"slf\" required.");
-		  return;
+			updateStatus("Proof file extension of \"slf\" required.");
+			return;
 		} else {
 			String ext = fileName.substring(dotLoc + 1);
 			if (ext.equalsIgnoreCase("slf") == false) {

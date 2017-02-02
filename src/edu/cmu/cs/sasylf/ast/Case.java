@@ -15,16 +15,17 @@ import edu.cmu.cs.sasylf.util.Span;
 
 public class Case extends Node {
 	public Case(Location l, Location l1, Location l2) { 
-	    super(l); 
-	    span = new DefaultSpan(l1,l2);
+		super(l); 
+		span = new DefaultSpan(l1,l2);
 	}
-	
+
 	public List<Derivation> getDerivations() { return derivations; }
 
 	public Span getSpan() {
-	  return span;
+		return span;
 	}
-	
+
+	@Override
 	public void prettyPrint(PrintWriter out) {
 		for (Derivation d : derivations) {
 			d.prettyPrint(out);
@@ -33,12 +34,12 @@ public class Case extends Node {
 	}
 
 	public void typecheck(Context ctx, Pair<Fact,Integer> isSubderivation) {
-	  ErrorHandler.recordLastSpan(this);
+		ErrorHandler.recordLastSpan(this);
 		Map<String, Fact> oldMap = ctx.derivationMap;
 		ctx.derivationMap = new HashMap<String, Fact>(oldMap);
 
 		Derivation.typecheck(this, ctx, derivations);
-		
+
 		ctx.derivationMap = oldMap;
 	}
 

@@ -8,29 +8,29 @@ public class ClauseAssumption extends SyntaxAssumption {
 	public ClauseAssumption(Clause c, Location location) {
 		this(c,location,null);
 	}
-	
-  public ClauseAssumption(Clause c, Location location, Element a) {
-    super(null,location,a);
-    clause = c;
-  }
-  
-  
-	@Override
-  public Element getElementBase() {
-    return clause;
-  }
 
-  private Clause clause;
+	public ClauseAssumption(Clause c, Location location, Element a) {
+		super(null,location,a);
+		clause = c;
+	}
+
+
+	@Override
+	public Element getElementBase() {
+		return clause;
+	}
+
+	private Clause clause;
 
 	@Override
 	public void typecheck(Context ctx) {
-	  super.typecheck(ctx);
+		super.typecheck(ctx);
 		clause = (Clause) clause.typecheck(ctx);
 	}
-	
+
 	// ClauseAssumptions don't get added to the derivation map
 	@Override
-  public void addToDerivationMap(Context ctx) {
+	public void addToDerivationMap(Context ctx) {
 		throw new UnsupportedOperationException();
 	}
 }

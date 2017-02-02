@@ -13,10 +13,12 @@ public class DerivationBySolve extends DerivationWithArgs {
 		super(n,l,c);
 	}
 
+	@Override
 	public String prettyPrintByClause() {
 		return " by solve";
 	}
 
+	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 
@@ -26,7 +28,7 @@ public class DerivationBySolve extends DerivationWithArgs {
 		Judgment judgment = new Judgment(term, type);
 		Proof partial = new ProofImpl(judgment);
 		Proof complete = prover.prove(partial, 5);
-		
+
 		if (complete == null)
 			ErrorHandler.report("Unable to find proof", this);
 		else {

@@ -11,11 +11,14 @@ public abstract class Atom extends Term {
 	public final String getName() { return name; }
 	@Override
 	public final Term getType(List<Pair<String, Term>> varBindings) { return getType(); }
+	@Override
 	public abstract Term getType();
 	private String name;
 
+	@Override
 	public int hashCode() { return name.hashCode(); }
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Atom)) return false;
@@ -24,6 +27,7 @@ public abstract class Atom extends Term {
 		return name.equals(a.name);
 	}
 
+	@Override
 	public Term apply(List<? extends Term> arguments, int whichApplied) {
 		if (whichApplied < arguments.size())
 			return new Application(this, arguments.subList(whichApplied,arguments.size()));
@@ -31,6 +35,7 @@ public abstract class Atom extends Term {
 			return this;
 	}
 
+	@Override
 	Term substitute(Substitution s, int varIncrAmount) {
 		Term t = s.getSubstituted(this);
 		if (t != null)
@@ -39,6 +44,7 @@ public abstract class Atom extends Term {
 			return this;
 	}
 
+	@Override
 	public String toString() {
 		return name;
 	}

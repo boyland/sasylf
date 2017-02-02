@@ -15,55 +15,55 @@ public class ProofElement implements Comparable<ProofElement> {
 	private int start;
 	private int end;
 	private Position position;
-	
+
 	public ProofElement(String category, String content) {
 		this.category = category;
 		this.content = content;
 	}
-	
+
 	ProofElement(Position p) {
-	  category = "<none>";
-	  content = "<none>";
-	  lexicalInfo = "";
-	  this.position = p;
+		category = "<none>";
+		content = "<none>";
+		lexicalInfo = "";
+		this.position = p;
 	}
-	
+
 
 	public String getCategory() {
 		return category;
 	}
-	
+
 	public void setCategory(String category) {
 		this.category = category;
 	}
-	
+
 	public String getContent() {
 		return content;
 	}
-	
+
 	public void setContent(String content) {
 		this.content = content;
 	}
-	
+
 	public String getLexicalInfo() {
-	  return lexicalInfo;
+		return lexicalInfo;
 	}
-	
+
 	public void setLexicalInfo(String info) {
-	  lexicalInfo = info;
+		lexicalInfo = info;
 	}
-	
+
 	public void addChild(ProofElement element) {
 		if(this.children == null) {
 			this.children = new ArrayList<ProofElement>();
 		}
 		this.children.add(element);
 	}
-	
+
 	public List<ProofElement> getChildren() {
 		return children;
 	}
-	
+
 	public void setChildren(List<ProofElement> children) {
 		this.children = children;
 	}
@@ -75,7 +75,7 @@ public class ProofElement implements Comparable<ProofElement> {
 	public void setParentElement(ProofElement parentElement) {
 		this.parentElement = parentElement;
 	}	
-	
+
 	public boolean hasChildren() {
 		if(this.children == null || this.children.size() == 0) {
 			return false;
@@ -83,6 +83,7 @@ public class ProofElement implements Comparable<ProofElement> {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		return this.category + " " + this.content;
 	}
@@ -113,10 +114,10 @@ public class ProofElement implements Comparable<ProofElement> {
 
 
 
-  @Override
-  public int compareTo(ProofElement arg0) {
-    return PositionComparator.getDefault().compare(position,arg0.position);
-  }
-	
-	
+	@Override
+	public int compareTo(ProofElement arg0) {
+		return PositionComparator.getDefault().compare(position,arg0.position);
+	}
+
+
 }

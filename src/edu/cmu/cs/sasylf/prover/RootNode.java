@@ -14,7 +14,7 @@ public class RootNode implements ProvedNode {
 	private ProofNode child;
 	private boolean unproved;
 	private UnprovedNode undo;
-	
+
 	/** Creates a new RootNode with its child as the given node.
 	 * @param node
 	 */
@@ -26,6 +26,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * replaces the unproved node with a proved one
 	 */
+	@Override
 	public void applyRule(UnprovedNode un, ProvedNode pn) {
 		if(unproved) {
 			child = pn;
@@ -33,10 +34,11 @@ public class RootNode implements ProvedNode {
 			undo = un;
 		}
 	}
-	
+
 	/**
 	 * returns this node to the state it was in before last applyRule
 	 */
+	@Override
 	public ProvedNode undoApplyRule() {
 		if(!unproved) {
 			ProvedNode pn = (ProvedNode)child;
@@ -51,6 +53,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * return this node's child, if it is indeed unproved
 	 */
+	@Override
 	public UnprovedNode getLeftmostUnprovedNode() {
 		if(child instanceof UnprovedNode)
 			return (UnprovedNode) child;
@@ -61,6 +64,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * Returns a list of this node's premises
 	 */
+	@Override
 	public List<ProofNode> getPremises() {
 		List<ProofNode> result = new LinkedList<ProofNode>();
 		result.add(child);
@@ -70,6 +74,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * returns this node's rule
 	 */
+	@Override
 	public Rule getRule() {
 		if(unproved) {
 			return null;
@@ -81,6 +86,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * returns a list of this node's unproved children
 	 */
+	@Override
 	public List<UnprovedNode> getUnprovedNodes() {
 		List<UnprovedNode> result = new LinkedList<UnprovedNode>();
 		result.add((UnprovedNode)child);
@@ -90,6 +96,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * returns whether this list's child is unproved
 	 */
+	@Override
 	public boolean hasUnprovedChildren() {
 		return unproved;
 	}
@@ -97,24 +104,27 @@ public class RootNode implements ProvedNode {
 	/**
 	 * null. this is a dummy node.
 	 */
+	@Override
 	public Judgment getJudgment() {
 		return null;
 	}
-	
+
 	/**
 	 * prints this node's child.
 	 */
+	@Override
 	public String toString() {
 		return child.toString();
 	}
-	
+
 	/**
 	 * prints this node's child, and its depth.
 	 */
+	@Override
 	public String toString(int depth) {
 		return child.toString(depth+1);
 	}
-	
+
 	/**
 	 * true if unproved.
 	 */
@@ -125,6 +135,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * returns zero. the root's id is always zero.
 	 */
+	@Override
 	public int getId() {
 		return 0;
 	}
@@ -132,6 +143,7 @@ public class RootNode implements ProvedNode {
 	/**
 	 * pretty prints the child.
 	 */
+	@Override
 	public void prettyPrint(Substitution sub) {
 		child.prettyPrint(sub);
 	}

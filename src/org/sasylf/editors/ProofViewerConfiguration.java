@@ -24,63 +24,64 @@ import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 
 	static class SingleTokenScanner extends BufferedRuleBasedScanner {
-        public SingleTokenScanner (TextAttribute attribute) {
-            setDefaultReturnToken(new Token (attribute));
-        }   
-    }
-	
-	private final ProofEditor editor;
-	
-	public ProofViewerConfiguration (ProofEditor ed){
-	  editor = ed;
+		public SingleTokenScanner (TextAttribute attribute) {
+			setDefaultReturnToken(new Token (attribute));
+		}   
 	}
-	
+
+	private final ProofEditor editor;
+
+	public ProofViewerConfiguration (ProofEditor ed){
+		editor = ed;
+	}
+
+	@Override
 	public IPresentationReconciler getPresentationReconciler (ISourceViewer sourceViewer) {
 		SASyLFColorProvider provider = SASyLFEditorEnvironment.getSASyLFColorProvider();
 		PresentationReconciler reconciler = new PresentationReconciler();
 		DefaultDamagerRepairer dr = new DefaultDamagerRepairer (SASyLFEditorEnvironment.getSASyLFCodeScanner ());
-        reconciler.setDamager (dr, IDocument.DEFAULT_CONTENT_TYPE);
-        reconciler.setRepairer (dr, IDocument.DEFAULT_CONTENT_TYPE);
-        
-        dr = new DefaultDamagerRepairer (new SingleTokenScanner(new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT))));
-        reconciler.setDamager (dr, "__java_multiline_comment");
-        reconciler.setRepairer (dr, "__java_multiline_comment");
-        return reconciler;
+		reconciler.setDamager (dr, IDocument.DEFAULT_CONTENT_TYPE);
+		reconciler.setRepairer (dr, IDocument.DEFAULT_CONTENT_TYPE);
+
+		dr = new DefaultDamagerRepairer (new SingleTokenScanner(new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT))));
+		reconciler.setDamager (dr, "__java_multiline_comment");
+		reconciler.setRepairer (dr, "__java_multiline_comment");
+		return reconciler;
 	}
 
-  @Override
-  public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer,
-      String contentType) {
-    // System.out.println("getAutoEditStrategies: contentType =  " + contentType);
-    return new IAutoEditStrategy[]{ new SASyLFAutoIndentStrategy() };
-  }
+	@Override
+	public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer,
+			String contentType) {
+		// System.out.println("getAutoEditStrategies: contentType =  " + contentType);
+		return new IAutoEditStrategy[]{ new SASyLFAutoIndentStrategy() };
+	}
 
-  @Override
-  public IContentFormatter getContentFormatter(ISourceViewer sourceViewer) {
-    ContentFormatter result = new ContentFormatter();
-    // result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
-    return result;
-  }
+	@Override
+	public IContentFormatter getContentFormatter(ISourceViewer sourceViewer) {
+		ContentFormatter result = new ContentFormatter();
+		// result.setFormattingStrategy(new ProofFormattingStrategy(), IDocument.DEFAULT_CONTENT_TYPE);
+		return result;
+	}
 
-  @Override
-  public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
-    ContentAssistant assist = new ContentAssistant();
-    assist.setContentAssistProcessor(new ProofContentAssistProcessor(editor,assist), IDocument.DEFAULT_CONTENT_TYPE);
-    assist.setInformationControlCreator(getInformationControlCreator(sourceViewer));
-    assist.enableAutoActivation(true);
-    
-    return assist;
-  }
+	@Override
+	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
+		ContentAssistant assist = new ContentAssistant();
+		assist.setContentAssistProcessor(new ProofContentAssistProcessor(editor,assist), IDocument.DEFAULT_CONTENT_TYPE);
+		assist.setInformationControlCreator(getInformationControlCreator(sourceViewer));
+		assist.enableAutoActivation(true);
 
-  @Override
-  public IQuickAssistAssistant getQuickAssistAssistant(ISourceViewer sourceViewer) {
-    QuickAssistAssistant assist = new QuickAssistAssistant();
-    assist.setQuickAssistProcessor(new ProofQuickFixProcessor(editor.getDocument()));
-    return assist;
-  }
+		return assist;
+	}
 
-  @Override
-  public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
-    return new DefaultTextHover(sourceViewer);
-  }
+	@Override
+	public IQuickAssistAssistant getQuickAssistAssistant(ISourceViewer sourceViewer) {
+		QuickAssistAssistant assist = new QuickAssistAssistant();
+		assist.setQuickAssistProcessor(new ProofQuickFixProcessor(editor.getDocument()));
+		return assist;
+	}
+
+	@Override
+	public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
+		return new DefaultTextHover(sourceViewer);
+	}
 }

@@ -8,13 +8,13 @@
 package edu.cmu.cs.sasylf.grammar;
 
 class AcceptSymbol implements Terminal {
-	
+
 	private static AcceptSymbol any;
-	
+
 	/** Creates a generic accept symbol.
 	 */
 	private AcceptSymbol() {}
-	
+
 	/**
 	 * @return A symbol representing the end of a sentence. 
 	 */
@@ -24,15 +24,17 @@ class AcceptSymbol implements Terminal {
 		}
 		return any;
 	}
-	
+
 	/** Returns "$", the character generally used to represent accept symbols.
 	 */
+	@Override
 	public String toString() {
 		return "$";
 	}
-	
+
 	/** Returns true if s is also an accept symbol.
 	 */
+	@Override
 	public boolean equals(Object s) {
 		return s instanceof AcceptSymbol;
 	}

@@ -46,6 +46,7 @@ public class Application extends Term {
 	public Atom getFunction() { return function; }
 	public List<? extends Term> getArguments() { return arguments; }
 
+	@Override
 	Term substitute(Substitution s, int varIncrAmount) {
 		Term newF = function.substitute(s, varIncrAmount);
 		List<Term> newArgs = new ArrayList<Term>();
@@ -64,6 +65,7 @@ public class Application extends Term {
 		}
 	}
 
+	@Override
 	public Term apply(List<? extends Term> otherArgs, int whichApplied) {
 		Atom newFunction = function;
 		List<Term> newArgs = new ArrayList<Term>(arguments);
@@ -78,6 +80,7 @@ public class Application extends Term {
 		return new Application(newFunction, newArgs);
 	}
 
+	@Override
 	Term incrFreeDeBruijn(int nested, int amount) {
 		// note: functions are constants or FreeVars and so can't be affected
 
@@ -115,6 +118,7 @@ public class Application extends Term {
 		return result;
 	}
 
+	@Override
 	void getFreeVariables(Set<FreeVar> s) {
 		function.getFreeVariables(s);
 		for (Term a : arguments) {
@@ -122,12 +126,14 @@ public class Application extends Term {
 		}
 	}
 
+	@Override
 	int getOrder() { return 1 + function.getOrder()/2; }
 
 	/** returns 1 if this is a non-pattern free variable application, otherwise 0 */
+	@Override
 	boolean isNonPatFreeVarApp() {
 		if (function instanceof FreeVar) {
-		    for (Term t : arguments)
+			for (Term t : arguments)
 				if (!(t instanceof BoundVar))
 					return true;
 		}
@@ -136,13 +142,13 @@ public class Application extends Term {
 	/** returns 1 if this is a non-pattern free variable application, otherwise 0 */
 	boolean isNonPatFreeVarApp(Term other) {
 		if (function instanceof FreeVar) {
-		    for (Term t : arguments)
+			for (Term t : arguments)
 				if (!(t instanceof BoundVar))
 					return true;//other.isNonPatFreeVarApp() || other instanceof FreeVar;
 		}
 		return false;
 	}
-	
+
 	static boolean isPattern(Term f, List<? extends Term> args) {
 		if (f instanceof FreeVar) {
 			for (Term t : args)
@@ -151,7 +157,7 @@ public class Application extends Term {
 			if (args.size() < 2) return true;
 			Set<Integer> s = new HashSet<Integer>();
 			for (Term t : args) {
-			  if (!s.add(((BoundVar)t).getIndex())) return false;
+				if (!s.add(((BoundVar)t).getIndex())) return false;
 			}
 			return true;
 		} else
@@ -164,6 +170,7 @@ public class Application extends Term {
 	/** performs a unification, or fails throwing exception, then calls instanceHelper
 	 * to continue.  The current substitution is applied lazily.
 	 */
+	@Override
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		// invariant: never called with other a FreeVar (comes from ordering of Pairs)
 		if (function instanceof Constant) {
@@ -190,8 +197,9 @@ public class Application extends Term {
 		}
 	}
 
+	@Override
 	void unifyFlexApp(FreeVar otherVar, List<? extends Term> otherArgs, Substitution current, Queue<Pair<Term,Term>> worklist) {
-    Application otherApp =  new Application(otherVar, otherArgs);
+		Application otherApp =  new Application(otherVar, otherArgs);
 		if (function instanceof Constant) {
 			// avoid infinite loop
 			if (this.getFreeVariables().contains(otherVar)) {
@@ -209,17 +217,17 @@ public class Application extends Term {
 			 * in above, E is otherVar, e1'...em' is otherArgs, C is function, e1..en is arguments
 			 * e1''...em'' is xm...x1.
 			 */
-			
+
 			if (!otherApp.isPattern()) {
-			  throw new UnificationIncomplete("Not in pattern subset: " + this + " ?=? " + otherApp,this,otherApp);
+				throw new UnificationIncomplete("Not in pattern subset: " + this + " ?=? " + otherApp,this,otherApp);
 			}
 
 			List<Term> helperArgs = new ArrayList<Term>();
 			int m = otherArgs.size();
 			for (int i=0; i < m; ++i) {
-			  helperArgs.add(new BoundVar(m-i));
+				helperArgs.add(new BoundVar(m-i));
 			}
-			
+
 			Constant constant = (Constant) function;
 			List<Term> newArgs = new ArrayList<Term>();
 			Term partialFunctionType = constant.getType();
@@ -228,9 +236,9 @@ public class Application extends Term {
 				// takes same arguments as otherVar but result type is ith argument of function
 				Term newVarType = wrapWithLambdas(((Abstraction)partialFunctionType).varType, otherVarArgTypes);
 				partialFunctionType = ((Abstraction)partialFunctionType).getBody();
-				
+
 				FreeVar newVar = FreeVar.fresh("none", newVarType);
-        newArgs.add(new Application(newVar, helperArgs));
+				newArgs.add(new Application(newVar, helperArgs));
 				Application argApp = new Application(newVar, otherArgs);
 				worklist.add(makePair(argApp, arguments.get(i))); 
 			}
@@ -250,8 +258,8 @@ public class Application extends Term {
 				unifyHelper(current, worklist);
 				return;
 			}
-			
-      if (otherVar.equals(function.substitute(current))) {
+
+			if (otherVar.equals(function.substitute(current))) {
 				verify(arguments.size() == otherArgs.size(), "internal invariant: args to var must be of equal length");
 				/* case: F t1 ... tn = F t1' ... tn'
 				 * 
@@ -271,46 +279,46 @@ public class Application extends Term {
 				List<Term> newArgs = new ArrayList<Term>();
 				String failure = null;
 				for (int i=0; i < arguments.size(); ++i) {
-				  Abstraction currentAbs = (Abstraction)varType;
-				  varType = currentAbs.getBody();
-				  Term a = arguments.get(i).substitute(current);
-				  Term b = otherArgs.get(i).substitute(current);
-				  if (a.equals(b)) {
-				    trueFormals.add(currentAbs);
-				    newArgs.add(new BoundVar(arguments.size()-i));
-				  } else {
-				    // recursive unification...
-				    try {
-				      a.unify(b);
-				      // they unify but are not identical.  Oh well
-				      failure = a + " conditionally equal " + b;
-				      break;
-				    } catch (UnificationIncomplete ex) {
-              failure = a + " maybe equal " + b;
-				      break;
-				    } catch (UnificationFailed ex) {
-				      // Good!
-				    }
-				    varType.incrFreeDeBruijn(-1);
-				  }
+					Abstraction currentAbs = (Abstraction)varType;
+					varType = currentAbs.getBody();
+					Term a = arguments.get(i).substitute(current);
+					Term b = otherArgs.get(i).substitute(current);
+					if (a.equals(b)) {
+						trueFormals.add(currentAbs);
+						newArgs.add(new BoundVar(arguments.size()-i));
+					} else {
+						// recursive unification...
+						try {
+							a.unify(b);
+							// they unify but are not identical.  Oh well
+							failure = a + " conditionally equal " + b;
+							break;
+						} catch (UnificationIncomplete ex) {
+							failure = a + " maybe equal " + b;
+							break;
+						} catch (UnificationFailed ex) {
+							// Good!
+						}
+						varType.incrFreeDeBruijn(-1);
+					}
 				}
 				if (failure != null) {
-				  throw new UnificationIncomplete("Failed with self non-pattern unification: " + failure,this,otherApp);
+					throw new UnificationIncomplete("Failed with self non-pattern unification: " + failure,this,otherApp);
 				}
 				varType = Term.wrapWithLambdas(trueFormals, varType);
 				if (newArgs.size() == arguments.size()) {
-				  // all equal
-				  Util.debug("equal: ",this," and ",otherApp);
-				  unifyHelper(current,worklist);
-				  return;
+					// all equal
+					Util.debug("equal: ",this," and ",otherApp);
+					unifyHelper(current,worklist);
+					return;
 				}
-				
+
 				List<Abstraction> allAbs = new ArrayList<Abstraction>();
 				getWrappingAbstractions(otherVar.getType(), allAbs);
 				FreeVar g = FreeVar.fresh("G", varType);
 				Term replacement = g;
 				if (!newArgs.isEmpty()) {
-				  replacement = Facade.App(g,newArgs);
+					replacement = Facade.App(g,newArgs);
 				}
 				replacement = Term.wrapWithLambdas(allAbs, replacement);
 				Util.debug("For ",this," ?=? ",otherApp);
@@ -328,18 +336,18 @@ public class Application extends Term {
 				 * in above, E is otherVar, e1'...em' is otherArgs, C is function, e1..en is arguments
 				 */ 
 
-	      // verify that this is a pattern
-	      if (!otherApp.isPattern()) {
-	        Util.debug("not pattern: ", otherApp);
-	        otherApp.tryEtaLongCase(this, current, worklist);
-	        return;
-	      }
+				// verify that this is a pattern
+				if (!otherApp.isPattern()) {
+					Util.debug("not pattern: ", otherApp);
+					otherApp.tryEtaLongCase(this, current, worklist);
+					return;
+				}
 
-	      if (!isPattern()) {
-	        Util.debug("not pattern: ", this);
-	        tryEtaLongCase(otherApp, current, worklist);
-	        return;
-	      }
+				if (!isPattern()) {
+					Util.debug("not pattern: ", this);
+					tryEtaLongCase(otherApp, current, worklist);
+					return;
+				}
 
 
 				// invariant (of Queue): if we get here, all other things are flex-flex patterns (Nipkow flexflex2)
@@ -352,7 +360,7 @@ public class Application extends Term {
 
 				List<BoundVar> commonArgs = new ArrayList<BoundVar>(arguments.size());
 				for (Term arg : arguments) {
-				  commonArgs.add((BoundVar)arg);
+					commonArgs.add((BoundVar)arg);
 				}
 				//commonArgs.retainAll((List) otherArgs);
 				List<Term> functionArgTypes = getArgTypes(function.getType(), arguments.size());
@@ -376,7 +384,7 @@ public class Application extends Term {
 				Term otherVarMatch = computeVarMatch(H, commonArgs, otherArgs, getArgTypes(otherVar.getType(), otherArgs.size()), current, otherApp);
 
 				if (Util.DEBUG && varMatch.equals(otherVarMatch)) {       
-				  Util.debug("pointless substitution for ",function," and ",otherVar);
+					Util.debug("pointless substitution for ",function," and ",otherVar);
 				}
 				current.add(function, varMatch);
 				current.add(otherVar, otherVarMatch);
@@ -428,114 +436,114 @@ public class Application extends Term {
 	}
 
 	private void tryEtaLongCase(Application application, Substitution current, Queue<Pair<Term, Term>> worklist) {
-	  // This code tries to find a sound way to handle an otherwise illegal flexflex case.
-	  // In the past this code was hardly ever used and harbored major errors.
-	  Util.verify(function instanceof FreeVar, "tryEtaLongCase requires flexflex, function is " + function);
-	  Util.verify(application.getFunction() instanceof FreeVar, "tryEtaLongCase requires flexflex, application is "+application);
-	  Util.verify(!isPattern(), "tryEtaLongCase should only be called if this is not a pattern: " + this);
+		// This code tries to find a sound way to handle an otherwise illegal flexflex case.
+		// In the past this code was hardly ever used and harbored major errors.
+		Util.verify(function instanceof FreeVar, "tryEtaLongCase requires flexflex, function is " + function);
+		Util.verify(application.getFunction() instanceof FreeVar, "tryEtaLongCase requires flexflex, application is "+application);
+		Util.verify(!isPattern(), "tryEtaLongCase should only be called if this is not a pattern: " + this);
 
-	  // We have to be very careful in our heuristics.  SASyLF relies on unification.
-	  // If we report an ordinary unification failure for a case, this means the
-	  // case can be omitted.
-	  
-	  // Case:
-	  //    F x1 ... xn = G y1 ... ym
-	  // where y1 ... ym are distinct bound variables (G y1 ... ym is a pattern)
-	  // and x1 ... xn use only bound variables from y1 ... ym
-	  // We bind G to \m...\1 . F x'1 ... x'n
-	  // where in x'i, we replace every yj with j.  This is accomplished by applying
-	  //     (\N...\1 . F x1 ... xn) y-1_N .. y-1_1
-	  // where N = max yj and 
-	  //       y-1_i 
-	  //
-	  // If F took other bound variables, then G would be bound to something with variables
-	  // which will cause problems eventually.
-	  case1: if (application.isPattern()) {
-	    // Compute N and the y's
-	    int m = application.arguments.size();
-	    int N = 0;
-	    for (Term t : application.arguments) {
-	      int i = ((BoundVar)t).getIndex();
-	      if (i > N) N = i;
-	    }
-	    int[] inverse = new int[N];
-	    for (int j=0; j < m; ++j) {
-	      BoundVar bv = (BoundVar)application.arguments.get(j);
-	      int i = bv.getIndex();
-	      Util.verify(inverse[i-1] == 0, "not really a pattern");
-	      inverse[i-1] = m-j;
-	    }
-      Util.debug("Potential eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
-	    
-	    // Check condition
-	    if (this.hasBoundVarAbove(N)) {
-	      Util.debug("  has BV over " + N);
-	      break case1;
-	    }
-	    for (int i=0; i < N; ++i) {
-	      if (inverse[i] == 0 && this.hasBoundVar(i+1)) {
-	        Util.debug("  ",this,".hasBoundVar(" + (i+1) + ")");
-	        break case1;
-	      }
-	    }
-	    
-	    Util.debug("Found eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
-	    // Construct the binding
-	    List<Abstraction> abs = new ArrayList<Abstraction>();
-	    getWrappingAbstractions(application.function.getType(),abs);
-	    List<Term> tempTypes = new ArrayList<Term>();
-	    for (int i=0; i < N; ++i) {
-	      int j = inverse[i]-1;
-	      if (j < 0) tempTypes.add(Constant.UNKNOWN_TYPE);
-	      else tempTypes.add(abs.get(j).varType);
-	    }
-	    Collections.reverse(tempTypes);
-	    Term converted = wrapWithLambdas(this,tempTypes);
-	    Util.debug("  converted = ",converted);
-	    List<Term> tempArgs = new ArrayList<Term>();
-	    for (int i=0; i < N; ++i) {
-	      int j = inverse[i]-1;
-	      if (j < 0) tempArgs.add(this);
-	      else tempArgs.add(new BoundVar(j+1));
-	    }
-	    Collections.reverse(tempArgs);
-	    Util.debug("  tempArgs = " + tempArgs);
-	    converted = converted.apply(tempArgs, 0);
-	    Util.debug("  body = " + converted);
-	    converted = Term.wrapWithLambdas(abs, converted);
-	    Util.debug("  result = " + converted);
-      Util.debug("fixing up eta long case in pattern unification: ", application.function, " ==> ", converted);
-      current.add((FreeVar)application.getFunction(), converted);
-      unifyHelper(current, worklist);
-      return;
-	  }
+		// We have to be very careful in our heuristics.  SASyLF relies on unification.
+		// If we report an ordinary unification failure for a case, this means the
+		// case can be omitted.
 
-	  // Some previous unsound heuristics:
-	  // 
-	  // @ If the applications were the same size, equate everything:
-	  //    (F X) = (G X) ==> F = G
-	  //   Not sound: this doesn't include the solution
-	  //     F = \x.x,  G = \x.a,  X = a
-	  //
-	  // @ If one application has all the arguments of the other, then bind the shorter
-	  //   variable to the longer one.  This doesn't work for the same reason as above.
-	  
-	  Term thisTerm = this.substitute(current);
-	  Term otherTerm = application.substitute(current);
-	  Util.debug("incomplete. this = " + thisTerm + " =?= " + otherTerm + " current = ",current,", worklist = ", worklist);
+		// Case:
+		//    F x1 ... xn = G y1 ... ym
+		// where y1 ... ym are distinct bound variables (G y1 ... ym is a pattern)
+		// and x1 ... xn use only bound variables from y1 ... ym
+		// We bind G to \m...\1 . F x'1 ... x'n
+		// where in x'i, we replace every yj with j.  This is accomplished by applying
+		//     (\N...\1 . F x1 ... xn) y-1_N .. y-1_1
+		// where N = max yj and 
+		//       y-1_i 
+		//
+		// If F took other bound variables, then G would be bound to something with variables
+		// which will cause problems eventually.
+		case1: if (application.isPattern()) {
+			// Compute N and the y's
+			int m = application.arguments.size();
+			int N = 0;
+			for (Term t : application.arguments) {
+				int i = ((BoundVar)t).getIndex();
+				if (i > N) N = i;
+			}
+			int[] inverse = new int[N];
+			for (int j=0; j < m; ++j) {
+				BoundVar bv = (BoundVar)application.arguments.get(j);
+				int i = bv.getIndex();
+				Util.verify(inverse[i-1] == 0, "not really a pattern");
+				inverse[i-1] = m-j;
+			}
+			Util.debug("Potential eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
+
+			// Check condition
+			if (this.hasBoundVarAbove(N)) {
+				Util.debug("  has BV over " + N);
+				break case1;
+			}
+			for (int i=0; i < N; ++i) {
+				if (inverse[i] == 0 && this.hasBoundVar(i+1)) {
+					Util.debug("  ",this,".hasBoundVar(" + (i+1) + ")");
+					break case1;
+				}
+			}
+
+			Util.debug("Found eta-long-case 1: ",this," = ",application,", with " + Arrays.toString(inverse));
+			// Construct the binding
+			List<Abstraction> abs = new ArrayList<Abstraction>();
+			getWrappingAbstractions(application.function.getType(),abs);
+			List<Term> tempTypes = new ArrayList<Term>();
+			for (int i=0; i < N; ++i) {
+				int j = inverse[i]-1;
+				if (j < 0) tempTypes.add(Constant.UNKNOWN_TYPE);
+				else tempTypes.add(abs.get(j).varType);
+			}
+			Collections.reverse(tempTypes);
+			Term converted = wrapWithLambdas(this,tempTypes);
+			Util.debug("  converted = ",converted);
+			List<Term> tempArgs = new ArrayList<Term>();
+			for (int i=0; i < N; ++i) {
+				int j = inverse[i]-1;
+				if (j < 0) tempArgs.add(this);
+				else tempArgs.add(new BoundVar(j+1));
+			}
+			Collections.reverse(tempArgs);
+			Util.debug("  tempArgs = " + tempArgs);
+			converted = converted.apply(tempArgs, 0);
+			Util.debug("  body = " + converted);
+			converted = Term.wrapWithLambdas(abs, converted);
+			Util.debug("  result = " + converted);
+			Util.debug("fixing up eta long case in pattern unification: ", application.function, " ==> ", converted);
+			current.add(application.getFunction(), converted);
+			unifyHelper(current, worklist);
+			return;
+		}
+
+		// Some previous unsound heuristics:
+		// 
+		// @ If the applications were the same size, equate everything:
+		//    (F X) = (G X) ==> F = G
+		//   Not sound: this doesn't include the solution
+		//     F = \x.x,  G = \x.a,  X = a
+		//
+		// @ If one application has all the arguments of the other, then bind the shorter
+		//   variable to the longer one.  This doesn't work for the same reason as above.
+
+		Term thisTerm = this.substitute(current);
+		Term otherTerm = application.substitute(current);
+		Util.debug("incomplete. this = " + thisTerm + " =?= " + otherTerm + " current = ",current,", worklist = ", worklist);
 		throw new UnificationIncomplete("not implemented: non-pattern unification case after delay: " + otherTerm + " and " + thisTerm, otherTerm, thisTerm);
-		
+
 	}
 
 	private  Term computeVarMatch(FreeVar H, List<BoundVar> commonArgs, List<? extends Term> arguments2, List<Term> arguments2Types, Substitution current, Application errorApp) {
 		// otherArgs => arguments2?
 		// arguments => commonArgs?
-		
+
 		// build up a map
 		List<Term> substitutedOtherArgs = new ArrayList<Term>();
 		for (Term t : arguments2)
 			substitutedOtherArgs.add(t.substitute(current));
-		
+
 		// apply the map to construct new arguments
 		List<Term> fArgs = new ArrayList<Term>();
 		for (Term t : commonArgs) {
@@ -555,7 +563,7 @@ public class Application extends Term {
 		Term varMatch = fArgs.isEmpty()? H : new Application(H, fArgs);
 
 		varMatch = wrapWithLambdas(varMatch, arguments2Types);
-		
+
 		// wrap varMatch in an application for each argument in otherArgs
 		/*for (int i = 0; i < arguments2.size(); ++i) {
 			varMatch = Abstraction.make("x", "X", varMatch);
@@ -565,30 +573,31 @@ public class Application extends Term {
 	}
 
 	@Override
-  protected boolean selectUnusablePositions(int bound,
-      Set<Pair<FreeVar, Integer>> unusable) {
-	  boolean result = true;
-	  if (function instanceof FreeVar) {
-	    for (int i=0; i < arguments.size(); ++i) {
-	      Term t = arguments.get(i);
-	      if (t instanceof BoundVar) {
-	        BoundVar b = (BoundVar)t;
-	        if (b.getIndex() > bound) {
-	          unusable.add(new Pair<FreeVar, Integer>((FreeVar)function,i));
-	        }
-	      } else {
-	        result &= t.selectUnusablePositions(bound, unusable);
-	      }
-	    }
-	  } else {
-	    for (Term t : arguments) {
-	      result &= t.selectUnusablePositions(bound, unusable);
-	    }
-	  }
-	  return result;
-  }
+	protected boolean selectUnusablePositions(int bound,
+			Set<Pair<FreeVar, Integer>> unusable) {
+		boolean result = true;
+		if (function instanceof FreeVar) {
+			for (int i=0; i < arguments.size(); ++i) {
+				Term t = arguments.get(i);
+				if (t instanceof BoundVar) {
+					BoundVar b = (BoundVar)t;
+					if (b.getIndex() > bound) {
+						unusable.add(new Pair<FreeVar, Integer>((FreeVar)function,i));
+					}
+				} else {
+					result &= t.selectUnusablePositions(bound, unusable);
+				}
+			}
+		} else {
+			for (Term t : arguments) {
+				result &= t.selectUnusablePositions(bound, unusable);
+			}
+		}
+		return result;
+	}
 
-  public int hashCode() { return function.hashCode() + arguments.hashCode(); }
+	@Override
+	public int hashCode() { return function.hashCode() + arguments.hashCode(); }
 
 	@Override
 	public boolean typeEquals(Term otherType) {
@@ -605,7 +614,7 @@ public class Application extends Term {
 		}
 		return function.typeEquals(a.function);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
@@ -615,9 +624,11 @@ public class Application extends Term {
 		return function.equals(a.function) && arguments.equals(a.arguments);
 	}
 
+	@Override
 	public String toString() {
 		return "(" + function + " " + arguments + ")";
 	}
+	@Override
 	public Term getType(List<Pair<String, Term>> varBindings) {
 		Term funType = function.getType(varBindings);
 		for (Term t : arguments) {
@@ -631,7 +642,7 @@ public class Application extends Term {
 		}
 		return funType;
 	}
-	
+
 	/** Produces a substitution that will bind an outer bound variable in all free variables.
 	 * Here we just recurse to the function and arguments.
 	 */
@@ -660,7 +671,7 @@ public class Application extends Term {
 	public void removeBoundVarsAbove(int i, Substitution sub) {
 		Atom theFunction = function;
 		List<? extends Term> theArguments = arguments;
-		
+
 		// is the function a free variable?  If so, let's try to do elimination of unwanted arguments
 		if (theFunction instanceof FreeVar) {
 			// have we already substituted?  If so, substitute and continue
@@ -668,10 +679,10 @@ public class Application extends Term {
 				sub.getSubstituted(theFunction).apply(arguments, 0).removeBoundVarsAbove(i, sub);
 				return;
 			}
-			
+
 			// get argument types for function
 			List<Term> argTypes = getArgTypes(theFunction.getType());
-			
+
 			// build up a new set of arguments and argument types
 			List<Term> newArgs = new ArrayList<Term>();
 			List<Term> newArgTypes = new ArrayList<Term>();
@@ -683,19 +694,19 @@ public class Application extends Term {
 					newArgTypes.add(argTypes.get(j));
 				}
 			}
-			
+
 			// if we replaced anything, update theFunction and theArguments, and create a new substitution
 			if (newArgs.size() != theArguments.size()) {
 				Term newType = wrapWithLambdas(((FreeVar)theFunction).getBaseType(), newArgTypes);
 				theFunction = Facade.FreshVar(((FreeVar)theFunction).getName(), newType);
 				theArguments = newArgs;
-				
+
 				Term newTerm = theFunction.apply(theArguments, 0);
 				newTerm = Term.wrapWithLambdas(newTerm, argTypes);
 				sub.add(function, newTerm);
 			}
 		}
-		
+
 		// now, recurse down into the (possibly new) function and arguments.
 		theFunction.removeBoundVarsAbove(i, sub);
 
@@ -713,14 +724,14 @@ public class Application extends Term {
 		}
 	}
 
-  @Override
-  public boolean containsProper(Term other) {
-    if (function.contains(other)) return true;
-    for (Term arg : arguments) {
-      if (arg.contains(other)) return true;
-    }
-    return false;
-  }
-	
-	
+	@Override
+	public boolean containsProper(Term other) {
+		if (function.contains(other)) return true;
+		for (Term arg : arguments) {
+			if (arg.contains(other)) return true;
+		}
+		return false;
+	}
+
+
 }

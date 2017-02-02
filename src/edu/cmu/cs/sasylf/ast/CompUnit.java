@@ -37,18 +37,19 @@ public class CompUnit extends Node {
 	public PackageDeclaration getPackage() { return packageDecl; }
 	public Set<String> getDeclaredTerminals() { return declaredTerminals; }
 
-  private PackageDeclaration packageDecl;
+	private PackageDeclaration packageDecl;
 	private String moduleName;
 	private List<Syntax> syntax;
 	private List<Judgment> judgments;
 	private List<Theorem> theorems;
 	private Set<String> declaredTerminals;
 
+	@Override
 	public void prettyPrint(PrintWriter out) {
-	  packageDecl.prettyPrint(out);
-		
+		packageDecl.prettyPrint(out);
+
 		if (moduleName != null) {
-		  out.println("module " + moduleName);
+			out.println("module " + moduleName);
 		}
 
 		out.print("terminals ");
@@ -97,7 +98,7 @@ public class CompUnit extends Node {
 	 * false if there were one or more errors.
 	 */
 	public boolean typecheck(ModuleFinder mf, ModuleId id) {
-	  ErrorHandler.recordLastSpan(this);
+		ErrorHandler.recordLastSpan(this);
 		int oldCount = ErrorHandler.getErrorCount();
 		Context ctx = new Context(mf,this);
 		try {
@@ -109,31 +110,31 @@ public class CompUnit extends Node {
 		}
 		return ErrorHandler.getErrorCount() == oldCount;
 	}
-	
+
 	public boolean typecheck() {
-	  return typecheck(new NullModuleFinder(),(ModuleId)null);  
+		return typecheck(new NullModuleFinder(),(ModuleId)null);  
 	}
 
 	private void checkFilename(ModuleId id) {
-	  packageDecl.typecheck(id.packageName);
-	  
-	  if (moduleName != null) {
-	    if (!ParseUtil.isLegalIdentifier(id.moduleName)) {
-	      ErrorHandler.report(Errors.BAD_FILE_NAME,this);
-	    }
-	    if (!moduleName.equals(id.moduleName)) {
-	      ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+id.moduleName);
-	    }
-	  }
+		packageDecl.typecheck(id.packageName);
+
+		if (moduleName != null) {
+			if (!ParseUtil.isLegalIdentifier(id.moduleName)) {
+				ErrorHandler.report(Errors.BAD_FILE_NAME,this);
+			}
+			if (!moduleName.equals(id.moduleName)) {
+				ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+id.moduleName);
+			}
+		}
 	}
-	
+
 	// TODO: ensures variable names do not include num or prime
 	// computes Syntax type for each variable
 	// computes Syntax for each NonTerminal
 	// converts NonTerminal into Variable where appropriate
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
 	public void typecheck(Context ctx, ModuleId id) {
-    if (id != null) checkFilename(id);
+		if (id != null) checkFilename(id);
 		for (Syntax syn: syntax) {
 			if (declaredTerminals.contains(syn.getNonTerminal().getSymbol()))
 				ErrorHandler.report(Errors.SYNTAX_TERMINAL, syn, syn.getNonTerminal().getSymbol());
@@ -144,23 +145,23 @@ public class CompUnit extends Node {
 		for (Syntax syn: syntax) {
 			syn.typecheck(ctx);
 		}
-    
+
 		// check if useless
 		for (Syntax syn : syntax) {
-		  if (!syn.isProductive()) {
-		    ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, syn);
-		  }
-		}
-		
-		// check variables are bound in exactly context (two passes)
-		for (Syntax syn : syntax) {
-		  syn.registerVarTypes();
-		}
-		for (Syntax syn : syntax) {
-		  syn.checkVarTypeRegistered();
+			if (!syn.isProductive()) {
+				ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, syn);
+			}
 		}
 
-		
+		// check variables are bound in exactly context (two passes)
+		for (Syntax syn : syntax) {
+			syn.registerVarTypes();
+		}
+		for (Syntax syn : syntax) {
+			syn.checkVarTypeRegistered();
+		}
+
+
 		computeSubordinationSyntax(ctx);
 
 		for (Judgment j: judgments) {
@@ -177,12 +178,12 @@ public class CompUnit extends Node {
 
 		for (Judgment j: judgments) {
 			try {
-        j.typecheck(ctx);
-      } catch (SASyLFError e) {
-        // already reported.
-      }
+				j.typecheck(ctx);
+			} catch (SASyLFError e) {
+				// already reported.
+			}
 		}
-		
+
 		computeSubordinationJudgment(judgments);
 
 		for (Theorem t: theorems) {
@@ -193,14 +194,14 @@ public class CompUnit extends Node {
 			}
 		}
 	}
-	
+
 	private void computeSubordinationSyntax(Context ctx) {
 		for (Syntax syntax : ctx.synMap.values()) {
 			Term synType = syntax.typeTerm();
 			for (Clause clause : syntax.getClauses()) {
-			  if (clause.isVarOnlyClause()) {
-			    FreeVar.setAppearsIn(synType,synType);
-			  }
+				if (clause.isVarOnlyClause()) {
+					FreeVar.setAppearsIn(synType,synType);
+				}
 				if (clause instanceof ClauseDef) {
 					ClauseDef clauseDef = (ClauseDef) clause;
 					Constant constant = (Constant)clauseDef.asTerm();
@@ -210,8 +211,8 @@ public class CompUnit extends Node {
 						Util.debug(abs.varType.baseTypeFamily(), " < ", synType);
 						FreeVar.setAppearsIn(abs.varType.baseTypeFamily(), synType);
 						for (Term t = abs.varType; t instanceof Abstraction; t = ((Abstraction)t).getBody()){
-	            Util.debug(((Abstraction)t).varType.baseTypeFamily(), " < ", t.baseTypeFamily());
-						  FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
+							Util.debug(((Abstraction)t).varType.baseTypeFamily(), " < ", t.baseTypeFamily());
+							FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
 						}
 						typeTerm = abs.getBody();
 					}
@@ -221,30 +222,30 @@ public class CompUnit extends Node {
 	}
 
 	private void computeSubordinationJudgment(List<Judgment> js) {
-	  for (Judgment j : js) {
-	    Term jType = j.typeTerm();
-	    for (Element e : j.getForm().getElements()) {
-	      if (e instanceof NonTerminal) {
-	        Term nType = ((NonTerminal)e).getTypeTerm();
-	        Util.debug("subordination: ", nType, " < ", jType);
-          FreeVar.setAppearsIn(nType, jType);
-	      }
-	    }
-	    for (Rule r : j.getRules()) {
-	      if (r.isAssumption()) {
-	        Util.debug("subordination: ", jType, " < ", jType, " forced");
-	        FreeVar.setAppearsIn(jType,jType);
-	        Term cType = r.getAssumes().getTypeTerm();
-	        Util.debug("subordination: ", jType, " < ", cType, " forced.");
-          FreeVar.setAppearsIn(jType,cType);
-	      }
-	      for (Clause cl : r.getPremises()) {
-	        if (!(cl instanceof ClauseUse)) continue; // avoid recovered error -> internal error
-	        Term pType = ((ClauseUse)cl).getTypeTerm();
-	        Util.debug("subordination: ", pType, " < ", jType);
-          FreeVar.setAppearsIn(pType, jType);
-	      }
-	    }
-	  }
+		for (Judgment j : js) {
+			Term jType = j.typeTerm();
+			for (Element e : j.getForm().getElements()) {
+				if (e instanceof NonTerminal) {
+					Term nType = ((NonTerminal)e).getTypeTerm();
+					Util.debug("subordination: ", nType, " < ", jType);
+					FreeVar.setAppearsIn(nType, jType);
+				}
+			}
+			for (Rule r : j.getRules()) {
+				if (r.isAssumption()) {
+					Util.debug("subordination: ", jType, " < ", jType, " forced");
+					FreeVar.setAppearsIn(jType,jType);
+					Term cType = r.getAssumes().getTypeTerm();
+					Util.debug("subordination: ", jType, " < ", cType, " forced.");
+					FreeVar.setAppearsIn(jType,cType);
+				}
+				for (Clause cl : r.getPremises()) {
+					if (!(cl instanceof ClauseUse)) continue; // avoid recovered error -> internal error
+					Term pType = ((ClauseUse)cl).getTypeTerm();
+					Util.debug("subordination: ", pType, " < ", jType);
+					FreeVar.setAppearsIn(pType, jType);
+				}
+			}
+		}
 	}
 }

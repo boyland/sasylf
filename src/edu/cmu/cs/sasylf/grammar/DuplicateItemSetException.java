@@ -12,16 +12,16 @@ class DuplicateItemSetException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = -5355735248140414166L;
-	
+
 	private ItemSet original;
-	
+
 	/** Thrown when user attempts to create an ItemSet identical to one that already exists.
 	 * @param is The ItemSet this is a duplicate of.
 	 */
 	public DuplicateItemSetException(ItemSet is) {
 		original = is;
 	}
-	
+
 	/** Returns the itemset this is a duplicate of.
 	 */
 	public ItemSet originalCopy() {

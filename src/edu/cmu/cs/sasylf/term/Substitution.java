@@ -44,7 +44,7 @@ public class Substitution {
 		t2 = t2.substitute(this);
 		return t1.equals(t2);
 	}
-	
+
 	/** returns true if could avoid all atoms */
 	public boolean avoid(Set<? extends Atom> atoms) {
 		return selectUnavoidable(atoms).isEmpty();
@@ -54,25 +54,25 @@ public class Substitution {
 	 * Returns the subset of vars that can't be avoided. */
 	public <T extends Atom> Set<T> selectUnavoidable(Set<T> vars) {
 		Set<T> result = new HashSet<T>();
-		
+
 		for (T v : vars) {
 			Term t = varMap.get(v);
 			if (t != null) {
 				// see if there's an equivalent free variable
 				FreeVar fv = t.getEtaEquivFreeVar();
-				
+
 				if (fv == null) {
-				  Substitution revSub = new Substitution();
-				  fv = t.getEtaPermutedEquivFreeVar((FreeVar)v, revSub);
-				  if (fv != null && !vars.contains(fv)) {
-				    Util.debug("Found permuted var: ", v);
-				    varMap.remove(v);
-				    this.compose(revSub);
-				  } else {
-				    // can't avoid
-				    result.add(v);
-				    Util.debug("could not avoid ", v, " because it is equal to non-FreeVar expression ", t);
-				  }
+					Substitution revSub = new Substitution();
+					fv = t.getEtaPermutedEquivFreeVar((FreeVar)v, revSub);
+					if (fv != null && !vars.contains(fv)) {
+						Util.debug("Found permuted var: ", v);
+						varMap.remove(v);
+						this.compose(revSub);
+					} else {
+						// can't avoid
+						result.add(v);
+						Util.debug("could not avoid ", v, " because it is equal to non-FreeVar expression ", t);
+					}
 				} else if (vars.contains(fv)) {
 					// can't avoid
 					result.add(v);
@@ -84,68 +84,68 @@ public class Substitution {
 				}
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	/** guarantees compositionality, ensures no recursion in substitution (including mutual recursion)
 	 * but allows substituting X for X (this leaves the map unchanged). If the variable
-   * already has a binding, the two values are unified, which might produce a
-   * unification exception, which must be caught.
-   * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
-   * @throws UnificationFailed two binding for the variable failed to unify.
-   */
+	 * already has a binding, the two values are unified, which might produce a
+	 * unification exception, which must be caught.
+	 * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
+	 * @throws UnificationFailed two binding for the variable failed to unify.
+	 */
 	public void add(Atom atom, Term t) {
 		debug("substituting ", t, " for ", atom, " adding to ", this);
 		if (atom instanceof Constant) throw new RuntimeException("InternaError: substituting constant " + atom);
 		FreeVar var = (FreeVar)atom;
-		
+
 		// perform the substitution on t
 		Term tSubstituted;
 		if (varMap.isEmpty())
 			tSubstituted = t;
 		else
 			tSubstituted = t.substitute(this);
-		
+
 		FreeVar subFreeVar = tSubstituted.getEtaEquivFreeVar();
-		
+
 		// return if this is the empty substitution
 		if (tSubstituted.equals(var) || (subFreeVar != null && subFreeVar.equals(var)))
 			return;
 
 		debug("tSubstituted is ", tSubstituted);
-		
+
 		// ensure var is not free in tSubstituted
 		Set<FreeVar> freeVars = tSubstituted.getFreeVariables();
 		if(freeVars.contains(var))
 			throw new EOCUnificationFailed("Extended Occurs Check failed: " + var + " is free in " + tSubstituted, var);
 
 		// perform substitution on the existing variables
-    if (!varMap.isEmpty()) {
-      Substitution newSub = new Substitution(tSubstituted, var);
-      for (Atom v : varMap.keySet()) {
-        varMap.put(v, varMap.get(v).substitute(newSub));
-      }
-    }
-		if (varMap.containsKey(var)) {
-		  Term oldTerm = varMap.get(var);
-		  Substitution unifier = oldTerm.unify(tSubstituted);
-		  tSubstituted = tSubstituted.substitute(unifier);
-		  compose(unifier);
+		if (!varMap.isEmpty()) {
+			Substitution newSub = new Substitution(tSubstituted, var);
+			for (Atom v : varMap.keySet()) {
+				varMap.put(v, varMap.get(v).substitute(newSub));
+			}
 		}
-		
+		if (varMap.containsKey(var)) {
+			Term oldTerm = varMap.get(var);
+			Substitution unifier = oldTerm.unify(tSubstituted);
+			tSubstituted = tSubstituted.substitute(unifier);
+			compose(unifier);
+		}
+
 		// add the new entry to the map
 		varMap.put(var, tSubstituted);
 	}
 
 	public Term remove(Atom v) {
-	  return varMap.remove(v);
+		return varMap.remove(v);
 	}
-	
+
 	public void removeAll(Collection<? extends Atom> col) {
-	  varMap.keySet().removeAll(col);
+		varMap.keySet().removeAll(col);
 	}
-	
+
 	/**
 	 * Return what this variable is substituted with according to this substitution.
 	 * @param var variable to look up.
@@ -183,8 +183,10 @@ public class Substitution {
 		return unmodifiableMap;
 	}
 
+	@Override
 	public int hashCode() { return varMap.hashCode(); }
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Substitution)) return false;
@@ -193,9 +195,10 @@ public class Substitution {
 	}
 
 	public boolean containsAll(Substitution other) {
-	  return varMap.entrySet().containsAll(other.varMap.entrySet());
+		return varMap.entrySet().containsAll(other.varMap.entrySet());
 	}
-	
+
+	@Override
 	public String toString() {
 		return getMap().toString();
 	}

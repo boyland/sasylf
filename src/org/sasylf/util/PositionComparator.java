@@ -10,26 +10,26 @@ import org.eclipse.jface.text.Position;
  */
 public class PositionComparator implements Comparator<Position> {
 
-  public PositionComparator() { }
+	public PositionComparator() { }
 
-  @Override
-  public int compare(Position arg0, Position arg1) {
-    int diffOffset = arg0.getOffset() - arg1.getOffset();
-    if (diffOffset != 0) return diffOffset;
-    int diffLength = arg0.getLength() - arg1.getLength();
-    return diffLength;
-  }
+	@Override
+	public int compare(Position arg0, Position arg1) {
+		int diffOffset = arg0.getOffset() - arg1.getOffset();
+		if (diffOffset != 0) return diffOffset;
+		int diffLength = arg0.getLength() - arg1.getLength();
+		return diffLength;
+	}
 
-  static volatile PositionComparator instance;
-  
-  public static PositionComparator getDefault() {
-    if (instance == null) {
-      synchronized (PositionComparator.class) {
-        if (instance == null) {
-          instance = new PositionComparator(); 
-        }
-      }
-    }
-    return instance;
-  }
+	static volatile PositionComparator instance;
+
+	public static PositionComparator getDefault() {
+		if (instance == null) {
+			synchronized (PositionComparator.class) {
+				if (instance == null) {
+					instance = new PositionComparator(); 
+				}
+			}
+		}
+		return instance;
+	}
 }

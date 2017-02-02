@@ -27,36 +27,40 @@ public class Binding extends Element {
 		setEndLocation(endLoc);
 	}
 
-	
-  @Override
-  public int hashCode() {
-    return nonTerminal.hashCode() + elements.hashCode();
-  }
 
 	@Override
-  public boolean equals(Object obj) {
-	  if (!(obj instanceof Binding)) return false;
-	  Binding b = (Binding)obj;
-	  return nonTerminal.equals(b.nonTerminal) && elements.equals(b.elements);
-  }
+	public int hashCode() {
+		return nonTerminal.hashCode() + elements.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Binding)) return false;
+		Binding b = (Binding)obj;
+		return nonTerminal.equals(b.nonTerminal) && elements.equals(b.elements);
+	}
 
 
-  public NonTerminal getNonTerminal() { return nonTerminal; }
+	public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Element> getElements() { return elements; }
+	@Override
 	public Syntax getType() { return nonTerminal.getType(); }
+	@Override
 	public ElemType getElemType() { return nonTerminal.getType(); }
+	@Override
 	public Symbol getGrmSymbol() {
 		return nonTerminal.getGrmSymbol();
 		//throw new RuntimeException("not implemented");
 	}
 
 	@Override
-  public Term getTypeTerm() {
-    return nonTerminal.getTypeTerm();
-  }
+	public Term getTypeTerm() {
+		return nonTerminal.getTypeTerm();
+	}
 
 
-  public String getTerminalSymbolString() {
+	@Override
+	public String getTerminalSymbolString() {
 		return nonTerminal.getType().getTermSymbolString();
 	}
 
@@ -83,6 +87,7 @@ public class Binding extends Element {
 			}
 		}
 	}
+	@Override
 	public Element typecheck(Context ctx) {
 		Element e = nonTerminal.typecheck(ctx);
 		if (!(e instanceof NonTerminal))
@@ -108,15 +113,16 @@ public class Binding extends Element {
 
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
-	  if (assumes == null || ctx.isVarFree(this) ||
-	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
-	    return new BindingAssumption(this);
-	  return new BindingAssumption(this,assumes);
+		if (assumes == null || ctx.isVarFree(this) ||
+				!((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+			return new BindingAssumption(this);
+		return new BindingAssumption(this,assumes);
 	}
 
 
-  public Term computeTerm(List<Pair<String, Term>> varBindings) {
-		FreeVar t = (FreeVar) nonTerminal.computeTerm(varBindings);
+	@Override
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+		FreeVar t = nonTerminal.computeTerm(varBindings);
 		List<Term> argList = new ArrayList<Term>();
 		List<Term> argTypes = new ArrayList<Term>();
 		//int index = varBindings.size()-elements.size();
@@ -129,10 +135,10 @@ public class Binding extends Element {
 		Term varType = t.getType();
 		varType = Term.wrapWithLambdas(varType, argTypes);
 		t.setType(varType);
-		
+
 		Application result = new Application(t, argList);
 		// System.out.println("term for " + this + " is " + result);
-    return result;
+		return result;
 	}
 
 	@Override
@@ -149,25 +155,25 @@ public class Binding extends Element {
 		} else {
 			if (!prevType.equals(myType))
 				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + nonTerminal + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame,
-				    "(" + prevType + " != " + myType + ")");
+						"(" + prevType + " != " + myType + ")");
 		}
 	}
 
 
-  @Override
-  public NonTerminal getRoot() {
-    return null; // same reason as for NonTerminal (q.v.)
-  }
+	@Override
+	public NonTerminal getRoot() {
+		return null; // same reason as for NonTerminal (q.v.)
+	}
 
 
-  @Override
-  void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
-    super.getFree(freeSet, rigidOnly);
-    if (!rigidOnly) {
-      for (Element e:elements) {
-        e.getFree(freeSet, rigidOnly);
-      }
-    }
-  }
-	
+	@Override
+	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+		super.getFree(freeSet, rigidOnly);
+		if (!rigidOnly) {
+			for (Element e:elements) {
+				e.getFree(freeSet, rigidOnly);
+			}
+		}
+	}
+
 }

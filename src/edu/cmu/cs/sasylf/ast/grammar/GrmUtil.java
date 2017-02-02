@@ -8,7 +8,7 @@ import edu.cmu.cs.sasylf.grammar.NonTerminal;
 public class GrmUtil {
 	private static NonTerminal startSymbol;
 	private static Map<String, GrmTerminal> terminalMap = new HashMap<String, GrmTerminal>();
-	
+
 	public static NonTerminal getStartSymbol() {
 		if (startSymbol == null)
 			startSymbol = new GrmNonTerminal("__START");
@@ -23,12 +23,12 @@ public class GrmUtil {
 		}
 		return result;
 	}
-	
+
 	public static GrmTerminal getLeftParen() {
-	  return terminalFor("'('");
+		return terminalFor("'('");
 	}
-	
+
 	public static GrmTerminal getRightParen() {
-	  return terminalFor("')'");
+		return terminalFor("')'");
 	}
 }

@@ -37,7 +37,7 @@ public class Grammar {
 	public Grammar() {
 		this(null, new LinkedList<Rule>());
 	}
-	
+
 	/** Set the start symbol for this grammar.
 	 * @param s the new start symbol
 	 */
@@ -106,7 +106,7 @@ public class Grammar {
 		}
 		return result;
 	}
-	
+
 	/** For an augmented grammar (and ONLY an augmented grammar), return all ItemRules.
 	 */
 	List<ItemRule> allItemRules() {
@@ -127,10 +127,10 @@ public class Grammar {
 		Queue<Automaton> queue = new LinkedList<Automaton>();
 		LinkedList<Automaton> done = new LinkedList<Automaton>();
 		Set<RuleNode> parseTrees = new HashSet<RuleNode>();
-		
+
 		//Creates a new automaton to try to parse the sentence, and adds it to the queue.
 		queue.add(new Automaton(list, this));
-		
+
 		//Attempts to retrieve the next automaton and make it do one step.
 		while(!queue.isEmpty()) {
 			Automaton a = queue.poll();
@@ -146,14 +146,14 @@ public class Grammar {
 						continue;
 				}
 			} catch (AmbiguousSentenceException e) { //If we encountered a conflict...
-        //Create a new automaton for each possible action we can take
+				//Create a new automaton for each possible action we can take
 				for(Action action: e.getConflict().getActions()) {
-				  // accept actions have to be acted upon now since "act" ignores ACCEPT
-				  if (action.getType() == ActionType.ACCEPT) {
-				    done.add(a); 
-	          parseTrees.add(a.results());
-	          continue;
-				  }
+					// accept actions have to be acted upon now since "act" ignores ACCEPT
+					if (action.getType() == ActionType.ACCEPT) {
+						done.add(a); 
+						parseTrees.add(a.results());
+						continue;
+					}
 					Automaton clone = new Automaton(a);
 					clone.act(action);
 					queue.offer(clone);
@@ -165,17 +165,17 @@ public class Grammar {
 			}
 			queue.offer(a);
 		}
-		
+
 		//If no successful parsings were produced, throw an exception.
 		if(done.size() == 0) {
 			throw new NotParseableException();
 		}
-		
+
 		//If more than one successful parsing was produced, throw an exception.
 		if(parseTrees.size() >= 2) {
 			throw new AmbiguousSentenceException(parseTrees);
 		}
-		
+
 		//Otherwise, return the true parsing.
 		return done.getFirst().results();
 	}
@@ -191,7 +191,7 @@ public class Grammar {
 		LinkedList<Symbol> list = new LinkedList<Symbol>();
 		list.add(start);
 		augment.addRule(new ItemRule(StartSymbol.getStartSymbol(), list, 0));
-		
+
 		//For each rule in the original grammar, make a new one but with a read symbol "$"
 		//in front.
 		for(Rule r: rules) {
@@ -202,6 +202,7 @@ public class Grammar {
 
 	/** Prints a list of all the rules in this grammar.
 	 */
+	@Override
 	public String toString() {
 		String s = "";
 		for(Rule r: rules) {

@@ -17,30 +17,33 @@ import edu.cmu.cs.sasylf.term.*;
 public class Judgment {
 	private Term term;
 	private edu.cmu.cs.sasylf.ast.Judgment judgmentType;
-	
+
 	public Term getTerm() { return term; }
 	public edu.cmu.cs.sasylf.ast.Judgment getJudgmentType() { return judgmentType; }
-	
+
 	private Substitution sub;
-	
+
 	public Judgment(Term term, edu.cmu.cs.sasylf.ast.Judgment type) {
 		this.term = term;
 		this.judgmentType = type;
 	}
-	
+
+	@Override
 	public String toString() {
 		return term.toString();
 	}
+	@Override
 	public int hashCode() {
 		return term.hashCode();
 	}
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Judgment)) return false;
 		Judgment j = (Judgment) obj;
 		return term.equals(j.term);
 	}
-	
+
 	/** Prints this judgment in a form that can be understood by the tool.
 	 * @param substitution The substitution to be used.
 	 * @return a pretty string
@@ -77,7 +80,7 @@ public class Judgment {
 					//If it is a terminal symbol, just print the symbol
 					if(e instanceof Terminal) {
 						s += ((Terminal)e).getSymbol();
-					//If it's a nonterminal symbol, printElement the thing
+						//If it's a nonterminal symbol, printElement the thing
 					} else if(e instanceof NonTerminal) {
 						s += printElement(e, app, index);
 						index++;
@@ -88,7 +91,7 @@ public class Judgment {
 		}
 		return s.trim() + ")";
 	}
-	
+
 	/** Pretty prints an element
 	 * @param e the element to be pretty printed
 	 * @param a the application used to determine the Term of the element, if it's a nonterminal
@@ -100,7 +103,7 @@ public class Judgment {
 		if(e instanceof Terminal) {
 			Terminal t = (Terminal)e;
 			s += " " + t.getSymbol() + " ";
-		//If it's a nonterminal, use the Argument to determine its Term, and printTerm it
+			//If it's a nonterminal, use the Argument to determine its Term, and printTerm it
 		} else if(e instanceof NonTerminal) {
 			NonTerminal nt = (NonTerminal)e;
 			List<? extends Term> args = a.getArguments();
@@ -110,7 +113,7 @@ public class Judgment {
 		}
 		return s;
 	}
-	
+
 	/** Pretty prints a Term
 	 * @param t the term to be pretty printed
 	 * @param syntax the syntax used to determine the pretty symbol of this term
@@ -129,22 +132,22 @@ public class Judgment {
 					}
 				}
 			}
-		//If it's a freevar, check to see if it's a substitution
+			//If it's a freevar, check to see if it's a substitution
 		} else if (t instanceof FreeVar) {
 			FreeVar v = (FreeVar)t;
 			Term t2 = sub.getSubstituted(v);
 			//If there is a substitution for it, printTerm the substitution
 			if(t2 != null) {
 				s += printTerm(t2, syntax);
-			//If there is no substitution for it, it truly is a free variable. Print it.
+				//If there is no substitution for it, it truly is a free variable. Print it.
 			} else {
 				s += v.getName();
 			}
-		//If it's an application, printApplication it
+			//If it's an application, printApplication it
 		} else if (t instanceof Application) {
 			s += printApplication((Application)t, syntax);
 		}
 		return s;
 	}
-	
+
 }

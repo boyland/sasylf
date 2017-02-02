@@ -19,26 +19,26 @@ import org.sasylf.views.ProofOutline;
  */
 public class OpenDeclarationHandler extends AbstractHandler {
 
-  @Override
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-    ISelection currentSelection = HandlerUtil.getCurrentSelection(event);
-    if (!(currentSelection instanceof ITextSelection)) return null;
-    ITextSelection sel = (ITextSelection)currentSelection;
-    String name = sel.getText();
-    IEditorPart editor = HandlerUtil.getActiveEditor(event);
-    if (!(editor instanceof ProofEditor)) return null;
-    ProofEditor proofEditor = (ProofEditor)editor;
-    ProofOutline outline = proofEditor.getProofOutline();
-    ProofElement element = outline.findProofElementByName(name);
-    if (element == null) {
-      MessageDialog.openError(HandlerUtil.getActiveShell(event), "Open Declaration", "No judgment or theorem '"+ name +"' found");
-    } else {
-      Position pos = element.getPosition();
-      //TODO: later we may need to open an editor:
-      ISourceViewer sourceViewer = proofEditor.getSourceViweer();
-      sourceViewer.setRangeIndication(pos.getOffset(), pos.getLength(), true);
-    }
-    return null;
-  }
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		ISelection currentSelection = HandlerUtil.getCurrentSelection(event);
+		if (!(currentSelection instanceof ITextSelection)) return null;
+		ITextSelection sel = (ITextSelection)currentSelection;
+		String name = sel.getText();
+		IEditorPart editor = HandlerUtil.getActiveEditor(event);
+		if (!(editor instanceof ProofEditor)) return null;
+		ProofEditor proofEditor = (ProofEditor)editor;
+		ProofOutline outline = proofEditor.getProofOutline();
+		ProofElement element = outline.findProofElementByName(name);
+		if (element == null) {
+			MessageDialog.openError(HandlerUtil.getActiveShell(event), "Open Declaration", "No judgment or theorem '"+ name +"' found");
+		} else {
+			Position pos = element.getPosition();
+			//TODO: later we may need to open an editor:
+			ISourceViewer sourceViewer = proofEditor.getSourceViweer();
+			sourceViewer.setRangeIndication(pos.getOffset(), pos.getLength(), true);
+		}
+		return null;
+	}
 
 }

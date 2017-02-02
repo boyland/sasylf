@@ -20,7 +20,7 @@ public class ProvedNodeImpl implements ProvedNode {
 	private Stack<UnprovedNode> undoNodes;
 	private int id;
 	private static int idcounter = 0;
-	
+
 	/**
 	 * @param r The Rule used to prove this node is true.
 	 * @param pre The premises of Rule r.
@@ -28,14 +28,14 @@ public class ProvedNodeImpl implements ProvedNode {
 	public ProvedNodeImpl (Rule r, List<ProofNode> pre) {
 		id = idcounter;
 		idcounter++;
-		
+
 		judgment = r.getResult();
 		rule = r;
 		premises = pre;
-		
+
 		undoStates = new Stack<ProvedNode>();
 		undoNodes = new Stack<UnprovedNode>();
-		
+
 		//finds the unproved nodes in the premises and maintains a list of them.
 		unproved = new LinkedList<UnprovedNode>();
 		for(ProofNode pn: premises) {
@@ -48,13 +48,15 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * returns a list of premises
 	 */
+	@Override
 	public List<ProofNode> getPremises() {
 		return premises;
 	}
-	
+
 	/**
 	 * returns the rule
 	 */
+	@Override
 	public Rule getRule() {
 		return rule;
 	}
@@ -62,6 +64,7 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * returns the judgment
 	 */
+	@Override
 	public Judgment getJudgment() {
 		return judgment;
 	}
@@ -69,40 +72,45 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * returns the leftmost unproved node
 	 */
+	@Override
 	public UnprovedNode getLeftmostUnprovedNode() {
 		return unproved.get(0);
 	}
-	
+
 	/**
 	 * returns a list of unproved nodes
 	 */
+	@Override
 	public List<UnprovedNode> getUnprovedNodes() {
 		return unproved;
 	}
-	
+
 	/**
 	 * true if this node has unproved children
 	 */
+	@Override
 	public boolean hasUnprovedChildren() {
 		return unproved.size() > 0;
 	}
-	
+
 	/**
 	 * replaces the unproved node with the proved one
 	 */
+	@Override
 	public void applyRule(UnprovedNode un, ProvedNode pn) {
 		unproved.remove(un);
 		premises.remove(un);
 		premises.add(pn);	
-		
+
 		//updates the undo stacks
 		undoStates.push(pn);
 		undoNodes.push(un);
 	}
-	
+
 	/**
 	 * undoes the last applyRule this node performed
 	 */
+	@Override
 	public ProvedNode undoApplyRule() {
 		ProvedNode pn = undoStates.pop();
 		UnprovedNode un = undoNodes.pop();
@@ -111,10 +119,11 @@ public class ProvedNodeImpl implements ProvedNode {
 		unproved.add(un);
 		return pn;
 	}
-	
+
 	/**
 	 * prints out this proofnode and its children
 	 */
+	@Override
 	public String toString() {
 		String s = judgment.toString() + "\n";
 		for(ProofNode pn: premises) {
@@ -126,6 +135,7 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * prints out this proofnode and its children, along with their depths
 	 */
+	@Override
 	public String toString(int depth) {
 		String s = "";
 		for(int i = 0; i < depth; i++) {
@@ -141,11 +151,12 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * pretty prints this node and its children
 	 */
+	@Override
 	public void prettyPrint(Substitution sub) {
 		for(ProofNode pn: premises) {
 			pn.prettyPrint(sub);
 		}
-		
+
 		String s = "d" + getId() + ": " + judgment.prettyPrint(sub) + " by rule " + rule.prettyPrint();
 		if(premises.size() > 0) {
 			s += " on";
@@ -160,6 +171,7 @@ public class ProvedNodeImpl implements ProvedNode {
 	/**
 	 * returns a unique id for this node
 	 */
+	@Override
 	public int getId() {
 		return idcounter - id;
 	}

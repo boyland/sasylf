@@ -16,14 +16,17 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class Variable extends Element {
 	public Variable(String s, Location l) { 
-	  super(l); 
-	  symbol = s; 
-	  setEndLocation(l.add(s.length())); 
+		super(l); 
+		symbol = s; 
+		setEndLocation(l.add(s.length())); 
 	}
 
 	public String getSymbol() { return symbol; }
+	@Override
 	public Syntax getType() { return type; }
+	@Override
 	public ElemType getElemType() { return type; }
+	@Override
 	public Symbol getGrmSymbol() {
 		if (type == null)
 			System.err.println("null type for " + this);
@@ -34,8 +37,10 @@ public class Variable extends Element {
 	public String getTerminalSymbolString() {
 		return type.getTermSymbolString();
 	}
-	
-  public int hashCode() { return symbol.hashCode(); }
+
+	@Override
+	public int hashCode() { return symbol.hashCode(); }
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Variable)) return false;
@@ -43,16 +48,17 @@ public class Variable extends Element {
 		return symbol.equals(v.symbol);
 	}
 
-	
+
 	public void setType(Syntax t) {
-	  if (type != null && type == t) return; // idempotency
+		if (type != null && type == t) return; // idempotency
 		if (type != null)
 			ErrorHandler.report(Errors.SYNTAX_VARIABLE_TWICE, this);
 		if (t == null)
 			ErrorHandler.report(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
 		type = t;
 	}
-	
+
+	@Override
 	public Element typecheck(Context ctx) {
 		if (type == null) {
 			String strippedName = Util.stripId(getSymbol());
@@ -67,20 +73,20 @@ public class Variable extends Element {
 	}
 
 	@Override
-  void checkVariables(Set<String> bound, boolean defining) {
-	  // System.out.println("Checking " + getSymbol() + " as defining? " + defining);
-	  if (defining) {
-	    if (!bound.add(getSymbol())) {
-	      ErrorHandler.report(Errors.VAR_REBOUND, getSymbol(),this);
-	    }
-	  } else {
-	    if (!bound.contains(getSymbol())) {
-	      ErrorHandler.report(Errors.VAR_UNBOUND, getSymbol(),this);
-	    }
-	  }
-  }
+	void checkVariables(Set<String> bound, boolean defining) {
+		// System.out.println("Checking " + getSymbol() + " as defining? " + defining);
+		if (defining) {
+			if (!bound.add(getSymbol())) {
+				ErrorHandler.report(Errors.VAR_REBOUND, getSymbol(),this);
+			}
+		} else {
+			if (!bound.contains(getSymbol())) {
+				ErrorHandler.report(Errors.VAR_UNBOUND, getSymbol(),this);
+			}
+		}
+	}
 
-  private String symbol;
+	private String symbol;
 	private Syntax type;
 
 	@Override
@@ -89,43 +95,44 @@ public class Variable extends Element {
 	}
 
 	@Override
-  public Fact asFact(Context ctx, Element assumes) {
-    return new VariableAssumption(this);
-  }
-	
+	public Fact asFact(Context ctx, Element assumes) {
+		return new VariableAssumption(this);
+	}
+
 	/**
 	 * Generate a context clause for this variable around the given root.
 	 * @return a context clause that binds the variable.  It will have fresh variables.
 	 */
 	public ClauseUse genContext(Element base, Context ctx) {
-    ClauseDef contextClause = getType().getContextClause();
-    Syntax contextSyntax = (Syntax)contextClause.getType();
-	  Location location = getLocation();
-    if (base == null) {
-      ClauseDef termCase = contextSyntax.getTerminalCase();
-	    base = new ClauseUse(location,new ArrayList<Element>(termCase.getElements()),termCase);
-	  }
-	  List<Element> newElements = new ArrayList<Element>();
-	  for (Element e : contextClause.getElements()) {
-	    if (e instanceof NonTerminal) {
-	      NonTerminal nt = (NonTerminal)e;
-	      if (nt.getType() == contextSyntax) {
-	        newElements.add(base);
-	      } else {
-	        newElements.add(new NonTerminal(ctx.genFresh(nt.getSymbol()),location,nt.getType()));
-	      }
-	    } else if (e instanceof Terminal) {
-	      newElements.add(e);
-	    } else if (e instanceof Variable) {
-	      newElements.add(this);
-	    } else {
-	      throw new RuntimeException("internal error: context clause has strange thing it: " + e);
-	    }
-	  }
-	  return new ClauseUse(location,newElements,contextClause);
+		ClauseDef contextClause = getType().getContextClause();
+		Syntax contextSyntax = (Syntax)contextClause.getType();
+		Location location = getLocation();
+		if (base == null) {
+			ClauseDef termCase = contextSyntax.getTerminalCase();
+			base = new ClauseUse(location,new ArrayList<Element>(termCase.getElements()),termCase);
+		}
+		List<Element> newElements = new ArrayList<Element>();
+		for (Element e : contextClause.getElements()) {
+			if (e instanceof NonTerminal) {
+				NonTerminal nt = (NonTerminal)e;
+				if (nt.getType() == contextSyntax) {
+					newElements.add(base);
+				} else {
+					newElements.add(new NonTerminal(ctx.genFresh(nt.getSymbol()),location,nt.getType()));
+				}
+			} else if (e instanceof Terminal) {
+				newElements.add(e);
+			} else if (e instanceof Variable) {
+				newElements.add(this);
+			} else {
+				throw new RuntimeException("internal error: context clause has strange thing it: " + e);
+			}
+		}
+		return new ClauseUse(location,newElements,contextClause);
 	}
 
-  public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
+	@Override
+	public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
 		int index = -1;
 		for (int i = 0; i < varBindings.size(); ++i) {
 			if (varBindings.get(i).first.equals(symbol)) {
@@ -133,11 +140,11 @@ public class Variable extends Element {
 				break;
 			}
 		}
-		
+
 		if (index == -1) {
 			ErrorHandler.report("Variable " + symbol + " is not bound", this);
 		}
-		
+
 		return new BoundVar(varBindings.size()-index);
 	}
 }

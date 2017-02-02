@@ -21,9 +21,11 @@ public class BoundVar extends Term {
 
 	private int index; // de brejn index, must be at least 1
 
+	@Override
 	public int hashCode() { return index; }
 	public int getIndex() { return index; }
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof BoundVar)) return false;
@@ -31,10 +33,12 @@ public class BoundVar extends Term {
 		return bv.index == index;
 	}
 
+	@Override
 	public String toString() {
 		return "BoundVar" + index;
 	}
 
+	@Override
 	Term incrFreeDeBruijn(int nested, int amount) {
 		if (index <= nested && index > 0)
 			return this;
@@ -63,6 +67,7 @@ public class BoundVar extends Term {
 	}
 
 
+	@Override
 	public Term apply(List<? extends Term> arguments, int whichApplied) {
 		verify(whichApplied >= arguments.size(), "type invariant broken in term system");
 		int argIndex = whichApplied - index;
@@ -76,6 +81,7 @@ public class BoundVar extends Term {
 	/** performs a unification, or fails throwing exception, then calls instanceHelper
 	 * to continue.  The current substitution is applied lazily.
 	 */
+	@Override
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		// other term must be equal to me, otherwise fail
 		if (equals(other))
@@ -83,7 +89,7 @@ public class BoundVar extends Term {
 		else
 			throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);
 	}
-	
+
 	/** 
 	 * we are unifying y with e xn...x1
 	 * 
@@ -91,6 +97,7 @@ public class BoundVar extends Term {
 	 * 
 	 * where y == xi
 	 */
+	@Override
 	void unifyFlexApp(FreeVar function, List<? extends Term> arguments, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		Application errorApp =  new Application(function, arguments);
 		// TODO: should enforce that args are in proper order of binding, and that they include *all* the free "bound" vars in the unified thing
@@ -106,9 +113,9 @@ public class BoundVar extends Term {
 		}
 		if (i == arguments.size()+1)
 			throw new UnificationFailed("cannot unify " + this + " with expression " + errorApp + " in which var is not free", errorApp, this);
-		
+
 		Term wrappedBVar = new BoundVar(i);
-		
+
 		Term varType = function.getType();
 		//List<Term> argTypes = getArgTypes(varType, arguments.size());
 		List<Term> argTypes = getArgTypes(varType);
@@ -121,17 +128,18 @@ public class BoundVar extends Term {
 	}
 
 	@Override
-  protected boolean selectUnusablePositions(int bound,
-      Set<Pair<FreeVar, Integer>> unsable) {
-    return index <= bound;
-  }
-	
-  public Term getType(List<Pair<String, Term>> varBindings) {
+	protected boolean selectUnusablePositions(int bound,
+			Set<Pair<FreeVar, Integer>> unsable) {
+		return index <= bound;
+	}
+
+	@Override
+	public Term getType(List<Pair<String, Term>> varBindings) {
 		int indexToUse = varBindings.size() - index;
-		
+
 		if (indexToUse < 0 || indexToUse >= varBindings.size())
 			return Constant.UNKNOWN_TYPE; // we're typechecking with missing binding info; just return a default type
-		
+
 		return varBindings.get(indexToUse).second;
 	}
 }

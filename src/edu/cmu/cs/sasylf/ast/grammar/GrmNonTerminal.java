@@ -4,7 +4,8 @@ import edu.cmu.cs.sasylf.grammar.NonTerminal;
 
 public class GrmNonTerminal implements NonTerminal {
 	public GrmNonTerminal(String s) { string = s; }
-	
+
+	@Override
 	public String toString() { return string; }
 
 	private String string;

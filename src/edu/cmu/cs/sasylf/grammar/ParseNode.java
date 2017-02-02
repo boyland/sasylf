@@ -5,5 +5,6 @@
 package edu.cmu.cs.sasylf.grammar;
 
 public interface ParseNode {
+	@Override
 	public String toString();
 }

@@ -6,8 +6,10 @@ public class Pair<S,T> {
 	public S first;
 	public T second;
 
+	@Override
 	public int hashCode() { return first.hashCode() + second.hashCode(); }
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Pair)) return false;
@@ -15,6 +17,7 @@ public class Pair<S,T> {
 		return first.equals(p.first) && second.equals(p.second);
 	}
 
+	@Override
 	public String toString() {
 		return "Pair[" + first + ", " + second + "]";
 	}

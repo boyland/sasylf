@@ -34,120 +34,121 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	abstract public String getRuleName();
 
 
+	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		debug("line: ", this.getLocation().getLine());
-		
-    RuleLike ruleLike = getRule(ctx);
-    int n = getArgs().size();
-    
-    List<Abstraction> addedContext = new ArrayList<Abstraction>();
-    Term subject = ruleLike.checkApplication(ctx, getArgs(), this, addedContext, this, false);
-    // form the rule term
-    Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
-    Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars); 
-    // Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
-    
-    Substitution callSub;    
-    // Now we get the substitution.
-    // Then there are complex catch clauses for failed unification.
-    // The complication only concerns what error message to generate.
-    try {
-      callSub = subject.unify(pattern);
-    } catch (UnificationIncomplete e) {
-      String extraInfo = "\n\tcouldn't unify " + e.term1 + " and " + e.term2;
-      ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "SASyLF ran into incompleteness of unification while checking this rule" + extraInfo, this,
-          "(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
-      return; // tell Java we're gone.
-    } catch (UnificationFailed e1) {
-      Util.debug("failure checking ",subject," instanceof ",pattern,": ",e1);
-      // try to be more helpful
-      FreeVar concVar = FreeVar.fresh("conclusion", Term.wrapWithLambdas(addedContext,Constant.UNKNOWN_TYPE));
-      Term applied = concVar;
-      if (!addedContext.isEmpty()) {
-        List<Term> args = new ArrayList<Term>();
-        int m = addedContext.size();
-        for (int j=0; j < m; ++j) {
-          args.add(new BoundVar(m-j));
-        }
-        Util.debug("Facade.App(",concVar,",",args,")");
-        applied = Facade.App(concVar,args);
-      }
-      List<Term> newArgs = new ArrayList<Term>(((Application)subject).getArguments());
-      newArgs.set(n, applied);
-      Term newSubject = Facade.App(((Application)subject).getFunction(),newArgs);
-      Term explanationTerm = null;
-      String explanationString = null;
-      try {
-        Substitution learnAboutErrors = newSubject.unify(pattern);
-        explanationTerm = learnAboutErrors.getSubstituted(concVar);
-        TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation());
-        explanationString = tp.toString(tp.asElement(explanationTerm));
-      } catch (UnificationFailed e2) {
-        // do nothing; can't give good error message
-      } catch (RuntimeException ex) {
-        System.err.println("Couldn't print term: " + explanationTerm);
-        ex.printStackTrace();
-      }
-      if (explanationTerm == null)
-        ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The rule cannot legally be applied to the arguments", this,
-            "(was checking " + subject + " instance of " + pattern + ",\n got exception " + e1);
-      else if (explanationString == null) 
-        ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments", this,
-            "SASyLF computed that the result LF term should be " + explanationTerm);
-      else
-        ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments" +
-            "\nSASyLF computed that the result should be " + explanationString, this);
-      return;
-    }
+
+		RuleLike ruleLike = getRule(ctx);
+		int n = getArgs().size();
+
+		List<Abstraction> addedContext = new ArrayList<Abstraction>();
+		Term subject = ruleLike.checkApplication(ctx, getArgs(), this, addedContext, this, false);
+		// form the rule term
+		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
+		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars); 
+		// Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
+
+		Substitution callSub;    
+		// Now we get the substitution.
+		// Then there are complex catch clauses for failed unification.
+		// The complication only concerns what error message to generate.
+		try {
+			callSub = subject.unify(pattern);
+		} catch (UnificationIncomplete e) {
+			String extraInfo = "\n\tcouldn't unify " + e.term1 + " and " + e.term2;
+			ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "SASyLF ran into incompleteness of unification while checking this rule" + extraInfo, this,
+					"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
+			return; // tell Java we're gone.
+		} catch (UnificationFailed e1) {
+			Util.debug("failure checking ",subject," instanceof ",pattern,": ",e1);
+			// try to be more helpful
+			FreeVar concVar = FreeVar.fresh("conclusion", Term.wrapWithLambdas(addedContext,Constant.UNKNOWN_TYPE));
+			Term applied = concVar;
+			if (!addedContext.isEmpty()) {
+				List<Term> args = new ArrayList<Term>();
+				int m = addedContext.size();
+				for (int j=0; j < m; ++j) {
+					args.add(new BoundVar(m-j));
+				}
+				Util.debug("Facade.App(",concVar,",",args,")");
+				applied = Facade.App(concVar,args);
+			}
+			List<Term> newArgs = new ArrayList<Term>(((Application)subject).getArguments());
+			newArgs.set(n, applied);
+			Term newSubject = Facade.App(((Application)subject).getFunction(),newArgs);
+			Term explanationTerm = null;
+			String explanationString = null;
+			try {
+				Substitution learnAboutErrors = newSubject.unify(pattern);
+				explanationTerm = learnAboutErrors.getSubstituted(concVar);
+				TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation());
+				explanationString = tp.toString(tp.asElement(explanationTerm));
+			} catch (UnificationFailed e2) {
+				// do nothing; can't give good error message
+			} catch (RuntimeException ex) {
+				System.err.println("Couldn't print term: " + explanationTerm);
+				ex.printStackTrace();
+			}
+			if (explanationTerm == null)
+				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The rule cannot legally be applied to the arguments", this,
+						"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e1);
+			else if (explanationString == null) 
+				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments", this,
+						"SASyLF computed that the result LF term should be " + explanationTerm);
+			else
+				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying rule " + getRuleName() + " to the arguments" +
+						"\nSASyLF computed that the result should be " + explanationString, this);
+			return;
+		}
 
 
-    // We have taken care of most context discarding issues, but
-    // we still need to worry about an implicit syntactic parameter to a rule conclusion
-    boolean contextCheckNeeded = 
-        ruleLike instanceof Rule &&   // only rules have implicit parameters only in conclusion
-        ctx.assumedContext != null && // only if we have a context currently, and
-        (ruleLike.getAssumes() == null ||       // either the rule has no context, or
-         ctx.assumedContext.getType() != 
-         ruleLike.getAssumes().getType());      // or the type differs
-		
-    Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
-    if (ruleLike instanceof Theorem) {        
-      mustAvoid.addAll(conclusionFreeVars);
-    } else if (contextCheckNeeded) {
-      for (FreeVar v : conclusionFreeVars) {
-        if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
-        Term actual = v.substitute(callSub);
-        if (ctx.isVarFree(actual)) continue;
-        ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
-            " discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
-      }
-    }
-    
-    if (!callSub.avoid(mustAvoid)) {
-      subject.unify(pattern);
-      Util.debug("while unifying ", subject, " with ", pattern, " and sub ", callSub, "\n\ttrying to avoid ", mustAvoid);
-      Util.debug("\tctx.inputVars = ", ctx.inputVars);
-      Util.debug("\tctx.currentSub = ", ctx.currentSub);
-      Set<FreeVar> unavoided = callSub.selectUnavoidable(mustAvoid);
-      ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided + ")", 
-          this, "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")");
-    }  
-    
-    ctx.composeSub(callSub);
+		// We have taken care of most context discarding issues, but
+		// we still need to worry about an implicit syntactic parameter to a rule conclusion
+		boolean contextCheckNeeded = 
+				ruleLike instanceof Rule &&   // only rules have implicit parameters only in conclusion
+				ctx.assumedContext != null && // only if we have a context currently, and
+				(ruleLike.getAssumes() == null ||       // either the rule has no context, or
+				ctx.assumedContext.getType() != 
+				ruleLike.getAssumes().getType());      // or the type differs
 
-    /*
+		Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
+		if (ruleLike instanceof Theorem) {        
+			mustAvoid.addAll(conclusionFreeVars);
+		} else if (contextCheckNeeded) {
+			for (FreeVar v : conclusionFreeVars) {
+				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
+				Term actual = v.substitute(callSub);
+				if (ctx.isVarFree(actual)) continue;
+				ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
+						" discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
+			}
+		}
+
+		if (!callSub.avoid(mustAvoid)) {
+			subject.unify(pattern);
+			Util.debug("while unifying ", subject, " with ", pattern, " and sub ", callSub, "\n\ttrying to avoid ", mustAvoid);
+			Util.debug("\tctx.inputVars = ", ctx.inputVars);
+			Util.debug("\tctx.currentSub = ", ctx.currentSub);
+			Set<FreeVar> unavoided = callSub.selectUnavoidable(mustAvoid);
+			ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided + ")", 
+					this, "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")");
+		}  
+
+		ctx.composeSub(callSub);
+
+		/*
 		// build ruleTerm: the rule claimed by the user
 		// and adapted to the variables in scope at this point (i.e. Gamma unrolled as necessary)
 		Element elem = getElement();
 		Term derivTerm = DerivationByAnalysis.adapt(elem.asTerm(), elem, ctx, false);
-		
+
 		// build appliedTerm: the element claimed by the user for the conclusion and the
 		// premises claimed by the user as the arguments
 		List<Term> termArgs = new ArrayList<Term>();
 		List<Term> termArgsWithVar = new ArrayList<Term>();
 		Set<FreeVar> argFreeVars = new HashSet<FreeVar>();
-		
+
 		 *
 		 * We just fixed a minor problem that masked a major problem.
 		 * Minor problem:
@@ -178,9 +179,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		 * will need to figure out carefully how to adapt the subject to get
 		 * a function with the same number of lambdas.
 		 *
-		
-		
-		
+
+
+
 		for (int i = 0; i < getArgs().size(); ++i) {
 			Term argTerm = getAdaptedArg(ctx,i);
 			termArgs.add(argTerm);
@@ -194,7 +195,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		FreeVar concTermVar = FreeVar.fresh("conclusion", Constant.UNKNOWN_TYPE); 
 		termArgsWithVar.add(concTermVar);
 		Term appliedTermWithVar = App(ruleLike.getRuleAppConstant(), termArgsWithVar);
-		
+
     Substitution wrappingSub = new Substitution();	
     Util.debug("termArgs = ",termArgs);
 		Term ruleTerm = ruleLike.getFreshRuleAppTerm(derivTerm, wrappingSub, termArgs);
@@ -217,9 +218,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					// after matching premises, the only free vars will be argFreeVars
 					// if derivTerm assumes too much, it will be because it instantiated something in argFreeVars
 			// for LEMMAS, we need to ensure that in case 1, the vars are not instantiated (we assume they are existentials)
-			
+
 			Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
-			
+
       // compute the set of variables that appear in the rule's conclusion but not its arguments
       List<? extends Term> ruleTermArgs = ((Application)ruleTerm).getArguments();
       Term ruleConcTerm = ruleTermArgs.get(ruleTermArgs.size()-1);
@@ -227,7 +228,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
       for (int i=0; i<ruleTermArgs.size()-1; ++i) {
         ruleConcVarSet.removeAll(ruleTermArgs.get(i).getFreeVariables());//ruleTermArgs.get(i).substitute(sub).getFreeVariables());
       }
-      
+
 			if (ruleLike instanceof Theorem) {				
 				mustAvoid.addAll(ruleConcVarSet);
 			} else if (contextCheckNeeded) {
@@ -239,7 +240,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			        " discards its context " + ctx.innermostGamma, this, "\t(variable bound to " + actual + ")");
 			  }
 			}
-			
+
 			if (!sub.avoid(mustAvoid)) {
 				debug("while unifying ", appliedTerm, " with ", ruleTerm, " and sub ", sub, "\n\ttrying to avoid ", mustAvoid);
 				debug("\tctx.inputVars = ", ctx.inputVars);
@@ -290,120 +291,120 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	}
 
 
-  /**
-   * @param name
-   * @param formal
-   * @param actual
-   * @param allContexts
-   * @param allArgs
-   */
-  protected void getArgContextAndTerm(Context ctx, String name, Element formal,
-      Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs) {
-    Term f = formal.asTerm();
-    Term a = actual.asTerm().substitute(ctx.currentSub);
-    int diff = a.countLambdas() - f.countLambdas();
-    if (diff < 0) {
-      ErrorHandler.report(name + " to " + getRuleName() + " expects more in context than given",this,
-          "SASyLF expected the " + name + " to be " +f+ " but was given " + a + " from " + actual);
-    } else if (diff == 0) {
-      allContexts.add(Collections.<Abstraction>emptyList());
-      allArgs.add(a);
-    } else {
-      if (formal.getRoot() == null) {
-        ErrorHandler.report(name + " to " + getRuleName() + " doesn't expect/permit extra bindings",   this,
-            "SASyLF computed the " + name + " supplied as " + a); 
-      }
-      List<Abstraction> context = new ArrayList<Abstraction>();
-      allContexts.add(context);
-      allArgs.add(Term.getWrappingAbstractions(a, context, diff));
-    }
-  }
+	/**
+	 * @param name
+	 * @param formal
+	 * @param actual
+	 * @param allContexts
+	 * @param allArgs
+	 */
+	protected void getArgContextAndTerm(Context ctx, String name, Element formal,
+			Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs) {
+		Term f = formal.asTerm();
+		Term a = actual.asTerm().substitute(ctx.currentSub);
+		int diff = a.countLambdas() - f.countLambdas();
+		if (diff < 0) {
+			ErrorHandler.report(name + " to " + getRuleName() + " expects more in context than given",this,
+					"SASyLF expected the " + name + " to be " +f+ " but was given " + a + " from " + actual);
+		} else if (diff == 0) {
+			allContexts.add(Collections.<Abstraction>emptyList());
+			allArgs.add(a);
+		} else {
+			if (formal.getRoot() == null) {
+				ErrorHandler.report(name + " to " + getRuleName() + " doesn't expect/permit extra bindings",   this,
+						"SASyLF computed the " + name + " supplied as " + a); 
+			}
+			List<Abstraction> context = new ArrayList<Abstraction>();
+			allContexts.add(context);
+			allArgs.add(Term.getWrappingAbstractions(a, context, diff));
+		}
+	}
 
-  protected List<Abstraction> unionContexts(List<List<Abstraction>> contexts) {
-    List<Abstraction> result = Collections.<Abstraction>emptyList();
-    Set<String> argNames = new HashSet<String>();
-    boolean copied = false;
-    for (List<Abstraction> con : contexts) {
-      if (con.size() > 0) {
-        if (result.size() == 0) {
-          result = con;
-          for (Abstraction a : result) {
-            argNames.add(a.varName);
-          }
-        } else {
-          // merge any new things from con into result
-          int i=0,j=0;
-          Set<String> seen = new HashSet<String>();
-          while (j < con.size()) {
-            Abstraction b = con.get(j);
-            if (seen.contains(b.varName)) {
-              ErrorHandler.report("Computed context for " + getRuleName() + " has inconsistent placement of " + b.varName, this);
-            }
-            if (!argNames.add(b.varName)) {
-              while (!result.get(i).varName.equals(b.varName)) {
-                ++i;
-              }
-            } else {
-              if (!copied) {
-                result = new ArrayList<Abstraction>(result);
-                copied = true;
-              }
-              result.add(i, b);
-            }
-            // invariant i and j both point ton abstraction with the name b.varName
-            ++i; ++j;
-            seen.add(b.varName);
-          }
-        }
-      }
-    }
-    if (copied) {
-      System.out.println("On line " + getLocation().getLine() + " Merging ");
-      for (List<Abstraction> abs : contexts) {
-        System.out.println("  " + Term.wrappingAbstractionsToString(abs));
-      }
-      System.out.println("= " + Term.wrappingAbstractionsToString(result));
-    }
-    return result;
-  }
-  
-  protected Term weakenArg(List<Abstraction> current, List<Abstraction> desired, Term t) {
-    int i=current.size()-1, j=desired.size()-1;
-    while (j >= 0) {
-      Abstraction b = desired.get(j);
-      if (i >= 0 && current.get(i).varName.equals(b.varName)) {
-        --i; --j;
-      } else {
-        t = t.incrFreeDeBruijn(1);
-        --j;
-      }
-    }
-    return t;
-  }
-  
-  /**
-   * Check inductive calls.
-   * @param ctx global context
-   * @param self caller theorem
-   * @param other callee theorem
-   */
-  protected void checkInduction(Context ctx, Theorem self, Theorem other) {
-    InductionSchema mySchema = self.getInductionSchema();
-    InductionSchema yourSchema = other.getInductionSchema();
-    if (mySchema.matches(yourSchema, this, false)) {
-      Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
-      switch (r) {
-      case NONE: break; // error already printed
-      case LESS: break; // no problem
-      case EQUAL: // maybe problem
-        if (self.getGroupIndex() <= other.getGroupIndex()) {
-          if (self != other) {
-            ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
-          } else {
-            ErrorHandler.report(Errors.NOT_SUBDERIVATION, " " + mySchema + " is unchanged", this);
-          }
-        }        
-      }
-    }
-  }
+	protected List<Abstraction> unionContexts(List<List<Abstraction>> contexts) {
+		List<Abstraction> result = Collections.<Abstraction>emptyList();
+		Set<String> argNames = new HashSet<String>();
+		boolean copied = false;
+		for (List<Abstraction> con : contexts) {
+			if (con.size() > 0) {
+				if (result.size() == 0) {
+					result = con;
+					for (Abstraction a : result) {
+						argNames.add(a.varName);
+					}
+				} else {
+					// merge any new things from con into result
+					int i=0,j=0;
+					Set<String> seen = new HashSet<String>();
+					while (j < con.size()) {
+						Abstraction b = con.get(j);
+						if (seen.contains(b.varName)) {
+							ErrorHandler.report("Computed context for " + getRuleName() + " has inconsistent placement of " + b.varName, this);
+						}
+						if (!argNames.add(b.varName)) {
+							while (!result.get(i).varName.equals(b.varName)) {
+								++i;
+							}
+						} else {
+							if (!copied) {
+								result = new ArrayList<Abstraction>(result);
+								copied = true;
+							}
+							result.add(i, b);
+						}
+						// invariant i and j both point ton abstraction with the name b.varName
+						++i; ++j;
+						seen.add(b.varName);
+					}
+				}
+			}
+		}
+		if (copied) {
+			System.out.println("On line " + getLocation().getLine() + " Merging ");
+			for (List<Abstraction> abs : contexts) {
+				System.out.println("  " + Term.wrappingAbstractionsToString(abs));
+			}
+			System.out.println("= " + Term.wrappingAbstractionsToString(result));
+		}
+		return result;
+	}
+
+	protected Term weakenArg(List<Abstraction> current, List<Abstraction> desired, Term t) {
+		int i=current.size()-1, j=desired.size()-1;
+		while (j >= 0) {
+			Abstraction b = desired.get(j);
+			if (i >= 0 && current.get(i).varName.equals(b.varName)) {
+				--i; --j;
+			} else {
+				t = t.incrFreeDeBruijn(1);
+				--j;
+			}
+		}
+		return t;
+	}
+
+	/**
+	 * Check inductive calls.
+	 * @param ctx global context
+	 * @param self caller theorem
+	 * @param other callee theorem
+	 */
+	protected void checkInduction(Context ctx, Theorem self, Theorem other) {
+		InductionSchema mySchema = self.getInductionSchema();
+		InductionSchema yourSchema = other.getInductionSchema();
+		if (mySchema.matches(yourSchema, this, false)) {
+			Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
+			switch (r) {
+			case NONE: break; // error already printed
+			case LESS: break; // no problem
+			case EQUAL: // maybe problem
+				if (self.getGroupIndex() <= other.getGroupIndex()) {
+					if (self != other) {
+						ErrorHandler.report(Errors.MUTUAL_NOT_EARLIER, this);
+					} else {
+						ErrorHandler.report(Errors.NOT_SUBDERIVATION, " " + mySchema + " is unchanged", this);
+					}
+				}        
+			}
+		}
+	}
 }

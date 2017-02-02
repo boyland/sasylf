@@ -43,11 +43,12 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 		super();
 		setNeedsProgressMonitor(true);
 	}
-	
+
 	/**
 	 * Adding the page to the wizard.
 	 */
 
+	@Override
 	public void addPages() {
 		page = new NewProofPackageWizardPage(selection);
 		addPage(page);
@@ -58,10 +59,12 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 	 * the wizard. We will create an operation and run it
 	 * using wizard as execution context.
 	 */
+	@Override
 	public boolean performFinish() {
-	  final IProject project = page.getProject();
+		final IProject project = page.getProject();
 		final String packageName = page.getPackageName();
 		IRunnableWithProgress op = new WorkspaceModifyOperation() {
+			@Override
 			public void execute(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(project, packageName, monitor);
@@ -73,8 +76,8 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 			}
 		};
 		try {
-      IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
-      progressService.busyCursorWhile(op);
+			IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
+			progressService.busyCursorWhile(op);
 		} catch (InterruptedException e) {
 			return false;
 		} catch (InvocationTargetException e) {
@@ -84,7 +87,7 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * The worker method. It will find the container, create the
 	 * file if missing or just replace its contents, and open
@@ -92,31 +95,32 @@ public class NewProofPackageWizard extends Wizard implements INewWizard {
 	 */
 
 	private static final int END_CREATION_SIZE = 1;
-	
+
 	private void doFinish(
-	  IProject project,
-		String packageName,
-		IProgressMonitor monitor)
-		throws CoreException {
-	  String[] segs = packageName.split("\\.");
+			IProject project,
+			String packageName,
+			IProgressMonitor monitor)
+					throws CoreException {
+		String[] segs = packageName.split("\\.");
 		monitor.beginTask("Creating package " + packageName, segs.length+END_CREATION_SIZE);
 		IContainer con = ProofBuilder.getProofFolder(project);
 		for (int i=0; i < segs.length; ++i) {
-		  IFolder f = con.getFolder(new Path(segs[i]));
-		  if (!f.exists()) {
-		    f.create(false, true, monitor);
-		  }
-		  con = f;
-		  monitor.worked(1);
+			IFolder f = con.getFolder(new Path(segs[i]));
+			if (!f.exists()) {
+				f.create(false, true, monitor);
+			}
+			con = f;
+			monitor.worked(1);
 		}
 		monitor.worked(END_CREATION_SIZE);
 	}
-	
+
 	/**
 	 * We will accept the selection in the workbench to see if
 	 * we can initialize from it.
 	 * @see IWorkbenchWizard#init(IWorkbench, IStructuredSelection)
 	 */
+	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.selection = selection;
 	}

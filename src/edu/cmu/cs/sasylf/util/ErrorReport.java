@@ -31,10 +31,10 @@ public class ErrorReport {
 		msg = msg + customMessage;
 		return msg;
 	}
-	
-	
-	
-	
+
+
+
+
 	public final Errors errorType;
 	public final String customMessage;
 	public final Span loc;

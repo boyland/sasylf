@@ -44,6 +44,7 @@ public class EditorPerspective implements IPerspectiveFactory {
 	// public EditorPerspective() {
 	// super();
 	// }
+	@Override
 	public void createInitialLayout(IPageLayout factory) {
 		this.factory = factory;
 		addViews();
@@ -67,12 +68,12 @@ public class EditorPerspective implements IPerspectiveFactory {
 		Left.addView(SYNTAXVIEW_ID);
 
 		IFolderLayout Right =
-		factory.createFolder(
-		"Right",
-		IPageLayout.RIGHT,
-		0.80f,
-		factory.getEditorArea());
-		
+				factory.createFolder(
+						"Right",
+						IPageLayout.RIGHT,
+						0.80f,
+						factory.getEditorArea());
+
 
 		Right.addView(IPageLayout.ID_OUTLINE);
 		// Right.addView(LEMMAS_ID);

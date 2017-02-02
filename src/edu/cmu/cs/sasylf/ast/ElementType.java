@@ -6,5 +6,5 @@ package edu.cmu.cs.sasylf.ast;
  * which (unfortunately) doesn't handle all elements.
  */
 public interface ElementType {
-  public String getName();
+	public String getName();
 }

@@ -25,40 +25,40 @@ import org.sasylf.editors.SASyLFCorrectIndentStrategy;
  */
 public class CorrectIndentationHandler extends AbstractHandler {
 
-  private SASyLFCorrectIndentStrategy doIndent;
-  
-  @Override
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-    IEditorPart editor = HandlerUtil.getActiveEditor(event);
-    if (!(editor instanceof ProofEditor)) return null;
-    ProofEditor proofEditor = (ProofEditor)editor;
-    IDocument doc = proofEditor.getDocument();
-    if (doc == null) return null;
-    ISelection sel = HandlerUtil.getCurrentSelection(event);
-    if (!(sel instanceof ITextSelection)) {
-      // if (sel == null) System.out.println("no selection");
-      return null;
-    }
-    ITextSelection textSel = (ITextSelection)sel;
-    if (doIndent == null) doIndent = new SASyLFCorrectIndentStrategy();
-    final int first = textSel.getStartLine();
-    final int count = textSel.getEndLine() - first + 1;
-    TextEdit edits = doIndent.correctIndentation(doc, first, count);
-    if (edits == null) return null;
-    IDocumentUndoManager undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(doc);
-    undoManager.beginCompoundChange();
-    try {
-      new TextEditProcessor(doc, edits, TextEdit.NONE).performEdits();
-    } catch (MalformedTreeException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (BadLocationException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } finally {
-      undoManager.endCompoundChange();
-    }
-    return null;
-  }
+	private SASyLFCorrectIndentStrategy doIndent;
+
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		IEditorPart editor = HandlerUtil.getActiveEditor(event);
+		if (!(editor instanceof ProofEditor)) return null;
+		ProofEditor proofEditor = (ProofEditor)editor;
+		IDocument doc = proofEditor.getDocument();
+		if (doc == null) return null;
+		ISelection sel = HandlerUtil.getCurrentSelection(event);
+		if (!(sel instanceof ITextSelection)) {
+			// if (sel == null) System.out.println("no selection");
+			return null;
+		}
+		ITextSelection textSel = (ITextSelection)sel;
+		if (doIndent == null) doIndent = new SASyLFCorrectIndentStrategy();
+		final int first = textSel.getStartLine();
+		final int count = textSel.getEndLine() - first + 1;
+		TextEdit edits = doIndent.correctIndentation(doc, first, count);
+		if (edits == null) return null;
+		IDocumentUndoManager undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(doc);
+		undoManager.beginCompoundChange();
+		try {
+			new TextEditProcessor(doc, edits, TextEdit.NONE).performEdits();
+		} catch (MalformedTreeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			undoManager.endCompoundChange();
+		}
+		return null;
+	}
 
 }

@@ -26,85 +26,86 @@ import org.sasylf.Options;
  * TODO: Implement this class.  It's currently a NOP.
  * @deprecated Use SASyLFCorrectIndentatStrategy
  */
+@Deprecated
 public class ProofFormattingStrategy implements IFormattingStrategy,
-    IFormattingStrategyExtension {
+IFormattingStrategyExtension {
 
-  // these lists are queues in synch with each other.
-  private LinkedList<IDocument> documents;
-  private LinkedList<IRegion> regions;
-  private LinkedList<Map<?,?>> preferences;
-  
-  @Override
-  public void formatterStarts(IFormattingContext context) {
-    IDocument document = (IDocument) context.getProperty(FormattingContextProperties.CONTEXT_DOCUMENT);
-    IRegion region = (IRegion) context.getProperty(FormattingContextProperties.CONTEXT_REGION);
-    Map<?,?> prefs = (Map<?,?>) context.getProperty(FormattingContextProperties.CONTEXT_PREFERENCES);
-    if (document == null || prefs == null) {
-      System.out.println("no document or prefs: nothing to do");
-      return;
-    }
-    documents.addLast(document);
-    regions.addLast(region);
-    preferences.addLast(prefs);
-  }
+	// these lists are queues in synch with each other.
+	private LinkedList<IDocument> documents;
+	private LinkedList<IRegion> regions;
+	private LinkedList<Map<?,?>> preferences;
 
-  @Override
-  public void formatterStops() {
-    documents.clear();
-    regions.clear();
-    preferences.clear();
-  }
+	@Override
+	public void formatterStarts(IFormattingContext context) {
+		IDocument document = (IDocument) context.getProperty(FormattingContextProperties.CONTEXT_DOCUMENT);
+		IRegion region = (IRegion) context.getProperty(FormattingContextProperties.CONTEXT_REGION);
+		Map<?,?> prefs = (Map<?,?>) context.getProperty(FormattingContextProperties.CONTEXT_PREFERENCES);
+		if (document == null || prefs == null) {
+			System.out.println("no document or prefs: nothing to do");
+			return;
+		}
+		documents.addLast(document);
+		regions.addLast(region);
+		preferences.addLast(prefs);
+	}
 
-  /* (non-Javadoc)
-   * @see org.eclipse.jface.text.formatter.IFormattingStrategyExtension#format()
-   */
-  @Override
-  public void format() {
-    while (!documents.isEmpty()) {
-      IDocument document = documents.removeFirst();
-      IRegion region = regions.removeFirst();
-      Map<?, ?> prefs = preferences.removeFirst();
-      
-      if (document.getLength() == 0) continue;
-      
-      if (region == null) region = new Region(0,document.getLength());
-      else {
-        int p = region.getOffset();
-        int q = p + region.getLength();
-        if (p >= document.getLength()) p = q = document.getLength()-1;
-        else if (q >= document.getLength()) q = document.getLength()-1;
-        IRegion firstLine, lastLine;
-        try {
-          firstLine = document.getLineInformationOfOffset(p);
-          lastLine = document.getLineInformationOfOffset(q);
-        } catch (BadLocationException e) {
-          throw new AssertionError("not possible");
-        }
-        region = new Region(firstLine.getOffset(),lastLine.getOffset()-firstLine.getOffset()+lastLine.getLength());
-      }
-      format(document, region, prefs);
-    }
-  }
+	@Override
+	public void formatterStops() {
+		documents.clear();
+		regions.clear();
+		preferences.clear();
+	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.text.formatter.IFormattingStrategyExtension#format()
+	 */
+	@Override
+	public void format() {
+		while (!documents.isEmpty()) {
+			IDocument document = documents.removeFirst();
+			IRegion region = regions.removeFirst();
+			Map<?, ?> prefs = preferences.removeFirst();
 
-  /// the following two methods are vestigial and do not need to be implemented
+			if (document.getLength() == 0) continue;
 
-  @Override
-  public void formatterStarts(String initialIndentation) {
-    throw new AssertionError("use the extension interface");
-  }
+			if (region == null) region = new Region(0,document.getLength());
+			else {
+				int p = region.getOffset();
+				int q = p + region.getLength();
+				if (p >= document.getLength()) p = q = document.getLength()-1;
+				else if (q >= document.getLength()) q = document.getLength()-1;
+				IRegion firstLine, lastLine;
+				try {
+					firstLine = document.getLineInformationOfOffset(p);
+					lastLine = document.getLineInformationOfOffset(q);
+				} catch (BadLocationException e) {
+					throw new AssertionError("not possible");
+				}
+				region = new Region(firstLine.getOffset(),lastLine.getOffset()-firstLine.getOffset()+lastLine.getLength());
+			}
+			format(document, region, prefs);
+		}
+	}
 
 
-  @Override
-  public String format(String content, boolean isLineStart, String indentation,
-      int[] positions) {
-    throw new AssertionError("use the extension interface");
-  }
+	/// the following two methods are vestigial and do not need to be implemented
+
+	@Override
+	public void formatterStarts(String initialIndentation) {
+		throw new AssertionError("use the extension interface");
+	}
 
 
-  /// The formatting code
-  protected void format(IDocument document, IRegion region, Map<?,?> preferences) {
-    System.out.println("format called for region: " + region.getOffset() + " for " + region.getLength());
-    System.out.println("  indent = " + Options.getOption(preferences, Options.FORMATTER_INDENT_SIZE));
-  }
+	@Override
+	public String format(String content, boolean isLineStart, String indentation,
+			int[] positions) {
+		throw new AssertionError("use the extension interface");
+	}
+
+
+	/// The formatting code
+	protected void format(IDocument document, IRegion region, Map<?,?> preferences) {
+		System.out.println("format called for region: " + region.getOffset() + " for " + region.getLength());
+		System.out.println("  indent = " + Options.getOption(preferences, Options.FORMATTER_INDENT_SIZE));
+	}
 }

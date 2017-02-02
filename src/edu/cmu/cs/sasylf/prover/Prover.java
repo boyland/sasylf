@@ -16,31 +16,31 @@ public class Prover {
 		//Gets the leftmost unproved node and its parent
 		ProvedNode leftmostParent = partial.getLeftmostUnprovedNodeParent();
 		UnprovedNode leftmost = leftmostParent.getLeftmostUnprovedNode();
-		
+
 		//If we've exceeded the depth bound, return
 		if(leftmost.getDepth() > bound) {
 			return null;
 		}
 
 		//Try each rule
-	    for(Rule r: leftmost.getRulesThatApply(partial)) {
-	    	//Apply the rule.
-	        partial.applyRule(leftmostParent, leftmost, r);
-	        
-	        //If we're done, return.
-	        if(partial.isCompleteProof()) {
-	        	return partial;
-	        }
-	        
-	        //Otherwise, continue trying to prove this.
-	        Proof result = prove(partial, bound);
+		for(Rule r: leftmost.getRulesThatApply(partial)) {
+			//Apply the rule.
+			partial.applyRule(leftmostParent, leftmost, r);
+
+			//If we're done, return.
+			if(partial.isCompleteProof()) {
+				return partial;
+			}
+
+			//Otherwise, continue trying to prove this.
+			Proof result = prove(partial, bound);
 			if (result != null) {
 				return result;
 			}
-			
+
 			//If the search failed, undo and try something else.
 			partial.undoApplyRule();
-	    }
-	    return null;
+		}
+		return null;
 	}
 }

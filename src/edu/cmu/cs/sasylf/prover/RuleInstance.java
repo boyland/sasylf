@@ -13,7 +13,7 @@ public class RuleInstance implements Rule {
 	private List<Judgment> preconditions;
 	private Substitution sub;
 	private edu.cmu.cs.sasylf.ast.Rule ruleUsed;
-	
+
 	public RuleInstance(Judgment result, List<Judgment> preconditions, Substitution sub, edu.cmu.cs.sasylf.ast.Rule ruleUsed) {
 		this.result = result;
 		this.preconditions = preconditions;
@@ -21,22 +21,27 @@ public class RuleInstance implements Rule {
 		this.ruleUsed = ruleUsed;
 	}
 
+	@Override
 	public List<Judgment> getPreconditions() {
 		return preconditions;
 	}
 
+	@Override
 	public Substitution getSubstitution() {
 		return sub;
 	}
 
+	@Override
 	public Judgment getResult() {
 		return result;
 	}
 
+	@Override
 	public boolean hasPreconditions() {
 		return preconditions.size() > 0;
 	}
-	
+
+	@Override
 	public String prettyPrint() {
 		return ruleUsed.getName();
 	}

@@ -13,32 +13,32 @@ import org.eclipse.ui.IMarkerResolution2;
  */
 public class CompletionProposalMarkerResolution implements IMarkerResolution, IMarkerResolution2 {
 
-  private final IDocument document;
-  private final ICompletionProposal proposal;
-  
-  public CompletionProposalMarkerResolution(IDocument doc, ICompletionProposal p) {
-    document = doc;
-    proposal = p;
-  }
-  
-  @Override
-  public String getLabel() {
-    return proposal.getDisplayString();
-  }
+	private final IDocument document;
+	private final ICompletionProposal proposal;
 
-  @Override
-  public void run(IMarker marker) {
-    proposal.apply(document);
-  }
+	public CompletionProposalMarkerResolution(IDocument doc, ICompletionProposal p) {
+		document = doc;
+		proposal = p;
+	}
 
-  @Override
-  public String getDescription() {
-    return proposal.getAdditionalProposalInfo();
-  }
+	@Override
+	public String getLabel() {
+		return proposal.getDisplayString();
+	}
 
-  @Override
-  public Image getImage() {
-    return proposal.getImage();
-  }
-  
+	@Override
+	public void run(IMarker marker) {
+		proposal.apply(document);
+	}
+
+	@Override
+	public String getDescription() {
+		return proposal.getAdditionalProposalInfo();
+	}
+
+	@Override
+	public Image getImage() {
+		return proposal.getImage();
+	}
+
 }

@@ -33,35 +33,36 @@ public class ClauseDef extends Clause {
 				if (e instanceof Terminal) {
 					Terminal t = (Terminal) e;
 					//if (Character.isLetter(t.getSymbol().charAt(0))) {
-						consName += '_' + t.getSymbol();
+					consName += '_' + t.getSymbol();
 					//}
 				} 
 			}
 			consName = uniqueify(consName);
 		}
 		for (Element e : getElements()) {
-		  if (e instanceof Clause) {
-        ErrorHandler.report("judgment/syntax must not include parenthesized expressions",copy);
-      }
+			if (e instanceof Clause) {
+				ErrorHandler.report("judgment/syntax must not include parenthesized expressions",copy);
+			}
 		}
 	}
 
 	public String getConstructorName() { return consName; }
+	@Override
 	public ClauseType getType() { return type; }
 	public int getAssumeIndex() {
-	  if (cachedAssumeIndex > -2) return cachedAssumeIndex;
+		if (cachedAssumeIndex > -2) return cachedAssumeIndex;
 		if (type instanceof Judgment) {
 			NonTerminal assumeNT = ((Judgment)type).getAssume();
 			return cachedAssumeIndex=getElements().indexOf(assumeNT);
 		} else if (type instanceof Syntax) {
-		  Syntax s = (Syntax)type;
-		  if (s.isInContextForm()) {
-		    return cachedAssumeIndex=getElements().indexOf(s.getNonTerminal());
-		  }
+			Syntax s = (Syntax)type;
+			if (s.isInContextForm()) {
+				return cachedAssumeIndex=getElements().indexOf(s.getNonTerminal());
+			}
 		}
 		return cachedAssumeIndex=-1;
 	}
-	
+
 	@Override
 	public Term getTypeTerm() { return asTerm(); }
 
@@ -81,12 +82,13 @@ public class ClauseDef extends Clause {
 		return result;
 	}
 
+	@Override
 	public Constant computeTerm(List<Pair<String, Term>> varBindings) {
 		Term typeTerm = type.typeTerm();
 		int assumeIndex = getAssumeIndex();
 		List<Term> argTypes = new ArrayList<Term>();
 		List<String> argNames = new ArrayList<String>();
-		
+
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
 			if (! (e instanceof Terminal) && i != assumeIndex 
@@ -97,7 +99,7 @@ public class ClauseDef extends Clause {
 					Binding defB = (Binding) e;
 					argType = defB.getNonTerminal().getType().typeTerm();
 					argName = defB.getNonTerminal().getSymbol();
-						
+
 					List<Term> varTypes = new ArrayList<Term>();
 					for (Element boundVarElem : defB.getElements()) {
 						int varIndex = getIndexOf((Variable)boundVarElem);
@@ -108,11 +110,11 @@ public class ClauseDef extends Clause {
 					}
 					argType = Term.wrapWithLambdas(argType, varTypes);
 				} else if (e instanceof NonTerminal){
-				  // JTB: The following check is needed for AndClauses which can have multiple
-				  // contexts.
-				  if (((NonTerminal)e).getType().isInContextForm()) continue;
-				  argType = ((NonTerminal)e).getType().typeTerm();
-				  argName = ((NonTerminal)e).getSymbol();
+					// JTB: The following check is needed for AndClauses which can have multiple
+					// contexts.
+					if (((NonTerminal)e).getType().isInContextForm()) continue;
+					argType = ((NonTerminal)e).getType().typeTerm();
+					argName = ((NonTerminal)e).getSymbol();
 				} else if (e instanceof Clause) {
 					argType = ((ClauseUse)e).getConstructor().asTerm();
 					argName = ((ClauseUse)e).getElemType().toString();
@@ -125,29 +127,29 @@ public class ClauseDef extends Clause {
 		}
 
 		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes, argNames);
-		
+
 		return new Constant(consName, typeTerm);
 	}
 
 	public int getVariableIndex() {
-	  int index = 0;
-	  int result = -1;
-	  for (Element e : getElements()) {
-	    if (e instanceof Variable) {
-	      if (result == -1) result = index;
-	      else {
-	        ErrorHandler.warning("An assumption clause must not have more than one variable", this);
-	      }
-	    }
-	    ++index;
-	  }
-	  return result;
+		int index = 0;
+		int result = -1;
+		for (Element e : getElements()) {
+			if (e instanceof Variable) {
+				if (result == -1) result = index;
+				else {
+					ErrorHandler.warning("An assumption clause must not have more than one variable", this);
+				}
+			}
+			++index;
+		}
+		return result;
 	}
-	
+
 	public int getIndexOf(Variable boundVar) {
 		return getElements().indexOf(boundVar);
 	}
-	
+
 	/** Computes a sample term for use in case analysis.
 	 * Consists of the clause constant applied to fresh variables.
 	 */
@@ -196,13 +198,13 @@ public class ClauseDef extends Clause {
 			}
 		}
 	}
-	
+
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
-	  if (ctx == null) {
-	    super.prettyPrint(out, null);
-	    return;
-	  }
+		if (ctx == null) {
+			super.prettyPrint(out, null);
+			return;
+		}
 		//System.err.println("clausedef.prettyPrint for " + (ctx == null ? "" : ctx.term));
 		Term origT = ctx.term;
 		Term t = origT;
@@ -251,7 +253,7 @@ public class ClauseDef extends Clause {
 				out.print(')');
 			prev = true;
 		}
-		
+
 		if (origBoundVars != null) {
 			ctx.boundVars = origBoundVars;
 			ctx.boundVarCount = origBoundVarCount;

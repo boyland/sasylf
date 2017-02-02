@@ -10,7 +10,7 @@ import java.util.List;
 
 class Conflict extends Action {
 	private List<Action> actions;
-	
+
 	/** Create a new Conflict representing two different actions being placed in the
 	 *  same place in the lookup table.
 	 * @param a1 The first action.
@@ -22,7 +22,7 @@ class Conflict extends Action {
 		actions.add(a1);
 		actions.add(a2);
 	}
-	
+
 	/** Add a new action into the mix.
 	 * @param a Action to be added.
 	 * @return false if duplicate
@@ -36,15 +36,16 @@ class Conflict extends Action {
 		actions.add(a);
 		return true;
 	}
-	
+
 	/** Returns a list of all actions in this conflict.
 	 */
 	public List<Action> getActions() {
 		return new LinkedList<Action>(actions);
 	}
-	
+
 	/** prints out all actions in this conflict in a compact form, like "s5/r3".
 	 */
+	@Override
 	public String toString() {
 		String s = "";
 		for(Action a: actions) {

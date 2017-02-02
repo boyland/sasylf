@@ -11,16 +11,17 @@ import edu.cmu.cs.sasylf.Version;
 
 public class AboutHandler extends AbstractHandler {
 
-  public AboutHandler() {}
-  
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-    IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
-    MessageDialog.openInformation(window.getShell(), "About SASyLF", 
-        Version.getInstance() + "\nTool to check proofs.\n" +
-        "See http://www.cs.cmu.edu/~aldrich/SASyLF/\n" +
-        "and http://code.google.com/p/sasylf/wiki/Main");
-    return null;
-  }
+	public AboutHandler() {}
+
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+		MessageDialog.openInformation(window.getShell(), "About SASyLF", 
+				Version.getInstance() + "\nTool to check proofs.\n" +
+						"See http://www.cs.cmu.edu/~aldrich/SASyLF/\n" +
+				"and http://code.google.com/p/sasylf/wiki/Main");
+		return null;
+	}
 
 
 

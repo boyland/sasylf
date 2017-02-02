@@ -38,11 +38,12 @@ public class NewProofWizard extends Wizard implements INewWizard {
 		super();
 		setNeedsProgressMonitor(true);
 	}
-	
+
 	/**
 	 * Adding the page to the wizard.
 	 */
 
+	@Override
 	public void addPages() {
 		page = new NewProofWizardPage(selection);
 		addPage(page);
@@ -53,10 +54,12 @@ public class NewProofWizard extends Wizard implements INewWizard {
 	 * the wizard. We will create an operation and run it
 	 * using wizard as execution context.
 	 */
+	@Override
 	public boolean performFinish() {
 		final String containerName = page.getContainerName();
 		final String fileName = page.getFileName();
 		IRunnableWithProgress op = new IRunnableWithProgress() {
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(containerName, fileName, monitor);
@@ -78,7 +81,7 @@ public class NewProofWizard extends Wizard implements INewWizard {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * The worker method. It will find the container, create the
 	 * file if missing or just replace its contents, and open
@@ -86,10 +89,10 @@ public class NewProofWizard extends Wizard implements INewWizard {
 	 */
 
 	private void doFinish(
-		String containerName,
-		String fileName,
-		IProgressMonitor monitor)
-		throws CoreException {
+			String containerName,
+			String fileName,
+			IProgressMonitor monitor)
+					throws CoreException {
 		// create a sample file
 		monitor.beginTask("Creating " + fileName, 2);
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
@@ -112,9 +115,10 @@ public class NewProofWizard extends Wizard implements INewWizard {
 		monitor.worked(1);
 		monitor.setTaskName("Opening file for editing...");
 		getShell().getDisplay().asyncExec(new Runnable() {
+			@Override
 			public void run() {
 				IWorkbenchPage page =
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				try {
 					IDE.openEditor(page, file, true);
 				} catch (PartInitException e) {
@@ -123,30 +127,30 @@ public class NewProofWizard extends Wizard implements INewWizard {
 		});
 		monitor.worked(1);
 	}
-	
+
 	/**
 	 * We will initialize file contents with a sample text.
 	 */
 
 	private InputStream openContentStream(IPath relPath) {
-	  String[] segments = relPath.segments();
-	  StringBuilder sb = new StringBuilder();
-	  for (int i=0; i < segments.length; ++i) {
-	    if (i > 0) sb.append(".");
-	    sb.append(segments[i]);
-	  }
-	  String contents = "" +
-	      (segments.length > 0 ? "package " + sb.toString() + ";" : "// default package") +
-	      "\n\nterminals \n\n" +
-	      "syntax\n\n\n" +
-	      "// judgment ...\n\n" +
-	      "// theorem ...\n\n";
+		String[] segments = relPath.segments();
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i < segments.length; ++i) {
+			if (i > 0) sb.append(".");
+			sb.append(segments[i]);
+		}
+		String contents = "" +
+				(segments.length > 0 ? "package " + sb.toString() + ";" : "// default package") +
+				"\n\nterminals \n\n" +
+				"syntax\n\n\n" +
+				"// judgment ...\n\n" +
+				"// theorem ...\n\n";
 		return new ByteArrayInputStream(contents.getBytes());
 	}
 
 	private void throwCoreException(String message) throws CoreException {
 		IStatus status =
-			new Status(IStatus.ERROR, "org.sasylf", IStatus.OK, message, null);
+				new Status(IStatus.ERROR, "org.sasylf", IStatus.OK, message, null);
 		throw new CoreException(status);
 	}
 
@@ -155,6 +159,7 @@ public class NewProofWizard extends Wizard implements INewWizard {
 	 * we can initialize from it.
 	 * @see IWorkbenchWizard#init(IWorkbench, IStructuredSelection)
 	 */
+	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.selection = selection;
 	}

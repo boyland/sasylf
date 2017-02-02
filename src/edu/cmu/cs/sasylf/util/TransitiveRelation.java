@@ -11,47 +11,47 @@ import java.util.Set;
  */
 public class TransitiveRelation<T> extends Relation<T, T> {
 
-  private final boolean reflexive;
-  
-  public TransitiveRelation(boolean refl) { 
-    reflexive = refl;
-  }
+	private final boolean reflexive;
 
-  // this code relies on the fact that getAll and getAllReverse
-  // return access to internals.
-  
-  @Override
-  public boolean put(T t1, T t2) {
-    if (!super.put(t1, t2)) return false;
-    Set<T> before = super.getAllReverse(t1);
-    Set<T> after = super.getAll(t2);
-    getAll(t1).addAll(after);
-    getAllReverse(t2).addAll(before);
-    for (T t0 : before) {
-      super.put(t0, t2);
-      getAll(t0).addAll(after);
-    }
-    for (T t3 : after) {
-      super.put(t1, t3);
-      getAllReverse(t3).addAll(before);
-    }
-    return true;
-  }
+	public TransitiveRelation(boolean refl) { 
+		reflexive = refl;
+	}
 
-  @SuppressWarnings("unchecked")
-  @Override
-  protected <Ta,Tb> Set<Ta> makeInitialEdgeSet(Tb key) {
-    Set<Ta> result = super.makeInitialEdgeSet(key);
-    if (reflexive) {
-      result.add((Ta)key);
-    }
-    return result;
-  }
+	// this code relies on the fact that getAll and getAllReverse
+	// return access to internals.
 
-  @Override
-  public boolean contains(T key, T value) {
-    if (reflexive && key != null && key.equals(value)) return true;
-    return super.contains(key, value);
-  }
+	@Override
+	public boolean put(T t1, T t2) {
+		if (!super.put(t1, t2)) return false;
+		Set<T> before = super.getAllReverse(t1);
+		Set<T> after = super.getAll(t2);
+		getAll(t1).addAll(after);
+		getAllReverse(t2).addAll(before);
+		for (T t0 : before) {
+			super.put(t0, t2);
+			getAll(t0).addAll(after);
+		}
+		for (T t3 : after) {
+			super.put(t1, t3);
+			getAllReverse(t3).addAll(before);
+		}
+		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected <Ta,Tb> Set<Ta> makeInitialEdgeSet(Tb key) {
+		Set<Ta> result = super.makeInitialEdgeSet(key);
+		if (reflexive) {
+			result.add((Ta)key);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean contains(T key, T value) {
+		if (reflexive && key != null && key.equals(value)) return true;
+		return super.contains(key, value);
+	}
 
 }

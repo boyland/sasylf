@@ -72,6 +72,7 @@ public class ProjectPropertyPage extends PropertyPage {
 	/**
 	 * @see PreferencePage#createContents(Composite)
 	 */
+	@Override
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -100,6 +101,7 @@ public class ProjectPropertyPage extends PropertyPage {
 		return composite;
 	}
 
+	@Override
 	protected void performDefaults() {
 		super.performDefaults();
 		// Populate the build path text field with the default value
@@ -107,12 +109,13 @@ public class ProjectPropertyPage extends PropertyPage {
 		buildPathText.setText(defaultBuildPath);
 	}
 
-  public boolean performOk() {
+	@Override
+	public boolean performOk() {
 		// store the value in the build path text field
 		try {
 			ProjectProperties.setBuildPath((IProject) getElement(), buildPathText.getText());
 		} catch (CoreException e) {
-		  e.printStackTrace();
+			e.printStackTrace();
 			return false;
 		}
 		return true;

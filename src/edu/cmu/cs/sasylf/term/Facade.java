@@ -44,10 +44,10 @@ public class Facade {
 		return new Application(f, args);
 	}
 	public static Term App(Term f, Term a1) {
-	  return f.apply(Collections.singletonList(a1), 0);
+		return f.apply(Collections.singletonList(a1), 0);
 	}
 	public static Term App(Term f, Term... args) {
-	  return f.apply(Arrays.asList(args),0);
+		return f.apply(Arrays.asList(args),0);
 	}
 	public static BoundVar BVar(int i) {
 		return new BoundVar(i);

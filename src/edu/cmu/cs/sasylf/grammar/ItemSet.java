@@ -11,13 +11,13 @@ public class ItemSet {
 	private Symbol symbol;
 	private List<ItemRule> kernelRules;
 	private List<ItemRule> nonKernelRules;
-	
+
 	private List<ItemSet> nextSets;
-	
+
 	private LRZeroParseTable table;
-	
+
 	public final int setNumber;
-	
+
 	/** Creates a new ItemSet and all of its children.
 	 * @param s The symbol of this set.
 	 * @param lrz The parse table keeping track of this set and its children.
@@ -28,11 +28,11 @@ public class ItemSet {
 	public ItemSet(Symbol s, LRZeroParseTable lrz, List<ItemRule> allRules, List<ItemRule> parentRules) throws DuplicateItemSetException {	
 		symbol = s;
 		table = lrz;
-		
+
 		nextSets = new LinkedList<ItemSet>();
 		kernelRules = new LinkedList<ItemRule>();
 		nonKernelRules = new LinkedList<ItemRule>();
-		
+
 		//If parentRules is empty, that means this ItemSet has no parent, so it is the root.
 		//As such, look for all rules in the original grammar produced by the start symbol.
 		if(parentRules.isEmpty()) {
@@ -42,21 +42,21 @@ public class ItemSet {
 			//symbol one place to the right.
 			kernelRules = childAll(parentRules, s);
 		}
-		
+
 		//if this is identical to another given set, throw an exception.
 		for(ItemSet is: table.getAllSets()) {
 			if(this.equals(is)) {
 				throw new DuplicateItemSetException(is);
 			}
 		}
-		
+
 		// Now close the set using the kernelRules and the list of all rules.
 		close(kernelRules, allRules);
-		
+
 		//Add this to the table, give it an id
 		table.addItemSet(this);
 		setNumber = table.getNextID();
-		
+
 		//And finally, generate all children of this set.
 		for(ItemRule r: kernelRules) {
 			generateChild(r.readSymbol(), allRules, table);
@@ -76,14 +76,14 @@ public class ItemSet {
 		if(readSymbol == null) {
 			return;
 		}
-		
+
 		//If there already exists a set in nextSets based on this symbol, return.
 		for(ItemSet s: nextSets) {
 			if(s.symbol == readSymbol) {
 				return;
 			}
 		}
-		
+
 		//Try to construct an ItemSet based on the next symbol. If it already exists,
 		//simply use the original instead.
 		ItemSet nextSet;
@@ -134,13 +134,13 @@ public class ItemSet {
 	public Symbol getSymbol() {
 		return symbol;
 	}
-	
+
 	/** Returns a list of all rules produced by S in this set.
 	 */
 	public List<ItemRule> findAll(Symbol s) {
 		return findAll(allRules(), s);
 	}
-	
+
 	/** Returns a list of all rules, kernel and non-kernel, in this set.
 	 */
 	public List<ItemRule> allRules() {
@@ -149,10 +149,11 @@ public class ItemSet {
 		result.addAll(nonKernelRules);
 		return result;
 	}
-	
+
 	/** True if all rules are the same. Luckily, this is true if and only if all kernel rules are the same.
 	 * @param other ItemSet being compared to.
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof ItemSet)) {
 			return false;
@@ -160,7 +161,7 @@ public class ItemSet {
 		ItemSet o = (ItemSet)obj;
 		if (!(o instanceof ItemSet))
 			return false;
-		ItemSet other = (ItemSet) o;
+		ItemSet other = o;
 		if (kernelRules.size() != other.kernelRules.size())
 			return false;
 		for(int i = 0; i < kernelRules.size(); i++) {
@@ -170,19 +171,20 @@ public class ItemSet {
 		}
 		return true;
 	}
-	
+
 	/** Hashes based on List.hash() of the list of kernel rules
 	 */
+	@Override
 	public int hashCode() {
 		return kernelRules.hashCode();
 	}
-	
+
 	/** Returns a list of all sets that this set points to.
 	 */
 	public List<ItemSet> nextSets() {
 		return nextSets;
 	}
-	
+
 	/** Finds all rules in list produced by s.
 	 */
 	public static List<ItemRule> findAll(List<ItemRule> list, Symbol s) {
@@ -194,7 +196,7 @@ public class ItemSet {
 		}
 		return result;
 	}
-	
+
 	/** Finds all rules in list produced by S, duplicates each, and returns all duplicates.
 	 */
 	public static List<ItemRule> duplicateAll(List<ItemRule> list, Symbol s) {
@@ -206,7 +208,7 @@ public class ItemSet {
 		}
 		return result;
 	}
-	
+
 	/** Finds all rules in list produced by S, finds each child, and returns all children.
 	 */
 	private static List<ItemRule> childAll(List<ItemRule> list, Symbol s) {
@@ -218,10 +220,11 @@ public class ItemSet {
 		}
 		return result;
 	}
-	
+
 	/** Returns a string containing all of the kernel and non-kernel rules, and all transitions.
 	 * 
 	 */
+	@Override
 	public String toString() {
 		String result = "Item set " + setNumber + ":\n";
 		for(Rule r: kernelRules) {

@@ -26,7 +26,7 @@ public abstract class Element extends Node {
 			terminal = new GrmTerminal(getTerminalSymbolString(), this);
 		return terminal;		
 	}
-	
+
 	protected abstract String getTerminalSymbolString();
 
 	public abstract Element typecheck(Context ctx);
@@ -39,7 +39,7 @@ public abstract class Element extends Node {
 	/** t may be null, and if so, boundVars may be null too
 	 */
 	public abstract void prettyPrint(PrintWriter out, PrintContext ctx);
-	
+
 	/**
 	 * Compute a fact for this element.
 	 * This method is used to handle an argument to a Derivation,
@@ -56,7 +56,7 @@ public abstract class Element extends Node {
 	 * @throws SASyLFError if this element is a Clause for a Judgment.
 	 */
 	public abstract Fact asFact(Context ctx, Element assumes);
-	
+
 	/**
 	 * For each binding in this clause, check that the list of element types bound in
 	 * the variable is consistent with what the map says.  If the variable is not already
@@ -82,11 +82,11 @@ public abstract class Element extends Node {
 	 * @return set of nonterminals in this element (perhaps restricted to rigid positions)
 	 */
 	public Set<NonTerminal> getFree(boolean rigidOnly) {
-	  Set<NonTerminal> result = new HashSet<NonTerminal>();
-	  getFree(result,rigidOnly);
-	  return result;
+		Set<NonTerminal> result = new HashSet<NonTerminal>();
+		getFree(result,rigidOnly);
+		return result;
 	}
-	
+
 	/**
 	 * Add variables that occur in this element to the set
 	 * if it is a rigid position or rigidOnly is not set.
@@ -94,20 +94,20 @@ public abstract class Element extends Node {
 	 * @param rigidOnly
 	 */
 	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
-	  // do nothing by default
+		// do nothing by default
 	}
-	
+
 	public NonTerminal getRoot() {
-	  throw new UnsupportedOperationException("need to type check first before calling getRoot()");
+		throw new UnsupportedOperationException("need to type check first before calling getRoot()");
 	}
-	
+
 	public Term asTerm() {
 		if (term == null)
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
 		return term;
 	}
 	private Term term;
-	
+
 	/** For ClauseUse, checks that this is an assumption list and adds
 	 * assumptions to varBindings and assumedVars.  For varBindings we
 	 * only add actual variables, but for assumed vars we also add a variable
@@ -129,6 +129,7 @@ public abstract class Element extends Node {
 	 * Only ClauseUse actually does adaptation; the other cases simply return term.
 	 * @deprecated
 	 */
+	@Deprecated
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return term;
 	}

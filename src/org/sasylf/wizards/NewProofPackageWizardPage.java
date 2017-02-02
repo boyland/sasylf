@@ -31,7 +31,7 @@ import org.sasylf.project.ProofBuilder;
  */
 
 public class NewProofPackageWizardPage extends WizardPage {
-  private IProject project;
+	private IProject project;
 	private Text packageNameText;
 
 	private ISelection selection;
@@ -51,6 +51,7 @@ public class NewProofPackageWizardPage extends WizardPage {
 	/**
 	 * @see IDialogPage#createControl(Composite)
 	 */
+	@Override
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
@@ -65,6 +66,7 @@ public class NewProofPackageWizardPage extends WizardPage {
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		packageNameText.setLayoutData(gd);
 		packageNameText.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
 			}
@@ -92,18 +94,18 @@ public class NewProofPackageWizardPage extends WizardPage {
 				else
 					container = ((IResource) obj).getParent();
 			} else if (obj instanceof IAdaptable) {
-			  container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
+				container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
 			}
 			if (container != null) {
-			  project = container.getProject();
-			  IPath ip = ProofBuilder.getProofFolderRelativePath(container);
-			  StringBuilder sb = new StringBuilder();
-			  String[] segs = ip.segments();
-			  for (int i=0; i < segs.length; ++i) {
-			    if (i != 0) sb.append('.');
-			    sb.append(segs[i]);
-			  }
-			  packageNameText.setText(sb.toString());
+				project = container.getProject();
+				IPath ip = ProofBuilder.getProofFolderRelativePath(container);
+				StringBuilder sb = new StringBuilder();
+				String[] segs = ip.segments();
+				for (int i=0; i < segs.length; ++i) {
+					if (i != 0) sb.append('.');
+					sb.append(segs[i]);
+				}
+				packageNameText.setText(sb.toString());
 			}
 		}
 	}
@@ -116,57 +118,57 @@ public class NewProofPackageWizardPage extends WizardPage {
 		String packageName = getPackageName();
 
 		if (project == null) {
-		  updateStatus("Can't find project.  Can't create SASyLF Proof package");
-		  return;
+			updateStatus("Can't find project.  Can't create SASyLF Proof package");
+			return;
 		}
-		
+
 		if (!project.isAccessible()) {
-		  updateStatus("Project is closed.  Can't create SASyLF Proof package");
-		  return;
+			updateStatus("Project is closed.  Can't create SASyLF Proof package");
+			return;
 		}
-		
+
 		try {
-      if (!project.hasNature(MyNature.NATURE_ID)) {
-        updateStatus("Can only create proof packages in SASyLF Projects");
-        return;
-      }
-    } catch (CoreException e) {
-      // should never happen
-      e.printStackTrace();
-      updateStatus(e.toString());
-      return;
-    }
-		
+			if (!project.hasNature(MyNature.NATURE_ID)) {
+				updateStatus("Can only create proof packages in SASyLF Projects");
+				return;
+			}
+		} catch (CoreException e) {
+			// should never happen
+			e.printStackTrace();
+			updateStatus(e.toString());
+			return;
+		}
+
 		if (packageName.length() == 0) {
 			updateStatus("Need to specify package name");
 			return;
 		}
 
-    if (packageName.startsWith(".")) {
-      updateStatus("Package name cannot start with a dot.");
-      return;
-    }
-
-    if (packageName.endsWith(".")) {
-		  updateStatus("Package name cannot end with a dot.");
-		  return;
+		if (packageName.startsWith(".")) {
+			updateStatus("Package name cannot start with a dot.");
+			return;
 		}
-    
-    IWorkspace ws = ResourcesPlugin.getWorkspace();
-    String[] segs = packageName.split("\\.");
-    IContainer f = ProofBuilder.getProofFolder(project);
-    for (int i=0; i < segs.length; ++i) {
-      if (!ws.validateName(segs[i], IResource.FOLDER).isOK()) {
-        updateStatus("Package name has illegal segment '" + segs[i] + "'");
-        return;
-      }
-      f = f.getFolder(new Path(segs[i]));
-    }
-    
-    if (f.exists()) {
-      updateStatus("Package already exists.");
-      return;
-    }    
+
+		if (packageName.endsWith(".")) {
+			updateStatus("Package name cannot end with a dot.");
+			return;
+		}
+
+		IWorkspace ws = ResourcesPlugin.getWorkspace();
+		String[] segs = packageName.split("\\.");
+		IContainer f = ProofBuilder.getProofFolder(project);
+		for (int i=0; i < segs.length; ++i) {
+			if (!ws.validateName(segs[i], IResource.FOLDER).isOK()) {
+				updateStatus("Package name has illegal segment '" + segs[i] + "'");
+				return;
+			}
+			f = f.getFolder(new Path(segs[i]));
+		}
+
+		if (f.exists()) {
+			updateStatus("Package already exists.");
+			return;
+		}    
 
 		updateStatus(null);
 	}
@@ -177,9 +179,9 @@ public class NewProofPackageWizardPage extends WizardPage {
 	}
 
 	public IProject getProject() {
-	  return project;
+		return project;
 	}
-	
+
 	public String getPackageName() {
 		return packageNameText.getText();
 	}

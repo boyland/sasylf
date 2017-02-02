@@ -10,7 +10,7 @@ package edu.cmu.cs.sasylf.grammar;
 class StartSymbol implements NonTerminal {
 	private static StartSymbol any;
 	private StartSymbol() {}
-	
+
 	/**
 	 * @return a new symbol for an augmented grammar.
 	 */
@@ -20,17 +20,19 @@ class StartSymbol implements NonTerminal {
 		}
 		return any;
 	}
-	
+
 	/**
 	 * Prints "S", the character used to represent the start symbol.
 	 */
+	@Override
 	public String toString() {
 		return "S";
 	}
-	
+
 	/**
 	 * true if the other object is also a start symbol.
 	 */
+	@Override
 	public boolean equals(Object o) {
 		return o instanceof StartSymbol;
 	}

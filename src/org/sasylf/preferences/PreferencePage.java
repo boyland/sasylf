@@ -20,38 +20,40 @@ import org.sasylf.Activator;
  */
 
 public class PreferencePage
-	extends FieldEditorPreferencePage
-	implements IWorkbenchPreferencePage {
+extends FieldEditorPreferencePage
+implements IWorkbenchPreferencePage {
 
 	public PreferencePage() {
 		super(GRID);
 	}
-	
+
 	/**
 	 * Creates the field editors. Field editors are abstractions of
 	 * the common GUI blocks needed to manipulate various types
 	 * of preferences. Each field editor knows how to save and
 	 * restore itself.
 	 */
+	@Override
 	public void createFieldEditors() {
 		addField(
-			new IntegerFieldEditor(
-				PreferenceConstants.FORMATTER_INDENT_SIZE,
-				"&Indentation of SASyLF constructs",
-				getFieldEditorParent()));
+				new IntegerFieldEditor(
+						PreferenceConstants.FORMATTER_INDENT_SIZE,
+						"&Indentation of SASyLF constructs",
+						getFieldEditorParent()));
 		addField(
-		    new StringFieldEditor(
-		        PreferenceConstants.PROOF_FOLDER_NAME,
-		        "&Name of root proof folder",
-		        getFieldEditorParent()));
+				new StringFieldEditor(
+						PreferenceConstants.PROOF_FOLDER_NAME,
+						"&Name of root proof folder",
+						getFieldEditorParent()));
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(IWorkbench workbench) {
-    setPreferenceStore(Activator.getDefault().getPreferenceStore());
-    setDescription("SASyLF Preferences");
+		setPreferenceStore(Activator.getDefault().getPreferenceStore());
+		setDescription("SASyLF Preferences");
 	}
-	
+
 }

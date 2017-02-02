@@ -16,23 +16,23 @@ import org.sasylf.wizards.NewProofPackageWizard;
  */
 public class NewProofPackageHandler extends AbstractHandler {
 
-  /**
-   * Create the handler that handles wizards
-   */
-  public NewProofPackageHandler() { }
+	/**
+	 * Create the handler that handles wizards
+	 */
+	public NewProofPackageHandler() { }
 
-  @Override
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-    Shell shell = HandlerUtil.getActiveShell(event);
-    NewProofPackageWizard wizard = new NewProofPackageWizard();
-    ISelection currentSelection = HandlerUtil.getCurrentSelection(event);
-    IStructuredSelection structuredSelection = null;
-    if (currentSelection instanceof IStructuredSelection) {
-      structuredSelection = (IStructuredSelection)currentSelection;
-    }
-    wizard.init(HandlerUtil.getActiveWorkbenchWindow(event).getWorkbench(), structuredSelection);
-    WizardDialog dialog = new WizardDialog(shell,wizard);
-    dialog.open();
-    return null;
-  }
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		Shell shell = HandlerUtil.getActiveShell(event);
+		NewProofPackageWizard wizard = new NewProofPackageWizard();
+		ISelection currentSelection = HandlerUtil.getCurrentSelection(event);
+		IStructuredSelection structuredSelection = null;
+		if (currentSelection instanceof IStructuredSelection) {
+			structuredSelection = (IStructuredSelection)currentSelection;
+		}
+		wizard.init(HandlerUtil.getActiveWorkbenchWindow(event).getWorkbench(), structuredSelection);
+		WizardDialog dialog = new WizardDialog(shell,wizard);
+		dialog.open();
+		return null;
+	}
 }

@@ -20,7 +20,7 @@ public class PrintContext {
 		boundVars = new ArrayList<String>();
 		boundVarCount = 0;
 	}
-	
+
 	public PrintContext(Term t, PrintContext ctx) {
 		Util.verify(t != null, "term is null");
 		term = t;
@@ -30,17 +30,17 @@ public class PrintContext {
 		contextVarName = ctx.contextVarName;
 		boundVarCount = ctx.boundVarCount;
 	}
-	
+
 	public Term term;
 	public List<String> boundVars;
 	private Map<String,String> varMap;
 	private Set<FreeVar> varsInScope;
 	public final String contextVarName;
 	public int boundVarCount;
-	
+
 	public String getStringFor(FreeVar term2, String nameRoot) {
 		//System.err.println("getStringFor " + term2 + " and " + nameRoot + " with " + varMap);
-		
+
 		if (varsInScope.contains(term2))
 			return term2.getName();
 		String s = varMap.get(term2.toString());

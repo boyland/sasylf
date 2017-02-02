@@ -27,10 +27,10 @@ public class Main {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws ParseException, IOException {
-	  //System.setOut(new PrintStream(System.out, true, "UTF-8"));
-	  //System.setErr(new PrintStream(System.err, true, "UTF-8"));
-	  int exitCode = 0;
-	  if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
+		//System.setOut(new PrintStream(System.out, true, "UTF-8"));
+		//System.setErr(new PrintStream(System.err, true, "UTF-8"));
+		int exitCode = 0;
+		if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
 			System.err.println("usage: sasylf [options] file1.slf ...");
 			System.err.println("Options include:");
 			System.err.println("   --version   print version");
@@ -41,8 +41,8 @@ public class Main {
 			return;
 		}
 		if (args.length >= 1 && args[0].equals("--version")) {
-      System.out.println(Version.getInstance());
-		  return;
+			System.out.println(Version.getInstance());
+			return;
 		}
 		String dir = null;
 		ModuleFinder mf = null;
@@ -56,38 +56,38 @@ public class Main {
 				continue;
 			}
 			if (args[i].equals("--debug")) {
-			  edu.cmu.cs.sasylf.util.Util.DEBUG = true;
-			  continue;
+				edu.cmu.cs.sasylf.util.Util.DEBUG = true;
+				continue;
 			}
 			if (args[i].startsWith("--root=")) {
-			  dir = args[i].substring(7);
-        File root = new File(dir); 
-			  if (!root.isDirectory()) {
-			    if (root.exists()) {
-			      System.err.println("Not a directory: "+ dir);
-			      System.exit(-1);
-			    } else {
-			      System.err.println("No such file or directory: " + dir);
-			      System.exit(-1);
-			    }
-			  }
-			  mf = new RootModuleFinder(root);
-			  continue;
+				dir = args[i].substring(7);
+				File root = new File(dir); 
+				if (!root.isDirectory()) {
+					if (root.exists()) {
+						System.err.println("Not a directory: "+ dir);
+						System.exit(-1);
+					} else {
+						System.err.println("No such file or directory: " + dir);
+						System.exit(-1);
+					}
+				}
+				mf = new RootModuleFinder(root);
+				continue;
 			}
 			String filename = args[i];
 			File file;
 			ModuleId id = null;
 			if (dir == null) {
-			  file = new File(filename);
+				file = new File(filename);
 			} else {
-			  file = new File(dir,filename);
-			  try {
-			    id = new ModuleId(filename);
-			  } catch (RuntimeException ex) {
-			    System.err.println(ex.getMessage());
-			    exitCode = -1;
-			    continue;
-			  }
+				file = new File(dir,filename);
+				try {
+					id = new ModuleId(filename);
+				} catch (RuntimeException ex) {
+					System.err.println(ex.getMessage());
+					exitCode = -1;
+					continue;
+				}
 			}
 			if (!file.canRead()) {
 				System.err.println("Could not open file " + filename);
@@ -96,16 +96,16 @@ public class Main {
 			}
 			Reader r;
 			try {
-			  r = new InputStreamReader(new FileInputStream(file),"UTF-8");
+				r = new InputStreamReader(new FileInputStream(file),"UTF-8");
 			} catch(FileNotFoundException ex) {
-			  System.err.println("Could not open file " + filename);
-			  exitCode = -1;
-			  continue;
+				System.err.println("Could not open file " + filename);
+				exitCode = -1;
+				continue;
 			}
 			try {
-			  /* long start = System.nanoTime(); */
+				/* long start = System.nanoTime(); */
 				@SuppressWarnings("unused")
-        CompUnit cu = parseAndCheck(mf, filename, id, r);
+				CompUnit cu = parseAndCheck(mf, filename, id, r);
 				/*
 				long mid = System.nanoTime();
 				if (cu != null) {
@@ -114,7 +114,7 @@ public class Main {
 				  System.out.println("Parse and check: " + (mid - start));
 				  System.out.println("        recheck: " + (end-mid));
 				}
-				*/
+				 */
 			} catch (SASyLFError e) {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();
@@ -123,11 +123,11 @@ public class Main {
 				e.printStackTrace(); // unexpected exception
 				exitCode = -1;
 			} finally {
-			  r.close();
+				r.close();
 				int newErrorCount = ErrorHandler.getErrorCount();
 				int newWarnings = ErrorHandler.getWarningCount();
 				@SuppressWarnings("resource")
-        PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
+				PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
 				if (newErrorCount == 0)
 					ps.print(filename + ": No errors");
 				else if (newErrorCount == 1)
@@ -135,11 +135,11 @@ public class Main {
 				else
 					ps.print(filename + ": "+ newErrorCount +" errors");
 				if (newWarnings > 0) {
-				  if (newWarnings > 1) {
-				    ps.print(" and " + newWarnings + " warnings");
-				  } else {
-				    ps.print(" and 1 warning");
-				  }
+					if (newWarnings > 1) {
+						ps.print(" and " + newWarnings + " warnings");
+					} else {
+						ps.print(" and 1 warning");
+					}
 				}
 				ps.println(" reported.");
 				if (newErrorCount > 0) exitCode = -1;
@@ -149,40 +149,40 @@ public class Main {
 		System.exit(exitCode);
 	}
 
-  /**
-   * Analyze the SASyLF code in the reader and return a compilation unit
-   * if no (unrecoverable) errors are found. 
-   * @param mf may be4 null
-   * @param filename must not be null
-   * @param id may be null only if mf is null
-   * @param r contexts: must not be null
-   * @throws SASyLFError is an error is found.
-   */
-  public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
-      ModuleId id, Reader r) {
-    CompUnit cu = null;
-    try {
-    	cu = DSLToolkitParser.read(filename,r);
-    } catch (ParseException e) {
-    	ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
-    } catch (TokenMgrError e) {
-      ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
-    }
-    check(mf, id, cu);
-    return cu;
-  }
+	/**
+	 * Analyze the SASyLF code in the reader and return a compilation unit
+	 * if no (unrecoverable) errors are found. 
+	 * @param mf may be4 null
+	 * @param filename must not be null
+	 * @param id may be null only if mf is null
+	 * @param r contexts: must not be null
+	 * @throws SASyLFError is an error is found.
+	 */
+	public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
+			ModuleId id, Reader r) {
+		CompUnit cu = null;
+		try {
+			cu = DSLToolkitParser.read(filename,r);
+		} catch (ParseException e) {
+			ErrorHandler.report(null, e.getMessage(), new Location(e.currentToken.next), null, true, true);
+		} catch (TokenMgrError e) {
+			ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
+		}
+		check(mf, id, cu);
+		return cu;
+	}
 
-  /**
-   * @param mf
-   * @param id
-   * @param cu
-   */
-  public static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
-    if (mf == null) cu.typecheck();
-    else {
-      mf.setCurrentPackage(id.packageName);
-      cu.typecheck(mf,id);
-    }
-  }
+	/**
+	 * @param mf
+	 * @param id
+	 * @param cu
+	 */
+	public static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
+		if (mf == null) cu.typecheck();
+		else {
+			mf.setCurrentPackage(id.packageName);
+			cu.typecheck(mf,id);
+		}
+	}
 
 }

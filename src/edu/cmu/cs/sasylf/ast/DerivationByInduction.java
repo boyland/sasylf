@@ -11,33 +11,35 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	public DerivationByInduction(String n, Location l, Clause c, String derivName) {
 		super(n,l,c, derivName);
 	}
-  public DerivationByInduction(String n, Location l, Clause c, Clause subject) {
-    super(n,l,c, subject);
-  }
+	public DerivationByInduction(String n, Location l, Clause c, Clause subject) {
+		super(n,l,c, subject);
+	}
 	public DerivationByInduction(String n, Location l, Clause c) {
-	  super(n,l,c);
+		super(n,l,c);
 	}
 
+	@Override
 	public String byPhrase() { return "induction"; }
 
+	@Override
 	public void typecheck(Context ctx) {
-    if (!ctx.currentTheorem.getDerivations().contains(this)) {
-      ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction on " + getArgStrings().get(0) + "'", this);
-    }
-	  InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), this);
+		if (!ctx.currentTheorem.getDerivations().contains(this)) {
+			ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction on " + getArgStrings().get(0) + "'", this);
+		}
+		InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), this);
 
-	  if (is != null && !ctx.currentTheorem.getInductionSchema().equals(is)) {
-      ErrorHandler.report(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");	    
-	  }
+		if (is != null && !ctx.currentTheorem.getInductionSchema().equals(is)) {
+			ErrorHandler.report(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");	    
+		}
 
 		// special case: handle "use induction by"
 		if (getClause() instanceof AndClauseUse && ((AndClauseUse)getClause()).getClauses().isEmpty()) {
-		  Util.debug("use induction detected.");
-		  return;
+			Util.debug("use induction detected.");
+			return;
 		}
-		
+
 		if (is != null && !(is instanceof StructuralInduction)) {
-		  ErrorHandler.report("'induction' combined with a case analysis can accept only one structural induction argument.", this);
+			ErrorHandler.report("'induction' combined with a case analysis can accept only one structural induction argument.", this);
 		}
 		super.typecheck(ctx);
 	}

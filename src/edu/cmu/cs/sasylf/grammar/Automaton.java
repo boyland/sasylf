@@ -17,7 +17,7 @@ class Automaton {
 	private LinkedList<ParseNode> buffer;
 	private Grammar grammar;
 	private int id;
-	
+
 	private static int idcounter = 0;
 
 	/** Creates a new Automaton to try to parse a sentence.
@@ -36,13 +36,13 @@ class Automaton {
 		sentence.add(AcceptSymbol.getAcceptSymbol());
 
 		state.push(0);
-		
+
 		lrz = g.getTable();
 		index = 0;
 		grammar = g;
 		id = idcounter++;
 	}
-	
+
 	/** Clones another automaton. Used extensively in GLR parsing.
 	 * @param a the Automaton to be cloned.
 	 */
@@ -78,7 +78,7 @@ class Automaton {
 	public void parse() throws NotParseableException, AmbiguousSentenceException {
 		while(!step());
 	}
-	
+
 	/** Try to take a single step in parsing the sentence.
 	 * @return true if we're finished; false otherwise
 	 * @throws NotParseableException If encountered a null on the lookup table
@@ -87,25 +87,25 @@ class Automaton {
 	public boolean step() throws NotParseableException, AmbiguousSentenceException {
 		//Consult the parse table for the next action
 		Action a = lrz.nextAction(state.peek(), sentence.get(index));
-		
+
 		//If there's nothing there, the sentence isn't parseable with this grammar
 		if(a == null) {
 			throw new NotParseableException();
 		}
-		
+
 		switch(a.getType()) {
 		//If it's a shift action, go ahead and shift.
 		case SHIFT:
 			shift(a);
 			break;
-		//If it's a reduce action, go ahead and reduce.
+			//If it's a reduce action, go ahead and reduce.
 		case REDUCE:
 			reduce(a);
 			break;
-		//If it's a conflict, throw an exception.
+			//If it's a conflict, throw an exception.
 		case CONFLICT:
 			throw new AmbiguousSentenceException((Conflict)a);
-		//If it's an accept state, go ahead and accept.
+			//If it's an accept state, go ahead and accept.
 		case ACCEPT:
 			return true;
 		default:
@@ -113,7 +113,7 @@ class Automaton {
 		}
 		return false;
 	}
-	
+
 	/** Manually force the Automaton to take an Action.
 	 * @param a The Action to be taken.
 	 * @throws NotParseableException 
@@ -125,7 +125,7 @@ class Automaton {
 			reduce(a);
 		}
 	}
-	
+
 	/** Shift according to the provided action.
 	 * @param a The action used to shift.
 	 */
@@ -134,7 +134,7 @@ class Automaton {
 		index++;
 		state.push(a.getNext());
 	}
-	
+
 	/** Reduce according to the provided action.
 	 * @param a The action used to reduce.
 	 * @throws NotParseableException if the slot on the goto table is blank
@@ -148,10 +148,10 @@ class Automaton {
 			reduced.add(0, buffer.removeLast());
 			state.pop();
 		}
-		
+
 		//Place the new symbol in the buffer
 		buffer.add(new RuleNode(r, reduced));
-		
+
 		//Consult the goto table to see what state to goto next
 		Integer pk = state.peek();
 		NonTerminal ls = r.getLeftSide();
@@ -176,7 +176,7 @@ class Automaton {
 	public void printBuffer() {
 		//Prints this automatons ID number and state
 		System.out.print(id + " (" + state.peek() + "): ");
-		
+
 		//Prints out each parsenode in the buffer.
 		for(ParseNode p: buffer) {
 			if(p instanceof RuleNode) {
@@ -186,16 +186,16 @@ class Automaton {
 				System.out.print(p + " ");
 			}
 		}
-		
+
 		//Prints out symbols we've not yet looked at.
 		System.out.print("\t\t");
 		for(int i = index; i < sentence.size(); i++) {
 			System.out.print(sentence.get(i) + " ");
 		}
-		
+
 		System.out.println();
 	}
-	
+
 	/** Returns a unique ID generated for each automaton. Useful in debugging GLR parsing.
 	 */
 	public int getID() {

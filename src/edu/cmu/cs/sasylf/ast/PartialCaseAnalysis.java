@@ -12,8 +12,8 @@ import edu.cmu.cs.sasylf.util.Location;
  */
 public class PartialCaseAnalysis extends DerivationByCaseAnalysis {
 
-  public PartialCaseAnalysis(Location l, String derivName) {
-    super("_", l, null, derivName);
-  }
+	public PartialCaseAnalysis(Location l, String derivName) {
+		super("_", l, null, derivName);
+	}
 
 }

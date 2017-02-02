@@ -31,35 +31,36 @@ public class CheckProofsHandler extends AbstractHandler {
 	 * This is called when checking proofs is chosen from a menu, the
 	 * toolbar or a context menu.
 	 */
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-	  IWorkbenchPage page = HandlerUtil.getActiveWorkbenchWindow(event).getActivePage();
-	  ISelection sel = HandlerUtil.getCurrentSelection(event);
-	  if (sel instanceof TreeSelection) {
-	    TreeSelection tsel = (TreeSelection) sel;
-      for (Object seg : tsel.toArray()) {
-        if (seg instanceof IResource) {
-          IResource res = (IResource)seg;
-          if ("slf".equals(res.getFileExtension())) {
-            IFile f = (IFile)res.getAdapter(IFile.class);
-            // System.out.println("  with correct extension");
-            ProofChecker.analyzeSlf(null,null, res, ResourceUtil.findEditor(page, f));
-          }
-        }
-        // System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
-	    }
-      return null;
-	  }
-	  IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
-	  IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
-	  if (res != null) {
-	    ProofChecker.analyzeSlf(null, null, res, activeEditor);
-	  }  else {
-	    IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
-	    MessageDialog.openInformation(
-	        window.getShell(),
-	        "SASyLF Check Proofs ",
-	        "Cannot find resource for " + activeEditor);
-	  }
+		IWorkbenchPage page = HandlerUtil.getActiveWorkbenchWindow(event).getActivePage();
+		ISelection sel = HandlerUtil.getCurrentSelection(event);
+		if (sel instanceof TreeSelection) {
+			TreeSelection tsel = (TreeSelection) sel;
+			for (Object seg : tsel.toArray()) {
+				if (seg instanceof IResource) {
+					IResource res = (IResource)seg;
+					if ("slf".equals(res.getFileExtension())) {
+						IFile f = (IFile)res.getAdapter(IFile.class);
+						// System.out.println("  with correct extension");
+						ProofChecker.analyzeSlf(null,null, res, ResourceUtil.findEditor(page, f));
+					}
+				}
+				// System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
+			}
+			return null;
+		}
+		IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
+		IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
+		if (res != null) {
+			ProofChecker.analyzeSlf(null, null, res, activeEditor);
+		}  else {
+			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+			MessageDialog.openInformation(
+					window.getShell(),
+					"SASyLF Check Proofs ",
+					"Cannot find resource for " + activeEditor);
+		}
 		return null;
 	}
 }

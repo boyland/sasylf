@@ -10,9 +10,9 @@ public class Location implements Span {
 		file = DSLToolkitParser.currentFile;
 	}
 	public Location(String f, int line, int column) {
-	  beginLine = line;
-	  beginColumn = column;
-	  file = f;
+		beginLine = line;
+		beginColumn = column;
+		file = f;
 	}
 	/**
 	 * Return an <em>exclusive</em> endpoint given the token.
@@ -21,42 +21,43 @@ public class Location implements Span {
 	 * @return location just after end of token.
 	 */
 	public static Location endOf(Token t) {
-	  return new Location(DSLToolkitParser.currentFile,t.endLine,t.endColumn+1);
+		return new Location(DSLToolkitParser.currentFile,t.endLine,t.endColumn+1);
 	}
-	
+
 	public int getLine() {
 		return beginLine;
 	}
 	public int getColumn() {
 		return beginColumn;
 	}
-	
+
 	public String getFile() {
-	  return file;
+		return file;
 	}
-	
+
 	public Location add(int cs) {
-	  return new Location(file,beginLine,beginColumn+cs);
+		return new Location(file,beginLine,beginColumn+cs);
 	}
-	
+
 	private int beginLine, beginColumn /*, endLine, endColumn*/;
 	private String file;
 
+	@Override
 	public String toString() {
 		return file + ":" + beginLine;
 	}
-	
-	
-	/// as a degenerate case: a location is a zero-length span
-	
-  @Override
-  public Location getLocation() {
-    return this;
-  }
-  @Override
-  public Location getEndLocation() {
-    return this;
-  }
 
-	
+
+	/// as a degenerate case: a location is a zero-length span
+
+	@Override
+	public Location getLocation() {
+		return this;
+	}
+	@Override
+	public Location getEndLocation() {
+		return this;
+	}
+
+
 }

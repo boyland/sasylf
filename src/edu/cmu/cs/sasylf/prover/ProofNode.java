@@ -12,7 +12,7 @@ public interface ProofNode {
 
 	/** return string with i tabs before it */
 	String toString(int i);
-	
+
 	void prettyPrint(Substitution sub);
 
 	int getId();

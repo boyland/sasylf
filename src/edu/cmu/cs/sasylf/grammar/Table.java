@@ -12,7 +12,7 @@ class Table {
 	private List<Symbol> header;
 	private Action[][] table;
 	private LRZeroParseTable lrz;
-	
+
 	/** Constructs a new table. 
 	 * @param ls The list of symbols to be used as this table's header.
 	 * @param transTable The LRZeroParseTable whose itemsets will be used.
@@ -23,15 +23,15 @@ class Table {
 		header.addAll(ls);
 		table = new Action[lrz.numberOfSets()][header.size()];
 	}
-	
+
 	/** Places action in the table at state i under symbol a.
 	 */
 	public void addAction(int i, Symbol s, Action action) {
 		int symIndex = header.indexOf(s);
 		if (symIndex < 0) {
-		  System.out.println("Problem building LR table: cannot find " + s + " in " + header);
+			System.out.println("Problem building LR table: cannot find " + s + " in " + header);
 		}
-    Action a = table[i][symIndex];
+		Action a = table[i][symIndex];
 		//If there's already a symbol in that slot, we have a conflict!
 		if(a != null){
 			//If there's already a conflict there, just add this to the conflict.
@@ -42,7 +42,7 @@ class Table {
 			}
 			//If there's no conflict here yet and this isn't the same action, 
 			//create a new conflict here.
- 			if (!a.equals(action)) {
+			if (!a.equals(action)) {
 				Conflict c = new Conflict(a, action);
 				table[i][symIndex] = c;
 			}
@@ -50,7 +50,7 @@ class Table {
 		}
 		table[i][symIndex] = action;
 	}
-	
+
 	/**
 	 * @param index the state
 	 * @param key the symbol
@@ -72,7 +72,7 @@ class Table {
 			addAction(index, header.get(i), action);
 		}
 	}
-	
+
 	/** Takes a table and fills it with gotos based on this class's parse table.
 	 * @param t the table to be filled with gotos.
 	 */
@@ -113,6 +113,7 @@ class Table {
 	/**
 	 * Prints this table using tabs. Not guaranteed to be formatted well.
 	 */
+	@Override
 	public String toString() {
 		String s = "State\t";
 		for(Symbol s2: header) {

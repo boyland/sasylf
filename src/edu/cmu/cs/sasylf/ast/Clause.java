@@ -31,9 +31,9 @@ import edu.cmu.cs.sasylf.util.Pair;
 public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
 	public Clause(Element e) { 
-	  super(e.getLocation()); 
-	  verify(getLocation() != null, "location null for " + e + " of type " + e.getClass()); 
-	  super.setEndLocation(e.getEndLocation());
+		super(e.getLocation()); 
+		verify(getLocation() != null, "location null for " + e + " of type " + e.getClass()); 
+		super.setEndLocation(e.getEndLocation());
 	}
 
 	/**
@@ -41,29 +41,30 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 * @param e
 	 */
 	public void add(Element e) {
-	  elements.add(e);
-	  Location l = e.getEndLocation();
-	  if (l != null) setEndLocation(l);
+		elements.add(e);
+		Location l = e.getEndLocation();
+		if (l != null) setEndLocation(l);
 	}
-	
+
 	public List<Element> getElements() { return elements; }
 
 	protected List<Element> elements = new ArrayList<Element>();
 
+	@Override
 	public Clause clone() {
-	  Clause result;
+		Clause result;
 
-	  try {
-	    result = (Clause) super.clone();
-	  } catch (CloneNotSupportedException e) {
-	    return null;
-	  }
-	  
-	  result.elements = new ArrayList<Element>(elements);
+		try {
+			result = (Clause) super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
 
-	  return result;
+		result.elements = new ArrayList<Element>(elements);
+
+		return result;
 	}
-	
+
 	public List<ElemType> getElemTypes() {
 		List<ElemType> list = new ArrayList<ElemType>();
 		for (Element e : elements) {
@@ -94,14 +95,17 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		return list;
 	}
 
+	@Override
 	public ClauseType getType() {
-	  throw new RuntimeException("Cannot determine type of unparsed Clause");
+		throw new RuntimeException("Cannot determine type of unparsed Clause");
 	}
-	
+
+	@Override
 	public ElemType getElemType() {
 		throw new RuntimeException(getLocation().getLine() + ": should only call getElemTypes on syntax def clauses which don't have sub-clauses; can't call getElemType() on a Clause");
 	}
 
+	@Override
 	public Symbol getGrmSymbol() {
 		throw new RuntimeException("should only call getSymbols on syntax def clauses which don't have sub-clauses; can't call getSymbol() on a Clause");
 	}
@@ -129,15 +133,15 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			prev = e;
 		}
 	}
-	
+
 	public static boolean addSpace(Element e1, Element e2) {
-	  if (!(e2 instanceof Terminal)) return true;
-	  String thisTerminal = e2.toString();
-    if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
-    if (!(e1 instanceof Terminal)) return true;
-    if (thisTerminal.isEmpty()) return false;
-    if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
-    return false;
+		if (!(e2 instanceof Terminal)) return true;
+		String thisTerminal = e2.toString();
+		if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
+		if (!(e1 instanceof Terminal)) return true;
+		if (thisTerminal.isEmpty()) return false;
+		if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
+		return false;
 	}
 
 	public Set<Terminal> getTerminals() {
@@ -152,19 +156,19 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		for (Element e : elements) {
 			if (e instanceof Binding) {
 				for (Element e2 : ((Binding)e).getElements()) {
-				  String key;
-				  Variable v;
-				  if (e2 instanceof Variable) { // idempotence of type checking
-				    v = (Variable)e2;
-				    key = ((Variable)e2).getSymbol();
-				  } else if (e2 instanceof NonTerminal) {
-				    NonTerminal nt = (NonTerminal)e2;
-				    key = nt.getSymbol();
-				    v = new Variable(key, nt.getLocation());
-				  } else {
+					String key;
+					Variable v;
+					if (e2 instanceof Variable) { // idempotence of type checking
+						v = (Variable)e2;
+						key = ((Variable)e2).getSymbol();
+					} else if (e2 instanceof NonTerminal) {
+						NonTerminal nt = (NonTerminal)e2;
+						key = nt.getSymbol();
+						v = new Variable(key, nt.getLocation());
+					} else {
 						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, e2);
 						throw new RuntimeException("should not get here");
-				  }
+					}
 					if (!map.containsKey(key)) {
 						map.put(key, v);
 					}
@@ -175,11 +179,11 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 
 	@Override
 	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
-	  for (Element e: elements) {
-	    e.getFree(freeSet, rigidOnly);
-	  }
+		for (Element e: elements) {
+			e.getFree(freeSet, rigidOnly);
+		}
 	}
-	
+
 	// computes Syntax type for each variable
 	public void computeVarTypes(Syntax parent, Map<String,Variable> varMap) {
 
@@ -197,6 +201,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	// converts NonTerminal into Variable where appropriate
 	// sets type of NonTerminals and Bindings
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
+	@Override
 	public Element typecheck(Context ctx) {
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e = elements.get(i);
@@ -211,159 +216,159 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 
 		return this;
 	}
-	
+
 	public Element computeClause(Context ctx, boolean inBinding) {
 		return computeClause(ctx, inBinding, ctx.getGrammar());
 	}
-	
+
 	public Element computeClause(Context ctx, boolean inBinding, edu.cmu.cs.sasylf.grammar.Grammar g) {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
-    if (symList.isEmpty()) return OrClauseUse.makeEmptyOrClause(getLocation());
+		if (symList.isEmpty()) return OrClauseUse.makeEmptyOrClause(getLocation());
 		return parseClause(ctx, inBinding, g, symList);
 	}
-	
-  /**
-   * @param ctx
-   * @param inBinding
-   * @param g
-   * @param symList
-   * @return
-   */
-  private Element parseClause(Context ctx, boolean inBinding,
-      edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
-    /*
-     * JTB: The following section is to implement parsing of "and" and "or" judgments
-     * without requiring us to change the grammar.
-     */
-    boolean hasAnd = false;
-    boolean hasOr = false;
-    boolean hasNot = false;
-    int parens = 0;
-    for (GrmTerminal t : symList) {
-      if (t == GrmUtil.getLeftParen()) ++parens;
-      else if (t == GrmUtil.getRightParen()) --parens;
-      if (parens > 0) continue;
-      Element elem = t.getElement();
-      if (elem instanceof AndJudgment.AndTerminal) {
-        hasAnd = true;
-        if (hasNot) {
-          ErrorHandler.report("ambiguous use of 'not'",this);
-        }
-      } else if (elem instanceof OrJudgment.OrTerminal) {
-        hasOr = true;
-        if (hasNot) {
-          ErrorHandler.report("ambiguous use of 'not'",this);
-        }
-      } else if (elem instanceof NotJudgment.NotTerminal) {
-        hasNot = true;
-      }
-    }
-    if (hasOr && hasAnd) {
-      ErrorHandler.report("Ambiguous use of 'and' and 'or'.  Use parentheses.", this);
-    }
-    if (hasNot) {
-      ErrorHandler.report("'not' judgments not supported",this);
-    }
-    if (hasAnd || hasOr) {
-      // System.out.println("Found 'and'/'or'" + symList);
-      List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
-      List<GrmTerminal> sepList = new ArrayList<GrmTerminal>();
-      List<GrmTerminal> aList = new ArrayList<GrmTerminal>();
-      parens = 0;
-      for (GrmTerminal t : symList) {
-        if (t == GrmUtil.getLeftParen()) ++parens;
-        else if (t == GrmUtil.getRightParen()) --parens;
-        if (parens == 0 &&
-            (t.getElement() instanceof AndJudgment.AndTerminal ||
-             t.getElement() instanceof OrJudgment.OrTerminal)) {
-          symLists.add(aList);
-          aList = new ArrayList<GrmTerminal>();
-          sepList.add(t);
-        } else {
-          aList.add(t);
-        }
-      }
-      symLists.add(aList);
-      List<ClauseUse> clauses = new ArrayList<ClauseUse>();
-      List<Judgment> types = new ArrayList<Judgment>();
-      Element sharedContext = null;
-      for (List<GrmTerminal> sublist : symLists) {
-        stripParens(sublist);
-        // The following crashes if it starts with a paren:
-        // Clause subClause = new Clause(sublist.isEmpty() ? this.getLocation() : sublist.get(0).getElement().getLocation()); 
-        Clause subClause = new Clause(this.getLocation()); 
-        Stack<Clause> stack = new Stack<Clause>();
-        for (GrmTerminal t : sublist) {
-          Element element = t.getElement();
-          if (element == null) {
-            if (t == GrmUtil.getLeftParen()) {
-              stack.push(subClause);
-              subClause = new Clause(this.getLocation());
-              continue;
-            } else if (t == GrmUtil.getRightParen()) {
-              element = subClause;
-              subClause = stack.pop();
-            }
-          }
-          subClause.elements.add(element);
-        }
-        // using a subClause forces the error to print correctly.
-        Element e = subClause.parseClause(ctx,inBinding,g,sublist);
-        if (e instanceof ClauseUse) {
-          ClauseUse cu = (ClauseUse)e;
-          if (!clauses.isEmpty() && cu.getElements().size() > 0) {
-            // set location, which otherwise refers to the whole thing
-            cu.setLocation(cu.getElements().get(0).getLocation());
-          }
-          ClauseType ty = cu.getConstructor().getType();
-          if (ty instanceof Judgment) types.add((Judgment)ty);
-          else ErrorHandler.report("cannot '"+sepList.get(0)+"' syntax only judgments", this);
-          clauses.add(cu);
-          
-          if (((Judgment)ty).getAssume() != null) {
-            Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
-            if (sharedContext != null) {
-              if (!sharedContext.equals(context)) {
-                ErrorHandler.report("all '"+sepList.get(0)+"'ed judgments must use the same context", this);
-              }
-            } else {
-              sharedContext = context;
-            }
-          }
-        } else {
-          ErrorHandler.report("can only '"+sepList.get(0)+"' clauses together, not nonterminals", this);
-        }
-      }
-      List<Element> newElements = new ArrayList<Element>();
-      Iterator<GrmTerminal> seps = sepList.iterator();
-      for (ClauseUse cl : clauses) {
-        for (Element e : cl.getElements()) {
-          newElements.add(e);
-        }
-        if (seps.hasNext()) newElements.add(seps.next().getElement());
-      }
-      if (hasAnd) {
-        ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
-        return new AndClauseUse(getLocation(),newElements,cd,clauses);
-      } else {
-        ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(getLocation(), ctx, types).getForm();
-        return new OrClauseUse(getLocation(),newElements,cd,clauses);
-      }
-    }
-    /*
-     * JTB: End of section to implement parsing of "and"/"or" judgments
-     */
 
-    RuleNode parseTree = null;
+	/**
+	 * @param ctx
+	 * @param inBinding
+	 * @param g
+	 * @param symList
+	 * @return
+	 */
+	private Element parseClause(Context ctx, boolean inBinding,
+			edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
+		/*
+		 * JTB: The following section is to implement parsing of "and" and "or" judgments
+		 * without requiring us to change the grammar.
+		 */
+		boolean hasAnd = false;
+		boolean hasOr = false;
+		boolean hasNot = false;
+		int parens = 0;
+		for (GrmTerminal t : symList) {
+			if (t == GrmUtil.getLeftParen()) ++parens;
+			else if (t == GrmUtil.getRightParen()) --parens;
+			if (parens > 0) continue;
+			Element elem = t.getElement();
+			if (elem instanceof AndJudgment.AndTerminal) {
+				hasAnd = true;
+				if (hasNot) {
+					ErrorHandler.report("ambiguous use of 'not'",this);
+				}
+			} else if (elem instanceof OrJudgment.OrTerminal) {
+				hasOr = true;
+				if (hasNot) {
+					ErrorHandler.report("ambiguous use of 'not'",this);
+				}
+			} else if (elem instanceof NotJudgment.NotTerminal) {
+				hasNot = true;
+			}
+		}
+		if (hasOr && hasAnd) {
+			ErrorHandler.report("Ambiguous use of 'and' and 'or'.  Use parentheses.", this);
+		}
+		if (hasNot) {
+			ErrorHandler.report("'not' judgments not supported",this);
+		}
+		if (hasAnd || hasOr) {
+			// System.out.println("Found 'and'/'or'" + symList);
+			List<List<GrmTerminal>> symLists = new ArrayList<List<GrmTerminal>>();
+			List<GrmTerminal> sepList = new ArrayList<GrmTerminal>();
+			List<GrmTerminal> aList = new ArrayList<GrmTerminal>();
+			parens = 0;
+			for (GrmTerminal t : symList) {
+				if (t == GrmUtil.getLeftParen()) ++parens;
+				else if (t == GrmUtil.getRightParen()) --parens;
+				if (parens == 0 &&
+						(t.getElement() instanceof AndJudgment.AndTerminal ||
+								t.getElement() instanceof OrJudgment.OrTerminal)) {
+					symLists.add(aList);
+					aList = new ArrayList<GrmTerminal>();
+					sepList.add(t);
+				} else {
+					aList.add(t);
+				}
+			}
+			symLists.add(aList);
+			List<ClauseUse> clauses = new ArrayList<ClauseUse>();
+			List<Judgment> types = new ArrayList<Judgment>();
+			Element sharedContext = null;
+			for (List<GrmTerminal> sublist : symLists) {
+				stripParens(sublist);
+				// The following crashes if it starts with a paren:
+					// Clause subClause = new Clause(sublist.isEmpty() ? this.getLocation() : sublist.get(0).getElement().getLocation()); 
+				Clause subClause = new Clause(this.getLocation()); 
+				Stack<Clause> stack = new Stack<Clause>();
+				for (GrmTerminal t : sublist) {
+					Element element = t.getElement();
+					if (element == null) {
+						if (t == GrmUtil.getLeftParen()) {
+							stack.push(subClause);
+							subClause = new Clause(this.getLocation());
+							continue;
+						} else if (t == GrmUtil.getRightParen()) {
+							element = subClause;
+							subClause = stack.pop();
+						}
+					}
+					subClause.elements.add(element);
+				}
+				// using a subClause forces the error to print correctly.
+				Element e = subClause.parseClause(ctx,inBinding,g,sublist);
+				if (e instanceof ClauseUse) {
+					ClauseUse cu = (ClauseUse)e;
+					if (!clauses.isEmpty() && cu.getElements().size() > 0) {
+						// set location, which otherwise refers to the whole thing
+						cu.setLocation(cu.getElements().get(0).getLocation());
+					}
+					ClauseType ty = cu.getConstructor().getType();
+					if (ty instanceof Judgment) types.add((Judgment)ty);
+					else ErrorHandler.report("cannot '"+sepList.get(0)+"' syntax only judgments", this);
+					clauses.add(cu);
+
+					if (((Judgment)ty).getAssume() != null) {
+						Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
+						if (sharedContext != null) {
+							if (!sharedContext.equals(context)) {
+								ErrorHandler.report("all '"+sepList.get(0)+"'ed judgments must use the same context", this);
+							}
+						} else {
+							sharedContext = context;
+						}
+					}
+				} else {
+					ErrorHandler.report("can only '"+sepList.get(0)+"' clauses together, not nonterminals", this);
+				}
+			}
+			List<Element> newElements = new ArrayList<Element>();
+			Iterator<GrmTerminal> seps = sepList.iterator();
+			for (ClauseUse cl : clauses) {
+				for (Element e : cl.getElements()) {
+					newElements.add(e);
+				}
+				if (seps.hasNext()) newElements.add(seps.next().getElement());
+			}
+			if (hasAnd) {
+				ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
+				return new AndClauseUse(getLocation(),newElements,cd,clauses);
+			} else {
+				ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(getLocation(), ctx, types).getForm();
+				return new OrClauseUse(getLocation(),newElements,cd,clauses);
+			}
+		}
+		/*
+		 * JTB: End of section to implement parsing of "and"/"or" judgments
+		 */
+
+		RuleNode parseTree = null;
 		try {
 			parseTree = g.parse(symList);
 			return computeClause(parseTree);
 		} catch (NotParseableException e) {
-		  // kludge while we figure out what to do with "contradiction"
-		  if (symList.size() == 1 && symList.get(0).toString().equals("contradiction")) {
-		    return OrClauseUse.makeEmptyOrClause(getLocation());
-		  }
+			// kludge while we figure out what to do with "contradiction"
+			if (symList.size() == 1 && symList.get(0).toString().equals("contradiction")) {
+				return OrClauseUse.makeEmptyOrClause(getLocation());
+			}
 			/*for (edu.cmu.cs.sasylf.grammar.Rule r : g.getRules()) {
 				debug_parse(r.toString());
 			}
@@ -396,30 +401,30 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " + e.getParseTrees() /*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
 		}
-  }
-	
-  private void stripParens(List<GrmTerminal> syms) {
-    // simple not super-efficient implementation
-    int l = syms.size()-1;
-    GrmTerminal leftParen = GrmUtil.getLeftParen();
-    GrmTerminal rightParen = GrmUtil.getRightParen();
-    while (syms.size() >= 2 && 
-          syms.get(0) == leftParen && 
-          syms.get(l) == rightParen) {
-      int parens = 0;
-      for (int i=1; i < l; ++i) {
-        GrmTerminal t = syms.get(i);
-        if (t == leftParen) ++parens;
-        else if (t == rightParen) {
-          if (--parens < 0) return; // no change
-        }
-      }
-      syms.remove(l);
-      syms.remove(0);
-      l -= 2;
-    }
-  }
-  
+	}
+
+	private void stripParens(List<GrmTerminal> syms) {
+		// simple not super-efficient implementation
+		int l = syms.size()-1;
+		GrmTerminal leftParen = GrmUtil.getLeftParen();
+		GrmTerminal rightParen = GrmUtil.getRightParen();
+		while (syms.size() >= 2 && 
+				syms.get(0) == leftParen && 
+				syms.get(l) == rightParen) {
+			int parens = 0;
+			for (int i=1; i < l; ++i) {
+				GrmTerminal t = syms.get(i);
+				if (t == leftParen) ++parens;
+				else if (t == rightParen) {
+					if (--parens < 0) return; // no change
+				}
+			}
+			syms.remove(l);
+			syms.remove(0);
+			l -= 2;
+		}
+	}
+
 	private Element computeClause(RuleNode parseTree) {
 		List<Element> newElements = new ArrayList<Element>();
 		for (ParseNode p : parseTree.getChildren()) {
@@ -433,10 +438,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 		ClauseDef cd = ((GrmRule)parseTree.getRule()).getClauseDef();
 		if (cd == null) {
-		  if (newElements.size() == 1) {
-		    return newElements.get(0);
-		  }
-		  /*
+			if (newElements.size() == 1) {
+				return newElements.get(0);
+			}
+			/*
 			// this rule goes from start to a nonterminal
 			if (newElements.size() == 1 && newElements.get(0) instanceof ClauseUse
 					&& parseTree.getRule().getLeftSide().equals(GrmUtil.getStartSymbol())
@@ -454,14 +459,15 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 		return new ClauseUse(getLocation(), newElements, cd);
 	}
-	
-	
+
+
 	@Override
-  public Fact asFact(Context ctx, Element assumes) {
-    throw new RuntimeException("internal error: can't get fact before typechecking");
-  }
-	
-  public Term computeTerm(List<Pair<String, Term>>  varBindings) {
+	public Fact asFact(Context ctx, Element assumes) {
+		throw new RuntimeException("internal error: can't get fact before typechecking");
+	}
+
+	@Override
+	public Term computeTerm(List<Pair<String, Term>>  varBindings) {
 		throw new RuntimeException("internal error: can't compute the term before typechecking, at line " + getLocation().getLine());
 	}
 
@@ -471,8 +477,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			e.checkBindings(bindingTypes, nodeToBlame);
 		}
 	}
-	
-  @Override
+
+	@Override
 	public String getErrorDescription(Term t, Context ctx) {		
 		if (t != null) {
 			StringWriter sw = new StringWriter();

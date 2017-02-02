@@ -34,10 +34,10 @@ public class ClauseUse extends Clause {
 		super(loc);
 		elements = elems;
 		cons = cd;
-    root = computeRoot();
-    if (!elems.isEmpty()) {
-      super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
-    }
+		root = computeRoot();
+		if (!elems.isEmpty()) {
+			super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
+		}
 	}
 	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
 		super(copy.getLocation());
@@ -69,121 +69,123 @@ public class ClauseUse extends Clause {
 		cons = cd;
 		root = computeRoot();
 	}
-	
-  @Override 
+
+	@Override 
 	public boolean equals(Object x) {
-	  if (!(x instanceof ClauseUse)) return false;
-	  ClauseUse cu = (ClauseUse)x;
-	  return (cons == cu.cons && elements.equals(cu.getElements()));
+		if (!(x instanceof ClauseUse)) return false;
+		ClauseUse cu = (ClauseUse)x;
+		return (cons == cu.cons && elements.equals(cu.getElements()));
 	}
-	
+
 	public ClauseDef getConstructor() { return cons; }
-	
+
+	@Override
 	public ClauseType getType() { return cons.getType(); }
 
 	@Override
 	public Term getTypeTerm() { return getConstructor().asTerm(); }
 
 	private ClauseDef cons;
-	
-	
+
+
 	@Override
 	public Element typecheck(Context c) {
-	  return this; // already done
+		return this; // already done
 	}
 
-  @Override
-  void checkVariables(Set<String> bound, boolean defining) {
-    // we want to handle cases like:
-    //   Gamma, x:(fn X => T[X])
-    //   Gamma, x':T'' |- (fn x : T => t[x][x']) : T -> T'
-    int ai = cons.getAssumeIndex();
-    boolean copied = false;
-    // System.out.println("Checking " + this + " with ai=" + ai + " defining? " + defining);
-    for (int i=0; i < elements.size(); ++i) {
-      if (i == ai || cons.getElements().get(i) instanceof Variable) {
-        if (!copied && !defining) bound = new HashSet<String>(bound);
-        elements.get(i).checkVariables(bound, true);
-      }
-    }
-    for (int i=0; i < elements.size(); ++i) {
-      if (i != ai) {
-        elements.get(i).checkVariables(bound, false);
-      }
-    }
-  }
-	
 	@Override
-  public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
-    return this; // already done
-  }
-  
-  @Override
-  public Fact asFact(Context ctx, Element assumes) {
-    Element localAssumes = null;
-    // accept assumes only if we have something that the context can affect.
-    if (assumes != null) {
-      Syntax contextSyntax = (Syntax)assumes.getType();
-      for (Element e : getElements()) {
-        if (e instanceof NonTerminal || e instanceof Binding) {
-          if (contextSyntax.canAppearIn(e.getTypeTerm())) {
-            localAssumes = assumes;
-          }
-        }
-      }
-    }
-    return new ClauseAssumption(this,getLocation(),localAssumes);
-  }
+	void checkVariables(Set<String> bound, boolean defining) {
+		// we want to handle cases like:
+		//   Gamma, x:(fn X => T[X])
+		//   Gamma, x':T'' |- (fn x : T => t[x][x']) : T -> T'
+		int ai = cons.getAssumeIndex();
+		boolean copied = false;
+		// System.out.println("Checking " + this + " with ai=" + ai + " defining? " + defining);
+		for (int i=0; i < elements.size(); ++i) {
+			if (i == ai || cons.getElements().get(i) instanceof Variable) {
+				if (!copied && !defining) bound = new HashSet<String>(bound);
+				elements.get(i).checkVariables(bound, true);
+			}
+		}
+		for (int i=0; i < elements.size(); ++i) {
+			if (i != ai) {
+				elements.get(i).checkVariables(bound, false);
+			}
+		}
+	}
 
-  /**
-   * Return the assumptions/context for this instance of a judgment.
-   * @return null if no assumption, a non-terminal if no local bindings,
-   * a clause use if assumption has local bindings, or no bindings. 
-   */
-  public Element getAssumes() {
-    int ai = cons.getAssumeIndex();
-    if (ai < 0) return null;
-    return getElements().get(ai);
-  }
-  
-  /** True iff assumptions environment is rooted in a variable */
+	@Override
+	public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
+		return this; // already done
+	}
+
+	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+		Element localAssumes = null;
+		// accept assumes only if we have something that the context can affect.
+		if (assumes != null) {
+			Syntax contextSyntax = (Syntax)assumes.getType();
+			for (Element e : getElements()) {
+				if (e instanceof NonTerminal || e instanceof Binding) {
+					if (contextSyntax.canAppearIn(e.getTypeTerm())) {
+						localAssumes = assumes;
+					}
+				}
+			}
+		}
+		return new ClauseAssumption(this,getLocation(),localAssumes);
+	}
+
+	/**
+	 * Return the assumptions/context for this instance of a judgment.
+	 * @return null if no assumption, a non-terminal if no local bindings,
+	 * a clause use if assumption has local bindings, or no bindings. 
+	 */
+	public Element getAssumes() {
+		int ai = cons.getAssumeIndex();
+		if (ai < 0) return null;
+		return getElements().get(ai);
+	}
+
+	/** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
 	//private boolean hasBindings;
+	@Override
 	public NonTerminal getRoot() { return root; }
 	public boolean isRootedInVar() { return root != null; }
 	/** Whether there are variable bindings -- not in use currently */
 	// public boolean hasBindings() { return hasBindings; }
 
 	private NonTerminal computeRoot() {
-	  int ai = cons.getAssumeIndex();
-	  if (ai < 0) {
-	    return null;
-	  }
-	  Element e = getElements().get(ai);
-	  if (e == null) {
-	    System.out.println("null root in " + getElements() + " at " + ai);
-	  }
-	  return computeRootHelper(e);
+		int ai = cons.getAssumeIndex();
+		if (ai < 0) {
+			return null;
+		}
+		Element e = getElements().get(ai);
+		if (e == null) {
+			System.out.println("null root in " + getElements() + " at " + ai);
+		}
+		return computeRootHelper(e);
 	}
-	
+
 	private NonTerminal computeRootHelper(Element e) {
-	  if (e instanceof NonTerminal) return (NonTerminal)e;
-	  if (e instanceof Terminal) return null;
-	  if (e instanceof Variable) return null; // syntax binder
-	  if (e instanceof ClauseUse) {
-	    for (Element ep : ((ClauseUse) e).getElements()) {
-	      if (ep.getType().equals(e.getType())) {
-	        //XXX will need to revisit (of course) if we permit context concatenation
-	        //hasBindings = true;
-	        return computeRootHelper(ep);
-	      }
-	    }
-	    return null;
-	  }
-	  ErrorHandler.report("Internal Error: no root in clause", e);
-	  throw new RuntimeException("Internal Error");
+		if (e instanceof NonTerminal) return (NonTerminal)e;
+		if (e instanceof Terminal) return null;
+		if (e instanceof Variable) return null; // syntax binder
+		if (e instanceof ClauseUse) {
+			for (Element ep : ((ClauseUse) e).getElements()) {
+				if (ep.getType().equals(e.getType())) {
+					//XXX will need to revisit (of course) if we permit context concatenation
+					//hasBindings = true;
+					return computeRootHelper(ep);
+				}
+			}
+			return null;
+		}
+		ErrorHandler.report("Internal Error: no root in clause", e);
+		throw new RuntimeException("Internal Error");
 	}
-	
+
 	@Override
 	public ElemType getElemType() {
 		ClauseType ct = getConstructor().getType();
@@ -212,7 +214,7 @@ public class ClauseUse extends Clause {
 	// inAssumption means we are computing a fake term for an assumption clause
 	private Term computeBasicTerm(List<Pair<String, Term>> varBindings, boolean inAssumption) {
 		int assumeIndex = cons.getAssumeIndex();
-		Constant cnst = (Constant) cons.computeTerm(varBindings);
+		Constant cnst = cons.computeTerm(varBindings);
 		List<Term> args = new ArrayList<Term>();
 		// System.out.println("converting term " + this + " with assumed vars " + varBindings);
 		for (int i = 0; i < getElements().size(); ++i) {
@@ -235,7 +237,7 @@ public class ClauseUse extends Clause {
 						int varIndex = cons.getIndexOf((Variable)boundVarElem);
 						if (varIndex == -1)
 							debug("could not find ", boundVarElem, " in clause ", cons,
-									  "\n    context is ", this);
+									"\n    context is ", this);
 						Element varElement = getElements().get(varIndex);
 						if (!(varElement instanceof Variable))
 							ErrorHandler.report(EXPECTED_VARIABLE, "Expected variable matching " + boundVarElem + " but found the non-variable " + varElement, varElement);
@@ -259,10 +261,10 @@ public class ClauseUse extends Clause {
 				args.add(t);
 			}
 		}
-		
+
 		return (args.size() > 0) ? new Application(cnst, args) : cnst;
 	}
-	
+
 	@Override
 	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		// ignore terminals
@@ -283,21 +285,21 @@ public class ClauseUse extends Clause {
 		}
 
 		Term t = computeBasicTerm(varBindings, false);
-		
+
 		if (assumeIndex != -1) {
-		  t = newWrap(t,varBindings,initialBindingsSize);
+			t = newWrap(t,varBindings,initialBindingsSize);
 		}
 		// System.out.println("converted " + this + " to " + t);
 		return t;
 	}
-	
+
 	public boolean hasVariables() {
-	  int ai = cons.getAssumeIndex();
-	  if (ai < 0) return false;
-	  Element e = getElements().get(ai);
-	  return !(e instanceof NonTerminal);
+		int ai = cons.getAssumeIndex();
+		if (ai < 0) return false;
+		Element e = getElements().get(ai);
+		return !(e instanceof NonTerminal);
 	}
-	
+
 	/**
 	 * Called when checking a syntax case.
 	 * @param assumes TODO
@@ -309,25 +311,25 @@ public class ClauseUse extends Clause {
 		// JTB: TODO: This method is poorly named,
 		// and it looks at assumeIndex which will never be defined for (normal) syntax.
 		if (assumeIndex != -1) {
-		  throw new RuntimeException("assumeIndex on a syntax clause? " + this);
+			throw new RuntimeException("assumeIndex on a syntax clause? " + this);
 		}
 		for (int i = 0; i < getElements().size(); ++i) {
 			Element e = getElements().get(i);
 			if (e instanceof Terminal) continue;
 			if (e instanceof Variable) continue;
 			if (e instanceof Clause) {
-			  throw new RuntimeException("syntax cases shouldn't have nested syntax: " + this);
+				throw new RuntimeException("syntax cases shouldn't have nested syntax: " + this);
 			}
 			Fact f;
 			if (e instanceof Binding) {
-			  Binding b = (Binding)e;
-			  Element context = assumes;
-			  for (Element sube : b.getElements()) {
-			    context = ((Variable)sube).genContext(context, ctx);
-			  }
-			  f = e.asFact(ctx, context);
+				Binding b = (Binding)e;
+				Element context = assumes;
+				for (Element sube : b.getElements()) {
+					context = ((Variable)sube).genContext(context, ctx);
+				}
+				f = e.asFact(ctx, context);
 			} else {
-			  f = e.asFact(ctx, assumes);
+				f = e.asFact(ctx, assumes);
 			}
 			facts.add((SyntaxAssumption)f);
 		}
@@ -363,19 +365,19 @@ public class ClauseUse extends Clause {
 		int varIndex = cons.getVariableIndex();
 
 		// TODO: rewrite this code to handle non-variable assumptions too.  (If we add them)
-		
+
 		// Previously: this code would look for variables in the elements, but a variable
 		// appearing was not necessary in a binding occurrence, e.g.  X <: X2
 		// where X is being bound but X2 is a USE of an existing variable.
 		// So we can't just loop through the USE looking for variables, we need to go to the place
 		// where the clause definition says variables should appear.
-    if (varIndex >= 0) {
-      Element e = getElements().get(varIndex);
-      if (!(e instanceof Variable)) {
-        ErrorHandler.report(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
-      } else {
+		if (varIndex >= 0) {
+			Element e = getElements().get(varIndex);
+			if (!(e instanceof Variable)) {
+				ErrorHandler.report(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
+			} else {
 				Variable v = (Variable) e;
-				
+
 				/* Here we implement hypothetical judgments
 				 * Look up the var rule for the ClauseDef and get its conclusion
 				 * Transform the conclusion into a term (w/o abstractions)
@@ -423,23 +425,24 @@ public class ClauseUse extends Clause {
 					// derivTerm = derivTerm.incrFreeDeBruijn(-1);  <-- KLUDGE no longer needed since this method corrected
 				}
 				Util.debug("\tresult derivTerm = ", derivTerm);
-				
+
 				varBindings.add(pair(v.getSymbol(), (Term) v.getType().typeTerm()));
 				if (derivTerm != null) {
-				  Util.verify(includeAssumptionTerm, "assumoption term wasn't supposed to exist!");
-				  /* v2 */ varBindings.add(pair(derivSym, derivTerm));
+					Util.verify(includeAssumptionTerm, "assumoption term wasn't supposed to exist!");
+					/* v2 */ varBindings.add(pair(derivSym, derivTerm));
 				}
-      }
+			}
 		}
-		
+
 		return root;
 	}
-	
+
 	/** If environment is a variable, add lambdas to term to make it match matchTerm.
 	 * Modifies the substitution to reflect changes.
 	 * Also changes free variables so they bind new the new bound variables in them
 	 * @deprecated
 	 */
+	@Deprecated
 	@Override
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return adaptTermTo(term, matchTerm, sub, false);
@@ -453,6 +456,7 @@ public class ClauseUse extends Clause {
 	 * @param wrapUnrooted
 	 * @return
 	 */
+	@Deprecated
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub, boolean wrapUnrooted) {
 		Term result = wrapWithOuterLambdas(term, matchTerm, getAdaptationNumber(term, matchTerm, wrapUnrooted), sub, wrapUnrooted);
 		debug("adapation of ", term, " to ", result, " with sub ", sub, "\n\tsub applied is: ", term.substitute(sub));
@@ -488,28 +492,28 @@ public class ClauseUse extends Clause {
 			return term;
 		return wrapWithOuterLambdas(term, matchTerm, i, sub);
 	}
-	
-  /**
-   * Wrap a term with lambdas to match the match term, up to i variables.
-   * We substitute variables that could depend on the term.
-   * @param term term to wrap
-   * @param matchTerm term to get variables from
-   * @param i number of variables to get
-   * @param sub substitution used and modified, to hold substitution with paranmeterized variables
-   * @return wrapped term
-   */
-  public static Term wrapWithOuterLambdas(Term term, Term matchTerm, int i,
-      Substitution sub) {
-    if (i == 0) return term;
-    Abstraction absMatchTerm = (Abstraction) matchTerm;
+
+	/**
+	 * Wrap a term with lambdas to match the match term, up to i variables.
+	 * We substitute variables that could depend on the term.
+	 * @param term term to wrap
+	 * @param matchTerm term to get variables from
+	 * @param i number of variables to get
+	 * @param sub substitution used and modified, to hold substitution with paranmeterized variables
+	 * @return wrapped term
+	 */
+	public static Term wrapWithOuterLambdas(Term term, Term matchTerm, int i,
+			Substitution sub) {
+		if (i == 0) return term;
+		Abstraction absMatchTerm = (Abstraction) matchTerm;
 		List<Term> varTypes = new ArrayList<Term>();
 		List<String> varNames = new ArrayList<String>();
-		
+
 		readNamesAndTypes(absMatchTerm, i, varNames, varTypes, null); // pass in null, because doWrap checks
 
 		return doWrap(term, varNames, varTypes, sub);
-  }
-  
+	}
+
 	/**
 	 * Reads the names and types of the i lambdas on the outside of absMatchTerm, and adds them to varNames and varTypes.
 	 * XXX: This code is a mess: we have two ways to avoid non-subordinate types, and clients make use of different ones.
@@ -517,16 +521,16 @@ public class ClauseUse extends Clause {
 	 */
 	public static void readNamesAndTypes(Abstraction absMatchTerm, int i, List<String> varNames, List<Term> varTypes, Term base) {
 		// determine how to wrap
-	  Constant ty = base == null ? null : base.getTypeFamily();
-	  for (int j = 0; j < i; ++j) {
-	    if (ty == null || FreeVar.canAppearIn(absMatchTerm.varType.baseTypeFamily(), ty)) {
-	      varTypes.add(absMatchTerm.varType);
-	      varNames.add(absMatchTerm.varName);
-	    } else {
-	      Util.debug("Skipping dependency on variable ", absMatchTerm.varName, " for ", base);
-	    }
-      if (j < i-1)
-        absMatchTerm = (Abstraction) absMatchTerm.getBody();
+		Constant ty = base == null ? null : base.getTypeFamily();
+		for (int j = 0; j < i; ++j) {
+			if (ty == null || FreeVar.canAppearIn(absMatchTerm.varType.baseTypeFamily(), ty)) {
+				varTypes.add(absMatchTerm.varType);
+				varNames.add(absMatchTerm.varName);
+			} else {
+				Util.debug("Skipping dependency on variable ", absMatchTerm.varName, " for ", base);
+			}
+			if (j < i-1)
+				absMatchTerm = (Abstraction) absMatchTerm.getBody();
 		}
 	}
 
@@ -538,23 +542,23 @@ public class ClauseUse extends Clause {
 	 * @return wrapped term
 	 */
 	public static Term newWrap(Term t, List<Pair<String,Term>> varBindings, int from) {
-    for (int i = varBindings.size()-1; i >= from; --i) {
-      t = Abs(varBindings.get(i).first, varBindings.get(i).second, t);
-    }
-    return t;
+		for (int i = varBindings.size()-1; i >= from; --i) {
+			t = Abs(varBindings.get(i).first, varBindings.get(i).second, t);
+		}
+		return t;
 	}
-	
+
 	public static Term newDoBindWrap(Term term, List<Pair<String,Term>> varBindings) {
-	  List<String> varNames = new ArrayList<String>();
-	  List<Term> varTypes = new ArrayList<Term>();
-	  Substitution sub = new Substitution();
-	  for (Pair<String,Term> pair : varBindings) {
-	    varNames.add(pair.first);
-	    varTypes.add(pair.second);
-	  }
-	  return doWrap(term,varNames,varTypes,sub);
+		List<String> varNames = new ArrayList<String>();
+		List<Term> varTypes = new ArrayList<Term>();
+		Substitution sub = new Substitution();
+		for (Pair<String,Term> pair : varBindings) {
+			varNames.add(pair.first);
+			varTypes.add(pair.second);
+		}
+		return doWrap(term,varNames,varTypes,sub);
 	}
-	
+
 	/** Wraps term in i lambdas that have variable names and types given by varNames and varTypes.
 	 * Also changes free variables so they bind new the new bound variables in them
 	 * Modifies the substitution to reflect changes.
@@ -574,17 +578,17 @@ public class ClauseUse extends Clause {
 		// do the wrapping
 		Constant typeFamily = term.getTypeFamily();
 		for (int j = varNames.size()-1; j >= 0; --j) {
-		  Constant varFamily = varTypes.get(j).baseTypeFamily();
-      if (FreeVar.canAppearIn(varFamily, typeFamily)) {
-		    term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
-		  } else if (term.equals(new BoundVar(1))) {
-		    term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
-		    typeFamily = varFamily;
-		  } else {
-		    Util.debug("Skipping ", varNames.get(j), " in ", term);
-		    term = term.incrFreeDeBruijn(-1);
-		    Util.debug("  term is now ", term);
-		  }
+			Constant varFamily = varTypes.get(j).baseTypeFamily();
+			if (FreeVar.canAppearIn(varFamily, typeFamily)) {
+				term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
+			} else if (term.equals(new BoundVar(1))) {
+				term = Abstraction.make(varNames.get(j), varTypes.get(j), term);
+				typeFamily = varFamily;
+			} else {
+				Util.debug("Skipping ", varNames.get(j), " in ", term);
+				term = term.incrFreeDeBruijn(-1);
+				Util.debug("  term is now ", term);
+			}
 		}
 
 		return term;
@@ -605,5 +609,5 @@ public class ClauseUse extends Clause {
 		debug("after binding in free vars: ", term, " with sub ", sub);
 		return Abstraction.make(absMatchTerm.varName, absMatchTerm.varType, term);
 	}
-	
+
 }

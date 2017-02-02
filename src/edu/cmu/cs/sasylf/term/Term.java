@@ -44,7 +44,7 @@ public abstract class Term {
 		else
 			throw new UnificationFailed("terms unify but the instance relationship does not hold");
 	}
-	
+
 	/** FreeVar order 0
 	 * Application of FreeVar order 1
 	 * others order 2
@@ -53,28 +53,29 @@ public abstract class Term {
 
 	/** returns 1 if this is a non-pattern free variable application, otherwise 0 */
 	final int oneIfNonPatFreeVarApp() { return isNonPatFreeVarApp() ? 1 : 0; }
-	
+
 	/** true if this is a non-pattern free variable application, otherwise false */
 	boolean isNonPatFreeVarApp() { return false; }
 
 	/** puts non-pattern free variable applications last */
 	//compare in order of pair elements, put in opposite order of terms
 	static class PairComparator implements Comparator<Pair<Term,Term>> {
+		@Override
 		public int compare(Pair<Term, Term> t1, Pair<Term, Term> t2) {
 			return toPriority(t1) - toPriority(t2);
 		}
-    /**
-     * Compute priority of a pair.
-     * 1 point for each non-pattern free application.
-     * Previously, max was 1.  But we want to make sure that
-     * T2 =?= T22[T23] has higher priority than T1[T2] =?= T1[T22[T23]]
-     * Eventually, we may want to count "bad" applications. 
-     * @param t1 pair to evaluate
-     * @return priority (greater is lower priority...)
-     */
-    protected int toPriority(Pair<Term, Term> t1) {
-      return t1.first.oneIfNonPatFreeVarApp() + t1.second.oneIfNonPatFreeVarApp();
-    }
+		/**
+		 * Compute priority of a pair.
+		 * 1 point for each non-pattern free application.
+		 * Previously, max was 1.  But we want to make sure that
+		 * T2 =?= T22[T23] has higher priority than T1[T2] =?= T1[T22[T23]]
+		 * Eventually, we may want to count "bad" applications. 
+		 * @param t1 pair to evaluate
+		 * @return priority (greater is lower priority...)
+		 */
+		protected int toPriority(Pair<Term, Term> t1) {
+			return t1.first.oneIfNonPatFreeVarApp() + t1.second.oneIfNonPatFreeVarApp();
+		}
 	}
 	/** constructs a pair with the terms in order
 	 */
@@ -86,31 +87,31 @@ public abstract class Term {
 		else 
 			return new Pair<Term,Term>(t2, t1);
 	}
-	
+
 	private final Substitution unifyAllowingBVs(Term t) {
 		Substitution current = new Substitution();
 		Queue<Pair<Term,Term>> worklist = new PriorityQueue<Pair<Term,Term>>(11, new PairComparator());
 		worklist.add(makePair(this, t));
 		debugCount = 0;
 		unifyHelper(current, worklist);
-		
+
 		return current;
 	}
-	
+
 	/** Sets up worklist and calls unifyHelper
 	 */
 	public final Substitution unify(Term t) {
-	  Substitution current;
-	  try {
-	    current = unifyAllowingBVs(t);
-	  } catch (UnificationIncomplete ex) {
-	    Util.debug("Was trying to unify ",this," and ", t);
-	    throw ex;
-	  }
+		Substitution current;
+		try {
+			current = unifyAllowingBVs(t);
+		} catch (UnificationIncomplete ex) {
+			Util.debug("Was trying to unify ",this," and ", t);
+			throw ex;
+		}
 		// a free variable in the input to unify() should not, in its substitution result, have any free bound variables
 		Set<FreeVar> freeVars = getFreeVariables();
 		freeVars.addAll(t.getFreeVariables());
-    Set<Pair<FreeVar,Integer>> unusable = new HashSet<Pair<FreeVar,Integer>>();
+		Set<Pair<FreeVar,Integer>> unusable = new HashSet<Pair<FreeVar,Integer>>();
 		for (FreeVar v : freeVars) {
 			Term substituted = current.getSubstituted(v);
 			if (substituted != null && !substituted.selectUnusablePositions(0, unusable)) {
@@ -119,58 +120,58 @@ public abstract class Term {
 			}
 		}
 		if (!unusable.isEmpty()) {
-		  // restructure set as map:
-		  Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
-		  for (Pair<FreeVar,Integer> p : unusable) {
-		    if (!map.containsKey(p.first)) {
-		      map.put(p.first, new HashSet<Integer>());
-		    }
-		    map.get(p.first).add(p.second);
-		  }
-		  for (Map.Entry<FreeVar, Set<Integer>> replace : map.entrySet()) {
-		    Util.debug("need to replace: ",replace);
-		    FreeVar v = replace.getKey();
-		    Term type = v.getType();
-		    List<Term> oldTypes = new ArrayList<Term>();
-		    List<String> oldNames = new ArrayList<String>();
-		    List<Term> newTypes = new ArrayList<Term>();
-		    List<String> newNames = new ArrayList<String>();
-		    int i=0;
-		    while (type instanceof Abstraction) {
-		      Abstraction f = (Abstraction)type;
-		      oldTypes.add(f.varType);
-		      oldNames.add(f.varName);
-		      if (replace.getValue().contains(i)) {
-	          //XXX we assume types on other parameters don't depend on removed positions
-		        type = f.getBody().incrFreeDeBruijn(-1);
-		      } else {
-		        newTypes.add(f.varType);
-		        newNames.add(f.varName);
-		        type = f.getBody();
-		      }
-		      ++i;
-		    }
-		    Term newType = wrapWithLambdas(type, newTypes, newNames);
-        FreeVar newV = FreeVar.fresh(v.getName(), newType);
-        Term replacement;
-        if (newTypes.isEmpty()) replacement = newV;
-        else {
-          List<Term> newArgs = new ArrayList<Term>();
-          int n = newTypes.size();
-          for (int j=0; j < n; ++j) {
-            newArgs.add(new BoundVar(n-j));
-          }
-          replacement = Facade.App(newV, newArgs);
-        }
-        current.add(v, wrapWithLambdas(replacement, oldTypes, oldNames));
-		  }
+			// restructure set as map:
+			Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
+			for (Pair<FreeVar,Integer> p : unusable) {
+				if (!map.containsKey(p.first)) {
+					map.put(p.first, new HashSet<Integer>());
+				}
+				map.get(p.first).add(p.second);
+			}
+			for (Map.Entry<FreeVar, Set<Integer>> replace : map.entrySet()) {
+				Util.debug("need to replace: ",replace);
+				FreeVar v = replace.getKey();
+				Term type = v.getType();
+				List<Term> oldTypes = new ArrayList<Term>();
+				List<String> oldNames = new ArrayList<String>();
+				List<Term> newTypes = new ArrayList<Term>();
+				List<String> newNames = new ArrayList<String>();
+				int i=0;
+				while (type instanceof Abstraction) {
+					Abstraction f = (Abstraction)type;
+					oldTypes.add(f.varType);
+					oldNames.add(f.varName);
+					if (replace.getValue().contains(i)) {
+						//XXX we assume types on other parameters don't depend on removed positions
+						type = f.getBody().incrFreeDeBruijn(-1);
+					} else {
+						newTypes.add(f.varType);
+						newNames.add(f.varName);
+						type = f.getBody();
+					}
+					++i;
+				}
+				Term newType = wrapWithLambdas(type, newTypes, newNames);
+				FreeVar newV = FreeVar.fresh(v.getName(), newType);
+				Term replacement;
+				if (newTypes.isEmpty()) replacement = newV;
+				else {
+					List<Term> newArgs = new ArrayList<Term>();
+					int n = newTypes.size();
+					for (int j=0; j < n; ++j) {
+						newArgs.add(new BoundVar(n-j));
+					}
+					replacement = Facade.App(newV, newArgs);
+				}
+				current.add(v, wrapWithLambdas(replacement, oldTypes, oldNames));
+			}
 		}
 
 		return current;
 	}
 
 	static int debugCount = 0;
-	
+
 	/** picks first pair and calls unifyCase
 	 */
 	static final void unifyHelper(Substitution current, Queue<Pair<Term,Term>> worklist) {
@@ -190,7 +191,7 @@ public abstract class Term {
 			p.first.unifyCase(p.second, current, worklist);
 		}
 	}
-	
+
 	/**
 	 * Collect a set of argument positions (zero-based) for free variable applications
 	 * which cannot be used if the result must not have bound variables above given bound.
@@ -201,7 +202,7 @@ public abstract class Term {
 	 * @return whether all illegal bound variables can be avoided
 	 */
 	protected boolean selectUnusablePositions(int bound, Set<Pair<FreeVar,Integer>> unusable) {
-	  return true;
+		return true;
 	}
 
 	public boolean typeEquals(Term otherType) {
@@ -209,7 +210,7 @@ public abstract class Term {
 				|| otherType == Constant.UNKNOWN_TYPE
 				|| this.equals(otherType);
 	}
-	
+
 	/*protected static boolean typesEqual(Term type, Term type2) {
 		return type.typeEquals(type2);
 		//return type == Constant.UNKNOWN_TYPE || type2 == Constant.UNKNOWN_TYPE || type.equals(type2);
@@ -232,11 +233,11 @@ public abstract class Term {
 	public boolean hasBoundVar(int i) {
 		return false;
 	}
-	
+
 	public boolean hasBoundVarAbove(int i) {
 		return false;
 	}
-	
+
 	// does not check for free "bound variables"
 	public final Set<FreeVar> getFreeVariables() {
 		Set<FreeVar> s = new HashSet<FreeVar>();
@@ -254,14 +255,14 @@ public abstract class Term {
 	 * to continue.  The current substitution is applied lazily.
 	 */
 	abstract void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist);
-	
+
 	/** case for Constant given here
 	 *  FlexVar case should be impossible
 	 *  Application, Abstraction, BoundVar cases separate
 	 */
 	void unifyFlexApp(FreeVar function, List<? extends Term> arguments, Substitution current, Queue<Pair<Term,Term>> worklist) {
-	  Util.verify(this instanceof Constant, "This case only for constants");
-	  
+		Util.verify(this instanceof Constant, "This case only for constants");
+
 		/* case: C = E t1...tn
 		 * where each ti is a bound variable
 		 * 
@@ -289,13 +290,13 @@ public abstract class Term {
 		return termToWrap;
 	}
 
-  public static Term wrapWithLambdas(Term termToWrap, List<Term> argTypes, List<String> argNames) {
-    for (int i = argTypes.size()-1; i >= 0; --i) {
-      termToWrap = Abstraction.make(argNames.get(i), argTypes.get(i), termToWrap);
-    }
-    return termToWrap;
-  }
-  
+	public static Term wrapWithLambdas(Term termToWrap, List<Term> argTypes, List<String> argNames) {
+		for (int i = argTypes.size()-1; i >= 0; --i) {
+			termToWrap = Abstraction.make(argNames.get(i), argTypes.get(i), termToWrap);
+		}
+		return termToWrap;
+	}
+
 	public static List<Term> getArgTypes(Term varType, int count) {
 		List<Term> argTypes = new ArrayList<Term>();
 		debug("getting ", count, " args from ", varType);
@@ -315,95 +316,95 @@ public abstract class Term {
 		}
 		return argTypes;
 	}
-	
+
 	public static Term wrapWithLambdas(List<Abstraction> abs, Term t) {
-	  return wrapWithLambdas(abs,t,0,abs.size());
-	}
-	
-  /**
-   * Wrap abstractions from the given list around the term.
-   * @param abs list of abstractions giving name and type.
-   * @param t term to wrap
-   * @param start inclusive lower bound
-   * @param stop exclusive upper bound
-   * @return wrapped term.
-   */
-  public static Term wrapWithLambdas(List<Abstraction> abs, Term t, int start, int stop) {
-    for (int i=stop-1; i >= start; --i) {
-      Abstraction a = abs.get(i);
-      t = Abstraction.make(a.varName, a.varType, t);
-    }
-    return t;
-  }
-
-  /**
-   * Unwrap any abstractions from the term and return the center term (not an Abstraction).
-   * @param t term to unwrap, if null, returned unchanged
-   * @param abs list of abstractions to add to (if not null)
-   * @return term after all wrappers removed.
-   */
-  public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
-	  while (t instanceof Abstraction) {
-	    Abstraction a = (Abstraction)t;
-	    if (abs != null) abs.add(a);
-	    t = a.getBody();
-	  }
-	  return t;
+		return wrapWithLambdas(abs,t,0,abs.size());
 	}
 
-  public static Term getWrappingAbstractions(Term t, List<Abstraction> abs, int n) {
-    while (n > 0) {
-      Abstraction a = (Abstraction)t;
-      if (abs != null) abs.add(a);
-      t = a.getBody();
-      --n;
-    }
-    return t;
-  }
+	/**
+	 * Wrap abstractions from the given list around the term.
+	 * @param abs list of abstractions giving name and type.
+	 * @param t term to wrap
+	 * @param start inclusive lower bound
+	 * @param stop exclusive upper bound
+	 * @return wrapped term.
+	 */
+	public static Term wrapWithLambdas(List<Abstraction> abs, Term t, int start, int stop) {
+		for (int i=stop-1; i >= start; --i) {
+			Abstraction a = abs.get(i);
+			t = Abstraction.make(a.varName, a.varType, t);
+		}
+		return t;
+	}
 
-  public static String wrappingAbstractionsToString(List<Abstraction> abs) {
-    StringBuilder sb = null;
-    for (Abstraction a : abs) {
-      if (sb == null) sb = new StringBuilder("{");
-      else sb.append(", ");
-      sb.append(a.varName);
-      sb.append(":");
-      sb.append(a.varType);
-    }
-    if (sb == null) return "{}";
-    else sb.append("}");
-    return sb.toString();
-  }
-  
-  /**
+	/**
+	 * Unwrap any abstractions from the term and return the center term (not an Abstraction).
+	 * @param t term to unwrap, if null, returned unchanged
+	 * @param abs list of abstractions to add to (if not null)
+	 * @return term after all wrappers removed.
+	 */
+	public static Term getWrappingAbstractions(Term t, List<Abstraction> abs) {
+		while (t instanceof Abstraction) {
+			Abstraction a = (Abstraction)t;
+			if (abs != null) abs.add(a);
+			t = a.getBody();
+		}
+		return t;
+	}
+
+	public static Term getWrappingAbstractions(Term t, List<Abstraction> abs, int n) {
+		while (n > 0) {
+			Abstraction a = (Abstraction)t;
+			if (abs != null) abs.add(a);
+			t = a.getBody();
+			--n;
+		}
+		return t;
+	}
+
+	public static String wrappingAbstractionsToString(List<Abstraction> abs) {
+		StringBuilder sb = null;
+		for (Abstraction a : abs) {
+			if (sb == null) sb = new StringBuilder("{");
+			else sb.append(", ");
+			sb.append(a.varName);
+			sb.append(":");
+			sb.append(a.varType);
+		}
+		if (sb == null) return "{}";
+		else sb.append("}");
+		return sb.toString();
+	}
+
+	/**
 	 * Compute the type family for this term.
 	 * Ignore dependencies; ignore arguments -- just the type family.
 	 * @return type family of this term
 	 */
 	public Constant getTypeFamily() {
-	  List<Pair<String,Term>> argTypes = new ArrayList<Pair<String,Term>>();
-	  Term type = getType(argTypes);
-	  return type.baseTypeFamily();
+		List<Pair<String,Term>> argTypes = new ArrayList<Pair<String,Term>>();
+		Term type = getType(argTypes);
+		return type.baseTypeFamily();
 	}
 
-  /**
-   * Compute the family for this type.
-   * @return type family for this type
-   */
-  public Constant baseTypeFamily() {
-    Term type = this;
-    while (type instanceof Abstraction) {
-	    type = ((Abstraction)type).getBody();
-	  }
-	  if (type instanceof Application) {
-	    type = ((Application)type).getFunction();
-	  }
-	  if (type instanceof Constant) {
-	    return (Constant)type;
-	  }
-	  return (Constant) Constant.UNKNOWN_TYPE;
-  }
-	
+	/**
+	 * Compute the family for this type.
+	 * @return type family for this type
+	 */
+	public Constant baseTypeFamily() {
+		Term type = this;
+		while (type instanceof Abstraction) {
+			type = ((Abstraction)type).getBody();
+		}
+		if (type instanceof Application) {
+			type = ((Application)type).getFunction();
+		}
+		if (type instanceof Constant) {
+			return (Constant)type;
+		}
+		return Constant.UNKNOWN_TYPE;
+	}
+
 	public abstract Term apply(List<? extends Term> arguments, int whichApplied);
 
 	final Term subForBoundVars(Map<Integer, Term> adjustmentMap) {
@@ -413,13 +414,13 @@ public abstract class Term {
 			if (i > maxInt)
 				maxInt = i;
 		}
-		
+
 		// wrap this term in that many lambdas
 		Term wrappedTerm = this;
 		for (int i = 0; i < maxInt; ++i) {
 			wrappedTerm = Facade.Abs(Constant.UNKNOWN_TYPE, wrappedTerm);
 		}
-		
+
 		// compute argument list
 		List<Term> argList = new ArrayList<Term>();
 		for (int i = 0; i < maxInt; ++i) {
@@ -428,7 +429,7 @@ public abstract class Term {
 			else
 				argList.add(Facade.BVar(i+1));
 		}
-		
+
 		Term result = wrappedTerm.apply(argList, 0);
 		debug("\tadjusting ", this, " to ", result);
 		return result;
@@ -459,18 +460,18 @@ public abstract class Term {
 	}
 
 	public Term getType() {
-	  List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
-	  return getType(varBindings);
+		List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
+		return getType(varBindings);
 	}
-	
- 	public abstract Term getType(List<Pair<String, Term>> varBindings);
+
+	public abstract Term getType(List<Pair<String, Term>> varBindings);
 
 	/** Produces a substitution that will bind an outer bound variable in all free variables.
 	 * In Term we implement the default case (which does nothing) for Constant and BoundVar.
 	 */
 	public void bindInFreeVars(Term typeTerm, Substitution sub) {}
 	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {}
-	
+
 	/** Attempts to remove all bound variables above index i and above from the expression.
 	 * Modifies the input substitution to effect the change.
 	 * If this is impossible a UnificationFailedException is thrown.
@@ -494,9 +495,9 @@ public abstract class Term {
 	 * the reverse permutation.  Only Abstraction overrides.
 	 */
 	public FreeVar getEtaPermutedEquivFreeVar(FreeVar src, Substitution reverseSub) {
-	  return null;
+		return null;
 	}
-	
+
 	/** converts (locally) to eta-long form.
 	 * Here, we implement the default--return this.  Only FreeVar overrides.
 	 */
@@ -510,9 +511,9 @@ public abstract class Term {
 	 * @return term unchanged or with fewer abstraction layers.
 	 */
 	public Term stripUnusedLambdas() {
-	  return this;
+		return this;
 	}
-	
+
 	// reduce() is unnecessary - terms are always in normal form
 
 	/**
@@ -521,18 +522,18 @@ public abstract class Term {
 	 * @return whether the other term is a strict subterm of this one.
 	 */
 	public boolean containsProper(Term other) {
-	  return false;
+		return false;
 	}
-	
+
 	/**
 	 * Check whether the argument term is a (possibly improper) subterm of this one.
 	 * @param other term to look for inside of this term
 	 * @return whether the other term is a (possibly improper) subterm of this one.
 	 */
 	public boolean contains(Term other) {
-	  Util.debug(this, " >?= ", other);
-	  FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
-	  if (fv != null) return contains(fv);
-	  return this.equals(other) || containsProper(other);
+		Util.debug(this, " >?= ", other);
+		FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
+		if (fv != null) return contains(fv);
+		return this.equals(other) || containsProper(other);
 	}
 }

@@ -18,7 +18,7 @@ public class UnprovedNodeImpl implements UnprovedNode {
 	private Judgment judgment;
 	private int depth;
 	private int choiceDepth;
-	
+
 	/** Constructs a new UnprovedNode.
 	 * @param j The Judgment to be proven (or not.)
 	 * @param d This node's depth in the proof tree.
@@ -29,11 +29,13 @@ public class UnprovedNodeImpl implements UnprovedNode {
 		depth = d;
 		choiceDepth = c;
 	}
-	
+
+	@Override
 	public int getChoiceDepth() {
 		return choiceDepth;
 	}
 
+	@Override
 	public int getDepth() {
 		return depth;
 	}
@@ -41,18 +43,19 @@ public class UnprovedNodeImpl implements UnprovedNode {
 	/**
 	 * Written by Dr. Aldrich, 2008
 	 */
+	@Override
 	public List<Rule> getRulesThatApply(Proof proof) {
 		List<Rule> result = new ArrayList<Rule>();
 		ProofImpl proofImpl = (ProofImpl) proof;
-		
+
 		// get a substituted term
 		Term derivTerm = judgment.getTerm().substitute(proofImpl.getSubstitution());
 		edu.cmu.cs.sasylf.ast.Judgment judgmentType = judgment.getJudgmentType();
-		
+
 		// try all the rules of the appropriate type, in turn
 		for (edu.cmu.cs.sasylf.ast.Rule rule: judgmentType.getRules()) {
 			Term ruleTerm = rule.getFreshRuleAppTerm(derivTerm, new Substitution(), null);
-			
+
 			/*List<Term> termArgs = new ArrayList<Term>();
 			for (int i = 0; i < rule.getPremises().size(); ++i) {
 				ClauseDef clauseDef = ((ClauseUse) rule.getPremises().get(i)).getConstructor(); 
@@ -66,19 +69,19 @@ public class UnprovedNodeImpl implements UnprovedNode {
 			List<Term> termArgs = rule.getFreeVarArgs(derivTerm);
 			termArgs.add(derivTerm);
 			Term appliedTerm = App(rule.getRuleAppConstant(), termArgs);
-			
+
 			Substitution sub = null;
 			try {
 				sub = appliedTerm.unify(ruleTerm);
 				if (! sub.avoid(proofImpl.getInputVars()))
-						continue;
+					continue;
 			} catch (UnificationFailed e) {
 				continue; // try the next possible rule
 			}
-			
+
 			// construct a RuleInstance and add it to result
 			List<Judgment> preconditions = new ArrayList<Judgment>();
-			
+
 			for(int i = 0; i < rule.getPremises().size(); ++i) {
 				Term termArg = termArgs.get(i);
 				ClauseDef clauseDef = ((ClauseUse) rule.getPremises().get(i)).getConstructor();
@@ -86,17 +89,19 @@ public class UnprovedNodeImpl implements UnprovedNode {
 				Term substitutedTerm = termArg.substitute(sub);
 				preconditions.add(new Judgment(substitutedTerm, judgeType));
 			}
-			
+
 			result.add(new RuleInstance(judgment, preconditions, sub, rule));
 		}
-		
+
 		return result;
 	}
 
+	@Override
 	public Judgment getJudgment() {
 		return judgment;
 	}
 
+	@Override
 	public String toString(int tabs) {
 		String s = "";
 		for(int i = 0; i < tabs; i++) {
@@ -105,15 +110,18 @@ public class UnprovedNodeImpl implements UnprovedNode {
 		s += judgment.toString();
 		return s;
 	}
-	
+
+	@Override
 	public String toString() {
 		return judgment.toString();
 	}
 
+	@Override
 	public void prettyPrint(Substitution sub) {
 		return;
 	}
 
+	@Override
 	public int getId() {
 		return 0;
 	}

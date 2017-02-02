@@ -15,72 +15,74 @@ public class DerivationByExchange extends DerivationWithArgs {
 		super(n,l,c);
 	}
 
+	@Override
 	public String prettyPrintByClause() {
 		return " by exchange";
 	}
 
+	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 
-    if (this.getArgs().size() != 1) {
-      ErrorHandler.report(Errors.WRONG_EXCHANGE_ARGUMENTS, this);
-      return;
-    }
+		if (this.getArgs().size() != 1) {
+			ErrorHandler.report(Errors.WRONG_EXCHANGE_ARGUMENTS, this);
+			return;
+		}
 
-    Fact arg = getArgs().get(0);
-    Element e = arg.getElement();
-    if (!(e instanceof ClauseUse)) {
-      ErrorHandler.report("exchange argument should be a judgment, not syntax", this);
-    }
-    checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause(), this);
-    
-    Term adapted = ctx.toTerm(e);
-    //System.out.println("Exchange arg, adapted = " + adapted);
-    Term result = ctx.toTerm(getClause());
-    //System.out.println("Exchange result: " + result);
-    
-    if (!checkExchange(result,adapted)) {
-      ErrorHandler.report(Errors.BAD_EXCHANGE, this);
-    }
-    checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
+		Fact arg = getArgs().get(0);
+		Element e = arg.getElement();
+		if (!(e instanceof ClauseUse)) {
+			ErrorHandler.report("exchange argument should be a judgment, not syntax", this);
+		}
+		checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause(), this);
+
+		Term adapted = ctx.toTerm(e);
+		//System.out.println("Exchange arg, adapted = " + adapted);
+		Term result = ctx.toTerm(getClause());
+		//System.out.println("Exchange result: " + result);
+
+		if (!checkExchange(result,adapted)) {
+			ErrorHandler.report(Errors.BAD_EXCHANGE, this);
+		}
+		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
 		if (ctx.subderivations.containsKey(arg))
 			ctx.subderivations.put(this,ctx.subderivations.get(arg));
 	}
 
-  private static boolean checkExchange(Term t1, Term t2) {
-	  // NB: If the following line is uncommented,
-	  // exchange will be (safely) allowed in more situations
-	  // but the cases where it works will be harder to explain.
-	  // if (t1.equals(t2)) return true;
-	  if (t1 instanceof Abstraction) {
-	    Abstraction ab1 = (Abstraction)t1;
-	    List<Term> remaining = new LinkedList<Term>();
-	    //System.out.println("Checking " + t2);
-	    //System.out.println(" against " + ab1);
-	    Term body2 = removeMatching(t2,remaining,ab1.varName,ab1.varType);
-	    if (body2 == null) return false;
-	    //System.out.println("Proceeding with exchanged body: " + body2);
-	    return checkExchange(ab1.getBody(),body2);
-	  } else return t1.equals(t2);
+	private static boolean checkExchange(Term t1, Term t2) {
+		// NB: If the following line is uncommented,
+		// exchange will be (safely) allowed in more situations
+		// but the cases where it works will be harder to explain.
+		// if (t1.equals(t2)) return true;
+		if (t1 instanceof Abstraction) {
+			Abstraction ab1 = (Abstraction)t1;
+			List<Term> remaining = new LinkedList<Term>();
+			//System.out.println("Checking " + t2);
+			//System.out.println(" against " + ab1);
+			Term body2 = removeMatching(t2,remaining,ab1.varName,ab1.varType);
+			if (body2 == null) return false;
+			//System.out.println("Proceeding with exchanged body: " + body2);
+			return checkExchange(ab1.getBody(),body2);
+		} else return t1.equals(t2);
 	}
-	
+
 	private static Term removeMatching(Term t, List<Term> rem, String name, Term type) {
-	  if (t instanceof Abstraction) {
-	    Abstraction ab = (Abstraction)t;
-	    if (ab.varName.equals(name)) {
-	      if (ab.varType.equals(type)) {
-	        rem.add(new BoundVar(rem.size()+1));
-	        return ab.getBody().apply(rem, rem.size());
-	      }
-	      // System.out.println("Wrong type");
-	      return null;
-	    } else {
-	      rem.add(0, new BoundVar(rem.size()+1));
-	      Term result = removeMatching(ab.getBody(),rem,name,type.incrFreeDeBruijn(1));
-	      if (result == null) return null;
-	      return Abstraction.make(ab.varName,ab.varType,result);
-	    }
-	  } else return null;
+		if (t instanceof Abstraction) {
+			Abstraction ab = (Abstraction)t;
+			if (ab.varName.equals(name)) {
+				if (ab.varType.equals(type)) {
+					rem.add(new BoundVar(rem.size()+1));
+					return ab.getBody().apply(rem, rem.size());
+				}
+				// System.out.println("Wrong type");
+				return null;
+			} else {
+				rem.add(0, new BoundVar(rem.size()+1));
+				Term result = removeMatching(ab.getBody(),rem,name,type.incrFreeDeBruijn(1));
+				if (result == null) return null;
+				return Abstraction.make(ab.varName,ab.varType,result);
+			}
+		} else return null;
 	}
 }

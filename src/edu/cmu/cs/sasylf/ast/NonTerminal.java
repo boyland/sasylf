@@ -24,16 +24,18 @@ import edu.cmu.cs.sasylf.util.Util;
 public class NonTerminal extends Element {
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, Syntax ty) {
-	  super(l);
-	  symbol = s;
-	  type = ty;
-	  if (l != null) {
-	    super.setEndLocation(l.add(s.length()));
-	  }
+		super(l);
+		symbol = s;
+		type = ty;
+		if (l != null) {
+			super.setEndLocation(l.add(s.length()));
+		}
 	}
-	
+
 	public String getSymbol() { return symbol; }
+	@Override
 	public Syntax getType() { return type; }
+	@Override
 	public ElemType getElemType() { return type; }
 
 	@Override
@@ -122,10 +124,11 @@ public class NonTerminal extends Element {
 			cd.prettyPrint(out, new PrintContext(ctx.term, ctx));
 	}
 
+	@Override
 	public Element typecheck(Context ctx) {
-	  if (ctx.isTerminalString(symbol)) {
-	    return new Terminal(symbol,this);
-	  }
+		if (ctx.isTerminalString(symbol)) {
+			return new Terminal(symbol,this);
+		}
 		NonTerminal nt = this;
 		Element e = this;
 		String strippedName = Util.stripId(nt.getSymbol());
@@ -142,11 +145,11 @@ public class NonTerminal extends Element {
 			if (syn != null) {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {
-			  e = new OrJudgment.OrTerminal(this);
-      } else if (nt.getSymbol().equals("not")) {
-        e = new NotJudgment.NotTerminal(this);
+				e = new OrJudgment.OrTerminal(this);
+			} else if (nt.getSymbol().equals("not")) {
+				e = new NotJudgment.NotTerminal(this);
 			} else {
-			  e = new Terminal(nt.getSymbol(),nt.getLocation());
+				e = new Terminal(nt.getSymbol(),nt.getLocation());
 				ErrorHandler.recoverableError(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);
 			}
 		}
@@ -155,27 +158,27 @@ public class NonTerminal extends Element {
 
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
-	  if (ctx.bindingTypes.containsKey(symbol) &&
-	      !ctx.bindingTypes.get(symbol).isEmpty()) {
-	    ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
-	  }
-	  // System.out.println(this+".asFact(_," + assumes + ")");
-	  if (ctx.isVarFree(this) || assumes == null ||
-	      !((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
-	    return new NonTerminalAssumption(this);
-	  else return new NonTerminalAssumption(this,assumes);
+		if (ctx.bindingTypes.containsKey(symbol) &&
+				!ctx.bindingTypes.get(symbol).isEmpty()) {
+			ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
+		}
+		// System.out.println(this+".asFact(_," + assumes + ")");
+		if (ctx.isVarFree(this) || assumes == null ||
+				!((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+			return new NonTerminalAssumption(this);
+		else return new NonTerminalAssumption(this,assumes);
 	}
 
-  @Override
+	@Override
 	public FreeVar computeTerm(List<Pair<String, Term>> varBindings) {
 		return new FreeVar(symbol, type.typeTerm());
 	}
-	
+
 	@Override
 	NonTerminal readAssumptions(List<Pair<String, Term>> varBindings, boolean includeAssumptionTerm) {
 		return this;
 	}
-	
+
 	@Override
 	void checkBindings(Map<String, List<ElemType>> bindingTypes, Node nodeToBlame) {
 		List<ElemType> myType = new ArrayList<ElemType>();
@@ -188,16 +191,16 @@ public class NonTerminal extends Element {
 				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + this + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame);
 		}
 	}
-  @Override
-  public NonTerminal getRoot() {
-    // This is correct if this element came by way of a Fact,
-    // otherwise it would have the correct context.
-    return null;
-  }
-  @Override
-  void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
-    freeSet.add(this);
-  }
-	
-	
+	@Override
+	public NonTerminal getRoot() {
+		// This is correct if this element came by way of a Fact,
+		// otherwise it would have the correct context.
+		return null;
+	}
+	@Override
+	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
+		freeSet.add(this);
+	}
+
+
 }

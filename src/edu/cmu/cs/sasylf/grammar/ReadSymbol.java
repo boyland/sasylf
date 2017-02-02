@@ -10,7 +10,7 @@ package edu.cmu.cs.sasylf.grammar;
 class ReadSymbol implements Symbol {
 	private static ReadSymbol any;
 	private ReadSymbol() {}
-	
+
 	/**
 	 * @return a symbol representing a cursor reading this rule.
 	 */
@@ -20,17 +20,19 @@ class ReadSymbol implements Symbol {
 		}
 		return any;
 	}
-	
+
 	/** Returns a "~" to represent a readsymbol.
 	 * 
 	 */
+	@Override
 	public String toString() {
 		return "~";
 	}
-	
+
 	/**
 	 * True if the other object is a readsymbol, as all are identical.
 	 */
+	@Override
 	public boolean equals(Object o) {
 		return o instanceof ReadSymbol;
 	}

@@ -22,25 +22,26 @@ public class FreeVar extends Atom {
 	private int stamp;
 	private Term type;
 
+	@Override
 	public boolean equals(Object obj) {
 		return super.equals(obj) && ((FreeVar) obj).stamp == stamp;
 	}
 
-  private static ThreadLocal<Integer> freshStamp = new ThreadLocal<Integer>() {
-    @Override
-    protected Integer initialValue() {
-      return 1;
-    }
-  };
+	private static ThreadLocal<Integer> freshStamp = new ThreadLocal<Integer>() {
+		@Override
+		protected Integer initialValue() {
+			return 1;
+		}
+	};
 
-  private static void resetFreshStamp() {
-    freshStamp.remove();
-  }
-  private static int getFreshStampInc() {
-    int result = freshStamp.get();
-    freshStamp.set(result+1);
-    return result;
-  }
+	private static void resetFreshStamp() {
+		freshStamp.remove();
+	}
+	private static int getFreshStampInc() {
+		int result = freshStamp.get();
+		freshStamp.set(result+1);
+		return result;
+	}
 
 	public static FreeVar fresh(String s, Term t) {
 		FreeVar newV = new FreeVar(s, t, getFreshStampInc());
@@ -52,6 +53,7 @@ public class FreeVar extends Atom {
 		return newV;
 	}
 
+	@Override
 	public String toString() {
 		if (stamp == 0)
 			return getName();
@@ -60,13 +62,15 @@ public class FreeVar extends Atom {
 	}
 
 	public int getStamp() { return stamp; }
-	
+
+	@Override
 	int getOrder() { return 0; }
 	boolean isNonPatFreeVarApp(Term other) { return other.isNonPatFreeVarApp(); }
 
 	/** performs a unification, or fails throwing exception, then calls instanceHelper
 	 * to continue.  The current substitution is applied lazily.
 	 */
+	@Override
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		// substitute if applicable
 		Term t = current.getMap().get(this);
@@ -102,10 +106,12 @@ public class FreeVar extends Atom {
 		}
 	}
 
+	@Override
 	void unifyFlexApp(FreeVar function, List<? extends Term> arguments, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		throw new RuntimeException("internal invariant violated");
 	}
 
+	@Override
 	void getFreeVariables(Set<FreeVar> s) {
 		s.add(this);
 	}
@@ -133,20 +139,20 @@ public class FreeVar extends Atom {
 			return;
 
 		Term baseType = getBaseType();
-		
+
 		if (!canAppearIn(typeTerm, baseType))
 			return;
-		
+
 		/*FreeVar newVar = null;
 		Term earlierSub = sub.getSubstituted(this);
 		if (earlierSub != null) {
 			newVar = (FreeVar)((Application)earlierSub).getFunction();
 		} else {*/
-			FreeVar newVar = this.freshify();
-			newVar.type = Abstraction.make("extendedTypeArg", typeTerm, type);			
+		FreeVar newVar = this.freshify();
+		newVar.type = Abstraction.make("extendedTypeArg", typeTerm, type);			
 		//}
 		Term appTerm = new Application(newVar, new BoundVar(1));
-    Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
+		Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
 		sub.add(this, appTerm);
 	}
 
@@ -154,7 +160,7 @@ public class FreeVar extends Atom {
 	public void bindInFreeVars(List<Term> typeTerms, Substitution sub) {
 		Term earlierSub = sub.getSubstituted(this);
 		int n = typeTerms.size();
-    if (earlierSub != null || n == 0)
+		if (earlierSub != null || n == 0)
 			return;
 
 		// compute the new type
@@ -162,73 +168,73 @@ public class FreeVar extends Atom {
 		Term newVarType = type;
 		List<Term> bVarList = new ArrayList<Term>();
 		for (int i=n-1; i >= 0; --i) {
-		  Term typeTerm = typeTerms.get(i);
-      if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
-        continue;
-      newVarType = Abstraction.make("extendedTypeArg", typeTerm, newVarType);
-      bVarList.add(new BoundVar(n-i));
+			Term typeTerm = typeTerms.get(i);
+			if (!canAppearIn(typeTerm.baseTypeFamily(), baseType))
+				continue;
+			newVarType = Abstraction.make("extendedTypeArg", typeTerm, newVarType);
+			bVarList.add(new BoundVar(n-i));
 		}
-		
+
 		if (bVarList.size() == 0)
 			return;
 
 		Collections.reverse(bVarList);
-		
+
 		// create a fresh free variable
 		FreeVar newVar = this.freshify();
 		newVar.type = newVarType;		
-    Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
+		Util.debug("newVar2 ",newVar," for ",this, " : ", type, ", has type ",newVar.type);
 
 		// add new bound variables and fill in substitution
 		Term appTerm = Facade.App(newVar, bVarList);
 		List<Pair<String,Term>> varBindings = new ArrayList<Pair<String,Term>>();
 		for (Term ty : typeTerms) {
-		  varBindings.add(new Pair<String,Term>("_",ty));
+			varBindings.add(new Pair<String,Term>("_",ty));
 		}
 		Util.verify(type.equals(appTerm.getType(varBindings)), "replacement has wrong type");
 		sub.add(this, appTerm);
 	}
-	
+
 	public static boolean canAppearIn(Term term1, Term term2) {
 		debug("testing if ", term1, " can appear in ", term2);
 		return getAppearsIn().contains(term1, term2);
 	}
-	
+
 	public static void setAppearsIn(Term term1, Term term2) {
 		getAppearsIn().put(term1, term2);
 	}
 
 	public static Relation<Term,Term> getAppearsIn() {
-    return appearsIn.get();
-  }
-  private static void resetAppearsIn() {
-    FreeVar.appearsIn.remove();
-  }
+		return appearsIn.get();
+	}
+	private static void resetAppearsIn() {
+		FreeVar.appearsIn.remove();
+	}
 
-  private static ThreadLocal<Relation<Term,Term>> appearsIn = new ThreadLocal<Relation<Term,Term>>() {
-    @Override
-    protected Relation<Term, Term> initialValue() {
-      return new TransitiveRelation<Term>(false);
-    }    
-  };
+	private static ThreadLocal<Relation<Term,Term>> appearsIn = new ThreadLocal<Relation<Term,Term>>() {
+		@Override
+		protected Relation<Term, Term> initialValue() {
+			return new TransitiveRelation<Term>(false);
+		}    
+	};
 
-  public static void printSubordination() {
-    Relation<Term,Term> rel = appearsIn.get();
-    for (Pair<Term,Term> p : rel) {
-      System.out.println(p.first + " < " + p.second);
-    }
-  }
-  
+	public static void printSubordination() {
+		Relation<Term,Term> rel = appearsIn.get();
+		for (Pair<Term,Term> p : rel) {
+			System.out.println(p.first + " < " + p.second);
+		}
+	}
+
 	public static void reinit() {
-	  resetFreshStamp();
+		resetFreshStamp();
 		resetAppearsIn();
 	}
-	
+
 	public static void computeAppearsInClosure() {
 		// already done while adding!
 		// TODO: eliminate this function
 	}
-	
+
 	@Override
 	public FreeVar getEtaEquivFreeVar() {
 		return this;

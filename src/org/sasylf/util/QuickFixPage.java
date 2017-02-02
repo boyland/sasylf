@@ -75,558 +75,583 @@ import org.sasylf.Activator;
  */
 public class QuickFixPage extends WizardPage {
 
-  private Map<?,?> resolutions;
+	private Map<?,?> resolutions;
 
-  private TableViewer resolutionsList;
-  private CheckboxTableViewer markersTable;
-  private IWorkbenchPartSite site;
-  private final IMarker[] selectedMarkers;
+	private TableViewer resolutionsList;
+	private CheckboxTableViewer markersTable;
+	private IWorkbenchPartSite site;
+	private final IMarker[] selectedMarkers;
 
 
-  /**
-   * Create a new instance of the receiver.
-   * 
-   * @param problemDescription the description of the problem being fixed
-   * @param selectedMarkers the selected markers
-   * @param resolutions {@link Map} with key of {@link IMarkerResolution} and value of
-   *            {@link Collection} of {@link IMarker}
-   * @param site The IWorkbenchPartSite to show markers
-   */
-  public QuickFixPage(String problemDescription, IMarker[] selectedMarkers, Map<?,?> resolutions,
-      IWorkbenchPartSite site) {
-    super(problemDescription);
-    this.selectedMarkers= selectedMarkers;
-    this.resolutions = resolutions;
-    this.site = site;
-    setTitle("Quick Fix");
-    setMessage(problemDescription);
-  }
+	/**
+	 * Create a new instance of the receiver.
+	 * 
+	 * @param problemDescription the description of the problem being fixed
+	 * @param selectedMarkers the selected markers
+	 * @param resolutions {@link Map} with key of {@link IMarkerResolution} and value of
+	 *            {@link Collection} of {@link IMarker}
+	 * @param site The IWorkbenchPartSite to show markers
+	 */
+	public QuickFixPage(String problemDescription, IMarker[] selectedMarkers, Map<?,?> resolutions,
+			IWorkbenchPartSite site) {
+		super(problemDescription);
+		this.selectedMarkers= selectedMarkers;
+		this.resolutions = resolutions;
+		this.site = site;
+		setTitle("Quick Fix");
+		setMessage(problemDescription);
+	}
 
-  public void createControl(Composite parent) {
+	@Override
+	public void createControl(Composite parent) {
 
-    initializeDialogUnits(parent);
+		initializeDialogUnits(parent);
 
-    // Create a new composite as there is the title bar separator
-    // to deal with
-    Composite control = new Composite(parent, SWT.NONE);
-    control.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-    setControl(control);
+		// Create a new composite as there is the title bar separator
+		// to deal with
+		Composite control = new Composite(parent, SWT.NONE);
+		control.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		setControl(control);
 
-    /*PlatformUI.getWorkbench().getHelpSystem().setHelp(control,
+		/*PlatformUI.getWorkbench().getHelpSystem().setHelp(control,
         IWorkbenchHelpContextIds.PROBLEMS_VIEW);*/
 
-    FormLayout layout = new FormLayout();
-    layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
-    layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
-    layout.spacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
-    control.setLayout(layout);
-
-    Label resolutionsLabel = new Label(control, SWT.NONE);
-    resolutionsLabel
-        .setText("Select a fix:");
-
-    resolutionsLabel.setLayoutData(new FormData());
-
-    createResolutionsList(control);
-
-    FormData listData = new FormData();
-    listData.top = new FormAttachment(resolutionsLabel, 0);
-    listData.left = new FormAttachment(0);
-    listData.right = new FormAttachment(100, 0);
-    listData.height = convertHeightInCharsToPixels(10);
-    resolutionsList.getControl().setLayoutData(listData);
-
-    Label title = new Label(control, SWT.NONE);
-    title.setText("Problems:");
-    FormData labelData = new FormData();
-    labelData.top = new FormAttachment(resolutionsList.getControl(), 0);
-    labelData.left = new FormAttachment(0);
-    title.setLayoutData(labelData);
-
-    createMarkerTable(control);
-
-    Composite buttons = createTableButtons(control);
-    FormData buttonData = new FormData();
-    buttonData.top = new FormAttachment(title, 0);
-    buttonData.right = new FormAttachment(100);
-    buttonData.height = convertHeightInCharsToPixels(10);
-    buttons.setLayoutData(buttonData);
-
-    FormData tableData = new FormData();
-    tableData.top = new FormAttachment(buttons, 0, SWT.TOP);
-    tableData.left = new FormAttachment(0);
-    tableData.bottom = new FormAttachment(100);
-    tableData.right = new FormAttachment(buttons, 0);
-    tableData.height = convertHeightInCharsToPixels(10);
-    markersTable.getControl().setLayoutData(tableData);
-
-    Dialog.applyDialogFont(control);
-
-    resolutionsList.setSelection(new StructuredSelection(resolutionsList
-        .getElementAt(0)));
-
-    markersTable.setCheckedElements(selectedMarkers);
-    
-    setPageComplete(markersTable.getCheckedElements().length > 0);
-  }
-
-  /**
-   * Create the table buttons for the receiver.
-   * 
-   * @param control
-   * @return {@link Composite}
-   */
-  private Composite createTableButtons(Composite control) {
-
-    Composite buttonComposite = new Composite(control, SWT.NONE);
-    GridLayout layout = new GridLayout();
-    layout.marginWidth = 0;
-    layout.marginHeight = 0;
-    layout.horizontalSpacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
-    layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
-    buttonComposite.setLayout(layout);
-
-    Button selectAll = new Button(buttonComposite, SWT.PUSH);
-    selectAll.setText("Select All");
-    selectAll.setLayoutData(new GridData(SWT.FILL, SWT.NONE, false, false));
-
-    selectAll.addSelectionListener(new SelectionAdapter() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-       */
-      public void widgetSelected(SelectionEvent arg0) {
-        markersTable.setAllChecked(true);
-        setPageComplete(!resolutionsList.getSelection().isEmpty());
-      }
-    });
-
-    Button deselectAll = new Button(buttonComposite, SWT.PUSH);
-    deselectAll.setText("Deselect All");
-    deselectAll
-        .setLayoutData(new GridData(SWT.FILL, SWT.NONE, false, false));
-
-    deselectAll.addSelectionListener(new SelectionAdapter() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-       */
-      public void widgetSelected(SelectionEvent arg0) {
-        markersTable.setAllChecked(false);
-        setPageComplete(false);
-      }
-    });
-
-    return buttonComposite;
-  }
-
-  /**
-   * @param control
-   */
-  private void createResolutionsList(Composite control) {
-    resolutionsList= new TableViewer(control, SWT.BORDER | SWT.SINGLE
-        | SWT.V_SCROLL);
-    resolutionsList.setContentProvider(new IStructuredContentProvider() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
-       */
-      public Object[] getElements(Object inputElement) {
-        return resolutions.keySet().toArray();
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-       */
-      public void dispose() {
-
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer,
-       *      java.lang.Object, java.lang.Object)
-       */
-      public void inputChanged(Viewer viewer, Object oldInput,
-          Object newInput) {
-
-      }
-    });
-
-    resolutionsList.setLabelProvider(new LabelProvider() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-       */
-      public String getText(Object element) {
-        return ((IMarkerResolution) element).getLabel();
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-       * @since 3.7
-       */
-      public Image getImage(Object element) {
-        return element instanceof IMarkerResolution2 ? ((IMarkerResolution2)element).getImage() : null;
-      }
-    });
-
-    resolutionsList.setInput(this);
-
-    resolutionsList.setComparator(new ViewerComparator() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer,
-       *      java.lang.Object, java.lang.Object)
-       */
-      public int compare(Viewer viewer, Object e1, Object e2) {
-        return ((IMarkerResolution) e1).getLabel().compareTo(
-            ((IMarkerResolution)e2).getLabel());
-      }
-    });
-
-    resolutionsList
-        .addSelectionChangedListener(new ISelectionChangedListener() {
-          /*
-           * (non-Javadoc)
-           * 
-           * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-           */
-          public void selectionChanged(SelectionChangedEvent event) {
-            markersTable.refresh();
-            setPageComplete(markersTable.getCheckedElements().length > 0);
-          }
-        });
-  }
-
-  /**
-   * Create the table that shows the markers.
-   * 
-   * @param control
-   */
-  private void createMarkerTable(Composite control) {
-    markersTable = CheckboxTableViewer.newCheckList(control, SWT.BORDER
-        | SWT.V_SCROLL | SWT.SINGLE);
-
-    createTableColumns();
-
-    markersTable.setContentProvider(new IStructuredContentProvider() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-       */
-      public void dispose() {
-
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
-       */
-      public Object[] getElements(Object inputElement) {
-        IMarkerResolution selected = getSelectedResolution();
-        if (selected == null) {
-          return new Object[0];
-        }
-
-        if (resolutions.containsKey(selected)) {
-          return ((Collection<?>) resolutions.get(selected)).toArray();
-        }
-        return EMPTY_MARKER_ARRAY;
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer,
-       *      java.lang.Object, java.lang.Object)
-       */
-      public void inputChanged(Viewer viewer, Object oldInput,
-          Object newInput) {
-
-      }
-    });
-
-    markersTable.setLabelProvider(new ITableLabelProvider() {
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object,
-       *      int)
-       */
-      public Image getColumnImage(Object element, int columnIndex) {
-        if (columnIndex == 0) {
-          String name = "error.png";
-          switch (((IMarker)element).getAttribute(IMarker.SEVERITY, -1)) {
-          default:
-          case IMarker.SEVERITY_ERROR: name = "error.png"; break;
-          case IMarker.SEVERITY_WARNING: name = "warning.png"; break;
-          case IMarker.SEVERITY_INFO: name = "info.png"; break;
-          }
-          File f = new File("icons",name);
-          return Activator.getDefault().getImage(f.getPath());
-        }
-        return null;
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object,
-       *      int)
-       */
-      public String getColumnText(Object element, int columnIndex) {
-        IMarker marker =(IMarker) element;
-        if (columnIndex == 0)
-          return marker.getResource().getName();
-        
-        // Is the location override set?
-        String locationString = marker.getAttribute(IMarker.LOCATION,"");
-        if (locationString.length() > 0) {
-          return locationString;
-        }
-
-        // No override so use line number
-        int lineNumber = marker.getAttribute(IMarker.LINE_NUMBER, -1);
-        String lineNumberString=null;
-        if (lineNumber < 0)
-          lineNumberString = "<unknown>";
-        else
-          lineNumberString = "line " + Integer.toString(lineNumber);
-
-        return lineNumberString;
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-       */
-      public void addListener(ILabelProviderListener listener) {
-        // do nothing
-
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-       */
-      public void dispose() {
-        // do nothing
-
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object,
-       *      java.lang.String)
-       */
-      public boolean isLabelProperty(Object element, String property) {
-        return false;
-      }
-
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-       */
-      public void removeListener(ILabelProviderListener listener) {
-        // do nothing
-
-      }
-    });
-
-    markersTable.addCheckStateListener(new ICheckStateListener() {
-      /*
-       * (non-Javadoc)
-       * 
-       * @see org.eclipse.jface.viewers.ICheckStateListener#checkStateChanged(org.eclipse.jface.viewers.CheckStateChangedEvent)
-       */
-      public void checkStateChanged(CheckStateChangedEvent event) {
-        if (event.getChecked() == true) {
-          setPageComplete(true);
-        } else {
-          setPageComplete(markersTable.getCheckedElements().length > 0);
-        }
-
-      }
-    });
-
-    new OpenAndLinkWithEditorHelper(markersTable) {
-      
-      { setLinkWithEditor(false); }
-
-      protected void activate(ISelection selection) {
-        open(selection, true);
-      }
-
-      /** Not supported*/
-      protected void linkToEditor(ISelection selection) {
-      }
-      
-      protected void open(ISelection selection, boolean activate) {
-        if (selection.isEmpty())
-          return;
-        IMarker marker = (IMarker) ((IStructuredSelection) selection)
-            .getFirstElement();
-        if (marker != null && marker.getResource() instanceof IFile) {
-          try {
-            IDE.openEditor(site.getPage(), marker, activate);
-          } catch (PartInitException e) {
-            MessageDialog.openError(getShell(), "Open Error", e.getLocalizedMessage());
-          }
-        }
-      }
-    };
-    markersTable.setInput(this);
-  }
-
-  /**
-   * Create the table columns for the receiver.
-   */
-  private void createTableColumns() {
-    TableLayout layout = new TableLayout();
-
-    Table table = markersTable.getTable();
-    table.setLayout(layout);
-    table.setLinesVisible(true);
-    table.setHeaderVisible(true);
-
-    layout.addColumnData(new ColumnWeightData(70, true));
-    TableColumn tc = new TableColumn(table, SWT.NONE, 0);
-    tc.setText("Location");
-    layout.addColumnData(new ColumnWeightData(30, true));
-    tc = new TableColumn(table, SWT.NONE, 0);
-    tc.setText("Resource");
-
-  }
-
-  /**
-   * Return the marker being edited.
-   * 
-   * @return IMarker or <code>null</code>
-   */
-  public IMarker getSelectedMarker() {
-    ISelection selection = markersTable.getSelection();
-    if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
-      IStructuredSelection struct = (IStructuredSelection) selection;
-      if (struct.size() == 1)
-        return (IMarker) struct.getFirstElement();
-    }
-    return null;
-  }
-
-  /**
-   * Finish has been pressed.
-   */
-  public void performFinish() {
-
-    final IMarkerResolution resolution = getSelectedResolution();
-    if (resolution == null)
-      return;
-
-    final Object[] checked = markersTable.getCheckedElements();
-    if (checked.length == 0)
-      return;
-
-    if (resolution instanceof WorkbenchMarkerResolution) {
-
-      try {
-        getWizard().getContainer().run(false, true,
-            new IRunnableWithProgress() {
-              /*
-               * (non-Javadoc)
-               * 
-               * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
-               */
-              public void run(IProgressMonitor monitor) {
-                IMarker[] markers = new IMarker[checked.length];
-                System.arraycopy(checked, 0, markers, 0,
-                    checked.length);
-                ((WorkbenchMarkerResolution) resolution).run(
-                    markers, monitor);
-              }
-
-            });
-      } catch (InvocationTargetException e) {
-        StatusManager.getManager().handle(errorFor(e));
-      } catch (InterruptedException e) {
-        StatusManager.getManager().handle(errorFor(e));
-      }
-
-    } else {
-
-      try {
-        getWizard().getContainer().run(false, true,
-            new IRunnableWithProgress() {
-              /*
-               * (non-Javadoc)
-               * 
-               * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
-               */
-              public void run(IProgressMonitor monitor) {
-                monitor
-                    .beginTask("Fixing...",checked.length);
-                for (int i = 0; i < checked.length; i++) {
-                  // Allow paint events and wake up the button
-                  getShell().getDisplay().readAndDispatch();
-                  if (monitor.isCanceled())
-                    return;
-                  IMarker marker = (IMarker) checked[i];
-                  monitor.subTask(marker.getAttribute(IMarker.MESSAGE, "error"));
-                  resolution.run(marker);
-                  monitor.worked(1);
-                }
-              }
-
-            });
-      } catch (InvocationTargetException e) {
-        StatusManager.getManager().handle(errorFor(e));
-      } catch (InterruptedException e) {
-        StatusManager.getManager().handle(errorFor(e));
-      }
-
-    }
-
-  }
-
-  /**
-   * Return the marker resolution that is currently selected/
-   * 
-   * @return IMarkerResolution or <code>null</code> if there is no
-   *         selection.
-   */
-  private IMarkerResolution getSelectedResolution() {
-    ISelection selection = resolutionsList.getSelection();
-    if (!(selection instanceof IStructuredSelection)) {
-      return null;
-    }
-
-    Object first = ((IStructuredSelection) selection).getFirstElement();
-
-    return (IMarkerResolution) first;
-
-  }
-  
-  private static StatusAdapter errorFor(Exception e) {
-    return new StatusAdapter(new Status(IStatus.ERROR, e.getLocalizedMessage(), e.toString()));
-  }
-  
-  private static final IMarker[] EMPTY_MARKER_ARRAY = new IMarker[0];
+		FormLayout layout = new FormLayout();
+		layout.marginHeight = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
+		layout.marginWidth = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+		layout.spacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
+		control.setLayout(layout);
+
+		Label resolutionsLabel = new Label(control, SWT.NONE);
+		resolutionsLabel
+		.setText("Select a fix:");
+
+		resolutionsLabel.setLayoutData(new FormData());
+
+		createResolutionsList(control);
+
+		FormData listData = new FormData();
+		listData.top = new FormAttachment(resolutionsLabel, 0);
+		listData.left = new FormAttachment(0);
+		listData.right = new FormAttachment(100, 0);
+		listData.height = convertHeightInCharsToPixels(10);
+		resolutionsList.getControl().setLayoutData(listData);
+
+		Label title = new Label(control, SWT.NONE);
+		title.setText("Problems:");
+		FormData labelData = new FormData();
+		labelData.top = new FormAttachment(resolutionsList.getControl(), 0);
+		labelData.left = new FormAttachment(0);
+		title.setLayoutData(labelData);
+
+		createMarkerTable(control);
+
+		Composite buttons = createTableButtons(control);
+		FormData buttonData = new FormData();
+		buttonData.top = new FormAttachment(title, 0);
+		buttonData.right = new FormAttachment(100);
+		buttonData.height = convertHeightInCharsToPixels(10);
+		buttons.setLayoutData(buttonData);
+
+		FormData tableData = new FormData();
+		tableData.top = new FormAttachment(buttons, 0, SWT.TOP);
+		tableData.left = new FormAttachment(0);
+		tableData.bottom = new FormAttachment(100);
+		tableData.right = new FormAttachment(buttons, 0);
+		tableData.height = convertHeightInCharsToPixels(10);
+		markersTable.getControl().setLayoutData(tableData);
+
+		Dialog.applyDialogFont(control);
+
+		resolutionsList.setSelection(new StructuredSelection(resolutionsList
+				.getElementAt(0)));
+
+		markersTable.setCheckedElements(selectedMarkers);
+
+		setPageComplete(markersTable.getCheckedElements().length > 0);
+	}
+
+	/**
+	 * Create the table buttons for the receiver.
+	 * 
+	 * @param control
+	 * @return {@link Composite}
+	 */
+	private Composite createTableButtons(Composite control) {
+
+		Composite buttonComposite = new Composite(control, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		layout.horizontalSpacing = convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
+		layout.verticalSpacing = convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING);
+		buttonComposite.setLayout(layout);
+
+		Button selectAll = new Button(buttonComposite, SWT.PUSH);
+		selectAll.setText("Select All");
+		selectAll.setLayoutData(new GridData(SWT.FILL, SWT.NONE, false, false));
+
+		selectAll.addSelectionListener(new SelectionAdapter() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
+			 */
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				markersTable.setAllChecked(true);
+				setPageComplete(!resolutionsList.getSelection().isEmpty());
+			}
+		});
+
+		Button deselectAll = new Button(buttonComposite, SWT.PUSH);
+		deselectAll.setText("Deselect All");
+		deselectAll
+		.setLayoutData(new GridData(SWT.FILL, SWT.NONE, false, false));
+
+		deselectAll.addSelectionListener(new SelectionAdapter() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
+			 */
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				markersTable.setAllChecked(false);
+				setPageComplete(false);
+			}
+		});
+
+		return buttonComposite;
+	}
+
+	/**
+	 * @param control
+	 */
+	private void createResolutionsList(Composite control) {
+		resolutionsList= new TableViewer(control, SWT.BORDER | SWT.SINGLE
+				| SWT.V_SCROLL);
+		resolutionsList.setContentProvider(new IStructuredContentProvider() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
+			 */
+			@Override
+			public Object[] getElements(Object inputElement) {
+				return resolutions.keySet().toArray();
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+			 */
+			@Override
+			public void dispose() {
+
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer,
+			 *      java.lang.Object, java.lang.Object)
+			 */
+			@Override
+			public void inputChanged(Viewer viewer, Object oldInput,
+					Object newInput) {
+
+			}
+		});
+
+		resolutionsList.setLabelProvider(new LabelProvider() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+			 */
+			@Override
+			public String getText(Object element) {
+				return ((IMarkerResolution) element).getLabel();
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+			 * @since 3.7
+			 */
+			@Override
+			public Image getImage(Object element) {
+				return element instanceof IMarkerResolution2 ? ((IMarkerResolution2)element).getImage() : null;
+			}
+		});
+
+		resolutionsList.setInput(this);
+
+		resolutionsList.setComparator(new ViewerComparator() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer,
+			 *      java.lang.Object, java.lang.Object)
+			 */
+			@Override
+			public int compare(Viewer viewer, Object e1, Object e2) {
+				return ((IMarkerResolution) e1).getLabel().compareTo(
+						((IMarkerResolution)e2).getLabel());
+			}
+		});
+
+		resolutionsList
+		.addSelectionChangedListener(new ISelectionChangedListener() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
+			 */
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				markersTable.refresh();
+				setPageComplete(markersTable.getCheckedElements().length > 0);
+			}
+		});
+	}
+
+	/**
+	 * Create the table that shows the markers.
+	 * 
+	 * @param control
+	 */
+	private void createMarkerTable(Composite control) {
+		markersTable = CheckboxTableViewer.newCheckList(control, SWT.BORDER
+				| SWT.V_SCROLL | SWT.SINGLE);
+
+		createTableColumns();
+
+		markersTable.setContentProvider(new IStructuredContentProvider() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+			 */
+			@Override
+			public void dispose() {
+
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
+			 */
+			@Override
+			public Object[] getElements(Object inputElement) {
+				IMarkerResolution selected = getSelectedResolution();
+				if (selected == null) {
+					return new Object[0];
+				}
+
+				if (resolutions.containsKey(selected)) {
+					return ((Collection<?>) resolutions.get(selected)).toArray();
+				}
+				return EMPTY_MARKER_ARRAY;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer,
+			 *      java.lang.Object, java.lang.Object)
+			 */
+			@Override
+			public void inputChanged(Viewer viewer, Object oldInput,
+					Object newInput) {
+
+			}
+		});
+
+		markersTable.setLabelProvider(new ITableLabelProvider() {
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object,
+			 *      int)
+			 */
+			@Override
+			public Image getColumnImage(Object element, int columnIndex) {
+				if (columnIndex == 0) {
+					String name = "error.png";
+					switch (((IMarker)element).getAttribute(IMarker.SEVERITY, -1)) {
+					default:
+					case IMarker.SEVERITY_ERROR: name = "error.png"; break;
+					case IMarker.SEVERITY_WARNING: name = "warning.png"; break;
+					case IMarker.SEVERITY_INFO: name = "info.png"; break;
+					}
+					File f = new File("icons",name);
+					return Activator.getDefault().getImage(f.getPath());
+				}
+				return null;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object,
+			 *      int)
+			 */
+			@Override
+			public String getColumnText(Object element, int columnIndex) {
+				IMarker marker =(IMarker) element;
+				if (columnIndex == 0)
+					return marker.getResource().getName();
+
+				// Is the location override set?
+				String locationString = marker.getAttribute(IMarker.LOCATION,"");
+				if (locationString.length() > 0) {
+					return locationString;
+				}
+
+				// No override so use line number
+				int lineNumber = marker.getAttribute(IMarker.LINE_NUMBER, -1);
+				String lineNumberString=null;
+				if (lineNumber < 0)
+					lineNumberString = "<unknown>";
+				else
+					lineNumberString = "line " + Integer.toString(lineNumber);
+
+				return lineNumberString;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
+			 */
+			@Override
+			public void addListener(ILabelProviderListener listener) {
+				// do nothing
+
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+			 */
+			@Override
+			public void dispose() {
+				// do nothing
+
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object,
+			 *      java.lang.String)
+			 */
+			@Override
+			public boolean isLabelProperty(Object element, String property) {
+				return false;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
+			 */
+			@Override
+			public void removeListener(ILabelProviderListener listener) {
+				// do nothing
+
+			}
+		});
+
+		markersTable.addCheckStateListener(new ICheckStateListener() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.viewers.ICheckStateListener#checkStateChanged(org.eclipse.jface.viewers.CheckStateChangedEvent)
+			 */
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				if (event.getChecked() == true) {
+					setPageComplete(true);
+				} else {
+					setPageComplete(markersTable.getCheckedElements().length > 0);
+				}
+
+			}
+		});
+
+		new OpenAndLinkWithEditorHelper(markersTable) {
+
+			{ setLinkWithEditor(false); }
+
+			@Override
+			protected void activate(ISelection selection) {
+				open(selection, true);
+			}
+
+			/** Not supported*/
+			@Override
+			protected void linkToEditor(ISelection selection) {
+			}
+
+			@Override
+			protected void open(ISelection selection, boolean activate) {
+				if (selection.isEmpty())
+					return;
+				IMarker marker = (IMarker) ((IStructuredSelection) selection)
+						.getFirstElement();
+				if (marker != null && marker.getResource() instanceof IFile) {
+					try {
+						IDE.openEditor(site.getPage(), marker, activate);
+					} catch (PartInitException e) {
+						MessageDialog.openError(getShell(), "Open Error", e.getLocalizedMessage());
+					}
+				}
+			}
+		};
+		markersTable.setInput(this);
+	}
+
+	/**
+	 * Create the table columns for the receiver.
+	 */
+	private void createTableColumns() {
+		TableLayout layout = new TableLayout();
+
+		Table table = markersTable.getTable();
+		table.setLayout(layout);
+		table.setLinesVisible(true);
+		table.setHeaderVisible(true);
+
+		layout.addColumnData(new ColumnWeightData(70, true));
+		TableColumn tc = new TableColumn(table, SWT.NONE, 0);
+		tc.setText("Location");
+		layout.addColumnData(new ColumnWeightData(30, true));
+		tc = new TableColumn(table, SWT.NONE, 0);
+		tc.setText("Resource");
+
+	}
+
+	/**
+	 * Return the marker being edited.
+	 * 
+	 * @return IMarker or <code>null</code>
+	 */
+	public IMarker getSelectedMarker() {
+		ISelection selection = markersTable.getSelection();
+		if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
+			IStructuredSelection struct = (IStructuredSelection) selection;
+			if (struct.size() == 1)
+				return (IMarker) struct.getFirstElement();
+		}
+		return null;
+	}
+
+	/**
+	 * Finish has been pressed.
+	 */
+	public void performFinish() {
+
+		final IMarkerResolution resolution = getSelectedResolution();
+		if (resolution == null)
+			return;
+
+		final Object[] checked = markersTable.getCheckedElements();
+		if (checked.length == 0)
+			return;
+
+		if (resolution instanceof WorkbenchMarkerResolution) {
+
+			try {
+				getWizard().getContainer().run(false, true,
+						new IRunnableWithProgress() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
+					 */
+					@Override
+					public void run(IProgressMonitor monitor) {
+						IMarker[] markers = new IMarker[checked.length];
+						System.arraycopy(checked, 0, markers, 0,
+								checked.length);
+						((WorkbenchMarkerResolution) resolution).run(
+								markers, monitor);
+					}
+
+				});
+			} catch (InvocationTargetException e) {
+				StatusManager.getManager().handle(errorFor(e));
+			} catch (InterruptedException e) {
+				StatusManager.getManager().handle(errorFor(e));
+			}
+
+		} else {
+
+			try {
+				getWizard().getContainer().run(false, true,
+						new IRunnableWithProgress() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
+					 */
+					@Override
+					public void run(IProgressMonitor monitor) {
+						monitor
+						.beginTask("Fixing...",checked.length);
+						for (int i = 0; i < checked.length; i++) {
+							// Allow paint events and wake up the button
+							getShell().getDisplay().readAndDispatch();
+							if (monitor.isCanceled())
+								return;
+							IMarker marker = (IMarker) checked[i];
+							monitor.subTask(marker.getAttribute(IMarker.MESSAGE, "error"));
+							resolution.run(marker);
+							monitor.worked(1);
+						}
+					}
+
+				});
+			} catch (InvocationTargetException e) {
+				StatusManager.getManager().handle(errorFor(e));
+			} catch (InterruptedException e) {
+				StatusManager.getManager().handle(errorFor(e));
+			}
+
+		}
+
+	}
+
+	/**
+	 * Return the marker resolution that is currently selected/
+	 * 
+	 * @return IMarkerResolution or <code>null</code> if there is no
+	 *         selection.
+	 */
+	private IMarkerResolution getSelectedResolution() {
+		ISelection selection = resolutionsList.getSelection();
+		if (!(selection instanceof IStructuredSelection)) {
+			return null;
+		}
+
+		Object first = ((IStructuredSelection) selection).getFirstElement();
+
+		return (IMarkerResolution) first;
+
+	}
+
+	private static StatusAdapter errorFor(Exception e) {
+		return new StatusAdapter(new Status(IStatus.ERROR, e.getLocalizedMessage(), e.toString()));
+	}
+
+	private static final IMarker[] EMPTY_MARKER_ARRAY = new IMarker[0];
 }
 

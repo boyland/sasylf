@@ -7,7 +7,7 @@ import edu.cmu.cs.sasylf.term.Constant;
  */
 public interface ClauseType extends ElementType {
 	public Constant typeTerm();
-	
+
 	/**
 	 * Return whether this type has its inhabitants defined here.
 	 * Case analysis is not permitted on things of abstract 

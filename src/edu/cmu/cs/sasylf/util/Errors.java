@@ -1,16 +1,16 @@
 package edu.cmu.cs.sasylf.util;
 
 public enum Errors {
-  BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
-  BAD_FILE_NAME("Proof file for module must be a legal identifier"),
-  WRONG_PACKAGE ("wrong package"),
-  WRONG_MODULE_NAME ("wrong module name"),
-  WRONG_END,
-  SYNTAX_TERMINAL("A syntax nonterminal should not also be declared as a terminal"),
-  SYNTAX_UNPRODUCTIVE ("Syntax is unproductive.  You need a production that can actually generate a string."),
-  SYNTAX_VARIABLE_MISSING ("No syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
-  SYNTAX_VARIABLE_TWICE ("The same variable may not appear in multiple syntax definitions"),
-  DERIVATION_UNPROVED		("derivation unproved"),
+	BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
+	BAD_FILE_NAME("Proof file for module must be a legal identifier"),
+	WRONG_PACKAGE ("wrong package"),
+	WRONG_MODULE_NAME ("wrong module name"),
+	WRONG_END,
+	SYNTAX_TERMINAL("A syntax nonterminal should not also be declared as a terminal"),
+	SYNTAX_UNPRODUCTIVE ("Syntax is unproductive.  You need a production that can actually generate a string."),
+	SYNTAX_VARIABLE_MISSING ("No syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
+	SYNTAX_VARIABLE_TWICE ("The same variable may not appear in multiple syntax definitions"),
+	DERIVATION_UNPROVED		("derivation unproved"),
 	DERIVATION_SYNTAX ("cannot prove syntax, only judgments"),
 	RULE_NOT_FOUND			("cannot find a rule named "),
 	THEOREM_NOT_FOUND  ("cannot find lemma/theorem named "),
@@ -85,12 +85,12 @@ public enum Errors {
 	WEIRD_ADAPT_ERROR("internal error in adapt"),
 	EXISTS_SYNTAX("'exists' of theorem must be a judgment, not syntax"),
 	MUTUAL_INDUCTION_NO_INDUCTION("mutual induction cannot be used without an inductive argument"),
-  MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
-  MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
-  ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
-  OR_SYNTAX("can only or 'or' with judgments, not syntax"),
-  OR_CASE_NOT_APPLICABLE("derivation under consideration is not a disjunction"),
-  INTERNAL_ERROR("SASyLF Internal Error")
+	MUTUAL_NOT_SUBDERIVATION   ("argument to mutual induction must be a subderivation of theorem induction"),
+	MUTUAL_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
+	ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
+	OR_SYNTAX("can only or 'or' with judgments, not syntax"),
+	OR_CASE_NOT_APPLICABLE("derivation under consideration is not a disjunction"),
+	INTERNAL_ERROR("SASyLF Internal Error")
 	;
 
 	Errors() {
@@ -100,9 +100,9 @@ public enum Errors {
 	Errors(String text) {
 		this.text = text;
 	}
-	
+
 	private String text;
-	
+
 	public String getText() {
 		return text;
 	}

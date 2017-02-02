@@ -8,15 +8,15 @@ import edu.cmu.cs.sasylf.util.Pair;
 public class Constant extends Atom {
 	public static final Constant TYPE = new Constant();
 	public static final Constant UNKNOWN_TYPE = new Constant("UNKNOWN_TYPE", TYPE);
-	
+
 	public Constant(String n, Term type) { super(n); this.type = type; }
 	@Override
 	public Term getType() { return type; }
 
 	private Constant() { super("TYPE"); this.type = this; }
-	
+
 	Term type;
-	
+
 	/** performs a unification, or fails throwing exception, then calls instanceHelper
 	 * to continue.  The current substitution is applied lazily.
 	 */

@@ -15,18 +15,19 @@ abstract public class DerivationWithArgs extends Derivation {
 	}
 
 	public void addArgString(Clause cl) {
-	  argStrings.add(cl);
-	  Location endLocation = cl.getEndLocation();
-	  if (endLocation != null) {
-	    setEndLocation(endLocation);
-	  }
+		argStrings.add(cl);
+		Location endLocation = cl.getEndLocation();
+		if (endLocation != null) {
+			setEndLocation(endLocation);
+		}
 	}
-	
+
 	public List<Clause> getArgStrings() { return argStrings; }
 	public List<Fact> getArgs() { return args; }
 
 	protected abstract String prettyPrintByClause();
 
+	@Override
 	public void prettyPrint(PrintWriter out) {
 		super.prettyPrint(out);
 		out.print(prettyPrintByClause());
@@ -46,41 +47,42 @@ abstract public class DerivationWithArgs extends Derivation {
 		out.println();
 	}
 
+	@Override
 	public void typecheck(Context ctx) {
-    super.typecheck(ctx);
-    
-    args.clear(); // needed for idempotency
-    for (int i = 0; i < argStrings.size(); ++i) {
+		super.typecheck(ctx);
+
+		args.clear(); // needed for idempotency
+		for (int i = 0; i < argStrings.size(); ++i) {
 			Clause c = argStrings.get(i);
-      // remove all (c) parens:
-      while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
-        argStrings.set(i,c = (Clause)c.getElements().get(0));
-      }
-      Fact f = null;
-      // special case for a reference to a derivation 
-      if (c.getElements().size() == 1 && c.getElements().get(0) instanceof NonTerminal) {
-        String s = ((NonTerminal)c.getElements().get(0)).getSymbol();
-        f = ctx.derivationMap.get(s);
-        if (f == null && !ctx.isKnown(s)) {
-          ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
-        }
-        // fall through: handle as a nonterminal
-      }
-      if (f == null) {
-        Element e = c.typecheck(ctx);
-        if (e instanceof Clause) {
-          Clause cl = (Clause)e;
-          if (cl.getElements().size() == 1 && cl.getElements().get(0) instanceof NonTerminal) {
-            e = cl.getElements().get(0);
-          } else {
-            e = cl.computeClause(ctx, false);
-          }
-        }
-        f = e.asFact(ctx, ctx.assumedContext);
-      }
-      if (!ctx.isKnownContext(f.getElement().getRoot())) {
-        ErrorHandler.report(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
-      }
+			// remove all (c) parens:
+			while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
+				argStrings.set(i,c = (Clause)c.getElements().get(0));
+			}
+			Fact f = null;
+			// special case for a reference to a derivation 
+			if (c.getElements().size() == 1 && c.getElements().get(0) instanceof NonTerminal) {
+				String s = ((NonTerminal)c.getElements().get(0)).getSymbol();
+				f = ctx.derivationMap.get(s);
+				if (f == null && !ctx.isKnown(s)) {
+					ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
+				}
+				// fall through: handle as a nonterminal
+			}
+			if (f == null) {
+				Element e = c.typecheck(ctx);
+				if (e instanceof Clause) {
+					Clause cl = (Clause)e;
+					if (cl.getElements().size() == 1 && cl.getElements().get(0) instanceof NonTerminal) {
+						e = cl.getElements().get(0);
+					} else {
+						e = cl.computeClause(ctx, false);
+					}
+				}
+				f = e.asFact(ctx, ctx.assumedContext);
+			}
+			if (!ctx.isKnownContext(f.getElement().getRoot())) {
+				ErrorHandler.report(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
+			}
 			args.add(f);
 		}
 	}
@@ -89,10 +91,10 @@ abstract public class DerivationWithArgs extends Derivation {
 	 */
 	protected Term getAdaptedArg(Context ctx, int i) {
 		Element element = getArgs().get(i).getElement();
-    Term argTerm = ctx.toTerm(element);
-    return argTerm;
+		Term argTerm = ctx.toTerm(element);
+		return argTerm;
 	}
-	
+
 	private List<Clause> argStrings = new ArrayList<Clause>();
 	private List<Fact> args = new ArrayList<Fact>();
 }

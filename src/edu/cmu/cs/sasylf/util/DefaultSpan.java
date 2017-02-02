@@ -2,28 +2,28 @@ package edu.cmu.cs.sasylf.util;
 
 public class DefaultSpan implements Span {
 
-  public DefaultSpan(Location l) {
-    start = end = l;
-  }
+	public DefaultSpan(Location l) {
+		start = end = l;
+	}
 
-  public DefaultSpan(Location l1, Location l2) {
-    start = l1;
-    end = l2;
-  }
-  
-  @Override
-  public Location getLocation() {
-    return start;
-  }
+	public DefaultSpan(Location l1, Location l2) {
+		start = l1;
+		end = l2;
+	}
 
-  @Override
-  public Location getEndLocation() {
-    return end;
-  }
+	@Override
+	public Location getLocation() {
+		return start;
+	}
 
-  public void setEndLocation(Location l) {
-    end = l;
-  }
-  
-  private Location start, end;
+	@Override
+	public Location getEndLocation() {
+		return end;
+	}
+
+	public void setEndLocation(Location l) {
+		end = l;
+	}
+
+	private Location start, end;
 }

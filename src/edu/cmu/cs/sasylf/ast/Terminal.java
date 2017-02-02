@@ -10,14 +10,17 @@ import edu.cmu.cs.sasylf.util.Span;
 
 public class Terminal extends Element implements ElemType {
 	public Terminal(String s, Span sp) { 
-	  super(sp.getLocation()); 
-	  symbol = s; 
-	  super.setEndLocation(sp.getEndLocation());
+		super(sp.getLocation()); 
+		symbol = s; 
+		super.setEndLocation(sp.getEndLocation());
 	}
 
+	@Override
 	public String getName() { return symbol; }
-	
+
+	@Override
 	public int hashCode() { return symbol.hashCode(); }
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (!(obj instanceof Terminal)) return false;
@@ -25,23 +28,28 @@ public class Terminal extends Element implements ElemType {
 		return symbol.equals(t.symbol);
 	}
 
+	@Override
 	public String getTerminalSymbolString() { return getSymbol(); }
 	public String getSymbol() { return symbol; }
-	
+
 	public void setMustQuote() {
-	  mustQuote = true;
+		mustQuote = true;
 	}
-	
+
 	private String symbol;
 	private boolean mustQuote;
 
+	@Override
 	public Symbol getGrmSymbol() {
 		return getTerminalSymbol();
 	}
+	@Override
 	public ElemType getType() { return this; }
-	
+
+	@Override
 	public ElemType getElemType() { return this; }
-	
+
+	@Override
 	public Element typecheck(Context ctx) {
 		return this;
 	}
@@ -56,14 +64,15 @@ public class Terminal extends Element implements ElemType {
 			if (mustQuote) out.print('\"');
 		}
 	}
-	
-	
-	@Override
-  public Fact asFact(Context ctx, Element assumes) {
-    throw new RuntimeException("internal error: can't compute a Fact for a Terminal.");
-  }
 
-  public Term computeTerm(List<Pair<String, Term>> varBindings) {
+
+	@Override
+	public Fact asFact(Context ctx, Element assumes) {
+		throw new RuntimeException("internal error: can't compute a Fact for a Terminal.");
+	}
+
+	@Override
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
 }

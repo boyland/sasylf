@@ -14,7 +14,7 @@ public class AmbiguousSentenceException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = -716076963796923796L;
-	
+
 	private Conflict conflict;
 	private Set<RuleNode> parseTrees;
 
@@ -24,14 +24,14 @@ public class AmbiguousSentenceException extends Exception {
 	public AmbiguousSentenceException(Set<RuleNode> trees) {
 		this.parseTrees = trees;
 	}
-	
+
 	/** An exception thrown when an Automaton encounters a conflict.
 	 * @param c The conflict in question.
 	 */
 	public AmbiguousSentenceException(Conflict c) {
 		conflict = c;
 	}
-	
+
 	/** An exception thrown when the GLR parser finds more than one way to parse
 	 *  a sentence.
 	 */

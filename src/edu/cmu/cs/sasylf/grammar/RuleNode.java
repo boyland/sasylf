@@ -10,7 +10,7 @@ import java.util.List;
 public class RuleNode implements ParseNode {
 	private Rule data;
 	private List<ParseNode> children;
-	
+
 	/**
 	 * @param rule The production rule that this node represents.
 	 * @param nodes The symbols that the rule produces.
@@ -19,14 +19,14 @@ public class RuleNode implements ParseNode {
 		data = rule;
 		children = nodes;
 	}
-	
+
 	/**
 	 * @return the rule this node is based on
 	 */
 	public Rule getRule() {
 		return data;
 	}
-	
+
 	/**
 	 * @return the list of children of this node
 	 */
@@ -38,23 +38,26 @@ public class RuleNode implements ParseNode {
 	 * True if the other object is a RuleNode, the rule is the same, and the list of 
 	 * children is the same
 	 */
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof RuleNode))
 			return false;
 		RuleNode rn = (RuleNode) o;
 		return rn.getRule().equals(getRule()) && rn.getChildren().equals(getChildren());
 	}
-	
+
 	/**
 	 * hashes based on rule.hash + list.hash()
 	 */
+	@Override
 	public int hashCode() {
 		return data.hashCode() + children.hashCode();
 	}	
-	
+
 	/**
 	 * Prints the list of children
 	 */
+	@Override
 	public String toString() {
 		String s = "(";
 		for(ParseNode n: children) {
@@ -63,7 +66,7 @@ public class RuleNode implements ParseNode {
 		s += ")";
 		return s;
 	}
-	
+
 	/**
 	 * Prints the left side of the rule.
 	 */

@@ -5,13 +5,13 @@ import edu.cmu.cs.sasylf.grammar.*;
 
 public class GrmTerminal implements Terminal {
 	public GrmTerminal(String s, Element e) { string = s; element = e; }
-	
+
 	@Override
 	public String toString() { return string; }
 
 	private String string;
 	private Element element;
-	
+
 	@Override
 	public boolean equals(Object s) {
 		return s instanceof GrmTerminal && string.equals(((GrmTerminal)s).string);

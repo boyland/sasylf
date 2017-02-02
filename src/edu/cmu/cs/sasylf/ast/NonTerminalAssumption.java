@@ -12,27 +12,27 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	public NonTerminalAssumption(String n, Location l) {
 		this(new NonTerminal(n, l),null);
 	}
-  public NonTerminalAssumption(String n, Location l, Element assumes) {
-    this(new NonTerminal(n, l),assumes);
-  }
-  public NonTerminalAssumption(NonTerminal nt, Location l, Element assumes) {
-    super(nt.getSymbol(), l, assumes);
-    nonTerminal = nt;
-  }
-  public NonTerminalAssumption(NonTerminal nt, Element assumes) {
-    super(nt.getSymbol(), nt.getLocation(),assumes);
-    nonTerminal = nt;
-  }
+	public NonTerminalAssumption(String n, Location l, Element assumes) {
+		this(new NonTerminal(n, l),assumes);
+	}
+	public NonTerminalAssumption(NonTerminal nt, Location l, Element assumes) {
+		super(nt.getSymbol(), l, assumes);
+		nonTerminal = nt;
+	}
+	public NonTerminalAssumption(NonTerminal nt, Element assumes) {
+		super(nt.getSymbol(), nt.getLocation(),assumes);
+		nonTerminal = nt;
+	}
 	public NonTerminalAssumption(NonTerminal nt) {
 		this(nt,null);
 	}
-	
+
 	public Syntax getSyntax() { return nonTerminal.getType(); }
 	public boolean isTheoremArg() { return isTheoremArg; }
 
 	@Override
 	public void typecheck(Context ctx) {
-    super.typecheck(ctx);
+		super.typecheck(ctx);
 		Element e = nonTerminal.typecheck(ctx);
 		if (e != nonTerminal)
 			ErrorHandler.report("No syntax match for " + getName(), this);
@@ -43,6 +43,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		if (syntax == null)*/
 	}
 
+	@Override
 	public Element getElementBase() { return nonTerminal; }
 
 	private NonTerminal nonTerminal;

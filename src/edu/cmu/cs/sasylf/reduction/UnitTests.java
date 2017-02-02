@@ -4,12 +4,12 @@ import edu.cmu.cs.sasylf.util.SimpleTestSuite;
 
 public class UnitTests extends SimpleTestSuite {
 
-  public UnitTests() { }
+	public UnitTests() { }
 
-  @Override
-  protected void runTests() {
-    // TODO Auto-generated method stub
+	@Override
+	protected void runTests() {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
 }
