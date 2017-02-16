@@ -1,0 +1,47 @@
+package regression;
+
+terminals S contradiction
+
+syntax
+    n ::= 0 | S n
+
+judgment absurd: contradiction
+
+judgment eq: n = n
+
+----- eq
+n = n
+
+
+judgment plus: n + n = n
+
+
+--------- plus-z
+0 + n = n
+
+n1 + n2 = n3
+----------------- plus-s
+S n1 + n2 = S n3
+
+theorem implausible:
+    forall p: S n1 + n2 = n3
+    exists n1 = n3.
+    proof by case analysis on p:
+        case rule
+            p': n3 + n2 = n4
+            ---------------- plus-s
+            _: S n3 + n2 = S n4
+        is
+            proof by rule eq
+        end case
+    end case analysis
+end theorem
+
+theorem impossible:
+    exists contradiction.
+    p011: 0 + S 0 = S 0 by rule plus-z
+    p112: S 0 + S 0 = S S 0 by rule plus-s on p011 
+    e02: 0 = S S 0 by theorem implausible on p112
+    proof by case analysis on e02:
+    end case analysis
+end theorem
