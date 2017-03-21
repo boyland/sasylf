@@ -28,7 +28,7 @@ theorem implausible:
     exists n1 = n3.
     proof by case analysis on p:
         case rule
-            p': n3 + n2 = n4
+            p': n3 + n2 = n4 //!! case too strict
             ---------------- plus-s
             _: S n3 + n2 = S n4
         is

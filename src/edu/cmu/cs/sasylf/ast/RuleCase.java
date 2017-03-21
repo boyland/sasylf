@@ -253,9 +253,16 @@ public class RuleCase extends Case {
 				pairSub = new Substitution(pair.second);
 				debug("\tpair.first was ", pair.first);
 				debug("\tpair.second was ", pairSub);
+				// JTB: It does not seem necessary to selectUnavailable here,
+				// JTB: but it ensures that we don't unnecessarily substitute away
+				// JTB: the user named variables.
 				Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
 				candidate = pair.first.substitute(pairSub); // reorganized and so must re-sub.
-
+				// JTB: alternative that doesn't "selectUnavoidable".  Passes regression tests.
+				//Set<FreeVar> boundInputVars = new HashSet<FreeVar>(ctx.inputVars);
+				//boundInputVars.retainAll(pairSub.getMap().keySet());
+				//candidate = pair.first;
+					
 				Util.debug("case analysis: does ", caseTerm, " generalize ", candidate);
 				Util.debug("\tpair.second is now ", pairSub);
 				Util.debug("bound input vars = " + boundInputVars);
@@ -271,7 +278,7 @@ public class RuleCase extends Case {
 				patternFree.addAll(inputVars);
 				Util.debug("patternFree = ",patternFree);
 
-				Substitution computedSub = caseTerm.unify(candidate);
+				Substitution computedSub = caseTerm.substitute(pairSub).unify(candidate);
 				Set<FreeVar> problems = computedSub.selectUnavoidable(patternFree);
 				if (!problems.isEmpty()) {
 					Util.debug("Candidate = ", candidate);
@@ -285,7 +292,8 @@ public class RuleCase extends Case {
 						Util.debug("  binding ",v," to ",subbed);
 						if (explanation == null) {
 							if (subbed == baseSubbed) {
-								explanation = "Perhaps it uses " + baseSubbed + " where it should use another variable.";
+								explanation = "Perhaps it constrains " + v + " to be a specific form.";
+								// explanation = "Perhaps it uses " + baseSubbed + " where it should use another variable.";
 							} else {
 								explanation = "Perhaps " + baseSubbed + " should be replaced with something that could depend on the variable(s) in the context.";
 							}
