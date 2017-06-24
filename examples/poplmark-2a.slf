@@ -324,7 +324,7 @@ lemma arrow-sub-arrow:
 proof by induction on dsub:
 
 case rule
-	------------------- SA-Refl
+	------------------- SA-Refl //! this case conceals binding of T (warning)
 	d1: * |- T <: T
 is
     deq: T1 -> T2 == T1 -> T2 by rule type-equality

@@ -77,8 +77,9 @@ lemma wrong:
             _: (S n1) * n2 = n3
         is
             proof by case analysis on t':
-                case rule //! rebinding n0
-                    _: n1' * n2 = n0
+                case rule 
+                    _: n1' * n2 = n0 //! rebinding n0
+
                     p': n0 + n2 = n3'
                     ------------------- times-S
                     _: (S n1') * n2 = n3'
