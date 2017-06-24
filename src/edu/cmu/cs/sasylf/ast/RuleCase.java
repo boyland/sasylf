@@ -8,7 +8,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -251,17 +250,18 @@ public class RuleCase extends Case {
 				// fishy variables indicate that at least a warning should be generated and perhaps an error
 				candidate = pair.first.substitute(pairSub); // reorganized and so must re-sub.
 					
-				//Util.tdebug("case analysis: does ", caseTerm, " generalize ", candidate);
+				//tdebug("case analysis: does ", caseTerm, " generalize ", candidate);
 				//Util.tdebug("\tpair.second is now ", pairSub);
 
 				Set<FreeVar> candidateFree = candidate.getFreeVariables();
 				//tdebug("case free = " + caseFree);
 				//tdebug("candidate free = " + candidateFree);
 				
-				// for correctness: we first apply the current substitution and then pairSub
-				// to the case term.  If everything works, we will warn if these substitutions had any effect.
-
-				Term cleanedCaseTerm = caseTerm.substitute(ctx.currentSub).substitute(pairSub);
+				// for correctness: we apply the pairSub
+				// to the case term.  If everything works, we will warn if this substitution had any effect.
+				// (Applying curentSub is a No-Op since this was done earlier.)
+				
+				Term cleanedCaseTerm = caseTerm.substitute(pairSub);
 				// Util.debug("cleaned case term = " + cleanedCaseTerm);
 				Substitution computedSub = cleanedCaseTerm.unify(candidate);
 				// tdebug("computedSub = " + computedSub);
@@ -330,6 +330,7 @@ public class RuleCase extends Case {
 					Set<FreeVar> genVars = computedSub.selectUnavoidable(caseFree);
 					Set<FreeVar> subVars = new HashSet<FreeVar>(caseFree);
 					subVars.retainAll(ctx.currentSub.getMap().keySet());
+					Util.verify(subVars.isEmpty(), "currentSub already applied.");
 					if (!fishy.isEmpty()) {
 						FreeVar first = fishy.iterator().next();
 						Term result = pairSub.getSubstituted(first);
@@ -338,7 +339,7 @@ public class RuleCase extends Case {
 					} else if (!genVars.isEmpty()) {
 						ErrorHandler.warning("The given pattern is overly general, should restrict " + genVars, this.getSpan(),
 								"SASyLF computes the first restriction as " + computedSub.getSubstituted(genVars.iterator().next()));
-					} else if (!subVars.isEmpty()) {
+					} else if (!subVars.isEmpty()) { // won't happen (see above)
 						ErrorHandler.warning("The given pattern uses variables already substituted: " + subVars, this.getSpan());
 					}
 				}
