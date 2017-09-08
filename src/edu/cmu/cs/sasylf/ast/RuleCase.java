@@ -8,10 +8,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
 import edu.cmu.cs.sasylf.term.Facade;
@@ -101,21 +103,8 @@ public class RuleCase extends Case {
 		Application appliedTerm = rule.checkApplication(ctx, premises, conclusion, addedContext, this, true);
 		Term patternConc = Term.wrapWithLambdas(addedContext, appliedTerm.getArguments().get(numPremises));
 
-		// find all free variables NOT bound in the conclusion:
-		Set<FreeVar> newVars = new HashSet<FreeVar>();
-		for (int i=0; i < numPremises; ++i) {
-			newVars.addAll(appliedTerm.getArguments().get(i).getFreeVariables());
-		}
-		newVars.removeAll(appliedTerm.getArguments().get(numPremises).getFreeVariables());
-		// and then make sure that they are not already in use:
-		for (FreeVar v : newVars) {
-			if (ctx.currentSub.getSubstituted(v) != null || ctx.inputVars.contains(v)) {
-				ErrorHandler.report(Errors.INVALID_CASE, "Case should not reuse binding for " + v, this);
-			}
-			if (ctx.derivationMap.containsKey(v.toString())) {
-				ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this.getSpan());
-			}
-		}
+		// We used to find all free variables NOT bound in the conclusion
+		// but it wasn't general enough, so this is handled in the main checker now.
 
 		Relaxation relax = null;
 
@@ -210,14 +199,12 @@ public class RuleCase extends Case {
 
 		// Now create the "unifyingSub"
 		// tdebug("Unifying " + patternConc + " " + adaptedSubjectTerm);
+		Set<FreeVar> RCCvars = patternConc.getFreeVariables();
 		Substitution unifyingSub = null;
 		try {
-			// Don't put patternConc first because this tends to
-			// force the variables in the conclusion to be substituted in favor
-			// of the generated code:
-			//    unifyingSub = patternConc.unify(adaptedSubjectTerm);
-			// Instead, do it the other way around:
+			// JTB: Changed to use selectUnavoidable to prefer user-written variables.
 			unifyingSub = adaptedSubjectTerm.unify(patternConc);
+			unifyingSub.selectUnavoidable(RCCvars);
 		} catch (EOCUnificationFailed uf) {
 			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 					+ "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);     
@@ -232,7 +219,7 @@ public class RuleCase extends Case {
 		if (adaptedSubjectTerm != subjectTerm) {
 			Util.debug("pattern = ",patternConc," adaptedSubject = ",adaptedSubjectTerm);
 		}
-		Util.debug("  unifyingSub = ",unifyingSub);
+		//Util.debug("  unifyingSub = ",unifyingSub);
 
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
@@ -241,56 +228,57 @@ public class RuleCase extends Case {
 		if (caseResult.isEmpty())
 			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
-		Util.debug("caseResult = ",caseResult);
+		//Util.debug("caseResult = ",caseResult);
 
 		// find the computed case that matches the given rule
 		Term caseTerm = Term.wrapWithLambdas(addedContext,canonRuleApp(appliedTerm));
+		Set<FreeVar> caseFree = caseTerm.getFreeVariables();
 		Term computedCaseTerm = null;
 		Term candidate = null;
 		Substitution pairSub = null;
 		for (Pair<Term,Substitution> pair : caseResult)
 			try {
+				boolean generatedError = false;
 				pairSub = new Substitution(pair.second);
-				debug("\tpair.first was ", pair.first);
-				debug("\tpair.second was ", pairSub);
-				// JTB: It does not seem necessary to selectUnavailable here,
-				// JTB: but it ensures that we don't unnecessarily substitute away
-				// JTB: the user named variables.
-				Set<FreeVar> boundInputVars = pairSub.selectUnavoidable(ctx.inputVars);
+				//debug("\tpair.first was ", pair.first);
+				//debug("\tpair.second was ", pairSub);
+				
+				// The case creation already SU(ctx.inputVars),
+				// but we need to SU(RCCvars) because we want to bias the 
+				// substitution to the variables the user chose, not SASyLF
+				// in case there is freedom.
+				Set<FreeVar> fishy = pairSub.selectUnavoidable(RCCvars);
+				// fishy variables indicate that at least a warning should be generated and perhaps an error
 				candidate = pair.first.substitute(pairSub); // reorganized and so must re-sub.
-				// JTB: alternative that doesn't "selectUnavoidable".  Passes regression tests.
-				//Set<FreeVar> boundInputVars = new HashSet<FreeVar>(ctx.inputVars);
-				//boundInputVars.retainAll(pairSub.getMap().keySet());
-				//candidate = pair.first;
 					
-				Util.debug("case analysis: does ", caseTerm, " generalize ", candidate);
-				Util.debug("\tpair.second is now ", pairSub);
-				Util.debug("bound input vars = " + boundInputVars);
+				//Util.tdebug("case analysis: does ", caseTerm, " generalize ", candidate);
+				//Util.tdebug("\tpair.second is now ", pairSub);
 
-				Set<FreeVar> patternFree = candidate.getFreeVariables();
-				debug("pattern free = " + patternFree);
-				//  We have to make sure the user doesn't use an existing
-				//  variable that shouldn't be changed as a new pattern variable.
-				// See bad54.slf
-				Set<FreeVar> inputVars = new HashSet<FreeVar>(ctx.inputVars);
-				inputVars.removeAll(boundInputVars);
-				Util.debug("removing ",boundInputVars);
-				patternFree.addAll(inputVars);
-				Util.debug("patternFree = ",patternFree);
+				Set<FreeVar> candidateFree = candidate.getFreeVariables();
+				//tdebug("case free = " + caseFree);
+				//tdebug("candidate free = " + candidateFree);
+				
+				// for correctness: we first apply the current substitution and then pairSub
+				// to the case term.  If everything works, we will warn if these substitutions had any effect.
 
-				Substitution computedSub = caseTerm.substitute(pairSub).unify(candidate);
-				Set<FreeVar> problems = computedSub.selectUnavoidable(patternFree);
+				Term cleanedCaseTerm = caseTerm.substitute(ctx.currentSub).substitute(pairSub);
+				// Util.debug("cleaned case term = " + cleanedCaseTerm);
+				Substitution computedSub = cleanedCaseTerm.unify(candidate);
+				// tdebug("computedSub = " + computedSub);
+				Set<FreeVar> problems = computedSub.selectUnavoidable(candidateFree);
 				if (!problems.isEmpty()) {
 					Util.debug("Candidate = ", candidate);
 					Util.debug("caseTerm = ", caseTerm);
-					Util.debug("computedSUb = ", computedSub);
+					Util.debug("cleaned caseTerm = ", cleanedCaseTerm);
+					Util.debug("computedSub = ", computedSub);
 					Util.debug("problems = ", problems);
+					Util.debug("fishy = " + fishy);
 					String explanation = null;
 					for (FreeVar v : problems) {
 						Term subbed = computedSub.getSubstituted(v);
 						Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
 						Util.debug("  binding ",v," to ",subbed);
-						if (explanation == null) {
+						if (explanation == null && !(v.isGenerated())) {
 							if (subbed == baseSubbed) {
 								explanation = "Perhaps it constrains " + v + " to be a specific form.";
 								// explanation = "Perhaps it uses " + baseSubbed + " where it should use another variable.";
@@ -300,14 +288,61 @@ public class RuleCase extends Case {
 						}
 					}
 					if (explanation == null) {
-						explanation = "The case requires instantiating the following variable(s) that should be free: " + problems;
+						// tdebug("problems: " + problems + " in " + computedSub + " after " + pairSub);
+						FreeVar first = problems.iterator().next();
+						Term subbed = computedSub.getSubstituted(first);
+						Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
+						if (subbed == baseSubbed) {
+							explanation = "Perhaps " + TermPrinter.toString(ctx, subjectRoot, getLocation(), subbed, false) + " should be replaced with a new variable.";
+						} else if (!fishy.isEmpty()) {
+							explanation = "Perhaps " + fishy.iterator().next() + " should be replaced with something that could depend on the variable(s) in the context.";
+						} else {
+							explanation = "Perhaps " + baseSubbed + " should be replaced with something that could depend on the variable(s) in the context.";
+						}
 					}
 					// if we ever decide to have mutually compatible patterns
 					// without a MGU, we will need to change this error into something
 					// more sophisticated
 					ErrorHandler.recoverableError(INVALID_CASE, "Case is overly strict. " + explanation, this.getSpan(),
 							"SASyLF computes that " + problems.iterator().next() + " needs to be " + computedSub.getSubstituted(problems.iterator().next()));
+					generatedError = true;
+				} else {
+					// now check that all fresh variables are actually new
+					// See: bad36, bad54
+					String errorString = null;
+					for (Atom v : computedSub.getMap().keySet()) {
+						if (ctx.inputVars.contains(v)) {
+							errorString = "Case reuses " + v + " when it should use a new variable";
+							break;
+						}
+						if (ctx.derivationMap.containsKey(v.toString())) {
+							ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this.getSpan());
+						}
+					}
+					if (errorString != null) {
+						ErrorHandler.recoverableError(INVALID_CASE,  errorString, this.getSpan());
+						generatedError = true;
+					}
 				}
+				
+				// If no errors so far, see what warnings should be generated:
+				if (!generatedError) {
+					Set<FreeVar> genVars = computedSub.selectUnavoidable(caseFree);
+					Set<FreeVar> subVars = new HashSet<FreeVar>(caseFree);
+					subVars.retainAll(ctx.currentSub.getMap().keySet());
+					if (!fishy.isEmpty()) {
+						FreeVar first = fishy.iterator().next();
+						Term result = pairSub.getSubstituted(first);
+						ErrorHandler.warning("The given pattern is overly general, should restrict " + fishy, this.getSpan(),
+								"SASyLF computes the first restriction as " + first + " -> " + result);
+					} else if (!genVars.isEmpty()) {
+						ErrorHandler.warning("The given pattern is overly general, should restrict " + genVars, this.getSpan(),
+								"SASyLF computes the first restriction as " + computedSub.getSubstituted(genVars.iterator().next()));
+					} else if (!subVars.isEmpty()) {
+						ErrorHandler.warning("The given pattern uses variables already substituted: " + subVars, this.getSpan());
+					}
+				}
+				
 				computedCaseTerm = candidate;
 				verify(caseResult.remove(pair), "internal invariant broken");
 
@@ -339,8 +374,8 @@ public class RuleCase extends Case {
 		}
 
 
-		Util.debug("unifyingSub: ", unifyingSub);
-		Util.debug("pairSub: ", pairSub);
+		//Util.debug("unifyingSub: ", unifyingSub);
+		//Util.debug("pairSub: ", pairSub);
 
 		// can't be done before because it would interfere with checking tests.
 		if (relax != null) {
@@ -360,26 +395,6 @@ public class RuleCase extends Case {
 			}
 		} else {
 			conclusion.addToDerivationMap(ctx);
-		}
-
-		// check whether the pattern is overly general requires that we first
-		// compose the pairSub with the unifyingSub, which sometimes can fail
-		// with a non-pattern substitution.  I probably could figure out how to
-		// see how to avoid this problem, but it's easier simply to give up trying
-		// to check the warning.
-
-		try {
-			pairSub.compose(unifyingSub);
-			Util.debug("Unifed pairSub = ", pairSub);
-			Set<FreeVar> overlyGeneral = pairSub.selectUnavoidable(ctx.inputVars);
-			overlyGeneral.removeAll(adaptSub.getMap().keySet());
-			if (!overlyGeneral.isEmpty()) {
-				ErrorHandler.warning("The given pattern is overly general, should restrict " + overlyGeneral, this.getSpan(),
-						"SASyLF computes the restriction as " + pairSub.getSubstituted(overlyGeneral.iterator().next()));
-			}
-		} catch (UnificationFailed ex) {
-			Util.debug("pairSub unification failed ", ex.term1, " = ", ex.term2, 
-					" while trying to compose ", pairSub, " with ", unifyingSub);
 		}
 
 		// tdebug("current sub = " + ctx.currentSub);

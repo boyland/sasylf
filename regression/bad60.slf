@@ -1,0 +1,13 @@
+terminals S
+syntax
+  n ::= 0 | S n
+
+judgment fake: n + n
+
+n //! syntax, not judgment
+-------- fake-A
+n + n
+
+0 + 0
+-------- fake-B
+n //! syntax not judgment

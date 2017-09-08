@@ -79,7 +79,11 @@ public class Rule extends RuleLike implements CanBeCase {
 		judgment = judge;
 		Map<String, List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
 		conclusion.typecheck(ctx);
-		ClauseUse myConc = (ClauseUse) conclusion.computeClause(ctx, false);
+		Element computed = conclusion.computeClause(ctx, false);
+		if (!(computed instanceof ClauseUse)) {
+			ErrorHandler.report(JUDGMENT_EXPECTED, "Rule conclusion must be a judgment form, not just syntax", computed);				
+		}
+		ClauseUse myConc = (ClauseUse) computed;
 		if (!(myConc.getConstructor().getType() instanceof Judgment))
 			ErrorHandler.report(JUDGMENT_EXPECTED, "Rule conclusion must be a judgment form, not just syntax", myConc);
 
@@ -106,7 +110,11 @@ public class Rule extends RuleLike implements CanBeCase {
 		for (int i = 0; i < premises.size(); ++i) {
 			Clause c = premises.get(i);
 			c.typecheck(ctx);
-			ClauseUse premiseClause = (ClauseUse) c.computeClause(ctx, false);
+			computed = c.computeClause(ctx, false);
+			if (!(computed instanceof ClauseUse)) {
+				ErrorHandler.report(JUDGMENT_EXPECTED, "Rule premise must be a judgment form, not just syntax", computed);				
+			}
+			ClauseUse premiseClause = (ClauseUse) computed;
 			if (!(premiseClause.getConstructor().getType() instanceof Judgment)) {
 				ErrorHandler.report(JUDGMENT_EXPECTED, "Rule premise must be a judgment form, not just syntax", premiseClause);
 			}
