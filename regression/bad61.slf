@@ -31,9 +31,9 @@ lemma test2:
     proof by case analysis on d:
         case rule
             --------------- R //! n1 or n2 or n3 is superfluous
-	    _: n1 ? n2 ? n3
+	        _: n1 ? n2 ? n3
         is
-	    proof by d
+	        proof by d
         end case
     end case analysis
 end lemma

@@ -125,7 +125,22 @@ public class Application extends Term {
 			a.getFreeVariables(s);
 		}
 	}
-
+	
+	@Override
+	protected void getBoundVariables(List<Pair<String, Term>> s) {
+		function.getBoundVariables(s);
+		for (Term a : arguments)
+			a.getBoundVariables(s);
+	}
+	
+	@Override
+	protected Term remakeHelper(List<Pair<String, Term>> varBindings) {
+		List<Term> newArgs = new ArrayList<Term>();
+		for (Term arg : arguments)
+			newArgs.add(arg.remakeHelper(varBindings));
+		return new Application(function, newArgs); // function doesn't have bindings
+	}
+	
 	@Override
 	int getOrder() { return 1 + function.getOrder()/2; }
 
@@ -386,7 +401,7 @@ public class Application extends Term {
 				if (Util.DEBUG && varMatch.equals(otherVarMatch)) {       
 					Util.debug("pointless substitution for ",function," and ",otherVar);
 				}
-				current.add(function, varMatch);
+				current.add((FreeVar)function, varMatch);
 				current.add(otherVar, otherVarMatch);
 
 				unifyHelper(current, worklist);
@@ -513,7 +528,7 @@ public class Application extends Term {
 			converted = Term.wrapWithLambdas(abs, converted);
 			Util.debug("  result = " + converted);
 			Util.debug("fixing up eta long case in pattern unification: ", application.function, " ==> ", converted);
-			current.add(application.getFunction(), converted);
+			current.add((FreeVar)application.getFunction(), converted);
 			unifyHelper(current, worklist);
 			return;
 		}
@@ -675,8 +690,8 @@ public class Application extends Term {
 		// is the function a free variable?  If so, let's try to do elimination of unwanted arguments
 		if (theFunction instanceof FreeVar) {
 			// have we already substituted?  If so, substitute and continue
-			if (sub.getSubstituted(theFunction) != null) {
-				sub.getSubstituted(theFunction).apply(arguments, 0).removeBoundVarsAbove(i, sub);
+			if (sub.getSubstituted((FreeVar)theFunction) != null) {
+				sub.getSubstituted((FreeVar)theFunction).apply(arguments, 0).removeBoundVarsAbove(i, sub);
 				return;
 			}
 
@@ -703,7 +718,7 @@ public class Application extends Term {
 
 				Term newTerm = theFunction.apply(theArguments, 0);
 				newTerm = Term.wrapWithLambdas(newTerm, argTypes);
-				sub.add(function, newTerm);
+				sub.add((FreeVar)function, newTerm);
 			}
 		}
 

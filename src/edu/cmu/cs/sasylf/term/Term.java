@@ -244,7 +244,42 @@ public abstract class Term {
 		getFreeVariables(s);
 		return s;
 	}
+	
+	/** 
+	 * Returns a list of all bound variables found within this term,
+	 * by their (mostly irrelevant) names and types.<br>
+	 * The outermost bound variable is first in the list.
+	 */
+	public final List<Pair<String, Term>> getBoundVariables() {
+		List<Pair<String, Term>> s = new ArrayList<Pair<String, Term>>();
+		getBoundVariables(s);
+		return s;
+	}
+	/** Overridden in Application and Abstraction. */
+	protected void getBoundVariables(List<Pair<String, Term>> s) {}
 
+	
+	/** 
+     * Replaces bound variables in this term with the given ones,
+	 * from the outside in.
+	 * @param varBindings
+	 * @return
+	 * @throws IllegalArgumentException if there aren't enough bindings in 
+	 * the list, too many, or if the new bindings' types don't match the old ones
+	 */
+	public final Term remakeWithBoundVars(List<Pair<String, Term>> varBindings) {
+		List<Pair<String, Term>> myBindings = new ArrayList<Pair<String, Term>>(varBindings);
+		Term out = remakeHelper(myBindings);
+		if (!myBindings.isEmpty())
+			throw new IllegalArgumentException("bindings left over after remake: " + myBindings);
+		return out;
+	}
+	/** Overridden in Application and Abstraction. */
+	protected Term remakeHelper(List<Pair<String, Term>> varBindings) {
+		return this;
+	}
+	
+	
 	public final Term substitute(Substitution s) { return substitute(s, 0); }
 
 	/************ must override the functions below if default behavior does not apply *************/

@@ -29,13 +29,21 @@ import edu.cmu.cs.sasylf.util.Util;
 
 
 public class RuleCase extends Case {
-	public RuleCase(Location l, Location l1, String rn, List<Derivation> ps, Derivation c) {
-		super(l,l1,c.getEndLocation());
+	
+	private Rule rule;
+	private final String ruleName;
+	private final List<Derivation> premises;
+	private final Derivation conclusion;
+	private final List<Pair<Element, Clause>> whereClauses;
+	
+	public RuleCase(Location l, Location l1, Location l2,
+			String rn, List<Derivation> ps, Derivation c, List<Pair<Element, Clause>> wcs) {
+		super(l, l1, l2);
 		conclusion = c;
 		premises = ps;
 		ruleName = rn;
+		whereClauses = wcs;
 	}
-
 	public String getRuleName() { return ruleName; }
 	public Rule getRule() { return rule; }
 	public List<Derivation> getPremises() { return premises; }
@@ -86,6 +94,8 @@ public class RuleCase extends Case {
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
 			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
 		Term subjectTerm = ctx.currentCaseAnalysisElement.asTerm().substitute(ctx.currentSub);
+		Term rcc = conclusion.getClause().asTerm();
+		Term cas = subjectTerm;
 		NonTerminal subjectRoot = ctx.currentCaseAnalysisElement.getRoot();
 		int numPremises = premises.size();
 		Substitution adaptSub = new Substitution();
@@ -374,7 +384,6 @@ public class RuleCase extends Case {
 			// TODO: explain WHY!!!
 		}
 
-
 		//Util.debug("unifyingSub: ", unifyingSub);
 		//Util.debug("pairSub: ", pairSub);
 
@@ -382,7 +391,6 @@ public class RuleCase extends Case {
 		if (relax != null) {
 			ctx.addRelaxation(thisRoot, relax);
 		}
-
 
 		// update the current substitution
 		ctx.composeSub(unifyingSub);
@@ -409,11 +417,10 @@ public class RuleCase extends Case {
 			}
 		}
 
-
+		// verify user-written where clauses
+		WhereClause.checkWhereClauses(whereClauses, ctx, cas, rcc, null, conclusion);
 
 		super.typecheck(ctx, isSubderivation);
-
-
 	}
 
 	/**
@@ -440,10 +447,5 @@ public class RuleCase extends Case {
 		}
 		return app;
 	}
-
-	private Derivation conclusion;
-	private List<Derivation> premises;
-	private String ruleName;
-	private Rule rule;
 }
 

@@ -40,6 +40,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 /**
  * Check SASyLF Proofs
@@ -213,6 +214,7 @@ public class ProofChecker  {
 					e.printStackTrace();
 				}
 			}
+			Util.COMP_WHERE = Preferences.isWhereCompulsory();
 			result = Main.parseAndCheck(mf, res.getName(), id, contents);
 			newProof.setCompilation(result);
 		} catch (SASyLFError e) {

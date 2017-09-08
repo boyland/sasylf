@@ -18,6 +18,10 @@ import edu.cmu.cs.sasylf.util.Util;
  * changed.
  */
 public class Substitution {
+	
+	private Map<FreeVar, Term> varMap = new HashMap<FreeVar, Term>();
+	private Map<FreeVar, Term> unmodifiableMap;
+	
 	public Substitution() { }
 
 	/** var may not be free in term
@@ -25,7 +29,7 @@ public class Substitution {
 	public Substitution(Term term, FreeVar var) {
 		add(var, term);
 	}
-	public Substitution(List<? extends Term> terms, List<? extends Atom> vars) {
+	public Substitution(List<FreeVar> vars, List<? extends Term> terms) {
 		if (terms.size() != vars.size())
 			throw new RuntimeException("implementation error");
 
@@ -45,17 +49,20 @@ public class Substitution {
 		return t1.equals(t2);
 	}
 
-	/** returns true if could avoid all atoms */
-	public boolean avoid(Set<? extends Atom> atoms) {
-		return selectUnavoidable(atoms).isEmpty();
+	/** 
+	 * Returns true if could avoid mapping all given variables.<br>
+	 * NB: This may permanently modify this substitution.
+	 */
+	public boolean avoid(Set<FreeVar> vars) {
+		return selectUnavoidable(vars).isEmpty();
 	}
 
 	/** Modifies the substitution to avoid each of these vars if possible.
 	 * Returns the subset of vars that can't be avoided. */
-	public <T extends Atom> Set<T> selectUnavoidable(Set<T> vars) {
-		Set<T> result = new HashSet<T>();
+	public Set<FreeVar> selectUnavoidable(Set<FreeVar> vars) {
+		Set<FreeVar> result = new HashSet<FreeVar>();
 
-		for (T v : vars) {
+		for (FreeVar v : vars) {
 			Term t = varMap.get(v);
 			if (t != null) {
 				// see if there's an equivalent free variable
@@ -95,10 +102,8 @@ public class Substitution {
 	 * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
 	 * @throws UnificationFailed two binding for the variable failed to unify.
 	 */
-	public void add(Atom atom, Term t) {
-		debug("substituting ", t, " for ", atom, " adding to ", this);
-		if (atom instanceof Constant) throw new RuntimeException("InternaError: substituting constant " + atom);
-		FreeVar var = (FreeVar)atom;
+	public void add(FreeVar var, Term t) {
+		debug("substituting ", t, " for ", var, " adding to ", this);
 
 		// perform the substitution on t
 		Term tSubstituted;
@@ -123,7 +128,7 @@ public class Substitution {
 		// perform substitution on the existing variables
 		if (!varMap.isEmpty()) {
 			Substitution newSub = new Substitution(tSubstituted, var);
-			for (Atom v : varMap.keySet()) {
+			for (FreeVar v : varMap.keySet()) {
 				varMap.put(v, varMap.get(v).substitute(newSub));
 			}
 		}
@@ -138,11 +143,11 @@ public class Substitution {
 		varMap.put(var, tSubstituted);
 	}
 
-	public Term remove(Atom v) {
+	public Term remove(FreeVar v) {
 		return varMap.remove(v);
 	}
 
-	public void removeAll(Collection<? extends Atom> col) {
+	public void removeAll(Collection<FreeVar> col) {
 		varMap.keySet().removeAll(col);
 	}
 
@@ -151,7 +156,7 @@ public class Substitution {
 	 * @param var variable to look up.
 	 * @return null if no substitution
 	 */
-	public Term getSubstituted(Atom var) {
+	public Term getSubstituted(FreeVar var) {
 		return varMap.get(var);
 	}
 
@@ -159,7 +164,7 @@ public class Substitution {
 	 * substitution plus the other substitution.
 	 */
 	public void compose(Substitution other) {
-		for (Atom v : other.varMap.keySet()) {
+		for (FreeVar v : other.varMap.keySet()) {
 			//if (varMap.containsKey(v))
 			//throw new RuntimeException("bad composition: " + this + " and " + other);
 			add(v, other.varMap.get(v));
@@ -169,15 +174,12 @@ public class Substitution {
 	}
 
 	public final void incrFreeDeBruijn(int amount) {
-		for (Atom v: varMap.keySet()) {
+		for (FreeVar v: varMap.keySet()) {
 			varMap.put(v, varMap.get(v).incrFreeDeBruijn(amount));
 		}
 	}
-
-	private Map<Atom, Term> varMap = new HashMap<Atom, Term>();
-	private Map<Atom, Term> unmodifiableMap;
-
-	public Map<Atom, Term> getMap() {
+	
+	public Map<FreeVar, Term> getMap() {
 		if (unmodifiableMap == null)
 			unmodifiableMap = Collections.unmodifiableMap(varMap);
 		return unmodifiableMap;
@@ -200,7 +202,13 @@ public class Substitution {
 
 	@Override
 	public String toString() {
-		return getMap().toString();
+		if (varMap.isEmpty())
+			return "{}";
+		StringBuilder sb = new StringBuilder();
+		sb.append('{');
+		for (FreeVar v : varMap.keySet())
+			sb.append(v + " -> " + varMap.get(v) + ", ");
+		return sb.substring(0, sb.length() - 2) + "}";
 	}
 
 }

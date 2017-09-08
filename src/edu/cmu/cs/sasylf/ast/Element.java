@@ -14,13 +14,16 @@ import edu.cmu.cs.sasylf.util.Pair;
  * Concrete subclasses include Clause, Terminal, NonTerminal, Variable, and Binding
  */
 public abstract class Element extends Node {
+	
+	private Term term;
+	private GrmTerminal terminal;
+
 	public Element(Location l) { super(l); }
 
 	public abstract ElementType getType();
 	public abstract ElemType getElemType();
 	public abstract Symbol getGrmSymbol();
 
-	private GrmTerminal terminal;
 	public final GrmTerminal getTerminalSymbol() {
 		if (terminal == null)
 			terminal = new GrmTerminal(getTerminalSymbolString(), this);
@@ -106,7 +109,11 @@ public abstract class Element extends Node {
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
 		return term;
 	}
-	private Term term;
+	
+	public Term asTerm(List<Pair<String, Term>> varBindings) {
+		term = computeTerm(varBindings);
+		return term;
+	}
 
 	/** For ClauseUse, checks that this is an assumption list and adds
 	 * assumptions to varBindings and assumedVars.  For varBindings we

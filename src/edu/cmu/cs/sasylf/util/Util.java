@@ -8,6 +8,7 @@ public class Util {
 	public static final boolean DEBUG2 = false;
 	public static boolean EXTRA_ERROR_INFO = false;
 	public static boolean VERBOSE = false;
+	public static boolean COMP_WHERE = false;
 
 	public static void debug_parse(Object o) {
 		if (DEBUG_PARSE)

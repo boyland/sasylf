@@ -33,11 +33,12 @@ public class Main {
 		if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
 			System.err.println("usage: sasylf [options] file1.slf ...");
 			System.err.println("Options include:");
-			System.err.println("   --version   print version");
-			System.err.println("   --help      print this message");
-			System.err.println("   --verbose   prints out theorem names as it checks them");
-			System.err.println("   --LF        extra info about LF terms in certain error messages");
-			System.err.println("   --root=dir  use the given directory for package/module checking.");
+			System.err.println("   --version     print version");
+			System.err.println("   --help        print this message");
+			System.err.println("   --compwhere   makes where clauses compulsory (will check them even if not)");
+			System.err.println("   --verbose     prints out theorem names as it checks them");
+			System.err.println("   --LF          extra info about LF terms in certain error messages");
+			System.err.println("   --root=dir    use the given directory for package/module checking.");
 			return;
 		}
 		if (args.length >= 1 && args[0].equals("--version")) {
@@ -47,6 +48,10 @@ public class Main {
 		String dir = null;
 		ModuleFinder mf = null;
 		for (int i = 0; i < args.length; ++i) {
+			if (args[i].equals("--compwhere")) {
+				edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
+				continue;
+			}
 			if (args[i].equals("--LF")) {
 				edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO = true;
 				continue;

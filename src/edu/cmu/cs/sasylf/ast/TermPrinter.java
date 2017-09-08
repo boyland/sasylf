@@ -39,15 +39,24 @@ public class TermPrinter {
 	private final Map<FreeVar,NonTerminal> varMap = new HashMap<FreeVar,NonTerminal>();
 	private final Set<FreeVar> used = new HashSet<FreeVar>();
 	private final Set<String> variableNames = new HashSet<String>();
+	
+	/** whether this TermPrinter creates names for free and bound variables;
+	 *  otherwise grabs the name from the FreeVar or the binding Abstraction **/
+	private final boolean rename;
 
 	public static String toString(Context ctx, Element gamma, Location loc, Term term, boolean asClause) {
 		return new TermPrinter(ctx,gamma,loc).toString(term,asClause);
 	}
 
 	public TermPrinter(Context ctx, Element gamma, Location loc) {
+		this(ctx, gamma, loc, true);
+	}
+	
+	public TermPrinter(Context ctx, Element gamma, Location loc, boolean rename) {
 		this.ctx = ctx;
 		context = rootElement(gamma);
 		location = loc;
+		this.rename = rename;
 		//System.out.println("TermPrinter(context = " + context + ")");
 	}
 
@@ -108,13 +117,21 @@ public class TermPrinter {
 			}
 			String base = ty.toString();
 			Syntax syn = ctx.synMap.get(base);
-			if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) return new NonTerminal(x.toString(),location, syn);
-			for (int i=0; true; ++i) {
-				FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
-				if (ctx.isKnown(base + i)) continue;
-				if (used.contains(v)) continue;
-				used.add(v);
-				NonTerminal result = new NonTerminal(v.toString(),location, syn);
+			if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) 
+				return new NonTerminal(x.toString(),location, syn);
+			if (rename) { // MDA: only rename free variables if the option is enabled
+				for (int i=0; true; ++i) {
+					FreeVar v = new FreeVar(base + i, ((FreeVar) x).getType());
+					if (ctx.isKnown(base + i)) continue;
+					if (used.contains(v)) continue;
+					used.add(v);
+					NonTerminal result = new NonTerminal(v.toString(),location, syn);
+					varMap.put((FreeVar)x, result);
+					return result;
+				}
+			}
+			else {
+				NonTerminal result = new NonTerminal(((FreeVar)x).toString(),location, syn);
 				varMap.put((FreeVar)x, result);
 				return result;
 			}
@@ -144,7 +161,8 @@ public class TermPrinter {
 			if (syn == null) {
 				System.out.println("null syntax for " + ty + " in " + x);
 			}
-			Variable v = new Variable(createVarName(syn,vars),location);
+			Variable v = rename ? new Variable(createVarName(syn,vars),location)
+								: new Variable(abs.varName, location);
 			v.setType(syn);
 			vars.add(v);
 			Element bodyElem = asElement(abs.getBody(),vars);
@@ -178,7 +196,8 @@ public class TermPrinter {
 			if (syn == null) {
 				System.out.println("No syntax for " + ty);
 			}
-			Variable v = new Variable(createVarName(syn,vars),location);
+			Variable v = rename ? new Variable(createVarName(syn,vars),location)
+								: new Variable(abs.varName, location);
 			v.setType(syn);
 			vars.add(v);
 			Term body1 = abs.getBody();
@@ -220,7 +239,8 @@ public class TermPrinter {
 			Abstraction abs = (Abstraction)x;
 			Term ty = abs.varType;
 			Syntax syn = ctx.synMap.get(ty.toString());
-			Variable v = new Variable(createVarName(syn,vars),location);
+			Variable v = rename ? new Variable(createVarName(syn,vars),location)
+								: new Variable(abs.varName, location);
 			v.setType(syn);
 			vars.add(v);
 			Term body1 = abs.getBody();

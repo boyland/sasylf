@@ -273,4 +273,13 @@ public class FreeVar extends Atom {
 			return this;
 		}
 	}
+
+	@Override
+	Term substitute(Substitution s, int varIncrAmount) {
+		Term t = s.getSubstituted(this);
+		if (t != null)
+			return t.incrFreeDeBruijn(varIncrAmount);
+		else
+			return this;
+	}
 }
