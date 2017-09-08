@@ -5,7 +5,7 @@ terminals let skip if then else in
 syntax
   v ::= x
   e ::= 0 | 1 | v | e + e
-  s ::= skip | let x = e in s[x] | s; s | if e then s else s | v := e
+  s ::= skip | let x = e in s[x] | s; s | if e then s else s | v <- e
   p ::= * | p,s
   
   Gamma ::= * | Gamma, x 
@@ -60,7 +60,7 @@ assumes Gamma
     Gamma |- v
     Gamma ||- e
     ------------------ B-Assign
-    Gamma |||- v := e
+    Gamma |||- v <- e
     
 judgment boundp: Gamma |- p
 assumes Gamma

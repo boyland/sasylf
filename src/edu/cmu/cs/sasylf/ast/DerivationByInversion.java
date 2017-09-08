@@ -12,6 +12,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -22,13 +23,19 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInversion extends DerivationWithArgs {
+	
 	private final String ruleName;
 	private final String inputName;
+	private final List<Pair<Element, Clause>> whereClauses =
+						new ArrayList<Pair<Element, Clause>>();
 
-	public DerivationByInversion(String n, Location l, Clause c, String rule, String relation) {
-		super(n,l,c);
+	public DerivationByInversion(String n, Location start, Location end, Clause c,
+			String rule, String relation, List<Pair<Element, Clause>> wcs) {
+		super(n, start, c);
+		setEndLocation(end); // overwrite end location to include entire justification
 		ruleName = rule;
 		inputName = relation;
+		whereClauses.addAll(wcs);
 	}
 
 	@Override
@@ -66,6 +73,11 @@ public class DerivationByInversion extends DerivationWithArgs {
 
 		Term targetTerm = ctx.toTerm(targetClause);
 
+		// build a sigma_u (substitution imposed by this inversion)
+		// starting with the current sigma
+		// sigma_u mappings from CAS variables will need where clauses
+		Substitution su = new Substitution(ctx.currentSub);
+		
 		boolean found_rulel = false;
 
 		// see if each rule, in turn, applies
@@ -102,11 +114,11 @@ public class DerivationByInversion extends DerivationWithArgs {
 				if (iterator.hasNext()) {
 					ErrorHandler.report("Cannot use inversion: two or more instance of '" + ruleName + "' apply.", this);
 				}
-				Term result = ctx.toTerm(getClause());
+				Term result = ctx.toTerm(getClause()); // this is the output of the derivation
 				result = result.substitute(pair.second);
 				Util.debug("  after adapt/subst, result = ", result);
 				Util.debug("inversion gets substitution ",pair.second);
-				ctx.composeSub(pair.second);
+				ctx.composeSub(pair.second); // ctx sub changes from inversion with internal "fresh" rule
 				List<Abstraction> outer = new ArrayList<Abstraction>();
 				Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
 				List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());
@@ -142,11 +154,19 @@ public class DerivationByInversion extends DerivationWithArgs {
 						ClauseUse cu = clauses.get(i);
 						Term mt = ctx.toTerm(cu);
 						Term piece = pieces.get(i).substitute(ctx.currentSub);
+						// ctx sub changes as a result of each checkMatch,
+						// with user-supplied RHS's (as opposed to "fresh" version)
 						if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
 							String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
 							String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
 							ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
 						}
+						
+						// continue building up sigma_u from the user-written premises
+						// avoid mapping user-written variables
+						su.compose(ctx.currentSub);
+						su.avoid(mt.getFreeVariables());
+						
 						// If the derivation has no implicit context, we
 						// skip the context check
 						if (targetClause.isRootedInVar()) {
@@ -173,6 +193,19 @@ public class DerivationByInversion extends DerivationWithArgs {
 		if (!found_rulel) {
 			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
 		}
+
+		// add to sigma_u new mappings from CAS variables to generated terms
+		// (for which the user has not provided their own terms in premises)
+		for (FreeVar v : targetTerm.getFreeVariables()) {
+			if (su.getSubstituted(v) == null) { // favor user-defined mappings
+				Term mapped = ctx.currentSub.getSubstituted(v);
+				if (mapped != null)
+					su.add(v, mapped);
+			}
+		}
+		
+		// verify user-written where clauses
+		WhereClause.checkWhereClauses(whereClauses, ctx, targetTerm, null, su, this);
 
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(targetDerivation)) {

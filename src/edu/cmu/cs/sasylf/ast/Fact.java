@@ -11,6 +11,9 @@ import edu.cmu.cs.sasylf.util.Location;
  * Common superclass of Derivation, SyntaxAssumption, and ClauseAssumption
  */
 public abstract class Fact extends Node {
+	
+	private String name;
+
 	public Fact(String n, Location l) {
 		super(l);
 		name = n;
@@ -18,7 +21,6 @@ public abstract class Fact extends Node {
 			setEndLocation(l.add(n.length()));
 		}
 	}
-	private String name;
 
 	public String getName() { return name; }
 	public abstract Element getElement();

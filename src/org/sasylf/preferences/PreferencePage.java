@@ -45,6 +45,11 @@ implements IWorkbenchPreferencePage {
 						PreferenceConstants.PROOF_FOLDER_NAME,
 						"&Name of root proof folder",
 						getFieldEditorParent()));
+		addField(
+				new BooleanFieldEditor(
+						PreferenceConstants.COMPULSORY_WHERE_CLAUSES,
+						"&Require where clauses",
+						getFieldEditorParent()));
 	}
 
 	/* (non-Javadoc)

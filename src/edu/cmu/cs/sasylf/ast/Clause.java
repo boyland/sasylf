@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.AmbiguousSentenceException;
 import edu.cmu.cs.sasylf.grammar.NotParseableException;
 import edu.cmu.cs.sasylf.grammar.ParseNode;
+import edu.cmu.cs.sasylf.grammar.Rule;
 import edu.cmu.cs.sasylf.grammar.RuleNode;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
@@ -29,6 +30,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
+	
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
 	public Clause(Element e) { 
 		super(e.getLocation()); 
@@ -220,12 +222,20 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	public Element computeClause(Context ctx, boolean inBinding) {
 		return computeClause(ctx, inBinding, ctx.getGrammar());
 	}
-
-	public Element computeClause(Context ctx, boolean inBinding, edu.cmu.cs.sasylf.grammar.Grammar g) {
+	public Element computeClause(Context ctx, boolean inBinding, Rule matchRule) {
+		return computeClause(ctx, inBinding, ctx.getGrammar(), matchRule);
+	}
+	
+	public Element computeClause(Context ctx, boolean inBinding,
+			edu.cmu.cs.sasylf.grammar.Grammar g) {
+		return computeClause(ctx, inBinding, g, null);
+	}
+	public Element computeClause(Context ctx, boolean inBinding,
+			edu.cmu.cs.sasylf.grammar.Grammar g, Rule matchRule) {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
 		if (symList.isEmpty()) return OrClauseUse.makeEmptyOrClause(getLocation());
-		return parseClause(ctx, inBinding, g, symList);
+		return parseClause(ctx, inBinding, g, symList, matchRule);
 	}
 
 	/**
@@ -236,7 +246,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 * @return
 	 */
 	private Element parseClause(Context ctx, boolean inBinding,
-			edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList) {
+			edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList,
+			Rule matchRule) {
 		/*
 		 * JTB: The following section is to implement parsing of "and" and "or" judgments
 		 * without requiring us to change the grammar.
@@ -314,7 +325,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					subClause.elements.add(element);
 				}
 				// using a subClause forces the error to print correctly.
-				Element e = subClause.parseClause(ctx,inBinding,g,sublist);
+				Element e = subClause.parseClause(ctx,inBinding,g,sublist,matchRule);
 				if (e instanceof ClauseUse) {
 					ClauseUse cu = (ClauseUse)e;
 					if (!clauses.isEmpty() && cu.getElements().size() > 0) {
@@ -398,7 +409,26 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					return computeClause(parseTree);
 				}
 			}
-			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " + e.getParseTrees() /*+" with elements " + elemTypes*/, this);
+			
+			// look for unique tree that follows the given rule
+			if (matchRule != null) {
+				String match = matchRule.getLeftSide().toString();
+				RuleNode follows = null;
+				int found = 0;
+				for (RuleNode tree : e.getParseTrees()) {
+					Rule treeRule = tree.getRule();
+					List<Symbol> symbols = treeRule.getRightSide();
+					if (symbols.size() == 1 && symbols.get(0).toString().equals(match)) {
+						follows = tree;
+						found++;
+					}
+				}
+				if (found == 1)
+					return computeClause(follows);
+			}
+			
+			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " +
+				e.getParseTrees() /*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
 		}
 	}

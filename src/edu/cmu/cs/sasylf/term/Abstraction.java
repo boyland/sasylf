@@ -76,6 +76,25 @@ public class Abstraction extends Term {
 		body.getFreeVariables(s);
 		varType.getFreeVariables(s);
 	}
+	
+	@Override
+	protected void getBoundVariables(List<Pair<String, Term>> s) {
+		s.add(new Pair<String, Term>(varName, varType));
+		body.getBoundVariables(s);
+		varType.getBoundVariables(s);
+	}
+
+	@Override
+	protected Term remakeHelper(List<Pair<String, Term>> varBindings) {
+		if (varBindings.isEmpty())
+			throw new IllegalArgumentException("ran out of new bindings on: " + this);
+		Pair<String, Term> nextNew = varBindings.remove(0);
+		if (!nextNew.second.equals(varType))
+			throw new IllegalArgumentException("types don't match, given: " +
+				nextNew.second + " this type: " + varType);
+		return make(nextNew.first, nextNew.second, 
+			body.remakeHelper(varBindings));
+	}
 
 	/** performs a unification, or fails throwing exception, then calls instanceHelper
 	 * to continue.  The current substitution is applied lazily.

@@ -28,7 +28,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		"weakening", "exchange", "contraction", "solve", 
 		"proof", "and", "use", "contradiction",
 		"module", "extends", "provides", "requires", "or", "not", "do",
-		"abstract"
+		"abstract", "where"
 	};
 
 	private static String[] _templates = {

@@ -23,4 +23,9 @@ public class Preferences {
 		IPreferenceStore store = get();
 		return store.getString(PreferenceConstants.PROOF_FOLDER_NAME);
 	}
+	
+	public static boolean isWhereCompulsory() {
+		IPreferenceStore store = get();
+		return store.getBoolean(PreferenceConstants.COMPULSORY_WHERE_CLAUSES);
+	}
 }

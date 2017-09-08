@@ -142,7 +142,7 @@ public class Variable extends Element {
 		}
 
 		if (index == -1) {
-			ErrorHandler.report("Variable " + symbol + " is not bound", this);
+			ErrorHandler.recoverableError("Variable " + symbol + " is not bound", this);
 		}
 
 		return new BoundVar(varBindings.size()-index);

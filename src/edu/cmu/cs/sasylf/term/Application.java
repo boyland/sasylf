@@ -125,7 +125,22 @@ public class Application extends Term {
 			a.getFreeVariables(s);
 		}
 	}
-
+	
+	@Override
+	protected void getBoundVariables(List<Pair<String, Term>> s) {
+		function.getBoundVariables(s);
+		for (Term a : arguments)
+			a.getBoundVariables(s);
+	}
+	
+	@Override
+	protected Term remakeHelper(List<Pair<String, Term>> varBindings) {
+		List<Term> newArgs = new ArrayList<Term>();
+		for (Term arg : arguments)
+			newArgs.add(arg.remakeHelper(varBindings));
+		return new Application(function, newArgs); // function doesn't have bindings
+	}
+	
 	@Override
 	int getOrder() { return 1 + function.getOrder()/2; }
 

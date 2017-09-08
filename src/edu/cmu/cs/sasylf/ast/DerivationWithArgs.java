@@ -9,7 +9,11 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
-abstract public class DerivationWithArgs extends Derivation {
+public abstract class DerivationWithArgs extends Derivation {
+	
+	private List<Clause> argStrings = new ArrayList<Clause>();
+	private List<Fact> args = new ArrayList<Fact>();
+	
 	public DerivationWithArgs(String n, Location l, Clause c) {
 		super(n,l,c);
 	}
@@ -94,7 +98,4 @@ abstract public class DerivationWithArgs extends Derivation {
 		Term argTerm = ctx.toTerm(element);
 		return argTerm;
 	}
-
-	private List<Clause> argStrings = new ArrayList<Clause>();
-	private List<Fact> args = new ArrayList<Fact>();
 }
