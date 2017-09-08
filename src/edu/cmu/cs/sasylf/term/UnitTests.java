@@ -70,7 +70,7 @@ public class UnitTests extends SimpleTestSuite {
 			vars.add(new FreeVar(p.first,p.second.getType(varBindings)));
 			terms.add(p.second);
 		}
-		return new Substitution(terms,vars);
+		return new Substitution(vars,terms);
 	}
 
 	static final Substitution NO_MGU = new Substitution();

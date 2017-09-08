@@ -36,15 +36,6 @@ public abstract class Atom extends Term {
 	}
 
 	@Override
-	Term substitute(Substitution s, int varIncrAmount) {
-		Term t = s.getSubstituted(this);
-		if (t != null)
-			return t.incrFreeDeBruijn(varIncrAmount);
-		else
-			return this;
-	}
-
-	@Override
 	public String toString() {
 		return name;
 	}

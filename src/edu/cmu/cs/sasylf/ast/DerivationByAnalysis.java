@@ -356,7 +356,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 						Substitution sub = missing.second;
 						Substitution revSub = new Substitution();
 						//XXX: Shouldn't this be done using selectUnavoidable ?
-						for (Map.Entry<Atom,Term> e2 : sub.getMap().entrySet()) {
+						for (Map.Entry<FreeVar,Term> e2 : sub.getMap().entrySet()) {
 							if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue()) && ctx.inputVars.contains(e2.getKey())) {
 								// System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
 								revSub.add((FreeVar)e2.getValue(), e2.getKey());

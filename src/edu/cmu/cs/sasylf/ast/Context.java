@@ -244,7 +244,7 @@ public class Context implements Cloneable {
 				problem = true;
 			}
 		}
-		for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
 			if (e.getValue().substitute(currentSub) != e.getValue()) {
 				System.out.println("Internal error: currentSub is not idempotent for " + e.getValue());
 				System.out.println("  " + e.getValue().substitute(currentSub));
@@ -252,7 +252,7 @@ public class Context implements Cloneable {
 			}
 		}
 
-		for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
 			Atom key = e.getKey();
 			if (!(key instanceof FreeVar)) {
 				System.out.println("Internal error: binding a constant " + key + " to " + e.getValue());
@@ -260,7 +260,7 @@ public class Context implements Cloneable {
 			}
 		}
 
-		for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
+		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
 			Set<FreeVar> free = e.getValue().getFreeVariables();
 			if (!inputVars.containsAll(free)) {
 				free.removeAll(inputVars);
@@ -335,7 +335,7 @@ public class Context implements Cloneable {
 		inputVars.removeAll(unavoidableInputVars);
 		currentSub.compose(sub);  // modifies in place
 		Set<FreeVar> newVars = new HashSet<FreeVar>();
-		for (Map.Entry<Atom,Term> e : sub.getMap().entrySet()) {
+		for (Map.Entry<FreeVar,Term> e : sub.getMap().entrySet()) {
 			Set<FreeVar> freeVariables = e.getValue().getFreeVariables();
 			newVars.addAll(freeVariables);
 			if (varFreeNTmap != null && varFreeNTmap.containsKey(e.getKey().toString())) {
@@ -358,8 +358,8 @@ public class Context implements Cloneable {
 	public void removeUnreachableVariables() {
 		boolean changed = false;
 		Substitution newSub = new Substitution();
-		for (Map.Entry<Atom,Term> e : currentSub.getMap().entrySet()) {
-			Atom key = e.getKey();
+		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
+			FreeVar key = e.getKey();
 			if (key instanceof FreeVar) {
 				FreeVar fv = (FreeVar)key;
 				if (fv.getStamp() != 0) {
