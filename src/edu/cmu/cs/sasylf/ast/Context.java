@@ -314,12 +314,20 @@ public class Context implements Cloneable {
 	}
 
 	public boolean canCompose(Substitution sub) {
+		// We have to reject a substitution that changes a relaxation variable to anything but another free variable.
+		// An earlier version of this code permitted it to be substituted with a bound variable,
+		// presumably its own variable, but:
+		// (1) That caused an exception because the relaxation cannot handle the substitution, and
+		// (2) The only rule that can cause the relaxation variable to be replaced
+		//     by a variable is precisely the one that was already done to cause the relaxation
+		// This change moves the bug in good28.slf from an internal error (exception throw)
+		// to an unsound rejection of the matching.  It will be fixed by changing
+		// case analysis to handle the special relation as a special case.
 		if (relaxationVars != null) {
 			for (FreeVar relax : relaxationVars) {
 				Term subbed = sub.getSubstituted(relax);
 				if (subbed == null) continue;
 				Util.debug(relax," -> ",subbed);
-				if (subbed instanceof BoundVar) continue;
 				if (subbed instanceof FreeVar) continue;
 				Util.debug("non-viable substition of ", relax, " with ",subbed);
 				return false;
@@ -459,7 +467,7 @@ public class Context implements Cloneable {
 				if (r.getRelaxationVars().contains(fv)) return r.getResult();
 				Set<FreeVar> container = new HashSet<FreeVar>();
 				r.getFreeVars(container);
-				if (container.contains(fv)) return p.getKey();
+				if (container.contains(fv)) return p.getKey(); // the variable was used in this context.
 			}
 		}
 		return assumedContext;
