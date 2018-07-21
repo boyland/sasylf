@@ -1,0 +1,67 @@
+// relaxation shouldn't ban case anaysis on variables that aren't
+// the one due to being relaxed.
+package regression;
+
+terminals fn contradiction Top
+    
+syntax
+
+  t ::= x | t t | fn x : T => t[x]
+  
+  T ::= T -> T | Top
+  
+  Gamma ::= * | Gamma, x:T
+  
+  
+judgment absurd: contradiction
+    
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    ------------------- T-Var
+    Gamma, x:T |- x:T
+
+    Gamma, x:T1 |- t2[x] : T2
+    --------------------------------------- T-Abs
+    Gamma |- fn x:T1 => t2[x] : T1 -> T2
+
+
+    Gamma |- t1 : T11 -> T12
+    Gamma |- t2 : T11
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T12
+
+
+lemma test:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists contradiction.
+    proof by induction on d:
+        case rule
+            ------------------------- T-Var
+            _: (Gamma', x : T) |- x : T
+        is
+            proof by case analysis on T: //!! should complain about missing cases
+            end case analysis
+        end case
+
+        case rule
+            d1: (Gamma, x : T0) |- t0[x] : T1
+            --------------------------------------------- T-Abs
+            _: Gamma |- (fn x : T0 => t0[x]) : (T0 -> T1)
+        is
+            proof by induction hypothesis on d1
+        end case
+
+        case rule
+            d1: Gamma |- t0 : (T0 -> T)
+            _: Gamma |- t1 : T0
+            ---------------------------------------- T-App
+            _: Gamma |- (t0 t1) : T
+        is
+            proof by induction hypothesis on d1
+        end case
+
+    end induction
+end lemma
+     

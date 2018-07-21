@@ -298,7 +298,7 @@ public class Context implements Cloneable {
 							System.out.println("Internal error: " + s);
 							problem = true;
 						}
-						r.getFreeVars(check);
+						check.addAll(r.getRelaxationVars());
 					}
 				}
 				if (!check.equals(relaxationVars)) {
@@ -347,7 +347,7 @@ public class Context implements Cloneable {
 			for (Map.Entry<NonTerminal, Relaxation> e : relaxationMap.entrySet()) {
 				Relaxation r = e.getValue();
 				r = r.substitute(sub);
-				r.getFreeVars(relaxationVars);
+				relaxationVars.addAll(r.getRelaxationVars());
 				e.setValue(r);
 			}
 		}
