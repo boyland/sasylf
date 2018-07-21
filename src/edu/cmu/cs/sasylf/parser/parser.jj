@@ -86,6 +86,7 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == STRING_LITERAL
 			|| getToken(1).kind == OPERATOR
 			|| getToken(1).kind == COLON
+			|| getToken(1).kind == COLON_EQ
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
 			|| getToken(1).kind == COMMA
@@ -1474,6 +1475,7 @@ Token Operator() :
 	(
 		t=<OPERATOR>
 		| t=<COLON>
+		| t=<COLON_EQ>
 		| t=<SEMICOLON>
 		| t=<MINUS>
 		| t=<COMMA>
