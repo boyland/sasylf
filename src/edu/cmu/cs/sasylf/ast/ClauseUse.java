@@ -146,6 +146,21 @@ public class ClauseUse extends Clause {
 		if (ai < 0) return null;
 		return getElements().get(ai);
 	}
+	
+	/**
+	 * Return the clause use that has an instance of the given nonterminal.
+	 * We only look in "Assumes" locations.
+	 * @param nt an assumed nonterminal
+	 * @return clause that contains the nonterminal, or null if it can't be found
+	 */
+	public ClauseUse getAssumesContaining(NonTerminal nt) {
+		int ai = cons.getAssumeIndex();
+		if (ai < 0) return null;
+		Element e = getElements().get(ai);
+		if (e.equals(nt)) return this;
+		if (e instanceof ClauseUse) return ((ClauseUse)e).getAssumesContaining(nt);
+		return null;
+	}
 
 	/** True iff assumptions environment is rooted in a variable */
 	private NonTerminal root;
