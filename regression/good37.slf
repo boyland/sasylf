@@ -1,0 +1,25 @@
+terminals S z
+
+syntax
+  n ::= z | S n
+
+judgment equal: n = n
+
+   ------- eq
+    n = n
+
+lemma easy : exists n = n'.
+	_: n = n' by rule eq
+end lemma
+
+lemma test1 : exists z = z.
+  a: n = n' by lemma easy
+  proof by case analysis on n: // 
+    case z is
+      proof by rule eq
+    end case
+    case S n'' is
+      proof by rule eq
+    end case
+  end case analysis
+end lemma
