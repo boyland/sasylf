@@ -14,7 +14,6 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Atom;
-import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -363,6 +362,21 @@ public class Context implements Cloneable {
 		inputVars.addAll(newVars);
 	}
 
+	public NonTerminal getCurrentCaseAnalysisRoot() {
+		Term t = this.currentCaseAnalysis;
+		// System.out.println("Finding root for " + t);
+		//TODO: This doesn't work if the element is Gamma |- t : T2 -- not a freevar
+		if (relaxationVars != null && relaxationVars.contains(t)) {
+			// System.out.println("  A relaxation variable!");
+			// System.out.println("Finding root for " + t);
+			for (Map.Entry<NonTerminal,Relaxation> entry : this.relaxationMap.entrySet()) {
+				if (entry.getValue().getRelaxationVars().contains(t)) return entry.getKey();
+			}
+			throw new InternalError("can't find relaxation context");
+		}
+		return this.currentCaseAnalysisElement.getRoot();
+	}
+	
 	public void removeUnreachableVariables() {
 		boolean changed = false;
 		Substitution newSub = new Substitution();
@@ -413,7 +427,7 @@ public class Context implements Cloneable {
 	/**
 	 * Return true if the argument is a relaxation variable for a variable already
 	 * visible inside the scope.  If so, this means this variable cannot refer to
-	 * anything outside the scope.
+	 * anything outside the scope, that is, inside the given nonterminal.
 	 * @param root context nonterminal
 	 * @param fv relaxation variable (should be a member of ctx.relaxationVars)
 	 * @return if the variable is bound already
@@ -425,6 +439,16 @@ public class Context implements Cloneable {
 			root = r.getResult();
 		}
 		return false;
+	}
+	
+	/**
+	 * Return true if the argument is a relaxation variable 
+	 * and so cannot be matched with anything other than the bound variable already in scope.
+	 * @param name name of nonterminal being checked
+	 * @return if the variable is bound already
+	 */
+	public boolean isRelaxationVar(NonTerminal nt) {
+		return relaxationVars != null && relaxationVars.contains(new FreeVar(nt.toString(),null));
 	}
 
 	public List<Term> getRelaxationTypes(FreeVar relaxVar) {

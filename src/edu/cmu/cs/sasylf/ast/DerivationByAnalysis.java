@@ -152,6 +152,9 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				}
 				caseNTRoot = ae.getRoot();
 			}
+			if (caseNTRoot != null && ctx.isRelaxationVar(caseNTRoot)) {
+				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", this);
+			}
 
 			if (savedMap != null) {
 				for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> e : savedMap.entrySet()) {

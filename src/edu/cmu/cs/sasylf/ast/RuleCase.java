@@ -97,7 +97,7 @@ public class RuleCase extends Case {
 		Term subjectTerm = ctx.currentCaseAnalysisElement.asTerm().substitute(ctx.currentSub);
 		Term rcc = conclusion.getClause().asTerm();
 		Term cas = subjectTerm;
-		NonTerminal subjectRoot = ctx.currentCaseAnalysisElement.getRoot();
+		NonTerminal subjectRoot = ctx.getCurrentCaseAnalysisRoot();
 		int numPremises = premises.size();
 		Substitution adaptSub = new Substitution();
 		Term adaptedSubjectTerm = subjectTerm;
@@ -139,14 +139,18 @@ public class RuleCase extends Case {
 			if (!rule.isAssumption()) {
 				ErrorHandler.report("Only assumption rules can change context: " + subjectRoot + " -> " + thisRoot, this);
 			}
-			if (ctx.isKnownContext(thisRoot)) {
-				ErrorHandler.report("Context already in use: " + thisRoot, this);
-			}
 			int diff = patternConc.countLambdas() - subjectTerm.countLambdas();
 			if (diff != rule.isAssumptionSize()) {
 				Util.debug("diff = ", diff, "assumption size = ", rule.isAssumptionSize());
 				ErrorHandler.report("assumption rule should introduce exactly one level of context",this);
 			}
+			
+			// TODO: At this point I'd like to grab the Element that represents the
+			// syntax of the new context, the "G', x : T" that can be relaxed to "G".
+			ClauseUse container = concClause.getAssumesContaining(thisRoot);
+			Util.debug("  relaxation source: " + container);
+			verify(container != null,"no use of " + thisRoot + " in " + concClause + "?");
+
 
 			// we need to make sure the subject pattern has a simple variable where
 			// we are going to have a variable because we need this for the relaxation.
@@ -203,7 +207,15 @@ public class RuleCase extends Case {
 			Util.debug("adaptSub = ", adaptSub);
 
 			// set up relaxation info
-			relax = new Relaxation(newWrappers,relaxVars,subjectRoot);
+			relax = new Relaxation(container,newWrappers,relaxVars,subjectRoot);
+			if (ctx.isKnownContext(thisRoot)) {
+				Relaxation former = ctx.relaxationMap.get(thisRoot);
+				if (former == null)
+					ErrorHandler.report("Context already in use: " + thisRoot, this);
+				else if (!former.equals(relax)) 
+					ErrorHandler.report("Context already in use for a different variable: " + thisRoot, this);
+				relax = null; // don't do a new relaxation
+			}
 			conclusionIsUnsound = true; // not always, but safer this way
 		}
 

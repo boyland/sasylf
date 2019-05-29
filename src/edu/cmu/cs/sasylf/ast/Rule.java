@@ -354,7 +354,7 @@ public class Rule extends RuleLike implements CanBeCase {
 					newTypes.add(a.getArgType());
 				}
 				List<Term> oldTypes = newTypes;
-				if (appVarIndex >= 0) { // if no variables (error, or extension, don't try
+				if (appVarIndex >= 0) { // if no variables (error, or extension), don't try
 					Util.debug("** bare = ", bare, ", appVarIndex = ", appVarIndex);
 					Term wouldBeVar = ((Application)bare).getArguments().get(appVarIndex);
 					if (ctx.relaxationVars != null && ctx.relaxationVars.contains(wouldBeVar)) {
@@ -377,7 +377,10 @@ public class Rule extends RuleLike implements CanBeCase {
 					Term newGoal = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size())));
 					Term pattern = Term.wrapWithLambdas(newGoal.substitute(adaptSub),oldTypes);
 					Util.debug("adaptSub = ", adaptSub);
-					checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
+					Util.debug("  pairs = " + pairs);
+					Util.debug("  adaptedSubject = " + adaptedSubject);
+					Util.debug("  pattern = " + pattern);
+					checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, oldTypes == newTypes? adaptSub : null, source);
 				}
 			} else {
 				Util.debug("no root, so no special assumption rule");
@@ -442,7 +445,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				// We should think this through carefully.
 			}
 			sub.avoid(ctx.inputVars); // try to avoid so we don't unnecessarily replace input vars
-			Util.debug("at check, adaptSub = ",adaptSub);
+			Util.debug("at check, sub = " + sub + ", adaptSub = ",adaptSub);
 			if (!ctx.canCompose(sub)) return;
 			Util.debug("\t added result: ", term, sub);
 			result.add(new Pair<Term,Substitution>(term.substitute(sub),sub));
