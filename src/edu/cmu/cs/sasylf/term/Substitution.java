@@ -13,7 +13,7 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
- * A mutable class of term substitutions, substuting arbitrary terms for variables.
+ * A mutable class of term substitutions, substituting arbitrary terms for variables.
  * An earlier design permitted substitution of constants too, but this is being
  * changed.
  */
