@@ -124,9 +124,9 @@ public class Main {
 				// ignore the error; it has already been reported
 				//e.printStackTrace();
 			} catch (RuntimeException e) {
-				System.err.println("Internal SASyLF error analyzing " + filename + " !");
+				// System.err.println("Internal SASyLF error analyzing " + filename + " !");
 				e.printStackTrace(); // unexpected exception
-				exitCode = -1;
+				ErrorHandler.recoverableError("Internal error: " + e.toString(), null); // "recoverable" = "don't throw"
 			} finally {
 				r.close();
 				int newErrorCount = ErrorHandler.getErrorCount();
