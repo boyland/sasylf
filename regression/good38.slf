@@ -1,0 +1,102 @@
+// testing that pattern matching works for SECOND time on T-VAR rule.
+// good28.slf tests inversion.
+package regression;
+
+terminals fn Top
+    
+syntax
+
+  t ::= x | t t | fn x : T => t[x]
+  
+  T ::= T -> T | Top
+  
+  Gamma ::= * | Gamma, x:T
+  
+  
+judgment type-equal: T == T
+
+    --------- type-eq
+      T == T
+
+    
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+    ------------------- T-Var
+    Gamma, x:T |- x:T
+
+    Gamma, x:T1 |- t2[x] : T2
+    --------------------------------------- T-Abs
+    Gamma |- fn x:T1 => t2[x] : T1 -> T2
+
+
+    Gamma |- t1 : T11 -> T12
+    Gamma |- t2 : T11
+    ---------------------------------- T-App
+    Gamma |- t1 t2 : T12
+
+
+lemma typing-unique:
+    assumes Gamma
+    forall d1: Gamma |- t : T1
+    forall d2: Gamma |- t : T2
+    exists T1 == T2.
+    proof by induction on d1:
+        case rule
+            ------------------------- T-Var
+            _: (Gamma', x : T1) |- x : T1
+        is
+            // use inversion of rule T-Var on d2
+            proof by case analysis on d2:
+                case rule
+                    ------------------------- T-Var
+                    _: (Gamma', x : T1) |- x : T1
+                is
+                    proof by rule type-eq
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1': (Gamma, x : T0) |- t0[x] : T1'
+            --------------------------------------------- T-Abs
+            _: Gamma |- (fn x : T0 => t0[x]) : (T0 -> T1')
+        is
+            proof by case analysis on d2:
+                case rule
+                    d2': (Gamma, x : T0) |- t0[x] : T2'
+                    --------------------------------------------- T-Abs
+                    _: Gamma |- (fn x : T0 => t0[x]) : (T0 -> T2')
+                is
+                    e: T1' == T2' by induction hypothesis on d1', d2'
+                    use inversion of type-eq on e
+                    proof by rule type-eq
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            d1a: Gamma |- t0 : (T1' -> T1)
+            d1b: Gamma |- t1 : T1'
+            ---------------------------------------- T-App
+            _: Gamma |- (t0 t1) : T1
+        is
+            proof by case analysis on d2:
+                case rule
+                    d2a: Gamma |- t0 : (T2' -> T2)
+                    d2b: Gamma |- t1 : T2'
+                    ---------------------------------------- T-App
+                    _: Gamma |- (t0 t1) : T2
+                is
+                    ea: (T1' -> T1) == (T2' -> T2) by induction hypothesis on d1a, d2a
+                    use inversion of type-eq on ea
+                    proof by rule type-eq
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+     
