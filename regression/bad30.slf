@@ -23,7 +23,7 @@ judgment gt: n > n
 lemma gt-impossible:
     forall d: n1 > n2
     exists contradiction.
-    e: n = 0 by rule eq // new variable n out of nowhere
+    e: n = 0 by rule eq //! new variable n out of nowhere
     d': n > n2 by d //! allows n1 to be bound
     proof by case analysis on e:
         case rule

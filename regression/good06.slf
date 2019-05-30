@@ -54,7 +54,7 @@ lemma label-total:
         case t1 t2 is
             l1: Gamma; s n |- t1 -| n1 by induction hypothesis on t1,(s n)
             l2: Gamma; n1 |- t2 -| n2 by induction hypothesis on t2,n1
-            _: Gamma; n0 |- t1 t2 -| n2 by rule L-App on l1,l2
+            _: Gamma; n |- t1 t2 -| n2 by rule L-App on l1,l2
         end case
         
         case fn x => t1[x] is

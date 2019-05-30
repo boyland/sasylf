@@ -42,7 +42,7 @@ theorem impossible:
             -------- eq
             _: 0 = 0
         is
-            proof by rule eq
+            proof by rule eq //! warning about "n" as of 1.4.0
         end case
     end case analysis
     e2: n = S 0 by case analysis on e0:

@@ -101,7 +101,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 						"\nSASyLF computed that the result should be " + explanationString, this);
 			return;
 		}
-
+		// System.out.println("subject = " + subject + ", pattern = " + pattern + ", callSub = " + callSub + ", concFreeVars = " + conclusionFreeVars);
 
 		// We have taken care of most context discarding issues, but
 		// we still need to worry about an implicit syntactic parameter to a rule conclusion
@@ -135,6 +135,17 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					this, "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")");
 		}  
 
+		// See good37.slf
+		Set<FreeVar> poorVars = callSub.selectUnavoidable(subject.getFreeVariables());
+		poorVars.removeAll(ctx.outputVars); // output variables are often not-free
+		if (!poorVars.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
+			for (FreeVar v : poorVars) {
+				sb.append(v + "->" + callSub.getMap().get(v));
+			}
+			ErrorHandler.warning("The result used variables that are not free: " + poorVars, this, sb.toString());
+		}
+		
 		ctx.composeSub(callSub);
 
 		/*

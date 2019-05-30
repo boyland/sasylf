@@ -404,7 +404,7 @@ proof by case analysis on dtv:
             is
                 // even at this point, we don't see a contradiction
                 // so we just go ahead inverting the subtyping relation and using the I.H.
-                d4: T' == T1'' -> T2' and
+                d4: T3 == T1'' -> T2' and
                 d5: * |- T1 <: T1'' and
                 d6: * |- T2' <: T2 by lemma arrow-sub-arrow on dts1
                 use inversion of rule type-equality on d4
