@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -25,11 +26,13 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class Relaxation {
 
+	private final ClauseUse		 context; // e.g. Gamma', x:T
 	private final List<Term>     types;
 	private final List<FreeVar>  values;
 	private final NonTerminal    result;
 
-	public Relaxation(List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
+	public Relaxation(ClauseUse container, List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
+		context = container;
 		types = new ArrayList<Term>();
 		for (Abstraction a : abs) {
 			types.add(a.getArgType());
@@ -41,13 +44,15 @@ public class Relaxation {
 		result = r;
 	}
 
-	private Relaxation(List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
+	private Relaxation(ClauseUse container, List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
+		context = container;
 		types = ts;
 		values = vals;
 		result = r;
 	}
 
-	public Relaxation(List<Pair<String,Term>> ps, FreeVar val, NonTerminal r) {
+	public Relaxation(ClauseUse container, List<Pair<String,Term>> ps, FreeVar val, NonTerminal r) {
+		context = container;
 		types = new ArrayList<Term>(ps.size());
 		values = new ArrayList<FreeVar>(ps.size());
 		result = r;
@@ -127,7 +132,7 @@ public class Relaxation {
 			}
 		}
 		if (changed) {
-			return new Relaxation(newTypes,newValues,result,false);
+			return new Relaxation(context,newTypes,newValues,result,false); // NB: can't substitute in context.
 		}
 		return this;
 	}
@@ -164,6 +169,21 @@ public class Relaxation {
 			}
 		}
 		return null;
+	}
+
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.types,this.values,this.result);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Relaxation)) return false;
+		Relaxation other = (Relaxation)obj;
+		return this.types.equals(other.types) &&
+				this.values.equals(other.values) &&
+				this.result.equals(other.result);
 	}
 
 	@Override

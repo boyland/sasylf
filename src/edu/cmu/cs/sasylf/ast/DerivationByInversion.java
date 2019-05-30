@@ -109,6 +109,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 			if (caseResult.isEmpty()) continue;
 			Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
 			if (rule == rulel) {
+				Util.debug("before inversion: targetTerm = " + targetTerm);
+				Util.debug("inversion: before, sub = " + ctx.currentSub);
 				Util.debug("inversion: caseResult = ", caseResult);
 				Pair<Term,Substitution> pair = iterator.next();
 				if (iterator.hasNext()) {
