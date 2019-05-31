@@ -1,0 +1,26 @@
+package regression;
+
+terminals S fn in
+
+syntax
+  n ::= 0 | S n
+  t ::= x | n | t t | fn x => t[x]
+  G ::= * | G, x
+
+judgment nat-equal: n = n
+
+   ----- nat-eq
+   n = n
+
+judgment var: t in G
+assumes G
+
+   ----------- var
+   x in (G, x)
+
+lemma no-context: 
+  assumes G
+  exists 0 = 0.
+  proof by rule nat-eq
+end lemma
+
