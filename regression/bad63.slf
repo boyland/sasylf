@@ -18,7 +18,7 @@ assumes G
    ----------- var
    x in (G, x)
 
-lemma no-context: 
+lemma no-context: //! assumption irrelevant
   assumes G
   exists 0 = 0.
   proof by rule nat-eq

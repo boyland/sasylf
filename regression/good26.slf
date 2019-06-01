@@ -53,12 +53,14 @@ lemma no-problem:
     _: G, x : Unit |- t[x] = t[x] by rule term-eq
 end lemma
 
-lemma should-be-ok:
+/*
+lemma not-ok-since-G-irrelevant:
     assumes G
     forall t
     exists G, x:Unit |- t = t.
     _: G, x : Unit |- t = t by rule term-eq
 end lemma
+*/
 
 lemma also-harmless:
     assumes G
@@ -74,12 +76,14 @@ lemma no-problem-again:
     _: G, x : Unit |- t[x] = t[x] by lemma eq-reflexive on t
 end lemma
 
-lemma should-be-ok-again:
+/*
+lemma not-ok-since-G-irrelevant-again:
     assumes G
     forall t
     exists G, x:Unit |- t = t.
     _: G, x : Unit |- t = t by lemma eq-reflexive on t
 end lemma
+*/
 
 lemma also-harmless-again:
     assumes G

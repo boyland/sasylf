@@ -235,6 +235,16 @@ public class Theorem extends RuleLike {
 			ctx.currentGoalClause = exists;
 			ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 			ctx.outputVars.removeAll(ctx.inputVars);
+			
+			if (assumes != null) {
+				boolean foundAssumption = false;
+				for (Fact f : foralls) {
+					if (assumes.equals(f.getElement().getRoot())) foundAssumption = true;
+				}
+				if (!foundAssumption) {
+					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
+				}
+			}
 
 			Derivation.typecheck(this, ctx, derivations);
 
