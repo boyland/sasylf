@@ -81,6 +81,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			String explanationString = null;
 			try {
 				Substitution learnAboutErrors = newSubject.unify(pattern);
+				learnAboutErrors.avoid(ctx.inputVars);
 				explanationTerm = learnAboutErrors.getSubstituted(concVar);
 				TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation());
 				explanationString = tp.toString(tp.asElement(explanationTerm));
