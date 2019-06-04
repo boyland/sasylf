@@ -1,6 +1,6 @@
-SASyLF version 1.3.5
+SASyLF version 1.4.0a1
 Copyright (c) 2009 by Jonathan Aldrich
-Additional contributions by John Boyland
+Additional contributions by John Boyland and others
 
 This software is distributed under the Eclipse Public License Version 1.0
 ("EPL"). A copy of the EPL is provided with this distribution and is also
@@ -112,6 +112,8 @@ analysis.  Its use is deprecated.
 
 RELEASE HISTORY
 
+1.4.0	"where" clauses
+    Resolved issues #74, #76, #77, #78
 1.3.4	Plugin improvements
 	Incremental proof checking
 	re-check after revert.
