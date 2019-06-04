@@ -113,7 +113,7 @@ analysis.  Its use is deprecated.
 RELEASE HISTORY
 
 1.4.0	"where" clauses
-    Resolved issues #74, #76, #77, #78
+    Resolved issues #71, #74, #76, #77, #78
 1.3.4	Plugin improvements
 	Incremental proof checking
 	re-check after revert.
