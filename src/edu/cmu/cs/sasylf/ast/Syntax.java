@@ -84,15 +84,36 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return variable;
 	}
 
+	/**
+	 * Find all the places we have variable sin this syntax, and place them in the given var map.
+	 * @param map var map, must not be null.
+	 */
 	public void getVariables(Map<String,Variable> map) {
 		for (Clause c : getClauses()) {
 			if (c == null)
-				System.err.println("null clause in Syntax " + this);
+				ErrorHandler.report("null clause in Syntax " + this, this);
 			c.getVariables(map);
 		}
 	}
 
-	public void typecheck(Context ctx) {
+	/**
+	 * If this syntax could be a variable, declare it and update the variable to point to this.
+	 * Then update the syntax map for nonterminals using this syntax.
+	 * @param varMap variable map, must not be null
+	 * @param synMap syntax map, must not be null
+	 */
+	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,Syntax> synMap) {
+		for (Clause c : getClauses()) {
+			c.computeVarTypes(this, varMap);
+		}
+		synMap.put(getNonTerminal().getSymbol(), this);
+	}
+	
+	public void typecheck(Context ctx, Set<String> declaredTerminals) {
+		if (declaredTerminals.contains(getNonTerminal().getSymbol())) {
+			ErrorHandler.report(Errors.SYNTAX_TERMINAL, this, this.getNonTerminal().getSymbol());
+		}
+		
 		int countVarOnly = 0;
 		for (int i = 0; i < elements.size(); ++i) {
 			Clause c = elements.get(i);
@@ -243,7 +264,8 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return isContext ? contextCaseCount : 0;
 	}
 
-	/** A context case has a recursive reference to the syntax and a variable
+	/** A context case has a recursive reference to the syntax and a variable,
+	 * and no bindings.
 	 */
 	private boolean isContextCase(Clause c) {
 		if (c.getElements().size() < 2) return false; // var only case can match otherwise
@@ -359,12 +381,6 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return false;
 	}
 
-	public void computeVarTypes(Map<String,Variable> varMap) {
-		for (Clause c : getClauses()) {
-			c.computeVarTypes(this, varMap);
-		}	
-	}
-
 	@Override
 	public Constant typeTerm() {
 		if (term == null) {
@@ -388,7 +404,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	}
 	public GrmTerminal getTermSymbol() {
 		if (gt == null)
-			gt = new GrmTerminal("__TERM_FOR_" + nonTerminal.getSymbol(), nonTerminal);
+			gt = new GrmTerminal(getTermSymbolString(), nonTerminal);
 		return gt;
 	}
 }

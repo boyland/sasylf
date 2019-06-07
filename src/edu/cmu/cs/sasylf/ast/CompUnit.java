@@ -88,12 +88,6 @@ public class CompUnit extends Node {
 		return s;
 	}
 
-	public void getVariables(Context ctx) {
-		for (Syntax syn: syntax) {
-			syn.getVariables(ctx.varMap);
-		}
-	}
-
 	/** typechecks this compilation unit, returning true if the check was successful,
 	 * false if there were one or more errors.
 	 */
@@ -102,7 +96,6 @@ public class CompUnit extends Node {
 		int oldCount = ErrorHandler.getErrorCount();
 		Context ctx = new Context(mf,this);
 		try {
-			getVariables(ctx);
 			typecheck(ctx,id);
 		} catch (SASyLFError e) {
 			// ignore the error; it has already been reported
@@ -129,31 +122,36 @@ public class CompUnit extends Node {
 	}
 
 	// TODO: ensures variable names do not include num or prime
-	// computes Syntax type for each variable
-	// computes Syntax for each NonTerminal
-	// converts NonTerminal into Variable where appropriate
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
 	public void typecheck(Context ctx, ModuleId id) {
 		if (id != null) checkFilename(id);
+		
+		// Since syntax can be mutually recursive, we have multiple passes through the syntax
+		
+		// first we find where a name appears inside of the brackets e.g. t[x]
+		// and mark it a variable.
 		for (Syntax syn: syntax) {
-			if (declaredTerminals.contains(syn.getNonTerminal().getSymbol()))
-				ErrorHandler.report(Errors.SYNTAX_TERMINAL, syn, syn.getNonTerminal().getSymbol());
-			syn.computeVarTypes(ctx.varMap);
-			ctx.synMap.put(syn.getNonTerminal().getSymbol(), syn);
+			syn.getVariables(ctx.varMap);
+		}
+		
+		// now we map variables and nonterminals back to their syntax
+		for (Syntax syn: syntax) {
+			syn.updateSyntaxMap(ctx.varMap, ctx.synMap);
 		}
 
+		// Finally, we're ready to check syntax
 		for (Syntax syn: syntax) {
-			syn.typecheck(ctx);
+			syn.typecheck(ctx, declaredTerminals);
 		}
 
-		// check if useless
+		// check if useless (done after type checking)
 		for (Syntax syn : syntax) {
 			if (!syn.isProductive()) {
 				ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, syn);
 			}
 		}
 
-		// check variables are bound in exactly context (two passes)
+		// check variables are bound in exactly one context (two passes)
 		for (Syntax syn : syntax) {
 			syn.registerVarTypes();
 		}
