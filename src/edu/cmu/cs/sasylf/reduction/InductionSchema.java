@@ -10,9 +10,9 @@ import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.NonTerminal;
+import edu.cmu.cs.sasylf.ast.Terminal;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.Pair;
 
 /**
  * A reduction schema; how to permit "recursion" in theorems.
@@ -69,6 +69,7 @@ public abstract class InductionSchema {
 
 	/**
 	 * Create an induction schema signified by the given list.
+	 * If there are multiple elements, it will create a lexicographical order.
 	 * Return null if there is an error.  Error will be reported if
 	 * errorPoint is non-null.
 	 * @param thm context information, must not be null
@@ -95,14 +96,7 @@ public abstract class InductionSchema {
 			return StructuralInduction.create(thm, ((Binding)arg).getNonTerminal().getSymbol(), errorPoint);
 		} else if (arg instanceof Clause) {
 			Clause cl = (Clause)arg;
-			Pair<InductionSchema,Integer> p = parse(thm,cl.getElements(), 0, errorPoint);
-			if (p.first == null) return null;
-			if (p.second != cl.getElements().size()) {
-				ErrorHandler.recoverableError("Cannot parse induction schema starting at " + cl.getElements().get(p.second),
-						errorPoint);
-				return null;
-			}
-			return p.first; 
+			return parse(thm,cl.getElements(), errorPoint);
 		}
 		if (errorPoint != null) {
 			ErrorHandler.recoverableError("Cannot parse induction schema: " + arg, errorPoint);
@@ -110,37 +104,48 @@ public abstract class InductionSchema {
 		return null;    
 	}
 
-	private static Pair<InductionSchema,Integer> parse(Theorem thm, List<Element> parts, int i, Node errorPoint) {
-		if (i == parts.size()) {
-			ErrorHandler.recoverableError("induction description too short", errorPoint);
-			return new Pair<InductionSchema,Integer>(null,i);
+	/**
+	 * Parse a clause that is supposed to refer to an induction schema.
+	 * We use the following grammar:
+	 * <pre>
+	 * l ::= t l | t      // Unordered
+	 * t ::= f SEP t | f  // Lexicographic
+	 * SEP ::= "," | ">"
+	 * </pre> 
+	 * @param thm context information, must not be null
+	 * @param parts elements of the clause
+	 * @param errorPoint place to note errors
+	 * @return induction schema or null (if an error was reported)
+	 */
+	private static InductionSchema parse(Theorem thm, List<Element> parts, Node errorPoint) {
+		if (parts.isEmpty()) {
+			if (errorPoint != null) {
+				ErrorHandler.recoverableError("empty induction description",errorPoint);
+			}
+			return null;
 		}
-		Element e = parts.get(i);
-		InductionSchema result;
-		if (e.toString().equals("{")) {
-			result = Unordered.create();
-			do {
-				Pair<InductionSchema,Integer> p = parse(thm, parts,i+1,errorPoint);
-				if (p.first == null) return p;
-				i = p.second;
-				result = Unordered.create(result,p.first);
-			} while (parts.get(i).toString().equals(","));
-			if (!parts.get(i).toString().equals("}")) {
-				ErrorHandler.recoverableError("induction set missing '}'", errorPoint);
-				return new Pair<InductionSchema,Integer>(null,i);
+		InductionSchema result = null;
+		InductionSchema factor = create(thm,parts.get(0),errorPoint);
+		int i = 1;
+		while (i < parts.size()) {
+			Element e = parts.get(i);
+			if (Terminal.matches(e, ",") || Terminal.matches(e, ">")) {
+				if (++i >= parts.size()) {
+					if (errorPoint != null) {
+						ErrorHandler.recoverableError("induction description too short", errorPoint);
+					}
+					return null;
+				}
+				factor = LexicographicOrder.create(factor,create(thm,parts.get(i),errorPoint));
+			} else {
+				if (result == null) result = factor;
+				else result = Unordered.create(result,factor);
+				factor = create(thm,e,errorPoint);
 			}
 			++i;
-		} else {
-			result = create(thm,e,errorPoint);
-			++i;
 		}
-
-		if (i < parts.size() && parts.get(i).toString().equals(">")) {
-			Pair<InductionSchema,Integer> p = parse(thm,parts,i+1,errorPoint);
-			if (p.first == null) return null;
-			result = LexicographicOrder.create(result,p.first);
-			return new Pair<InductionSchema,Integer>(result,p.second);
-		}
-		return new Pair<InductionSchema,Integer>(result,i);
+		if (result == null) result = factor;
+		else result = Unordered.create(result,factor);
+		return result;
 	}
 }

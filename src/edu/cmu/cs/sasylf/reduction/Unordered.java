@@ -117,10 +117,11 @@ public class Unordered extends InductionSchema {
 		StringBuilder sb = null;
 		if (schemas.size() == 0) return "[none]";
 		for (InductionSchema is : schemas) {
-			if (sb == null) sb = new StringBuilder();
-			else sb.append(", ");
+			if (sb == null) sb = new StringBuilder("(");
+			else sb.append(" ");
 			sb.append(is.describe());
 		}
+		sb.append(")");
 		return sb.toString();
 	}
 

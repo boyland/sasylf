@@ -75,4 +75,14 @@ public class Terminal extends Element implements ElemType {
 	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
+	
+	/**
+	 * Return true if the element is a terminal with the given string
+	 * @param e element to check
+	 * @param s string to match against
+	 * @return whether the element equals a terminal with the given string
+	 */
+	public static boolean matches(Element e, String s) {
+		return e instanceof Terminal && ((Terminal)e).symbol.equals(s);
+	}
 }

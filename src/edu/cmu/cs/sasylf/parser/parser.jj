@@ -80,8 +80,16 @@ public class DSLToolkitParser {
     }
       
 
+    /** True if the next token is almost anything but not
+     * PIPE
+     * LPAREN, RPAREN, LBRACK, RBRACK, DOT,
+     * AND, NOT, OR
+     * other keywords too.
+     * These are the things that can be in the concrete syntax
+     * using in syntax definitions, judgments forms and derivations.
+     */
     boolean isTermNoBAR() {
-		return (getToken(1).kind == IDENTIFIER && getToken(2).kind != ASSIGN)
+		return getToken(1).kind == IDENTIFIER
 	        /* || (getToken(1).kind == DOT && notNL(getToken(2).specialToken)) */
 			|| getToken(1).kind == STRING_LITERAL
 			|| getToken(1).kind == OPERATOR
@@ -90,8 +98,6 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
 			|| getToken(1).kind == COMMA
-			|| getToken(1).kind == LBRACE
-			|| getToken(1).kind == RBRACE
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
@@ -104,21 +110,24 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == REQUIRES
 			|| getToken(1).kind == PROVIDES
 			|| getToken(1).kind == INTEGER_LITERAL;
-			/*|| getToken(1).kind == LBRACE;*/
-    }
+    }    
 
     boolean isTerm() {
     	return isTermNoBAR() || getToken(1).kind == PIPE;  
     }
 
 	boolean notNL(Token tok) {
-		return tok == null || tok.kind != NL && notNL(tok.specialToken);
+		return tok == null || tok.kind != NL && tok.kind != SINGLE_LINE_COMMENT && notNL(tok.specialToken);
 	}
 
+    boolean isTermNoBARNL() {
+        boolean result = isTermNoBAR();
+        return result && notNL(getToken(1).specialToken);
+    }
+  
     boolean isTermNoNL() {
     	boolean result = isTerm();
 		return result && notNL(getToken(1).specialToken);
-			/*|| getToken(1).kind == LBRACE;*/
     }
 
     boolean lParenNoNL() {
@@ -991,12 +1000,9 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACK: "[" >
 | < RBRACK: "]" >
-| < LBRACE: "{" >
-| < RBRACE: "}" >
 | < SEMICOLON: ";" >
 | < MINUS: "-" >
 | < COMMA: "," >
-//| < DOUBLECOLON: "::" >
 | < COLON: ":" >
 | < DOT: "." >
 | < ASSIGN: "::=" >
@@ -1480,8 +1486,6 @@ Token Operator() :
 		| t=<MINUS>
 		| t=<COMMA>
 		| t=<PIPE>
-		| t=<LBRACE>
-		| t=<RBRACE>
 		/* | t=<DOT> */
 	) { return t; }
 }
@@ -1595,7 +1599,7 @@ void Clauses(List<Clause> l) :
 Clause Clause() :
 {Element e; Clause c = null; }
 {
-  ( LOOKAHEAD({ isTermNoBAR() }) e=Term()
+  ( LOOKAHEAD({ isTermNoBARNL() }) e=Term()
     {
 		if (c == null)
 			c = new Clause(e);
@@ -1725,13 +1729,21 @@ Clause SimpleExpr() :
 		c = new Clause(e);
 		c.add(e); 
 	}
-	| t="{" { c = new Clause(new Location(t)); 
-	          c.add(new Terminal("{",new Location(t))); }
-	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <OPERATOR> | <LPAREN>) 
-	   e=Term() { c.add(e); } ) * 
-	  t2="}"
+	/* Deprecated unordered induction schema syntax */
+	| t=<OPERATOR>
+	  {
+	    if (!t.image.equals("{")) {
+	    	ErrorHandler.recoverableError("expected '{', not '" + t.image + "'", new Location(t));
+	    }
+	    c = new Clause(new Location(t)); }
+	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <LPAREN>) 
+	   e=Term() { if (!Terminal.matches(e,",")) c.add(e); } ) * 
+	  t2=<OPERATOR>
 	{
-	     c.add(new Terminal("}",new Location(t2)));
+	  if (!t2.image.equals("}")) {
+	    	ErrorHandler.recoverableError("expected '}', not '" + t2.image + "'", new Location(t2));
+	  }
+	  c.setEndLocation(new Location(t2).add(1));
 	}
   )
   { return c; }

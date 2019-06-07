@@ -94,7 +94,7 @@ public class StructuralInduction extends InductionSchema {
 
 	@Override
 	public String describe() {
-		return "structure on arg #" + argNum;
+		return "arg#" + argNum;
 	}
 
 	@Override
