@@ -58,12 +58,12 @@ t ::= lambda x:T => t[x]
  | t "[" T "]" 
 
 
-/** Here we define the syntax of types */
+/** Here we define the syntax of types (either S or T can be used) */
 
-T ::= X
+S, T ::= X
  | Top
- | T -> T
- | all X <: T => T[X]
+ | S -> T
+ | all X <: S => T[X]
 
 
 /** The form of contexts.  Judgments that use this as a variable
@@ -134,10 +134,10 @@ t2 -> t2'
 
 t2 value
 ------------------------------------- E-AppAbs
-(lambda x:T11 => t12[x]) t2 -> t12[t2]
+(lambda x:S => t12[x]) t2 -> t12[t2]
 
 ------------------------------------------------ E-TappTabs
-(lambda X <: T11 => t12[X]) "[" T2 "]" -> t12[T2]
+(lambda X <: S => t12[X]) "[" T2 "]" -> t12[T2]
 
 
 /** The typing judgment uses a list of assumptions for variable types.
@@ -182,11 +182,8 @@ Gamma |- T2 <: T11
 Gamma |- t1 "[" T2 "]" : T12[T2]
 
 
-// In this rule we use T' rather than S as SASyLF doesn't currently support
-// more than one metavariable per syntactic category.
-
-Gamma |- t : T'
-Gamma |- T' <: T
+Gamma |- t : S
+Gamma |- S <: T
 ---------------- T-Sub
 Gamma |- t : T
 
@@ -195,7 +192,7 @@ Gamma |- t : T
 /** The subtyping judgment
  */
 
-judgment subtyping: Gamma |- T <: T'
+judgment subtyping: Gamma |- T <: S
 assumes Gamma
 
 
@@ -225,10 +222,10 @@ Gamma |- T2 <: T3
 Gamma |- T1 <: T3
 
 
-Gamma |- T1 <: T1'
-Gamma |- T2' <: T2
+Gamma |- T1 <: S1
+Gamma |- S2 <: T2
 ------------------------------- SA-Arrow
-Gamma |- T1' -> T2' <: T1 -> T2
+Gamma |- S1 -> S2 <: T1 -> T2
 
 
 Gamma |- T1 <: T1'
