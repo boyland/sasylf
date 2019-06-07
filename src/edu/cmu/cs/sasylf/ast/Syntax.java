@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -22,6 +23,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Status;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Syntax extends Node implements ClauseType, ElemType {
@@ -49,12 +51,36 @@ public class Syntax extends Node implements ClauseType, ElemType {
 
 	private List<Clause> elements;
 	private NonTerminal nonTerminal;
+	private Set<String> alternates;
 	private Variable variable;
 	private ClauseDef context;
 	private boolean isAbstract;
 
+	/**
+	 * Add an alternate form for a syntax.
+	 * An error is generated if it's not unique.
+	 * @param nt alternate form for syntax, must not be null
+	 */
+	public void addAlternate(NonTerminal nt) {
+		if (alternates == null) {
+			alternates = new TreeSet<String>();
+			alternates.add(Util.stripId(nonTerminal.getSymbol()));
+		}
+		if (!alternates.add(Util.stripId(nt.getSymbol()))) {
+			ErrorHandler.recoverableError("", nt);
+		}
+	}
+	
 	@Override
 	public void prettyPrint(PrintWriter out) {
+		if (alternates != null) {
+			for (String alt : alternates) {
+				if (!nonTerminal.getSymbol().equals(alt)) {
+					out.print(alt);
+					out.print(", ");
+				}
+			}
+		}
 		nonTerminal.prettyPrint(out);
 		out.print("\t::= ");
 		boolean prev = false;
@@ -106,7 +132,12 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		for (Clause c : getClauses()) {
 			c.computeVarTypes(this, varMap);
 		}
-		synMap.put(getNonTerminal().getSymbol(), this);
+		if (alternates != null) {
+			for (String alt : alternates) {
+				synMap.put(alt, this);
+			}
+		}
+		synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes
 	}
 	
 	public void typecheck(Context ctx, Set<String> declaredTerminals) {

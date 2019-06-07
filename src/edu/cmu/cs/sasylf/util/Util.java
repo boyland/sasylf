@@ -58,8 +58,15 @@ public class Util {
 		return Character.isDigit(ch) || Character.getType(ch) == Character.OTHER_NUMBER;
 	}
 
+	/**
+	 * Remove primes and digits from the end of an identifier string.
+	 * If the string starts with a digit or a prime, we don't change it,
+	 * since it's not a valid identifier, and we don't want to remove everything.
+	 * @param id string to operate on
+	 * @return string without trailing primes and digits
+	 */
 	public static String stripId(String id) {
-		if (isNumber(id.charAt(0)))
+		if (id.isEmpty() || isNumber(id.charAt(0)) || id.charAt(0) == '\'')
 			return id;
 		int newLength = id.length();
 		char ch = id.charAt(newLength-1);

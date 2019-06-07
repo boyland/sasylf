@@ -1570,12 +1570,21 @@ Set<String> TerminalsDeclaration() :
 }
 
 Syntax BNFRule() :
-{Token t; List<Clause> l = new ArrayList<Clause>();}
+{ Token t;
+  List<NonTerminal> alts = new ArrayList<NonTerminal>();
+  List<Clause> l = new ArrayList<Clause>(); }
 {
-  t=<IDENTIFIER> <ASSIGN> Clauses(l)
+  t=<IDENTIFIER>
+  (
+    "," { alts.add(getNonTerminal(t)); } t=<IDENTIFIER>  )*
+  <ASSIGN> Clauses(l)
   {
     NonTerminal nt = getNonTerminal(t);
-    return new Syntax(new Location(t), nt, l);
+    Syntax syn = new Syntax(new Location(t), nt, l);
+    for (NonTerminal alt : alts) {
+      syn.addAlternate(alt);
+    }
+    return syn;
   }
 }
 
