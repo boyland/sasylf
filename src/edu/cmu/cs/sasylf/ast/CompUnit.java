@@ -141,7 +141,7 @@ public class CompUnit extends Node {
 
 		// Finally, we're ready to check syntax
 		for (Syntax syn: syntax) {
-			syn.typecheck(ctx, declaredTerminals);
+			syn.typecheck(ctx);
 		}
 
 		// check if useless (done after type checking)

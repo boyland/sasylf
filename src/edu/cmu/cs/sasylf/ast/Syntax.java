@@ -31,15 +31,16 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		super(loc); 
 		nonTerminal = nt; 
 		elements = l; 
-		isAbstract = false;
-		setEndLocation(l.get(l.size()-1).getEndLocation());
+		isAbstract = l.isEmpty();
+		if (!l.isEmpty()) {
+			setEndLocation(l.get(l.size()-1).getEndLocation());
+		}
+		alternates = new TreeSet<String>();
+		alternates.add(Util.stripId(nonTerminal.getSymbol()));
 	}
 
 	public Syntax(Location loc, NonTerminal nt) {
-		super(loc);
-		nonTerminal = nt;
-		elements = Collections.emptyList();
-		isAbstract = true;
+		this(loc,nt,Collections.<Clause>emptyList());
 	}
 
 	@Override
@@ -62,10 +63,6 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 * @param nt alternate form for syntax, must not be null
 	 */
 	public void addAlternate(NonTerminal nt) {
-		if (alternates == null) {
-			alternates = new TreeSet<String>();
-			alternates.add(Util.stripId(nonTerminal.getSymbol()));
-		}
 		if (!alternates.add(Util.stripId(nt.getSymbol()))) {
 			ErrorHandler.recoverableError("", nt);
 		}
@@ -73,12 +70,10 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	
 	@Override
 	public void prettyPrint(PrintWriter out) {
-		if (alternates != null) {
-			for (String alt : alternates) {
-				if (!nonTerminal.getSymbol().equals(alt)) {
-					out.print(alt);
-					out.print(", ");
-				}
+		for (String alt : alternates) {
+			if (!nonTerminal.getSymbol().equals(alt)) {
+				out.print(alt);
+				out.print(", ");
 			}
 		}
 		nonTerminal.prettyPrint(out);
@@ -132,17 +127,17 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		for (Clause c : getClauses()) {
 			c.computeVarTypes(this, varMap);
 		}
-		if (alternates != null) {
-			for (String alt : alternates) {
-				synMap.put(alt, this);
-			}
+		for (String alt : alternates) {
+			synMap.put(alt, this);
 		}
-		synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes
+		synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
 	}
 	
-	public void typecheck(Context ctx, Set<String> declaredTerminals) {
-		if (declaredTerminals.contains(getNonTerminal().getSymbol())) {
-			ErrorHandler.report(Errors.SYNTAX_TERMINAL, this, this.getNonTerminal().getSymbol());
+	public void typecheck(Context ctx) {
+		for (String alt: alternates) {
+			if (ctx.isTerminalString(alt)) {
+				ErrorHandler.report(Errors.SYNTAX_TERMINAL, this, this.getNonTerminal().getSymbol());				
+			}
 		}
 		
 		int countVarOnly = 0;
