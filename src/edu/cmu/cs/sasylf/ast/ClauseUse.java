@@ -229,7 +229,7 @@ public class ClauseUse extends Clause {
 	// inAssumption means we are computing a fake term for an assumption clause
 	private Term computeBasicTerm(List<Pair<String, Term>> varBindings, boolean inAssumption) {
 		int assumeIndex = cons.getAssumeIndex();
-		Constant cnst = cons.computeTerm(varBindings);
+		Term cnst = cons.computeTerm(varBindings);
 		List<Term> args = new ArrayList<Term>();
 		// System.out.println("converting term " + this + " with assumed vars " + varBindings);
 		for (int i = 0; i < getElements().size(); ++i) {
@@ -277,7 +277,7 @@ public class ClauseUse extends Clause {
 			}
 		}
 
-		return (args.size() > 0) ? new Application(cnst, args) : cnst;
+		return (args.size() > 0) ? Facade.App(cnst, args) : cnst;
 	}
 
 	@Override

@@ -83,7 +83,7 @@ public class ClauseDef extends Clause {
 	}
 
 	@Override
-	public Constant computeTerm(List<Pair<String, Term>> varBindings) {
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		Term typeTerm = type.typeTerm();
 		int assumeIndex = getAssumeIndex();
 		List<Term> argTypes = new ArrayList<Term>();
