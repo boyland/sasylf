@@ -61,7 +61,7 @@ public abstract class SyntaxAssumption extends Fact {
 				context = ((Clause)context).computeClause(ctx,false);
 			}
 			ElementType type = context.getType();
-			if (!(type instanceof Syntax) || !((Syntax)type).isInContextForm()) {
+			if (!(type instanceof SyntaxDeclaration) || !((SyntaxDeclaration)type).isInContextForm()) {
 				ErrorHandler.report(Errors.ILLEGAL_ASSUMES_CLAUSE,": " + type, this);
 			}
 		}

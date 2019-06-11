@@ -164,7 +164,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		// look for sub-part of gamma clause, a NonTerminal with same type as gamma
 		ClauseUse assumeClauseUse = (ClauseUse) assumeElement;
 		ClauseDef assumeClauseDef = assumeClauseUse.getConstructor();
-		Syntax gammaType = (Syntax) assumeClauseDef.getType();
+		SyntaxDeclaration gammaType = (SyntaxDeclaration) assumeClauseDef.getType();
 		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
 		int n = assumeClauseDef.getElements().size();
 

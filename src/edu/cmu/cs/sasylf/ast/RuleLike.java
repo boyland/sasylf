@@ -248,7 +248,7 @@ public abstract class RuleLike extends Node {
 			Element formal = getPremises().get(i);
 			String name = "argument #"+ (i+1);
 			if (formal.getRoot() == null) continue;
-			if (formal.getType() instanceof Syntax) {
+			if (formal.getType() instanceof SyntaxDeclaration) {
 				List<Abstraction> abs = allContexts.get(i);
 				Term t = allArgs.get(i);
 				allArgs.set(i,weakenArg(abs,addedContext,t));

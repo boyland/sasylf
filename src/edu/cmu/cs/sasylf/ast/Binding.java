@@ -44,7 +44,7 @@ public class Binding extends Element {
 	public NonTerminal getNonTerminal() { return nonTerminal; }
 	public List<Element> getElements() { return elements; }
 	@Override
-	public Syntax getType() { return nonTerminal.getType(); }
+	public SyntaxDeclaration getType() { return nonTerminal.getType(); }
 	@Override
 	public ElemType getElemType() { return nonTerminal.getType(); }
 	@Override
@@ -114,7 +114,7 @@ public class Binding extends Element {
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
 		if (assumes == null || ctx.isVarFree(this) ||
-				!((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+				!((SyntaxDeclaration)assumes.getType()).canAppearIn(getTypeTerm()))
 			return new BindingAssumption(this);
 		return new BindingAssumption(this,assumes);
 	}

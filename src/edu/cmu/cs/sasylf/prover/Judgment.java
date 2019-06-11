@@ -10,7 +10,7 @@ import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.ClauseDef;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.NonTerminal;
-import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Terminal;
 import edu.cmu.cs.sasylf.term.*;
 
@@ -68,7 +68,7 @@ public class Judgment {
 	 * @param app the application object
 	 * @param syntax the syntax object to be used for the app's form
 	 */
-	private String printApplication(Application app, Syntax syntax) {
+	private String printApplication(Application app, SyntaxDeclaration syntax) {
 		String s = "(";
 		List<Clause> clauses = syntax.getClauses();
 		for(Clause c: clauses) {
@@ -108,7 +108,7 @@ public class Judgment {
 			NonTerminal nt = (NonTerminal)e;
 			List<? extends Term> args = a.getArguments();
 			Term t = args.get(index);
-			Syntax syntax = nt.getType();
+			SyntaxDeclaration syntax = nt.getType();
 			s += printTerm(t, syntax);
 		}
 		return s;
@@ -118,7 +118,7 @@ public class Judgment {
 	 * @param t the term to be pretty printed
 	 * @param syntax the syntax used to determine the pretty symbol of this term
 	 */
-	private String printTerm(Term t, Syntax syntax) {
+	private String printTerm(Term t, SyntaxDeclaration syntax) {
 		String s = "";
 		//If it's a constant, look for the pretty symbol in the syntax.
 		if(t instanceof Constant) {

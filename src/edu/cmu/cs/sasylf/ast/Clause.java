@@ -187,7 +187,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	}
 
 	// computes Syntax type for each variable
-	public void computeVarTypes(Syntax parent, Map<String,Variable> varMap) {
+	public void computeVarTypes(SyntaxDeclaration parent, Map<String,Variable> varMap) {
 
 		// singleton elements matching variables define variable type
 		if (elements.size() == 1 && elements.get(0) instanceof NonTerminal) {

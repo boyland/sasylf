@@ -23,7 +23,7 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
 	public NonTerminal(String s, Location l) { this(s,l,null); }
-	public NonTerminal(String s, Location l, Syntax ty) {
+	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
 		super(l);
 		symbol = s;
 		type = ty;
@@ -34,7 +34,7 @@ public class NonTerminal extends Element {
 
 	public String getSymbol() { return symbol; }
 	@Override
-	public Syntax getType() { return type; }
+	public SyntaxDeclaration getType() { return type; }
 	@Override
 	public ElemType getElemType() { return type; }
 
@@ -63,14 +63,14 @@ public class NonTerminal extends Element {
 		return symbol.equals(nt.symbol);
 	}
 
-	public void setType(Syntax t) {
+	public void setType(SyntaxDeclaration t) {
 		if (type != null && type != t)
 			ErrorHandler.report("Internal error: can't reset a NonTerminal's type", this);
 		type = t;
 	}
 
 	private String symbol;
-	private Syntax type;
+	private SyntaxDeclaration type;
 
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
@@ -141,7 +141,7 @@ public class NonTerminal extends Element {
 			e = v;
 		} else {
 			// find appropriate syntax
-			Syntax syn = ctx.synMap.get(strippedName);
+			SyntaxDeclaration syn = ctx.synMap.get(strippedName);
 			if (syn != null) {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {
@@ -164,7 +164,7 @@ public class NonTerminal extends Element {
 		}
 		// System.out.println(this+".asFact(_," + assumes + ")");
 		if (ctx.isVarFree(this) || assumes == null ||
-				!((Syntax)assumes.getType()).canAppearIn(getTypeTerm()))
+				!((SyntaxDeclaration)assumes.getType()).canAppearIn(getTypeTerm()))
 			return new NonTerminalAssumption(this);
 		else return new NonTerminalAssumption(this,assumes);
 	}

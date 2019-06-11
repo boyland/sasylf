@@ -54,8 +54,8 @@ public class ClauseDef extends Clause {
 		if (type instanceof Judgment) {
 			NonTerminal assumeNT = ((Judgment)type).getAssume();
 			return cachedAssumeIndex=getElements().indexOf(assumeNT);
-		} else if (type instanceof Syntax) {
-			Syntax s = (Syntax)type;
+		} else if (type instanceof SyntaxDeclaration) {
+			SyntaxDeclaration s = (SyntaxDeclaration)type;
 			if (s.isInContextForm()) {
 				return cachedAssumeIndex=getElements().indexOf(s.getNonTerminal());
 			}
@@ -195,7 +195,7 @@ public class ClauseDef extends Clause {
 				topVars.removeAll(boundVars);
 				if (isContext) {
 					for (Variable v : topVars) {
-						Syntax varType = v.getType();
+						SyntaxDeclaration varType = v.getType();
 						varType.setContext(this);
 					}
 				} else {

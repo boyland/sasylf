@@ -124,7 +124,7 @@ public class ClauseUse extends Clause {
 		Element localAssumes = null;
 		// accept assumes only if we have something that the context can affect.
 		if (assumes != null) {
-			Syntax contextSyntax = (Syntax)assumes.getType();
+			SyntaxDeclaration contextSyntax = (SyntaxDeclaration)assumes.getType();
 			for (Element e : getElements()) {
 				if (e instanceof NonTerminal || e instanceof Binding) {
 					if (contextSyntax.canAppearIn(e.getTypeTerm())) {
@@ -204,8 +204,8 @@ public class ClauseUse extends Clause {
 	@Override
 	public ElemType getElemType() {
 		ClauseType ct = getConstructor().getType();
-		if (ct instanceof Syntax)
-			return (Syntax) ct;
+		if (ct instanceof SyntaxDeclaration)
+			return (SyntaxDeclaration) ct;
 		else
 			// not applicable--this is a judgment and does not have an ElemType
 			throw new RuntimeException("should only call getElemTypes on syntax def clauses which don't have sub-clauses; can't call getElemType() on a Clause");

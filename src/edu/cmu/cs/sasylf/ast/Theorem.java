@@ -102,7 +102,7 @@ public class Theorem extends RuleLike {
 			interfaceChecked = true;
 			if (assumes != null) {
 				assumes.typecheck(ctx);
-				Syntax syntax = assumes.getType();
+				SyntaxDeclaration syntax = assumes.getType();
 				if (syntax == null || !syntax.isInContextForm()) {
 					ErrorHandler.recoverableError(Errors.ILLEGAL_ASSUMES, assumes);
 				}

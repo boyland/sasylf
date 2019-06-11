@@ -26,8 +26,13 @@ import edu.cmu.cs.sasylf.util.Status;
 import edu.cmu.cs.sasylf.util.Util;
 
 
-public class Syntax extends Node implements ClauseType, ElemType {
-	public Syntax(Location loc, NonTerminal nt, List<Clause> l) { 
+/**
+ * This class is a definition of a nonterminal of syntax either
+ * as "abstract syntax" (no rules) or as "concrete syntax" in which case
+ * we have CFG productions.  This class serves as an LF type.
+ */
+public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
+	public SyntaxDeclaration(Location loc, NonTerminal nt, List<Clause> l) { 
 		super(loc); 
 		nonTerminal = nt; 
 		elements = l; 
@@ -39,7 +44,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		alternates.add(Util.stripId(nonTerminal.getSymbol()));
 	}
 
-	public Syntax(Location loc, NonTerminal nt) {
+	public SyntaxDeclaration(Location loc, NonTerminal nt) {
 		this(loc,nt,Collections.<Clause>emptyList());
 	}
 
@@ -89,6 +94,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		out.println("\n");
 	}
 
+	@Override
 	public Set<Terminal> getTerminals() {
 		Set<Terminal> s = new HashSet<Terminal>();
 		for (Clause c : getClauses()) {
@@ -111,7 +117,8 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 * @param varMap variable map, must not be null
 	 * @param synMap syntax map, must not be null
 	 */
-	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,Syntax> synMap) {
+	@Override
+	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,SyntaxDeclaration> synMap) {
 		for (String alt : alternates) {
 			synMap.put(alt, this);
 		}
@@ -127,12 +134,14 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 * If this syntax could be a variable, declare it and update the variable to point to this.
 	 * @param ctx
 	 */
+	@Override
 	public void precheck(Context ctx) {
 		for (Clause c : getClauses()) {
 			c.computeVarTypes(this, ctx.varMap);
 		}		
 	}
 	
+	@Override
 	public void typecheck(Context ctx) {
 		for (String alt: alternates) {
 			if (ctx.isTerminalString(alt)) {
@@ -202,6 +211,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 * </ul>
 	 * @param ctx context, must not be null
 	 */
+	@Override
 	public void postcheck(Context ctx) {
 		if (!isProductive()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
@@ -225,14 +235,14 @@ public class Syntax extends Node implements ClauseType, ElemType {
 
 	private boolean isProductive;
 	private Status isProductiveStatus = Status.NOTSTARTED;
-	private static List<Syntax> computed = new ArrayList<Syntax>();
+	private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
 
 	public boolean isProductive() {
 		if (isAbstract) return true; // by assumption
 		if (isProductiveStatus == Status.DONE) return isProductive;
 		isProductiveStatus = Status.NOTSTARTED;
 		isProductive = computeIsProductive();
-		for (Syntax s : computed) {
+		for (SyntaxDeclaration s : computed) {
 			if (s.isProductiveStatus == Status.INPROCESS) {
 				s.isProductiveStatus = Status.NOTSTARTED;
 			}
@@ -372,14 +382,14 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		return nonTerminal.toString();
 	}
 
-	private Set<Syntax> varTypes;
+	private Set<SyntaxDeclaration> varTypes;
 	/**
 	 * Return the variable types that this context nonterminal can include
 	 * @return set of variable types
 	 */
-	public Set<Syntax> getVarTypes() {
+	public Set<SyntaxDeclaration> getVarTypes() {
 		if (varTypes == null) {
-			varTypes = new HashSet<Syntax>();
+			varTypes = new HashSet<SyntaxDeclaration>();
 			for (Clause c : getClauses()) {
 				if (isContextCase(c)) {
 					for (Element e : c.getElements()) {
@@ -398,7 +408,7 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	 * @return true if a variable could be used in a term of the given type.
 	 */
 	public boolean canAppearIn(Term type) {
-		for (Syntax s : getVarTypes()) {
+		for (SyntaxDeclaration s : getVarTypes()) {
 			if (FreeVar.canAppearIn(s.typeTerm(), type)) return true;
 		}
 		return false;

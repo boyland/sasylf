@@ -32,7 +32,7 @@ public class Context implements Cloneable {
 
 	public final ModuleFinder moduleFinder;
 	public final CompUnit compUnit;
-	public Map<String,Syntax> synMap = new HashMap<String,Syntax>();
+	public Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
 	public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
 	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
@@ -397,7 +397,7 @@ public class Context implements Cloneable {
 
 	public void addVarFree(Set<FreeVar> vars, Location l) {
 		for (FreeVar f : vars) {
-			Syntax syn = synMap.get(f.getType().baseTypeFamily().toString());
+			SyntaxDeclaration syn = synMap.get(f.getType().baseTypeFamily().toString());
 			if (syn == null) {
 				ErrorHandler.report(Errors.INTERNAL_ERROR, "no syntactic type for "+f, l);
 			}

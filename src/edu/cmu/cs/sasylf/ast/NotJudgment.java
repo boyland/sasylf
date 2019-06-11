@@ -45,7 +45,7 @@ public class NotJudgment extends Judgment {
 		NonTerminal root = j.getAssume();
 		for (Element e : j.getForm().getElements()) {
 			if (e instanceof NonTerminal && !e.equals(root)) {
-				Syntax s = ((NonTerminal)e).getType();
+				SyntaxDeclaration s = ((NonTerminal)e).getType();
 				NonTerminal gen = new NonTerminal(s.toString()+ ++u,l);
 				gen.setType(s);
 				es.add(gen);

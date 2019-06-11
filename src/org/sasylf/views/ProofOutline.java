@@ -48,6 +48,7 @@ import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
@@ -104,11 +105,13 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				pe = new ProofElement("Syntax", syn.toString());
 				pe.setPosition(convertLocToPos(document,syn.getLocation()));
 				pList.add(pe);
-				for (Clause c : syn.getClauses()) {
-					ProofElement ce = new ProofElement("Clause",c.toString());
-					Location loc = c.getLocation();
-					ce.setPosition(convertLocToPos(document, loc));
-					pe.addChild(ce);
+				if (syn instanceof SyntaxDeclaration) {
+					for (Clause c : ((SyntaxDeclaration)syn).getClauses()) {
+						ProofElement ce = new ProofElement("Clause",c.toString());
+						Location loc = c.getLocation();
+						ce.setPosition(convertLocToPos(document, loc));
+						pe.addChild(ce);
+					}
 				}
 			}
 

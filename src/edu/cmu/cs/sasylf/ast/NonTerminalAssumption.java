@@ -27,7 +27,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		this(nt,null);
 	}
 
-	public Syntax getSyntax() { return nonTerminal.getType(); }
+	public SyntaxDeclaration getSyntax() { return nonTerminal.getType(); }
 	public boolean isTheoremArg() { return isTheoremArg; }
 
 	@Override

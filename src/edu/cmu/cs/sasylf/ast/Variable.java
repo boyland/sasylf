@@ -23,7 +23,7 @@ public class Variable extends Element {
 
 	public String getSymbol() { return symbol; }
 	@Override
-	public Syntax getType() { return type; }
+	public SyntaxDeclaration getType() { return type; }
 	@Override
 	public ElemType getElemType() { return type; }
 	@Override
@@ -49,7 +49,7 @@ public class Variable extends Element {
 	}
 
 
-	public void setType(Syntax t) {
+	public void setType(SyntaxDeclaration t) {
 		if (type != null && type == t) return; // idempotency
 		if (type != null)
 			ErrorHandler.report(Errors.SYNTAX_VARIABLE_TWICE, this);
@@ -87,7 +87,7 @@ public class Variable extends Element {
 	}
 
 	private String symbol;
-	private Syntax type;
+	private SyntaxDeclaration type;
 
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
@@ -105,7 +105,7 @@ public class Variable extends Element {
 	 */
 	public ClauseUse genContext(Element base, Context ctx) {
 		ClauseDef contextClause = getType().getContextClause();
-		Syntax contextSyntax = (Syntax)contextClause.getType();
+		SyntaxDeclaration contextSyntax = (SyntaxDeclaration)contextClause.getType();
 		Location location = getLocation();
 		if (base == null) {
 			ClauseDef termCase = contextSyntax.getTerminalCase();

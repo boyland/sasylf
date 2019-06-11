@@ -183,7 +183,7 @@ public class CompUnit extends Node {
 	}
 
 	private void computeSubordinationSyntax(Context ctx) {
-		for (Syntax syntax : ctx.synMap.values()) {
+		for (SyntaxDeclaration syntax : ctx.synMap.values()) {
 			Term synType = syntax.typeTerm();
 			for (Clause clause : syntax.getClauses()) {
 				if (clause.isVarOnlyClause()) {

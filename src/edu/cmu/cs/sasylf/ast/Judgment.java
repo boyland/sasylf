@@ -101,7 +101,7 @@ public class Judgment extends Node implements ClauseType {
 	public void typecheck(Context ctx) {
 		//form.typecheck(synMap, varMap);
 
-		Syntax contextSyntax = null;
+		SyntaxDeclaration contextSyntax = null;
 
 		if (assume != null) {
 			assume.typecheck(ctx);
@@ -113,7 +113,7 @@ public class Judgment extends Node implements ClauseType {
 
 		for (Element f : form.getElements()) {
 			if (f instanceof NonTerminal) {
-				Syntax s = ((NonTerminal)f).getType();
+				SyntaxDeclaration s = ((NonTerminal)f).getType();
 				if (s.isInContextForm()) contextSyntax = s;
 			}
 		}

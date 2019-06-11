@@ -1428,7 +1428,7 @@ CompUnit CompilationUnit() :
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
     ( LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-    | LOOKAHEAD(2) s=SyntaxDeclaration() { syntax.addAll(s); }
+    | LOOKAHEAD(2) s=Syntax() { syntax.addAll(s); }
     | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
     | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); }
     )+
@@ -1447,7 +1447,7 @@ CompUnit CompilationUnit() :
   
   (
     LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-  | LOOKAHEAD(2) s=SyntaxDeclaration() { syntax.addAll(s); } 
+  | LOOKAHEAD(2) s=Syntax() { syntax.addAll(s); } 
   | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
   | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
       ( "and" 
@@ -1543,7 +1543,7 @@ StringSpan RuleName() :
   	return s; }
 }
 
-List<Syntax> SyntaxDeclaration() :
+List<Syntax> Syntax() :
 { 	Token f; Syntax s;
 	List<Syntax> l = new ArrayList<Syntax>(); }
 {
@@ -1569,7 +1569,7 @@ Set<String> TerminalsDeclaration() :
   { if (firstToken == null) firstToken = f; return l; }
 }
 
-Syntax BNFRule() :
+SyntaxDeclaration BNFRule() :
 { Token t;
   List<NonTerminal> alts = new ArrayList<NonTerminal>();
   List<Clause> l = new ArrayList<Clause>(); }
@@ -1580,7 +1580,7 @@ Syntax BNFRule() :
   <ASSIGN> Clauses(l)
   {
     NonTerminal nt = getNonTerminal(t);
-    Syntax syn = new Syntax(new Location(t), nt, l);
+    SyntaxDeclaration syn = new SyntaxDeclaration(new Location(t), nt, l);
     for (NonTerminal alt : alts) {
       syn.addAlternate(alt);
     }
@@ -1588,13 +1588,13 @@ Syntax BNFRule() :
   }
 }
 
-Syntax AbstractBNFRule() :
+SyntaxDeclaration AbstractBNFRule() :
 {Token t;}
 {
   t=<IDENTIFIER>
   {
     NonTerminal nt = getNonTerminal(t);
-    return new Syntax(new Location(t), nt);
+    return new SyntaxDeclaration(new Location(t), nt);
   }
 }
 
