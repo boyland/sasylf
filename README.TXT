@@ -114,6 +114,7 @@ RELEASE HISTORY
 
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
+	Added syntactic sugar (e.g.: 1 := s 0)
     Resolved issues #71, #74, #76, #77, #78
 1.3.4	Plugin improvements
 	Incremental proof checking

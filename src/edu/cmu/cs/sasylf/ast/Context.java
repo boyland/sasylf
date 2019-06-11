@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.verify;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -509,10 +507,10 @@ public class Context implements Cloneable {
 	}*/
 
 	public Grammar getGrammar() {
-		if (g == null) {
-			g = new edu.cmu.cs.sasylf.grammar.Grammar(GrmUtil.getStartSymbol(), ruleSet);
-			ruleSize = ruleSet.size();
-		} else { verify(ruleSize == ruleSet.size(), "rule set increased!"); }
+		if (g != null && ruleSize == ruleSet.size()) return g;
+		// sometimes we increase the grammar
+		g = new edu.cmu.cs.sasylf.grammar.Grammar(GrmUtil.getStartSymbol(), ruleSet);
+		ruleSize = ruleSet.size();
 		return g;
 	}
 

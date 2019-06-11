@@ -1,0 +1,39 @@
+package edu.cmu.cs.sasylf.ast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Pair;
+
+public class SugarClauseDef extends ClauseDef {
+
+	private final Clause definition;
+	
+	/**
+	 * Create a sugar clause definition.
+	 * @param copy the sugar syntax being defined
+	 * @param type its syntactic type (Syntax or Judgment)
+	 * @param defn the replacement clause
+	 */
+	public SugarClauseDef(Clause sugar, ClauseType type, Clause defn) {
+		super(sugar, type);
+		definition = defn;
+	}
+
+	@Override
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+		Term body = definition.computeTerm(varBindings);
+		Constant cnst = (Constant)super.computeTerm(varBindings);
+		Term ctype = cnst.getType();
+		List<Abstraction> wrappers = new ArrayList<Abstraction>();
+		Term.getWrappingAbstractions(ctype, wrappers);
+		Term result = Term.wrapWithLambdas(wrappers, body);
+		System.out.println("term for sugar = " + result);
+		return result;
+	}
+
+	
+}

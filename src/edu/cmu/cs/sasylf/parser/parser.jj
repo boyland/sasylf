@@ -1548,7 +1548,9 @@ List<Syntax> Syntax() :
 	List<Syntax> l = new ArrayList<Syntax>(); }
 {
   f=<SYNTAX>
-  ( s=BNFRule() { l.add(s); } )+
+  ( LOOKAHEAD(2) s=BNFRule() { l.add(s); }
+  | LOOKAHEAD(2) s=Sugar() {  l.add(s); }
+  )+
   { if (firstToken == null) firstToken =f; return l; }
 | f=<ABSTRACT> <SYNTAX>
   ( s=AbstractBNFRule() { l.add(s); } )+
@@ -1588,6 +1590,15 @@ SyntaxDeclaration BNFRule() :
   }
 }
 
+Sugar Sugar() :
+{ Token t; Element e; Clause s; Clause c; }
+{ ( e=Term() { s = new Clause(e); s.add(e); }
+  | t=<LPAREN> { s = new Clause(new Location(t)); }
+    ( e=Term() { s.add(e); } )+
+    t=<RPAREN> { s.setEndLocation(new Location(t)); } )      
+  <COLON_EQ> c=ExprToNL() { return new Sugar(s,c); }
+}
+    
 SyntaxDeclaration AbstractBNFRule() :
 {Token t;}
 {
