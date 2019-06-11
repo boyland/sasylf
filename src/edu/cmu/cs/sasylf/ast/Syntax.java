@@ -106,31 +106,31 @@ public class Syntax extends Node implements ClauseType, ElemType {
 	}
 
 	/**
-	 * Find all the places we have variable sin this syntax, and place them in the given var map.
-	 * @param map var map, must not be null.
-	 */
-	public void getVariables(Map<String,Variable> map) {
-		for (Clause c : getClauses()) {
-			if (c == null)
-				ErrorHandler.report("null clause in Syntax " + this, this);
-			c.getVariables(map);
-		}
-	}
-
-	/**
-	 * If this syntax could be a variable, declare it and update the variable to point to this.
-	 * Then update the syntax map for nonterminals using this syntax.
+	 * Find all the places we have variables in this syntax, and place them in the given var map.
+	 * Update the syntax map for nonterminals using this syntax.
 	 * @param varMap variable map, must not be null
 	 * @param synMap syntax map, must not be null
 	 */
 	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,Syntax> synMap) {
-		for (Clause c : getClauses()) {
-			c.computeVarTypes(this, varMap);
-		}
 		for (String alt : alternates) {
 			synMap.put(alt, this);
 		}
 		synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
+		for (Clause c : getClauses()) {
+			c.getVariables(varMap);
+		}
+	}
+	
+	/** Perform actions that must take place after the maps are
+	 * done but before type checking is done.  In this case,
+	 * we need to get the type of every variable set.
+	 * If this syntax could be a variable, declare it and update the variable to point to this.
+	 * @param ctx
+	 */
+	public void precheck(Context ctx) {
+		for (Clause c : getClauses()) {
+			c.computeVarTypes(this, ctx.varMap);
+		}		
 	}
 	
 	public void typecheck(Context ctx) {
@@ -174,8 +174,8 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		}
 
 		// check variable uses
-		for (int i = 0; i < elements.size(); ++i) {
-			Clause c = elements.get(i);
+		// TODO: merge these two loops (perhaps by having checkvarUse do the work)
+		for (Clause c : elements) {
 			if (!c.isVarOnlyClause()) {
 				ClauseDef cd = (ClauseDef) c;
 				cd.checkVarUse(isInContextForm());
@@ -191,6 +191,36 @@ public class Syntax extends Node implements ClauseType, ElemType {
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
 		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
 		ctx.ruleSet.add(startRule);
+	}
+	
+	/**
+	 * Perform checks that can only be done once all the syntax is type checked:
+	 * <ul>
+	 * <li> Check that syntax is "productive"
+	 * <li> Check that every variable is bound in a context.
+	 * (Already checked that bound in at most one context).
+	 * </ul>
+	 * @param ctx context, must not be null
+	 */
+	public void postcheck(Context ctx) {
+		if (!isProductive()) {
+			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
+		}
+		if (variable != null && context == null) {
+			ErrorHandler.report(Errors.VARIABLE_HAS_NO_CONTEXT, this);
+		}
+	}
+	
+	/**
+	 * Set the clause definition that binds the variable for this type.
+	 * This can be set only once.
+	 * @param cd clause definition in context form
+	 */
+	public void setContext(ClauseDef cd) {
+		if (context == null) context = cd;
+		else if (context != cd) {
+			ErrorHandler.report(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
+		}
 	}
 
 	private boolean isProductive;
@@ -331,39 +361,6 @@ public class Syntax extends Node implements ClauseType, ElemType {
 				return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Register this syntax (if in context form) so that it knows what
-	 * clause binds the variable.  If we discover a variable being bound
-	 * in multiple contexts, we report an error.
-	 */
-	public void registerVarTypes() {
-		if (isInContextForm()) {
-			for (Clause c : getClauses()) {
-				if (isContextCase(c)) {
-					for (Element e : c.getElements()) {
-						if (e instanceof Variable) {
-							Syntax varType = ((Variable)e).getType();
-							if (varType.context == null) varType.context = (ClauseDef)c;
-							else if (varType.context != c) {
-								ErrorHandler.report(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,varType);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Check that if this syntax has variables that it has a registered context.
-	 * If it doesn't we report an error.
-	 */
-	public void checkVarTypeRegistered() {
-		if (variable != null && context == null) {
-			ErrorHandler.report(Errors.VARIABLE_HAS_NO_CONTEXT, this);
-		}
 	}
 
 	public ClauseDef getContextClause() {

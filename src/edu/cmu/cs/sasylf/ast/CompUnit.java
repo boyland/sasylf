@@ -128,15 +128,14 @@ public class CompUnit extends Node {
 		
 		// Since syntax can be mutually recursive, we have multiple passes through the syntax
 		
-		// first we find where a name appears inside of the brackets e.g. t[x]
-		// and mark it a variable.
-		for (Syntax syn: syntax) {
-			syn.getVariables(ctx.varMap);
-		}
-		
-		// now we map variables and nonterminals back to their syntax
+		// We set up variables and nonterminal maps.
 		for (Syntax syn: syntax) {
 			syn.updateSyntaxMap(ctx.varMap, ctx.synMap);
+		}
+		
+		// Do some checks before type checking;
+		for (Syntax syn : syntax) {
+			syn.precheck(ctx);
 		}
 
 		// Finally, we're ready to check syntax
@@ -144,19 +143,9 @@ public class CompUnit extends Node {
 			syn.typecheck(ctx);
 		}
 
-		// check if useless (done after type checking)
+		// checks after syntax all defined
 		for (Syntax syn : syntax) {
-			if (!syn.isProductive()) {
-				ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, syn);
-			}
-		}
-
-		// check variables are bound in exactly one context (two passes)
-		for (Syntax syn : syntax) {
-			syn.registerVarTypes();
-		}
-		for (Syntax syn : syntax) {
-			syn.checkVarTypeRegistered();
+			syn.postcheck(ctx);
 		}
 
 

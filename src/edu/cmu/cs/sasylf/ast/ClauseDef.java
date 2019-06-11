@@ -193,8 +193,15 @@ public class ClauseDef extends Clause {
 			} else {
 				// a variable declared at the top was not used in a binding
 				topVars.removeAll(boundVars);
-				if (!isContext)
+				if (isContext) {
+					for (Variable v : topVars) {
+						Syntax varType = v.getType();
+						varType.setContext(this);
+					}
+				} else {
 					ErrorHandler.report(Errors.UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
+
+				}
 			}
 		}
 	}
