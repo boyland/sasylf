@@ -1,0 +1,6 @@
+abstract theorem impossible : exists contradiction. //! only in a "requires" section
+end theorem
+
+theorem really : exists contradiction
+proof by theorem impossible
+end theorem
