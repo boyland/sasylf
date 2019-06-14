@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.util;
 
 public enum Errors {
+	ABSTRACT_NOT_PERMITTED_HERE ("'abstract' not allowed in main part of proof file"),
 	BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
 	BAD_FILE_NAME("Proof file for module must be a legal identifier"),
 	WRONG_PACKAGE ("wrong package"),

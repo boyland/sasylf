@@ -1428,9 +1428,9 @@ CompUnit CompilationUnit() :
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
     ( LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-    | LOOKAHEAD(2) s=Syntax() { syntax.addAll(s); }
-    | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
-    | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); }
+    | LOOKAHEAD(2) s=Syntax(true) { syntax.addAll(s); }
+    | LOOKAHEAD(2) j=JudgmentDeclaration(true) { judges.add(j); }
+    | LOOKAHEAD(2) thm=TheoremDeclaration(true) { theorems.add(thm); }
     )+
   )?
    
@@ -1447,11 +1447,11 @@ CompUnit CompilationUnit() :
   
   (
     LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-  | LOOKAHEAD(2) s=Syntax() { syntax.addAll(s); } 
-  | LOOKAHEAD(2) j=JudgmentDeclaration() { judges.add(j); }
-  | LOOKAHEAD(2) thm=TheoremDeclaration() { theorems.add(thm); lastThm = thm; }
+  | LOOKAHEAD(2) s=Syntax(false) { syntax.addAll(s); } 
+  | LOOKAHEAD(2) j=JudgmentDeclaration(false) { judges.add(j); }
+  | LOOKAHEAD(2) thm=TheoremDeclaration(false) { theorems.add(thm); lastThm = thm; }
       ( "and" 
-        thm = TheoremDeclaration()
+        thm = TheoremDeclaration(false)
         { theorems.add(thm);
           lastThm.setAnd(thm);
           lastThm = thm;
@@ -1543,7 +1543,7 @@ StringSpan RuleName() :
   	return s; }
 }
 
-List<Syntax> Syntax() :
+List<Syntax> Syntax(boolean abstractOK) :
 { 	Token f; Syntax s;
 	List<Syntax> l = new ArrayList<Syntax>(); }
 {
@@ -1553,6 +1553,7 @@ List<Syntax> Syntax() :
   )+
   { if (firstToken == null) firstToken =f; return l; }
 | f=<ABSTRACT> <SYNTAX>
+  { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(f),f.image + "\n"); }
   ( s=AbstractBNFRule() { l.add(s); } )+
   { return l; }
 }
@@ -1651,10 +1652,11 @@ Binding Binding() :
   { return new Binding(new Location(t), getNonTerminal(t), l, new Location(u).add(1)); }
 }
 
-Judgment JudgmentDeclaration() :
+Judgment JudgmentDeclaration(boolean abstractOK) :
 { Token t,t_assume=null; StringSpan s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
 {
-  (t=<ABSTRACT> <JUDGMENT> | t=<JUDGMENT>) s=RuleName() <COLON>
+  (t=<ABSTRACT> <JUDGMENT> { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(t),t.image + "\n"); }
+   | t=<JUDGMENT>) s=RuleName() <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
   ( r=RuleDeclaration() { rules.add(r); } )*
@@ -1783,12 +1785,14 @@ Element WhereLHS() :
   | <LPAREN> e=NonTerminalOrBinding() <RPAREN> { return e; } // one set of parens allowed
 }
 
-Theorem TheoremDeclaration() :
+Theorem TheoremDeclaration(boolean abstractOK) :
 { Token tinit = null, t0, t, tp=null; StringSpan s, sp=null; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
   (tinit=<ABSTRACT>) ?
-  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON> { if (tinit == null) tinit = t0;
-                                                     thm = new Theorem(s.toString(), new Location(tinit), tinit != t0); }
+  (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON>
+  { if (tinit == null) tinit = t0;
+    else if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(tinit),tinit.image + "\n");
+    thm = new Theorem(s.toString(), new Location(tinit), tinit != t0); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()
     { thm.getForalls().add(new DerivationByAssumption(t.image, new Location(t), c)); }
