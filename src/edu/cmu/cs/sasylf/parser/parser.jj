@@ -1553,7 +1553,7 @@ List<Syntax> Syntax(boolean abstractOK) :
   )+
   { if (firstToken == null) firstToken =f; return l; }
 | f=<ABSTRACT> <SYNTAX>
-  { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(f),f.image + "\n"); }
+  { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new StringSpan(f),f.image + "\n"); }
   ( s=AbstractBNFRule() { l.add(s); } )+
   { return l; }
 }
@@ -1655,7 +1655,7 @@ Binding Binding() :
 Judgment JudgmentDeclaration(boolean abstractOK) :
 { Token t,t_assume=null; StringSpan s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
 {
-  (t=<ABSTRACT> <JUDGMENT> { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(t),t.image + "\n"); }
+  (t=<ABSTRACT> <JUDGMENT> { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new StringSpan(t),t.image + "\n"); }
    | t=<JUDGMENT>) s=RuleName() <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
@@ -1791,7 +1791,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
   (tinit=<ABSTRACT>) ?
   (t0=<THEOREM> | t0=<LEMMA>) s=RuleName() <COLON>
   { if (tinit == null) tinit = t0;
-    else if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new Location(tinit),tinit.image + "\n");
+    else if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new StringSpan(tinit),tinit.image + "\n");
     thm = new Theorem(s.toString(), new Location(tinit), tinit != t0); }
   [ <ASSUMES> t=<IDENTIFIER> { thm.setAssumes(getNonTerminal(t)); } ]
   ( LOOKAHEAD(3) <FORALL> t=<IDENTIFIER> <COLON> c=Expr()

@@ -113,6 +113,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 
 		switch (markerType) {
 		default: break;
+		case ABSTRACT_NOT_PERMITTED_HERE: return true;
 		case MISSING_CASE: return true;
 		case EXTRANEOUS_ASSUMES:
 		case MISSING_ASSUMES: 
@@ -284,6 +285,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 				proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
 						null, "insert missing case(s)", null, fixInfo));
 				break;
+			case ABSTRACT_NOT_PERMITTED_HERE:
 			case ILLEGAL_ASSUMES:
 			case EXTRANEOUS_ASSUMES:
 				if (old != null) {
