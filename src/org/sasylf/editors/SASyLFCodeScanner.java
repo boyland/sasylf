@@ -15,6 +15,7 @@ import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
+import org.eclipse.jface.util.Assert;
 import org.eclipse.swt.SWT;
 
 public class SASyLFCodeScanner extends RuleBasedScanner{
@@ -62,10 +63,11 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		rules.add (new SingleLineRule ("C","N",comment));
 		rules.add (new SingleLineRule ("D","N",comment));
 		rules.add (new SingleLineRule ("P","E",comment));*/
-		rules.add (new EndOfLineRule ("---", rule));
-		rules.add (new EndOfLineRule ("\u2014\u2014\u2014", rule));
-		rules.add (new EndOfLineRule ("\u2015\u2015\u2015", rule));
-		rules.add (new EndOfLineRule ("\u2500\u2500\u2500", rule));
+		//rules.add (new EndOfLineRule ("---", rule));
+		rules.add (new LineRule ('-', rule));
+		rules.add (new LineRule ('\u2014', rule));
+		rules.add (new LineRule ('\u2015', rule));
+		rules.add (new LineRule ('\u2500', rule));
 
 		rules.add (new WhitespaceRule (new IWhitespaceDetector() {
 			@Override
@@ -141,6 +143,51 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		public boolean isWordStart (char ch) {
 			return Character.isLetter(ch) ||
 					ch == '_';
+		}
+	}
+	
+	public static class LineRule implements IRule {
+		protected IToken token;
+		private char comp;
+		
+		public LineRule(char barChar, IToken token) {
+			comp = barChar;
+			this.token = token;
+		}
+		
+		@Override
+		public IToken evaluate(ICharacterScanner scanner) {
+			// TODO Auto-generated method stub
+			int c = scanner.read();
+			if (c != comp) {
+				scanner.unread();
+				return Token.UNDEFINED;
+			}
+			c = scanner.read();
+			if (c != comp) {
+				scanner.unread();
+				scanner.unread();
+				return Token.UNDEFINED;
+			}
+			c = scanner.read();
+			if (c != comp) {
+				scanner.unread();
+				scanner.unread();
+				scanner.unread();
+				return Token.UNDEFINED;
+			}
+		
+			while (c == comp)
+				c = scanner.read();
+			
+			while (Character.isWhitespace(c))
+				c = scanner.read();
+			
+			while (Character.isLetterOrDigit(c) || c == '-')
+				c = scanner.read();
+
+			scanner.unread();
+			return token;
 		}
 	}
 
