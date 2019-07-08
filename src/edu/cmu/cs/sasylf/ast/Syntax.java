@@ -64,4 +64,8 @@ public abstract class Syntax extends Node {
 	 */
 	public abstract Set<Terminal> getTerminals();
 
+	/**
+	 * Compute Subordination relations using this syntax.
+	 */
+	public void computeSubordination() {}
 }

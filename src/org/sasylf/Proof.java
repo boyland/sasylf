@@ -1,6 +1,10 @@
 package org.sasylf;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -9,6 +13,8 @@ import org.eclipse.jface.text.IDocument;
 import org.sasylf.util.TrackDirtyRegions;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.RuleLike;
 
 /**
  * Information about a SASyLF Proof:
@@ -20,6 +26,8 @@ public class Proof {
 	private IDocument document;
 	private TrackDirtyRegions tracker;
 	private CompUnit compilation;
+	private List<Node> declarations;
+	private SortedMap<String,RuleLike> ruleLikeCache = new TreeMap<String,RuleLike>();
 
 	/**
 	 * Create a proof object with compilation not set yet.
@@ -48,12 +56,19 @@ public class Proof {
 	 * @throws IllegalStateException if compilation already set.
 	 */
 	public void setCompilation(CompUnit cu) {
+		if (cu == null) return; // or throw?
 		if (compilation != null) {
 			throw new IllegalStateException("can only set compilation once");
 		}
 		compilation = cu;
+		updateCache();
 	}
 
+	private void updateCache() {
+		compilation.collectTopLevel(declarations);
+		compilation.collectRuleLike(ruleLikeCache);
+	}
+	
 	public IResource getResource() {
 		return resource;
 	}
@@ -67,6 +82,31 @@ public class Proof {
 		return compilation;
 	}
 
+	/**
+	 * Return all declarations in this proof.
+	 * @return
+	 */
+	public Collection<Node> getDeclarations() {
+		return Collections.unmodifiableCollection(declarations);
+	}
+	
+	/**
+	 * Find a rule-like by name 
+	 * @param name key to look for, must not be null
+	 * @return rule-like in this proof that has the given name, or null if none such exists.
+	 */
+	public RuleLike findRuleLikeByName(String name) {
+		return ruleLikeCache.get(name);
+	}
+	
+	/** Find all rule-likes in teh given compilation unit that start with the given prefix.
+	 * @param prefix key to start with, must not be null
+	 * @return iterator (never null) of rule-likes that start with the given prefix.
+	 */
+	public Collection<RuleLike> findRuleLikeByPrefix(String prefix) {
+		return ruleLikeCache.subMap(prefix, prefix+Character.MAX_VALUE).values();
+	}
+	
 	/**
 	 * If this proof object is collecting incremental changes, stop doing that,
 	 * and release resources.  If the proof thus changed is the current object
@@ -126,7 +166,7 @@ public class Proof {
 	}
 
 	/**
-	 * Replace the proof from it's old value to the new value,
+	 * Replace the proof from its old value to the new value,
 	 * but only if the old value matches.  If the old proof
 	 * had already been replaced, then the new proof is disposed
 	 * and this method returns false.

@@ -655,7 +655,7 @@ public class TermPrinter {
 	}
 
 	public static boolean isTerminal(Context ctx, String s) {
-		if (ctx.compUnit.getDeclaredTerminals().contains(s)) return true;
+		if (ctx.isTerminalString(s)) return true;
 		return isParseTerminal(s);
 	}
 

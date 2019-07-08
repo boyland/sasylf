@@ -16,6 +16,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
+import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -439,5 +440,30 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 		if (gt == null)
 			gt = new GrmTerminal(getTermSymbolString(), nonTerminal);
 		return gt;
+	}
+
+	@Override
+	public void computeSubordination() {
+		Term synType = typeTerm();
+		for (Clause clause : getClauses()) {
+			if (clause.isVarOnlyClause()) {
+				FreeVar.setAppearsIn(synType,synType);
+			}
+			if (clause instanceof ClauseDef) {
+				ClauseDef clauseDef = (ClauseDef) clause;
+				Constant constant = (Constant)clauseDef.asTerm();
+				Term typeTerm = constant.getType();
+				while (typeTerm instanceof Abstraction) {
+					Abstraction abs = (Abstraction)typeTerm;
+					Util.debug(abs.varType.baseTypeFamily(), " < ", synType);
+					FreeVar.setAppearsIn(abs.varType.baseTypeFamily(), synType);
+					for (Term t = abs.varType; t instanceof Abstraction; t = ((Abstraction)t).getBody()){
+						Util.debug(((Abstraction)t).varType.baseTypeFamily(), " < ", t.baseTypeFamily());
+						FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
+					}
+					typeTerm = abs.getBody();
+				}
+			}
+		}
 	}
 }

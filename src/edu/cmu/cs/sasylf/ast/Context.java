@@ -30,6 +30,7 @@ public class Context implements Cloneable {
 
 	public final ModuleFinder moduleFinder;
 	public final CompUnit compUnit;
+	public Set<String> termSet = new HashSet<String>();
 	public Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
 	public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
 	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
@@ -203,8 +204,13 @@ public class Context implements Cloneable {
 				isTerminalString(s); // terminals are pervasive
 	}
 
+	/**
+	 * Return true if the given string is a declared terminal string
+	 * @param s string to check
+	 * @return true if the string is a declared terminal
+	 */
 	public boolean isTerminalString(String s) {
-		return compUnit.getDeclaredTerminals().contains(s);
+		return termSet.contains(s);
 	}
 
 	/**

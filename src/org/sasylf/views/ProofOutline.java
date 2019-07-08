@@ -39,6 +39,7 @@ import org.sasylf.ProofChecker;
 import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
+import edu.cmu.cs.sasylf.ast.Chunk;
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
@@ -98,9 +99,20 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				return;
 			}
 
-			ProofElement pe = null;
+			Chunk chunk = cu.getPart();
+			
+			getChunkElements(documentFile, document, chunk);
+		}
 
-			for (Syntax syn : cu.getSyntax()) {
+		/**
+		 * @param documentFile
+		 * @param document
+		 * @param chunk
+		 */
+		public void getChunkElements(IFile documentFile, IDocument document,
+				Chunk chunk) {
+			ProofElement pe;			
+			for (Syntax syn : chunk.getSyntax()) {
 				if (!inResource(syn.getLocation(), documentFile)) continue;
 				pe = new ProofElement("Syntax", syn.toString());
 				pe.setPosition(convertLocToPos(document,syn.getLocation()));
@@ -116,7 +128,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			}
 
 			//judgments
-			for (Judgment judg : cu.getJudgments()) {
+			for (Judgment judg : chunk.getJudgments()) {
 				if (!inResource(judg.getLocation(), documentFile)) continue;
 				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
 				pe.setPosition(convertLocToPos(document, judg.getLocation()));
@@ -151,7 +163,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			}
 
 			//theorem
-			for (Theorem theo : cu.getTheorems()) {
+			for (Theorem theo : chunk.getTheorems()) {
 				if (!inResource(theo.getLocation(), documentFile)) continue;
 				StringBuilder sb = new StringBuilder();
 				sb.append(theo.getName());
@@ -473,13 +485,13 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	public void setInput(IEditorInput input) {
 		fInput= input;
 		IFile f = (IFile)fInput.getAdapter(IFile.class);
-		proofChecked(f,Proof.getCompUnit(f), 0);
+		proofChecked(f,Proof.getProof(f), 0);
 	}
 
 
 	@Override
-	public void proofChecked(final IFile file, final CompUnit cu, int errors) {
-		if (file == null || cu == null || fInput == null) return;
+	public void proofChecked(final IFile file, final Proof pf, int errors) {
+		if (file == null || pf == null || pf.getCompilation() == null || fInput == null) return;
 		if (!file.equals(fInput.getAdapter(IFile.class))) return;
 		final TreeViewer viewer= getTreeViewer();
 		if (viewer != null) {
@@ -491,7 +503,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						control.setRedraw(false);
 						ContentProvider provider = (ContentProvider)viewer.getContentProvider();
 						IDocument doc = fDocumentProvider.getDocument(fInput);
-						provider.newCompUnit(file,doc,cu);
+						provider.newCompUnit(file,doc,pf.getCompilation());
 						viewer.expandAll();
 						control.setRedraw(true);
 						viewer.refresh(); // doesn't work if inside the controlled area.

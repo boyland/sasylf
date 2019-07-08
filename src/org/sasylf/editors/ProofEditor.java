@@ -43,10 +43,10 @@ import org.sasylf.util.DocumentUtil;
 import org.sasylf.views.ProofOutline;
 
 import edu.cmu.cs.sasylf.ast.Case;
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
 
@@ -309,21 +309,23 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 
 
 	@Override
-	public void proofChecked(IFile file, CompUnit cu, int errors) {
-		if (file == null || cu == null) return;
+	public void proofChecked(IFile file, Proof pf, int errors) {
+		if (file == null || pf == null || pf.getCompilation() == null) return;
 		if (getEditorInput().getAdapter(IFile.class) == file) {
 			IDocument doc = getDocument();
 			List<Position> positions = new ArrayList<Position>();
 
 			try {
-				for (Judgment j : cu.getJudgments()) {
-					Position p = DocumentUtil.getPositionToNextLine(j, doc);
-					positions.add(p);
-				}
-				for (Theorem th : cu.getTheorems()) {
-					Position p = DocumentUtil.getPosition(th, doc);
-					positions.add(p);
-					findFoldable(doc,th.getDerivations(),positions);
+				for (Node n : pf.getDeclarations()) {
+					if (n instanceof Judgment) {
+						Position p = DocumentUtil.getPositionToNextLine(n, doc);
+						positions.add(p);
+					} else if (n instanceof Theorem) {
+						Position p = DocumentUtil.getPosition(n, doc);
+						positions.add(p);
+						Theorem th = (Theorem)n;
+						findFoldable(doc,th.getDerivations(),positions);
+					}
 				}
 			} catch (BadLocationException e) {
 				e.printStackTrace();

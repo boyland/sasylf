@@ -28,6 +28,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
 	
@@ -165,7 +166,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 						key = ((Variable)e2).getSymbol();
 					} else if (e2 instanceof NonTerminal) {
 						NonTerminal nt = (NonTerminal)e2;
-						key = nt.getSymbol();
+						key = Util.stripId(nt.getSymbol());
 						v = new Variable(key, nt.getLocation());
 					} else {
 						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, e2);

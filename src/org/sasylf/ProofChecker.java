@@ -51,10 +51,10 @@ public class ProofChecker  {
 		/**
 		 * We attempted a check of this file.
 		 * @param file file checked (perhaps in an editor that hasn't saved yet)
-		 * @param cu compilation unit, if any parsed (may be null).
+		 * @param proof proof structure, will not be null
 		 * @param errors number of errors found.
 		 */
-		public void proofChecked(IFile file, CompUnit cu, int errors);
+		public void proofChecked(IFile file, Proof proof, int errors);
 	}
 
 	/**
@@ -91,9 +91,9 @@ public class ProofChecker  {
 		}
 	}
 
-	protected void informListeners(IFile source, CompUnit cu, int errors) {
+	protected void informListeners(IFile source, Proof proof, int errors) {
 		for (Listener l : listeners) {
-			l.proofChecked(source, cu, errors);
+			l.proofChecked(source, proof, errors);
 		}
 	}
 
@@ -245,7 +245,8 @@ public class ProofChecker  {
 		if (!Proof.changeProof(oldProof, newProof)) {
 			System.out.println("Concurrent compile got there ahead of us for " + res);
 		} else {
-			if (res instanceof IFile) getInstance().informListeners((IFile)res,result, errors);
+			if (res instanceof IFile) getInstance().informListeners((IFile)res, newProof, errors);
+			else System.out.println("Can't inform listeners since not IFile: " + res);
 		}
 
 		return result;

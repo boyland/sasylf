@@ -78,17 +78,13 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 		if (p == null || p.getCompilation() == null) {
 			return Collections.emptyList();
 		}
-		CompUnit cu = p.getCompilation();
+
 		List<RuleLike> result = new ArrayList<RuleLike>();
-		if (type.equals("rule")) {
-			for (Judgment j : cu.getJudgments()) {
-				for (Rule r : j.getRules()) {
-					if (r.getName().startsWith(pattern)) result.add(r);
-				}
-			}
-		} else if (type.equals("lemma") || type.equals("theorem")) {
-			for (Theorem th : cu.getTheorems()) {
-				if (th.getName().startsWith(pattern)) result.add(th);
+		for (RuleLike rl : p.findRuleLikeByPrefix(pattern)) {
+			if (type.equals("rule")) {
+				if (rl instanceof Rule) result.add(rl);
+			} else if (type.equals("lemma") || type.equals("theorem")) {
+				if (rl instanceof Theorem) result.add(rl);
 			}
 		}
 		return result;
@@ -101,25 +97,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 			failureReason = "Proof is not checked or has syntax errors";
 			return null;
 		}
-		CompUnit cu = p.getCompilation();
-		RuleLike result = null;
-		if (type.equals("rule")) {
-			for (Judgment j : cu.getJudgments()) {
-				for (Rule r : j.getRules()) {
-					if (r.getName().equals(name)) {
-						result = r;
-						break;
-					}
-				}
-			}
-		} else if (type.equals("lemma") || type.equals("theorem")) {
-			for (Theorem th : cu.getTheorems()) {
-				if (th.getName().startsWith(name)) {
-					result = th;
-					break;
-				}
-			}
-		}
+		RuleLike result = p.findRuleLikeByName(name);
 		if (result == null) {
 			failureReason = "can find no " + type + " named " + name;
 			return null;
