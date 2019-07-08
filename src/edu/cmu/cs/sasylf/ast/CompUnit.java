@@ -18,19 +18,15 @@ public class CompUnit extends Node {
 		super(loc);
 		packageDecl=pack; 
 		moduleName = n; 
-		part.declaredTerminals = terms; 
-		part.syntax=s; part.judgments=j; 
-		part.theorems = t; 
+		part = new Chunk(terms,s,j,t);
 	}
 
 	public PackageDeclaration getPackage() { return packageDecl; }
 
 	private PackageDeclaration packageDecl;
 	private String moduleName;
-	Chunk part = new Chunk();
+	private Chunk part = new Chunk();
 	
-	public Chunk getPart() { return part; }
-
 	@Override
 	public void prettyPrint(PrintWriter out) {
 		packageDecl.prettyPrint(out);

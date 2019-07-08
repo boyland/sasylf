@@ -39,13 +39,13 @@ import org.sasylf.ProofChecker;
 import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
-import edu.cmu.cs.sasylf.ast.Chunk;
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
@@ -99,104 +99,83 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				return;
 			}
 
-			Chunk chunk = cu.getPart();
+			List<Node> contents = new ArrayList<Node>();
+			cu.collectTopLevel(contents);
 			
-			getChunkElements(documentFile, document, chunk);
-		}
-
-		/**
-		 * @param documentFile
-		 * @param document
-		 * @param chunk
-		 */
-		public void getChunkElements(IFile documentFile, IDocument document,
-				Chunk chunk) {
 			ProofElement pe;			
-			for (Syntax syn : chunk.getSyntax()) {
-				if (!inResource(syn.getLocation(), documentFile)) continue;
-				pe = new ProofElement("Syntax", syn.toString());
-				pe.setPosition(convertLocToPos(document,syn.getLocation()));
-				pList.add(pe);
-				if (syn instanceof SyntaxDeclaration) {
-					for (Clause c : ((SyntaxDeclaration)syn).getClauses()) {
-						ProofElement ce = new ProofElement("Clause",c.toString());
-						Location loc = c.getLocation();
-						ce.setPosition(convertLocToPos(document, loc));
-						pe.addChild(ce);
+			for (Node decl : contents) {
+				if (decl instanceof Syntax) {
+					Syntax syn = (Syntax)decl;
+					if (!inResource(syn.getLocation(), documentFile)) continue;
+					pe = new ProofElement("Syntax", syn.toString());
+					pe.setPosition(convertLocToPos(document,syn.getLocation()));
+					pList.add(pe);
+					if (syn instanceof SyntaxDeclaration) {
+						for (Clause c : ((SyntaxDeclaration)syn).getClauses()) {
+							ProofElement ce = new ProofElement("Clause",c.toString());
+							Location loc = c.getLocation();
+							ce.setPosition(convertLocToPos(document, loc));
+							pe.addChild(ce);
+						}
 					}
 				}
-			}
-
-			//judgments
-			for (Judgment judg : chunk.getJudgments()) {
-				if (!inResource(judg.getLocation(), documentFile)) continue;
-				pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
-				pe.setPosition(convertLocToPos(document, judg.getLocation()));
-				pList.add(pe);
-				for (Rule r : judg.getRules()) {
+				else if (decl instanceof Judgment) {
+					Judgment judg = (Judgment)decl;
+					if (!inResource(judg.getLocation(), documentFile)) continue;
+					pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
+					pe.setPosition(convertLocToPos(document, judg.getLocation()));
+					pList.add(pe);
+					for (Rule r : judg.getRules()) {
+						StringBuilder sb = new StringBuilder();
+						sb.append(r.getName()).append(": ");
+						for (Clause cl : r.getPremises()) {
+							sb.append(FORALL).append(cl).append(" ");
+						}
+						sb.append(EXISTS);
+						sb.append(r.getConclusion());
+						ProofElement re = new ProofElement("Rule", sb.toString());
+						Location loc = r.getLocation();
+						Position barPos = convertLocToPos(document, loc);
+						try {
+							String barPlusName = document.get(barPos.getOffset(), barPos.getLength()).trim();
+							int n = 0;
+							while (n < barPlusName.length() && ParseUtil.isBarChar(barPlusName.charAt(n))) {
+								++n;
+							}
+							re.setLexicalInfo(barPlusName.substring(0,n));
+						} catch (BadLocationException e) {
+							// muffle;
+						}
+						if (r.getPremises().size() > 0) {
+							loc = r.getPremises().get(0).getLocation();
+						}
+						re.setPosition(convertLocToPos(document, loc));
+						pe.addChild(re);
+					}
+				}
+				else if (decl instanceof Theorem) {
+					Theorem theo = (Theorem)decl;
+					if (!inResource(theo.getLocation(), documentFile)) continue;
 					StringBuilder sb = new StringBuilder();
-					sb.append(r.getName()).append(": ");
-					for (Clause cl : r.getPremises()) {
-						sb.append(FORALL).append(cl).append(" ");
+					sb.append(theo.getName());
+					sb.append(": ");
+					for(Fact fact : theo.getForalls()) {
+						sb.append(FORALL);
+						sb.append(fact.getElement()).append(" ");
 					}
 					sb.append(EXISTS);
-					sb.append(r.getConclusion());
-					ProofElement re = new ProofElement("Rule", sb.toString());
-					Location loc = r.getLocation();
-					Position barPos = convertLocToPos(document, loc);
+					sb.append(theo.getExists());
+					pe = new ProofElement(theo.getKindTitle(), sb.toString());
 					try {
-						String barPlusName = document.get(barPos.getOffset(), barPos.getLength()).trim();
-						int n = 0;
-						while (n < barPlusName.length() && ParseUtil.isBarChar(barPlusName.charAt(n))) {
-							++n;
-						}
-						re.setLexicalInfo(barPlusName.substring(0,n));
+						Position pos = DocumentUtil.getPosition(theo, document);
+						pe.setPosition(pos);
+						document.addPosition(pos);
 					} catch (BadLocationException e) {
-						// muffle;
+						// NB: This theorem is now gone.  Just ignore it:
+						continue;
 					}
-					if (r.getPremises().size() > 0) {
-						loc = r.getPremises().get(0).getLocation();
-					}
-					re.setPosition(convertLocToPos(document, loc));
-					pe.addChild(re);
+					pList.add(pe);
 				}
-			}
-
-			//theorem
-			for (Theorem theo : chunk.getTheorems()) {
-				if (!inResource(theo.getLocation(), documentFile)) continue;
-				StringBuilder sb = new StringBuilder();
-				sb.append(theo.getName());
-				sb.append(": ");
-				for(Fact fact : theo.getForalls()) {
-					sb.append(FORALL);
-					sb.append(fact.getElement()).append(" ");
-				}
-				sb.append(EXISTS);
-				sb.append(theo.getExists());
-				/*for(Element element : theo.getExists().getElements()) {
-					sb.append(element).append(" ");
-				}*/
-				pe = new ProofElement(theo.getKindTitle(), sb.toString());
-				try {
-					Position pos = DocumentUtil.getPosition(theo, document);
-					pe.setPosition(pos);
-					document.addPosition(pos);
-				} catch (BadLocationException e) {
-					//IStatus st = new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Theorem has no position: " + theo.getName(), e);
-					//StatusManager.getManager().handle(st);
-					// NB: This theorem is now gone.  Just ignore it:
-					continue;
-				}
-				pList.add(pe);
-				/* This part  hasn't ever been useful, and it uses up screen real estate:
-				cStack.push(pe);
-				for(Derivation deri: theo.getDerivations()) {
-					if(deri instanceof DerivationByAnalysis) {
-						findCaseRule(document, ((DerivationByAnalysis) deri).getCases());
-					}
-				}
-				cStack.pop();*/
 			}
 		}
 

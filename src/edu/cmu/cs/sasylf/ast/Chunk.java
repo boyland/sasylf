@@ -4,7 +4,9 @@ import static edu.cmu.cs.sasylf.util.Util.debug2;
 import static edu.cmu.cs.sasylf.util.Util.debug_parse;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,19 +18,21 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Chunk {
-	public List<Syntax> syntax;
-	public List<Judgment> judgments;
-	public List<Theorem> theorems;
-	public Set<String> declaredTerminals;
-
-	// The following are needed by the ProofOutline module.
-	public List<Syntax> getSyntax() { return syntax; }
-	public List<Judgment> getJudgments() { return judgments; }
-	public List<Theorem> getTheorems() { return theorems; }
+	private Set<String> declaredTerminals;
+	private List<Syntax> syntax;
+	private List<Judgment> judgments;
+	private List<Theorem> theorems;
 	
 	public Chunk() {
 	}
 
+	public Chunk(Set<String> terms, List<Syntax> sdecls, List<Judgment> judges, List<Theorem> theos) {
+		declaredTerminals = new HashSet<String>(terms);
+		syntax = new ArrayList<Syntax>(sdecls);
+		judgments = new ArrayList<Judgment>(judges);
+		theorems = new ArrayList<Theorem>(theos);
+	}
+	
 	/**
 	 * @param out
 	 */
