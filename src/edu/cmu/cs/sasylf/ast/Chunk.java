@@ -17,15 +17,26 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
+/**
+ * A sequence of terminals, syntax, judgments and theorems.
+ * The syntax and judgments may be mutually recursive.
+ * Theorem may be mutually recursive only as connected with 'and".
+ */
 public class Chunk {
 	private Set<String> declaredTerminals;
 	private List<Syntax> syntax;
 	private List<Judgment> judgments;
 	private List<Theorem> theorems;
 	
-	public Chunk() {
-	}
-
+	/**
+	 * Create a chunk from various collections.
+	 * The collections are not stored locally.
+	 * ANy can be empty, but at least one of these should be non-empty.
+	 * @param terms terminals (must not be null)
+	 * @param sdecls syntax declarations (must not be null)
+	 * @param judges judgment declarations (with rules) (must not be null)
+	 * @param theos theorem or lemma declarations (must not be null).
+	 */
 	public Chunk(Set<String> terms, List<Syntax> sdecls, List<Judgment> judges, List<Theorem> theos) {
 		declaredTerminals = new HashSet<String>(terms);
 		syntax = new ArrayList<Syntax>(sdecls);
