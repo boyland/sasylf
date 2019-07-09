@@ -1,10 +1,10 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -14,18 +14,33 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class CompUnit extends Node {
-	public CompUnit(PackageDeclaration pack, Location loc, String n, Set<String> terms, List<Syntax> s, List<Judgment> j, List<Theorem> t) {
+	public CompUnit(PackageDeclaration pack, Location loc, String n) {
 		super(loc);
 		packageDecl=pack; 
 		moduleName = n; 
-		part = new Chunk(terms,s,j,t);
+	}
+	
+	/**
+	 * Add a chunk that is required by this module.
+	 * @param c chunk to add, must not be null
+	 */
+	public void addParameterChunk(Chunk c) {
+		parts.add(c); //! We need to separate required from provides in a module system.
+	}
+	
+	/**
+	 * Add a chunk to this compilation unit.
+	 * @param c
+	 */
+	public void addChunk(Chunk c) {
+		parts.add(c);
 	}
 
 	public PackageDeclaration getPackage() { return packageDecl; }
 
 	private PackageDeclaration packageDecl;
 	private String moduleName;
-	private Chunk part = new Chunk();
+	private List<Chunk> parts = new ArrayList<Chunk>();
 	
 	@Override
 	public void prettyPrint(PrintWriter out) {
@@ -35,7 +50,9 @@ public class CompUnit extends Node {
 			out.println("module " + moduleName);
 		}
 
-		part.prettyPrint(out);
+		for (Chunk part : parts) {
+			part.prettyPrint(out);
+		}
 
 		out.flush();
 	}
@@ -71,7 +88,9 @@ public class CompUnit extends Node {
 	 */
 	public void typecheck(Context ctx, ModuleId id) {
 		if (id != null) checkFilename(id);
-		part.typecheck(ctx);
+		for (Chunk part : parts) {
+			part.typecheck(ctx);
+		}
 	}
 	
 	private void checkFilename(ModuleId id) {
@@ -93,10 +112,14 @@ public class CompUnit extends Node {
 	 * @param things collection to add to.
 	 */
 	public void collectTopLevel(Collection<? super Node> things) {
-		part.collectTopLevel(things);
+		for (Chunk part : parts) {
+			part.collectTopLevel(things);
+		}
 	}
 	
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
-		part.collectRuleLike(map);
+		for (Chunk part : parts) {
+			part.collectRuleLike(map);
+		}
 	}
 }

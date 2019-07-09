@@ -1414,24 +1414,22 @@ CompUnit CompilationUnit() :
   String moduleName = null;
   Token t=null;
   List<String> usedModule = null;
-  List<Syntax> syntax = new ArrayList<Syntax>(); 
-  List<Syntax> s; Judgment j;
-  Set<String> terms = new HashSet<String>();
-  Set<String> trm;
-  List<Judgment> judges = new ArrayList<Judgment>();
-  Theorem thm, lastThm;
-  List<Theorem> theorems = new ArrayList<Theorem>(); }
+  Chunk c;
+  CompUnit cu; }
 {
   [ pkg=PackageDeclaration() ]
   [ firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
+  {
+    if (pkg == null)
+		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
+    cu = new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName);
+  }
   
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
-    ( LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-    | LOOKAHEAD(2) s=Syntax(true) { syntax.addAll(s); }
-    | LOOKAHEAD(2) j=JudgmentDeclaration(true) { judges.add(j); }
-    | LOOKAHEAD(2) thm=TheoremDeclaration(true) { theorems.add(thm); }
-    )+
+    (
+      LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") )      c=Chunk(true) {  cu.addParameterChunk(c); }
+  	)+
   )?
    
   (t=<EXTENDS> usedModule=Name() 
@@ -1444,26 +1442,20 @@ CompUnit CompilationUnit() :
                   if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
   | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
   )
-  
-  (
-    LOOKAHEAD(2) trm=TerminalsDeclaration() { terms.addAll(trm); }
-  | LOOKAHEAD(2) s=Syntax(false) { syntax.addAll(s); } 
-  | LOOKAHEAD(2) j=JudgmentDeclaration(false) { judges.add(j); }
-  | LOOKAHEAD(2) thm=TheoremDeclaration(false) { theorems.add(thm); lastThm = thm; }
-      ( "and" 
-        thm = TheoremDeclaration(false)
-        { theorems.add(thm);
-          lastThm.setAnd(thm);
-          lastThm = thm;
-        }
-      )*
-  | t=<USE> usedModule=Name() { ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
+
+  (    
+	  LOOKAHEAD( ("terminals" | "syntax" | "judgment" | "theorem" | "lemma" | "use") )
+    (      c=Chunk(false) { cu.addChunk(c); }
+    )
+  | (
+    	t=<USE> usedModule=Name()
+      	{ ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
+    )
   )*
   <EOF>
   {
-    if (pkg == null)
-		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
-    return new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName, terms, syntax, judges, theorems);
+    /* maybe update first token? */
+    return cu;
   }
 }
 
@@ -1475,6 +1467,47 @@ PackageDeclaration PackageDeclaration() :
   t=<PACKAGE> l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
 }
 
+Chunk Chunk(boolean abstractOK) :
+{
+  List<Syntax> syntax = new ArrayList<Syntax>(); 
+  List<Syntax> s; Judgment j;
+  Set<String> terms = new HashSet<String>();
+  Set<String> trm;
+  List<Judgment> judges = new ArrayList<Judgment>();
+  Theorem thm, lastThm;
+  List<Theorem> theorems = new ArrayList<Theorem>(); }
+{
+  ( terms=TerminalsDeclaration()
+    ( LOOKAHEAD(2) syntax=Syntax(abstractOK) ) ?
+    ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) *
+    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?
+  | LOOKAHEAD(2) syntax=Syntax(abstractOK)    ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) *
+    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?
+  | ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) +
+    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?        | LOOKAHEAD(2) theorems=Theorems(abstractOK)
+  ) 
+	{
+	  return new Chunk(terms, syntax, judges, theorems);
+	}
+}
+
+List<Theorem> Theorems(boolean abstractOK) :
+{ Theorem thm, lastThm;
+  List<Theorem> theorems = new ArrayList<Theorem>(); }
+{
+  (	LOOKAHEAD(2)    thm=TheoremDeclaration(abstractOK) { theorems.add(thm); lastThm = thm; }
+    ( "and" thm = TheoremDeclaration(false)
+        { theorems.add(thm);
+          lastThm.setAnd(thm);
+          lastThm = thm;
+        }
+    )*
+  )+
+  {
+     return theorems;
+  }
+}
+ 
 Token Operator() :
 { Token t; }
 {
