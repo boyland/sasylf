@@ -1,5 +1,6 @@
 package org.sasylf;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +62,7 @@ public class Proof {
 			throw new IllegalStateException("can only set compilation once");
 		}
 		compilation = cu;
+		declarations = new ArrayList<Node>();
 		updateCache();
 	}
 
