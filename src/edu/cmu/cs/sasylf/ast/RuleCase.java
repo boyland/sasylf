@@ -207,12 +207,22 @@ public class RuleCase extends Case {
 
 			// set up relaxation info
 			relax = new Relaxation(container,newWrappers,relaxVars,subjectRoot);
+			// System.out.println("Relaxation is " + relax);
 			if (ctx.isKnownContext(thisRoot)) {
 				Relaxation former = ctx.relaxationMap.get(thisRoot);
+				// We only accept this if the new relaxation is the same as the old.
+				// Otherwise, we pick the correct error message.
+				// if (former != null) System.out.println("Previous was: " + former);
 				if (former == null)
 					ErrorHandler.report("Context already in use: " + thisRoot, this);
-				else if (!former.equals(relax)) 
-					ErrorHandler.report("Context already in use for a different variable: " + thisRoot, this);
+				else if (!former.getResult().equals(relax.getResult())) 
+					ErrorHandler.report("Context already in use for a different context: " + former.getResult(), this);
+				else if (!former.getRelaxationVars().equals(relax.getRelaxationVars()))
+					ErrorHandler.report("Context " + thisRoot + " already in use for analyzing " + former.getRelaxationVars(), this);
+				else if (!former.getTypes().equals(relax.getTypes()))
+					ErrorHandler.report("Context " + thisRoot + " already used with a different typed variable",this);
+				else // if (!former.equals(relax)) 
+					ErrorHandler.report("Binding does not match expectations in some way",this,former.toString());
 				relax = null; // don't do a new relaxation
 			}
 			conclusionIsUnsound = true; // not always, but safer this way
