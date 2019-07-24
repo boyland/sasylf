@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -221,9 +222,19 @@ public class RuleCase extends Case {
 					ErrorHandler.report("Context " + thisRoot + " already in use for analyzing " + former.getRelaxationVars(), this);
 				else if (!former.getTypes().equals(relax.getTypes()))
 					ErrorHandler.report("Context " + thisRoot + " already used with a different typed variable",this);
-				else // if (!former.equals(relax)) 
+				else if (!former.equals(relax)) 
 					ErrorHandler.report("Binding does not match expectations in some way",this,former.toString());
 				relax = null; // don't do a new relaxation
+			} else if (ctx.relaxationMap != null) {
+				// maybe we SHOULD have used an existing context!
+				for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
+					Relaxation r = e.getValue();
+					if (r.getResult().equals(relax.getResult()) &&
+						r.getRelaxationVars().equals(relax.getRelaxationVars())) {
+						ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + thisRoot, this);
+						break;
+					}
+				}
 			}
 			conclusionIsUnsound = true; // not always, but safer this way
 		}
