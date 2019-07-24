@@ -1,0 +1,181 @@
+// poor handling of contexts (relaxation)
+// Also a "where" clause failure
+terminals fn unit in 
+
+
+syntax
+
+e ::= fn x : tau => e[x]
+ | x
+ | e e
+ | "(" ")" 				
+
+
+tau ::= unit
+ | tau -> tau
+
+
+Gamma ::= *
+      |   Gamma, x : tau
+
+
+judgment has-type: Gamma |- e : tau
+assumes Gamma
+
+
+-------------------------- t-unit
+Gamma |- "("")" : unit
+
+
+------------------------- t-var
+Gamma, x:tau |- x : tau
+
+
+Gamma, x1:tau |- e[x1] : tau'
+--------------------------------------------- t-fn
+Gamma |- fn x : tau => e[x] : tau -> tau'
+
+
+Gamma |- e1 : tau' -> tau
+Gamma |- e2 : tau'
+---------------------------------- t-app
+Gamma |- e1 e2 : tau
+
+
+ 
+judgment type-equality: tau == tau
+
+  --------- type-eq
+  tau == tau
+  
+
+
+theorem typing-unique:
+  assumes Gamma
+  forall d1: Gamma |- e : tau1
+  forall d2: Gamma |- e : tau2
+  exists tau1 == tau2
+  proof by case analysis on d1:
+    case rule
+      -------------------------------- t-unit
+      _: Gamma |- "("")" : unit
+      where e := "(" ")"
+       and  tau1 := unit
+    is
+      use inversion of t-unit on d2
+         where tau2 := unit
+      proof by rule type-eq
+    end case
+
+    case rule
+      ------------------------------- t-var
+      _: (Gamma', x : tau1) |- x : tau1
+    is
+      proof by case analysis on d2:
+        /* The case that quick fix recommends: */ // it should be permitted!
+        case rule
+          ------------------------------- t-var
+          _: (Gamma', x : tau2) |- x : tau2
+          // where tau1 := tau2
+        is
+          proof by rule type-eq
+        end case
+        /**/
+      end case analysis
+    end case
+
+    case rule
+      d1': (Gamma, x : tau') |- e'[x] : tau1'
+      --------------------------------------------------- t-fn
+      _: Gamma |- (fn x : tau' => e'[x]) : (tau' -> tau1')
+      where e := fn x : tau' => e'[x]
+       and tau1 := tau' -> tau1'
+    is
+      d2' : Gamma, x : tau' |- e'[x] : tau2' by inversion of rule t-fn on d2
+         where tau2 := tau' -> tau2'
+      eq': tau1' == tau2' by induction hypothesis on d1', d2'
+      use inversion of type-eq on eq'
+        where tau1' := tau2'
+        // where tau2' := tau1' would be preferable but is also rejected.
+      proof by rule type-eq
+    end case
+
+    case rule
+      d11: Gamma |- e1 : (tau1' -> tau1)
+      d12: Gamma |- e2 : tau1'
+      ---------------------------------------- t-app
+      _: Gamma |- (e1 e2) : tau1
+      where e := e1 e2
+    is
+      d21: Gamma |- e1 : tau2' -> tau2 and
+      d22: Gamma |- e2 : tau2' by inversion of rule t-app on d2
+      eq: (tau1' -> tau1) == (tau2' -> tau2) by induction hypothesis on d11, d21
+      use inversion of rule type-eq on eq
+      where tau2' := tau1'
+       and tau2 := tau1
+     proof by rule type-eq
+    end case
+
+  end case analysis
+end theorem
+
+theorem typing-unique-unit:
+  assumes Gamma
+  forall d1: Gamma |- e : tau1
+  forall d2: Gamma |- e : unit
+  exists tau1 == tau2
+  proof by case analysis on d1:
+    case rule
+      -------------------------------- t-unit
+      _: Gamma |- "("")" : unit
+      where e := "(" ")"
+       and  tau1 := unit
+    is
+      proof by rule type-eq
+    end case
+
+    case rule
+      ------------------------------- t-var
+      _: (Gamma', x : tau1) |- x : tau1
+    is
+      proof by case analysis on d2:
+        /* The case that is recommended: */
+        case rule
+          ------------------------------- t-var
+          _: (Gamma', x : unit) |- x : unit
+        is
+          proof by rule type-eq
+        end case
+        /**/
+      end case analysis
+    end case
+
+    case rule
+      d1': (Gamma, x : tau') |- e'[x] : tau1'
+      --------------------------------------------------- t-fn
+      _: Gamma |- (fn x : tau' => e'[x]) : (tau' -> tau1')
+      where e := fn x : tau' => e'[x]
+       and tau1 := tau' -> tau1'
+    is
+      proof by contradiction on d2
+    end case
+
+    case rule
+      d11: Gamma |- e1 : (tau1' -> tau1)
+      d12: Gamma |- e2 : tau1'
+      ---------------------------------------- t-app
+      _: Gamma |- (e1 e2) : tau1
+      where e := e1 e2
+    is
+      d21: Gamma |- e1 : tau2' -> unit and
+      d22: Gamma |- e2 : tau2' by inversion of rule t-app on d2
+      eq: (tau1' -> tau1) == (tau2' -> unit) by theorem typing-unique on d11, d21
+      use inversion of rule type-eq on eq
+      where tau2' := tau1'
+       and tau1 := unit
+     proof by rule type-eq
+    end case
+
+  end case analysis
+end theorem
+
