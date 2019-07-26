@@ -311,7 +311,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	@Override
 	public void proofChecked(IFile file, Proof pf, int errors) {
 		if (file == null || pf == null || pf.getCompilation() == null) return;
-		if (getEditorInput().getAdapter(IFile.class) == file) {
+		if (file.equals(getEditorInput().getAdapter(IFile.class))) {
 			IDocument doc = getDocument();
 			List<Position> positions = new ArrayList<Position>();
 
