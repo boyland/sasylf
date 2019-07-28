@@ -192,50 +192,44 @@ public class RuleCase extends Case {
 					Util.debug("Found canonSub = ",canonSub);
 					subjectTerm = subjectTerm.substitute(canonSub);
 					ctx.composeSub(canonSub);
+					canonSub = null;
 				}
 				relaxVars.add(null); // for the assumption itself
 			}
-
-			List<Abstraction> newWrappers = new ArrayList<Abstraction>();
-			Term.getWrappingAbstractions(patternConc, newWrappers, diff);
-			Util.debug("Introducing ",thisRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
-
-			//XXX: the following statement should use new techniques, not the old one.
-			adaptedSubjectTerm = ClauseUse.wrapWithOuterLambdas(subjectTerm, patternConc, diff, adaptSub);
-			Util.debug("subject = ", subjectTerm);
-			Util.debug("adapted is ", adaptedSubjectTerm);
-			Util.debug("adaptSub = ", adaptSub);
-
-			// set up relaxation info
-			relax = new Relaxation(container,newWrappers,relaxVars,subjectRoot);
-			// System.out.println("Relaxation is " + relax);
-			if (ctx.isKnownContext(thisRoot)) {
-				Relaxation former = ctx.relaxationMap.get(thisRoot);
-				// We only accept this if the new relaxation is the same as the old.
-				// Otherwise, we pick the correct error message.
-				// if (former != null) System.out.println("Previous was: " + former);
-				if (former == null)
-					ErrorHandler.report("Context already in use: " + thisRoot, this);
-				else if (!former.getResult().equals(relax.getResult())) 
-					ErrorHandler.report("Context already in use for a different context: " + former.getResult(), this);
-				else if (!former.getRelaxationVars().equals(relax.getRelaxationVars()))
+			
+			Relaxation former = ctx.relaxationMap == null ? null : ctx.relaxationMap.get(thisRoot);
+			if (former != null) {
+				if (!former.getValues().equals(relaxVars)) {
 					ErrorHandler.report("Context " + thisRoot + " already in use for analyzing " + former.getRelaxationVars(), this);
-				else if (!former.getTypes().equals(relax.getTypes()))
-					ErrorHandler.report("Context " + thisRoot + " already used with a different typed variable",this);
-				else if (!former.equals(relax)) 
-					ErrorHandler.report("Binding does not match expectations in some way",this,former.toString());
-				relax = null; // don't do a new relaxation
-			} else if (ctx.relaxationMap != null) {
-				// maybe we SHOULD have used an existing context!
-				for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
-					Relaxation r = e.getValue();
-					if (r.getResult().equals(relax.getResult()) &&
-						r.getRelaxationVars().equals(relax.getRelaxationVars())) {
-						ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + thisRoot, this);
-						break;
+				}
+				// System.out.println("Former Relaxation is " + former);
+				adaptedSubjectTerm = former.adapt(subjectTerm);
+			} else if (ctx.isKnownContext(thisRoot)) {
+				ErrorHandler.report("Context already in use: " + thisRoot, this);
+			} else {
+				List<Abstraction> newWrappers = new ArrayList<Abstraction>();
+				Term.getWrappingAbstractions(patternConc, newWrappers, diff);
+				Util.debug("Introducing ",thisRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
+				// set up relaxation info
+				relax = new Relaxation(container,newWrappers,relaxVars,subjectRoot);
+				// System.out.println("Relaxation is " + relax);
+				adaptedSubjectTerm = relax.adapt(subjectTerm);
+				if (ctx.relaxationMap != null) {
+					// maybe we SHOULD have used an existing context!
+					for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
+						Relaxation r = e.getValue();
+						if (r.getResult().equals(relax.getResult()) &&
+								r.getRelaxationVars().equals(relax.getRelaxationVars())) {
+							ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + thisRoot, this);
+							break;
+						}
 					}
 				}
 			}
+			
+			Util.debug("subject = ", subjectTerm);
+			Util.debug("adapted is ", adaptedSubjectTerm);
+
 			conclusionIsUnsound = true; // not always, but safer this way
 		}
 
