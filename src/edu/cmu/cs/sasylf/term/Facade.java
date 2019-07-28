@@ -28,6 +28,9 @@ public class Facade {
 	public static Term Abs(String var, Term type, Term body) {
 		return Abstraction.make(var, type, body);
 	}
+	public static Term Abs(FreeVar var, Term type, Term body) { // substitutes out formal!
+		return Abstraction.make(var, type, body);
+	}
 	public static Application App(Atom f, Term a) {
 		return new Application(f, a);
 	}

@@ -125,6 +125,7 @@ public class UnitTests extends SimpleTestSuite {
 		testUnify();
 		// new tests must be after testUnify because of fragile assignment of fresh variables
 		testStripLambdas();
+		testBindVars();
 	}
 
 	private void testType() {
@@ -157,6 +158,12 @@ public class UnitTests extends SimpleTestSuite {
 		assertEqual("used second",Abs(a,b(1)), Abs(a,Abs(a,b(1))).stripUnusedLambdas());
 		assertEqual("unused except in unused",a1, Abs(a,Abs(App(b,b(1)),a1)).stripUnusedLambdas());
 		assertEqual("unused except in unused",Abs(a,App(a2,b(1))), Abs(a,Abs(App(b,b(1)),Abs(a,App(a2,b(1))))).stripUnusedLambdas());
+	}
+	
+	private void testBindVars() {
+		FreeVar av = v("a",a);
+		Term t = Abs(av,a,av);
+		assertEqual("bound var correctly",t,Abs(a,b(1)));
 	}
 
 	@SuppressWarnings("unchecked")

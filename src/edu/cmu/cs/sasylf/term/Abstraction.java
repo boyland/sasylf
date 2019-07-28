@@ -42,6 +42,20 @@ public class Abstraction extends Term {
 		}
 		return new Abstraction(var, type, body);
 	}
+	
+	/**
+	 * Create an abstraction while substituting the formal variable with
+	 * free variables in the body.
+	 * @param v variable used in the body (perhaps)
+	 * @param type type
+	 * @param body body of abstraction
+	 * @return new abstraction
+	 */
+	public static Term make(FreeVar v, Term type, Term body) {
+		Substitution sub = new Substitution();
+		sub.add(v, new BoundVar(1));
+		return make(v.getName(), type, body.substitute(sub));
+	}
 
 	private Abstraction(String name, Term type, Term b) {
 		varName = name; varType = type; body =b;
