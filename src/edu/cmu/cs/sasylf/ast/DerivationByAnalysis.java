@@ -383,7 +383,26 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 								targetGamma = ((ClauseUse)targetGamma).getRoot();
 							}
 							NonTerminal gammaNT = (NonTerminal)targetGamma;
-							NonTerminal newGammaNT = new NonTerminal(gammaNT.getSymbol()+"'", gammaNT.getLocation());
+							NonTerminal newGammaNT = null;
+							if (ctx.relaxationMap != null) {
+								Set<FreeVar> free = ctx.currentCaseAnalysis.getFreeVariables();
+								free.retainAll(ctx.relaxationVars);
+								if (!free.isEmpty()) {
+									for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
+										if (e.getValue().getRelaxationVars().containsAll(free)) {
+											newGammaNT = e.getKey();
+										}
+									}
+								}
+							}
+							if (newGammaNT == null) {
+								String newName = gammaNT.getSymbol()+"'";
+								int i=0;
+								while (ctx.isKnownContext(newGammaNT = new NonTerminal(newName, gammaNT.getLocation()))) {
+									newName = gammaNT.getSymbol()+i;
+									++i;
+								}
+							}
 							newGammaNT.setType(gammaNT.getType());
 							targetGamma = newGammaNT;
 						}
