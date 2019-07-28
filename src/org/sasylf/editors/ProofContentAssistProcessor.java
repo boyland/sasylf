@@ -27,9 +27,7 @@ import org.eclipse.ui.statushandlers.StatusManager;
 import org.sasylf.Activator;
 import org.sasylf.Proof;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Element;
-import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleLike;
 import edu.cmu.cs.sasylf.ast.Theorem;

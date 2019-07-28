@@ -15,7 +15,6 @@ import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
-import org.eclipse.jface.util.Assert;
 import org.eclipse.swt.SWT;
 
 public class SASyLFCodeScanner extends RuleBasedScanner{
