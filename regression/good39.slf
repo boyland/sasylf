@@ -76,7 +76,7 @@ theorem typing-unique:
         case rule
           ------------------------------- t-var
           _: (Gamma', x : tau2) |- x : tau2
-          // where tau1 := tau2
+          // where tau1 := tau2 (cannot handle yet)
         is
           proof by rule type-eq
         end case
