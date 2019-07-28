@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -66,7 +67,7 @@ public class Relaxation {
 	public NonTerminal getResult() {
 		return result;
 	}
-
+	
 	/**
 	 * Relax a term using this relaxation, 
 	 * or return null if relaxation doesn't apply.
@@ -110,6 +111,29 @@ public class Relaxation {
 		return t;
 	}
 
+	/**
+	 * Wrap a term in binders to reflect the relaxation.
+	 * This is the opposite of the {@link #relax(Term)} method.
+	 * This method is only reasonable (we are *undoing* relaxation)
+	 * if the term is the bare relation, otherwise, some bindings may be lost.
+	 * @param t term to wrap and replace variables
+	 * @return abstraction representing term adapted to the relaxation context.
+	 */
+	public Term adapt(Term t) {
+		int n = types.size();
+		List<Term> tempTypes = new ArrayList<Term>(types);
+		for (int i=n-1; i >= 0; --i) {
+			Term ty = tempTypes.get(i);
+			FreeVar val = values.get(i);
+			if (val == null) {
+				t = Facade.Abs(ty, t);
+			} else {
+				t = Facade.Abs(val, ty, t); 
+			}
+		}
+		return t;
+	}
+
 	public Relaxation substitute(Substitution sub) {
 		boolean changed = false;
 		List<Term> newTypes = null;
@@ -137,6 +161,14 @@ public class Relaxation {
 		return this;
 	}
 
+	/**
+	 * Get the values for this relaxation.
+	 * @return
+	 */
+	public List<FreeVar> getValues() {
+		return Collections.unmodifiableList(values);
+	}
+	
 	public Set<FreeVar> getRelaxationVars() {
 		Set<FreeVar> result = new HashSet<FreeVar>(values);
 		result.remove(null);
