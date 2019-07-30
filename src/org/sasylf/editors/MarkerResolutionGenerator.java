@@ -14,6 +14,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
@@ -62,7 +63,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		@Override
 		public void apply(IDocument document) {
 			super.apply(document);
-			ProofChecker.analyzeSlf(null,null, resource, document);
+			ProofChecker.analyzeSlf(null, null, resource, document);
 		}
 
 	}
@@ -208,7 +209,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		String extraIndent = "";
 
 		try {
-			String nl = doc.getLineDelimiter(line);
+			String nl = TextUtilities.getDefaultLineDelimiter(doc);
 			IRegion old = new FindReplaceDocumentAdapter(doc).find(lineInfo.getOffset(), split[0], true, true, false, false);
 			/* Too conservative:
       if (old != null && lineInfo != null && old.getOffset() - lineInfo.getOffset() > lineInfo.getLength()) {
@@ -219,7 +220,8 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 					old = new Region(lineInfo.getOffset(),lineText.length());
 				}
 			}
-
+			String newText;
+			
 			switch (markerType) {
 			default: break;
 			case MISSING_CASE:
@@ -281,9 +283,25 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						sb.append(nl);
 					}
 				}
-				String newText = sb.toString();
-				proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
-						null, "insert missing case(s)", null, fixInfo));
+				if (lineText.contains("by contradiction on") && !lineText.contains("by case analysis on")) { // XXX: Could be confused by a comment 
+					IRegion reg = doc.getLineInformation(line-1); // lines are zero-based
+					int lo = lineText.indexOf("contradiction");
+					String[] parts = lineText.split("\\s+");
+					int l = parts.length;
+					// try to avoid dangerous changes
+					if (l > 3 && parts[l-2].equals("on")) {
+						String derivName = parts[l-1];
+						newText = "case analysis on " + derivName + ":" + nl + sb + lineIndent + "end case analysis";
+						int offset = reg.getOffset() + lo;
+						// System.out.println("Converting starting at column " + lo + " using '" + newText + "'");
+						proposals.add(new MyCompletionProposal(res, newText, offset, reg.getLength()-lo, 
+								newCursor, null, "convert to case analysis with missign case(s)", null, fixInfo));
+					}
+				} else {
+					newText = sb.toString();
+					proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
+							null, "insert missing case(s)", null, fixInfo));
+				}
 				break;
 			case ABSTRACT_NOT_PERMITTED_HERE:
 			case ILLEGAL_ASSUMES:

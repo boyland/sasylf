@@ -1,4 +1,4 @@
-SASyLF version 1.4.0a2
+SASyLF version 1.4.0a3
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -115,7 +115,7 @@ RELEASE HISTORY
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)
-    Resolved issues #71, #74, #76, #77, #78
+    Resolved issues #25, #68, #70, #71, #72, #74, #75, #76, #77, #78, #79
 1.3.4	Plugin improvements
 	Incremental proof checking
 	re-check after revert.
