@@ -96,10 +96,8 @@ public class RuleCase extends Case {
 			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
 		Term subjectTerm = ctx.currentCaseAnalysisElement.asTerm().substitute(ctx.currentSub);
 		Term rcc = conclusion.getClause().asTerm();
-		Term cas = subjectTerm;
 		NonTerminal subjectRoot = ctx.getCurrentCaseAnalysisRoot();
 		int numPremises = premises.size();
-		Substitution adaptSub = new Substitution();
 		Term adaptedSubjectTerm = subjectTerm;
 		// Technically the conclusion is unsound if we are using
 		// the assumption rule and unrolling the context.
@@ -443,7 +441,7 @@ public class RuleCase extends Case {
 		}
 
 		// verify user-written where clauses
-		WhereClause.checkWhereClauses(whereClauses, ctx, cas, rcc, null, conclusion);
+		WhereClause.checkWhereClauses(whereClauses, ctx, adaptedSubjectTerm, rcc, null, conclusion);
 
 		super.typecheck(ctx, isSubderivation);
 	}
