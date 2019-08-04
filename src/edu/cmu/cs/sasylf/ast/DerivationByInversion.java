@@ -186,6 +186,9 @@ public class DerivationByInversion extends DerivationWithArgs {
 						checkRootMatch(ctx,rule.getPremises().get(i),this.getElement(),this);
 					}
 				}
+				// Because we do the unifications step by step, we can't just "avoid"
+				// on the substitutions as they come, but instead do this at the end:
+				ctx.avoidIfPossible(result.getFreeVariables());
 				found_rulel = true;
 			} else {
 				ErrorHandler.report(Errors.MISSING_CASE,

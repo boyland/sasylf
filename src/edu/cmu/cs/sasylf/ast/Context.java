@@ -36,9 +36,12 @@ public class Context implements Cloneable {
 	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
 	public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
+	// public Map<String,Module> modMap = new HashMap<String, Module>();
 	public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
 	public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
 
+	// public int version; // incremented to indicate that caches should be abandoned.
+	
 	/// The remainder fields represent contextual (local) information
 
 	public Map<String, Theorem> recursiveTheorems; // only changes with theorems
@@ -364,6 +367,43 @@ public class Context implements Cloneable {
 		}
 		// System.out.println("new vars = " + newVars);
 		inputVars.addAll(newVars);
+	}
+	
+	/**
+	 * Change the current substitution (if possible) to avoid mapping
+	 * the given variables.  If the substitution is changed, the other
+	 * parts of the context are updated as well.
+	 * @param vars variables to avoid mapping, updated to remove variables
+	 * that could be avoided.
+	 * @return substitution that handles the changes that this call performs.
+	 */
+	public Substitution avoidIfPossible(Set<FreeVar> vars) {
+		// System.out.println("avoidIfPossible(" + vars + ")");
+		// System.out.println("  current = " + currentSub);
+		// System.out.println("  inpuVars = " + inputVars);
+		Substitution original = new Substitution(currentSub);
+		Set<FreeVar> requested = new HashSet<FreeVar>(vars);
+		vars.clear();
+		vars.addAll(currentSub.selectUnavoidable(requested));
+		requested.removeAll(vars); // now has all the ones made input vars
+		Substitution result = new Substitution(currentSub);
+		result.removeAll(original.getDomain());
+		inputVars.removeAll(result.getDomain());
+		inputVars.addAll(requested);
+		if (relaxationMap != null) {
+			relaxationVars.clear();
+			for (Map.Entry<NonTerminal, Relaxation> e : relaxationMap.entrySet()) {
+				Relaxation r = e.getValue();
+				r = r.substitute(result);
+				relaxationVars.addAll(r.getRelaxationVars());
+				e.setValue(r);
+			}
+		}	
+		// System.out.println("  updated = " + currentSub);
+		// System.out.println("  new inputVars = " + inputVars);
+		// System.out.println("  not avoided = " + vars);
+		// System.out.println("  result = " + result);
+		return result;
 	}
 
 	public NonTerminal getCurrentCaseAnalysisRoot() {

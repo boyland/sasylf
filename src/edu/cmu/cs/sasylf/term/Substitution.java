@@ -150,6 +150,14 @@ public class Substitution {
 	public void removeAll(Collection<FreeVar> col) {
 		varMap.keySet().removeAll(col);
 	}
+	
+	/**
+	 * Return the domain as an unmodifiable set.
+	 * @return set of variables mapped y this substitution
+	 */
+	public Set<FreeVar> getDomain() {
+		return Collections.unmodifiableSet(varMap.keySet());
+	}
 
 	/**
 	 * Return what this variable is substituted with according to this substitution.
