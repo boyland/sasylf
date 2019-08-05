@@ -629,6 +629,7 @@
             id="org.sasylf.refactor.move"
             name="Move SASyLF Proof File">
          <enablement>
+            <instanceof value="org.eclipse.core.resources.IFile"/>
             <test
                   property="org.eclipse.core.resources.name"
                   value="*.slf">
