@@ -78,7 +78,7 @@ public class Chunk {
 		
 		// We set up variables and nonterminal maps.
 		for (Syntax syn: syntax) {
-			syn.updateSyntaxMap(ctx.varMap, ctx.synMap);
+			syn.updateContext(ctx);
 		}
 		
 		// Do some checks before type checking;

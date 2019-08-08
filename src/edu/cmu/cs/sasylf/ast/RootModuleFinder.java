@@ -34,14 +34,21 @@ public class RootModuleFinder implements ModuleFinder {
 	}
 
 	@Override
-	public CompUnit findModule(String name, Span location) {
+	public boolean hasCandidate(ModuleId id) {
+		if (cache.containsKey(id)) return true;
+		File f = id.asFile(rootDirectory);
+		return f.isFile();
+	}
+
+	@Override
+	public Module findModule(String name, Span location) {
 		return findModule(new ModuleId(currentPackage,name),location);
 	}
 
 	@Override
-	public CompUnit findModule(ModuleId id, Span location) {
+	public Module findModule(ModuleId id, Span location) {
 		if (cache.containsKey(id)) {
-			CompUnit previous = cache.get(id);
+			Module previous = cache.get(id);
 			if (previous == null) {
 				ErrorHandler.report("Module has errors: " + id, location);
 			}

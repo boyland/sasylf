@@ -36,11 +36,11 @@ public class Context implements Cloneable {
 	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
 	public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
-	// public Map<String,Module> modMap = new HashMap<String, Module>();
+	public Map<String,Module> modMap = new HashMap<String, Module>();
 	public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
 	public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
 
-	// public int version; // incremented to indicate that caches should be abandoned.
+	public int version; // incremented to indicate that caches should be abandoned.
 	
 	/// The remainder fields represent contextual (local) information
 

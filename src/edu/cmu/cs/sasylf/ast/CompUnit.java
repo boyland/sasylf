@@ -13,7 +13,7 @@ import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
-public class CompUnit extends Node {
+public class CompUnit extends Node implements Module {
 	public CompUnit(PackageDeclaration pack, Location loc, String n) {
 		super(loc);
 		packageDecl=pack; 
@@ -38,10 +38,19 @@ public class CompUnit extends Node {
 
 	public PackageDeclaration getPackage() { return packageDecl; }
 
+	/* (non-Javadoc)
+	 * @see edu.cmu.cs.sasylf.ast.Module#getName()
+	 */
+	@Override
+	public String getName() { return moduleName; }
+	
 	private PackageDeclaration packageDecl;
 	private String moduleName;
 	private List<Chunk> parts = new ArrayList<Chunk>();
 	
+	/* (non-Javadoc)
+	 * @see edu.cmu.cs.sasylf.ast.Module#prettyPrint(java.io.PrintWriter)
+	 */
 	@Override
 	public void prettyPrint(PrintWriter out) {
 		packageDecl.prettyPrint(out);
@@ -57,10 +66,10 @@ public class CompUnit extends Node {
 		out.flush();
 	}
 
-	/**
-	 * Type check this compilation unit in the default module context.
-	 * @return
+	/* (non-Javadoc)
+	 * @see edu.cmu.cs.sasylf.ast.Module#typecheck()
 	 */
+	@Override
 	public boolean typecheck() {
 		return typecheck(new NullModuleFinder(),(ModuleId)null);  
 	}
@@ -106,17 +115,20 @@ public class CompUnit extends Node {
 		}
 	}
 	
-	/**
-	 * Put all top-level declarations is this compilation unit (module)
-	 * into the collection
-	 * @param things collection to add to.
+	/* (non-Javadoc)
+	 * @see edu.cmu.cs.sasylf.ast.Module#collectTopLevel(java.util.Collection)
 	 */
+	@Override
 	public void collectTopLevel(Collection<? super Node> things) {
 		for (Chunk part : parts) {
 			part.collectTopLevel(things);
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.cmu.cs.sasylf.ast.Module#collectRuleLike(java.util.Map)
+	 */
+	@Override
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
 		for (Chunk part : parts) {
 			part.collectRuleLike(map);

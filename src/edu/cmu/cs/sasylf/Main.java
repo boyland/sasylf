@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import java.io.Reader;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Module;
 import edu.cmu.cs.sasylf.ast.ModuleFinder;
 import edu.cmu.cs.sasylf.ast.ModuleId;
 import edu.cmu.cs.sasylf.ast.RootModuleFinder;
@@ -110,7 +111,7 @@ public class Main {
 			try {
 				/* long start = System.nanoTime(); */
 				@SuppressWarnings("unused")
-				CompUnit cu = parseAndCheck(mf, filename, id, r);
+				Module cu = parseAndCheck(mf, filename, id, r);
 				/*
 				long mid = System.nanoTime();
 				if (cu != null) {

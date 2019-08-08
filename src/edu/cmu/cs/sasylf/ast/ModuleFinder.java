@@ -11,6 +11,15 @@ public interface ModuleFinder {
 	public static final String[] EMPTY_PACKAGE = new String[0];
 
 	/**
+	 * Check to see if this module finder has a candidate module with the given name.
+	 * Attempting to find it may cause errors (e.g. parse errors), but this method
+	 * will simply return true (without errors)
+	 * @param id module id to check, must not be null
+	 * @return whether something representing itself as a module is present.
+	 */
+	public abstract boolean hasCandidate(ModuleId id);
+	
+	/**
 	 * Find a module given just a name.
 	 * The implementation make look in the current package,
 	 * as well as in any generally imported package.
@@ -19,7 +28,7 @@ public interface ModuleFinder {
 	 * @return compilation unit for module
 	 * @throws SASyLFError if none found, or if conflicting modules found
 	 */
-	public abstract CompUnit findModule(String name, Span location);
+	public abstract Module findModule(String name, Span location);
 
 	/**
 	 * Find a module in a given package.
@@ -28,7 +37,7 @@ public interface ModuleFinder {
 	 * @return compilation unit for module
 	 * @throws SASyLFError if none found, or if conflicting modules found
 	 */
-	public abstract CompUnit findModule(ModuleId id, Span location);
+	public abstract Module findModule(ModuleId id, Span location);
 
 	/**
 	 * Set the current package for use in later {@link #findModule(String, Span)} calls.

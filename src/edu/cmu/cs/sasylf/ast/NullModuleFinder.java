@@ -13,12 +13,17 @@ public class NullModuleFinder implements ModuleFinder {
 	protected NullModuleFinder() { }
 
 	@Override
-	public CompUnit findModule(String name, Span location) {
+	public boolean hasCandidate(ModuleId id) {
+		return false;
+	}
+
+	@Override
+	public Module findModule(String name, Span location) {
 		return findModule(new ModuleId(EMPTY_PACKAGE,name),location);
 	}
 
 	@Override
-	public CompUnit findModule(ModuleId id, Span location) {
+	public Module findModule(ModuleId id, Span location) {
 		ErrorHandler.report("no root directory or SASyLF project,  cannot find module " + id,location);
 		return null;
 	}

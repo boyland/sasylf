@@ -77,7 +77,9 @@ public class Judgment extends Node implements ClauseType {
 
 	public void defineConstructor(Context ctx) {
 		form.typecheck(ctx);
-		ClauseDef cd = new ClauseDef(form, this, name);
+		ClauseDef cd;
+		if (form instanceof ClauseDef) cd = (ClauseDef)form;
+		else cd = new ClauseDef(form, this, name);
 		cd.checkVarUse(false);
 		form = cd;
 		ctx.prodMap.put(name,cd);
@@ -94,12 +96,11 @@ public class Judgment extends Node implements ClauseType {
 		ctx.judgMap.put(name, this);
 	}
 
-	protected void setForm(Clause f) {
+	protected void setForm(ClauseDef f) {
 		form = f;
 	}
 
 	public void typecheck(Context ctx) {
-		//form.typecheck(synMap, varMap);
 
 		SyntaxDeclaration contextSyntax = null;
 

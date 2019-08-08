@@ -80,6 +80,20 @@ public class DSLToolkitParser {
     }
       
 
+	/** True if the next thing is another top-level declaration
+	*/
+	boolean isTopLevel() {
+	  Token t = getToken(1);
+	  return t.kind == TERMINALS
+	      || t.kind == SYNTAX
+	      || t.kind == ABSTRACT
+	      || t.kind == JUDGMENT
+	      || t.kind == LEMMA
+	      || t.kind == THEOREM
+	      || t.kind == USE
+	      || t.kind == EXTENDS;
+	}
+	      
     /** True if the next token is almost anything but not
      * PIPE
      * LPAREN, RPAREN, LBRACK, RBRACK, DOT,
@@ -95,6 +109,7 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == OPERATOR
 			|| getToken(1).kind == COLON
 			|| getToken(1).kind == COLON_EQ
+			|| getToken(1).kind == EQUAL
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
 			|| getToken(1).kind == COMMA
@@ -1008,6 +1023,7 @@ TOKEN :
 | < ASSIGN: "::=" >
 | < PIPE: "|" >
 | < COLON_EQ: ":=" >
+| < EQUAL: "=" >
 }
 
 
@@ -1412,6 +1428,7 @@ TOKEN :
 CompUnit CompilationUnit() :
 { PackageDeclaration pkg = null;
   String moduleName = null;
+  List<QualName> args;
   Token t=null;
   List<String> usedModule = null;
   Chunk c;
@@ -1432,7 +1449,7 @@ CompUnit CompilationUnit() :
   	)+
   )?
    
-  (t=<EXTENDS> usedModule=Name() 
+  (t=<EXTENDS> usedModule=Name()
     { if (firstToken == null) firstToken = t;
       if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
       else ErrorHandler.recoverableError("module 'extends' not implemented yet", new Location(t)); }
@@ -1448,7 +1465,7 @@ CompUnit CompilationUnit() :
     (      c=Chunk(false) { cu.addChunk(c); }
     )
   | (
-    	t=<USE> usedModule=Name()
+    	t=<USE> usedModule=Name() args=ModuleParameters() 
       	{ ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
     )
   )*
@@ -1507,7 +1524,19 @@ List<Theorem> Theorems(boolean abstractOK) :
      return theorems;
   }
 }
- 
+
+List<QualName> ModuleParameters() :
+{
+  QualName qn;
+  List<QualName> result = new ArrayList<QualName>();
+}
+{
+  [ "[" [ qn=QualName() { result.add(qn); }
+          ( "," qn=QualName() {  result.add(qn); } )* ]
+    "]"  ]
+  { return result; }    
+}
+  
 Token Operator() :
 { Token t; }
 {
@@ -1519,6 +1548,7 @@ Token Operator() :
 		| t=<MINUS>
 		| t=<COMMA>
 		| t=<PIPE>
+		| t=<EQUAL>
 		/* | t=<DOT> */
 	) { return t; }
 }
@@ -1552,6 +1582,16 @@ List<String> Name() :
   )*
   { return l; }
 }
+
+/*
+ * Eventually this will include qualified names, and will take over Name() from previous.
+ */
+QualName QualName() :
+{ Token t; }
+{
+  t=<IDENTIFIER> { return new QualName(new Location(t), t.image); }
+}  
+    
 
 StringSpan RuleName() :
 {Token t, t1; StringSpan s; }
@@ -1608,15 +1648,19 @@ Set<String> TerminalsDeclaration() :
 SyntaxDeclaration BNFRule() :
 { Token t;
   List<NonTerminal> alts = new ArrayList<NonTerminal>();
+  QualName qn = null;
   List<Clause> l = new ArrayList<Clause>(); }
 {
   t=<IDENTIFIER>
   (
     "," { alts.add(getNonTerminal(t)); } t=<IDENTIFIER>  )*
+  [ "=" qn=QualName() ]
   <ASSIGN> Clauses(l)
   {
     NonTerminal nt = getNonTerminal(t);
-    SyntaxDeclaration syn = new SyntaxDeclaration(new Location(t), nt, l);
+    SyntaxDeclaration syn;
+    if (qn == null) syn = new SyntaxDeclaration(new Location(t), nt, l);
+    else syn = new RenameSyntaxDeclaration(new Location(t), nt, qn, l);
     for (NonTerminal alt : alts) {
       syn.addAlternate(alt);
     }
@@ -1666,7 +1710,7 @@ Clause Clause() :
 Element Term() :
 { Token t; Element e; }
 {
-  LOOKAHEAD({ isBinding() }) e=Binding() { return e; }
+  LOOKAHEAD(2) e=Binding() { return e; }
   | t=<IDENTIFIER> { return getNonTerminal(t); }
   | t=<STRING_LITERAL> { Terminal tm = getTerminal(t, t.image.substring(1, t.image.length()-1)); tm.setMustQuote(); return tm; }
   | t=Operator() { return getTerminal(t, t.image); }
@@ -1686,14 +1730,25 @@ Binding Binding() :
 }
 
 Judgment JudgmentDeclaration(boolean abstractOK) :
-{ Token t,t_assume=null; StringSpan s; Clause c; Rule r; List<Rule> rules = new ArrayList<Rule>(); }
+{ Token t,t_assume=null; StringSpan s; Clause c; QualName qn = null;
+  Rule r; List<Rule> rules = new ArrayList<Rule>(); }
 {
   (t=<ABSTRACT> <JUDGMENT> { if (!abstractOK) ErrorHandler.recoverableError(Errors.ABSTRACT_NOT_PERMITTED_HERE,"",new StringSpan(t),t.image + "\n"); }
-   | t=<JUDGMENT>) s=RuleName() <COLON>
+   | t=<JUDGMENT>) s=RuleName() ["=" qn=QualName()] <COLON>
   c=ExprToNL()
   [ <ASSUMES> t_assume=<IDENTIFIER> ]
-  ( r=RuleDeclaration() { rules.add(r); } )*
-  { return new Judgment(new Location(t), s.toString(), t.image.equals("abstract") ? null : rules, c, t_assume==null ? null : getNonTerminal(t_assume)); }
+  ( LOOKAHEAD(2) r=RuleDeclaration() { rules.add(r); } )*
+  {
+    Location loc = new Location(t);
+    String name = s.toString();
+    boolean isAbstract = t.image.equals("abstract");
+    NonTerminal assume = t_assume==null ? null : getNonTerminal(t_assume);
+    if (isAbstract && !rules.isEmpty()) {
+      ErrorHandler.recoverableError("abstract judgment should not have rules",rules.get(0));
+    }
+    return qn == null ? new Judgment(loc, name, isAbstract ? null : rules, c, assume)
+                      : new RenameJudgment(loc, name, qn, rules, c, assume);
+    }
 }
 
 Rule RuleDeclaration() :

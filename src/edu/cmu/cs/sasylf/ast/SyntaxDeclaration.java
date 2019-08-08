@@ -4,10 +4,10 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -63,6 +63,10 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	private ClauseDef context;
 	private boolean isAbstract;
 
+	public Collection<String> getAlternates() {
+		return Collections.unmodifiableCollection(alternates);
+	}
+	
 	/**
 	 * Add an alternate form for a syntax.
 	 * An error is generated if it's not unique.
@@ -83,6 +87,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 			}
 		}
 		nonTerminal.prettyPrint(out);
+		printExtra(out);
 		out.print("\t::= ");
 		boolean prev = false;
 		for (Clause c : getClauses()) {
@@ -94,6 +99,12 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 		}
 		out.println("\n");
 	}
+	
+	/**
+	 * Print out extra information before the clasues.
+	 * @param out
+	 */
+	protected void printExtra(PrintWriter out) {}
 
 	@Override
 	public Set<Terminal> getTerminals() {
@@ -113,19 +124,18 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	}
 
 	/**
-	 * Find all the places we have variables in this syntax, and place them in the given var map.
-	 * Update the syntax map for nonterminals using this syntax.
-	 * @param varMap variable map, must not be null
-	 * @param synMap syntax map, must not be null
+	 * Find all the places we have variables in this syntax, and place them in the context's var map.
+	 * Update the syntax map of the context for nonterminals using this syntax.
+	 * @param ctx context to update.
 	 */
 	@Override
-	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,SyntaxDeclaration> synMap) {
+	public void updateContext(Context ctx) {
 		for (String alt : alternates) {
-			synMap.put(alt, this);
+			ctx.synMap.put(alt, this);
 		}
-		synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
+		ctx.synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
 		for (Clause c : getClauses()) {
-			c.getVariables(varMap);
+			c.getVariables(ctx.varMap);
 		}
 	}
 	

@@ -34,6 +34,7 @@ import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
 import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Module;
 import edu.cmu.cs.sasylf.ast.ModuleFinder;
 import edu.cmu.cs.sasylf.ast.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -137,7 +138,7 @@ public class ProofChecker  {
 		}
 	}
 
-	public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IEditorPart editor) {
+	public static Module analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IEditorPart editor) {
 		if (editor == null || !(editor instanceof ITextEditor)) {
 			return analyzeSlf(mf, id, res);
 		}

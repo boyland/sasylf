@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.util.Location;
@@ -33,10 +32,9 @@ public abstract class Syntax extends Node {
 	
 	/**
 	 * Update the contexts syntax maps so that we know about each declared entity.
-	 * @param varMap variable map
-	 * @param synMap syntax declaration map
+	 * @param ctx TODO
 	 */
-	public void updateSyntaxMap(Map<String,Variable> varMap, Map<String,SyntaxDeclaration> synMap) {}
+	public void updateContext(Context ctx) {}
 
 	/**
 	 * Some last checks before we can type check.

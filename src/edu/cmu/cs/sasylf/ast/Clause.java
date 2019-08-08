@@ -220,6 +220,73 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		return this;
 	}
 
+	/**
+	 * Return a copy of the contents without terminals.
+	 * @param es element list, must not be null
+	 * @return a new list including only the elements that are not terminals (noise words).
+	 */
+	protected List<Element> withoutTerminals() {
+		List<Element> result = new ArrayList<Element>();
+		for (Element e : elements) {
+			if (e instanceof Terminal) continue;
+			result.add(e);
+		}
+		return result;
+	}
+	
+	/**
+	 * Generate an error if the two elements don't match.
+	 * Neither will be a terminal.
+	 * @param orig original element
+	 * @param repl new element
+	 */
+	protected static void checkMatch(Element orig, Element repl) {
+		if (orig.getElemType() != repl.getElemType()) {
+			ErrorHandler.report("Renaming has wrong type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl);
+		}
+		if (orig instanceof NonTerminal) {
+			if (!(repl instanceof NonTerminal)) {
+				ErrorHandler.report("Expected " + orig, repl);
+			}
+		} else if (orig instanceof Variable) {
+			if (!(repl instanceof Variable)) {
+				ErrorHandler.report("Expected bound variable",repl);
+			}
+		} else if (orig instanceof Binding) {
+			if (!(repl instanceof Binding)) {
+				ErrorHandler.report("Expected binding here " + orig, repl);
+			}
+			Binding ob = (Binding)orig;
+			Binding rb = (Binding)repl;
+			List<Element> oes = ob.getElements();
+			List<Element> res = rb.getElements();
+			if (oes.size() != res.size()) {
+				ErrorHandler.report("Incorrect number of parameters (expected " + oes.size() + ")", rb);
+			}
+			int n = oes.size();
+			for (int i=0; i < n; ++i) {
+				checkMatch(oes.get(i),res.get(i));
+			}
+		}
+	}
+	
+	/**
+	 * Check that a clause re-interpreted with this syntax has the
+	 * right number and type of content parts.
+	 * @param o original clause
+	 */
+	public void checkClauseMatch(Clause o) {
+		List<Element> cf = withoutTerminals();
+		List<Element> of = o.withoutTerminals();
+		if (cf.size() != of.size()) {
+			ErrorHandler.report("Has a different content than corresponding clause: " + o, this);
+		}
+		int m = cf.size();
+		for (int j = 0; j < m; ++j) {
+			Clause.checkMatch(of.get(j),cf.get(j));
+		}
+	}
+	
 	public Element computeClause(Context ctx, boolean inBinding) {
 		return computeClause(ctx, inBinding, ctx.getGrammar());
 	}

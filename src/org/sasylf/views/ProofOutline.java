@@ -40,11 +40,11 @@ import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Derivation;
 import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.Module;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
@@ -92,7 +92,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			return pos;
 		}
 
-		public void newCompUnit(IFile documentFile, IDocument document, CompUnit cu) {
+		public void newCompUnit(IFile documentFile, IDocument document, Module cu) {
 			pList.clear();
 
 			if(cu == null) {
