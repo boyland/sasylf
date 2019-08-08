@@ -532,17 +532,19 @@
             id="org.sasylf.project.navigator.content"
             labelProvider="org.sasylf.project.MyLabelProvider"
             name="Proof Navigator Content"
-            priority="high">
-         <triggerPoints>
+            priority="higher">
+         <enablement>
             <or>
                <instanceof
                      value="org.eclipse.core.resources.IFolder">
                </instanceof>
+               <instanceof value="org.eclipse.core.resources.IProject"/>
                <instanceof
                      value="org.sasylf.project.IPackageFragment">
                </instanceof>
+               <instanceof value="org.eclipse.core.resources.IFile"/>
             </or>
-         </triggerPoints>
+         </enablement>
          <override
                policy="InvokeAlwaysRegardlessOfSuppressedExt"
                suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">

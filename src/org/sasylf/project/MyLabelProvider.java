@@ -22,7 +22,7 @@ public class MyLabelProvider extends LabelProvider {
 		// We don't dispose the main icons -- they are managed elsewhere.
 		emptyPackageIcon = null;
 		packageIcon = null;
-		if (problemDecorator == null) {
+		if (problemDecorator != null) {
 			problemDecorator.dispose();
 			problemDecorator = null;
 		}
@@ -80,5 +80,4 @@ public class MyLabelProvider extends LabelProvider {
 		}
 		return result;
 	}
-
 }

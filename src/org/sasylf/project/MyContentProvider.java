@@ -167,6 +167,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void getPipelinedChildren(Object aParent, Set theCurrentChildren) {
+		// System.out.println("pipelining from " + theCurrentChildren + " of " + theCurrentChildren.getClass());
 		Object[] children = getChildren(aParent);  
 		// we only return EMPTY_ARRAY when we can't compute anything -- defer to current
 		if (children == EMPTY_ARRAY) return;
@@ -178,10 +179,12 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 		}
 		theCurrentChildren.retainAll(newSet);
 		theCurrentChildren.addAll(newSet);
+		// System.out.println("    to " + theCurrentChildren);
 	}
 
 	@Override
 	public boolean hasPipelinedChildren(Object anInput, boolean currentHasChildren) {
+		if (getChildren(anInput) == EMPTY_ARRAY) return currentHasChildren;
 		return hasChildren(anInput);
 	}
 
@@ -203,7 +206,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 		Object parent = mod.getParent();
 		Collection<Object> newChildren = new ArrayList<Object>();
 		if (ProofBuilder.isProofFolder(parent)) { // must have been added directly to proof folder
-			for (Iterator<Object> chit = mod.getChildren().iterator(); chit.hasNext();) {
+			for (Iterator<?> chit = mod.getChildren().iterator(); chit.hasNext();) {
 				Object child = chit.next();
 				if (child instanceof IFolder) {
 					// System.out.println("Converting folder child: " + child);
@@ -221,7 +224,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 				}
 			}
 		} else if (parent instanceof IPackageFragment) {
-			for (Iterator<Object> chit = mod.getChildren().iterator(); chit.hasNext();) {
+			for (Iterator<?> chit = mod.getChildren().iterator(); chit.hasNext();) {
 				Object child = chit.next();
 				if (child instanceof IFolder) {
 					// System.out.println("Discarding folder: " + child);
