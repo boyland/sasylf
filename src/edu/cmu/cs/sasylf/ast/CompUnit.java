@@ -22,17 +22,17 @@ public class CompUnit extends Node implements Module {
 	
 	/**
 	 * Add a chunk that is required by this module.
-	 * @param c chunk to add, must not be null
+	 * @param c part to add, must not be null
 	 */
-	public void addParameterChunk(Chunk c) {
+	public void addParameterChunk(Part c) {
 		parts.add(c); //! We need to separate required from provides in a module system.
 	}
 	
 	/**
-	 * Add a chunk to this compilation unit.
+	 * Add a part to this compilation unit.
 	 * @param c
 	 */
-	public void addChunk(Chunk c) {
+	public void addChunk(Part c) {
 		parts.add(c);
 	}
 
@@ -46,7 +46,7 @@ public class CompUnit extends Node implements Module {
 	
 	private PackageDeclaration packageDecl;
 	private String moduleName;
-	private List<Chunk> parts = new ArrayList<Chunk>();
+	private List<Part> parts = new ArrayList<Part>();
 	
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#prettyPrint(java.io.PrintWriter)
@@ -59,7 +59,7 @@ public class CompUnit extends Node implements Module {
 			out.println("module " + moduleName);
 		}
 
-		for (Chunk part : parts) {
+		for (Part part : parts) {
 			part.prettyPrint(out);
 		}
 
@@ -74,7 +74,7 @@ public class CompUnit extends Node implements Module {
 		return typecheck(new NullModuleFinder(),(ModuleId)null);  
 	}
 	
-	/** typechecks this compilation unit, returning true if the check was successful,
+	/** Typechecks this compilation unit, returning true if the check was successful,
 	 * false if there were one or more errors.
 	 */
 	public boolean typecheck(ModuleFinder mf, ModuleId id) {
@@ -97,7 +97,7 @@ public class CompUnit extends Node implements Module {
 	 */
 	public void typecheck(Context ctx, ModuleId id) {
 		if (id != null) checkFilename(id);
-		for (Chunk part : parts) {
+		for (Part part : parts) {
 			part.typecheck(ctx);
 		}
 	}
@@ -120,7 +120,7 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectTopLevel(Collection<? super Node> things) {
-		for (Chunk part : parts) {
+		for (Part part : parts) {
 			part.collectTopLevel(things);
 		}
 	}
@@ -130,7 +130,7 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
-		for (Chunk part : parts) {
+		for (Part part : parts) {
 			part.collectRuleLike(map);
 		}
 	}

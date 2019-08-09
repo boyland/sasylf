@@ -1428,10 +1428,10 @@ TOKEN :
 CompUnit CompilationUnit() :
 { PackageDeclaration pkg = null;
   String moduleName = null;
+  Part p;
   List<QualName> args;
   Token t=null;
   List<String> usedModule = null;
-  Chunk c;
   CompUnit cu; }
 {
   [ pkg=PackageDeclaration() ]
@@ -1445,7 +1445,7 @@ CompUnit CompilationUnit() :
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
     (
-      LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") )      c=Chunk(true) {  cu.addParameterChunk(c); }
+      LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") )       p=Part(true) {  cu.addParameterChunk(p); }
   	)+
   )?
    
@@ -1460,10 +1460,8 @@ CompUnit CompilationUnit() :
   | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
   )
 
-  (    
-	  LOOKAHEAD( ("terminals" | "syntax" | "judgment" | "theorem" | "lemma" | "use") )
-    (      c=Chunk(false) { cu.addChunk(c); }
-    )
+  (
+    p=Part(false) {  cu.addChunk(p); }
   | (
     	t=<USE> usedModule=Name() args=ModuleParameters() 
       	{ ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
@@ -1484,28 +1482,18 @@ PackageDeclaration PackageDeclaration() :
   t=<PACKAGE> l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
 }
 
-Chunk Chunk(boolean abstractOK) :
+Part Part(boolean abstractOK) :
 {
-  List<Syntax> syntax = new ArrayList<Syntax>(); 
-  List<Syntax> s; Judgment j;
-  Set<String> terms = new HashSet<String>();
-  Set<String> trm;
+  List<Syntax> syntax; Judgment j;
+  Set<String> terms;
   List<Judgment> judges = new ArrayList<Judgment>();
-  Theorem thm, lastThm;
-  List<Theorem> theorems = new ArrayList<Theorem>(); }
+  List<Theorem> theorems; }
 {
-  ( terms=TerminalsDeclaration()
-    ( LOOKAHEAD(2) syntax=Syntax(abstractOK) ) ?
-    ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) *
-    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?
-  | LOOKAHEAD(2) syntax=Syntax(abstractOK)    ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) *
-    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?
-  | ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) +
-    ( LOOKAHEAD(2) theorems=Theorems(abstractOK) ) ?        | LOOKAHEAD(2) theorems=Theorems(abstractOK)
-  ) 
-	{
-	  return new Chunk(terms, syntax, judges, theorems);
-	}
+    terms=TerminalsDeclaration() { return new TerminalsPart(terms); }
+  | LOOKAHEAD(2) syntax=Syntax(abstractOK) { return new SyntaxPart(syntax); }
+  | LOOKAHEAD(2) ( LOOKAHEAD(2) j=JudgmentDeclaration(abstractOK) {  judges.add(j); } ) +
+  	{ return new JudgmentPart(judges);}
+  | LOOKAHEAD(2) theorems=Theorems(abstractOK) { return new TheoremPart(theorems); }
 }
 
 List<Theorem> Theorems(boolean abstractOK) :

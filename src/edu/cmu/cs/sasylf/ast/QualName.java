@@ -41,6 +41,14 @@ public class QualName extends Node {
 		this(null,loc,name);
 	}
 
+	/**
+	 * Get last part of a qualified name,
+	 * @return last part of a qualified name.
+	 */
+	public String getLastSegment() {
+		return name;
+	}
+	
 	@Override
 	public void prettyPrint(PrintWriter out) {
 		if (source != null) {

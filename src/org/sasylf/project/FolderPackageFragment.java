@@ -117,7 +117,7 @@ public class FolderPackageFragment extends PlatformObject implements IPackageFra
 	}
 
 	@Override
-	public <T> T getAdapter(Class<T> adapter) {
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
 		if (adapter == IFolder.class || adapter == IContainer.class || adapter == IResource.class)
 			return adapter.cast(folder);
 		return super.getAdapter(adapter);
