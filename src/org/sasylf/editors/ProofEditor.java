@@ -69,7 +69,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 				if (ProofBuilder.getProofBuilder(p) != null) return;
 				Proof.removeProof(f);
 				// no proof builder to automatically parse the file, so we do it ourselves:
-				ProofChecker.analyzeSlf(null, null, f, this);
+				ProofChecker.analyzeSlf(f, this);
 			}
 		}
 	}
@@ -93,7 +93,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 				IProject p = f.getProject();
 				ProofBuilder pb = ProofBuilder.getProofBuilder(p);
 				if (pb == null) {
-					ProofChecker.analyzeSlf(null, null, f, this);
+					ProofChecker.analyzeSlf(f, this);
 				} else {
 					pb.forceBuild(f);
 				}
@@ -249,6 +249,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	public void updateFoldingStructure(List<Position> positions)
 	{
 		ProjectionAnnotationModel annotationModel = getProjectionAnnotationModel();
+		if (annotationModel == null) return; // can't do anything...
 		IDocument doc = getDocument();
 
 		if (!doc.containsPositionCategory(PROOF_PROJECTION_CATEGORY)) {
@@ -303,6 +304,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	 */
 	public ProjectionAnnotationModel getProjectionAnnotationModel() {
 		ProjectionViewer viewer = (ProjectionViewer)getSourceViewer();
+		if (viewer == null) return null;
 		ProjectionAnnotationModel annotationModel = viewer.getProjectionAnnotationModel();
 		return annotationModel;
 	}

@@ -138,15 +138,41 @@ public class ProofChecker  {
 		}
 	}
 
-	public static Module analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IEditorPart editor) {
+	/**
+	 * Check proofs for a resource bound in an editor.
+	 * @param res resource (must not be null)
+	 * @param editor editor for resource, may be null if not known
+	 * @return compilation unit (inf any) resulting from the analysis
+	 */
+	public static Module analyzeSlf(IResource res, IEditorPart editor) {
 		if (editor == null || !(editor instanceof ITextEditor)) {
-			return analyzeSlf(mf, id, res);
+			return analyzeSlf(null, null, res);
 		}
 		ITextEditor ite = (ITextEditor)editor;
 		IDocument doc = ite.getDocumentProvider().getDocument(ite.getEditorInput());
-		return analyzeSlf(mf, id, res, doc);
+		return analyzeSlf(res, doc);
 	}
 
+	/**
+	 * Check proofs for resource currently being edited as a document. 
+	 * @param res resource to which to attach error and warning markers.
+	 * Must not be null
+	 * @param doc document holding content.  Must not be null.
+	 * @return compilation unit of the parse, or null (if a serious error)
+	 */
+	public static CompUnit analyzeSlf(IResource res, IDocument doc) {
+		if (res == null) throw new NullPointerException("resource cannot be null");
+		return analyzeSlf(null, null, res, doc, new StringReader(doc.get()));
+	}
+
+	/**
+	 * Analyze a resource as found with the given module finder using the id.
+	 * @param mf module finder used to find resource (may be null)
+	 * @param id identifier used to find resource (may be null)
+	 * @param res resource, must not be null and must either have
+	 * a document associated with it and/or a file.
+	 * @return compilation unit that was read, or null if there were problems.
+	 */
 	public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res) {
 		IDocument doc = EclipseUtil.getDocumentFromResource(res);
 		IFile f = (IFile)res.getAdapter(IFile.class);
@@ -154,30 +180,18 @@ public class ProofChecker  {
 			System.out.println("cannot get contents of resource");
 			return null;
 		} else {
+			Reader r;
 			try {
 				if (doc != null)
-					return analyzeSlf(mf, id, res, doc);
-				else return analyzeSlf(mf,id,res, doc, new InputStreamReader(f.getContents(),"UTF-8"));
+					r = new StringReader(doc.get());
+				else r = new InputStreamReader(f.getContents(),"UTF-8");
 			} catch (UnsupportedEncodingException e) {
 				return null;
 			} catch (CoreException e) {
 				return null;
 			}
+			return analyzeSlf(mf, id, res, doc, r);
 		}
-	}
-
-	/**
-	 * Check proofs for resource currently being edited as a document. 
-	 * @param mf TODO
-	 * @param id TODO
-	 * @param res resource to which to attach error and warning markers.
-	 * Must not be null
-	 * @param doc document holding content.  Must not be null.
-	 * @return compilation unit of the parse, or null (if a serious error)
-	 */
-	public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IDocument doc) {
-		if (res == null) throw new NullPointerException("resource cannot be null");
-		return analyzeSlf(mf, id, res, doc, new StringReader(doc.get()));
 	}
 
 	public static String getProofFolderRelativePathString(IResource res) {
@@ -198,6 +212,16 @@ public class ProofChecker  {
 		Proof oldProof = Proof.getProof(res);
 		Proof newProof = new Proof(res,doc);
 		int errors = 0;
+		
+		if (mf == null) {
+			ProofBuilder pb = ProofBuilder.getProofBuilder(res.getProject());
+			if (pb != null) {
+				mf = pb.getModuleFinder();
+			}
+		}
+		if (id == null) {
+			id = ProofBuilder.getId(res);
+		}
 
 		try {
 			if (doc == null) {

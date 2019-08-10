@@ -140,7 +140,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	}
 
 	private ProjectModuleFinder moduleFinder;
-	private ProjectModuleFinder getModuleFinder() {
+	public ProjectModuleFinder getModuleFinder() {
 		if (moduleFinder == null) {
 			moduleFinder = new ProjectModuleFinder(this.getProject());
 		}

@@ -1575,9 +1575,16 @@ List<String> Name() :
  * Eventually this will include qualified names, and will take over Name() from previous.
  */
 QualName QualName() :
-{ Token t; }
+{ Token t;
+  QualName result;
+}
 {
-  t=<IDENTIFIER> { return new QualName(new Location(t), t.image); }
+  t=<IDENTIFIER> { result = new QualName(new Location(t), t.image); }
+  (    "." t=<IDENTIFIER> {  result = new QualName(result, new Location(t), t.image); }
+  )*
+  {
+     return result;
+  }
 }  
     
 
@@ -1642,8 +1649,9 @@ SyntaxDeclaration BNFRule() :
   t=<IDENTIFIER>
   (
     "," { alts.add(getNonTerminal(t)); } t=<IDENTIFIER>  )*
-  [ "=" qn=QualName() ]
-  <ASSIGN> Clauses(l)
+  (    "=" qn=QualName() [ <ASSIGN> Clauses(l) ]
+  | <ASSIGN> Clauses(l)
+  )
   {
     NonTerminal nt = getNonTerminal(t);
     SyntaxDeclaration syn;

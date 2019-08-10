@@ -63,7 +63,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		@Override
 		public void apply(IDocument document) {
 			super.apply(document);
-			ProofChecker.analyzeSlf(null, null, resource, document);
+			ProofChecker.analyzeSlf(resource, document);
 		}
 
 	}

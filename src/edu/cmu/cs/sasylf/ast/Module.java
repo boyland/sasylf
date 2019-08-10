@@ -39,4 +39,11 @@ public interface Module {
 	 */
 	public abstract void collectRuleLike(Map<String, ? super RuleLike> map);
 
+	/**
+	 * Return named entity within this module.
+	 * The context is used for versioning.
+	 * @return a module, syntax, judgment, rule, theorem or module declared in this module,
+	 * or null if nothing with this name.
+	 */
+	public abstract Object getDeclaration(Context ctx, String name);
 }

@@ -14,6 +14,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.ProofChecker;
+import org.sasylf.project.ProofBuilder;
+
+import edu.cmu.cs.sasylf.ast.ModuleFinder;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -43,7 +46,7 @@ public class CheckProofsHandler extends AbstractHandler {
 					if ("slf".equals(res.getFileExtension())) {
 						IFile f = (IFile)res.getAdapter(IFile.class);
 						// System.out.println("  with correct extension");
-						ProofChecker.analyzeSlf(null,null, res, ResourceUtil.findEditor(page, f));
+						ProofChecker.analyzeSlf(res, ResourceUtil.findEditor(page, f));
 					}
 				}
 				// System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
@@ -53,7 +56,7 @@ public class CheckProofsHandler extends AbstractHandler {
 		IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
 		IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
 		if (res != null) {
-			ProofChecker.analyzeSlf(null, null, res, activeEditor);
+			ProofChecker.analyzeSlf(res, activeEditor);
 		}  else {
 			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 			MessageDialog.openInformation(

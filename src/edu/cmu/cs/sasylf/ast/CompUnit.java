@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -133,5 +134,31 @@ public class CompUnit extends Node implements Module {
 		for (Part part : parts) {
 			part.collectRuleLike(map);
 		}
+	}
+
+	private Map<String,Object> declCache = new HashMap<String,Object>();
+	private int cacheVersion = -1;
+	
+	@Override
+	public Object getDeclaration(Context ctx, String name) {
+		if (cacheVersion != ctx.version) {
+			declCache.clear();
+			Collection<Node> things = new ArrayList<Node>();
+			this.collectTopLevel(things);
+			this.collectRuleLike(declCache); // doesn't get syntax declarations or judgments
+			for (Node n : things) {
+				if (n instanceof SyntaxDeclaration) {
+					SyntaxDeclaration sd = (SyntaxDeclaration)n;
+					for (String s : sd.getAlternates()) {
+						declCache.put(s, sd);
+					}
+				} else if (n instanceof Judgment) {
+					Judgment jd = (Judgment)n;
+					declCache.put(jd.getName(),jd);
+				}
+			}
+			cacheVersion = ctx.version;
+		}
+		return declCache.get(name);
 	}
 }

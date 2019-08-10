@@ -65,8 +65,10 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 					ctx.synMap.put(alternative, original);
 				}
 				// XXX: Nothing for the variables?
+			} else if (resolution instanceof String[]) {
+				ErrorHandler.report("Cannot find syntax associated with " + source, this);
 			} else {
-				ErrorHandler.report("Renaming of non-syntax!",this);
+				ErrorHandler.report("Renaming of non-syntax!",this, "SASyLF resolved " + this + " to " + resolution);
 			}
 		}
 	}

@@ -61,7 +61,8 @@ public class QualName extends Node {
 	/**
 	 * Resolve this qualified name (see class documentation comment).
 	 * @param ctx context to use, must not be null.
-	 * @return resolved 
+	 * @return resolved a String array, a module or a named thing.  
+	 * null is returns only if an error was reported already.
 	 */
 	public Object resolve(Context ctx) {
 		if (version != ctx.version) resolution = null;
@@ -78,10 +79,14 @@ public class QualName extends Node {
 				if (src == null) {
 					return null;
 				} else if (src instanceof Module) {
-					// TODO: handle modules.
+					resolution = ((Module)src).getDeclaration(ctx, name);
+					if (resolution == null) {
+						ErrorHandler.recoverableError("Cannot find anything named " + name + " in module", this);
+					}
 				} else if (src instanceof String[]) {
 					String[] pack = (String[])src;
 					ModuleId id = new ModuleId(pack,name);
+					// System.out.println("Looking for module " + id + " in " + ctx.moduleFinder);
 					if (ctx.moduleFinder.hasCandidate(id)) {
 						resolution = ctx.moduleFinder.findModule(id, this);
 					} else {

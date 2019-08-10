@@ -186,7 +186,7 @@ public class Main {
 	public static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
 		if (mf == null) cu.typecheck();
 		else {
-			mf.setCurrentPackage(id.packageName);
+			mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE : id.packageName);
 			cu.typecheck(mf,id);
 		}
 	}
