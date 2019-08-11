@@ -116,7 +116,7 @@ public class TermPrinter {
 				throw new RuntimeException("base type of " + x + " = " + ty);
 			}
 			String base = ty.toString();
-			SyntaxDeclaration syn = ctx.synMap.get(base);
+			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) 
 				return new NonTerminal(x.toString(),location, syn);
 			if (rename) { // MDA: only rename free variables if the option is enabled
@@ -157,7 +157,7 @@ public class TermPrinter {
 			FreeVar etaFV = abs.getEtaEquivFreeVar();
 			if (etaFV != null) return asElement(etaFV,vars);
 			Term ty = abs.varType;
-			SyntaxDeclaration syn = ctx.synMap.get(ty.toString());
+			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			if (syn == null) {
 				System.out.println("null syntax for " + ty + " in " + x);
 			}
@@ -192,7 +192,7 @@ public class TermPrinter {
 		if (x instanceof Abstraction) {
 			Abstraction abs = (Abstraction)x;
 			Term ty = abs.varType;
-			SyntaxDeclaration syn = ctx.synMap.get(ty.toString());
+			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			if (syn == null) {
 				System.out.println("No syntax for " + ty);
 			}
@@ -238,7 +238,7 @@ public class TermPrinter {
 		} else if (x instanceof Abstraction) {
 			Abstraction abs = (Abstraction)x;
 			Term ty = abs.varType;
-			SyntaxDeclaration syn = ctx.synMap.get(ty.toString());
+			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			Variable v = rename ? new Variable(createVarName(syn,vars),location)
 								: new Variable(abs.varName, location);
 			v.setType(syn);

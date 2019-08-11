@@ -95,7 +95,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			if (caseType instanceof NotJudgment) {
 				ErrorHandler.report("Cannot perform case analysis on 'not' judgments",this);
 			} else {
-				ErrorHandler.report("Cannot perform case analysis on parameter structures", this);
+				ErrorHandler.report("Cannot perform case analysis on unspecified type " + caseType, this);
 			}
 		}
 

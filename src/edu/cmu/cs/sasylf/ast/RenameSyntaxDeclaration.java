@@ -60,17 +60,13 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		if (resolution != null) {
 			if (resolution instanceof SyntaxDeclaration) {
 				original = (SyntaxDeclaration)resolution;
-				ctx.synMap.put(getName(), original);
-				for (String alternative : super.getAlternates()) {
-					ctx.synMap.put(alternative, original);
-				}
-				// XXX: Nothing for the variables?
 			} else if (resolution instanceof String[]) {
 				ErrorHandler.report("Cannot find syntax associated with " + source, this);
 			} else {
 				ErrorHandler.report("Renaming of non-syntax!",this, "SASyLF resolved " + this + " to " + resolution);
 			}
 		}
+		super.updateContext(ctx); // typeTerm() needs to work!
 	}
 
 	@Override

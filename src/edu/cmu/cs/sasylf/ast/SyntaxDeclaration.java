@@ -131,9 +131,9 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	@Override
 	public void updateContext(Context ctx) {
 		for (String alt : alternates) {
-			ctx.synMap.put(alt, this);
+			ctx.setSyntax(alt, this);
 		}
-		ctx.synMap.put(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
+		ctx.setSyntax(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
 		for (Clause c : getClauses()) {
 			c.getVariables(ctx.varMap);
 		}

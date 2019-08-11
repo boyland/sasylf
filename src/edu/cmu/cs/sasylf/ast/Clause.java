@@ -234,15 +234,26 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		return result;
 	}
 	
+	private static Term asLFType(ElemType t) {
+		if (t instanceof SyntaxDeclaration)
+			return ((SyntaxDeclaration)t).typeTerm();
+		else if (t instanceof Judgment)
+			return ((Judgment)t).typeTerm();
+		else throw new RuntimeException("Cannot convert " + t + " to an LF type");
+	}
+	
 	/**
 	 * Generate an error if the two elements don't match.
-	 * Neither will be a terminal.
+	 * Neither will be a terminal or a clause.
 	 * @param orig original element
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		if (orig.getElemType() != repl.getElemType()) {
-			ErrorHandler.report("Renaming has wrong type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl);
+		Term type1 = asLFType(orig.getElemType());
+		Term type2 = asLFType(repl.getElemType());
+		if (type1 != type2) {
+			ErrorHandler.report("Renaming has wrong type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl,
+					"SASyLF computed the LF types as " + type1 + " and " + type2);
 		}
 		if (orig instanceof NonTerminal) {
 			if (!(repl instanceof NonTerminal)) {

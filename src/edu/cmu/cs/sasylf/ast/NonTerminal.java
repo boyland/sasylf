@@ -141,7 +141,7 @@ public class NonTerminal extends Element {
 			e = v;
 		} else {
 			// find appropriate syntax
-			SyntaxDeclaration syn = ctx.synMap.get(strippedName);
+			SyntaxDeclaration syn = ctx.getSyntax(strippedName);
 			if (syn != null) {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {

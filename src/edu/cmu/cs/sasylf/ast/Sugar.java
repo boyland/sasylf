@@ -90,7 +90,7 @@ public class Sugar extends Syntax {
 			}
 		} else {
 			if (type == null) {
-				type = ctx.synMap.get(typeName.getSymbol());
+				type = ctx.getSyntax(typeName.getSymbol());
 				if (type == null) {
 					ErrorHandler.report("Unknown syntax " + typeName, this);
 				}

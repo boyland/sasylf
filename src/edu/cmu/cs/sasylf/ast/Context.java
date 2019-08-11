@@ -31,7 +31,8 @@ public class Context implements Cloneable {
 	public final ModuleFinder moduleFinder;
 	public final CompUnit compUnit;
 	public Set<String> termSet = new HashSet<String>();
-	public Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
+	private Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
+	private Map<String,SyntaxDeclaration> synTypeMap = new HashMap<String,SyntaxDeclaration>();
 	public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
 	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
@@ -104,6 +105,35 @@ public class Context implements Cloneable {
 		return e.asTerm().substitute(currentSub);
 	}
 
+	/**
+	 * Set the syntax declaration associated with nonterminals using this name.
+	 * @param name name to bind, should not be null
+	 * @param sd syntax declaration, must not be null
+	 */
+	public void setSyntax(String name, SyntaxDeclaration sd) {
+		if (sd == null) throw new NullPointerException("Need a valid syntax for " + name);
+		synMap.put(name, sd);
+		synTypeMap.put(sd.typeTerm().getName(), sd);
+	}
+	
+	/**
+	 * Get the syntax declaration associated with a nonterminal with this name.
+	 * @param name name to check
+	 * @return syntax declaration, or null if none known for this name
+	 */
+	public SyntaxDeclaration getSyntax(String name) {
+		return synMap.get(name);
+	}
+	
+	/**
+	 * Get the user-visible syntax declaration associated with an LF type
+	 * @param ty LF type, must not be null
+	 * @return syntax declaration, or null is this LF type is not known in this syntax
+	 */
+	public SyntaxDeclaration getSyntax(Term ty) {
+		return synTypeMap.get(ty.baseTypeFamily().getName()); 
+	}
+	
 	/**
 	 * Adapt the given term to 
 	 * @param t
@@ -441,7 +471,7 @@ public class Context implements Cloneable {
 
 	public void addVarFree(Set<FreeVar> vars, Location l) {
 		for (FreeVar f : vars) {
-			SyntaxDeclaration syn = synMap.get(f.getType().baseTypeFamily().toString());
+			SyntaxDeclaration syn = getSyntax(f.getType());
 			if (syn == null) {
 				ErrorHandler.report(Errors.INTERNAL_ERROR, "no syntactic type for "+f, l);
 			}
