@@ -71,14 +71,18 @@ public class RuleCase extends Case {
 		Context ctx = parent.clone();
 		debug("line "+ this.getLocation().getLine(), " case ", ruleName);
 		debug("    currentSub = ", ctx.currentSub);
-
-		RuleLike x = ctx.ruleMap.get(ruleName);
-		if (x == null) {
-			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
-		} else if (!(x instanceof Rule)) {
-			ErrorHandler.report(Errors.THEOREM_NOT_RULE, ruleName, this);
+		if (rule == null) {
+			Judgment judg = ctx.getJudgment(ctx.currentCaseAnalysis.baseTypeFamily());
+			if (judg == null) {
+				ErrorHandler.report("It doesn't appear that a rule case makes sense in this context", this, "SASyLF computes the case analysis is on " + ctx.currentCaseAnalysis);
+			}
+			for (Rule r : judg.getRules()) {
+				if (r.getName().equals(ruleName)) rule = r;
+			}
+			if (rule == null) {
+				ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+			}
 		}
-		rule = (Rule)x;
 		if (!rule.isInterfaceOK()) return;
 
 		for (Derivation d : premises) {

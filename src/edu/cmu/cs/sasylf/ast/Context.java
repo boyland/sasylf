@@ -35,6 +35,7 @@ public class Context implements Cloneable {
 	private Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,SyntaxDeclaration> synTypeMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
+	private Map<String,Judgment> judgLFMap = new HashMap<String,Judgment>();
 	private Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
 	public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
@@ -144,7 +145,7 @@ public class Context implements Cloneable {
 		if (jp != null && jp != j) {
 			ErrorHandler.recoverableError(Errors.DUPLICATE_JUDGMENT, j);
 		}
-		// perhaps put in an LF name binding backwards.
+		judgLFMap.put(j.typeTerm().getName(), j);
 	}
 	
 	/**
@@ -162,7 +163,7 @@ public class Context implements Cloneable {
 	 * @return judgment in the context with this LF name
 	 */
 	public Judgment getJudgment(Atom con) {
-		return judgMap.get(con.getName()); // XXX: Must be changed with modules.
+		return judgLFMap.get(con.getName());
 	}
 	
 	/**

@@ -24,6 +24,10 @@ public class DefaultSpan implements Span {
 	public void setEndLocation(Location l) {
 		end = l;
 	}
+	
+	protected void shiftEndLocation(int amt) {
+		end = end.add(amt);
+	}
 
 	private Location start, end;
 }

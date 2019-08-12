@@ -16,6 +16,7 @@ public class StringSpan extends DefaultSpan {
 
 	public void add(String s) {
 		builder.append(s);
+		this.shiftEndLocation(s.length());
 	}
 
 	@Override

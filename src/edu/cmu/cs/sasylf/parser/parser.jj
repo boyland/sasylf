@@ -1571,16 +1571,13 @@ List<String> Name() :
   { return l; }
 }
 
-/*
- * Eventually this will include qualified names, and will take over Name() from previous.
- */
 QualName QualName() :
-{ Token t;
+{ StringSpan t;
   QualName result;
 }
 {
-  t=<IDENTIFIER> { result = new QualName(new Location(t), t.image); }
-  (    "." t=<IDENTIFIER> {  result = new QualName(result, new Location(t), t.image); }
+  t=RuleName() { result = new QualName(t.getLocation(), t.toString()); }
+  (    "." t=RuleName() {  result = new QualName(result, t.getLocation(), t.toString()); }
   )*
   {
      return result;
@@ -1959,15 +1956,15 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; StringSpan s; Element e; Clause cl; Token of;
+  DerivationByCaseAnalysis dca; StringSpan s; Element e; Clause cl; Token of; QualName qn;
 }
 { // args should include expressions
-  <RULE> s=RuleName() { d=new DerivationByRule(startT.image, new Location(startT), c, s); }
+  <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
     [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
     { return d; }
-  | (t=<THEOREM> | t=<LEMMA>) s=RuleName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, t.image); }
+  | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, t.image); }
     [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
@@ -2061,15 +2058,15 @@ Derivation Justification(Token startT, Clause c) :
       d.addArgString(clauseFor(t));
       d.setEndLocation(Location.endOf(t)); 
       return d; }
-  | LOOKAHEAD({isRulePart2()}) s = RuleName() 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
+  | LOOKAHEAD({isRulePart2()}) qn = QualName() 
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, ""); }
      (<ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* | {} )
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
        return d;
      }
-  | LOOKAHEAD(2) t=<IDENTIFIER> {s = new StringSpan(t);} 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, s, ""); }
+  | LOOKAHEAD(2) t=<IDENTIFIER> {qn = new QualName(new Location(t), t.image);} 
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, ""); }
      <ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));

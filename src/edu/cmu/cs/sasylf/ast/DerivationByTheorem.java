@@ -3,39 +3,41 @@ package edu.cmu.cs.sasylf.ast;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.StringSpan;
 
 public class DerivationByTheorem extends DerivationByIHRule {
 
-	public DerivationByTheorem(String n, Location l, Clause c, StringSpan name, String kind) {
+	public DerivationByTheorem(String n, Location l, Clause c, QualName name, String kind) {
 		super(n, l, c);
-		theoremName = name.toString();
+		theoremName = name;
 		setEndLocation(name.getEndLocation());
 		theoremKind = kind;
 	}
 
 	@Override
-	public String getRuleName() { return theoremName; }
+	public String getRuleName() { return theoremName.toString(); }
 
 	@Override
 	public RuleLike getRule(Context ctx) {
 		if (theorem == null) {
-			// make sure we can find the rule
-			theorem = ctx.ruleMap.get(theoremName);
-			if (theorem == null) {
-				theorem = ctx.recursiveTheorems.get(theoremName);
+			Object resolution = theoremName.resolve(ctx);
+			if (resolution == null || resolution instanceof String[]) {
+				resolution = theorem = ctx.recursiveTheorems.get(theoremName.toString());
 				if (theorem == null)
-					ErrorHandler.report(Errors.THEOREM_NOT_FOUND, theoremName, this);
+					ErrorHandler.report(Errors.THEOREM_NOT_FOUND, theoremName.toString(), this);
 			}
+			if (!(resolution instanceof Theorem)) {
+				ErrorHandler.report(theoremName + " does not appear to name a theorem", this, "SASyLF computed that it is a " + resolution.getClass().getSimpleName());
+			}
+			theorem = (Theorem)resolution;
 			if (!theorem.isInterfaceOK()) {
-				ErrorHandler.report(Errors.RULE_BAD, theoremName, this);
+				ErrorHandler.report(Errors.RULE_BAD, theoremName.toString(), this);
 			}
 			if (!(theorem instanceof Theorem)) {
 				if (theoremKind.length() == 0) {
 					String kind = "rule";
 					ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, "by\nby "+kind);
 				} else {
-					ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName, this, theoremKind +"\nrule");
+					ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName.toString(), this, theoremKind +"\nrule");
 				}
 			} else { 
 				String kind = ((Theorem)theorem).getKind();
@@ -68,7 +70,7 @@ public class DerivationByTheorem extends DerivationByIHRule {
 	}
 
 	private String theoremKind;
-	private String theoremName;
+	private QualName theoremName;
 	private RuleLike theorem;
 
 }

@@ -46,6 +46,7 @@ import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Module;
 import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.RenameJudgment;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.RuleCase;
 import edu.cmu.cs.sasylf.ast.Syntax;
@@ -125,6 +126,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
 					pe.setPosition(convertLocToPos(document, judg.getLocation()));
 					pList.add(pe);
+					if (judg instanceof RenameJudgment) continue;
 					for (Rule r : judg.getRules()) {
 						StringBuilder sb = new StringBuilder();
 						sb.append(r.getName()).append(": ");
