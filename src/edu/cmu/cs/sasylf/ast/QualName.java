@@ -72,7 +72,7 @@ public class QualName extends Node {
 				resolution = ctx.modMap.get(name);
 				if (resolution == null) resolution = ctx.getSyntax(name);
 				if (resolution == null) resolution = ctx.ruleMap.get(name);
-				if (resolution == null) resolution = ctx.judgMap.get(name);
+				if (resolution == null) resolution = ctx.getJudgment(name);
 				if (resolution == null) resolution = new String[]{name};
 			} else {
 				Object src = source.resolve(ctx);

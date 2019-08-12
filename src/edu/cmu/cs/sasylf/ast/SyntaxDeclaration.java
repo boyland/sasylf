@@ -173,7 +173,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 				else cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
-				ctx.prodMap.put(cd.getConstructorName(),cd);
+				ctx.setProduction(cd.getConstructorName(),cd);
 				ctx.parseMap.put(cd.getElemTypes(), cd);
 
 				GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);

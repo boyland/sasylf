@@ -73,6 +73,9 @@ public class RenameJudgment extends Judgment {
 			getForm().checkClauseMatch(original.getForm());
 		}
 		super.typecheck(ctx);
+		for (Rule r : original.getRules()) {
+			ctx.ruleMap.put(r.getName(), r);
+		}
 	}
 
 	@Override

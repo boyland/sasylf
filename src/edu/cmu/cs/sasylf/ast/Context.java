@@ -12,6 +12,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -33,8 +34,8 @@ public class Context implements Cloneable {
 	public Set<String> termSet = new HashSet<String>();
 	private Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,SyntaxDeclaration> synTypeMap = new HashMap<String,SyntaxDeclaration>();
-	public Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
-	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
+	private Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
+	private Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
 	public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
 	public Map<String,Module> modMap = new HashMap<String, Module>();
@@ -132,6 +133,53 @@ public class Context implements Cloneable {
 	 */
 	public SyntaxDeclaration getSyntax(Term ty) {
 		return synTypeMap.get(ty.baseTypeFamily().getName()); 
+	}
+	
+	/**
+	 * Set the judgment for this name.
+	 */
+	public void setJudgment(String name, Judgment j) {
+		if (j == null) throw new NullPointerException("Need a valid judgment for " + name);
+		Judgment jp = judgMap.put(name, j);
+		if (jp != null && jp != j) {
+			ErrorHandler.recoverableError(Errors.DUPLICATE_JUDGMENT, j);
+		}
+		// perhaps put in an LF name binding backwards.
+	}
+	
+	/**
+	 * Get the judgment associated with this name in the context.
+	 * @param name name to look up
+	 * @return judgment mapped.
+	 */
+	public Judgment getJudgment(String name) {
+		return judgMap.get(name);
+	}
+	
+	/**
+	 * Get the judgment associated with this LF constant.
+	 * @param con constant to look up
+	 * @return judgment in the context with this LF name
+	 */
+	public Judgment getJudgment(Atom con) {
+		return judgMap.get(con.getName()); // XXX: Must be changed with modules.
+	}
+	
+	/**
+	 * Register a production for an LF constant
+	 * @param name name of LF constant
+	 * @param prod defining clause for this production
+	 */
+	public void setProduction(String name, ClauseDef cd) {
+		prodMap.put(name, cd);
+	}
+	
+	/**
+	 * Get the production associated with this constant
+	 * @param con constant to look up
+	 */
+	public ClauseDef getProduction(Constant con) {
+		return prodMap.get(con.getName());
 	}
 	
 	/**

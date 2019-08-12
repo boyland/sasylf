@@ -23,8 +23,8 @@ public abstract class AndOrJudgment extends Judgment {
 	@Override
 	public void defineConstructor(Context ctx) {
 		this.getForm().typecheck(ctx);
-		ctx.prodMap.put(getName(), (ClauseDef)getForm());
-		ctx.judgMap.put(getName(), this);
+		ctx.setProduction(getName(), (ClauseDef)getForm());
+		ctx.setJudgment(getName(), this);
 	}
 
 	@Override

@@ -115,8 +115,8 @@ public class TermPrinter {
 			if (!(ty instanceof Constant)) {
 				throw new RuntimeException("base type of " + x + " = " + ty);
 			}
-			String base = ty.toString();
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
+			String base = syn.getName();
 			if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) 
 				return new NonTerminal(x.toString(),location, syn);
 			if (rename) { // MDA: only rename free variables if the option is enabled
@@ -292,11 +292,13 @@ public class TermPrinter {
 	 */
 	ClauseUse assumeTypeAsClause(Term assumeType, List<Variable> vars) {
 		ClauseUse bindingClause = (ClauseUse)asElement(assumeType,vars);
-		if (assumeType instanceof Application && 
-				ctx.judgMap.containsKey(((Application)assumeType).getFunction().toString())) {
+		if (assumeType instanceof Application) {
 			Application vtApp = (Application)assumeType;
 			Map<String,Element> vtMap = new HashMap<String,Element>();
-			Judgment vtj = ctx.judgMap.get(vtApp.getFunction().toString());
+			Judgment vtj = ctx.getJudgment(vtApp.getFunction());
+			if (vtj == null) {
+				throw new RuntimeException("Cannot find judgment for " + vtApp);
+			}
 			for (Rule r : vtj.getRules()) {
 				if (r.isAssumption()) {
 					ClauseUse vtcu = (ClauseUse)r.getConclusion();
@@ -381,8 +383,8 @@ public class TermPrinter {
 
 	private ClauseUse appAsClause(Constant con, List<Element> args) {
 		String fname = con.getName();
-		ClauseDef cd = ctx.prodMap.get(fname);
 		if (fname.equals("or[]")) return OrClauseUse.makeEmptyOrClause(location);
+		ClauseDef cd = ctx.getProduction(con);
 		if (cd == null) {
 			throw new RuntimeException("no cd for " + fname);
 		}
