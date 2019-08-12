@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Syntax declarations that may be mutually recursive.
  */
-public class SyntaxPart extends Part {
+public class SyntaxPart implements Part {
 	private List<Syntax> syntax;
 	
 	/**

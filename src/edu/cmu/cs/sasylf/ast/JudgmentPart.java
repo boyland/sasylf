@@ -14,7 +14,7 @@ import edu.cmu.cs.sasylf.util.Util;
 /**
  * A sequence of judgments that may be mutually recursive.
  */
-public class JudgmentPart extends Part {
+public class JudgmentPart implements Part {
 	List<Judgment> judgments;
 	
 	/**

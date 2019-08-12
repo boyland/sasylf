@@ -26,7 +26,7 @@ public class CompUnit extends Node implements Module {
 	 * @param c part to add, must not be null
 	 */
 	public void addParameterChunk(Part c) {
-		parts.add(c); //! We need to separate required from provides in a module system.
+		params.add(c); 
 	}
 	
 	/**
@@ -45,8 +45,14 @@ public class CompUnit extends Node implements Module {
 	@Override
 	public String getName() { return moduleName; }
 	
+	@Override
+	public boolean isAbstract() {
+		return !params.isEmpty();
+	}
+
 	private PackageDeclaration packageDecl;
 	private String moduleName;
+	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
 	
 	/* (non-Javadoc)
@@ -58,6 +64,14 @@ public class CompUnit extends Node implements Module {
 
 		if (moduleName != null) {
 			out.println("module " + moduleName);
+		}
+		
+		if (!params.isEmpty()) {
+			out.println("requires");
+			for (Part part : params) {
+				part.prettyPrint(out);
+			}
+			out.println("provides");
 		}
 
 		for (Part part : parts) {
@@ -98,6 +112,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	public void typecheck(Context ctx, ModuleId id) {
 		if (id != null) checkFilename(id);
+		for (Part part : params) {
+			part.typecheck(ctx);
+		}
 		for (Part part : parts) {
 			part.typecheck(ctx);
 		}
@@ -121,6 +138,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectTopLevel(Collection<? super Node> things) {
+		for (Part part : params) {
+			part.collectTopLevel(things);
+		}
 		for (Part part : parts) {
 			part.collectTopLevel(things);
 		}
@@ -131,6 +151,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
+		for (Part part : params) {
+			part.collectRuleLike(map);
+		}
 		for (Part part : parts) {
 			part.collectRuleLike(map);
 		}

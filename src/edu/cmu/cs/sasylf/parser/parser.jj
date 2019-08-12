@@ -1429,13 +1429,15 @@ CompUnit CompilationUnit() :
 { PackageDeclaration pkg = null;
   String moduleName = null;
   Part p;
-  List<QualName> args;
-  Token t=null;
-  List<String> usedModule = null;
+  QualName qn;
+  List<QualName> args = new ArrayList<QualName>();
+  Token s, t=null, tp;
+  QualName usedModule = null;
+  Location loc;
   CompUnit cu; }
 {
   [ pkg=PackageDeclaration() ]
-  [ firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
+  [ LOOKAHEAD(3) firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   {
     if (pkg == null)
 		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
@@ -1449,7 +1451,7 @@ CompUnit CompilationUnit() :
   	)+
   )?
    
-  (t=<EXTENDS> usedModule=Name()
+  (t=<EXTENDS> usedModule=QualName()
     { if (firstToken == null) firstToken = t;
       if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
       else ErrorHandler.recoverableError("module 'extends' not implemented yet", new Location(t)); }
@@ -1463,8 +1465,13 @@ CompUnit CompilationUnit() :
   (
     p=Part(false) {  cu.addChunk(p); }
   | (
-    	t=<USE> usedModule=Name() args=ModuleParameters() 
-      	{ ErrorHandler.recoverableError("module 'use' not implemented yet", new Location(t)); }
+    	t=<MODULE> s=<IDENTIFIER> "=" usedModule=QualName() { args.clear(); loc=usedModule.getEndLocation(); }
+    	[ args=ModuleParameters()
+    	 "[" [ qn=QualName() { args.add(qn); }
+               ( "," qn=QualName() { args.add(qn); } )* ]
+         tp="]" {  loc = new Location(tp); }
+    	]
+      	{ p = new ModulePart(new Location(t),s.image,usedModule,args,loc); cu.addChunk(p); }
     )
   )*
   <EOF>

@@ -112,6 +112,8 @@ analysis.  Its use is deprecated.
 
 RELEASE HISTORY
 
+1.4.1	Modules without parameters
+    Added the ability to refer to syntax/judgments/theorems in other named modules
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)

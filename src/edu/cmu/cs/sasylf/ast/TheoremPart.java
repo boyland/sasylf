@@ -12,7 +12,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
  * A sequence of theorems.
  * Theorem may be mutually recursive only as connected with 'and".
  */
-public class TheoremPart extends Part {
+public class TheoremPart implements Part {
 	List<Theorem> theorems;
 	
 	/**

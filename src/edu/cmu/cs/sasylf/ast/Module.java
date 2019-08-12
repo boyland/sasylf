@@ -16,7 +16,13 @@ public interface Module {
 	 * @return module name of this compilation unit.
 	 */
 	public abstract String getName();
-
+	
+	/**
+	 * Return true if this module has non-empty requirements.
+	 * @return whether has requirements.
+	 */
+	public boolean isAbstract();
+	
 	public abstract void prettyPrint(PrintWriter out);
 
 	/**

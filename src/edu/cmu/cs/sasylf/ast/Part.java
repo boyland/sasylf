@@ -6,9 +6,8 @@ import java.util.Map;
 
 /**
  * A part of a compilation unit/module.
- * XXX: convert to interface ?
  */
-public abstract class Part {
+public interface Part {
 
 	/**
 	 * Type check the elements in this chunk.

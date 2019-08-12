@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Declared terminals/
  */
-public class TerminalsPart extends Part {
+public class TerminalsPart implements Part {
 	private Set<String> declaredTerminals;
 	
 	/**
