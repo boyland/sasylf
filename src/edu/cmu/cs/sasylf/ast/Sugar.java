@@ -82,7 +82,7 @@ public class Sugar extends Syntax {
 			replacement.typecheck(ctx);
 			for (NonTerminal nt : replacement.getFree(true)) {
 				if (!lhsVars.remove(nt.getSymbol())) {
-					ErrorHandler.report("This variable that doesn't occur in the syntax", nt);
+					ErrorHandler.report("This variable doesn't occur in the syntax:" + nt, this);
 				}
 			}
 			if (!lhsVars.isEmpty()) {

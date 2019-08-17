@@ -2,10 +2,15 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class SugarClauseDef extends ClauseDef {
@@ -30,8 +35,20 @@ public class SugarClauseDef extends ClauseDef {
 		Term ctype = cnst.getType();
 		List<Abstraction> wrappers = new ArrayList<Abstraction>();
 		Term.getWrappingAbstractions(ctype, wrappers);
-		Term result = Term.wrapWithLambdas(wrappers, body);
-		System.out.println("term for sugar = " + result);
+		Substitution sub = new Substitution();
+		int n = wrappers.size();
+		for (int i=0; i < n; ++i) {
+			Abstraction a = wrappers.get(i);
+			sub.add(new FreeVar(a.varName,a.varType), new BoundVar(n-i));
+		}
+		Term result = Term.wrapWithLambdas(wrappers, body.substitute(sub));
+		// System.out.println("term for sugar = " + result);
+		/* Already handled in Sugar
+		Set<FreeVar> unbound = result.getFreeVariables();
+		if (!unbound.isEmpty()) {
+			ErrorHandler.recoverableError("Not sure what to use for these variables " + unbound, this);
+		}
+		*/
 		return result;
 	}
 

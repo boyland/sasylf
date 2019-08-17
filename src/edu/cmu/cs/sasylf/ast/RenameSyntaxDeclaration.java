@@ -150,6 +150,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		return super.typeTerm();
 	}
 
+	/*
 	@Override
 	public edu.cmu.cs.sasylf.grammar.NonTerminal getSymbol() {
 		if (original != null) return original.getSymbol();
@@ -167,6 +168,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		if (original != null) return original.getTermSymbol();
 		return super.getTermSymbol();
 	}
+	*/
 
 	@Override
 	public void computeSubordination() {
