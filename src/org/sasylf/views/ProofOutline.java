@@ -45,6 +45,7 @@ import edu.cmu.cs.sasylf.ast.DerivationByAnalysis;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Module;
+import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.RenameJudgment;
 import edu.cmu.cs.sasylf.ast.Rule;
@@ -176,6 +177,12 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						// NB: This theorem is now gone.  Just ignore it:
 						continue;
 					}
+					pList.add(pe);
+				}
+				else if (decl instanceof ModulePart) {
+					ModulePart mpart = (ModulePart)decl;
+					pe = new ProofElement("Module", mpart.getName() + "= " + mpart.getModule().toString());
+					pe.setPosition(convertLocToPos(document,mpart.getLocation()));
 					pList.add(pe);
 				}
 			}
@@ -370,6 +377,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				kindImages.put("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
 				kindImages.put("Clause", activator.getImage("icons/small-green-ball.png"));
 				kindImages.put("Package", activator.getImage("icons/packd_obj.png"));
+				kindImages.put("Module", activator.getImage("icons/star.png"));
 			}
 		}
 

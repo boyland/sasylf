@@ -3,7 +3,9 @@ package org.sasylf;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +16,8 @@ import org.eclipse.jface.text.IDocument;
 import org.sasylf.util.TrackDirtyRegions;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Module;
+import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.RuleLike;
 
@@ -69,6 +73,20 @@ public class Proof {
 	private void updateCache() {
 		compilation.collectTopLevel(declarations);
 		compilation.collectRuleLike(ruleLikeCache);
+		for (Node n : declarations) {
+			if (n instanceof ModulePart) {
+				ModulePart mpart = (ModulePart)n;
+				Object res = mpart.getModule().resolve(null);
+				if (res instanceof Module) {
+					Map<String,RuleLike> tmp = new HashMap<String,RuleLike>();
+					((Module)res).collectRuleLike(tmp);
+					String prefix = mpart.getName() + ".";
+					for (Map.Entry<String, RuleLike> e : tmp.entrySet()) {
+						ruleLikeCache.put(prefix+e.getKey(), e.getValue());
+					}
+				}
+			}
+		}
 	}
 	
 	public IResource getResource() {
@@ -103,10 +121,10 @@ public class Proof {
 	
 	/** Find all rule-likes in teh given compilation unit that start with the given prefix.
 	 * @param prefix key to start with, must not be null
-	 * @return iterator (never null) of rule-likes that start with the given prefix.
+	 * @return submap (never null) of rule-likes that start with the given prefix.
 	 */
-	public Collection<RuleLike> findRuleLikeByPrefix(String prefix) {
-		return ruleLikeCache.subMap(prefix, prefix+Character.MAX_VALUE).values();
+	public Map<String,RuleLike> findRuleLikeByPrefix(String prefix) {
+		return ruleLikeCache.subMap(prefix, prefix+Character.MAX_VALUE);
 	}
 	
 	/**

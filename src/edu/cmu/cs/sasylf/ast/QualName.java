@@ -60,11 +60,12 @@ public class QualName extends Node {
 
 	/**
 	 * Resolve this qualified name (see class documentation comment).
-	 * @param ctx context to use, must not be null.
+	 * @param ctx context to use, if null, then simply return what what computed previously.
 	 * @return resolved a String array, a module or a named thing.  
 	 * null is returns only if an error was reported already.
 	 */
 	public Object resolve(Context ctx) {
+		if (ctx == null) return resolution;
 		if (version != ctx.version) resolution = null;
 		if (resolution == null) {
 			version = ctx.version;

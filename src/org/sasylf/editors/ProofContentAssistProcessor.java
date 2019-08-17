@@ -6,6 +6,8 @@ package org.sasylf.editors;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IStatus;
@@ -71,18 +73,19 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 		return Proof.getProof(res);
 	}
 
-	private List<RuleLike> findMatches(String type, String pattern) {
+	private List<Map.Entry<String,RuleLike>> findMatches(String type, String pattern) {
 		Proof p = getProof();
 		if (p == null || p.getCompilation() == null) {
 			return Collections.emptyList();
 		}
 
-		List<RuleLike> result = new ArrayList<RuleLike>();
-		for (RuleLike rl : p.findRuleLikeByPrefix(pattern)) {
+		List<Map.Entry<String,RuleLike>> result = new ArrayList<Map.Entry<String,RuleLike>>();
+		for (Map.Entry<String,RuleLike> e : p.findRuleLikeByPrefix(pattern).entrySet()) {
+			RuleLike rl = e.getValue();
 			if (type.equals("rule")) {
-				if (rl instanceof Rule) result.add(rl);
+				if (rl instanceof Rule) result.add(e);
 			} else if (type.equals("lemma") || type.equals("theorem")) {
-				if (rl instanceof Theorem) result.add(rl);
+				if (rl instanceof Theorem) result.add(e);
 			}
 		}
 		return result;
@@ -110,8 +113,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 		return argString;
 	}
 
-	private ICompletionProposal makeCompletionProposal(RuleLike match, int cursor, String prefix) {
-		String name = match.getName();
+	private ICompletionProposal makeCompletionProposal(String name, RuleLike match, int cursor, String prefix) {
 		int len = prefix.length();
 		int newCursor = name.length();
 		List<? extends Element> inputs = match.getPremises();
@@ -162,7 +164,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
         pieces[pieces.length-1] = "";
       }*/
 			//System.out.println("looking for " + pieces[pieces.length-2] + " for '" + pieces[pieces.length-1] + "'");
-			List<RuleLike> matches;
+			List<Map.Entry<String, RuleLike>> matches;
 			String key = pieces[pieces.length-2];
 			String prefix = pieces[pieces.length-1];
 			matches = findMatches(key, prefix);
@@ -171,7 +173,8 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 			}
 			ICompletionProposal[] result = new ICompletionProposal[matches.size()];
 			for (int i=0; i < result.length; ++i) {
-				result[i] = makeCompletionProposal(matches.get(i),offset,prefix);
+				Entry<String, RuleLike> entry = matches.get(i);
+				result[i] = makeCompletionProposal(entry.getKey(),matches.get(i).getValue(),offset,prefix);
 			}
 			failureReason = null;
 			return result;

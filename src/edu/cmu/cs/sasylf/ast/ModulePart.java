@@ -23,6 +23,18 @@ public class ModulePart extends Node implements Part {
 		this.arguments = arguments;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
+	/**
+	 * Return the module being renamed here.
+	 * @return the module.
+	 */
+	public QualName getModule() {
+		return module;
+	}
+	
 	@Override
 	public void typecheck(Context ctx) {
 		Object resolution = module.resolve(ctx);
