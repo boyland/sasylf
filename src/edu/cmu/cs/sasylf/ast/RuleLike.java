@@ -197,7 +197,7 @@ public abstract class RuleLike extends Node {
 			Element formal = getPremises().get(i);
 			Fact input = inputs.get(i);
 			Element actual = input.getElement();
-			if (formal.getType() != actual.getType()) {
+			if (formal.getType().typeTerm() != actual.getType().typeTerm()) {
 				ErrorHandler.report("argument #" + (i+1) + " to "+getName()+" is wrong type", isPattern ? input : errorPoint);
 			}
 		}

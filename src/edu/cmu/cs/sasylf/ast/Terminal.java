@@ -85,4 +85,8 @@ public class Terminal extends Element implements ElemType {
 	public static boolean matches(Element e, String s) {
 		return e instanceof Terminal && ((Terminal)e).symbol.equals(s);
 	}
+	
+	public Term typeTerm() {
+		throw new RuntimeException("internal error: can't compute the term of a Terminal");
+	}
 }
