@@ -85,7 +85,7 @@ Alternatively, if you fetch the source from github, you can build SASyLF
 (under Unix) assuming you have java and javacc in your path using
 	make build
 
-CUrrently, there's no easy way to build the Eclipse plugin from the command-line.
+Currently, there's no easy way to build the Eclipse plugin from the command-line.
 
 
 CONTACT
