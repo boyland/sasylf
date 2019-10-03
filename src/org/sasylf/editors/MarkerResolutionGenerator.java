@@ -295,7 +295,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						int offset = reg.getOffset() + lo;
 						// System.out.println("Converting starting at column " + lo + " using '" + newText + "'");
 						proposals.add(new MyCompletionProposal(res, newText, offset, reg.getLength()-lo, 
-								newCursor, null, "convert to case analysis with missign case(s)", null, fixInfo));
+								newCursor, null, "convert to case analysis with missing case(s)", null, fixInfo));
 					}
 				} else {
 					newText = sb.toString();
