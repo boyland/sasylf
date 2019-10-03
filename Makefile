@@ -4,7 +4,7 @@
 # SASyLF version VERSIONSTRING\r
 # where VERSION string is a valid Eclipse Version, e.g. 1.1.3
 
-VERSION=`head -1 README.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y%m%d'`
+VERSION=`head -1 README.TXT | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +'%Y%m%d'`
 .PHONY: build build-plugin test default unit-test regression-test
 
 default: test
