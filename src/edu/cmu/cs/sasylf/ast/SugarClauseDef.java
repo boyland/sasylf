@@ -2,7 +2,6 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -10,7 +9,6 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class SugarClauseDef extends ClauseDef {
