@@ -1,2 +1,2 @@
 #!/bin/bash
-java -cp bin edu.cmu.cs.sasylf.Main "$@"
+java -cp `dirname $0`/bin edu.cmu.cs.sasylf.Main "$@"
