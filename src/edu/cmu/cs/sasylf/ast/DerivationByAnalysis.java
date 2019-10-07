@@ -156,6 +156,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			}
 
 			if (savedMap != null) {
+				// System.out.println("\n*** Checking saved cases.\n");
 				for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> e : savedMap.entrySet()) {
 					HashSet<Pair<Term, Substitution>> newSet = new HashSet<Pair<Term,Substitution>>();
 					for (Pair<Term,Substitution> p : e.getValue()) {
@@ -166,6 +167,10 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 							Util.debug("current = ", ctx.currentSub);
 							Substitution newSubstitution = new Substitution(p.second);
 							newSubstitution.compose(ctx.currentSub);
+							if (!ctx.canCompose(newSubstitution)) {
+								Util.debug("case no lomger feasible (relaxation): ");
+								continue;
+							}
 							if (caseNT != null) {
 								FreeVar v = new FreeVar(caseNT.getSymbol(),p.first.getType(new ArrayList<Pair<String,Term>>()));
 								newSubstitution.add(v,p.first);

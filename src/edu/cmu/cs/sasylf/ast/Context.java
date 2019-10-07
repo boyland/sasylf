@@ -317,7 +317,7 @@ public class Context implements Cloneable {
 		relaxationMap.put(key, relax);
 		Set<FreeVar> newVars = relax.getRelaxationVars();
 		relaxationVars.addAll(newVars);
-		relax.getFreeVars(inputVars);
+		relax.getFreeVars(inputVars); //XXX: What is this doing?  It doesn't do anything?!?
 		Util.debug("ctx.relaxationVars = ", relaxationVars);
 	}
 
@@ -398,6 +398,15 @@ public class Context implements Cloneable {
 		removeUnreachableVariables();
 	}
 
+	/**
+	 * Check if the substitution passed in is compatible with the 
+	 * current relaxation.
+	 * XXX: This method should probably check whether the substitution
+	 * is compatible with the current substitution too.
+	 * For now {@link DerivationByAnalysis} does the other check as well.
+	 * @param sub substitution to check, must not be null
+	 * @return true composition does not interfere with relaxation variables.
+	 */
 	public boolean canCompose(Substitution sub) {
 		// We have to reject a substitution that changes a relaxation variable to anything but another free variable.
 		// An earlier version of this code permitted it to be substituted with a bound variable,
