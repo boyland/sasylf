@@ -100,12 +100,9 @@ public class Abstraction extends Term {
 
 	@Override
 	protected Term remakeHelper(List<Pair<String, Term>> varBindings) {
-		if (varBindings.isEmpty())
-			throw new IllegalArgumentException("ran out of new bindings on: " + this);
+		if (varBindings.isEmpty()) return this;
 		Pair<String, Term> nextNew = varBindings.remove(0);
-		if (!nextNew.second.equals(varType))
-			throw new IllegalArgumentException("types don't match, given: " +
-				nextNew.second + " this type: " + varType);
+		if (!nextNew.second.equals(varType)) return this;
 		return make(nextNew.first, nextNew.second, 
 			body.remakeHelper(varBindings));
 	}
