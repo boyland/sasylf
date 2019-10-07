@@ -1,4 +1,4 @@
-SASyLF version 1.4.1a1
+SASyLF version 1.4.1a2
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -114,6 +114,7 @@ RELEASE HISTORY
 
 1.4.1	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules
+    Resolved issues #85 #86
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)
