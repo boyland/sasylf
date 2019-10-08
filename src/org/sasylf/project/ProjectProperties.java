@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.widgets.Display;
 import org.osgi.service.prefs.BackingStoreException;
 import org.sasylf.Activator;
 import org.sasylf.Preferences;
@@ -101,14 +102,24 @@ public class ProjectProperties {
 	 * @return build path, never null.
 	 * @throws CoreException if the project is not open, or doesn't have nature
 	 */
-	public static String getBuildPath(IProject project) throws CoreException {
+	public static String getBuildPath(final IProject project) throws CoreException {
 		String buildPath;
 		if (!project.hasNature(MyNature.NATURE_ID)) return null;
 		IScopeContext scope = new ProjectScope(project);
 		IEclipsePreferences node = scope.getNode(Activator.PLUGIN_ID);
 		buildPath = node.get(PROJECT_BUILD_PATH_LOCAL_NAME, null);
 		if (buildPath == null) {
-			setBuildPath(project,buildPath = getDefaultBuldPath());
+			final String newBuildPath = getDefaultBuldPath();
+			Display.getDefault().asyncExec(new Runnable() {
+				public void run() {
+					try {
+						setBuildPath(project,newBuildPath);
+					} catch (CoreException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			buildPath = newBuildPath;
 		}
 		return buildPath;
 	}
