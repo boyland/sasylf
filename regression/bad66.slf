@@ -1,0 +1,40 @@
+// This error was introduced in version 1.2.6 and persisted through 1.4.0
+package regression;
+
+terminals S contradiction
+
+syntax
+  n ::= 0 | S n
+
+
+judgment absurd: contradiction
+
+judgment gt: n > n
+
+-------- gt-one
+S n > n
+
+n1 > n2
+--------- gt-more
+S n1 > n2
+
+lemma unlikely:
+    exists S 0 > S 0.
+    _: S 0 > S 0 by rule gt-more on (0 > S 0) //! Should not be allowed
+end lemma
+
+lemma impossible:
+    exists contradiction.
+    t: S 0 > S 0 by lemma unlikely
+    _: contradiction by case analysis on t:
+        case rule
+            u: 0 > (S 0)
+            --------------- gt-more
+            _: (S 0) > (S 0)
+        is
+            _: contradiction by case analysis on u:
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
