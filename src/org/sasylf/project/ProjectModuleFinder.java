@@ -55,7 +55,11 @@ public class ProjectModuleFinder extends RootModuleFinder {
 		IResource res = workspace.getRoot().getFileForLocation(path);
 		CompUnit result = ProofChecker.analyzeSlf(this, id, res);
 		if (result == null) {
-			ErrorHandler.report("Cannot read file " + f + " as " + res, loc);
+			// We should not generate any errors NOW since 
+			// this error will not be handled properly (using markers etc).
+			// And this will commonly happen if there is a syntactic error.
+			// A print to console might be useful for debugging:
+			System.out.println("proof checker failed to return a valid AST.");
 		}
 		return result;
 	}

@@ -227,7 +227,7 @@ public class ProofChecker  {
 			if (doc == null) {
 				doc = new ResourceDocument(res);
 			}
-			// eventually we want to do incremental checking.
+			// TODO: eventually we want to do incremental checking.
 			List<IDirtyRegion> dirtyRegions = oldProof == null ? null : oldProof.getChanges(doc);
 			if (dirtyRegions != null) {
 				try {
