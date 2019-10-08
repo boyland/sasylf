@@ -188,7 +188,9 @@ public class DerivationByInversion extends DerivationWithArgs {
 				}
 				// Because we do the unifications step by step, we can't just "avoid"
 				// on the substitutions as they come, but instead do this at the end:
-				ctx.avoidIfPossible(result.getFreeVariables());
+				Term userResult = getClause().asTerm(); 
+				ctx.avoidIfPossible(userResult.getFreeVariables());
+				su.avoid(userResult.getFreeVariables());
 				found_rulel = true;
 			} else {
 				ErrorHandler.report(Errors.MISSING_CASE,
