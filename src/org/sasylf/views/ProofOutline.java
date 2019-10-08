@@ -516,6 +516,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	 * @return position of declaration, or null if not found.
 	 */
 	public ProofElement findProofElementByName(String name) {
+		if (getTreeViewer() == null) {
+			System.out.println("No tree viewer!");
+			return null;
+		}
 		ContentProvider provider = (ContentProvider)getTreeViewer().getContentProvider();
 		return provider.findProofElementByName(name);
 	}
