@@ -319,7 +319,7 @@ public class WhereClause {
 			}
 			if (!missing.isEmpty()) {
 				String list = missing.toString();
-				ErrorHandler.recoverableError( // don't print brackets on list
+				ErrorHandler.warning( // don't print brackets on list
 					"Missing where clause" +
 					(missing.size() > 1 ? "s" : "") +
 					" for: " + list.substring(1, list.length() - 1), errorSpan
