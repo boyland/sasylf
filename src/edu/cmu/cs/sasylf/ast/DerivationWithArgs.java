@@ -82,6 +82,9 @@ public abstract class DerivationWithArgs extends Derivation {
 						e = cl.computeClause(ctx, false);
 					}
 				}
+				if (!(e.getType() instanceof Syntax)) {
+					ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+				}
 				f = e.asFact(ctx, ctx.assumedContext);
 			}
 			if (!ctx.isKnownContext(f.getElement().getRoot())) {
