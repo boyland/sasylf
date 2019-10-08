@@ -1,0 +1,89 @@
+// where clauses not working with induction
+package regression;
+
+terminals s
+
+syntax
+
+n ::= 0
+    | s n
+
+
+judgment gt: n > n
+
+------- gt-one
+s n > n
+
+n1 > n2
+--------- gt-more
+s n1 > n2
+
+theorem succ-cancels-gt:
+	forall g: s n1 > s n2
+	exists n1 > n2.
+	proof by induction on g:
+	case rule
+		---------------- gt-one
+		_: s s n2 > s n2
+	is
+		proof by rule gt-one
+	end case
+	case rule
+		g': n1 > s n2
+		-------------- gt-more
+		_: s n1 > s n2
+	is
+		proof by case analysis on n1:
+			case 0 is
+				proof by contradiction on g'
+			end case
+			case s n1' is
+				d: n1' > n2 by induction hypothesis on g'
+				proof by rule gt-more on d
+			end case
+		end case analysis
+	end case
+	end induction
+end theorem
+
+theorem gt-anti-refl-use:
+	forall n
+	forall d: n > n 
+	exists contradiction .
+	use inversion of rule gt-more on d
+	  // where n := s n'
+	p: n' > n' by theorem succ-cancels-gt on n', d // need to realize what n' is
+	proof by induction hypothesis on n', p
+end theorem
+
+theorem gt-anti-refl:
+	forall n
+	forall d: n > n 
+	exists contradiction .
+	_: n' > n by inversion of rule gt-more on d
+	  // where n := s n'
+	p: n' > n' by theorem succ-cancels-gt on d
+	proof by induction hypothesis on n', p
+end theorem
+
+theorem gt-anti-refl-use-w:
+        forall n
+        forall d: n > n
+        exists contradiction .
+        use inversion of rule gt-more on d
+          where n := s n'
+        p: n' > n' by theorem succ-cancels-gt on n', d
+        proof by induction hypothesis on n', p
+end theorem
+
+theorem gt-anti-refl-w:
+        forall n
+        forall d: n > n
+        exists contradiction .
+        _: n' > n by inversion of rule gt-more on d
+          where n := s n'
+        p: n' > n' by theorem succ-cancels-gt on d
+        proof by induction hypothesis on n', p
+end theorem
+
+
