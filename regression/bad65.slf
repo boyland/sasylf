@@ -1,0 +1,54 @@
+// default package
+
+terminals fn in
+
+syntax
+  t ::= x | ?
+  e ::= t | fn x => t[x]
+  G ::= * | G, x
+
+
+judgment isvar: t in G 
+assumes G
+
+  ---------- var
+  x in (G,x)
+  
+judgment approx: G |- t ~ t
+assumes G
+
+  ---------- qleft
+  G |- ? ~ t
+  
+  ---------- qright
+  G |- t ~ ?
+  
+  ---------- qequal
+  G |- t ~ t
+  
+theorem bad:
+  assumes G
+  forall t1 assumes G
+  forall t2 assumes G
+  exists G |- t1 ~ t2
+  proof by case analysis on t1:
+    case x assumes G', x is
+      proof by case analysis on t2:
+        case x assumes G1, x is
+          proof by rule qequal //! different x's
+        end case
+
+         case ? is
+          proof by rule qright
+        end case
+
+      end case analysis
+    end case
+
+    case ? is
+      proof by rule qleft
+    end case
+
+  end case analysis
+end theorem
+
