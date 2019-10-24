@@ -8,8 +8,8 @@ import edu.cmu.cs.sasylf.util.Location;
 
 /**
  * A judgment defined in terms of an existing judgment.
- * Eventually this will be used to handle importing judgments.
- * Currently rules cannot be imported/renamed, but the plan is to permit
+ * This is used to handle importing judgments.
+ * Currently rules cannot be imported/renamed, but we permit
  * them to be used with qualification, nat.plus-s, at application
  * and in pattern matching.
  */
@@ -73,9 +73,6 @@ public class RenameJudgment extends Judgment {
 			getForm().checkClauseMatch(original.getForm());
 		}
 		// super.typecheck(ctx);
-		for (Rule r : original.getRules()) {
-			ctx.ruleMap.put(r.getName(), r);
-		}
 	}
 
 	
