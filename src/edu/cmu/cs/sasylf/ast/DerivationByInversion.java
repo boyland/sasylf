@@ -24,13 +24,13 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInversion extends DerivationWithArgs {
 	
-	private final String ruleName;
+	private final QualName ruleName;
 	private final String inputName;
 	private final List<Pair<Element, Clause>> whereClauses =
 						new ArrayList<Pair<Element, Clause>>();
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
-			String rule, String relation, List<Pair<Element, Clause>> wcs) {
+			QualName rule, String relation, List<Pair<Element, Clause>> wcs) {
 		super(n, start, c);
 		setEndLocation(end); // overwrite end location to include entire justification
 		ruleName = rule;
@@ -60,12 +60,13 @@ public class DerivationByInversion extends DerivationWithArgs {
 			ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
 		Judgment judge = (Judgment)targetClause.getType();
-		RuleLike rulel = ctx.ruleMap.get(ruleName);
-		if (!(rulel instanceof Rule)) {
-			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+		Object resolution = ruleName.resolve(ctx);
+		if (resolution == null) return; // error already signaled
+		if (!(resolution instanceof Rule)) {
+			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName.toString(), this);
 			return;
 		}
-		if (((Rule)rulel).getJudgment() != judge) {
+		if (((Rule)resolution).getJudgment() != judge) {
 			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetClause, this);
 		}
 
@@ -108,7 +109,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 			}
 			if (caseResult.isEmpty()) continue;
 			Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
-			if (rule == rulel) {
+			if (rule == resolution) {
 				Util.debug("before inversion: targetTerm = " + targetTerm);
 				Util.debug("inversion: before, sub = " + ctx.currentSub);
 				Util.debug("inversion: caseResult = ", caseResult);

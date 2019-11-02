@@ -1909,7 +1909,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; StringSpan s; Case ca; Clause c; Clause c2; Derivation d; Token of;}
+{ Token t; Token t2; Token a; StringSpan s; QualName q; Case ca; Clause c; Clause c2; Derivation d; Token of;}
 {
    (
      t=<IDENTIFIER> <COLON> c=Expr()
@@ -1921,7 +1921,7 @@ Derivation Derivation() :
    <BY> d=Justification(t, c)
   { return d; }
 | LOOKAHEAD(<USE> <INVERSION>)
-  (    t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] s=RuleName() <ON> t2=<IDENTIFIER>
+  (    t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() <ON> t2=<IDENTIFIER>
     {
 	  Element lhs=null; Clause rhs=null;
 	  List<Pair<Element, Clause>> whereClauses = new ArrayList<Pair<Element, Clause>>();
@@ -1941,7 +1941,7 @@ Derivation Derivation() :
     )?
     {
       return new DerivationByInversion("_", new Location(t), Location.endOf(t2),
-    	 AndClauseUse.makeEmptyAndClause(new Location(t)), s.toString(), t2.image, whereClauses);
+    	 AndClauseUse.makeEmptyAndClause(new Location(t)), q, t2.image, whereClauses);
     }
   )
 |  t=<USE> <INDUCTION> <ON> c2=SimpleExpr()
@@ -1963,7 +1963,7 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; StringSpan s; Element e; Clause cl; Token of; QualName qn;
+  DerivationByCaseAnalysis dca; StringSpan s; QualName q; Element e; Clause cl; Token of; QualName qn;
 }
 { // args should include expressions
   <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
@@ -2003,12 +2003,12 @@ Derivation Justification(Token startT, Clause c) :
       dca.setEndLocation(Location.endOf(t)); return dca; }
   | LOOKAHEAD(3)
   (
-    <INVERSION> of=<IDENTIFIER> [<RULE>] s=RuleName() [ <ON> t=<IDENTIFIER> ]
+    <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() [ <ON> t=<IDENTIFIER> ]
     {
 	  Element lhs=null; Clause rhs=null;
 	  List<Pair<Element, Clause>> whereClauses = new ArrayList<Pair<Element, Clause>>();
       if (t == null) {
-          ErrorHandler.recoverableError("inversion " + of.image + " " + s + " on what?",new Location(of));
+          ErrorHandler.recoverableError("inversion " + of.image + " " + q + " on what?",new Location(of));
           t = new Token(IDENTIFIER,"<missing>");
       } else if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
@@ -2026,7 +2026,7 @@ Derivation Justification(Token startT, Clause c) :
     )?
     {
    	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
-   	      c, s.toString(), t.image, whereClauses);
+   	      c, q, t.image, whereClauses);
 	}
   )+
     // args should include expressions *****
