@@ -111,27 +111,13 @@ public class Theorem extends RuleLike {
 			for (Fact f : foralls) {
 				f.typecheck(ctx);
 				inputNames.add(f.getName());
-				// TODO: rationalize the following special cases:
-				if (f instanceof DerivationByAssumption) {
-					ClauseUse cu = (ClauseUse)f.getElement();
-					cu.asTerm();
-					if (cu.getRoot() != null) {
-						if (assumes == null) {
-							ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " +cu.getRoot().toString());
-						}
-						setAssumes(cu.getRoot());
-					}				  
-				} else if (f instanceof NonTerminalAssumption) {
+				if (f instanceof NonTerminalAssumption) {
 					NonTerminalAssumption sa = (NonTerminalAssumption)f;
 					NonTerminal root = sa.getRoot();
 					if (root != null) {
-						if (assumes == null) {
-							ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " + root.toString());
-						}
 						if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
 							ErrorHandler.report(Errors.EXTRANEOUS_ASSUMES, f, "assumes " + root.toString());
 						}
-						setAssumes(root);
 					}
 				}
 			}
