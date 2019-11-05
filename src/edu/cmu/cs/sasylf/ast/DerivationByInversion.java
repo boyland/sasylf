@@ -66,7 +66,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 			ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName.toString(), this);
 			return;
 		}
-		if (((Rule)resolution).getJudgment() != judge) {
+		if (((Rule)resolution).getJudgment().typeTerm() != judge.typeTerm()) {
 			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetClause, this);
 		}
 

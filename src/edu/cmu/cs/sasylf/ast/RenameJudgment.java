@@ -44,7 +44,7 @@ public class RenameJudgment extends Judgment {
 			getForm().typecheck(ctx);
 			ClauseDef cd;
 			if (getForm() instanceof ClauseDef) cd = (ClauseDef)getForm();
-			else cd = new ClauseDef(getForm(),original,original.getName());
+			else cd = new ClauseDef(getForm(),this,original.getName());
 			super.setForm(cd);
 		}
 		super.defineConstructor(ctx);
@@ -83,7 +83,7 @@ public class RenameJudgment extends Judgment {
 	}
 
 	@Override
-	public Constant typeTerm() {
+	protected Constant computeTypeTerm() {
 		if (original != null) return original.typeTerm();
 		return super.typeTerm();
 	}

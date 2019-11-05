@@ -19,7 +19,7 @@ public abstract class SimpleTestSuite {
 	}
 
 	protected <T> void assertEqual(String description, T expected, T given) {
-		assertTrue(description + "expected " + expected + ", but got " + given, 
+		assertTrue(description + ": expected " + expected + ", but got " + given, 
 				expected == given || expected != null && expected.equals(given));
 	}
 

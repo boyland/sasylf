@@ -41,6 +41,7 @@ test: unit-test regression-test
 
 unit-test:
 	java -cp bin edu/cmu/cs/sasylf/term/UnitTests
+	java -cp bin edu/cmu/cs/sasylf/util/UnitTests
 	
 regression-test:
 	@echo "Regression Tests: " `echo regression/*.slf ${ADDTESTS} | wc -w`

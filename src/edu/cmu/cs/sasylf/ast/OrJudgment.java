@@ -68,7 +68,7 @@ public class OrJudgment extends AndOrJudgment {
 			// concElems.add(RParenTerminal);
 			premises.add(new ClauseUse(l,es,(ClauseDef)j.getForm()));
 		}
-		ClauseDef cd = new ClauseDef(super.getForm(), this, super.getName());
+		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
 		super.setForm(cd);
 		Clause result = new ClauseUse(l,concElems,cd);
 		int i=1;
@@ -165,4 +165,5 @@ public class OrJudgment extends AndOrJudgment {
 		}
 		return result;
 	}
+		
 }

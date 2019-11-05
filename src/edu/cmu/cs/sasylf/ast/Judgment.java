@@ -132,10 +132,19 @@ public class Judgment extends Node implements ClauseType {
 	}
 
 	@Override
-	public Constant typeTerm() {
+	public final Constant typeTerm() {
 		if (term == null)
-			term =new Constant(name, Constant.TYPE); 
+			term = computeTypeTerm(); 
 		return term;
+	}
+
+	/**
+	 * Compute the LF base type for elements of this type.
+	 * In practice, this constructs a unique {@link Constant} instance.
+	 * @return LF base type family for this judgment.
+	 */
+	protected Constant computeTypeTerm() {
+		return new Constant(name, Constant.TYPE);
 	}
 
 	private Constant term = null;

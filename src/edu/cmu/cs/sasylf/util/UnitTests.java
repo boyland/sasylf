@@ -93,9 +93,46 @@ public class UnitTests extends SimpleTestSuite {
 
 	}
 
+	protected boolean hiddenTruth() {
+		Object o = new Object();
+		return !o.equals(new Object());
+	}
+	
+	protected void testIdentityArrayMap() {
+		Object[] key = new Object[] {};
+		Object[] key1a = new Object[] {"hello"};
+		Object[] key1b = new Object[] {"hell"+(hiddenTruth() ? "o" : "a")};
+		Object[] key1c = new Object[] {"hello"};
+		Object[] key1d = new Object[] {"jello"};
+		Object[] key2a = new Object[] {1, 2};
+		Object[] key2b = new Object[] {new Integer(1), new Integer(2) };
+		
+		IdentityArrayMap<String> m = new IdentityArrayMap<String>();
+		
+		assertEqual("nothing yet", null, m.get(key));
+		assertEqual("adding first", null, m.put(key, "apples"));
+		assertEqual("retrieving first", "apples", m.get(key));
+		
+		assertEqual("not yet", null, m.get(key1a));
+		assertEqual("adding second", null, m.put(key1a, "oranges"));
+		assertEqual("retrieving first", "apples", m.get(key));
+		assertEqual("retrieving second", "oranges", m.get(key1a));
+		assertEqual("retrieving with wrong(b) key", null, m.get(key1b));
+		assertEqual("retrieving with right(c) key", "oranges", m.get(key1c));
+		assertEqual("retrieving with wrong(d) key", null, m.get(key1d));
+		assertEqual("updating second key", "oranges", m.put(key1c, "lemons"));
+		assertEqual("retriving with original key", "lemons", m.get(key1a));
+		
+		assertEqual("not yet", null, m.get(key2a));
+		assertEqual("adding third", null, m.put(key2a, "pears"));
+		assertEqual("retrieving third", "pears", m.get(key2a.clone()));
+		assertEqual("wrong key", null, m.get(key2b));
+	}
+	
 	@Override
 	protected void runTests() {
 		testTransitiveRelation();
+		testIdentityArrayMap();
 	}
 
 	public static void main(String[] args) {

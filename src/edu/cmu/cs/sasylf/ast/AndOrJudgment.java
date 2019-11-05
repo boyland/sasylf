@@ -2,7 +2,9 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.List;
 
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.IdentityArrayMap;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
@@ -23,7 +25,7 @@ public abstract class AndOrJudgment extends Judgment {
 	@Override
 	public void defineConstructor(Context ctx) {
 		this.getForm().typecheck(ctx);
-		ctx.setProduction(getName(), (ClauseDef)getForm());
+		ctx.setProduction(typeTerm().getName(), (ClauseDef)getForm());
 		ctx.setJudgment(getName(), this);
 	}
 
@@ -41,4 +43,25 @@ public abstract class AndOrJudgment extends Judgment {
 
 	public List<Judgment> getJudgments() { return parts; }
 
+	private static IdentityArrayMap<Constant> typeTerms = new IdentityArrayMap<Constant>();
+
+	@Override
+	protected Constant computeTypeTerm() {
+		int n = parts.size();
+		Object[] key = new Object[n+1];
+		for (int i=0; i < n; ++i) {
+			key[i] = parts.get(i).typeTerm();
+		}
+		String name = super.getName();
+		name = name.substring(0,name.indexOf('['));
+		key[n] = name.intern();
+		Constant result = typeTerms.get(key);
+		if (result == null) {
+			result = super.computeTypeTerm();
+			typeTerms.put(key, result);
+		}
+		// System.out.println("Computed typeTerm for " + getName() + " to be " + result);
+		return result;
+	}
+	
 }

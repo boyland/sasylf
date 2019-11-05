@@ -202,7 +202,7 @@ public abstract class RuleLike extends Node {
 			}
 		}
 		Element concElem = output.getElement();
-		if (concElem.getType() != getConclusion().getType()) {
+		if (concElem.getType().typeTerm() != getConclusion().getType().typeTerm()) {
 			ErrorHandler.report(getName() + " can't produce any instance of the claimed judgment\n\t"+
 					concElem.getType().getName() + " != " + getConclusion().getType().getName(), errorPoint);
 		}

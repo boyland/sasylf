@@ -65,7 +65,7 @@ public class AndJudgment extends AndOrJudgment {
 			}
 			premises.add(new ClauseUse(l,es,(ClauseDef)j.getForm()));
 		}
-		ClauseDef cd = new ClauseDef(super.getForm(), this, super.getName());
+		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
 		super.setForm(cd);
 		Clause result = new ClauseUse(l,concElems,cd);
 		super.getRules().add(new Rule(l,name,premises,result));
