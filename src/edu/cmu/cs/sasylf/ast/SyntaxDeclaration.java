@@ -251,46 +251,54 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	public boolean isProductive() {
 		if (isAbstract) return true; // by assumption
 		if (isProductiveStatus == Status.DONE) return isProductive;
-		isProductiveStatus = Status.NOTSTARTED;
-		isProductive = computeIsProductive();
-		for (SyntaxDeclaration s : computed) {
-			if (s.isProductiveStatus == Status.INPROCESS) {
-				s.isProductiveStatus = Status.NOTSTARTED;
+		if (computed.isEmpty()) {
+			// start a new analysis
+			computed.add(this);
+			isProductiveStatus = Status.INPROCESS;
+			boolean changed;
+			do {
+				int n = computed.size();
+				changed = false;
+				List<SyntaxDeclaration> copy = new ArrayList<SyntaxDeclaration>(computed);
+				for (SyntaxDeclaration sd : copy) {
+					boolean newValue = sd.computeIsProductive();
+					if (newValue != sd.isProductive) {
+						sd.isProductive = newValue;
+						changed = true;
+					}
+				}
+				if (n != computed.size()) {
+					changed = true;
+				}
+			} while (changed);
+			for (SyntaxDeclaration sd : computed) {
+				sd.isProductiveStatus = Status.DONE;
 			}
+			computed.clear();
+		} else if (isProductiveStatus == Status.NOTSTARTED) {
+			isProductiveStatus = Status.INPROCESS;
+			isProductive = false;
+			computed.add(this);
+			isProductive = computeIsProductive();
 		}
-		isProductiveStatus = Status.DONE;
-		// System.out.println("Finished " + (isProductive ? "productive" : "unproductive") + " " + this);
 		return isProductive;
 	}
 
 	private boolean computeIsProductive() {
-		switch (isProductiveStatus) {
-		case NOTSTARTED: 
-			isProductiveStatus = Status.INPROCESS;
-			for (Clause elem : elements) {
-				boolean productive = true;
-				for (Element e : elem.getElements()) {
-					if (e instanceof NonTerminal && !((NonTerminal)e).getType().computeIsProductive()) {
-						// System.out.println("  Found unproductive use of " + e);
-						productive = false;
-						break;
-					} else if (e instanceof Binding && !((Binding)e).getType().computeIsProductive()) {
-						productive = false;
-						break;
-					}
-				}
-				if (productive) {
-					// System.out.println("  Clause " + elem + " is productive");
-					isProductive = true;
-					isProductiveStatus = Status.DONE;
+		for (Clause elem : elements) {
+			boolean productive = true;
+			for (Element e : elem.getElements()) {
+				if (e instanceof NonTerminal && !((NonTerminal)e).getType().isProductive()) {
+					productive = false;
+					break;
+				} else if (e instanceof Binding && !((Binding)e).getType().isProductive()) {
+					productive = false;
 					break;
 				}
 			}
-			computed.add(this);
-			return isProductive;
-		case INPROCESS:
-		case DONE:
-			return isProductive;
+			if (productive) {
+				return true;
+			}
 		}
 		return false;
 	}
