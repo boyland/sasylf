@@ -57,6 +57,7 @@ public class Context implements Cloneable {
 	public Term currentGoal;
 	public Clause currentGoalClause;
 	public NonTerminal assumedContext;
+	public Set<NonTerminal> knownContexts;
 	public Element currentCaseAnalysisElement;
 	public Set<FreeVar> inputVars;
 	public Set<FreeVar> outputVars;
@@ -92,6 +93,7 @@ public class Context implements Cloneable {
 		if (result.caseTermMap != null) result.caseTermMap = new HashMap<CanBeCase, Set<Pair<Term, Substitution>>>(caseTermMap);
 		if (result.savedCaseMap != null) result.savedCaseMap = new HashMap<String,Map<CanBeCase, Set<Pair<Term,Substitution>>>>(savedCaseMap);
 		result.varFreeNTmap = new HashMap<String,NonTerminal>(varFreeNTmap);
+		if (knownContexts != null) result.knownContexts = new HashSet<NonTerminal>(knownContexts);
 		if (relaxationMap != null) result.relaxationMap = new HashMap<NonTerminal,Relaxation>(relaxationMap);
 		if (relaxationVars != null) result.relaxationVars = new HashSet<FreeVar>(relaxationVars);
 		return result;
@@ -550,9 +552,17 @@ public class Context implements Cloneable {
 		}
 	}
 
+	public void addKnownContext(NonTerminal root) {
+		if (!isKnownContext(root)) {
+			if (knownContexts == null) knownContexts = new HashSet<NonTerminal>();
+			knownContexts.add(root);
+		}
+	}
+	
 	public boolean isKnownContext(NonTerminal root) {
 		return root == null || 
 				root.equals(assumedContext) || 
+				knownContexts != null && knownContexts.contains(root) ||
 				relaxationMap != null && relaxationMap.containsKey(root);
 	}
 

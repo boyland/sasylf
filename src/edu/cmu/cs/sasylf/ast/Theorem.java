@@ -222,10 +222,15 @@ public class Theorem extends RuleLike {
 			ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 			ctx.outputVars.removeAll(ctx.inputVars);
 			
+			for (Fact f : foralls) {
+				NonTerminal root = f.getElement().getRoot();
+				ctx.addKnownContext(root);
+			}
 			if (assumes != null) {
 				boolean foundAssumption = false;
 				for (Fact f : foralls) {
-					if (assumes.equals(f.getElement().getRoot())) foundAssumption = true;
+					NonTerminal root = f.getElement().getRoot();
+					if (assumes.equals(root)) foundAssumption = true;
 				}
 				if (!foundAssumption) {
 					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
