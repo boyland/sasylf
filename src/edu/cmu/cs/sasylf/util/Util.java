@@ -9,6 +9,7 @@ public class Util {
 	public static boolean EXTRA_ERROR_INFO = false;
 	public static boolean VERBOSE = false;
 	public static boolean COMP_WHERE = false;
+	public static boolean X_CONTEXT_IS_SYNTAX = false;
 
 	public static void debug_parse(Object o) {
 		if (DEBUG_PARSE)

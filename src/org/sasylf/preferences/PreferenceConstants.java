@@ -10,4 +10,6 @@ public class PreferenceConstants {
 	public static final String PROOF_FOLDER_NAME = "org.sasylf.proof.folder";
 
 	public static final String COMPULSORY_WHERE_CLAUSES = "org.sasylf.proof.compwhere";
+	
+	public static final String EXPERIMENTAL_FEATURES = "org.sasylf.proof.experimental";
 }
