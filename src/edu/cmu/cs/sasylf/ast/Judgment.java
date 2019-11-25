@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Judgment extends Node implements ClauseType {
@@ -114,7 +115,7 @@ public class Judgment extends Node implements ClauseType {
 			}
 		}
 
-		if ((getAssume() == null) && contextSyntax != null)
+		if ((getAssume() == null) && contextSyntax != null && !Util.X_CONTEXT_IS_SYNTAX)
 			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
 		else if ((getAssume() != null) && getAssume().getType() == null)
 			ErrorHandler.report(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume() + "\n" +
