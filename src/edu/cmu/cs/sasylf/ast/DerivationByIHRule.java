@@ -97,9 +97,13 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			else if (explanationString == null) 
 				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments", this,
 						"SASyLF computed that the result LF term should be " + explanationTerm);
-			else
+			else if (suspectOutputVarError == null)
 				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments" +
 						"\nSASyLF computed that the result should be " + explanationString, this);
+			else 
+				ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments" +
+						"\nSASyLF computed that the result should be " + explanationString + 
+						"\nPerhaps these output variables were set prematurely: " + suspectOutputVarError, this);
 			return;
 		}
 		// System.out.println("subject = " + subject + ", pattern = " + pattern + ", callSub = " + callSub + ", concFreeVars = " + conclusionFreeVars);

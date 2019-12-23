@@ -4,6 +4,7 @@ import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -22,13 +23,16 @@ import edu.cmu.cs.sasylf.util.Util;
 public abstract class Derivation extends Fact {
 
 	protected Clause clause;
+	protected final boolean wasProof; // this derivation was originally "proof by ..."
 	private boolean clauseChecked = false;
+	protected String suspectOutputVarError = null; // an output variable was set.
 
 	private static final int PROOF_SIZE = 5; // size of string "proof"
 	
 	public Derivation(String n, Location l, Clause c) {
 		super(n, l);
 		clause = c;
+		wasProof = (c == null);
 		if (c != null) {
 			super.setEndLocation(c.getEndLocation());
 		}
@@ -110,6 +114,15 @@ public abstract class Derivation extends Fact {
 		clause.checkBindings(ctx.bindingTypes, this);
 		clause.checkVariables(Collections.<String>emptySet(), false);
 
+		if (wasProof) {
+			Set<FreeVar> vs = new HashSet<FreeVar>(ctx.outputVars);
+			vs.retainAll(ctx.inputVars);
+			if (!vs.isEmpty()) {
+				suspectOutputVarError = vs.toString();
+				// System.out.println(this.getLocation().getLine() + ": suspect prematurely bound " + suspectOutputVarError);
+			}
+		}
+		
 		clauseChecked = true;
 	}
 
