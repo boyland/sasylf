@@ -82,6 +82,9 @@ public abstract class DerivationWithArgs extends Derivation {
 						e = cl.computeClause(ctx, false);
 					}
 				}
+				if (e instanceof Variable) {
+					ErrorHandler.report(Errors.UNBOUND_VAR_USE, "Variable found outside of a binding context.", c);
+				}
 				if (!(e.getType() instanceof Syntax)) {
 					ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
 				}
