@@ -104,28 +104,24 @@ public class WhereClause {
 		// check the user clauses
 		nextUserClause:
 		for (Pair<Element, Clause> userWC : userWhereClauses) {
+
+			// parse the LHS; should either be a NonTerminal or a Binding
+			Element lhsElement = userWC.first.typecheck(ctx);
 			
-			// sanity check: pattern match the LHS
-			// Clause.toString() removes meaningless whitespace within and around LHS
-			String originalLHS = userWC.first.toString();
-			String lhsPattern = 
-				"[(](\\p{L})+(\\d|')*(\\[[(](\\p{L})+(\\d|')*[)]\\]|\\[(\\p{L})+(\\d|')*\\])*[)]"+
-				  "|(\\p{L})+(\\d|')*(\\[[(](\\p{L})+(\\d|')*[)]\\]|\\[(\\p{L})+(\\d|')*\\])*";
-			if (!originalLHS.matches(lhsPattern)) {
+			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
+			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
 				ErrorHandler.recoverableError(
 					"The left-hand side of this where clause is not the correct form: " +
-						originalLHS, userWC.first);
+						lhsElement, userWC.first);
 				continue nextUserClause;
 			}
-			
-			// extract the variable name from the LHS string
-			String lhsVarName = originalLHS;
-			if (lhsVarName.startsWith("(")) // no parens
-				lhsVarName = lhsVarName.substring(1, lhsVarName.length() - 1);
-			int i = lhsVarName.indexOf('[');
-			if (i != -1) // just name, no args
-				lhsVarName = lhsVarName.substring(0, i);
 
+			NonTerminal lhsNT;
+			if (lhsElement instanceof NonTerminal) lhsNT = (NonTerminal)lhsElement;
+			else lhsNT = ((Binding)lhsElement).getNonTerminal();
+			
+			String lhsVarName = lhsNT.toString();
+			
 			// check if the LHS variable name is known in the (local) context
 			if (!ctx.isLocallyKnown(lhsVarName)) {
 				ErrorHandler.recoverableError(
@@ -160,21 +156,11 @@ public class WhereClause {
 			// make sure this isn't a duplicate clause (will check the RHS anyway, tentatively)
 			if (checked.get(matchingVar)) {
 				ErrorHandler.recoverableError(
-					"Where clause for " + originalLHS + " already written.", userWC.first
+					"Where clause for " + lhsVarName + " already written.", userWC.first
 				);
 			}
 			checked.put(matchingVar, true);
 			
-			// parse the LHS; should either be a NonTerminal or a Binding
-			Element lhsElement = userWC.first.typecheck(ctx);
-			
-			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
-			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
-				ErrorHandler.recoverableError(
-					"The left-hand side of this where clause is not the correct form: " +
-						lhsElement, userWC.first);
-				continue nextUserClause;
-			}
 
 			// parse the LHS's bindings, if present
 			List<Pair<String, Term>> lhsBindings = new ArrayList<Pair<String, Term>>();
@@ -280,7 +266,7 @@ public class WhereClause {
 				// false here maintains new binding names in suggestion, and free variable names
 				TermPrinter termPrinter = new TermPrinter(ctx, null, errorSpan.getLocation(), false);
 				String suggestion = termPrinter.asElement(rhsCorrect).toString();
-				i = suggestion.indexOf("assumes"); // don't print "assumes ..."
+				int i = suggestion.indexOf("assumes"); // don't print "assumes ..."
 				if (i != -1)
 					suggestion = suggestion.substring(0, i - 1);
 				
