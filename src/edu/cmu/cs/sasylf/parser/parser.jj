@@ -1873,6 +1873,30 @@ Element WhereLHS() :
   | <LPAREN> e=NonTerminalOrBinding() <RPAREN> { return e; } // one set of parens allowed
 }
 
+WhereClause WhereClauses() :
+{
+  Token t;
+  WhereClause result = new WhereClause();
+  Element lhs;
+  Clause rhs;
+}
+{
+    ( t=<WHERE> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
+    {
+      result = new WhereClause(new Location(t));
+      result.add(lhs, rhs);
+    }
+  	  ( <AND> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
+  	  {
+        result.add(lhs, rhs);
+      }
+      )*
+    )?
+  {
+     return result;
+   }
+}
+  
 Theorem TheoremDeclaration(boolean abstractOK) :
 { Token tinit = null, t0, t, tp=null; StringSpan s, sp=null; Clause c; Clause a = null; Binding b; Theorem thm; Derivation d; }
 {
@@ -1924,21 +1948,12 @@ Derivation Derivation() :
   (    t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() <ON> t2=<IDENTIFIER>
     {
 	  Element lhs=null; Clause rhs=null;
-	  List<Pair<Element, Clause>> whereClauses = new ArrayList<Pair<Element, Clause>>();
+	  WhereClause whereClauses = null;
       if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
-    ( <WHERE> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-    {
-      whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-    }
-  	  ( <AND> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-  	  {
-        whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-      }
-      )*
-    )?
+    whereClauses=WhereClauses()
     {
       return new DerivationByInversion("_", new Location(t), Location.endOf(t2),
     	 AndClauseUse.makeEmptyAndClause(new Location(t)), q, t2.image, whereClauses);
@@ -2006,7 +2021,7 @@ Derivation Justification(Token startT, Clause c) :
     <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() [ <ON> t=<IDENTIFIER> ]
     {
 	  Element lhs=null; Clause rhs=null;
-	  List<Pair<Element, Clause>> whereClauses = new ArrayList<Pair<Element, Clause>>();
+	  WhereClause whereClauses = null;
       if (t == null) {
           ErrorHandler.recoverableError("inversion " + of.image + " " + q + " on what?",new Location(of));
           t = new Token(IDENTIFIER,"<missing>");
@@ -2014,16 +2029,7 @@ Derivation Justification(Token startT, Clause c) :
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
-    ( <WHERE> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-    {
-      whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-    }
-  	  ( <AND> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-  	  {
-        whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-      }
-      )*
-    )?
+    whereClauses=WhereClauses()
     {
    	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
    	      c, q, t.image, whereClauses);
@@ -2093,7 +2099,7 @@ Case Case() :
   List<Derivation> premises = new ArrayList<Derivation>();
   Element lhs=null;
   Clause rhs=null;
-  List<Pair<Element, Clause>> whereClauses = new ArrayList<Pair<Element, Clause>>();
+  WhereClause whereClauses = null;
   Location endLoc=null;
 }
 {
@@ -2120,18 +2126,7 @@ Case Case() :
     {
       endLoc = ce.getEndLocation();
     }
-    ( <WHERE> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-    {
-      whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-      endLoc = rhs.getEndLocation();
-    }
-  	  ( <AND> lhs=WhereLHS() <COLON_EQ> rhs=ExprToNL()
-  	  {
-        whereClauses.add(new Pair<Element, Clause>(lhs, rhs));
-        endLoc = rhs.getEndLocation();
-      }
-      )*
-    )?
+    whereClauses=WhereClauses()
     {
       if (first == null)
       	first = u;

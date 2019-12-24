@@ -2,7 +2,9 @@ package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.util.Util.COMP_WHERE;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,20 +12,134 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
 /** 
- * Utility class for where clause operations 
- * @author Michael Ariotti
+ * User-written substitutions.
+ * See original paper by Ariotti and Boyland.
  */
-public class WhereClause {
+public class WhereClause extends Node {
+	
+	private final List<Pair<Element,Clause>> clauses;
+	
+	public WhereClause(Location l) {
+		super(l);
+		clauses = new ArrayList<Pair<Element,Clause>>();
+	}
+	
+	@Override
+	public void prettyPrint(PrintWriter out) {
+		out.println("where ");
+		boolean first = true;
+		for (Pair<Element,Clause> p : clauses) {
+			if (first) first = false;
+			else out.println(" and ");
+			out.println(p.first + " := " + p.second);
+		}
+	}
+
+	/**
+	 * Add a new where clause LHS := RHS
+	 * @param lhs lhs of the clause
+	 * @param rhs rhs of the clause
+	 */
+	public void add(Element lhs, Clause rhs) {
+		clauses.add(new Pair<Element,Clause>(lhs,rhs));
+	}
+	
+	/**
+	 * Convert where clauses to a substitution.
+	 * @param clauses clauses to check, must not be null
+	 * @param ctx context to check using, must not be null
+	 * @return where clauses converted to a substitution, not null
+	 * @throws SASyLFError in the clauses are not wellFormed
+	 */
+	public static Substitution typecheck(List<Pair<Element, Clause>> clauses, Context ctx) throws SASyLFError {
+		Substitution result = new Substitution();
+		nextUserClause:
+		for (Pair<Element, Clause> userWC : clauses) {
+
+			// parse the LHS; should either be a NonTerminal or a Binding
+			Element lhsElement = userWC.first.typecheck(ctx);
+			
+			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
+			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
+				ErrorHandler.recoverableError(
+					"The left-hand side of this where clause is not the correct form: " +
+						lhsElement, userWC.first);
+				continue nextUserClause;
+			}
+			NonTerminal lhsNT;
+			if (lhsElement instanceof Binding) {
+				lhsNT = ((Binding)lhsElement).getNonTerminal();
+			} else {
+				lhsNT = (NonTerminal)lhsElement; 
+			}
+			
+			List<Pair<String, Term>> lhsBindings = new ArrayList<Pair<String, Term>>();
+			List<Term> lhsArgTypes = new ArrayList<Term>();
+			List<String> lhsArgNames = new ArrayList<String>();
+			if (lhsElement instanceof Binding) { // the LHS has arguments listed
+				for (Element e : ((Binding)lhsElement).getElements()) {
+					if (e instanceof Variable) { // argument is a Variable => can use on the RHS
+						Variable v = (Variable)e;
+						// save for later, for parsing RHS
+						String name = v.getSymbol();
+						Constant type = v.getType().typeTerm();
+						lhsBindings.add(new Pair<String, Term>(name, type));
+					    lhsArgTypes.add(type);
+					    lhsArgNames.add(name);
+					}
+					else {
+						// non-variable bindings on the LHS are not allowed
+						ErrorHandler.recoverableError(
+							"Non-variable bound on the left-hand side of the clause: " + e,
+							userWC.first
+						);
+						continue nextUserClause;
+					}
+				}
+			}
+
+			Element rhsElement;
+			try {
+				rhsElement = userWC.second.typecheck(ctx).computeClause(ctx, lhsNT);
+			} catch (SASyLFError e) {
+				continue nextUserClause;
+			}
+			
+			Term rhsTerm = Term.wrapWithLambdas(rhsElement.asTerm(lhsBindings), lhsArgTypes, lhsArgNames);
+			rhsTerm = rhsTerm.substitute(ctx.currentSub);
+			rhsTerm = rhsTerm.substitute(result);
+			
+			FreeVar lhsVar = (FreeVar) lhsNT.asTerm();
+			if (result.getSubstituted(lhsVar) != null) {
+				ErrorHandler.recoverableError("Where clause for " + lhsVar + " already written.", userWC.first);
+			}
+			
+			if (lhsVar.equals(rhsTerm)) { // NOP substitution
+				continue nextUserClause;
+			}
+			
+			if (rhsTerm.getFreeVariables().contains(lhsVar)) {
+				ErrorHandler.recoverableError("Where clause for " + lhsVar + " includes this same variable", userWC.second);
+			}
+			
+			result.add(lhsVar, rhsTerm);
+		}
+		
+		return result;
+	}
 	
 	/**
 	 * Verifies the user-written where clauses for this RuleCase.<br>
@@ -48,10 +164,12 @@ public class WhereClause {
 	 * @param errorSpan a span representing the full block of code where the clauses apply;
 	 *   marked when where clauses are missing
 	 */
-	public static void checkWhereClauses(
-			List<Pair<Element, Clause>> userWhereClauses,
+	public void checkWhereClauses(
 			Context ctx, Term cas, Term rcc, Substitution su,
 			Span errorSpan) {
+		List<Pair<Element,Clause>> userWhereClauses = clauses;
+		
+		Substitution userSub = typecheck(userWhereClauses,ctx);
 		
 		/*
 		 * Unification fails here if the context changes from CAS to RCC,
@@ -80,6 +198,16 @@ public class WhereClause {
 		if (rcc != null) {
 			su.selectUnavoidable(rcc.getFreeVariables());
 		}
+		
+		/*
+		Set<FreeVar> domain = new HashSet<FreeVar>(su.getDomain());
+		for (FreeVar fv : domain) {
+			if (fv.isGenerated()) su.remove(fv);
+		}
+		
+		if (su.equals(userSub)) return; // everything matches!
+		ErrorHandler.warning("user sub " + userSub + " doesn't exactly match " + su, errorSpan);
+		*/
 		
 		// create map of vars to check clauses for, from s_u
 		// used to check for missing clauses
@@ -232,7 +360,7 @@ public class WhereClause {
 			
 			// pass the (topmost) grammar rule used to parse the LHS to help
 			// disambiguate parses of the RHS
-			Element rhsElement = ((Clause)userWC.second.typecheck(ctx)).computeClause(ctx, false, matchRule);
+			Element rhsElement = ((Clause)userWC.second.typecheck(ctx)).computeClause(ctx, lhsNT);
 			
 			// compute the term of the RHS with the LHS's additional bindings
 			// wrap those extra bindings around the computed term
@@ -314,5 +442,13 @@ public class WhereClause {
 		}
 	}
 	
-	private WhereClause() {}
+	
+	/**
+	 * Create an absent where clause
+	 */
+	public WhereClause() {
+		super((Location)null);
+		clauses = Collections.emptyList();
+	}
+
 }

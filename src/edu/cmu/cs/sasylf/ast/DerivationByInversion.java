@@ -26,16 +26,15 @@ public class DerivationByInversion extends DerivationWithArgs {
 	
 	private final QualName ruleName;
 	private final String inputName;
-	private final List<Pair<Element, Clause>> whereClauses =
-						new ArrayList<Pair<Element, Clause>>();
+	private final WhereClause whereClauses;
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
-			QualName rule, String relation, List<Pair<Element, Clause>> wcs) {
+			QualName rule, String relation, WhereClause wcs) {
 		super(n, start, c);
 		setEndLocation(end); // overwrite end location to include entire justification
 		ruleName = rule;
 		inputName = relation;
-		whereClauses.addAll(wcs);
+		whereClauses = wcs;
 	}
 
 	@Override
@@ -213,7 +212,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		}
 		
 		// verify user-written where clauses
-		WhereClause.checkWhereClauses(whereClauses, ctx, targetTerm, null, su, this);
+		whereClauses.checkWhereClauses(ctx, targetTerm, null, su, this);
 
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(targetDerivation)) {

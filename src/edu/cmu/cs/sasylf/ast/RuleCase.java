@@ -35,10 +35,10 @@ public class RuleCase extends Case {
 	private final String ruleName;
 	private final List<Derivation> premises;
 	private final Derivation conclusion;
-	private final List<Pair<Element, Clause>> whereClauses;
+	private final WhereClause whereClauses;
 	
 	public RuleCase(Location l, Location l1, Location l2,
-			String rn, List<Derivation> ps, Derivation c, List<Pair<Element, Clause>> wcs) {
+			String rn, List<Derivation> ps, Derivation c, WhereClause wcs) {
 		super(l, l1, l2);
 		conclusion = c;
 		premises = ps;
@@ -445,7 +445,7 @@ public class RuleCase extends Case {
 		}
 
 		// verify user-written where clauses
-		WhereClause.checkWhereClauses(whereClauses, ctx, adaptedSubjectTerm, rcc, null, conclusion);
+		whereClauses.checkWhereClauses(ctx, adaptedSubjectTerm, rcc, null, conclusion);
 
 		super.typecheck(ctx, isSubderivation);
 	}
