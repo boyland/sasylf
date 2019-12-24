@@ -25,7 +25,7 @@ public class ClauseAssumption extends SyntaxAssumption {
 	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		clause = (Clause) clause.typecheck(ctx);
+		clause = clause.typecheck(ctx);
 	}
 
 	// ClauseAssumptions don't get added to the derivation map

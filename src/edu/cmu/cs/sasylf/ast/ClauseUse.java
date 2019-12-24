@@ -88,7 +88,7 @@ public class ClauseUse extends Clause {
 
 
 	@Override
-	public Element typecheck(Context c) {
+	public Clause typecheck(Context c) {
 		return this; // already done
 	}
 

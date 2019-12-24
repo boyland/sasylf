@@ -206,7 +206,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	// sets type of NonTerminals and Bindings
 	// error if NonTerminal does not match a Syntax or Variable (likely should have been a Terminal)
 	@Override
-	public Element typecheck(Context ctx) {
+	public Clause typecheck(Context ctx) {
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e = elements.get(i);
 			elements.set(i, e.typecheck(ctx));
