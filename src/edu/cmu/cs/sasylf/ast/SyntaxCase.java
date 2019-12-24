@@ -76,9 +76,7 @@ public class SyntaxCase extends Case {
 			else caseNT = (NonTerminal)base;
 		} else caseNT = (NonTerminal)ctx.currentCaseAnalysisElement;
 
-		edu.cmu.cs.sasylf.grammar.NonTerminal nt = caseNT.getType().getSymbol();
-		edu.cmu.cs.sasylf.grammar.Grammar g = new edu.cmu.cs.sasylf.grammar.Grammar(nt, ctx.getGrammar().getRules());
-		Element concElem = conclusion.computeClause(ctx, false, g);
+		Element concElem = conclusion.computeClause(ctx, caseNT);
 		Clause concDef = null;
 
 		if (assumes != null) {

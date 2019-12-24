@@ -28,6 +28,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Clause extends Element implements CanBeCase, Cloneable {
@@ -298,23 +299,59 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 	}
 	
-	public Element computeClause(Context ctx, boolean inBinding) {
-		return computeClause(ctx, inBinding, ctx.getGrammar());
-	}
-	public Element computeClause(Context ctx, boolean inBinding, Rule matchRule) {
-		return computeClause(ctx, inBinding, ctx.getGrammar(), matchRule);
+	/**
+	 * Parse the contents of this clause and return the parsed version.
+	 * @param ctx context to use, must not be null
+	 * @return the parsed version of this clause
+	 * @throws SASyLFError if clause cannot be parsed at all, or parse is ambiguous.
+	 * @see #computeClause(Context, boolean) to parse only for something that can be a variable
+	 * @see #computeClause(Context, NonTerminal) to parse only for a nonterminal
+	 * @see #computeClause(Context, edu.cmu.cs.sasylf.grammar.Grammar) to parse using a custom grammar
+	 */
+	public Element computeClause(Context ctx) throws SASyLFError {
+		return computeClause(ctx,false);
 	}
 	
-	public Element computeClause(Context ctx, boolean inBinding,
-			edu.cmu.cs.sasylf.grammar.Grammar g) {
-		return computeClause(ctx, inBinding, g, null);
+	/**
+	 * Parse the contents of this clause for the nonterminal and return the parse version
+	 * @param ctx context to use, must not be null
+	 * @param nt nonterminal (optional) to parse for
+	 * @return the parsed version of this clause
+	 * @throws SASyLFError if the clause cannot be parsed at all, or parse is ambiguous.
+	 */
+	public Element computeClause(Context ctx, NonTerminal nt) throws SASyLFError {
+		return computeClause(ctx,false,ctx.getGrammar(),nt);
 	}
-	public Element computeClause(Context ctx, boolean inBinding,
-			edu.cmu.cs.sasylf.grammar.Grammar g, Rule matchRule) {
+	
+	/**
+	 * Parse the contents of this clause where we can select whether
+	 * the result must be something that can be passed as a parameter.
+	 * @param ctx context to use, must not be null
+	 * @param inBinding true if the result must be something that can be passed as a parameter
+	 * @return the parsed version of this clause
+	 * @throws SASyLFError if the clause cannot be parsed at all, or parse is ambiguous.
+	 */
+	public Element computeClause(Context ctx, boolean inBinding) {
+		return computeClause(ctx, inBinding, ctx.getGrammar(), null);
+	}	
+	
+	/**
+	 * Parse the contents of this clause using a custom grammar.
+	 * @param ctx context (must not be null)
+	 * @param g grammar to use 
+	 * @return parsed version of this clause
+	 * @throws SASyLFError if the clause cannot be parsed at all, or if parse is ambiguous
+	 */
+	public Element computeClause(Context ctx, edu.cmu.cs.sasylf.grammar.Grammar g) throws SASyLFError {
+		return computeClause(ctx, false, g, null);
+	}
+	
+	protected Element computeClause(Context ctx, boolean inBinding,
+			edu.cmu.cs.sasylf.grammar.Grammar g, NonTerminal nt) {
 		// compute a ClauseUse based on parsing the input
 		List<GrmTerminal> symList = getTerminalSymbols();
 		if (symList.isEmpty()) return OrClauseUse.makeEmptyOrClause(getLocation());
-		return parseClause(ctx, inBinding, g, symList, matchRule);
+		return parseClause(ctx, inBinding, g, symList, nt);
 	}
 
 	/**
@@ -326,7 +363,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 */
 	private Element parseClause(Context ctx, boolean inBinding,
 			edu.cmu.cs.sasylf.grammar.Grammar g, List<GrmTerminal> symList,
-			Rule matchRule) {
+			NonTerminal nt) {
 		/*
 		 * JTB: The following section is to implement parsing of "and" and "or" judgments
 		 * without requiring us to change the grammar.
@@ -404,7 +441,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					subClause.elements.add(element);
 				}
 				// using a subClause forces the error to print correctly.
-				Element e = subClause.parseClause(ctx,inBinding,g,sublist,matchRule);
+				Element e = subClause.parseClause(ctx,inBinding,g,sublist,null);
 				if (e instanceof ClauseUse) {
 					ClauseUse cu = (ClauseUse)e;
 					if (!clauses.isEmpty() && cu.getElements().size() > 0) {
@@ -490,14 +527,14 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			}
 			
 			// look for unique tree that follows the given rule
-			if (matchRule != null) {
-				String match = matchRule.getLeftSide().toString();
+			if (nt != null) {
+				Symbol grmSymbol = nt.getGrmSymbol();
 				RuleNode follows = null;
 				int found = 0;
 				for (RuleNode tree : e.getParseTrees()) {
 					Rule treeRule = tree.getRule();
 					List<Symbol> symbols = treeRule.getRightSide();
-					if (symbols.size() == 1 && symbols.get(0).toString().equals(match)) {
+					if (symbols.size() == 1 && symbols.get(0) == grmSymbol) {
 						follows = tree;
 						found++;
 					}

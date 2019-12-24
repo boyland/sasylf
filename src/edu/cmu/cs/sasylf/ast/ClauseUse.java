@@ -112,12 +112,12 @@ public class ClauseUse extends Clause {
 			}
 		}
 	}
-
+	
 	@Override
-	public Element computeClause(Context ctx, boolean inBinding, Grammar g) {
+	protected Element computeClause(Context ctx, boolean inBinding, Grammar g, NonTerminal nt) {
 		return this; // already done
 	}
-
+	
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
 		Element localAssumes = null;
