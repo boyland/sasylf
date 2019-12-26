@@ -21,6 +21,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.FORMATTER_INDENT_SIZE, 4);
 		store.setDefault(PreferenceConstants.PROOF_FOLDER_NAME, "slf");
 		store.setDefault(PreferenceConstants.COMPULSORY_WHERE_CLAUSES, true);
+		store.setDefault(PreferenceConstants.EXPERIMENTAL_FEATURES, "");
 	}
 
 }

@@ -240,6 +240,7 @@ public class ProofChecker  {
 				}
 			}
 			Util.COMP_WHERE = Preferences.isWhereCompulsory();
+			Util.X_CONTEXT_IS_SYNTAX = Preferences.experimentalfeature("ContextIsSyntax");
 			result = Main.parseAndCheck(mf, res.getName(), id, contents);
 			newProof.setCompilation(result);
 		} catch (SASyLFError e) {

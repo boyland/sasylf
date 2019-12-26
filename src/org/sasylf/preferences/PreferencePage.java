@@ -50,6 +50,11 @@ implements IWorkbenchPreferencePage {
 						PreferenceConstants.COMPULSORY_WHERE_CLAUSES,
 						"&Require where clauses",
 						getFieldEditorParent()));
+		addField(
+				new StringFieldEditor(
+						PreferenceConstants.EXPERIMENTAL_FEATURES,
+						"&Enable experimental features",
+						getFieldEditorParent()));
 	}
 
 	/* (non-Javadoc)

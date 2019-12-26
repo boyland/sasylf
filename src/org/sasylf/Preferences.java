@@ -28,4 +28,10 @@ public class Preferences {
 		IPreferenceStore store = get();
 		return store.getBoolean(PreferenceConstants.COMPULSORY_WHERE_CLAUSES);
 	}
+	
+	public static boolean experimentalfeature(String name) {
+		IPreferenceStore store = get();
+		String features = store.getString(PreferenceConstants.EXPERIMENTAL_FEATURES);
+		return features.contains(name);
+	}
 }
