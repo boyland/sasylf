@@ -69,6 +69,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetClause, this);
 		}
 
+		whereClauses.typecheck(ctx);
+		
 		// Do a mini-case analysis, and see if we find result in premises
 
 		Term targetTerm = ctx.toTerm(targetClause);

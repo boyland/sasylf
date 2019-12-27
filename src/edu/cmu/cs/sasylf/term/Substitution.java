@@ -43,6 +43,14 @@ public class Substitution {
 		varMap.putAll(other.varMap);
 	}
 
+	/**
+	 * Return true if the substitution is the NOP.
+	 * @return true is there are no variables to map.
+	 */
+	public boolean isEmpty() {
+		return varMap.isEmpty();
+	}
+	
 	public boolean isUnifier(Term t1, Term t2) {
 		t1 = t1.substitute(this);
 		t2 = t2.substitute(this);
@@ -143,6 +151,12 @@ public class Substitution {
 		varMap.put(var, tSubstituted);
 	}
 
+	/**
+	 * Remove this variable from the map,
+	 * returning the old substitution
+	 * @param v variable to check, should not be null
+	 * @return former mapping for this variable.
+	 */
 	public Term remove(FreeVar v) {
 		return varMap.remove(v);
 	}

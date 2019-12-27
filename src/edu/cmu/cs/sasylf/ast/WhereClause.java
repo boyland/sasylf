@@ -23,6 +23,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
+import edu.cmu.cs.sasylf.util.Util;
 
 /** 
  * User-written substitutions.
@@ -31,6 +32,7 @@ import edu.cmu.cs.sasylf.util.Span;
 public class WhereClause extends Node {
 	
 	private final List<Pair<Element,Clause>> clauses;
+	private Substitution computed;
 	
 	public WhereClause(Location l) {
 		super(l);
@@ -59,12 +61,14 @@ public class WhereClause extends Node {
 	
 	/**
 	 * Convert where clauses to a substitution.
-	 * @param clauses clauses to check, must not be null
+	 * It's important to call this method once before the context's substitution
+	 * includes SASylF's own analysis of the case.
 	 * @param ctx context to check using, must not be null
 	 * @return where clauses converted to a substitution, not null
 	 * @throws SASyLFError in the clauses are not wellFormed
 	 */
-	public static Substitution typecheck(List<Pair<Element, Clause>> clauses, Context ctx) throws SASyLFError {
+	public Substitution typecheck(Context ctx) throws SASyLFError {
+		if (computed != null) return computed;
 		Substitution result = new Substitution();
 		nextUserClause:
 		for (Pair<Element, Clause> userWC : clauses) {
@@ -122,9 +126,16 @@ public class WhereClause extends Node {
 			rhsTerm = rhsTerm.substitute(ctx.currentSub);
 			rhsTerm = rhsTerm.substitute(result);
 			
+			
 			FreeVar lhsVar = (FreeVar) lhsNT.asTerm();
 			if (result.getSubstituted(lhsVar) != null) {
 				ErrorHandler.recoverableError("Where clause for " + lhsVar + " already written.", userWC.first);
+			}
+			
+			if (this.getLocation().getLine() == 1002) {
+				new Throwable("for the trace").printStackTrace();
+				System.out.println("lhsVar = " + lhsVar + ", rhsTerm = " + rhsTerm);
+				System.out.println("current sub = " + ctx.currentSub);
 			}
 			
 			if (lhsVar.equals(rhsTerm)) { // NOP substitution
@@ -138,7 +149,7 @@ public class WhereClause extends Node {
 			result.add(lhsVar, rhsTerm);
 		}
 		
-		return result;
+		return computed=result;
 	}
 	
 	/**
@@ -169,7 +180,7 @@ public class WhereClause extends Node {
 			Span errorSpan) {
 		List<Pair<Element,Clause>> userWhereClauses = clauses;
 		
-		Substitution userSub = typecheck(userWhereClauses,ctx);
+		Substitution userSub = typecheck(ctx);
 		
 		/*
 		 * Unification fails here if the context changes from CAS to RCC,
@@ -199,20 +210,22 @@ public class WhereClause extends Node {
 			su.selectUnavoidable(rcc.getFreeVariables());
 		}
 		
-		/*
+		Set<FreeVar> fvCAS = cas.getFreeVariables();
+		
 		Set<FreeVar> domain = new HashSet<FreeVar>(su.getDomain());
 		for (FreeVar fv : domain) {
-			if (fv.isGenerated()) su.remove(fv);
+			if (fv.isGenerated() || !fvCAS.contains(fv)) su.remove(fv);
 		}
 		
 		if (su.equals(userSub)) return; // everything matches!
-		ErrorHandler.warning("user sub " + userSub + " doesn't exactly match " + su, errorSpan);
-		*/
+		if (userSub.isEmpty() && !Util.COMP_WHERE) return;
+		// ErrorHandler.warning("user sub " + userSub + " doesn't exactly match " + su, errorSpan);
+		
 		
 		// create map of vars to check clauses for, from s_u
 		// used to check for missing clauses
 		Map<FreeVar, Boolean> checked = new HashMap<FreeVar, Boolean>();
-		Set<FreeVar> fvCAS = cas.getFreeVariables();
+		
 		int clausesNeeded = 0;
 		for (FreeVar v : su.getMap().keySet())
 			// TODO not sure how generated variables can get into the CAS...

@@ -434,9 +434,9 @@ public class Context implements Cloneable {
 
 	public void composeSub(Substitution sub) {
 		// System.out.println("ctx(" + currentSub + ").composeSub(" + sub + ")");
-		Set<FreeVar> unavoidableInputVars = sub.selectUnavoidable(inputVars);
+		//XXX: Set<FreeVar> unavoidableInputVars = sub.selectUnavoidable(inputVars);
 		// System.out.println("unavoidable = " + unavoidableInputVars);
-		inputVars.removeAll(unavoidableInputVars);
+		inputVars.removeAll(sub.getDomain()); // (unavoidableInputVars);
 		currentSub.compose(sub);  // modifies in place
 		Set<FreeVar> newVars = new HashSet<FreeVar>();
 		for (Map.Entry<FreeVar,Term> e : sub.getMap().entrySet()) {

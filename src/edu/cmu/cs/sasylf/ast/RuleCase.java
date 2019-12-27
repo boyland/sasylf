@@ -95,6 +95,8 @@ public class RuleCase extends Case {
 		ClauseUse concClause = (ClauseUse)conclusion.getClause();
 		NonTerminal thisRoot = concClause.getRoot();
 
+		whereClauses.typecheck(ctx);
+		
 		// make sure we were case-analyzing a derivation, not a nonterminal
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
 			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
@@ -302,6 +304,7 @@ public class RuleCase extends Case {
 				Term cleanedCaseTerm = caseTerm.substitute(ctx.currentSub).substitute(pairSub);
 				// Util.debug("cleaned case term = " + cleanedCaseTerm);
 				Substitution computedSub = cleanedCaseTerm.unify(candidate);
+				
 				// tdebug("computedSub = " + computedSub);
 				Set<FreeVar> problems = computedSub.selectUnavoidable(candidateFree);
 				if (!problems.isEmpty()) {
