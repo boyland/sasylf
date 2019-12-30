@@ -1,0 +1,42 @@
+package regression;
+
+terminals S
+
+syntax
+
+  n ::= 0 | S n
+
+judgment equality: n = n
+
+  ------- eq
+  n = n
+
+
+judgment pred: n - 1 = n
+
+  ---------- pred-succ
+  S n - 1 = n
+
+theorem pred-implies-eq-succ:
+  forall p: n1 - 1 = n2
+  exists n1 = S n2
+  proof by case analysis on p:
+    case rule
+       ----------------- pred-succ
+       _: S n1' -1 = n1'
+       where n1 := S n1'
+        and  n2 := n1'
+    is
+      d: n1' = n1' by rule eq
+      proof by case analysis on d:
+        case rule
+           ------------- eq
+           _: n = n
+           where n1' := n // should be permitted
+        is
+           proof by rule eq
+        end case
+      end case analysis
+    end case
+  end case analysis
+end theorem
