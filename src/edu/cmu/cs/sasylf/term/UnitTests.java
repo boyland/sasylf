@@ -4,6 +4,7 @@ import static edu.cmu.cs.sasylf.term.Facade.Abs;
 import static edu.cmu.cs.sasylf.term.Facade.App;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.Pair;
@@ -126,6 +127,7 @@ public class UnitTests extends SimpleTestSuite {
 		// new tests must be after testUnify because of fragile assignment of fresh variables
 		testStripLambdas();
 		testBindVars();
+		testAvoidHO();
 	}
 
 	private void testType() {
@@ -164,6 +166,17 @@ public class UnitTests extends SimpleTestSuite {
 		FreeVar av = v("a",a);
 		Term t = Abs(av,a,av);
 		assertEqual("bound var correctly",t,Abs(a,b(1)));
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void testAvoidHO() {
+		FreeVar v1 = v("F",Abs(a,a));
+		Term v1etalong = Abs(a, App(v1, new BoundVar(1)));
+		FreeVar v2 = v("G",Abs(a,a));
+		Term v2etalong = Abs(a, App(v2, new BoundVar(1)));
+		Substitution sub1 = subst(p(v1.getName(),v2etalong));
+		assertTrue("can avoid F", sub1.avoid(Collections.singleton(v1)));
+		assertEqual("should eta expand F",v1etalong,sub1.getSubstituted(v2));
 	}
 
 	@SuppressWarnings("unchecked")
