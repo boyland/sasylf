@@ -120,7 +120,7 @@ public class FreeVar extends Atom {
 	}
 
 	@Override
-	void getFreeVariables(Set<FreeVar> s) {
+	public void getFreeVariables(Set<FreeVar> s) {
 		s.add(this);
 	}
 	public Term getBaseType() {
@@ -247,7 +247,14 @@ public class FreeVar extends Atom {
 	public FreeVar getEtaEquivFreeVar() {
 		return this;
 	}
-
+	
+	@Override
+	public FreeVar getEtaPermutedEquivFreeVar(FreeVar src,
+			Substitution reverseSub) {
+		if (reverseSub != null) reverseSub.add(this,src);
+		return this;
+	}
+	
 	/** converts (locally) to eta-long form.
 	 * Here, we implement the conversion if necessary.
 	 */

@@ -239,6 +239,12 @@ public abstract class Term {
 	}
 
 	// does not check for free "bound variables"
+	/**
+	 * COmpute the free variables of a term.
+	 * This is a convenience method, calling {@link #getFreeVariables(Set)}.
+	 * NB: This method does not look at "bound" variables.
+	 * @return set of free variables, always fresh, never null
+	 */
 	public final Set<FreeVar> getFreeVariables() {
 		Set<FreeVar> s = new HashSet<FreeVar>();
 		getFreeVariables(s);
@@ -522,9 +528,9 @@ public abstract class Term {
 
 	/**
 	 * Return an eta-equivalent free variable with permutation, if possible.
-	 * Returns null if there is not free variable with a non-empty permutation of
-	 * arguments.  If result is not null, substitution is modified to specify
-	 * the reverse permutation.  Only Abstraction overrides.
+	 * Returns null if there is not free variable with a permutation of
+	 * arguments.  If result is not null, a non-null substitution is modified to specify
+	 * the reverse permutation.  Only Abstraction and FreeVar override.
 	 */
 	public FreeVar getEtaPermutedEquivFreeVar(FreeVar src, Substitution reverseSub) {
 		return null;
@@ -565,7 +571,7 @@ public abstract class Term {
 	public boolean contains(Term other) {
 		Util.debug(this, " >?= ", other);
 		FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
-		if (fv != null) return contains(fv);
+		if (fv != null && fv != other) return contains(fv);
 		return this.equals(other) || containsProper(other);
 	}
 }

@@ -73,21 +73,14 @@ public class Substitution {
 		for (FreeVar v : vars) {
 			Term t = varMap.get(v);
 			if (t != null) {
-				// see if there's an equivalent free variable
-				FreeVar fv = t.getEtaEquivFreeVar();
+				// see if there's an equivalent free variable (perhaps permuted)
+				Substitution revSub = new Substitution();
+				FreeVar fv = t.getEtaPermutedEquivFreeVar(v, revSub);
 
 				if (fv == null) {
-					Substitution revSub = new Substitution();
-					fv = t.getEtaPermutedEquivFreeVar((FreeVar)v, revSub);
-					if (fv != null && !vars.contains(fv)) {
-						Util.debug("Found permuted var: ", v);
-						varMap.remove(v);
-						this.compose(revSub);
-					} else {
-						// can't avoid
-						result.add(v);
-						Util.debug("could not avoid ", v, " because it is equal to non-FreeVar expression ", t);
-					}
+					// can't avoid
+					result.add(v);
+					Util.debug("could not avoid ", v, " because it is equal to non-FreeVar expression ", t);					
 				} else if (vars.contains(fv)) {
 					// can't avoid
 					result.add(v);
@@ -95,7 +88,7 @@ public class Substitution {
 				} else {
 					// switch a and t
 					varMap.remove(v);
-					add(fv,v);
+					compose(revSub);
 				}
 			}
 		}
@@ -182,6 +175,17 @@ public class Substitution {
 		return varMap.get(var);
 	}
 
+	/**
+	 * Return free variables in the range of the substitution.
+	 */
+	public Set<FreeVar> getFreeVariables() {
+		Set<FreeVar> result = new HashSet<FreeVar>();
+		for (Map.Entry<FreeVar, Term> e : varMap.entrySet()) {
+			e.getValue().getFreeVariables(result);
+		}
+		return result;
+	}
+	
 	/** Modifies this substitution to incorporate the existing
 	 * substitution plus the other substitution.
 	 */
