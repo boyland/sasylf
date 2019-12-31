@@ -1,0 +1,44 @@
+package regression;
+
+syntax
+t ::= 1 | t + t
+
+judgment eq: t = t
+
+----- eq
+t = t
+
+theorem A:
+    forall p: t = t'
+    exists t' = t.
+    use inversion of rule eq on p where t':= t
+    proof by rule eq
+end theorem
+
+theorem B:
+    forall p: t1 + t2 = t1' + t2'
+    exists t1 = t1'.
+    use inversion of rule eq on p where t1:= t1' and t2:=t2'
+    proof by rule eq
+end theorem
+
+theorem C:
+    forall p: (t1 + t2) + t3 = (t1' + t2') + t3'
+    exists t1 = t1'.
+    use inversion of rule eq on p where t1:= t1' and t2:=t2' and t3:=t3'
+    proof by rule eq
+end theorem
+
+theorem D:
+    forall p: ((t1 + t2) + t3) + t4 = ((t1' + t2') + t3') + t4'
+    exists t1 = t1'.
+    use inversion of rule eq on p where t1:= t1' and t2:=t2' and t3:=t3' and t4:=t4'
+    proof by rule eq
+end theorem
+
+theorem D2:
+    forall p: (t1 + t2) + (t3 + t4) = (t1' + t2') + (t3' + t4')
+    exists t1 = t1'.
+    use inversion of rule eq on p where t1:= t1' and t2:=t2' and t3:=t3' and t4:=t4'
+    proof by rule eq
+end theorem
