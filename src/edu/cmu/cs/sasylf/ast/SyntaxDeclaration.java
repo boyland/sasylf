@@ -428,7 +428,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	 */
 	public boolean canAppearIn(Term type) {
 		for (SyntaxDeclaration s : getVarTypes()) {
-			if (FreeVar.canAppearIn(s.typeTerm(), type)) return true;
+			if (FreeVar.canAppearIn(s.typeTerm(), type.baseTypeFamily())) return true;
 		}
 		return false;
 	}

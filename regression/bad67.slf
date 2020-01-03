@@ -1,0 +1,92 @@
+package regression;
+// testing for obscure context problems
+
+terminals fn value unit Unit contradiction
+
+syntax
+  t ::= x
+     | unit
+     | fn x : T => t[x]
+     | t t
+
+  T ::= Unit
+     | T -> T  
+
+  G ::= *
+     | G, x : T
+
+
+judgment absurd: contradiction
+
+judgment value: t value
+
+  ---------- val-unit
+  unit value
+
+  -------------------- val-fn
+  fn x:T => t[x] value
+
+
+/* The following judgment attempts to add contexts to the value
+ * judgment but it can only do so for terms that don't need the context.
+ */
+judgment value2: G |- t value
+assumes G
+
+   t value
+   ------------- val2
+   G |- t value
+
+
+judgment type: G |- t : T
+assumes G
+
+  ----------------- T-Var
+  G, x : T |- x : T
+
+  ---------------- T-Unit
+  G |- unit : Unit
+
+  G, x:T |- t[x] : T'
+  ----------------------------- T-Abs
+  G |- fn x:T => t[x] : T -> T'
+
+  G |- t1 : T -> T'
+  G |- t2 : T
+  ----------------- T-App
+  G |- t1 t2 : T'
+
+
+theorem loses-context:
+  assumes G
+  forall T
+  forall t assumes G
+  exists G |- fn x:T => t value.
+  v1: fn x:T => t value by rule val-fn //! illegal
+  _: G |- fn x:T => t value by rule val2 on v1
+end theorem
+
+theorem loses-context-fn:
+  assumes G
+  forall t[x] assumes G, x : T
+  exists G |- fn x:T => t[x] value.
+  v1: fn x:T => t[x] value by rule val-fn //! illegal
+  _: G |- fn x:T => t[x] value by rule val2 on v1
+end theorem
+
+theorem test:
+  exists contradiction.
+  v1: *, x1:Unit |- x1:Unit by rule T-Var
+  o: *, x1:Unit |- fn x2:Unit => x1 value by theorem loses-context on Unit, (x1 assumes *,x1:Unit)
+  proof by case analysis on o:
+  end case analysis
+end theorem
+
+theorem test-fn:
+  exists contradiction.
+  v1: *, x1:Unit |- x1:Unit by rule T-Var
+  v: *, x1:Unit, x2:Unit |- x1:Unit by weakening on v1
+  o: *, x1:Unit |- fn x2:Unit => x1 value by theorem loses-context-fn on (x1 assumes *,x1:Unit,x2:Unit)
+  proof by case analysis on o:
+  end case analysis
+end theorem
