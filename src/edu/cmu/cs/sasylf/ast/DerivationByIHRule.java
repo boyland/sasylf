@@ -61,7 +61,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
 			return; // tell Java we're gone.
 		} catch (UnificationFailed e1) {
-			Util.tdebug("failure checking ",subject," instanceof ",pattern,": ",e1);
+			Util.debug("failure checking ",subject," instanceof ",pattern,": ",e1);
 			// try to be more helpful
 			FreeVar concVar = FreeVar.fresh("conclusion", Term.wrapWithLambdas(addedContext,Constant.UNKNOWN_TYPE));
 			Term applied = concVar;
@@ -123,11 +123,8 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			mustAvoid.addAll(conclusionFreeVars);
 		} else if (contextCheckNeeded) {
 			for (FreeVar v : conclusionFreeVars) {
-				System.out.println("Checking context of " + v);
-				System.out.println("  can " + ctx.assumedContext + " appear in " +v.getType());
 				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
 				Term actual = v.substitute(callSub);
-				System.out.println("  actual = " + actual);
 				if (ctx.isVarFree(actual)) continue;
 				ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
 						" discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
