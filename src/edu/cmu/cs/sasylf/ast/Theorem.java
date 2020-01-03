@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Theorem extends RuleLike {
@@ -234,6 +235,16 @@ public class Theorem extends RuleLike {
 				}
 				if (!foundAssumption) {
 					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
+				}
+			}
+			if (ctx.knownContexts != null) {
+				if (ctx.knownContexts.size() > 1) {
+					ErrorHandler.recoverableError("SASyLF cannot yet handle theorems using multiple contexts", this);
+				} else if (ctx.knownContexts.size() == 1) {
+					NonTerminal root = ctx.knownContexts.iterator().next();
+					if (assumes == null) {
+						ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " + root);
+					}
 				}
 			}
 

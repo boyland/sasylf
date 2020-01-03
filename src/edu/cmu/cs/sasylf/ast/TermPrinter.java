@@ -158,12 +158,14 @@ public class TermPrinter {
 			if (etaFV != null) return asElement(etaFV,vars);
 			Term ty = abs.varType;
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
+			boolean createName = rename;
 			if (syn == null) {
 				System.out.println("null syntax for " + ty + " in " + x);
+				createName = false;
 			}
-			Variable v = rename ? new Variable(createVarName(syn,vars),location)
-								: new Variable(abs.varName, location);
-			v.setType(syn);
+			Variable v = createName ? new Variable(createVarName(syn,vars),location)
+									: new Variable(abs.varName, location);
+			if (syn != null) v.setType(syn);
 			vars.add(v);
 			Element bodyElem = asElement(abs.getBody(),vars);
 			vars.remove(vars.size()-1);

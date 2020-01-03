@@ -16,18 +16,18 @@ import edu.cmu.cs.sasylf.util.Util;
 public class Application extends Term {
 	public Application(Atom f, List<? extends Term> a) {
 		function = f;
-		arguments = a;
 		// check and convert to eta long
 		boolean convertFlag = false;
-		for (Term arg : arguments)
+		for (Term arg : a)
 			if (arg instanceof FreeVar && ((FreeVar)arg).getType().countLambdas() > 0)
 				convertFlag = true;
 		if (convertFlag) {
 			List<Term> newA = new ArrayList<Term>();
 			for (Term arg : a)
 				newA.add(arg.toEtaLong());
-			arguments = newA;
+			a = Collections.unmodifiableList(newA);
 		}
+		arguments = Collections.unmodifiableList(a);
 		getType(new ArrayList<Pair<String, Term>>()); // make sure the types are OK
 		/*if (f instanceof FreeVar && ((FreeVar)f).getType().countLambdas() > 0) {
 			verify(((FreeVar)f).getType().countLambdas() == a.size(), "applied freevar " + f + " with wrong number of arguments");
@@ -40,8 +40,8 @@ public class Application extends Term {
 		this(f, Arrays.asList(new Term[] { a }));
 	}
 
-	private Atom function;
-	private List<? extends Term> arguments;
+	private final Atom function;
+	private final List<? extends Term> arguments;
 
 	public Atom getFunction() { return function; }
 	public List<? extends Term> getArguments() { return arguments; }
@@ -206,7 +206,7 @@ public class Application extends Term {
 				worklist.add(makePair(t.apply(arguments, 0), other));
 				unifyHelper(current, worklist);
 			} else {
-				// TODO: apply pattern unification here first, if possible!				
+				// TODO: apply pattern unification here first, if possible!	
 				other.unifyFlexApp((FreeVar)function, arguments, current, worklist);
 			}
 		}
@@ -647,8 +647,9 @@ public class Application extends Term {
 	public Term getType(List<Pair<String, Term>> varBindings) {
 		Term funType = function.getType(varBindings);
 		for (Term t : arguments) {
+			if (funType == Constant.UNKNOWN_TYPE) break;
 			if (!(funType instanceof Abstraction))
-				verify(false, "applied " + arguments.size() + " arguments to function " + function + " of type " + function.getType(varBindings));
+				verify(false, "applied " + arguments.size() + " arguments to function " + function + " of type " + function.getType(varBindings) + " with " + funType);
 			Abstraction funTypeAbs = (Abstraction) funType;
 			Term argType = t.getType(varBindings);
 			Term absType = funTypeAbs.varType;

@@ -339,8 +339,12 @@ public abstract class Term {
 		List<Term> argTypes = new ArrayList<Term>();
 		debug("getting ", count, " args from ", varType);
 		for (int i = 0; i < count; ++i) {
-			argTypes.add(((Abstraction)varType).varType);
-			varType = ((Abstraction)varType).getBody();
+			if (varType == Constant.UNKNOWN_TYPE) {
+				argTypes.add(Constant.UNKNOWN_TYPE);
+			} else {
+				argTypes.add(((Abstraction)varType).varType);
+				varType = ((Abstraction)varType).getBody();
+			}
 		}
 		return argTypes;
 	}

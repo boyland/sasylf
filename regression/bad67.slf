@@ -18,6 +18,11 @@ syntax
 
 judgment absurd: contradiction
 
+judgment equal: t = t
+
+  ----- eq
+  t = t
+
 judgment value: t value
 
   ---------- val-unit
@@ -56,6 +61,12 @@ assumes G
   ----------------- T-App
   G |- t1 t2 : T'
 
+
+lemma old-loses-context: //! missing assumes
+  forall t assumes G
+  exists t = t
+  proof by rule eq // wrong if we don't use "assumes" in theorems 
+end lemma
 
 theorem loses-context:
   assumes G
