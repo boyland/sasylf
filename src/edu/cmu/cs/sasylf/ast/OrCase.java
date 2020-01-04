@@ -1,9 +1,12 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -27,6 +30,21 @@ public class OrCase extends Case {
 		super.prettyPrint(out);
 	}
 
+	private Term getOrClausePremise(Term result) {
+		if (result instanceof Application) { // simple: the application of an or-rule
+			return ((Application)result).getArguments().get(0);
+		} else if (result instanceof Abstraction) {
+			List<Abstraction> wraps = new ArrayList<Abstraction>();
+			Application inside = (Application)Term.getWrappingAbstractions(result, wraps);
+			Judgment pj = (Judgment)premise.getClause().getType();
+			Term base = getOrClausePremise(inside); 
+			if (pj.getAssume() == null) return base;
+			return Term.wrapWithLambdas(wraps, base);
+		} else {
+			throw new RuntimeException("Cannot get or case from " + result);
+		}
+	}
+	
 	@Override
 	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 		Context ctx = parent.clone();
@@ -56,7 +74,7 @@ public class OrCase extends Case {
 			// System.out.println("cl.getJudgment = " + cl.getType().toString());
 			if (p.getType() != cl.getType()) continue;
 			Pair<Term,Substitution> caseResult = e.getValue().iterator().next();
-			Term pt = ((Application)caseResult.first).getArguments().get(0);
+			Term pt = getOrClausePremise(caseResult.first);
 			if (pt.equals(t.substitute(caseResult.second))) {
 				e.getValue().remove(caseResult);
 				found = true;

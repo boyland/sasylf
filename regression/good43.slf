@@ -1,0 +1,69 @@
+package regression;
+// test for issue #92
+
+terminals fn value unit Unit taut
+
+syntax
+  t ::= x
+     | unit
+     | fn x : T => t[x]
+     | t t
+
+  T ::= Unit
+     | T -> T  
+
+  G ::= *
+     | G, x : T
+
+
+judgment tautology: taut
+
+   ------ tautology
+    taut
+
+judgment value: t value
+
+  ---------- val-unit
+  unit value
+
+  -------------------- val-fn
+  fn x:T => t[x] value
+
+
+judgment type: G |- t : T
+assumes G
+
+  ----------------- T-Var
+  G, x : T |- x : T
+
+  ---------------- T-Unit
+  G |- unit : Unit
+
+  G, x:T |- t[x] : T'
+  ----------------------------- T-Abs
+  G |- fn x:T => t[x] : T -> T'
+
+  G |- t1 : T -> T'
+  G |- t2 : T
+  ----------------- T-App
+  G |- t1 t2 : T'
+
+
+theorem obvious:
+  forall t[x] assumes *, x : T
+  exists fn x:T => t[x] value or G, x' : T |- t[x'] : Unit.
+  _: fn x:T => t[x] value by rule val-fn
+end theorem
+
+theorem test:
+  exists taut.
+  o: fn x':Unit => x' value or *, x:Unit |- x:Unit by theorem obvious on (x assumes *,x:Unit)
+  proof by case analysis on o:
+    case or d: *, x:Unit |- x:Unit is
+      proof by rule tautology
+    end case
+    case or v: fn x:Unit => x value is
+      proof by rule tautology
+    end case
+  end case analysis
+end theorem

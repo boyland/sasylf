@@ -132,6 +132,18 @@ public class Judgment extends Node implements ClauseType {
 		}
 	}
 
+	/**
+	 * FInd a rule for this judgment using the given constant.
+	 * @param c constant to check
+	 * @return rule usign this constant, or null if none found
+	 */
+	public Rule findRule(Constant c) {
+		for (Rule r : rules) {
+			if (r.getRuleAppConstant() == c) return r;
+		}
+		return null;
+	}
+	
 	@Override
 	public final Constant typeTerm() {
 		if (term == null)

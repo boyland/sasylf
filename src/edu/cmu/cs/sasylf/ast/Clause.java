@@ -450,21 +450,21 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					}
 					ClauseType ty = cu.getConstructor().getType();
 					if (ty instanceof Judgment) types.add((Judgment)ty);
-					else ErrorHandler.report("cannot '"+sepList.get(0)+"' syntax only judgments", this);
+					else ErrorHandler.report("cannot "+sepList.get(0)+" syntax only judgments", this);
 					clauses.add(cu);
 
 					if (((Judgment)ty).getAssume() != null) {
 						Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
 						if (sharedContext != null) {
 							if (!sharedContext.equals(context)) {
-								ErrorHandler.report("all '"+sepList.get(0)+"'ed judgments must use the same context", this);
+								ErrorHandler.report("all "+sepList.get(0)+"ed judgments must use the same context", this);
 							}
 						} else {
 							sharedContext = context;
 						}
 					}
 				} else {
-					ErrorHandler.report("can only '"+sepList.get(0)+"' clauses together, not nonterminals", this);
+					ErrorHandler.report("can only "+sepList.get(0)+" clauses together, not nonterminals", this);
 				}
 			}
 			List<Element> newElements = new ArrayList<Element>();
