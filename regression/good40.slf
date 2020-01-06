@@ -46,16 +46,6 @@ theorem succ-cancels-gt:
 	end induction
 end theorem
 
-theorem gt-anti-refl-use:
-	forall n
-	forall d: n > n 
-	exists contradiction .
-	use inversion of rule gt-more on d
-	  // where n := s n'
-	p: n' > n' by theorem succ-cancels-gt on n', d // need to realize what n' is
-	proof by induction hypothesis on n', p
-end theorem
-
 theorem gt-anti-refl:
 	forall n
 	forall d: n > n 
