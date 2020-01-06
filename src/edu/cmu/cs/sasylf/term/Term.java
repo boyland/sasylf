@@ -36,7 +36,15 @@ public abstract class Term {
 		return s;
 	}
 
-	public final Substitution instanceOf(Term t) {
+	/**
+	 * Check if this term is an instance of the parameter with a particular substitution
+	 * of the variables of the parameter.
+	 * @param t term to use as a pattern
+	 * @return substitution, never null
+	 * @throws UnificationFailed if terms don't unify or if the unification 
+	 * requires mapping some of the free variables of this term.
+	 */
+	public final Substitution instanceOf(Term t) throws UnificationFailed {
 		Set<FreeVar> freeVars = getFreeVariables();
 		Substitution unifyingSub = unify(t);
 		if (unifyingSub.avoid(freeVars))

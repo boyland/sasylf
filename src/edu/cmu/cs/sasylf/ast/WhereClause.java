@@ -132,12 +132,6 @@ public class WhereClause extends Node {
 				ErrorHandler.recoverableError("Where clause for " + lhsVar + " already written.", userWC.first);
 			}
 			
-			if (this.getLocation().getLine() == 1002) {
-				new Throwable("for the trace").printStackTrace();
-				System.out.println("lhsVar = " + lhsVar + ", rhsTerm = " + rhsTerm);
-				System.out.println("current sub = " + ctx.currentSub);
-			}
-			
 			if (lhsVar.equals(rhsTerm)) { // NOP substitution
 				continue nextUserClause;
 			}
@@ -227,13 +221,11 @@ public class WhereClause extends Node {
 		Map<FreeVar, Boolean> checked = new HashMap<FreeVar, Boolean>();
 		
 		int clausesNeeded = 0;
-		for (FreeVar v : su.getMap().keySet())
-			// TODO not sure how generated variables can get into the CAS...
-			if (fvCAS.contains(v) && !v.isGenerated()) { // this variable should have a where clause
-				checked.put(v, false);
-				clausesNeeded++;
-			}
-		
+		for (FreeVar v : su.getMap().keySet()) {
+			checked.put(v, false);
+			clausesNeeded++;
+		}
+
 		// check if no clauses are needed, but the user wrote some
 		if (clausesNeeded == 0 && !userWhereClauses.isEmpty()) {
 			ErrorHandler.recoverableError(
@@ -242,14 +234,14 @@ public class WhereClause extends Node {
 			return;
 		}
 		
-		// check the user clauses
+		// loop over the where clauses, for good error placement
 		nextUserClause:
 		for (Pair<Element, Clause> userWC : userWhereClauses) {
 
 			// parse the LHS; should either be a NonTerminal or a Binding
 			Element lhsElement = userWC.first.typecheck(ctx);
 			
-			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
+			// make sure the LHS isn't a judgment (probably would have failed already)
 			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
 				ErrorHandler.recoverableError(
 					"The left-hand side of this where clause is not the correct form: " +
@@ -263,15 +255,6 @@ public class WhereClause extends Node {
 			
 			String lhsVarName = lhsNT.toString();
 			
-			// check if the LHS variable name is known in the (local) context
-			if (!ctx.isLocallyKnown(lhsVarName)) {
-				ErrorHandler.recoverableError(
-					"The variable name is unrecognized in the local context: " +
-						lhsVarName, userWC.first
-				);
-				continue nextUserClause;
-			}
-		
 			// find the matching variable in the CAS
 			FreeVar matchingVar = null;
 			for (FreeVar fv : fvCAS)
@@ -302,82 +285,63 @@ public class WhereClause extends Node {
 			}
 			checked.put(matchingVar, true);
 			
-
-			// parse the LHS's bindings, if present
-			List<Pair<String, Term>> lhsBindings = new ArrayList<Pair<String, Term>>();
-			List<Term> lhsArgTypes = new ArrayList<Term>();
-			List<String> lhsArgNames = new ArrayList<String>();
-			if (lhsElement instanceof Binding) { // the LHS has arguments listed
-				for (Element e : ((Binding)lhsElement).getElements()) {
-					if (e instanceof Variable) { // argument is a Variable => can use on the RHS
-						Variable v = (Variable)e;
-						// save for later, for parsing RHS
-						Pair<String, Term> pair = 
-							new Pair<String, Term>(v.getSymbol(), v.getType().typeTerm());
-					    lhsBindings.add(pair);
-					    lhsArgTypes.add(pair.second);
-					    lhsArgNames.add(pair.first);
+			Term rhsUser = userSub.getSubstituted(matchingVar);
+			
+			int userLambdas = rhsUser.countLambdas();
+			int correctLambdas = rhsCorrect.countLambdas();
+			if (userLambdas != correctLambdas) {
+				// generate helpful error message:
+				String error;
+				if (correctLambdas == 0) {
+					error = "Arguments not needed for first-order where clause. " +
+							"Left-hand side should be " + matchingVar;
+						
+				} else if (userLambdas == 0) {
+					error = "Arguments needed for variable with 'holes'. " +
+							"Left-hand side should be " + makeLhsString(matchingVar,rhsCorrect);
+				} else {
+					error = " arguments bound on the left-hand side of the clause. " +
+							"Should have " + correctLambdas + " binding" + (correctLambdas > 1 ? "s" : "") +
+									", not " + userLambdas;
+					if (correctLambdas < userLambdas) {
+						error = "Too many " + error;
+					} else {
+						error = "Not enough" + error;
 					}
-					else {
-						// non-variable bindings on the LHS are not allowed
-						ErrorHandler.recoverableError(
-							"Non-variable bound on the left-hand side of the clause: " + e,
-							userWC.first
-						);
+				}
+				ErrorHandler.recoverableError(error, userWC.first);
+				continue nextUserClause;
+			}
+
+			// TODO: handle a generated variable in rhsCorrect
+			// replaced with a fresh variable in rhsUser
+			try {
+				Set<FreeVar> freeVars = rhsUser.getFreeVariables();
+				Substitution unifyingSub = rhsUser.unify(rhsCorrect);
+				Set<FreeVar> needSpecifics = unifyingSub.selectUnavoidable(freeVars);
+				if (needSpecifics.size() > 0) {
+					ErrorHandler.recoverableError("replacement too general, perhaps these variables should be replaced with something specific: " + needSpecifics, userWC.second);
+					continue nextUserClause;
+				}
+				for (Map.Entry<FreeVar, Term> e : unifyingSub.getMap().entrySet()) {
+					if (!e.getKey().isGenerated()) {
+						ErrorHandler.recoverableError("replacement too specific, imposes constraint on free variable " + e.getKey(), userWC.second);
+						continue nextUserClause;
+					}
+					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
+					if (fv == null || ctx.isKnown(fv.getName())) {
+						e.getValue();
+						Term body = Term.getWrappingAbstractions(e.getValue(), null);
+						String vals = TermPrinter.toString(ctx, null, userWC.second.getLocation(), body, false);
+						ErrorHandler.recoverableError("Replacement too specific, probably needs a fresh variable instead of " + vals, userWC.second);
 						continue nextUserClause;
 					}
 				}
+				rhsCorrect = rhsCorrect.substitute(unifyingSub);
+				ctx.composeSub(unifyingSub);
+			} catch (UnificationFailed e) {
+				// can't handle discrepancy
 			}
-			
-			// check number of LHS arguments; if wrong, don't check the RHS
-			int numArgs = lhsBindings.size();
-			if (rhsCorrect.getType() instanceof Abstraction) {
-				// if the clause is second-order, check the number of arguments
-				int lambdas = rhsCorrect.countLambdas();
-				String error = 
-					" arguments bound on the left-hand side of the clause. " +
-					"Should have " + lambdas + " binding" + (lambdas > 1 ? "s" : "") +
-					", not " + numArgs;
-				if (lambdas < numArgs) {
-					ErrorHandler.recoverableError(
-						"Too many" + error, userWC.first
-					);
-					continue nextUserClause;
-				}
-				else if (lambdas > numArgs) {
-					ErrorHandler.recoverableError(
-						"Not enough" + error, userWC.first
-					);
-					continue nextUserClause;
-				}
-			}
-			// make sure this first-order clause doesn't have arguments
-			else if (numArgs > 0) {
-				ErrorHandler.recoverableError(
-					"Arguments not needed for first-order where clause. " +
-					"Left-hand side should be: " + matchingVar, userWC.first
-				);
-				continue nextUserClause;
-			}
-			
-			// infer the grammar rule used to parse the LHS from its
-			//   appearance in the CAS;
-			// create dummy syntax rule from matching var's type
-			Term varType = matchingVar.getType();
-			while (varType instanceof Abstraction)
-				varType = ((Abstraction)varType).getBody();
-			edu.cmu.cs.sasylf.grammar.Rule matchRule = 
-				new edu.cmu.cs.sasylf.ast.grammar.GrmRule(
-					new edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal(
-						varType.toString()), null);
-			
-			// pass the (topmost) grammar rule used to parse the LHS to help
-			// disambiguate parses of the RHS
-			Element rhsElement = ((Clause)userWC.second.typecheck(ctx)).computeClause(ctx, lhsNT);
-			
-			// compute the term of the RHS with the LHS's additional bindings
-			// wrap those extra bindings around the computed term
-			Term rhsUser = Term.wrapWithLambdas(rhsElement.asTerm(lhsBindings), lhsArgTypes, lhsArgNames);
 			
 			// check for LF equality; allows alpha-equivalence
 			if (!rhsUser.equals(rhsCorrect)) {
@@ -423,25 +387,7 @@ public class WhereClause extends Node {
 			Set<String> missing = new HashSet<String>();
 			for (FreeVar lhs : checked.keySet()) {
 				if (!checked.get(lhs)) {
-					StringBuilder sb = new StringBuilder(lhs.toString());
-					Term rhs = su.getSubstituted(lhs);
-					
-					// if (correct) RHS is an abstraction, add bindings to
-					// missing LHS name for each outer lambda
-					if (rhs instanceof Abstraction) {
-						// create a new valid name for each binding
-						Map<String, Boolean> seenVars = new HashMap<String, Boolean>();
-						while (rhs instanceof Abstraction) {
-							Abstraction abs = (Abstraction)rhs;
-							String nextName = abs.varName;
-							while (seenVars.get(nextName) != null)
-								nextName += "'";
-							seenVars.put(nextName, true);
-							sb.append("[" + nextName + "]");
-							rhs = abs.getBody();
-						}
-					}
-					missing.add(sb.toString());
+					missing.add(makeLhsString(lhs,su.getSubstituted(lhs)));
 				}
 			}
 			if (!missing.isEmpty()) {
@@ -455,6 +401,33 @@ public class WhereClause extends Node {
 		}
 	}
 	
+	/**
+	 * Make a string of the form t[x,x'] to represent a lhs
+	 * possibly with bindings.
+	 * @param lhsVar variable being mapped
+	 * @param rhs term it's being mapped to (to know what bindings to require)
+	 * @return string for error message.
+	 */
+	private static String makeLhsString(FreeVar lhsVar, Term rhs) {
+		StringBuilder sb = new StringBuilder(lhsVar.toString());
+		
+		// if (correct) RHS is an abstraction, add bindings to
+		// missing LHS name for each outer lambda
+		if (rhs instanceof Abstraction) {
+			// create a new valid name for each binding
+			Map<String, Boolean> seenVars = new HashMap<String, Boolean>();
+			while (rhs instanceof Abstraction) {
+				Abstraction abs = (Abstraction)rhs;
+				String nextName = abs.varName;
+				while (seenVars.get(nextName) != null)
+					nextName += "'";
+				seenVars.put(nextName, true);
+				sb.append("[" + nextName + "]");
+				rhs = abs.getBody();
+			}
+		}
+		return sb.toString();
+	}
 	
 	/**
 	 * Create an absent where clause

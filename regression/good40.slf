@@ -62,7 +62,7 @@ theorem gt-anti-refl-use-w:
         exists contradiction .
         use inversion of rule gt-more on d
           where n := s n'
-        p: n' > n' by theorem succ-cancels-gt on n', d
+        p: n' > n' by theorem succ-cancels-gt on d
         proof by induction hypothesis on n', p
 end theorem
 

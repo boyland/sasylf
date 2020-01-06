@@ -110,6 +110,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 				caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause, this);
 			}
 			if (caseResult.isEmpty()) continue;
+
 			Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
 			if (rule == resolution) {
 				Util.debug("before inversion: targetTerm = " + targetTerm);
@@ -123,6 +124,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 				result = result.substitute(pair.second);
 				Util.debug("  after adapt/subst, result = ", result);
 				Util.debug("inversion gets substitution ",pair.second);
+
 				ctx.composeSub(pair.second); // ctx sub changes from inversion with internal "fresh" rule
 				List<Abstraction> outer = new ArrayList<Abstraction>();
 				Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
@@ -189,12 +191,18 @@ public class DerivationByInversion extends DerivationWithArgs {
 						checkRootMatch(ctx,rule.getPremises().get(i),this.getElement(),this);
 					}
 				}
+
 				// Because we do the unifications step by step, we can't just "avoid"
 				// on the substitutions as they come, but instead do this at the end:
 				Term userResult = getClause().asTerm(); 
 				ctx.avoidIfPossible(userResult.getFreeVariables());
 				su.avoid(userResult.getFreeVariables());
-				ctx.avoidIfPossible(userSubFree);
+				Set<FreeVar> userSubVars = new HashSet<FreeVar>(userSubFree);
+				// See good42.slf and good40.slf
+				for (Iterator<FreeVar> fvi = userSubVars.iterator(); fvi.hasNext();) {
+					if (!ctx.isLocallyKnown(fvi.next().getName())) fvi.remove();
+				}
+				ctx.avoidIfPossible(userSubVars);
 				su.avoid(userSubFree);
 				found_rulel = true;
 			} else {
