@@ -1964,8 +1964,8 @@ Derivation Derivation() :
 	  ((DerivationWithArgs)d).addArgString(c2); }
 	( <COMMA> c2=SimpleExpr() { ((DerivationWithArgs)d).addArgString(c2); } )* 
 	{ return d; }
-|  t=<DO> <CASE> <ANALYSIS> <ON> t2=<IDENTIFIER>
-     { d = new PartialCaseAnalysis(new Location(t),t2.image); }
+|  t=<DO> <CASE> <ANALYSIS> <ON> c=SimpleExpr()
+     { d = new PartialCaseAnalysis(new Location(t),c); }
         <COLON>
     ( ca=Case() { if (ca != null) ((DerivationByAnalysis)d).getCases().add(ca); })*
     of=<END> 

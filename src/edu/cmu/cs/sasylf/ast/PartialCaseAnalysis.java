@@ -15,5 +15,8 @@ public class PartialCaseAnalysis extends DerivationByCaseAnalysis {
 	public PartialCaseAnalysis(Location l, String derivName) {
 		super("_", l, null, derivName);
 	}
+	public PartialCaseAnalysis(Location l, Clause subject) {
+		super("_", l, null, subject);
+	}
 
 }
