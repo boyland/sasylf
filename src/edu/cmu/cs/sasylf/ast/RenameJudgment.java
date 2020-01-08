@@ -85,7 +85,7 @@ public class RenameJudgment extends Judgment {
 	@Override
 	protected Constant computeTypeTerm() {
 		if (original != null) return original.typeTerm();
-		return super.typeTerm();
+		return super.computeTypeTerm();
 	}
 
 	
