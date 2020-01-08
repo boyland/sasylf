@@ -120,19 +120,26 @@ public class SyntaxCase extends Case {
 		Term concTerm = concElem.asTerm();
 		Util.debug("concTerm = ", concTerm);
 
+		int diff = concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
+		// this check is redundant:
+		if (diff < 0) {
+			ErrorHandler.report(Errors.INVALID_CASE, "A case must use the whole context of the subject", this);
+			return;
+		}
+		
+		if (diff > 0) {
+			Util.debug("concDef = ",concDef);
+			if (!concDef.isVarOnlyClause()) {
+				ErrorHandler.report("The context may increase only with variable cases", assumes);
+			}
+		}
+
 		// This check is optional; but if we neglect to do it, we'll get a confusing message later.
 		for (FreeVar fv : getCaseFreeVars(ctx,concTerm)) {
 			if (ctx.isLocallyKnown(fv.toString())) {
 				Util.debug("ctx.inputsVars = ",ctx.inputVars);
 				ErrorHandler.report(Errors.INVALID_CASE, "A case must use new variables, cannot reuse " + fv, this);
 			}
-		}
-
-		int diff = concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
-		// this check is redundant:
-		if (diff < 0) {
-			ErrorHandler.report(Errors.INVALID_CASE, "A case must use the whole context of the subject", this);
-			return;
 		}
 
 		Term matching = Term.getWrappingAbstractions(concTerm, null, diff);
@@ -155,7 +162,7 @@ public class SyntaxCase extends Case {
 				computedSub = pair.first.unify(concTerm);
 				Util.debug("result is ", computedSub);
 			} catch (UnificationFailed uf) {
-				System.out.println("Case " + this + " does not apply to " + ctx.currentCaseAnalysisElement);
+				Util.debug("Case ",this," does not apply to ",ctx.currentCaseAnalysisElement);
 				continue;
 			}
 			computedCaseTerm = pair.first;
@@ -273,6 +280,9 @@ public class SyntaxCase extends Case {
 			ErrorHandler.report(Errors.INTERNAL_ERROR,": Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis,this);
 		}
 
+		unifyingSub.avoid(concTerm.getFreeVariables());
+		Util.debug("improved unifyingSub",unifyingSub);
+		
 		// update the current substitution
 		ctx.composeSub(unifyingSub); // modifies in place		
 
@@ -287,6 +297,7 @@ public class SyntaxCase extends Case {
 		result.addAll(bare.getFreeVariables());
 		int expected = ctx.currentCaseAnalysis.countLambdas();
 		int n = wrappers.size() - expected;
+		// skip expected wrappers
 		for (int i=0; i < n; ++i) {
 			result.addAll(wrappers.get(i).varType.getFreeVariables());
 		}
