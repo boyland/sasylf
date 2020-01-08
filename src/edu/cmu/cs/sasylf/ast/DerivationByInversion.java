@@ -93,12 +93,13 @@ public class DerivationByInversion extends DerivationWithArgs {
 					// TODO: refactor this with DerivationByAnalysis
 					Pair<Term,Substitution> newPair;
 					try {
-						Util.debug("term = ", p.first);
-						Util.debug("sub = ", p.second);
-						Util.debug("current = ", ctx.currentSub);
+						Util.debug("for rule = ",rule.getName());
+						Util.debug("  term = ", p.first);
+						Util.debug("  sub = ", p.second);
+						Util.debug("  current = ", ctx.currentSub);
 						Substitution newSubstitution = new Substitution(p.second);
 						newSubstitution.compose(ctx.currentSub);
-						Util.debug("newSub = ", newSubstitution);
+						Util.debug("  newSub = ", newSubstitution);
 						newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
 					} catch (UnificationFailed ex) {
 						Util.debug("case no longer feasible.");
@@ -121,6 +122,10 @@ public class DerivationByInversion extends DerivationWithArgs {
 					ErrorHandler.report("Cannot use inversion: two or more instance of '" + ruleName + "' apply.", this);
 				}
 				Term result = ctx.toTerm(getClause()); // this is the output of the derivation
+				pair.second.avoid(ctx.inputVars);
+				pair.second.avoid(userSubFree);
+				pair.second.avoid(result.getFreeVariables());
+				pair.first = pair.first.substitute(pair.second);
 				result = result.substitute(pair.second);
 				Util.debug("  after adapt/subst, result = ", result);
 				Util.debug("inversion gets substitution ",pair.second);
@@ -159,20 +164,20 @@ public class DerivationByInversion extends DerivationWithArgs {
 					}
 					for (int i=0; i < clauses.size(); ++i) {
 						ClauseUse cu = clauses.get(i);
-						Term mt = ctx.toTerm(cu);
+						Term mt = cu.asTerm(); // want user-level variables
 						Term piece = pieces.get(i).substitute(ctx.currentSub);
 						// ctx sub changes as a result of each checkMatch,
-						// with user-supplied RHS's (as opposed to "fresh" version)
+						// in the wrong way since we are applying it in the "opposite" way
 						if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
 							String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
 							String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
 							ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
 						}
+						// avoid mapping user-written variables
+						ctx.avoidIfPossible(mt.getFreeVariables());
 						
 						// continue building up sigma_u from the user-written premises
-						// avoid mapping user-written variables
 						su.compose(ctx.currentSub);
-						su.avoid(mt.getFreeVariables());
 						
 						// If the derivation has no implicit context, we
 						// skip the context check
@@ -192,18 +197,6 @@ public class DerivationByInversion extends DerivationWithArgs {
 					}
 				}
 
-				// Because we do the unifications step by step, we can't just "avoid"
-				// on the substitutions as they come, but instead do this at the end:
-				Term userResult = getClause().asTerm(); 
-				ctx.avoidIfPossible(userResult.getFreeVariables());
-				su.avoid(userResult.getFreeVariables());
-				Set<FreeVar> userSubVars = new HashSet<FreeVar>(userSubFree);
-				// See good42.slf and good40.slf
-				for (Iterator<FreeVar> fvi = userSubVars.iterator(); fvi.hasNext();) {
-					if (!ctx.isLocallyKnown(fvi.next().getName())) fvi.remove();
-				}
-				ctx.avoidIfPossible(userSubVars);
-				su.avoid(userSubFree);
 				found_rulel = true;
 			} else {
 				ErrorHandler.report(Errors.MISSING_CASE,
@@ -211,7 +204,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 			}
 		}
 		if (!found_rulel) {
-			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this);
+			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetClause, this);
 		}
 
 		// add to sigma_u new mappings from CAS variables to generated terms

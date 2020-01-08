@@ -229,7 +229,7 @@ public class WhereClause extends Node {
 		// check if no clauses are needed, but the user wrote some
 		if (clausesNeeded == 0 && !userWhereClauses.isEmpty()) {
 			ErrorHandler.recoverableError(
-				"No where clauses are needed here.", errorSpan
+				"No where clauses are needed here.", userWhereClauses.get(0).first
 			);
 			return;
 		}
@@ -286,6 +286,7 @@ public class WhereClause extends Node {
 			checked.put(matchingVar, true);
 			
 			Term rhsUser = userSub.getSubstituted(matchingVar);
+			Util.debug("Correct = ",rhsCorrect,",User = ",rhsUser);
 			
 			int userLambdas = rhsUser.countLambdas();
 			int correctLambdas = rhsCorrect.countLambdas();
@@ -304,7 +305,7 @@ public class WhereClause extends Node {
 							"Should have " + correctLambdas + " binding" + (correctLambdas > 1 ? "s" : "") +
 									", not " + userLambdas;
 					if (correctLambdas < userLambdas) {
-						error = "Too many " + error;
+						error = "Too many" + error;
 					} else {
 						error = "Not enough" + error;
 					}
@@ -313,12 +314,14 @@ public class WhereClause extends Node {
 				continue nextUserClause;
 			}
 
-			// TODO: handle a generated variable in rhsCorrect
+			// Handle a generated variable in rhsCorrect
 			// replaced with a fresh variable in rhsUser
 			try {
 				Set<FreeVar> freeVars = rhsUser.getFreeVariables();
+				Set<FreeVar> newVars = new HashSet<FreeVar>();
 				Substitution unifyingSub = rhsUser.unify(rhsCorrect);
 				Set<FreeVar> needSpecifics = unifyingSub.selectUnavoidable(freeVars);
+				Util.debug("unifyingSub = ",unifyingSub);
 				if (needSpecifics.size() > 0) {
 					ErrorHandler.recoverableError("replacement too general, perhaps these variables should be replaced with something specific: " + needSpecifics, userWC.second);
 					continue nextUserClause;
@@ -330,10 +333,13 @@ public class WhereClause extends Node {
 					}
 					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
 					if (fv == null || ctx.isKnown(fv.getName())) {
-						e.getValue();
 						Term body = Term.getWrappingAbstractions(e.getValue(), null);
 						String vals = TermPrinter.toString(ctx, null, userWC.second.getLocation(), body, false);
 						ErrorHandler.recoverableError("Replacement too specific, probably needs a fresh variable instead of " + vals, userWC.second);
+						continue nextUserClause;
+					}
+					if (!newVars.add(fv)) {
+						ErrorHandler.recoverableError("New variable " + fv + " should only be used once.", userWC.second);
 						continue nextUserClause;
 					}
 				}

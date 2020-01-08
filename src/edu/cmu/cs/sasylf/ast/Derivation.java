@@ -240,7 +240,7 @@ public abstract class Derivation extends Fact {
 			Substitution instanceSub = suppliedTerm.instanceOf(matchTerm);
 			debug("  instance sub = ", instanceSub);
 			// try to use the provided variable in preference
-			instanceSub.avoid(matchTerm.getFreeVariables());
+			instanceSub.avoid(suppliedTerm.getFreeVariables());
 			// must not require instantiating free variables
 			if (!instanceSub.avoid(ctx.inputVars)) {
 				Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
