@@ -1,0 +1,116 @@
+// demonstract use of the library module "Natural"
+// On command line, run using "sasylf.local --path=. examples/use-nat.slf"
+package examples;
+
+terminals unit S Z
+
+// Here we give a short name of a module
+module Nat = org.sasylf.util.Natural
+
+// Here we import the syntax of natural numbers without importing
+// the actual forms.
+syntax l = Nat.n
+
+// Here's how to import syntax with a new syntax
+syntax N = Nat.n ::= Z | S N
+
+// Here's how to import a judgment, giving the form we want to use it
+judgment lequal = Nat.equal : l == l
+
+judgment lnotequal = Nat.notequal : l <> l
+
+// One does not import theorems/lemmas/rules.
+// Instead, ome refers to them using qualified syntax, e.g. Nat.eq
+
+ 
+syntax
+    t ::= unit
+      | { r }
+
+    r ::= *
+       | l = t, r
+
+judgment equal: t == t
+
+  ------ eq
+  t == t
+    
+judgment lookup: r @ l = t
+
+  l == l'
+  ------------- lookup-eq
+  (l=t,r)@l' = t
+  
+  l <> l'
+  r@l' = t'
+  --------------- lookup-ne
+  (l=t,r)@l' = t'
+
+
+theorem lookup-unique:
+    forall d1: r @ l = t1
+    forall d2: r @ l = t2
+    exists t1 == t2.
+    proof by induction on d1:
+        case rule
+            eq1: l1 == l
+            ------------------- lookup-eq
+            _: (l1 = t1, r1) @ l = t1
+            where r := (l1=t1, r1)
+        is
+            proof by case analysis on d2:
+                case rule
+                    _: l1 == l
+                    ------------------- lookup-eq
+                    _: (l1 = t1, r1) @ l = t1
+                    where t2 := t1
+                is
+                    proof by rule eq
+                end case
+
+                case rule
+                    ne1: l1 <> l
+                    _: r1 @ l = t2
+                    --------------------- lookup-ne
+                    _: (l1 = t1, r1) @ l = t2
+                is
+                    use inversion of rule Nat.eq on eq1 where l1 := l
+                    _: contradiction by theorem Nat.ne-anti-reflexive on ne1
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ne1: l1 <> l
+            d1': r1 @ l = t1
+            --------------------- lookup-ne
+            _: (l1 = t, r1) @ l = t1
+            where r := l1 = t, r1
+        is
+            proof by case analysis on d2:
+                case rule
+                    eq1: l1 == l
+                    ------------------- lookup-eq
+                    _: (l1 = t, r1) @ l = t
+                    where t2 := t
+                is
+                    use inversion of rule Nat.eq on eq1 where l1 := l
+                    _: contradiction by theorem Nat.ne-anti-reflexive on ne1
+                end case
+
+                case rule
+                    _: l1 <> l
+                    d2': r1 @ l = t2
+                    --------------------- lookup-ne
+                    _: (l1 = t, r1) @ l = t2
+                is
+                    proof by induction hypothesis on d1', d2'
+                end case
+
+            end case analysis
+        end case
+
+        
+    end induction
+end theorem
