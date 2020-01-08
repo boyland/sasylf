@@ -105,4 +105,20 @@ public class QualName extends Node {
 		}
 		return resolution;
 	}
+	
+	/**
+	 * Indicate what sort of thing this resolution is.
+	 * @param resolution (returned from resolve)
+	 * @return string indicating kind of thing this is
+	 */
+	public static String classify(Object resolution) {
+		if (resolution == null) return "null";
+		if (resolution instanceof String[]) return "package";
+		if (resolution instanceof Module) return "module";
+		if (resolution instanceof Judgment) return "judgment";
+		if (resolution instanceof Rule) return "rule";
+		if (resolution instanceof Theorem) return ((Theorem)resolution).getKind();
+		if (resolution instanceof Syntax) return "syntax";
+		return resolution.getClass().getSimpleName().toLowerCase();
+	}
 }

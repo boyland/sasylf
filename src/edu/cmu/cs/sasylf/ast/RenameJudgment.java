@@ -39,7 +39,7 @@ public class RenameJudgment extends Judgment {
 			if (resolution instanceof Judgment) {
 				original = (Judgment)resolution;
 			} else {
-				ErrorHandler.report("Renaming of non-judgment!",this);
+				ErrorHandler.report("Cannot rename " + QualName.classify(resolution) + " as a judgment",this);
 			}
 			getForm().typecheck(ctx);
 			ClauseDef cd;
