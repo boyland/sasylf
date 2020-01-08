@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.module;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,7 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * Module finder that uses a path of module providers.
  */
-public abstract class PathModuleFinder implements ModuleFinder {
+public class PathModuleFinder implements ModuleFinder {
 
 	private String[] currentPackage = EMPTY_PACKAGE;
 	private final List<ModuleId> inProcess = new ArrayList<ModuleId>();
@@ -22,12 +23,32 @@ public abstract class PathModuleFinder implements ModuleFinder {
 	
 	/**
 	 * Create a path module finder with initially a single provider.
-	 * @param p a single provider
+	 * @param p a single provider, must not be null
 	 */
 	protected PathModuleFinder(ModuleProvider p) {
 		providers.add(p);
 	}
 
+	/**
+	 * Create a path module finder with given list of providers
+	 * @param l list of providers, must not be null
+	 */
+	protected PathModuleFinder(List<ModuleProvider> l) {
+		providers.addAll(l);
+	}
+	
+	/**
+	 * Create a path module finder with the given path,
+	 * a separated list of places to find modules.
+	 * @param path non-null string of places separated with {@link File#pathSeparator}.
+	 */
+	public PathModuleFinder(String path) {
+		String[] pieces = path.split(File.pathSeparator);
+		for (String p : pieces) {
+			providers.add(new RootModuleProvider(new File(p)));
+		}
+	}
+	
 	@Override
 	public void setCurrentPackage(String[] pName) {
 		currentPackage = pName;

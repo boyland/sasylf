@@ -12,6 +12,7 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
@@ -39,7 +40,7 @@ public class Main {
 			System.err.println("   --compwhere   makes where clauses compulsory (will check them even if not)");
 			System.err.println("   --verbose     prints out theorem names as it checks them");
 			System.err.println("   --LF          extra info about LF terms in certain error messages");
-			System.err.println("   --root=dir    use the given directory for package/module checking.");
+			System.err.println("   --path=dir... use the given directories for package/module checking.");
 			return;
 		}
 		if (args.length >= 1 && args[0].equals("--version")) {
@@ -82,6 +83,10 @@ public class Main {
 					}
 				}
 				mf = new RootModuleFinder(root);
+				continue;
+			}
+			if (args[i].startsWith("--path=")) {
+				mf = new PathModuleFinder(args[i].substring(7));
 				continue;
 			}
 			String filename = args[i];
