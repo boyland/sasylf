@@ -20,12 +20,12 @@ import org.sasylf.ProofChecker;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
-import edu.cmu.cs.sasylf.module.RootModuleFinder;
+import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.module.RootModuleProvider;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
-public class ProjectModuleFinder extends RootModuleFinder {
+public class ProjectModuleFinder extends PathModuleFinder {
 
 	private ConcurrentHashMap<ModuleId,Set<ModuleId>> dependencies = new ConcurrentHashMap<ModuleId,Set<ModuleId>>();
 
