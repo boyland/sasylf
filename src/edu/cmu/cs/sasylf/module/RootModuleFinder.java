@@ -1,4 +1,4 @@
-package edu.cmu.cs.sasylf.ast;
+package edu.cmu.cs.sasylf.module;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.Main;
+import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Span;

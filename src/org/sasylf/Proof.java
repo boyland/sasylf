@@ -16,10 +16,10 @@ import org.eclipse.jface.text.IDocument;
 import org.sasylf.util.TrackDirtyRegions;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Module;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.RuleLike;
+import edu.cmu.cs.sasylf.module.Module;
 
 /**
  * Information about a SASyLF Proof:

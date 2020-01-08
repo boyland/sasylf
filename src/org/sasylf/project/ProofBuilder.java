@@ -24,7 +24,7 @@ import org.sasylf.Marker;
 import org.sasylf.Proof;
 import org.sasylf.util.Cell;
 
-import edu.cmu.cs.sasylf.ast.ModuleId;
+import edu.cmu.cs.sasylf.module.ModuleId;
 
 public class ProofBuilder extends IncrementalProjectBuilder {
 

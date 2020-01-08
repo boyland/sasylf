@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.NullModuleFinder;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -86,7 +90,7 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public boolean typecheck() {
-		return typecheck(new NullModuleFinder(),(ModuleId)null);  
+		return typecheck(NullModuleFinder.get(),(ModuleId)null);  
 	}
 	
 	/** Typechecks this compilation unit, returning true if the check was successful,

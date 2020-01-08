@@ -1,4 +1,4 @@
-package edu.cmu.cs.sasylf.ast;
+package edu.cmu.cs.sasylf.module;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Span;
@@ -10,7 +10,7 @@ public class NullModuleFinder implements ModuleFinder {
 		return prototype;
 	}
 
-	protected NullModuleFinder() { }
+	private NullModuleFinder() { }
 
 	@Override
 	public boolean hasCandidate(ModuleId id) {

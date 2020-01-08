@@ -9,10 +9,10 @@ import java.io.PrintStream;
 import java.io.Reader;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Module;
-import edu.cmu.cs.sasylf.ast.ModuleFinder;
-import edu.cmu.cs.sasylf.ast.ModuleId;
-import edu.cmu.cs.sasylf.ast.RootModuleFinder;
+import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;

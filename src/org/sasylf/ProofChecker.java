@@ -34,9 +34,9 @@ import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
 import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Module;
-import edu.cmu.cs.sasylf.ast.ModuleFinder;
-import edu.cmu.cs.sasylf.ast.ModuleId;
+import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;

@@ -18,8 +18,8 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.sasylf.ProofChecker;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.ModuleId;
-import edu.cmu.cs.sasylf.ast.RootModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;

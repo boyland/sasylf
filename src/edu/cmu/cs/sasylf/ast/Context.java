@@ -10,6 +10,8 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Grammar;
+import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.Constant;

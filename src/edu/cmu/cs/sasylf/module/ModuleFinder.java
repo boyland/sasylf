@@ -1,4 +1,4 @@
-package edu.cmu.cs.sasylf.ast;
+package edu.cmu.cs.sasylf.module;
 
 import edu.cmu.cs.sasylf.util.Span;
 

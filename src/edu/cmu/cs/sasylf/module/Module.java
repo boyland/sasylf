@@ -1,8 +1,12 @@
-package edu.cmu.cs.sasylf.ast;
+package edu.cmu.cs.sasylf.module;
 
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Map;
+
+import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.RuleLike;
 
 /**
  * The compile-time representation of a SASyLF module.

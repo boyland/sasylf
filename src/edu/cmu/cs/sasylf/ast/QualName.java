@@ -2,6 +2,8 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
+import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
 
