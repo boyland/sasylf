@@ -26,6 +26,7 @@ public class PathModuleFinder implements ModuleFinder {
 	 * @param p a single provider, must not be null
 	 */
 	protected PathModuleFinder(ModuleProvider p) {
+		providers.add(new ResourceModuleProvider());
 		providers.add(p);
 	}
 
@@ -34,6 +35,7 @@ public class PathModuleFinder implements ModuleFinder {
 	 * @param l list of providers, must not be null
 	 */
 	protected PathModuleFinder(List<ModuleProvider> l) {
+		providers.add(new ResourceModuleProvider());
 		providers.addAll(l);
 	}
 	
@@ -43,6 +45,7 @@ public class PathModuleFinder implements ModuleFinder {
 	 * @param path non-null string of places separated with {@link File#pathSeparator}.
 	 */
 	public PathModuleFinder(String path) {
+		providers.add(new ResourceModuleProvider());
 		String[] pieces = path.split(File.pathSeparator);
 		for (String p : pieces) {
 			providers.add(new RootModuleProvider(new File(p)));

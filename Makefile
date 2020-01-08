@@ -13,11 +13,11 @@ build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
 	(cd src && javac -source 1.6 -target 1.6 -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java edu/cmu/cs/sasylf/term/UnitTests.java)
-	jar cmf sasylf.mf SASyLF.jar README.TXT -C bin edu
+	jar cmf sasylf.mf SASyLF.jar README.TXT -C bin edu -C library org
 
 TESTBIN= bin/org/sasylf/Activator.class
 build-plugin : ${TESTBIN} README.TXT
-	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml README.TXT icons/*.gif icons/*.png -C bin .
+	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml README.TXT icons/*.gif icons/*.png -C bin . -C library org
 
 ${TESTBIN}:
 	@echo Unable to compile Eclipse plugin code in Makefile.

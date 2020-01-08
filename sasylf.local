@@ -1,2 +1,4 @@
 #!/bin/bash
-java -cp `dirname $0`/bin edu.cmu.cs.sasylf.Main "$@"
+SASYLF_HOME=`dirname $0`
+cp -r $SASYLF_HOME/library/org $SASYLF_HOME/bin
+java -cp $SASYLF_HOME/bin edu.cmu.cs.sasylf.Main "$@"

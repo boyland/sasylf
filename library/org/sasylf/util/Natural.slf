@@ -1,0 +1,2196 @@
+package org.sasylf.util;
+
+// This module provides natural numbers, comparisons and arithmetic.
+// It requires SASyLF 1.4.0 or later
+module Natural
+
+provides
+
+terminals S
+
+syntax
+
+n ::= 0 | S n
+1 := S 0
+
+
+
+/// Equality and Nonequality
+
+// Eventually, we would like both relations here: =, ≠
+// to be all generated automatically along with all the theorems
+// shown here.
+
+
+judgment equal: n = n
+
+----- eq
+n = n
+
+
+judgment notequal: n ≠ n
+
+------- zero-ne-succ
+0 ≠ S n
+
+------- succ-ne-zero
+S n ≠ 0
+
+n1 ≠ n2
+----------- ne-rec
+S n1 ≠ S n2
+
+
+lemma succ-preserves-eq:
+  forall d: n1 = n2
+  exists S n1 = S n2.
+  use inversion of eq on d where n1 := n2
+  proof by rule eq
+end lemma
+
+theorem ne-anti-reflexive:
+  forall d: n ≠ n
+  exists contradiction.
+  proof by induction on d:
+    case rule
+      d': n' ≠ n'
+      -------------- ne-rec
+      _: S n' ≠ S n'
+      where n := S n'
+    is
+      proof by induction hypothesis on d'
+    end case
+  end induction
+end theorem
+
+theorem eq-or-ne:
+  forall n1
+  forall n2
+  exists n1 = n2 or n1 ≠ n2.
+  proof by induction on n1:
+    case 0 is
+      proof by case analysis on n2:
+        case 0 is
+          e: 0 = 0 by rule eq
+          proof by e
+        end case
+        case S n2' is
+          d: 0 ≠ S n2' by rule zero-ne-succ
+          proof by d
+        end case
+      end case analysis 
+    end case
+    case S n1' is
+      proof by case analysis on n2:
+        case 0 is
+          d: S n1' ≠ 0 by rule succ-ne-zero
+          proof by d
+        end case
+        case S n2' is
+          d1: n1' = n2' or n1' ≠ n2' by induction hypothesis on n1', n2'
+          proof by case analysis on d1:
+            case or e: n1' = n2' is
+              e': S n1' = S n2' by lemma succ-preserves-eq on e
+              proof by e'
+            end case            
+            case or d2: n1' ≠ n2' is
+              d3: S n1' ≠ S n2' by rule ne-rec on d2
+              proof by d3
+            end case
+          end case analysis
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
+
+theorem ne-symmetric:
+  forall d: n1 ≠ n2
+  exists n2 ≠ n1.
+  ch: n2 = n1 or n2 ≠ n1 by theorem eq-or-ne on n2, n1
+  proof by case analysis on ch:
+    case or e: n2 = n1 is
+      use inversion of eq on e where n2 := n1
+      c: contradiction by theorem ne-anti-reflexive on d
+    end case
+    case or f: n2 ≠ n1 is
+      proof by f
+    end case
+  end case analysis
+end theorem
+
+
+
+/// Inequality: greater than
+
+
+judgment gt: n > n
+
+------- gt-1
+S n > n
+
+n1 > n2
+--------- gt-s
+S n1 > n2
+
+
+judgment ge: n ≥ n
+
+----- ge-eq
+n ≥ n
+
+n1 > n2
+------- ge-gt
+n1 ≥ n2
+
+
+lemma succ-implies-gt-zero:
+  forall n
+  exists S n > 0.
+  proof by induction on n:
+    case 0 is
+      proof by rule gt-1
+    end case
+    case S n' is
+      d': S n' > 0 by induction hypothesis on n'
+      _: S S n' > 0 by rule gt-s on d'
+    end case
+  end induction
+end lemma
+
+lemma succ-preserves-gt:
+  forall d1: n1 > n2
+  exists S n1 > S n2.
+  proof by induction on d1:
+    case rule
+      ------------ gt-1
+      _: S n2 > n2
+      where n1 := S n2
+    is
+      _: S S n2 > S n2 by rule gt-1
+    end case
+    case rule
+      d1': n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+      where n1 := S n1'
+    is
+      d2: S n1' > S n2 by induction hypothesis on d1'
+      proof by rule gt-s on d2
+    end case
+  end induction
+end lemma
+
+lemma succ-preserves-gt-converse:
+  forall d1: S n1 > S n2
+  exists n1 > n2.
+  proof by induction on d1:
+    case rule
+      -------------- gt-1
+      _: S S n2 > S n2
+      where n1 := S n2
+    is
+      _: S n2 > n2 by rule gt-1
+    end case
+    case rule
+      d1': n1 > S n2
+      --------------- gt-s
+      _: (S n1) > S n2
+    is
+      proof by case analysis on n1:
+        case S n1' is
+          d':  n1' > n2 by induction hypothesis on d1'
+          _: S n1' > n2 by rule gt-s on d' 
+        end case
+        case 0 is
+          proof by contradiction on d1'
+        end case
+      end case analysis
+    end case
+  end induction
+end lemma
+
+lemma gt-implies-positive:
+  forall g: n1 > n2
+  exists n1 = (S n1')
+  proof by case analysis on g:
+    case rule
+      ------------- gt-1
+      _: (S n2) > n2
+      where n1 := S n2
+    is
+      proof by rule eq
+    end case
+
+    case rule
+      _: n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+      where n1 := S n1'
+    is
+      proof by rule eq
+    end case
+
+  end case analysis
+end lemma
+
+lemma gt-implies-ge-succ:
+  forall g: n1 > n2
+  exists n1 ≥ (S n2).
+  proof by case analysis on g:
+    case rule
+      ------------- gt-1
+      _: (S n2) > n2
+      where n1 := S n2
+    is
+      proof by rule ge-eq
+    end case
+
+    case rule
+      g': n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+      where n1 := S n1'
+    is
+      g'': (S n1') > (S n2) by lemma succ-preserves-gt on g'
+      proof by rule ge-gt on g''
+    end case
+
+  end case analysis
+end lemma
+
+lemma gt-anti-reflexive-star:
+  forall n
+  forall d: n > n
+  exists contradiction.
+  proof by induction on n:
+    case S n' is
+      d': n' > n' by lemma succ-preserves-gt-converse on d
+      proof by induction hypothesis on n', d'
+    end case
+    case 0 is
+      proof by contradiction on d
+    end case
+  end induction
+end lemma
+
+theorem gt-anti-reflexive:
+  forall d: n > n
+  exists contradiction.
+  proof by lemma gt-anti-reflexive-star on n, d
+end theorem
+   
+theorem gt-transitive:
+  forall g1: n1 > n2
+  forall g2: n2 > n3
+  exists n1 > n3.
+  proof by induction on g1:
+    case rule
+      g1': n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+      where n1 := S n1'
+    is
+      g3: n1' > n3 by induction hypothesis on g1', g2
+      proof by rule gt-s on g3
+    end case
+    case rule
+      ------------ gt-1
+      _: S n2 > n2
+      where n1 := S n2
+    is
+      proof by rule gt-s on g2
+    end case
+  end induction
+end theorem
+
+theorem gt-anti-symmetric:
+  forall d1: n1 > n2
+  forall d2: n2 > n1
+  exists contradiction.
+  d3: n1 > n1 by theorem gt-transitive on d1, d2
+  proof by theorem gt-anti-reflexive on d3 
+end theorem
+
+
+theorem ge-transitive-gt:
+  forall d12: n1 ≥ n2
+  forall d23: n2 > n3
+  exists n1 > n3.
+  proof by case analysis on d12:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n1 := n2
+    is
+      proof by d23
+    end case
+    case rule
+      d12': n1 > n2
+      --------------- ge-gt
+      _: n1 ≥ n2
+    is
+      proof by theorem gt-transitive on d12', d23
+    end case
+  end case analysis
+end theorem
+
+theorem gt-transitive-ge:
+  forall d12: n1 > n2
+  forall d23: n2 ≥ n3
+  exists n1 > n3.
+  proof by case analysis on d23:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n3 := n2
+    is
+      proof by d12
+    end case
+    case rule
+      d23': n2 > n3
+      --------------- ge-gt
+      _: n2 ≥ n3
+    is
+      proof by theorem gt-transitive on d12, d23'
+    end case
+  end case analysis
+end theorem
+
+theorem ge-transitive:
+  forall d12: n1 ≥ n2
+  forall d23: n2 ≥ n3
+  exists n1 ≥ n3.
+  proof by case analysis on d12:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n1 := n2
+    is
+      proof by d23
+    end case
+    case rule
+      d12': n1 > n2
+      --------------- ge-gt
+      _: n1 ≥ n2
+    is
+      d13': n1 > n3 by theorem gt-transitive-ge on d12', d23
+      proof by rule ge-gt on d13'
+    end case
+  end case analysis
+end theorem
+
+theorem ge-anti-symmetric:
+  forall d12: n1 ≥ n2
+  forall d21: n2 ≥ n1
+  exists n1 = n2.
+  proof by case analysis on d12:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n1 := n2
+    is
+      proof by rule eq
+    end case
+    case rule
+      d12': n1 > n2
+      --------------- ge-gt
+      _: n1 ≥ n2
+    is
+      d22: n2 > n2 by theorem ge-transitive-gt on d21, d12'
+      c: contradiction by theorem gt-anti-reflexive on d22
+      proof by contradiction on c
+    end case
+  end case analysis
+end theorem
+  
+lemma succ-preserves-ge:
+  forall d: n1 ≥ n2
+  exists S n1 ≥ S n2.
+  proof by case analysis on d:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n1 := n2
+    is
+      proof by rule ge-eq
+    end case
+    case rule
+      g: n1 > n2
+      --------------- ge-gt
+      _: n1 ≥ n2
+    is
+      g': S n1 > S n2 by lemma succ-preserves-gt on g
+      proof by rule ge-gt on g'
+    end case
+  end case analysis
+end lemma
+
+lemma succ-preserves-ge-converse:
+  forall d: S n1 ≥ S n2
+  exists n1 ≥ n2.
+  proof by case analysis on d:
+    case rule
+      --------------- ge-eq
+      _: S n2 ≥ S n2
+      where n1 := n2
+    is
+      proof by rule ge-eq
+    end case
+    case rule
+      g: S n1 > S n2
+      --------------- ge-gt
+      _: S n1 ≥ S n2
+    is
+      g': n1 > n2 by lemma succ-preserves-gt-converse on g
+      proof by rule ge-gt on g'
+    end case
+  end case analysis
+end lemma
+
+theorem ge-zero-always:
+  forall n
+  exists n ≥ 0.
+  proof by case analysis on n:
+    case 0 is
+      proof by rule ge-eq
+    end case
+    case S n' is
+      g: S n' > 0 by lemma succ-implies-gt-zero on n'
+      proof by rule ge-gt on g
+    end case
+  end case analysis
+end theorem
+
+theorem eq-implies-ge:
+  forall eq: n1 = n2
+  exists n1 ≥ n2.
+  use inversion of eq on eq where n1 := n2
+  proof by rule ge-eq
+end theorem
+
+theorem gt-implies-ne:
+  forall d1: n1 > n2
+  exists n1 ≠ n2.
+  d2: n1 = n2 or n1 ≠ n2 by theorem eq-or-ne on n1, n2
+  proof by case analysis on d2:
+    case or e: n1 = n2 is
+      use inversion of eq on e where n1 := n2
+      c: contradiction by theorem gt-anti-reflexive on d1
+      proof by contradiction on c
+    end case
+    case or d: n1 ≠ n2 is
+      proof by d 
+    end case
+  end case analysis
+end theorem
+      
+theorem cmp-total:
+  forall n1
+  forall n2
+  exists n2 > n1 or n1 = n2 or n1 > n2.
+  proof by induction on n1:
+    case 0 is
+      proof by case analysis on n2:
+        case 0 is
+          t: 0 = 0 by rule eq
+          proof by t
+        end case
+        case S n2' is
+          d: S n2' > 0 by lemma succ-implies-gt-zero on n2'
+          proof by d
+        end case
+      end case analysis
+    end case
+    case S n1' is
+      proof by case analysis on n2:
+        case 0 is
+          d: S n1' > 0 by lemma succ-implies-gt-zero on n1'
+          proof by d
+        end case
+        case S n2' is
+          d1: n2' > n1' or n1' = n2' or n1' > n2' by induction hypothesis on n1', n2'
+          proof by case analysis on d1:
+            case or d2: n2' > n1' is
+              d3: S n2' > S n1' by lemma succ-preserves-gt on d2
+              proof by d3
+            end case
+            case or d4: n1' > n2' is
+              d5: S n1' > S n2' by lemma succ-preserves-gt on d4
+              proof by d5
+            end case
+            case or d6: n1' = n2' is
+              d7: S n1' = S n2' by lemma succ-preserves-eq on d6
+              proof by d7
+            end case
+          end case analysis
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
+
+
+theorem ne-implies-gt-or-lt:
+  forall d: n1 ≠ n2
+  exists n1 > n2 or n2 > n1.
+  ch: n2 > n1 or n1 = n2 or n1 > n2 by theorem cmp-total on n1, n2
+  proof by case analysis on ch:
+    
+    case or dg: n2 > n1 is
+      proof by dg
+    end case
+
+    case or e: n1 = n2 is
+      use inversion of eq on e where n1 := n2
+      c: contradiction by theorem ne-anti-reflexive on d
+      proof by contradiction on c
+    end case
+
+    case or dg: n1 > n2 is
+      proof by dg
+    end case
+  end case analysis
+end theorem
+
+
+
+/// Addition
+
+
+judgment plus: n + n = n
+
+
+--------- plus-z
+0 + n = n
+
+n1 + n2 = n3
+----------------- plus-s
+S n1 + n2 = S n3
+
+
+theorem plus-unique:
+  forall d3: n1 + n2 = n3
+  forall d4: n1 + n2 = n4
+  exists n3 = n4.
+  proof by induction on d3:
+    case rule
+      --------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      proof by case analysis on d4:
+        case rule
+          --------------- plus-z
+          _: 0 + n2 = n2
+          where n4 := n2
+        is
+          proof by rule eq
+        end case
+      end case analysis
+    end case
+    case rule
+      d1: n1' + n2 = n3'
+      --------------------- plus-s
+      _: S n1' + n2 = S n3'
+      where n1 := S n1' and n3 := S n3'
+    is
+      d2: n1' + n2 = n4' by inversion of plus-s on d4
+        where n4 := S n4'
+      e: n3' = n4' by induction hypothesis on d1, d2
+      use inversion of eq on e where n3' := n4'
+      proof by rule eq
+    end case
+  end induction
+end theorem
+
+lemma plus-right-zero:
+  forall n0
+  exists n0 + 0 = n0.
+  proof by induction on n0:
+    case 0 is
+      proof by rule plus-z
+    end case
+    case S n1 is
+      d: n1 + 0 = n1 by induction hypothesis on n1
+      _: S n1 + 0 = S n1 by rule plus-s on d
+    end case
+  end induction
+end lemma
+
+lemma plus-right-succ:
+  forall p: n1 + n2 = n3
+  exists n1 + S n2 = S n3.
+  proof by induction on p:
+    case rule
+      -------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      _: 0 + S n2 = S n2 by rule plus-z
+    end case
+    case rule
+      p': n1' + n2 = n3' 
+      --------------------- plus-s
+      _: S n1' + n2 = S n3'
+      where n1 := S n1' and n3 := S n3'
+    is
+      d: n1' + S n2 = S n3' by induction hypothesis on p'
+      _: S n1' + S n2 = S S n3' by rule plus-s on d
+    end case
+  end induction
+end lemma
+
+lemma plus-right-one:
+  forall n
+  exists n + 1 = S n.
+  p: n + 0 = n by lemma plus-right-zero on n
+  proof by lemma plus-right-succ on p
+end lemma
+
+theorem plus-commutative:
+  forall p: n1 + n2 = n3
+  exists n2 + n1 = n3.
+  proof by induction on p:
+    case rule
+      -------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      _: n2 + 0 = n2 by lemma plus-right-zero on n2
+    end case
+    case rule 
+      p': n1' + n2 = n3'
+      --------------------- plus-s
+      _: S n1' + n2 = S n3'
+      where n1 := S n1' and n3 := S n3'
+    is
+      p1': n2 + n1' = n3' by induction hypothesis on p'
+      _: n2 + S n1' = S n3' by lemma plus-right-succ on p1'
+    end case
+  end induction
+end theorem
+
+theorem plus-associative:
+  forall p1: n1 + n2 = n3
+  forall p2: n3 + n4 = n7
+  exists n2 + n4 = n6
+  and    n1 + n6 = n7.
+  proof by induction on p1:
+    case rule
+      -------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      p6: 0 + n7 = n7 by rule plus-z
+      proof by p2,p6
+    end case
+    case rule
+      p1': n1' + n2 = n3'
+      --------------------- plus-s
+      _: S n1' + n2 = S n3'
+      where n1 := S n1' and n3 := S n3'
+    is
+      p2': n3' + n4 = n7' by inversion of plus-s on p2
+        where n7 := S n7'
+      p6: n2 + n4 = n6 and
+      p7': n1' + n6 = n7' by induction hypothesis on p1',p2' 
+      p7: S n1' + n6 = S n7' by rule plus-s on p7'
+      proof by p6,p7
+    end case
+  end induction
+end theorem
+
+theorem plus-associative-converse:
+    forall p1: n2 + n4 = n6
+    forall p2: n1 + n6 = n7
+    exists n1 + n2 = n3
+    and    n3 + n4 = n7.
+    proof by induction on p2:
+        case rule
+            --------------- plus-z
+            _: 0 + n6 = n6
+            where n1 := 0 and n7 := n6
+        is
+            p0: 0 + n2 = n2 by rule plus-z
+            proof by p0, p1
+        end case
+        case rule
+            p2': n1' + n6 = n7'
+            -------------------- plus-s
+            _: S n1' + n6 = S n7'
+            where n1 := S n1' and n7 := S n7'
+        is
+            p0': n1' + n2 = n3' and 
+            p3': n3' + n4 = n7' by induction hypothesis on p1, p2'
+            p0 : S n1' + n2 = S n3' by rule plus-s on p0'
+            p3 : S n3' + n4 = S n7' by rule plus-s on p3'
+            proof by p0, p3
+        end case 
+    end induction
+end theorem
+
+theorem plus-total:
+    forall n1
+    forall n2
+    exists n1 + n2 = n3.
+    proof by induction on n1:
+        case 0 is
+            _: 0 + n2 = n2 by rule plus-z
+        end case
+        case S n1' is
+            i: n1' + n2 = n3' by induction hypothesis on n1', n2
+            proof by rule plus-s on i
+        end case
+    end induction
+end theorem 
+
+theorem plus-left-cancels:
+  forall d1: n1 + n2 = n3
+  forall d2: n1 + n4 = n3
+  exists n2 = n4.
+  proof by induction on d1:
+    case rule
+      d1': n1' + n2 = n3'
+      --------------- plus-s
+      _: (S n1') + n2 = (S n3')
+      where n1 := S n1' and n3 := S n3'
+    is
+      d2': n1' + n4 = n3' by inversion of plus-s on d2
+      proof by induction hypothesis on d1', d2'
+    end case
+    case rule
+      -------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      use inversion of plus-z on d2
+        where n4 := n2
+      proof by rule eq
+    end case
+  end induction
+end theorem
+
+theorem plus-right-cancels:
+  forall d1: n1 + n2 = n3
+  forall d2: n1' + n2 = n3
+  exists n1 = n1'.
+  d1': n2 + n1 = n3 by theorem plus-commutative on d1
+  d2': n2 + n1' = n3 by theorem plus-commutative on d2
+  proof by theorem plus-left-cancels on d1', d2'
+end theorem
+
+theorem plus-assoc-commutative:
+  forall p12: n1 + n2 = n3
+  forall p34: n3 + n4 = n7
+  exists n1 + n4 = n5 and n5 + n2 = n7.
+  p21: n2 + n1 = n3 by theorem plus-commutative on p12
+  p14: n1 + n4 = n5 and 
+  p25: n2 + n5 = n7 by theorem plus-associative on p21, p34
+  p52: n5 + n2 = n7 by theorem plus-commutative on p25
+  proof by p14, p52
+end theorem
+
+theorem plus-double-associative:
+  forall p12: n1 + n2 = n3
+  forall p48: n4 + n8 = n12
+  forall p312: n3 + n12 = n15
+  exists n1 + n4 = n5 and n2 + n8 = n10 and n5 + n10 = n15.
+  p112: n1 + n12 = n13 and 
+  p132: n13 + n2 = n15 by theorem plus-assoc-commutative on p12, p312
+  p14: n1 + n4 = n5 and 
+  p58: n5 + n8 = n13 by theorem plus-associative-converse on p48, p112
+  p82: n8 + n2 = n10 and
+  p510: n5 + n10 = n15 by theorem plus-associative on p58, p132
+  p28: n2 + n8 = n10 by theorem plus-commutative on p82
+  proof by p14, p28, p510
+end theorem
+
+
+theorem gt-implies-plus:
+  forall g: n1 > n2
+  exists (S n3) + n2 = n1.
+  proof by induction on g:
+    case rule
+      --------------- gt-1
+      _: (S n2) > n2
+      where n1 := S n2
+    is
+      p: 0 + n2 = n2 by rule plus-z
+      proof by rule plus-s on p
+    end case
+    case rule
+      g': n1' > n2
+      --------------- gt-s
+      _: (S n1') > n2
+      where n1 := S n1'
+    is
+      p': (S n3') + n2 = n1' by induction hypothesis on g'
+      proof by rule plus-s on p'
+    end case
+  end induction
+end theorem
+
+theorem ge-implies-plus:
+  forall g: n1 ≥ n2
+  exists n3 + n2 = n1.
+  proof by case analysis on g:
+    case rule
+      --------------- ge-eq
+      _: n2 ≥ n2
+      where n1 := n2
+    is
+      proof by rule plus-z
+    end case
+    case rule
+      gt: n1 > n2
+      --------------- ge-gt
+      _: n1 ≥ n2
+    is
+      proof by theorem gt-implies-plus on gt
+    end case
+  end case analysis
+end theorem
+
+theorem plus-succ-left-implies-lt:
+  forall p: (S n3) + n2 = n1
+  exists n1 > n2.
+  proof by induction on p:
+    case rule
+      p': n3 + n2 = n1'
+      ------------------------ plus-s
+      _: (S n3) + n2 = (S n1')
+      where n1 := S n1'
+    is
+      proof by case analysis on n3:
+        case 0 is
+          use inversion of plus-z on p'
+            where n2 := n1'
+          proof by rule gt-1
+        end case
+        case S n3' is
+          g': n1' > n2 by induction hypothesis on p'
+          proof by rule gt-s on g'
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
+
+theorem plus-implies-leq:
+  forall p: n1 + n2 = n3
+  exists n3 ≥ n1 and n3 ≥ n2.
+  proof by induction on p:
+    case rule
+      p': n1' + n2 = n3'
+      ------------------------- plus-s
+      _: (S n1') + n2 = (S n3')
+      where n1 := S n1' and n3 := S n3'
+    is
+      g1': n3' ≥ n1' and
+      g2': n3' ≥ n2 by induction hypothesis on p'
+      g1: (S n3') ≥ (S n1') by lemma succ-preserves-ge on g1'
+      g2: (S n3') ≥ n2 by case analysis on g2':
+        case rule
+          gt2': n3' > n2
+          --------------- ge-gt
+          _: n3' ≥ n2
+        is
+          gt2: (S n3') > n2 by rule gt-s on gt2'
+          proof by rule ge-gt on gt2
+        end case
+        case rule
+          --------------- ge-eq
+          _: n3' ≥ n3'
+          where n2 := n3'
+        is
+          gt2: (S n3') > n2 by rule gt-1
+          proof by rule ge-gt on gt2
+        end case
+      end case analysis
+      proof by g1, g2
+    end case
+    case rule
+      --------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      g1: n2 ≥ 0 by theorem ge-zero-always on n2
+      g2: n2 ≥ n2 by rule ge-eq
+      proof by g1, g2
+    end case
+  end induction
+end theorem
+
+theorem plus-right-preserves-gt:
+  forall g1: n1 > n1'
+  forall p1: n1 + n2 = n3
+  forall p2: n1' + n2 = n3'
+  exists n3 > n3'.
+  proof by induction on g1:
+    case rule
+      --------------- gt-1
+      _: (S n1') > n1'
+      where n1 := S n1'
+    is
+      p1': n1' + n2 = n4 by inversion of plus-s on p1
+        where n3 := S n4
+      e: n3' = n4 by theorem plus-unique on p2, p1'
+      use inversion of eq on e where n3' := n4
+      proof by rule gt-1
+    end case
+    case rule
+      g1': n0 > n1'
+      --------------- gt-s
+      _: (S n0) > n1'
+      where n1 := S n0
+    is
+      p1': n0 + n2 = n4 by inversion of plus-s on p1
+        where n3 := S n4
+      g2': n4 > n3' by induction hypothesis on g1', p1', p2
+      proof by rule gt-s on g2'
+    end case
+  end induction
+end theorem
+
+theorem plus-left-preserves-gt:
+  forall g1: n2 > n2'
+  forall p1: n1 + n2 = n3
+  forall p2: n1 + n2' = n3'
+  exists n3 > n3'.
+  p1s: n2 + n1 = n3 by theorem plus-commutative on p1
+  p2s: n2' + n1 = n3' by theorem plus-commutative on p2
+  proof by theorem plus-right-preserves-gt on g1, p1s, p2s
+end theorem
+
+theorem plus-preserves-gt:
+  forall g1: n1 > n1'
+  forall g2: n2 > n2' 
+  forall p: n1 + n2 = n3
+  forall p': n1' + n2' = n3'
+  exists n3 > n3'.
+  p'': n1 + n2' = n3'' by theorem plus-total on n1, n2'
+  gt1: n3 > n3'' by theorem plus-left-preserves-gt on g2, p, p''
+  gt2: n3'' > n3' by theorem plus-right-preserves-gt on g1, p'', p'
+  proof by theorem gt-transitive on gt1, gt2
+end theorem
+
+theorem plus-left-cancels-gt:
+  forall p1: n1 + n2 = n3
+  forall p2: n1 + n2' = n3'
+  forall g: n3 > n3'
+  exists n2 > n2'.
+  proof by induction on p1:
+    case rule
+      --------------- plus-z
+      _: 0 + n2 = n2
+      where n1 := 0 and n3 := n2
+    is
+      use inversion of plus-z on p2
+       where n2' := n3'
+      proof by g
+    end case
+    case rule
+      p11: n11 + n2 = n31
+      ------------------------- plus-s
+      _: (S n11) + n2 = (S n31)
+      where n1 := S n11 and n3 := S n31
+    is
+      p11' : n11 + n2' = n31' by inversion of plus-s on p2
+        where n3' := S n31'
+      g3': n31 > n31' by lemma succ-preserves-gt-converse on g  
+      proof by induction hypothesis on p11, p11', g3'
+    end case
+  end induction
+end theorem
+
+theorem plus-right-cancels-gt:
+  forall p1: n1 + n2 = n3
+  forall p2: n1' + n2 = n3'
+  forall g: n3 > n3'
+  exists n1 > n1'.
+  p1s: n2 + n1 = n3 by theorem plus-commutative on p1
+  p2s: n2 + n1' = n3' by theorem plus-commutative on p2
+  proof by theorem plus-left-cancels-gt on p1s, p2s, g
+end theorem
+
+theorem plus-right-preserves-ge:
+  forall g1: n1 ≥ n1'
+  forall p1: n1 + n2 = n3
+  forall p2: n1' + n2 = n3'
+  exists n3 ≥ n3'.
+  proof by case analysis on g1:
+    case rule
+      --------------- ge-eq
+      _: n1' ≥ n1'
+      where n1 := n1'
+    is
+      e: n3 = n3' by theorem plus-unique on p1, p2
+      proof by theorem eq-implies-ge on e
+    end case
+    case rule
+      gt: n1 > n1'
+      --------------- ge-gt
+      _: n1 ≥ n1'
+    is
+      g': n3 > n3' by theorem plus-right-preserves-gt on gt, p1, p2
+      proof by rule ge-gt on g'
+    end case
+  end case analysis
+end theorem
+
+theorem plus-left-preserves-ge:
+  forall g1: n2 ≥ n2'
+  forall p1: n1 + n2 = n3
+  forall p2: n1 + n2' = n3'
+  exists n3 ≥ n3'.
+  p1s: n2 + n1 = n3 by theorem plus-commutative on p1
+  p2s: n2' + n1 = n3' by theorem plus-commutative on p2
+  proof by theorem plus-right-preserves-ge on g1, p1s, p2s
+end theorem
+
+theorem plus-preserves-ge:
+  forall g1: n1 ≥ n1'
+  forall g2: n2 ≥ n2' 
+  forall p: n1 + n2 = n3
+  forall p': n1' + n2' = n3'
+  exists n3 ≥ n3'.
+  p'': n1 + n2' = n3'' by theorem plus-total on n1, n2'
+  ge1: n3 ≥ n3'' by theorem plus-left-preserves-ge on g2, p, p''
+  ge2: n3'' ≥ n3' by theorem plus-right-preserves-ge on g1, p'', p'
+  proof by theorem ge-transitive on ge1, ge2
+end theorem
+
+theorem plus-preserves-gt-ge:
+  forall g1: n1 > n1'
+  forall ge2: n2 ≥ n2' 
+  forall p: n1 + n2 = n3
+  forall p': n1' + n2' = n3'
+  exists n3 > n3'.
+  proof by case analysis on ge2:
+    case rule
+      ------------ ge-eq
+      _: n2 ≥ n2
+      where n2' := n2
+    is
+      proof by theorem plus-right-preserves-gt on g1, p, p'
+    end case
+
+    case rule
+      g2: n2 > n2'
+      ------------- ge-gt
+      _: n2 ≥ n2'
+    is
+      proof by theorem plus-preserves-gt on g1, g2, p, p'
+    end case
+
+  end case analysis
+end theorem
+
+theorem plus-preserves-ge-gt:
+  forall g1: n1 ≥ n1'
+  forall g2: n2 > n2' 
+  forall p: n1 + n2 = n3
+  forall p': n1' + n2' = n3'
+  exists n3 > n3'.
+  pc: n2 + n1 = n3 by theorem plus-commutative on p
+  pc': n2' + n1' = n3' by theorem plus-commutative on p'
+  proof by theorem plus-preserves-gt-ge on g2, g1, pc, pc'
+end theorem
+  
+theorem plus-right-preserves-ne:
+  forall ne: n1 ≠ n1'
+  forall p1: n1 + n2 = n3
+  forall p2: n1' + n2 = n3'
+  exists n3 ≠ n3'.
+  cmp: n1' > n1 or n1 = n1' or n1 > n1' by theorem cmp-total on n1, n1'
+  proof by case analysis on cmp:
+    case or gt: n1' > n1 is
+      g': n3' > n3 by theorem plus-right-preserves-gt on gt, p2, p1
+      ne': n3' ≠ n3 by theorem gt-implies-ne on g'
+      proof by theorem ne-symmetric on ne'
+    end case
+    
+    case or eq: n1 = n1' is
+      use inversion of eq on eq where n1 := n1'
+      c: contradiction by theorem ne-anti-reflexive on ne
+      proof by contradiction on c
+    end case
+    
+    case or gt: n1 > n1' is
+      g': n3 > n3' by theorem plus-right-preserves-gt on gt, p1, p2
+      proof by theorem gt-implies-ne on g'
+    end case
+  end case analysis
+end theorem
+
+theorem plus-left-preserves-ne:
+  forall g1: n2 ≠ n2'
+  forall p1: n1 + n2 = n3
+  forall p2: n1 + n2' = n3'
+  exists n3 ≠ n3'.
+  p1s: n2 + n1 = n3 by theorem plus-commutative on p1
+  p2s: n2' + n1 = n3' by theorem plus-commutative on p2
+  proof by theorem plus-right-preserves-ne on g1, p1s, p2s
+end theorem
+
+
+
+/// Multiplication
+
+
+judgment times: n * n = n
+
+
+---------- times-z
+0 * n = 0
+
+n1 * n2 = n3
+n3 + n2 = n4
+----------------- times-s
+S n1 * n2 = n4
+
+
+lemma times-right-zero:
+	forall n1
+	exists n1 * 0 = 0 .
+	proof by induction on n1:
+		case 0 is
+		_: 0 * 0 = 0 by rule times-z
+		end case
+		case S n2 is
+		d: n2 * 0 = 0 by induction hypothesis on n2
+		e: 0 + 0 = 0 by rule plus-z
+		_: S n2 * 0 = 0 by rule times-s on d, e
+		end case
+	end induction
+end lemma
+
+lemma times-left-one:
+	forall n1
+	exists S 0 * n1 = n1 .
+	c: 0 * n1 = 0 by rule times-z
+	d: 0 + n1 = n1 by rule plus-z
+	e: S 0 * n1 = n1 by rule times-s on c, d
+end lemma
+
+lemma times-right-one:
+	forall n1
+	exists n1 * S 0 = n1.
+	proof by induction on n1:
+		case 0 is
+		_: 0 * S 0 = 0 by rule times-z
+		end case
+		case S n2 is
+		c: n2 * S 0 = n2 by induction hypothesis on n2
+		d: n2 + 0 = n2 by lemma plus-right-zero on n2
+		e: n2 + S 0 = S n2 by lemma plus-right-succ on d
+		_: S n2 * S 0 = S n2 by rule times-s on c, e
+		end case
+	end induction
+end lemma
+
+lemma times-right-succ:
+  forall t: n1 * n2 = n3
+  forall p: n1 + n3 = n4
+  exists n1 * S n2 = n4.
+  proof by induction on t:
+      case rule
+          ------------- times-z
+          _: 0 * n2 = 0
+          where n1 := 0 and n3 := 0
+      is
+          use inversion of plus-z on p where n4 := 0
+          proof by rule times-z
+      end case
+      case rule
+          t': n1' * n2 = n3'
+          pt: n3' + n2 = n3
+          ------------------- times-s
+          _: S n1' * n2 = n3
+          where n1 := S n1'
+      is
+          p': n1' + n3 = n4' by inversion of plus-s on p 
+            where n4 := S n4'
+          p1: n1' + n3' = n4'' and
+          p2: n4'' + n2 = n4' by theorem plus-associative-converse on pt, p'
+          ti : n1' * S n2 = n4'' by induction hypothesis on t', p1
+          x : n4'' + S n2 = n4 by lemma plus-right-succ on p2
+          proof by rule times-s on ti, x
+      end case
+  end induction
+end lemma
+
+theorem times-commutative: 
+  forall t: n1 * n2 = n3
+  exists n2 * n1 = n3.
+    proof by induction on t:
+      case rule
+      -------------- times-z
+      _: 0 * n2 = 0
+      where n1 := 0 and n3 := 0
+    is
+      proof by lemma times-right-zero on n2
+    end case
+    case rule
+      t': n1' * n2 = n3'
+      p: n3' + n2 = n3
+      ------------------ times-s
+      _: S n1' * n2 = n3
+      where n1 := S n1'
+    is
+      tc': n2 * n1' = n3' by induction hypothesis on t'
+      pc: n2 + n3' = n3 by theorem plus-commutative on p
+      _: n2 * S n1' = n3 by lemma times-right-succ on tc', pc
+    end case
+  end induction
+end theorem 
+
+theorem times-total:
+  forall n1
+  forall n2
+  exists n1 * n2 = n3.
+  proof by induction on n1:
+    case S n1' is
+      t12': n1' * n2 = n3' by induction hypothesis on n1', n2
+      p32: n3' + n2 = n3 by theorem plus-total on n3', n2
+      proof by rule times-s on t12', p32
+    end case
+    case 0 is
+      proof by rule times-z
+    end case
+  end induction
+end theorem
+
+theorem times-unique:
+  forall t3: n1 * n2 = n3
+  forall t4: n1 * n2 = n4
+  exists n3 = n4.
+  proof by induction on t3:
+    case rule
+      t3': n1' * n2 = n5
+      p3: n5 + n2 = n3
+      --------------- times-s
+      _: (S n1') * n2 = n3
+      where n1 := S n1'
+    is
+      proof by case analysis on t4:
+        case rule
+          t4': n1' * n2 = n6
+          p4: n6 + n2 = n4
+          --------------- times-s
+          _: (S n1') * n2 = n4
+        is
+          e: n5 = n6 by induction hypothesis on t3', t4'
+          use inversion of eq on e where n5 := n6
+          proof by theorem plus-unique on p3, p4
+        end case
+      end case analysis
+    end case
+    case rule
+      --------------- times-z
+      _: 0 * n2 = 0
+      where n1 := 0 and n3 := 0
+    is
+      use inversion of times-z on t4 where n4 := 0
+      proof by rule eq
+    end case
+  end induction
+end theorem 
+
+theorem times-preserves-positive:
+  forall t: (S n1) * (S n2) = n3'
+  exists n3' = (S n3)
+  proof by case analysis on t:
+    case rule
+      _: n1 * (S n2) = n0
+      p: n0 + (S n2) = n3'
+      ----------------------- times-s
+      _: (S n1) * (S n2) = n3'
+    is
+      pc : (S n2) + n0 = n3' by theorem plus-commutative on p
+      proof by case analysis on pc:
+          case rule
+              _: n2 + n0 = n3''
+              ----------------------- plus-s
+              _: (S n2) + n0 = (S n3'')
+              where n3' := S n3''
+          is
+              proof by rule eq
+          end case
+
+      end case analysis
+    end case
+  end case analysis
+end theorem
+
+theorem times-preserves-positive-converse:
+  forall t: n1 * n2 = (S n3')
+  exists n1 = (S n1') and n2 = (S n2')
+  proof by case analysis on t:
+    case rule
+      t': n1' * n2 = n12
+      p: n12 + n2 = (S n3')
+      ----------------------- times-s
+      _: (S n1') * n2 = (S n3')
+      where n1 := (S n1')
+    is
+      e1: n1 = (S n1') by rule eq
+      e2: n2 = (S n2') by case analysis on n2:
+        case 0 is
+          t'': n1' * 0 = 0 by lemma times-right-zero on n1'
+          e12: n12 = 0 by theorem times-unique on t', t''
+          use inversion of rule eq on e12
+          where n12 := 0
+          p': 0 + 0 = 0 by rule plus-z
+          eq3: (S n3') = 0 by theorem plus-unique on p, p'
+          proof by contradiction on eq3
+        end case
+
+        case S n2' is
+          proof by rule eq
+        end case
+      end case analysis
+      proof by e1, e2
+    end case
+
+  end case analysis
+end theorem
+  
+theorem times-left-distributes-over-plus:
+  forall p24: n2 + n4 = n6
+  forall t16: n1 * n6 = n7
+  exists n1 * n2 = n3 and n1 * n4 = n5 and n3 + n5 = n7.
+  proof by induction on t16:
+    case rule
+      t16': n1' * n6 = n7'
+      p7': n7' + n6 = n7
+      --------------- times-s
+      _: (S n1') * n6 = n7
+      where n1 := S n1'
+    is
+      t12': n1' * n2 = n3' and
+      t14': n1' * n4 = n5' and
+      p35': n3' + n5' = n7' by induction hypothesis on p24, t16'
+      p3': n3' + n2 = n3 and
+      p5': n5' + n4 = n5 and
+      p35: n3 + n5 = n7 by theorem plus-double-associative on p35', p24, p7'
+      t12: n1 * n2 = n3 by rule times-s on t12', p3'
+      t14: n1 * n4 = n5 by rule times-s on t14', p5'
+      proof by t12, t14, p35
+    end case
+    case rule
+      --------------- times-z
+      _: 0 * n6 = 0
+      where n1 := 0 and n7 := 0
+    is
+      t12: 0 * n2 = 0 by rule times-z
+      t14: 0 * n4 = 0 by rule times-z
+      p35: 0 + 0 = 0 by rule plus-z
+      proof by t12, t14, p35
+    end case
+  end induction
+end theorem
+  
+theorem times-right-distributes-over-plus:
+  forall p12: n1 + n2 = n3
+  forall t34: n3 * n4 = n7
+  exists n1 * n4 = n5 and n2 * n4 = n6 and n5 + n6 = n7.
+  t43: n4 * n3 = n7 by theorem times-commutative on t34
+  t41: n4 * n1 = n5 and 
+  t42: n4 * n2 = n6 and
+  p56: n5 + n6 = n7 by theorem times-left-distributes-over-plus on p12, t43
+  t14: n1 * n4 = n5 by theorem times-commutative on t41
+  t24: n2 * n4 = n6 by theorem times-commutative on t42
+  proof by t14, t24, p56
+end theorem
+
+theorem times-associative:
+  forall t12: n1 * n2 = n3
+  forall t34: n3 * n4 = n7
+  exists n2 * n4 = n6 and n1 * n6 = n7.
+  proof by induction on t12:
+    case rule
+      t12': n1' * n2 = n3'
+      p32': n3' + n2 = n3
+      -------------------- times-s
+      _: (S n1') * n2 = n3
+      where n1 := S n1'
+    is
+      t34': n3' * n4 = n7' and
+      t24: n2 * n4 = n6 and
+      p7': n7' + n6 = n7 by theorem times-right-distributes-over-plus on p32', t34
+      t24': n2 * n4 = n6' and
+      t16': n1' * n6' = n7' by induction hypothesis on t12', t34'
+      e: n6 = n6' by theorem times-unique on t24, t24'
+      use inversion of eq on e where n6 := n6'
+      t16: n1 * n6 = n7 by rule times-s on t16', p7'
+      proof by t24, t16
+    end case
+    case rule
+      ------------- times-z
+      _: 0 * n2 = 0
+      where n1 := 0 and n3 := 0
+    is
+      use inversion of times-z on t34 where n7 := 0
+      t24: n2 * n4 = n6 by theorem times-total on n2, n4
+      t16: 0 * n6 = 0 by rule times-z
+      proof by t24, t16
+    end case
+  end induction
+end theorem
+  
+theorem times-associative-converse:
+  forall t24: n2 * n4 = n6 
+  forall t16: n1 * n6 = n7 
+  exists n1 * n2 = n3 and n3 * n4 = n7.
+  t12: n1 * n2 = n3 by theorem times-total on n1, n2
+  t34': n3 * n4 = n7' by theorem times-total on n3, n4
+  t24': n2 * n4 = n6' and
+  t16': n1 * n6' = n7' by theorem times-associative on t12, t34'
+  e6: n6 = n6' by theorem times-unique on t24, t24'
+  use inversion of eq on e6 where n6 := n6'
+  e7: n7 = n7' by theorem times-unique on t16, t16'
+  use inversion of eq on e7 where n7 := n7'
+  proof by t12, t34'
+end theorem
+
+theorem times-assoc-commutative:
+  forall p12: n1 * n2 = n3
+  forall p34: n3 * n4 = n7
+  exists n1 * n4 = n5 and n5 * n2 = n7.
+  p21: n2 * n1 = n3 by theorem times-commutative on p12
+  p14: n1 * n4 = n5 and 
+  p25: n2 * n5 = n7 by theorem times-associative on p21, p34
+  p52: n5 * n2 = n7 by theorem times-commutative on p25
+  proof by p14, p52
+end theorem
+
+theorem times-double-associative:
+  forall p12: n1 * n2 = n3
+  forall p48: n4 * n8 = n12
+  forall p312: n3 * n12 = n15
+  exists n1 * n4 = n5 
+  and n2 * n8 = n10 
+  and n5 * n10 = n15.
+  p112: n1 * n12 = n13 and 
+  p132: n13 * n2 = n15 by theorem times-assoc-commutative on p12, p312
+  p14: n1 * n4 = n5 and 
+  p58: n5 * n8 = n13 by theorem times-associative-converse on p48, p112
+  p82: n8 * n2 = n10 and
+  p510: n5 * n10 = n15 by theorem times-associative on p58, p132
+  p28: n2 * n8 = n10 by theorem times-commutative on p82
+  proof by p14, p28, p510
+end theorem
+
+
+theorem times-left-factors-over-plus:
+    forall t1: n1 * n2 = n3
+    forall t2: n1 * n4 = n5
+    forall p: n3 + n5 = n7
+    exists n2 + n4 = n6 and n1 * n6 = n7.
+    p24: n2 + n4 = n6 by theorem plus-total on n2, n4
+    p16': n1 * n6 = n7' by theorem times-total on n1, n6
+    t1': n1 * n2 = n3' and
+    t2': n1 * n4 = n5' and
+    p35': n3' + n5' = n7' by theorem times-left-distributes-over-plus on p24, p16'
+    e1: n3 = n3' by theorem times-unique on t1, t1'
+    use inversion of eq on e1 where n3 := n3'
+    e2: n5 = n5' by theorem times-unique on t2, t2'
+    use inversion of eq on e2 where n5 := n5'
+    e3: n7 = n7' by theorem plus-unique on p, p35'
+    use inversion of eq on e3 where n7 := n7'
+    proof by p24, p16'
+end theorem
+   
+theorem times-right-factors-over-plus:
+  forall t1: n1 * n4 = n5
+  forall t2: n2 * n4 = n6
+  forall p: n5 + n6 = n7
+  exists n1 + n2 = n3 and n3 * n4 = n7.
+  t1c: n4 * n1 = n5 by theorem times-commutative on t1
+  t2c: n4 * n2 = n6 by theorem times-commutative on t2
+  p12: n1 + n2 = n3 and 
+  t43: n4 * n3 = n7 by theorem times-left-factors-over-plus on t1c, t2c, p
+  t34: n3 * n4 = n7 by theorem times-commutative on t43
+  proof by p12, t34
+end theorem
+
+theorem times-right-cancels:
+  forall t1: n1 * (S n2) = n3
+  forall t2: n1' * (S n2) = n3
+  exists n1 = n1'.
+  proof by induction on t1:
+    case rule
+      --------------- times-z
+      _: 0 * (S n2) = 0
+      where n1 := 0 and n3 := 0
+    is
+      proof by case analysis on t2:
+        case rule
+          --------------- times-z
+          _: 0 * (S n2) = 0
+          where n1' := 0
+        is
+          proof by rule eq 
+        end case
+        case rule
+          _: n0' * (S n2) = n4
+          p4: n4 + (S n2) = 0
+          ---------------------- times-s
+          _: (S n0') * (S n2) = 0
+          where n1' := S n0'
+        is
+          proof by contradiction on p4
+        end case
+      end case analysis
+    end case
+    case rule
+      t1': n0 * (S n2) = n4
+      p4: n4 + (S n2) = n3
+      ----------------------- times-s
+      _: (S n0) * (S n2) = n3
+      where n1 := S n0 
+    is
+      proof by case analysis on t2:
+        case rule
+          --------------- times-z
+          _: 0 * (S n2) = 0
+          where n1' := 0 and n3 := 0
+        is
+          proof by contradiction on p4
+        end case
+        case rule
+          t2': n0' * (S n2) = n6
+          p6: n6 + (S n2) = n3
+          --------------- times-s
+          _: (S n0') * (S n2) = n3
+          where n1' := S n0'
+        is
+          e: n4 = n6 by theorem plus-right-cancels on p4, p6
+          use inversion of eq on e where n4 := n6  
+          e': n0 = n0' by induction hypothesis on t1', t2'
+          use inversion of eq on e' where n0 := n0'
+          proof by rule eq
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
+
+theorem times-left-cancels:
+  forall t1: (S n1) * n2 = n3
+  forall t2: (S n1) * n2' = n3
+  exists n2 = n2'.
+  t1': n2 * (S n1) = n3 by theorem times-commutative on t1
+  t2': n2' * (S n1) = n3 by theorem times-commutative on t2
+  proof by theorem times-right-cancels on t1', t2'
+end theorem
+
+theorem times-left-preserves-ge:
+  forall g1: n2 ≥ n4
+  forall t12: n1 * n2 = n3
+  forall t14: n1 * n4 = n5
+  exists n3 ≥ n5.
+  proof by induction on t12:
+    case rule
+      --------------- times-z
+      _: 0 * n2 = 0
+      where n1 := 0 and n3 := 0
+    is
+      use inversion of times-z on t14 where n5 := 0
+      _: 0 ≥ 0 by rule ge-eq
+    end case
+    case rule
+      t12': n1' * n2 = n3'
+      p32: n3' + n2 = n3
+      --------------- times-s
+      _: (S n1') * n2 = n3
+      where n1 := S n1'
+    is
+      t14': n1' * n4 = n5' and
+      p52: n5' + n4 = n5 by inversion of times-s on t14
+      g': n3' ≥ n5' by induction hypothesis on g1, t12', t14'
+      proof by theorem plus-preserves-ge on g', g1, p32, p52
+    end case
+  end induction
+end theorem
+
+theorem times-right-preserves-ge:
+  forall g1: n1 ≥ n4
+  forall t12: n1 * n2 = n3
+  forall t42: n4 * n2 = n5
+  exists n3 ≥ n5.
+  t21: n2 * n1 = n3 by theorem times-commutative on t12
+  t24: n2 * n4 = n5 by theorem times-commutative on t42
+  proof by theorem times-left-preserves-ge on g1, t21, t24
+end theorem
+
+theorem times-preserves-ge:
+  forall g14: n1 ≥ n4
+  forall g25: n2 ≥ n5
+  forall t12: n1 * n2 = n3
+  forall t45: n4 * n5 = n6
+  exists n3 ≥ n6.
+  t15: n1 * n5 = n7 by theorem times-total on n1, n5
+  g57: n3 ≥ n7 by theorem times-left-preserves-ge on g25, t12, t15
+  g76: n7 ≥ n6 by theorem times-right-preserves-ge on g14, t15, t45
+  proof by theorem ge-transitive on g57, g76
+end theorem
+
+lemma times-positive-left-preserves-gt:
+  forall g25: n2 > n5
+  forall t12: (S n1') * n2 = n3
+  forall t15: (S n1') * n5 = n6
+  exists n3 > n6.
+  t12': n1' * n2 = n3' and
+  p3: n3' + n2 = n3 by inversion of rule times-s on t12
+  t15': n1' * n5 = n6' and
+  p5: n6' + n5 = n6 by inversion of rule times-s on t15
+  ge25: n2 ≥ n5 by rule ge-gt on g25
+  g36: n3' ≥ n6' by theorem times-left-preserves-ge on ge25, t12', t15'
+  proof by theorem plus-preserves-ge-gt on g36, g25, p3, p5
+end lemma
+   
+lemma times-positive-right-preserves-gt:
+  forall g14: n1 > n4
+  forall t12: n1 * (S n2') = n3
+  forall t42: n4 * (S n2') = n6
+  exists n3 > n6.
+  t12c: (S n2') * n1 = n3 by theorem times-commutative on t12
+  t42c: (S n2') * n4 = n6 by theorem times-commutative on t42
+  proof by lemma times-positive-left-preserves-gt on g14, t12c, t42c
+end lemma
+       
+theorem times-preserves-gt:
+  forall g14: n1 > n4
+  forall g25: n2 > n5
+  forall t12: n1 * n2 = n3
+  forall t45: n4 * n5 = n6
+  exists n3 > n6.
+  e1: n1 = (S n1') by lemma gt-implies-positive on g14
+  use inversion of rule eq on e1
+  where n1 := S n1'
+  t15: (S n1') * n5 = n35 by theorem times-total on (S n1'), n5
+  g3: n3 > n35 by lemma times-positive-left-preserves-gt on g25, t12, t15
+  ge14: (S n1') ≥ n4 by rule ge-gt on g14
+  g6: n35 ≥ n6 by theorem times-right-preserves-ge on ge14, t15, t45
+  proof by theorem gt-transitive-ge on g3, g6
+end theorem
+
+theorem times-right-cancels-gt:
+  forall t1: n1 * n2 = n3
+  forall t2: n1' * n2 = n3'
+  forall g: n3 > n3'
+  exists n1 > n1'.
+  proof by induction on t1:
+    case rule
+      t11: n11 * n2 = n31
+      p11: n31 + n2 = n3
+      --------------- times-s
+      _: (S n11) * n2 = n3
+      where n1 := S n11
+    is
+      proof by case analysis on t2:
+        case rule
+          --------------- times-z
+          _: 0 * n2 = 0
+          where n1' := 0 and n3' := 0
+        is
+          proof by lemma succ-implies-gt-zero on n11
+        end case
+        case rule
+          t11': n11' * n2 = n31'
+          p11': n31' + n2 = n3'
+          --------------- times-s
+          _: (S n11') * n2 = n3'
+          where n1' := S n11'
+        is
+          g': n31 > n31' by theorem plus-right-cancels-gt on p11, p11', g
+          g1: n11 > n11' by induction hypothesis on t11, t11', g'
+          proof by lemma succ-preserves-gt on g1
+        end case
+      end case analysis
+    end case
+    case rule
+      --------------- times-z
+      _: 0 * n2 = 0
+      where n1 := 0 and n3 := 0
+    is
+      proof by contradiction on g
+    end case
+  end induction
+end theorem
+
+theorem times-left-cancels-gt:
+  forall t1: n1 * n2 = n3
+  forall t2: n1 * n2' = n3'
+  forall g: n3 > n3'
+  exists n2 > n2'.
+  t1s: n2 * n1 = n3 by theorem times-commutative on t1
+  t2s: n2' * n1 = n3' by theorem times-commutative on t2
+  proof by theorem times-right-cancels-gt on t1s, t2s, g
+end theorem
+
+
+terminals R
+  
+judgment divrem: n / n = n R n
+
+n2 > n1
+------------------ divrem-rem
+n1 / n2 = 0 R n1
+
+n1' + n2 = n1
+n1' / n2 = n3' R n4
+--------------------- divrem-step
+n1 / n2 = S n3' R n4
+
+
+theorem divrem-implies-times-plus-gt:
+  forall d: n1 / n2 = n3 R n4
+  exists n3 * n2 = n5 and n5 + n4 = n1 and n2 > n4
+  proof by induction on d:
+    case rule
+      g: n2 > n4
+      ------------------------ divrem-rem
+      _: n4 / n2 = 0 R n4
+      where n1 := n4 and n3 := 0
+    is
+      m: 0 * n2 = 0 by rule times-z
+      p: 0 + n1 = n1 by rule plus-z
+      proof by m, p, g
+    end case
+
+    case rule
+      p0: n1' + n2 = n1
+      d': n1' / n2 = n3' R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n3') R n4
+      where n3 := S n3'
+    is
+      t': n3' * n2 = n5' and 
+      p': n5' + n4 = n1' and 
+      g: n2 > n4 by induction hypothesis on d'
+      pc': n4 + n5' = n1' by theorem plus-commutative on p'
+      p1c: n5' + n2 = n5 and 
+      pc: n4 + n5 = n1 by theorem plus-associative on pc', p0
+      t: (S n3') * n2 = n5 by rule times-s on t', p1c
+      p: n5 + n4 = n1 by theorem plus-commutative on pc
+      proof by t, p, g
+    end case
+
+  end induction
+end theorem
+
+theorem times-plus-gt-implies-divrem:
+  forall t: n3 * n2 = n5
+  forall p: n5 + n4 = n1
+  forall g: n2 > n4
+  exists n1 / n2 = n3 R n4
+  proof by induction on t:
+    case rule
+      ---------------- times-z
+      _: 0 * n2 = 0
+      where n3 := 0
+      and n5 := 0
+    is
+      use inversion of plus-z on p
+      where n4 := n1
+      proof by rule divrem-rem on g
+    end case
+
+    case rule
+      t': n3' * n2 = n5'
+      p': n5' + n2 = n5
+      ----------------------- times-s
+      _: (S n3') * n2 = n5
+      where n3 := S n3'
+    is
+      p1: n5' + n4 = n1' and
+      p1': n1' + n2 = n1 by theorem plus-assoc-commutative on p', p
+      d': n1' / n2 = n3' R n4 by induction hypothesis on t', p1, g
+      proof by rule divrem-step on p1', d'
+    end case
+
+  end induction
+end theorem
+
+// Since SASyLF doesn't have the ability to do strong induction
+// we have to make the induction step by step by moving down n0 step by step
+// until it hits n1.  We use "do case analysis" to handle this part.
+lemma nonzero-implies-divrem-helper:
+  forall n0
+  forall g0: n0 > n1
+  forall g: n2 > 0
+  exists n1 / n2 = n3 R n4.
+  use induction on n0
+  do case analysis on g0:
+    case rule
+      g0': n0' > n1
+      ------------- gt-s
+      _: S n0' > n1
+      where n0 := S n0'
+    is
+      proof by induction hypothesis on n0', g0', g
+    end case
+  end case analysis
+  use inversion of gt-1 on g0 where n0 := S n1
+  ch: n2 > n1 or n1 = n2 or n1 > n2 by theorem cmp-total on n1,n2
+  proof by case analysis on ch:
+    case or lt: n2 > n1 is
+      d: n1 / n2 = 0 R n1 by rule divrem-rem on lt
+    end case
+
+    case or e: n1 = n2 is
+      use inversion of eq on e where n1 := n2
+      p: 0 + n1 = n1 by rule plus-z
+      d: 0 / n2 = 0 R 0 by rule divrem-rem on g
+      d': n1 / n2 = S 0 R 0 by rule divrem-step on p, d
+      proof by d'
+    end case
+
+    case or gt: n1 > n2 is
+      p: S n1' + n2 = n1 by theorem gt-implies-plus on gt
+      p': S n1' + 0 = S n1' by lemma plus-right-zero on (S n1')
+      g1': n1 > S n1' by theorem plus-left-preserves-gt on g, p, p'
+      dr': S n1' / n2 = n3' R n4 by induction hypothesis on n1, g1', g
+      proof by rule divrem-step on p, dr'
+    end case
+  end case analysis
+end lemma
+
+theorem nonzero-implies-divrem:
+  forall n1
+  forall g: n2 > 0
+  exists n1 / n2 = n3 R n4.
+  g0: S n1 > n1 by rule gt-1
+  proof by lemma nonzero-implies-divrem-helper on (S n1), g0, g
+end theorem
+
+theorem divrem-total:
+  forall n1
+  forall n2
+  exists n2 = 0 or n1 / n2 = n3 R n4.
+  proof by case analysis on n2:
+    case 0 is
+      e: 0 = 0 by rule eq
+      proof by e
+    end case
+    
+    case S n2' is
+      g: S n2' > 0 by lemma succ-implies-gt-zero on n2'
+      d: n1 / n2 = n3 R n4 by theorem nonzero-implies-divrem on n1, g
+      proof by d
+    end case
+  end case analysis
+end theorem
+
+theorem divrem-unique:
+  forall d: n1 / n2 = n3 R n4
+  forall d': n1 / n2 = n3' R n4'
+  exists n3 = n3' and n4 = n4'
+  proof by induction on d:
+    case rule
+      g: n2 > n1
+      ------------------------ divrem-rem
+      _: n1 / n2 = 0 R n1
+      where n3 := 0
+       and  n4 := n1
+    is
+      proof by case analysis on d':
+        case rule
+          _: n2 > n1
+          ------------------------ divrem-rem
+          _: n1 / n2 = 0 R n1
+          where n3' := 0
+           and  n4' := n1
+        is
+          e3: 0 = 0 by rule eq
+          e4: n1 = n1 by rule eq
+          proof by e3, e4
+        end case
+
+        case rule
+          p: n0 + n2 = n1
+          _: n0 / n2 = n5 R n4'
+          --------------------------- divrem-step
+          _: n1 / n2 = (S n5) R n4'
+          where n3' := S n5
+        is
+          _: n1 ≥ n0 and
+          g': n1 ≥ n2 by theorem plus-implies-leq on p
+          gg: n1 > n1 by theorem ge-transitive-gt on g', g
+          _: contradiction by theorem gt-anti-reflexive on gg
+        end case
+
+      end case analysis
+    end case
+
+    case rule
+      p0: n0 + n2 = n1
+      d0: n0 / n2 = n5 R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n5) R n4
+      where n3 := S n5
+    is
+      proof by case analysis on d':
+        case rule
+          g: n2 > n1
+          ------------------------ divrem-rem
+          _: n1 / n2 = 0 R n1
+          where n3' := 0
+           and  n4' := n1
+        is
+          _: n1 ≥ n0 and
+          g': n1 ≥ n2 by theorem plus-implies-leq on p0
+          gg: n1 > n1 by theorem ge-transitive-gt on g', g
+          _: contradiction by theorem gt-anti-reflexive on gg
+        end case
+
+        case rule
+          p0': n0' + n2 = n1
+          d0': n0' / n2 = n5' R n4'
+          --------------------------- divrem-step
+          _: n1 / n2 = (S n5') R n4'
+          where n3' := S n5'
+        is
+          e0: n0 = n0' by theorem plus-right-cancels on p0, p0'
+          use inversion of eq on e0
+          where n0 := n0'
+          eq5: n5 = n5' and
+          eq4: n4 = n4' by induction hypothesis on d0, d0'
+          use inversion of eq on eq5
+          where n5 := n5'
+          eq3: S n5' = S n5' by rule eq
+          proof by eq3, eq4
+        end case
+
+      end case analysis
+    end case
+
+  end induction 
+end theorem
+
+theorem divrem-norem-implies-times:
+  forall d: n1 / n2 = n3 R 0
+  exists n3 * n2 = n1.
+  t: n3 * n2 = n4 and
+  p: n4 + 0 = n1 and
+  g: n2 > 0 by theorem divrem-implies-times-plus-gt on d
+  p': n4 + 0 = n4 by lemma plus-right-zero on n4
+  e: n4 = n1 by theorem plus-unique on p', p
+  use inversion of eq on e
+  where n4 := n1
+  proof by t
+end theorem
+
+theorem divrem-implies-ge:
+  forall d: n1 / n2 = n3 R n4
+  exists n1 ≥ n3 and n1 ≥ n4.
+  ig1: n3 * n2 = n6 and
+  ig2: n6 + n4 = n1 and
+  g24: n2 > n4 by theorem divrem-implies-times-plus-gt on d
+  ge4: n4 ≥ 0 by theorem ge-zero-always on n4
+  g20: n2 > 0 by theorem gt-transitive-ge on g24, ge4
+  proof by induction on d:
+    case rule
+      _: n2 > n1
+      ------------------------ divrem-rem
+      _: n1 / n2 = 0 R n1
+      where n3 := 0
+       and  n4 := n1 
+    is
+      g3: n1 ≥ 0 by theorem ge-zero-always on n1
+      g4: n1 ≥ n1 by rule ge-eq
+      proof by g3, g4
+    end case
+
+    case rule
+      p: n1' + n2 = n1
+      d': n1' / n2 = n3' R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n3') R n4
+      where n3 := S n3'
+    is
+      g3': n1' ≥ n3' and
+      g4': n1' ≥ n4 by induction hypothesis on d'
+      p0: n1' + 0 = n1' by lemma plus-right-zero on n1'
+      ge1': n1' ≥ n1' by rule ge-eq
+      g1: n1 > n1' by theorem plus-preserves-ge-gt on ge1', g20, p, p0 
+      g3: n1 > n3' by theorem gt-transitive-ge on g1, g3' 
+      ge3: n1 ≥ (S n3') by lemma gt-implies-ge-succ on g3
+      g4: n1 > n4 by theorem gt-transitive-ge on g1, g4'
+      g14: n1 ≥ n4 by rule ge-gt on g4
+      proof by ge3, g14
+    end case
+
+  end induction
+end theorem
+
+lemma divrem-implies-divisor-gt-zero:
+  forall d: n1 / n2 = n3 R n4
+  exists n2 > 0 .
+  proof by induction on d:
+    case rule
+      g: n2 > n4
+      ------------------------ divrem-rem
+      _: n4 / n2 = 0 R n4
+      where n1 := n4 and n3 := 0
+    is
+      g40: n4 ≥ 0 by theorem ge-zero-always on  n4
+      proof by theorem gt-transitive-ge on g, g40
+    end case
+
+    case rule
+      _: n0 + n2 = n1
+      d': n0 / n2 = n3' R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n3') R n4
+      where n3 := S n3'
+    is
+      proof by induction hypothesis on d'
+    end case
+
+  end induction
+end lemma
+
+lemma divrem-zero-inversion:
+  forall d: 0 / n2 = n3 R n4
+  exists n3 = 0 and n4 = 0 .
+  proof by induction on d:
+    case rule
+      _: n2 > 0
+      ------------------------ divrem-rem
+      _: 0 / n2 = 0 R 0
+      where n3 := 0 and n4 := 0
+    is
+      e0: 0 = 0 by rule eq
+      proof by e0, e0
+    end case
+
+    case rule
+      p: n0 + n2 = 0
+      _: n0 / n2 = n1 R n4
+      --------------------------- divrem-step
+      _: 0 / n2 = (S n1) R n4
+      where n3 := S n1
+    is
+      ge0: n0 ≥ 0 by theorem ge-zero-always on n0
+      g20: n2 > 0 by lemma divrem-implies-divisor-gt-zero on d
+      p0: 0 + 0 = 0 by rule plus-z
+      c: 0 > 0 by theorem plus-preserves-ge-gt on ge0, g20, p, p0
+      proof by contradiction on c
+    end case
+
+  end induction
+end lemma
+
+theorem divrem-implies-gt-quotient:
+  forall d: n1 / n2 = n3 R n4
+  exists n1 = 0 or n2 = 1 or n1 > n3.
+  g20: n2 > 0 by lemma divrem-implies-divisor-gt-zero on d
+  e2: n2 = (S n2') by case analysis on n2:
+    case 0 is
+      proof by contradiction on g20
+    end case
+    case S n2' is
+      proof by rule eq
+    end case
+  end case analysis
+  use inversion of rule eq on e2 where n2 := S n2'
+  do case analysis on n2':
+    case 0 is
+      _: 1 = 1 by rule eq
+    end case
+  end case analysis
+  g21: n2 > 1 by case analysis on n2':
+    case S n2'' is
+      g2': n2' > 0 by lemma succ-implies-gt-zero on n2''
+      proof by lemma succ-preserves-gt on g2'
+    end case
+  end case analysis
+  proof by case analysis on d:
+    case rule
+      _: n2 > n1
+      ------------------------ divrem-rem
+      _: n1 / n2 = 0 R n1
+      where n3 := 0
+       and  n4 := n1
+    is
+      proof by case analysis on n1:
+        case 0 is
+          _: n1 = 0 by rule eq
+        end case
+
+        case S n0 is
+          _: n1 > 0 by lemma succ-implies-gt-zero on n0
+        end case
+      end case analysis
+    end case
+
+    case rule
+      p': n1' + n2 = n1
+      d': n1' / n2 = n3' R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n3') R n4
+      where n3 := S n3'
+    is
+      h: n1' = 0 or n2 = 1 or n1' > n3' by induction hypothesis on d'
+      proof by case analysis on h:
+        case or e1': n1' = 0 is
+          use inversion of eq on e1'
+          where n1' := 0
+          use inversion of plus-z on p' where n1 := S n2'
+          e3': n3' = 0 and 
+          e4: n4 = 0 by lemma divrem-zero-inversion on d'
+          use inversion of rule eq on e3'
+          where n3' := 0
+          _: n1 > 1 by g21
+        end case
+
+        case or c: n2 = 1 is
+          proof by c
+        end case
+
+        case or g13: n1' > n3' is
+          p31': n3' + 1 = n3 by lemma plus-right-one on n3'
+          _: n1 > n3 by theorem plus-preserves-gt on g13, g21, p', p31'
+        end case
+
+      end case analysis
+    end case
+
+  end case analysis
+end theorem
+
+theorem divrem-implies-gt-remainder:
+  forall d: n1 / n2 = n3 R n4
+  exists n3 = 0 or n1 > n4.
+  proof by case analysis on d:
+    case rule
+      _: n2 > n1
+      ------------------------ divrem-rem
+      _: n1 / n2 = 0 R n1
+      where n3 := 0
+       and  n4 := n1
+    is
+      _: n3 = 0 by rule eq
+    end case
+
+    case rule
+      p': n1' + n2 = n1
+      d': n1' / n2 = n3' R n4
+      --------------------------- divrem-step
+      _: n1 / n2 = (S n3') R n4
+      where n3 := S n3'
+    is
+      g20: n2 > 0 by lemma divrem-implies-divisor-gt-zero on d
+      ge3: n1' ≥ n3' and
+      ge4: n1' ≥ n4 by theorem divrem-implies-ge on d'
+      p4: n4 + 0 = n4 by lemma plus-right-zero on n4
+      _: n1 > n4 by theorem plus-preserves-ge-gt on ge4, g20, p', p4
+    end case
+
+  end case analysis
+end theorem
