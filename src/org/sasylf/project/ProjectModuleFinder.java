@@ -18,9 +18,10 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.sasylf.ProofChecker;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.RootModuleFinder;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.module.RootModuleProvider;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -28,14 +29,24 @@ public class ProjectModuleFinder extends RootModuleFinder {
 
 	private ConcurrentHashMap<ModuleId,Set<ModuleId>> dependencies = new ConcurrentHashMap<ModuleId,Set<ModuleId>>();
 
+	private static class ProjectModuleProvider extends RootModuleProvider {
+		ProjectModuleProvider(IProject p) {
+			super(ProofBuilder.getProofFolder(p).getLocation().toFile());
+		}
+
+		@Override
+		protected CompUnit parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
+			return ((ProjectModuleFinder)mf).parseAndCheck(f, id, loc);
+		}	
+	}
+	
 	public ProjectModuleFinder(IProject p) {
-		super(ProofBuilder.getProofFolder(p).getLocation().toFile());
+		super(new ProjectModuleProvider(p));
 	}
 
 	public void dispose() {
 	}
 
-	@Override
 	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
 		ModuleId last = super.lastModuleId();
 		if (last != null) {
