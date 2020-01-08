@@ -5,10 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -19,64 +15,24 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * Module finder that uses a root directory and caches results.
  */
-public class RootModuleFinder implements ModuleFinder {
+public class RootModuleFinder extends AbstractModuleFinder {
 	private final File rootDirectory;
-	private final List<ModuleId> inProcess = new ArrayList<ModuleId>();
-	private final Map<ModuleId,CompUnit> cache = new HashMap<ModuleId,CompUnit>();
-	private String[] currentPackage = EMPTY_PACKAGE;
-
 	public RootModuleFinder(File dir) {
 		rootDirectory = dir;
 	}
 
 	@Override
-	public void setCurrentPackage(String[] pName) {
-		currentPackage = pName;
-	}
-
-	@Override
-	public boolean hasCandidate(ModuleId id) {
-		if (cache.containsKey(id)) return true;
+	protected boolean lookupCandidate(ModuleId id) {
 		File f = id.asFile(rootDirectory);
 		return f.isFile();
 	}
 
 	@Override
-	public Module findModule(String name, Span location) {
-		return findModule(new ModuleId(currentPackage,name),location);
-	}
-
-	@Override
-	public Module findModule(ModuleId id, Span location) {
-		if (cache.containsKey(id)) {
-			Module previous = cache.get(id);
-			if (previous == null) {
-				ErrorHandler.report("Module has errors: " + id, location);
-			}
-			return previous;
-		}
-		if (inProcess.contains(id)) {
-			StringBuilder path = new StringBuilder();
-			for (int i=inProcess.indexOf(id); i < inProcess.size(); ++i) {
-				path.append(inProcess.get(i).toString());
-				path.append(" -> ");
-			}
-			path.append(id);
-			cache.put(id, null);
-			ErrorHandler.report("Cyclic module reference: "+path.toString(), location);
-		}
+	protected CompUnit loadModule(ModuleId id, Span location) {
+		CompUnit result;
 		File f = id.asFile(rootDirectory);
-		String[] savedPackage = currentPackage;
-		inProcess.add(id);
-		CompUnit result = null;
-		try {
-			result = parseAndCheck(f,id,location);
-			return result;
-		} finally {
-			currentPackage = savedPackage;
-			inProcess.remove(inProcess.size()-1);
-			cache.put(id, result);
-		}
+		result = parseAndCheck(f,id,location);
+		return result;
 	}
 
 	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
@@ -88,18 +44,5 @@ public class RootModuleFinder implements ModuleFinder {
 			ErrorHandler.report("Module not found: " + id, loc);
 		}
 		return null;
-	}
-
-	protected ModuleId lastModuleId() {
-		if (inProcess.isEmpty()) return null;
-		return inProcess.get(inProcess.size()-1);
-	}
-
-	protected void clearCache() {
-		cache.clear();
-	}
-
-	protected boolean removeCacheEntry(ModuleId id) {
-		return cache.remove(id) != null;
 	}
 }
