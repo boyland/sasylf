@@ -13,7 +13,7 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * Module finder that uses a path of module providers.
  */
-public class PathModuleFinder implements ModuleFinder {
+public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 
 	private String[] currentPackage = EMPTY_PACKAGE;
 	private final List<ModuleId> inProcess = new ArrayList<ModuleId>();
@@ -26,17 +26,24 @@ public class PathModuleFinder implements ModuleFinder {
 	 * @param p a single provider, must not be null
 	 */
 	protected PathModuleFinder(ModuleProvider p) {
-		providers.add(new ResourceModuleProvider());
-		providers.add(p);
+		addProvider(new ResourceModuleProvider());
+		addProvider(p);
 	}
 
+	private void addProvider(ModuleProvider p) {
+		providers.add(p);
+		p.addModuleEventListener(this);
+	}
+	
 	/**
 	 * Create a path module finder with given list of providers
 	 * @param l list of providers, must not be null
 	 */
 	protected PathModuleFinder(List<ModuleProvider> l) {
-		providers.add(new ResourceModuleProvider());
-		providers.addAll(l);
+		addProvider(new ResourceModuleProvider());
+		for (ModuleProvider p : l) {
+			addProvider(p);
+		}
 	}
 	
 	/**
@@ -45,10 +52,11 @@ public class PathModuleFinder implements ModuleFinder {
 	 * @param path non-null string of places separated with {@link File#pathSeparator}.
 	 */
 	public PathModuleFinder(String path) {
-		providers.add(new ResourceModuleProvider());
+		addProvider(new ResourceModuleProvider());
 		String[] pieces = path.split(File.pathSeparator);
-		for (String p : pieces) {
-			providers.add(new RootModuleProvider(new File(p)));
+		for (String piece : pieces) {
+			ModuleProvider p = new RootModuleProvider(new File(piece));
+			addProvider(p);
 		}
 	}
 	
@@ -121,6 +129,12 @@ public class PathModuleFinder implements ModuleFinder {
 		return inProcess.get(inProcess.size()-1);
 	}
 
+	@Override
+	public void moduleChanged(ModuleChangedEvent e) {
+		System.out.println("Got changed event " + e);
+		removeCacheEntry(e.getModuleId());
+	}
+	
 	protected void clearCache() {
 		presentCache.clear();
 		cache.clear();

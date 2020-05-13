@@ -168,7 +168,7 @@ public class CompUnit extends Node implements Module {
 	
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
-		if (cacheVersion != ctx.version) {
+		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 			this.collectTopLevel(things);
@@ -184,7 +184,7 @@ public class CompUnit extends Node implements Module {
 					declCache.put(jd.getName(),jd);
 				}
 			}
-			cacheVersion = ctx.version;
+			cacheVersion = ctx.version();
 		}
 		return declCache.get(name);
 	}

@@ -64,7 +64,7 @@ public class ProjectPropertyPage extends PropertyPage {
 		try {
 			buildPath = ProjectProperties.getBuildPath((IProject)getElement());
 		} catch (CoreException e) {
-			buildPath = ProjectProperties.getDefaultBuldPath();
+			buildPath = ProjectProperties.getDefaultBuildPath();
 		}
 		buildPathText.setText(buildPath);
 	}
@@ -105,7 +105,7 @@ public class ProjectPropertyPage extends PropertyPage {
 	protected void performDefaults() {
 		super.performDefaults();
 		// Populate the build path text field with the default value
-		String defaultBuildPath = ProjectProperties.getDefaultBuldPath();
+		String defaultBuildPath = ProjectProperties.getDefaultBuildPath();
 		buildPathText.setText(defaultBuildPath);
 	}
 

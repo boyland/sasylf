@@ -16,7 +16,7 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * A module provider using a root directory to look things up.
  */
-public class RootModuleProvider implements ModuleProvider {
+public class RootModuleProvider extends AbstractModuleProvider {
 	public final File rootDirectory;
 
 	/**

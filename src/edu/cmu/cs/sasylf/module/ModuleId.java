@@ -8,23 +8,43 @@ public final class ModuleId {
 	public final String[] packageName;
 	public final String moduleName;
 	private final int hash;
-
-	public ModuleId(String filename) {
-		if (!filename.endsWith(".slf")) {
-			throw new IllegalArgumentException("SASyLF files must end in '.slf'");
-		}
-		filename = filename.substring(0,filename.length()-4);
+	
+	
+	public ModuleId(File file) {
+		System.out.println("File: " + file);	
+		
 		LinkedList<String> pkg = new LinkedList<String>();
-		File f = new File(filename);
+		moduleName = checkFileExtension(file.getName());
+		File f = file;
 		for (;;) {
-			String p = f.getParent();
-			if (p == null) break;
-			f = new File(p);
+			f = f.getParentFile();
+			if (f == null) break;
 			pkg.addFirst(f.getName());
 		}
 		packageName = pkg.toArray(new String[pkg.size()]);
-		moduleName = f.getName();
 		hash = computeHash();
+		
+		System.out.println(moduleName);
+	}
+
+	public ModuleId(String filename) {
+		this(new File(filename));
+
+		System.out.println("Created module id for " + filename + ": " + this);
+	}
+	
+	/**
+	 * Throws an exception if the file extension is not ".slf", otherwise
+	 * we chop that part off and return the new file name.
+	 * @param filename the file name to check
+	 * @return the new file name
+	 */
+	private static String checkFileExtension(String filename) {
+		if (!filename.endsWith(".slf")) {
+			throw new IllegalArgumentException("SASyLF files must end in '.slf'");
+		}
+		return filename.substring(0,filename.length()-4);
+		//return filename;
 	}
 
 	public ModuleId(String[] p, String n) {
@@ -37,7 +57,8 @@ public final class ModuleId {
 	}
 
 	/**
-	 * @return
+	 * Computes the hash of this module id.
+	 * @return module id hash
 	 */
 	private int computeHash() {
 		return Arrays.hashCode(packageName) + moduleName.hashCode();

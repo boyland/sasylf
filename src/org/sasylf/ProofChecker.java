@@ -34,6 +34,8 @@ import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
 import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.QualName;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -213,6 +215,8 @@ public class ProofChecker  {
 		Proof newProof = new Proof(res,doc);
 		int errors = 0;
 		
+		System.out.println("Reparsing...");
+		
 		if (mf == null) {
 			ProofBuilder pb = ProofBuilder.getProofBuilder(res.getProject());
 			if (pb != null) {
@@ -234,6 +238,7 @@ public class ProofChecker  {
 					for (IDirtyRegion dr : dirtyRegions) {
 						String newText = doc.get(dr.getOffset(), dr.getLength());
 						System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
+						//Context.updateVersion();
 					}
 				} catch (BadLocationException e) {
 					e.printStackTrace();

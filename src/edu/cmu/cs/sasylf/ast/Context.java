@@ -45,7 +45,8 @@ public class Context implements Cloneable {
 	public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
 	public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
 
-	public int version; // incremented to indicate that caches should be abandoned.
+	// CHANGED: public to private; now a static variable
+	private static int version; // incremented to indicate that caches should be abandoned.
 	
 	/// The remainder fields represent contextual (local) information
 
@@ -73,6 +74,23 @@ public class Context implements Cloneable {
 	public Context(ModuleFinder mf, CompUnit cu) {
 		moduleFinder = mf;
 		compUnit = cu;
+	}
+	
+	/**
+	 * Gives the current version of this context. (NEW)
+	 * @return the current version
+	 */
+	public int version() {
+		return version;
+	}
+ 	
+	/**
+	 * Updates if a change has happened, thus incrementing
+	 * the version. (NEW)
+	 */
+	public static void updateVersion() {
+		System.out.println("updating version...");
+		++version;
 	}
 
 	/** Return a copy of this context
