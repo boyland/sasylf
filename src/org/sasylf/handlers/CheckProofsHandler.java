@@ -4,6 +4,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -15,8 +16,6 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.ProofChecker;
 import org.sasylf.project.ProofBuilder;
-
-import edu.cmu.cs.sasylf.module.ModuleFinder;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -46,7 +45,15 @@ public class CheckProofsHandler extends AbstractHandler {
 					if ("slf".equals(res.getFileExtension())) {
 						IFile f = (IFile)res.getAdapter(IFile.class);
 						// System.out.println("  with correct extension");
-						ProofChecker.analyzeSlf(res, ResourceUtil.findEditor(page, f));
+						IProject p = f.getProject();
+						ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+						if (pb == null) {
+							System.out.println("couldn't find proof handler!");
+							ProofChecker.analyzeSlf(res, ResourceUtil.findEditor(page, f));
+						} else {
+							System.out.println("use proof builder");
+							pb.forceBuild(f);
+						}			
 					}
 				}
 				// System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
@@ -56,7 +63,15 @@ public class CheckProofsHandler extends AbstractHandler {
 		IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
 		IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
 		if (res != null) {
-			ProofChecker.analyzeSlf(res, activeEditor);
+			IProject p = res.getProject();
+			ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+			if (pb == null) {
+				System.out.println("couldn't find proof handler!");
+				ProofChecker.analyzeSlf(res, activeEditor);
+			} else {
+				System.out.println("use proof builder");
+				pb.forceBuild(res);
+			}			
 		}  else {
 			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 			MessageDialog.openInformation(

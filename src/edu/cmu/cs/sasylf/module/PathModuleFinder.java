@@ -131,7 +131,7 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 
 	@Override
 	public void moduleChanged(ModuleChangedEvent e) {
-		System.out.println("Got changed event " + e);
+		//System.out.println("Got changed event " + e);
 		removeCacheEntry(e.getModuleId());
 	}
 	

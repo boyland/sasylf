@@ -8,7 +8,7 @@ public abstract class AbstractModuleProvider implements ModuleProvider {
 	
 	@Override
 	public void addModuleEventListener(ModuleEventListener listener) {
-		if (listener == null) throw new NullPointerException();
+		if (listener == null) throw new NullPointerException("listener should not be null!");
 		listeners.add(listener);
 	}
 

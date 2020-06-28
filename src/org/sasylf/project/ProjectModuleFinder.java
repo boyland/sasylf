@@ -1,6 +1,7 @@
 package org.sasylf.project;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +19,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.sasylf.ProofChecker;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -33,8 +35,27 @@ public class ProjectModuleFinder extends PathModuleFinder {
 
 	public void dispose() {
 	}
+	
+	/**
+	 * Get the set of dependences associated with the given module id.  
+	 * If none exist, an empty set is returned instead.
+	 * @param id must not be null
+	 * @return the set of dependencies
+	 */
+	public Set<ModuleId> getDependencies(ModuleId id) {
+		if (id == null) throw new IllegalArgumentException("module id cannot be null!");
+		
+		if (dependencies.contains(id)) {
+			Set<ModuleId> copy = new HashSet<ModuleId>();
+			copy.addAll(dependencies.get(id));
+			return copy;
+		}
+		
+		return Collections.emptySet();
+	}
 
-	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
+	@Override
+	public Module findModule(ModuleId id, Span location) {
 		ModuleId last = super.lastModuleId();
 		if (last != null) {
 			Set<ModuleId> deps = dependencies.get(id);
@@ -43,7 +64,16 @@ public class ProjectModuleFinder extends PathModuleFinder {
 				deps = dependencies.get(id);
 			}
 			deps.add(last);
+			System.out.println("adding dependency from " + last + " on " + id);
+		} else {
+			System.out.println("Unknown dependency on " + id);
 		}
+		
+		return super.findModule(id, location);
+	}
+
+	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
+		
 		// The problem here is that we want to read the current state of the
 		// editor buffer instead of the resource on disk, if it is available.
 		// This requires us to convert back to a resource and then call the
@@ -51,7 +81,12 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IPath path = Path.fromOSString(f.getAbsolutePath());
 		IResource res = workspace.getRoot().getFileForLocation(path);
-		CompUnit result = ProofChecker.analyzeSlf(this, id, res);
+		CompUnit result;
+		try {
+			result = ProofChecker.analyzeSlf(this, id, res);
+		} finally {
+			// TODO: handle finally clause
+		}
 		if (result == null) {
 			// We should not generate any errors NOW since 
 			// this error will not be handled properly (using markers etc).
@@ -65,7 +100,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	private final Set<ModuleId> toRecheck = new HashSet<ModuleId>();
 
 	/**
-	 * Make this module ID as needing rechecking and anything that depends on it.
+	 * Mark this module ID as needing rechecking and anything that depends on it.
 	 * @param id must not be null.
 	 */
 	public void recheckNeeded(ModuleId id) {
@@ -85,7 +120,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		if (monitor == null) monitor = new NullProgressMonitor();
 		Set<ModuleId> todo = new HashSet<ModuleId>(toRecheck);
 		toRecheck.clear();
-		monitor.beginTask("reschecking proofs", todo.size());
+		monitor.beginTask("rechecking proofs", todo.size());
 		try {
 			for (ModuleId id : todo) {
 				IProgressMonitor subMonitor = new SubProgressMonitor(monitor,1);
@@ -117,3 +152,14 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		super.clearCache();
 	}
 }
+
+
+
+/*
+Notes:
+
+parseAndCheck() does indeed go through first if statement
+   - both "id" and "last" are the same
+   - what does adding things to "deps" actually do for us?
+need to figure out how to add dependencies from other files
+*/

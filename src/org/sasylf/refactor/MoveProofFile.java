@@ -81,6 +81,7 @@ public class MoveProofFile extends MoveParticipant {
 	@Override
 	public Change createChange(IProgressMonitor pm) throws CoreException,
 	OperationCanceledException {
+		System.out.println("returning the change");
 		return change;
 	}
 
@@ -171,7 +172,7 @@ public class MoveProofFile extends MoveParticipant {
 				edit = new ReplaceEdit(nameLoc.getOffset(),nameLoc.getLength(),newPackage);
 			}
 		}
-		// System.out.println("edit is " + edit);
+		System.out.println("edit is " + edit);
 		change.setEdit(edit);
 	}
 }

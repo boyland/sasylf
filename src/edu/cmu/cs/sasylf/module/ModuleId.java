@@ -8,11 +8,11 @@ public final class ModuleId {
 	public final String[] packageName;
 	public final String moduleName;
 	private final int hash;
-	
-	
+
+
 	public ModuleId(File file) {
-		System.out.println("File: " + file);	
-		
+		//System.out.println("File: " + file);	
+
 		LinkedList<String> pkg = new LinkedList<String>();
 		moduleName = checkFileExtension(file.getName());
 		File f = file;
@@ -23,16 +23,15 @@ public final class ModuleId {
 		}
 		packageName = pkg.toArray(new String[pkg.size()]);
 		hash = computeHash();
-		
-		System.out.println(moduleName);
+
+		//System.out.println(moduleName);
 	}
 
 	public ModuleId(String filename) {
 		this(new File(filename));
-
-		System.out.println("Created module id for " + filename + ": " + this);
+		//System.out.println("Created module id for " + filename + ": " + this);
 	}
-	
+
 	/**
 	 * Throws an exception if the file extension is not ".slf", otherwise
 	 * we chop that part off and return the new file name.
@@ -44,7 +43,6 @@ public final class ModuleId {
 			throw new IllegalArgumentException("SASyLF files must end in '.slf'");
 		}
 		return filename.substring(0,filename.length()-4);
-		//return filename;
 	}
 
 	public ModuleId(String[] p, String n) {

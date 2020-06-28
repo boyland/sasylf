@@ -35,34 +35,26 @@ class ProjectModuleProvider extends RootModuleProvider implements IResourceChang
 
 	@Override
 	public void resourceChanged(IResourceChangeEvent event) {
-		IResource resource = event.getResource();
 		// if this resource is in our project, then inform our own listeners
-
-		System.out.println("event type:" + event.getType());
-		System.out.println("resource: " + resource);
-		System.out.println("delta: " + event.getDelta());
-
 		if (event.getType() != IResourceChangeEvent.POST_CHANGE)
 			return;
 
-		IPath proj_path = project.getFullPath();
-
-		IResourceDelta projDelta = event.getDelta().findMember(proj_path);
+		IResourceDelta projDelta = event.getDelta().findMember(project.getFullPath());
 
 		if (projDelta == null) return;
-		System.out.println("got relevant change for project " + project);
+		//System.out.println("got relevant change for project " + project);
 
 		IResourceDeltaVisitor visitor = new IResourceDeltaVisitor() {
 			public boolean visit(IResourceDelta delta) {
 				IResource resource = delta.getResource();
 				
-				//only interested in files with the "slf" extension
+				// we're only interested in files with the "slf" extension
 				if (resource.getType() == IResource.FILE && 
 						"slf".equalsIgnoreCase(resource.getFileExtension())) {
-					ModuleId id = getNewModuleId(resource);
 					
 					EventType e = null;
 					
+					// determine which kind of change has occurred
 					switch(delta.getKind()) {
 					case IResourceDelta.CHANGED:
 						e = EventType.CHANGED;
@@ -75,12 +67,11 @@ class ProjectModuleProvider extends RootModuleProvider implements IResourceChang
 						break;
 					}   
 					
-					// do we need this?
+					// shouldn't happen, but just in case...
 					if (e == null) throw new NullPointerException("Event should not be null!");
 					
-					ProjectModuleProvider.this.fireModuleEvent(new ModuleChangedEvent(id, e));
-					
-					System.out.println(resource);
+					// fire the module even with the module id 
+					ProjectModuleProvider.this.fireModuleEvent(new ModuleChangedEvent(getNewModuleId(resource), e));
 				}
 
 				return true;
@@ -89,14 +80,13 @@ class ProjectModuleProvider extends RootModuleProvider implements IResourceChang
 		try {
 			projDelta.accept(visitor);
 		} catch (CoreException e) {
-			//open error dialog with syncExec or print to plugin log file
+			// open error dialog with syncExec or print to plugin log file
 		}
 	}
 
 	private ModuleId getNewModuleId(IResource resource) {
-		//System.out.println("Resource: " + resource);
 		IPath path = resource.getProjectRelativePath();
-		//System.out.println("Path: " + path);
+		
 		// XXX: check project has proof folder or not
 		// if it does not, don't remove first segment
 		
