@@ -1,0 +1,93 @@
+package regression;
+
+terminals fn value unit Unit value in varfree
+
+syntax
+  t ::= x
+     | unit
+     | fn x : T => t[x]
+     | t t
+
+  T ::= Unit
+     | T -> T  
+
+  G ::= *
+     | G, x : T
+
+    
+judgment isvar: t:T in G
+assumes G
+
+  ------------- var
+  x:T in G, x:T
+  
+judgment bound: G |- t
+assumes G
+
+  t:T in G
+  -------- B-Var
+  G |- t
+  
+  --------- B-Unit
+  G |- unit
+  
+  G |- t1
+  G |- t2
+  ---------- B-App
+  G |- t1 t2
+  
+  G, x:T |- t[x]
+  --------------------- B-Abs
+  G |- fn x : T => t[x]
+  
+judgment novars: t varfree
+
+  ------------ NV-Unit
+  unit varfree
+  
+  ------------- NV-App
+  t1 t2 varfree
+  
+  ------------------------ NV-Abs
+  (fn x:T => t[x]) varfree
+  
+theorem test: assumes G
+  forall t // indicates that t has no bindings
+  forall b: G |- t
+  exists t varfree.
+  proof by induction on b:
+      case rule
+          v: t : T0 in G
+          -------------- B-Var
+          _: G |- t
+      is
+          proof by case analysis on v:
+          end case analysis
+      end case
+
+      case rule
+          --------------- B-Unit
+          _: G |- unit
+      is
+          _: unit varfree by rule NV-Unit
+      end case
+
+      case rule
+          b1: G |- t1
+          b2: G |- t2
+          ---------------- B-App
+          _: G |- (t1 t2)
+      is
+          proof by rule NV-App
+      end case
+
+      case rule
+          _: (G, x : T0) |- t0[x]
+          --------------------------- B-Abs
+          _: G |- (fn x : T0 => t0[x])
+      is
+          proof by rule NV-Abs
+      end case
+
+  end induction
+end theorem
