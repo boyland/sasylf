@@ -1,0 +1,81 @@
+package regression;
+
+terminals λ value S unit
+
+syntax
+  t ::= x
+     | λ x • t[x]
+     | t t
+     | unit
+     
+  Γ ::= *
+     | Γ, x
+
+  n ::= 0
+     | S n
+
+judgment bound: Γ ⊢ t
+assumes Γ
+
+  -------- B-Var
+  Γ, x ⊢ x
+
+  Γ ⊢ t1
+  Γ ⊢ t2
+  --------- B-App
+  Γ ⊢ t1 t2
+  
+  Γ, x ⊢ t[x]
+  -------------- B-Abs
+  Γ ⊢ λ x • t[x]
+  
+  -------- B-Unit
+  Γ ⊢ unit
+  
+judgment height: #t = n
+
+  --------- H-Unit
+  #unit = 0
+  
+  #t1 = n
+  -------------- H-App
+  #(t1 t2) = S n
+  
+  #t[λ x • t[x]] = n
+  ------------------- H-Abs
+  #(λ x • t[x]) = S n
+  
+
+theorem bound-implies-height:
+    forall b: * ⊢ t
+    exists #t = n.
+    proof by induction on b:
+        case rule
+            d1: * ⊢ t0
+            _: * ⊢ t1
+            --------------- B-App
+            _: * ⊢ (t0 t1)
+        is
+            h1: #t0 = n0 by induction hypothesis on d1
+            proof by rule H-App on h1
+        end case
+
+        case rule
+            d1: *, x ⊢ t0[x]
+            -------------------- B-Abs
+            _: * ⊢ (λ x • t0[x])
+        is
+            d1': * ⊢ t0[t] by substitution on d1, b
+            h1: #t0[t] = n0 by induction hypothesis on d1' //! bad induction
+            proof by rule H-Abs on h1
+        end case
+
+        case rule
+            -------------- B-Unit
+            _: * ⊢ unit
+        is
+            proof by rule H-Unit
+        end case
+
+    end induction
+end theorem
