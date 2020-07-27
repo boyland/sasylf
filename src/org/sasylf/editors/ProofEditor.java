@@ -129,11 +129,12 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		return fOutlinePage;	  
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getAdapter(Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (IContentOutlinePage.class.equals(adapter)) {
-			return getProofOutline();
+			@SuppressWarnings("unchecked")
+			T outline = (T)getProofOutline();
+			return outline;
 		}
 		return super.getAdapter(adapter);
 	}
