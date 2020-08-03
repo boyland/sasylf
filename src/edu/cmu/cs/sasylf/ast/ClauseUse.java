@@ -122,14 +122,11 @@ public class ClauseUse extends Clause {
 	public Fact asFact(Context ctx, Element assumes) {
 		Element localAssumes = null;
 		// accept assumes only if we have something that the context can affect.
-		if (assumes != null) {
+		if (assumes != null && !ctx.isVarFree(this)) {
 			SyntaxDeclaration contextSyntax = (SyntaxDeclaration)assumes.getType();
-			for (Element e : getElements()) {
-				if (e instanceof NonTerminal || e instanceof Binding) {
-					if (contextSyntax.canAppearIn(e.getTypeTerm())) {
-						localAssumes = assumes;
-					}
-				}
+			Term myType = getType().typeTerm();
+			if (contextSyntax.canAppearIn(myType)) {
+				localAssumes = assumes;
 			}
 		}
 		return new ClauseAssumption(this,getLocation(),localAssumes);
