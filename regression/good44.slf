@@ -91,3 +91,11 @@ theorem test: assumes G
 
   end induction
 end theorem
+
+lemma silly: assumes G
+  forall t // indicates that y has no bindings
+  forall b: G |- t
+  exists (t t) varfree.
+  bb: G |- t t by rule B-App on b, b
+  proof by theorem test on (t t), bb // from SASyLF 1.3.3 up to 1.4.1 "context discarded for argument"
+end lemma
