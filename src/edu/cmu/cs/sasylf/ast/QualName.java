@@ -45,15 +45,14 @@ public class QualName extends Node {
 	
 	/**
 	 * Updates if a change has happened, thus incrementing
-	 * the version. (NEW)
+	 * the version.
 	 */
 	public void updateVersion() {
-		System.out.println("updating version...");
 		++version;
 	}
 	
 	/**
-	 * Gives the current version of this QualName. (NEW)
+	 * Gives the current version of this QualName.
 	 * @return the current version
 	 */
 	public int version() {

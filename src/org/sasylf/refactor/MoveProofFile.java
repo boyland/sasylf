@@ -1,10 +1,13 @@
 package org.sasylf.refactor;
 
+import java.util.Set;
+
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -18,6 +21,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
@@ -28,10 +32,15 @@ import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.sasylf.Proof;
+import org.sasylf.project.ProjectModuleFinder;
 import org.sasylf.project.ProofBuilder;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.PackageDeclaration;
+import edu.cmu.cs.sasylf.ast.QualName;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.Location;
 
 public class MoveProofFile extends MoveParticipant {
@@ -39,7 +48,9 @@ public class MoveProofFile extends MoveParticipant {
 	private IFile proofFile;
 	private IContainer newFolder;
 	private IFile newProofFile;
-	private Change change;
+	private CompositeChange change;
+	private IPath newPath;
+	private String newPackage;
 
 	public MoveProofFile() { }
 
@@ -47,11 +58,14 @@ public class MoveProofFile extends MoveParticipant {
 	protected boolean initialize(Object element) {
 		MoveArguments args = super.getArguments();
 		Object destination = args.getDestination();
+		change = new CompositeChange("Move Proof File");
 		if (element instanceof IFile && destination instanceof IContainer) {
 			proofFile = (IFile)element;
 			// System.out.println("Participating in moving " + element);
 			newFolder = (IContainer)destination;
 			newProofFile = newFolder.getFile(new Path(proofFile.getName()));
+			newPath = ProofBuilder.getProofFolderRelativePath(newFolder);
+			newPackage = PackageDeclaration.toString(newPath.segments());
 			return true;
 		} else {
 			// System.out.println("Cannot participate, element is " + element + ", dest = " + destination);
@@ -71,7 +85,7 @@ public class MoveProofFile extends MoveParticipant {
 		if (pm == null) pm = new NullProgressMonitor();
 		RefactoringStatus status = new RefactoringStatus();
 		try {
-			change = this.createChange(pm, status);
+			change.add(this.createChange(proofFile, pm, status));
 		} catch (CoreException e) {
 			status.addFatalError(e.getStatus().getMessage());
 		}
@@ -85,10 +99,10 @@ public class MoveProofFile extends MoveParticipant {
 		return change;
 	}
 
-	protected Change createChange(IProgressMonitor pm, RefactoringStatus status) 
+	protected Change createChange(IFile fileName, IProgressMonitor pm, RefactoringStatus status) 
 			throws OperationCanceledException, CoreException
 	{
-		IPath fullPath = proofFile.getFullPath();
+		IPath fullPath = fileName.getFullPath();
 		TextFileChange result = new TextFileChange("move package", newProofFile);
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
@@ -96,15 +110,15 @@ public class MoveProofFile extends MoveParticipant {
 		try {
 			IContainer oldFolder = proofFile.getParent();
 			IPath oldPath = ProofBuilder.getProofFolderRelativePath(oldFolder);
-			IPath newPath = ProofBuilder.getProofFolderRelativePath(newFolder);
 			String oldPackage = PackageDeclaration.toString(oldPath.segments());
-			String newPackage = PackageDeclaration.toString(newPath.segments());
 			pm.worked(10);
 			manager = FileBuffers.getTextFileBufferManager();
 			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
-			createPackageReplaceChange(document,result,status,oldPackage,newPackage);
+			createPackageReplaceChange(document,result,status,oldPackage);
+			pm.worked(40);
+			checkDependencies(pm, status);
 		} catch (BadLocationException e) {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
@@ -116,7 +130,7 @@ public class MoveProofFile extends MoveParticipant {
 		return result; 
 	}
 
-	protected void createPackageReplaceChange(IDocument doc, TextFileChange change, RefactoringStatus status, String oldPackage, String newPackage) 
+	protected void createPackageReplaceChange(IDocument doc, TextFileChange change, RefactoringStatus status, String oldPackage) 
 			throws CoreException, BadLocationException {
 		// first see if we can get a CompUnit:
 		CompUnit cu = Proof.getCompUnit(proofFile);
@@ -174,5 +188,106 @@ public class MoveProofFile extends MoveParticipant {
 		}
 		System.out.println("edit is " + edit);
 		change.setEdit(edit);
+	}
+
+	protected void createDependencyChanges(IFile fileName, IProgressMonitor pm, RefactoringStatus status) 
+			throws OperationCanceledException, CoreException
+	{
+		IPath fullPath = fileName.getFullPath();
+		ITextFileBufferManager manager = null;
+		boolean connected = false;
+		try {
+			IContainer oldFolder = proofFile.getParent();
+			IPath oldPath = ProofBuilder.getProofFolderRelativePath(oldFolder);
+			String oldPackage = PackageDeclaration.toString(oldPath.segments());
+			pm.worked(10);
+			manager = FileBuffers.getTextFileBufferManager();
+			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			connected = true;
+			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
+			createPackageReplaceChangeModule(fileName,document,status,oldPackage);
+			document.getLineInformation(1);
+		} catch (BadLocationException e) {
+			status.addWarning("couldn't change package info: internal error " + e.getMessage());
+		} finally {
+			if (connected) {
+				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			}
+		}
+
+	}
+
+	private void createPackageReplaceChangeModule(IFile file, IDocument doc, 
+			RefactoringStatus status, String oldPackage) throws BadLocationException {
+		// first see if we can get a CompUnit:
+		CompUnit cu = Proof.getCompUnit(file);
+		TextFileChange result = new TextFileChange("move package", file);
+		if (cu == null) {
+			status.addWarning("proof file is not syntactically legal; package declaration may be mislocated");
+		}	
+		IRegion moduleLoc = null;
+		if (cu != null) {
+			for (ModulePart part : cu.getModuleParts()) {
+				//CompUnit c = (CompUnit) part.getModule().resolve(null);
+
+				moduleLoc = getModuleLocation(oldPackage, doc, part.getModule());
+
+				int offset = moduleLoc.getOffset();
+				int length = moduleLoc.getLength();
+
+				if (doc.get(offset, length).equals(newPackage)) {
+					// no change needed
+					continue;
+				}
+				System.out.println("Replacing " + doc.get(offset, length) + " with " + newPackage);
+
+				createEdit(result, moduleLoc);
+				change.add(result);
+			}
+		} else {
+			moduleLoc = new FindReplaceDocumentAdapter(doc).find(0,"module",true,true,true,false);
+			if (moduleLoc == null) {
+				// System.out.println("Found no 'module' keyword");
+				return;
+			}
+		}
+	}
+	
+	private void createEdit(TextFileChange result, IRegion moduleLoc) {
+		TextEdit edit = new ReplaceEdit(moduleLoc.getOffset(),moduleLoc.getLength(),newPackage);
+		Context.updateVersion();	// added this to Context instead of QualName because QualName gets overwritten
+
+		// System.out.println("edit is " + edit);
+		result.setEdit(edit);  
+	}
+	
+	private IRegion getModuleLocation(String oldPackage, IDocument doc, QualName node) throws BadLocationException {
+		Location loc = node.getLocation();
+		IRegion line = doc.getLineInformation(loc.getLine()-1);
+		
+		QualName qn = node;
+		loc = qn.getLocation();
+		line = doc.getLineInformation(loc.getLine()-1);
+		
+		int length = oldPackage.length();
+		int offset = line.getOffset() + loc.getColumn() - 1;
+		return new Region(offset, length);
+	}
+
+	private void checkDependencies(IProgressMonitor pm, RefactoringStatus status) 
+			throws OperationCanceledException, CoreException {
+		IProject p = proofFile.getProject();
+		ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+		ProjectModuleFinder moduleFinder = pb.getModuleFinder();
+		ModuleId id = ProofBuilder.getId(proofFile);
+
+		Set<ModuleId> dependencies = moduleFinder.getDependencies(id);
+
+		for (ModuleId dependency : dependencies) {
+			System.out.println("IFile: " + pb.getResource(dependency));
+			createDependencyChanges(pb.getResource(dependency), pm, status);
+		}
+
+		pm.done();
 	}
 }

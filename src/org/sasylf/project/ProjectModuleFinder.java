@@ -29,6 +29,9 @@ public class ProjectModuleFinder extends PathModuleFinder {
 
 	private ConcurrentHashMap<ModuleId,Set<ModuleId>> dependencies = new ConcurrentHashMap<ModuleId,Set<ModuleId>>();
 
+	/**
+	 * Create an instance of {@link ProjectModuleFinder} from an {@link IProject}.
+	 */
 	public ProjectModuleFinder(IProject p) {
 		super(new ProjectModuleProvider(p));
 	}
@@ -45,10 +48,12 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	public Set<ModuleId> getDependencies(ModuleId id) {
 		if (id == null) throw new IllegalArgumentException("module id cannot be null!");
 		
-		if (dependencies.contains(id)) {
+		if (dependencies.containsKey(id)) {
 			Set<ModuleId> copy = new HashSet<ModuleId>();
 			copy.addAll(dependencies.get(id));
 			return copy;
+		} else {
+			System.out.println("no dependencies to get!");
 		}
 		
 		return Collections.emptySet();
@@ -64,6 +69,8 @@ public class ProjectModuleFinder extends PathModuleFinder {
 				deps = dependencies.get(id);
 			}
 			deps.add(last);
+			dependencies.put(id, deps);
+			
 			System.out.println("adding dependency from " + last + " on " + id);
 		} else {
 			System.out.println("Unknown dependency on " + id);
@@ -81,12 +88,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IPath path = Path.fromOSString(f.getAbsolutePath());
 		IResource res = workspace.getRoot().getFileForLocation(path);
-		CompUnit result;
-		try {
-			result = ProofChecker.analyzeSlf(this, id, res);
-		} finally {
-			// TODO: handle finally clause
-		}
+		CompUnit result = ProofChecker.analyzeSlf(this, id, res);
 		if (result == null) {
 			// We should not generate any errors NOW since 
 			// this error will not be handled properly (using markers etc).

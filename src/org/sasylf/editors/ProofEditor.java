@@ -114,7 +114,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		return getDocumentProvider().getDocument(this.getEditorInput());
 	}
 
-	public ISourceViewer getSourceViweer() {
+	public ISourceViewer getPublicSourceViewer() {
 		return super.getSourceViewer();
 	}
 

@@ -44,8 +44,6 @@ public class Context implements Cloneable {
 	public Map<String,Module> modMap = new HashMap<String, Module>();
 	public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
 	public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
-
-	// CHANGED: public to private; now a static variable
 	private static int version; // incremented to indicate that caches should be abandoned.
 	
 	/// The remainder fields represent contextual (local) information
@@ -86,10 +84,9 @@ public class Context implements Cloneable {
  	
 	/**
 	 * Updates if a change has happened, thus incrementing
-	 * the version. (NEW)
+	 * the version.
 	 */
 	public static void updateVersion() {
-		System.out.println("updating version...");
 		++version;
 	}
 

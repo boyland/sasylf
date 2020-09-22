@@ -29,6 +29,17 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 		addProvider(new ResourceModuleProvider());
 		addProvider(p);
 	}
+	
+	/**
+	 * Get the {@link ModuleProvider} associated with the provided {@link ModuleId} in the cache.
+	 * @param id the module id to check for, must not be null
+	 * @return the module provider associated with this id in the cache
+	 */
+	public ModuleProvider lookupModule(ModuleId id) {
+		hasCandidate(id);
+		
+		return presentCache.get(id);
+	}
 
 	private void addProvider(ModuleProvider p) {
 		providers.add(p);

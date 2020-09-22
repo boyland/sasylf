@@ -1,9 +1,12 @@
 package org.sasylf.refactor;
 
+import java.util.Set;
+
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -17,6 +20,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
@@ -25,9 +29,15 @@ import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.sasylf.Proof;
+import org.sasylf.project.ProjectModuleFinder;
+import org.sasylf.project.ProofBuilder;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.ModulePart;
+import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.QualName;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 
@@ -35,7 +45,7 @@ public class RenameProofModule extends RenameParticipant {
 
 	IFile proofFile, newProofFile;
 	String newName;
-	Change change;
+	CompositeChange change;
 
 	public RenameProofModule() { }
 
@@ -43,6 +53,7 @@ public class RenameProofModule extends RenameParticipant {
 	protected boolean initialize(Object element) {
 		RenameArguments args = super.getArguments();
 		newName = args.getNewName();
+		change = new CompositeChange("Rename Proof Module"); // better name??
 		if (element instanceof IFile) {
 			proofFile = (IFile)element;
 			// System.out.println("Participating in renaming " + element);
@@ -65,7 +76,8 @@ public class RenameProofModule extends RenameParticipant {
 		if (pm == null) pm = new NullProgressMonitor();
 		RefactoringStatus status = new RefactoringStatus();
 		try {
-			change = this.createChange(pm, status);
+			change.add(this.createChange(pm, status, proofFile));
+			//checkDependencies(pm, status);
 		} catch (CoreException e) {
 			status.addFatalError(e.getStatus().getMessage());
 		}
@@ -78,10 +90,10 @@ public class RenameProofModule extends RenameParticipant {
 		return change;
 	}
 
-	protected Change createChange(IProgressMonitor pm, RefactoringStatus status) 
+	protected Change createChange(IProgressMonitor pm, RefactoringStatus status, IFile file) 
 			throws OperationCanceledException, CoreException
 	{
-		IPath fullPath = proofFile.getFullPath();
+		IPath fullPath = file.getFullPath();
 		TextFileChange result = new TextFileChange("rename module", newProofFile);
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
@@ -101,34 +113,33 @@ public class RenameProofModule extends RenameParticipant {
 			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
-			createModuleRenameChange(newModuleName,document,result,status);
+			createModuleRenameChange(file,newModuleName,document,result, status);
 			document.getLineInformation(1);
 			pm.worked(40);
+			checkDependencies(pm, status);
 		} catch (BadLocationException e) {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
 			if (connected) {
 				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
 			}
-			pm.done();
 		}
 		return result; 
 	}
 
-	private void createModuleRenameChange(String newModuleName, IDocument doc, TextFileChange result, RefactoringStatus status) throws BadLocationException {
+	private void createModuleRenameChange(IFile file, String newModuleName, IDocument doc, TextFileChange result, RefactoringStatus status) throws BadLocationException {
 		// first see if we can get a CompUnit:
-		CompUnit cu = Proof.getCompUnit(proofFile);
+		CompUnit cu = Proof.getCompUnit(file);
 		if (cu == null) {
 			status.addWarning("proof file is not syntactically legal; module name may be mislocated");
 		}
 		IRegion moduleLoc = null;
 		if (cu != null) {
-			Location loc = cu.getLocation();
-			IRegion line = doc.getLineInformation(loc.getLine()-1);
-			moduleLoc = new Region(line.getOffset()+loc.getColumn()-1,6);
+			moduleLoc = getModuleLocation(doc, cu);
 			String text = doc.get(moduleLoc.getOffset(), moduleLoc.getLength());
+			//System.out.println("Text: " + text);
 			if (!text.equals("module")) {
-				// System.out.println("expected 'module', found '" + text + "'");
+				System.out.println("expected 'module', found '" + text + "'");
 				return;
 			}
 		} else {
@@ -155,13 +166,112 @@ public class RenameProofModule extends RenameParticipant {
 			return;
 		}
 		System.out.println("Replacing " + doc.get(offset, length) + " with " + newModuleName);
-		
-		TextEdit edit = new ReplaceEdit(nameLoc.getOffset(),nameLoc.getLength(),newModuleName);
-		Context.updateVersion();	// added this to Context instead of QualName because QualName gets overwritten
-		
-		// System.out.println("edit is " + edit);
-		result.setEdit(edit);  
+
+		createEdit(newModuleName, result, nameLoc);
 
 	}
 
+	protected void createDependencyChanges(IProgressMonitor pm, RefactoringStatus status, IFile file) 
+			throws OperationCanceledException, CoreException
+	{
+		IPath fullPath = file.getFullPath();
+		ITextFileBufferManager manager = null;
+		boolean connected = false;
+		try {
+			String newModuleName = newName.substring(0, newName.length()-4);
+			pm.worked(10);
+			manager = FileBuffers.getTextFileBufferManager();
+			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			connected = true;
+			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
+			createModulePartRenameChange(file,newModuleName,document,status);
+			document.getLineInformation(1);
+			pm.worked(10);
+		} catch (BadLocationException e) {
+			status.addWarning("couldn't change package info: internal error " + e.getMessage());
+		} finally {
+			if (connected) {
+				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			}
+		}
+	}
+
+	private void createModulePartRenameChange(IFile file, String newModuleName, 
+			IDocument doc, RefactoringStatus status) throws BadLocationException {
+		// first see if we can get a CompUnit:
+		CompUnit cu = Proof.getCompUnit(file);
+		TextFileChange result = new TextFileChange("rename module part", file);
+		if (cu == null) {
+			status.addWarning("proof file is not syntactically legal; module name may be mislocated");
+		}
+		IRegion moduleLoc = null;
+		if (cu != null) {
+			for (ModulePart part : cu.getModuleParts()) {
+				//CompUnit c = (CompUnit) part.getModule().resolve(null);
+
+				moduleLoc = getModuleLocation(doc, part.getModule());
+
+				int offset = moduleLoc.getOffset();
+				int length = moduleLoc.getLength();
+
+				if (doc.get(offset, length).equals(newModuleName)) {
+					// no change needed
+					continue;
+				}
+				System.out.println("Replacing " + doc.get(offset, length) + " with " + newModuleName);
+
+				createEdit(newModuleName, result, moduleLoc);
+				change.add(result);
+			}
+		} else {
+			moduleLoc = new FindReplaceDocumentAdapter(doc).find(0,"module",true,true,true,false);
+			if (moduleLoc == null) {
+				// System.out.println("Found no 'module' keyword");
+				return;
+			}
+		}
+	}
+
+	private void createEdit(String newModuleName, TextFileChange result,
+			IRegion moduleLoc) {
+		TextEdit edit = new ReplaceEdit(moduleLoc.getOffset(),moduleLoc.getLength(),newModuleName);
+		Context.updateVersion();	// added this to Context instead of QualName because QualName gets overwritten
+
+		// System.out.println("edit is " + edit);
+		result.setEdit(edit);  
+	}
+
+	private IRegion getModuleLocation(IDocument doc, Node node) throws BadLocationException {
+		Location loc = node.getLocation();
+		IRegion line = doc.getLineInformation(loc.getLine()-1);
+		
+		if (!(node instanceof QualName)) {
+			return new Region(line.getOffset()+loc.getColumn()-1,6);
+		} 
+		
+		QualName qn = (QualName) node;
+		loc = qn.getEndLocation();
+		line = doc.getLineInformation(loc.getLine()-1);
+		
+		int length = qn.getLastSegment().length();
+		int offset = line.getOffset() + loc.getColumn() - length - 1;
+		return new Region(offset, length);
+	}
+
+	private void checkDependencies(IProgressMonitor pm, RefactoringStatus status) 
+			throws OperationCanceledException, CoreException {
+		IProject p = proofFile.getProject();
+		ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+		ProjectModuleFinder moduleFinder = pb.getModuleFinder();
+		ModuleId id = ProofBuilder.getId(proofFile);
+
+		Set<ModuleId> dependencies = moduleFinder.getDependencies(id);
+		
+		for (ModuleId dependency : dependencies) {
+			//System.out.println("IFile: " + pb.getResource(dependency));
+			createDependencyChanges(pm, status, pb.getResource(dependency));
+		}
+		
+		pm.done();
+	}
 }
