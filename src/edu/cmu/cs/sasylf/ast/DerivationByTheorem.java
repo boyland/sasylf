@@ -25,10 +25,10 @@ public class DerivationByTheorem extends DerivationByIHRule {
 				if (theorem == null)
 					ErrorHandler.report(Errors.THEOREM_NOT_FOUND, theoremName.toString(), this);
 			}
-			if (!(resolution instanceof Theorem)) {
-				ErrorHandler.report(theoremName + " does not appear to name a theorem", this, "SASyLF computed that it is a " + resolution.getClass().getSimpleName());
+			if (!(resolution instanceof RuleLike)) {
+				ErrorHandler.report(theoremName + " does not appear to name a theorem or rule", this, "SASyLF computed that it is a " + resolution.getClass().getSimpleName());
 			}
-			theorem = (Theorem)resolution;
+			theorem = (RuleLike)resolution;
 			if (!theorem.isInterfaceOK()) {
 				ErrorHandler.report(Errors.RULE_BAD, theoremName.toString(), this);
 			}
