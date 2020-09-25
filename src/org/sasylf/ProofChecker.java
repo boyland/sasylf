@@ -212,7 +212,9 @@ public class ProofChecker  {
 		Proof oldProof = Proof.getProof(res);
 		Proof newProof = new Proof(res,doc);
 		int errors = 0;
-		
+
+		System.out.println("Reparsing...");
+
 		if (mf == null) {
 			ProofBuilder pb = ProofBuilder.getProofBuilder(res.getProject());
 			if (pb != null) {

@@ -23,5 +23,13 @@ public interface ModuleProvider {
 	 * @return module or null (in which case some errors were reported)
 	 */
 	public CompUnit get(PathModuleFinder mf, ModuleId id, Span location);
-
+	
+	/**
+	 * Add a listener that will be informed when there are a module
+	 * events.
+	 * @param listener must not be null
+	 */
+	public void addModuleEventListener(ModuleEventListener listener);
+	
+	// XXX: remove/deleteModuleListener
 }

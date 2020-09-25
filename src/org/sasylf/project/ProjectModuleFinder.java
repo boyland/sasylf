@@ -1,6 +1,7 @@
 package org.sasylf.project;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,10 +19,9 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.sasylf.ProofChecker;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
-import edu.cmu.cs.sasylf.module.RootModuleProvider;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -29,25 +29,38 @@ public class ProjectModuleFinder extends PathModuleFinder {
 
 	private ConcurrentHashMap<ModuleId,Set<ModuleId>> dependencies = new ConcurrentHashMap<ModuleId,Set<ModuleId>>();
 
-	private static class ProjectModuleProvider extends RootModuleProvider {
-		ProjectModuleProvider(IProject p) {
-			super(ProofBuilder.getProofFolder(p).getLocation().toFile());
-		}
-
-		@Override
-		protected CompUnit parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
-			return ((ProjectModuleFinder)mf).parseAndCheck(f, id, loc);
-		}	
-	}
-	
+	/**
+	 * Create an instance of {@link ProjectModuleFinder} from an {@link IProject}.
+	 */
 	public ProjectModuleFinder(IProject p) {
 		super(new ProjectModuleProvider(p));
 	}
 
 	public void dispose() {
 	}
+	
+	/**
+	 * Get the set of dependences associated with the given module id.  
+	 * If none exist, an empty set is returned instead.
+	 * @param id must not be null
+	 * @return the set of dependencies
+	 */
+	public Set<ModuleId> getDependencies(ModuleId id) {
+		if (id == null) throw new IllegalArgumentException("module id cannot be null!");
+		
+		if (dependencies.containsKey(id)) {
+			Set<ModuleId> copy = new HashSet<ModuleId>();
+			copy.addAll(dependencies.get(id));
+			return copy;
+		} else {
+			System.out.println("no dependencies to get!");
+		}
+		
+		return Collections.emptySet();
+	}
 
-	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
+	@Override
+	public Module findModule(ModuleId id, Span location) {
 		ModuleId last = super.lastModuleId();
 		if (last != null) {
 			Set<ModuleId> deps = dependencies.get(id);
@@ -56,7 +69,18 @@ public class ProjectModuleFinder extends PathModuleFinder {
 				deps = dependencies.get(id);
 			}
 			deps.add(last);
+			dependencies.put(id, deps);
+			
+			System.out.println("adding dependency from " + last + " on " + id);
+		} else {
+			System.out.println("Unknown dependency on " + id);
 		}
+		
+		return super.findModule(id, location);
+	}
+
+	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
+		
 		// The problem here is that we want to read the current state of the
 		// editor buffer instead of the resource on disk, if it is available.
 		// This requires us to convert back to a resource and then call the
@@ -78,7 +102,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	private final Set<ModuleId> toRecheck = new HashSet<ModuleId>();
 
 	/**
-	 * Make this module ID as needing rechecking and anything that depends on it.
+	 * Mark this module ID as needing rechecking and anything that depends on it.
 	 * @param id must not be null.
 	 */
 	public void recheckNeeded(ModuleId id) {
@@ -98,7 +122,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		if (monitor == null) monitor = new NullProgressMonitor();
 		Set<ModuleId> todo = new HashSet<ModuleId>(toRecheck);
 		toRecheck.clear();
-		monitor.beginTask("reschecking proofs", todo.size());
+		monitor.beginTask("rechecking proofs", todo.size());
 		try {
 			for (ModuleId id : todo) {
 				IProgressMonitor subMonitor = new SubProgressMonitor(monitor,1);
@@ -130,3 +154,14 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		super.clearCache();
 	}
 }
+
+
+
+/*
+Notes:
+
+parseAndCheck() does indeed go through first if statement
+   - both "id" and "last" are the same
+   - what does adding things to "deps" actually do for us?
+need to figure out how to add dependencies from other files
+*/

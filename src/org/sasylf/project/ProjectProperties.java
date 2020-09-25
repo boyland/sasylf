@@ -90,7 +90,7 @@ public class ProjectProperties {
 	/**
 	 * @return
 	 */
-	public static String getDefaultBuldPath() {
+	public static String getDefaultBuildPath() {
 		return ProofBuilder.makeDefaultBuildPath(Preferences.getProofFolderName());
 	}
 
@@ -109,7 +109,7 @@ public class ProjectProperties {
 		IEclipsePreferences node = scope.getNode(Activator.PLUGIN_ID);
 		buildPath = node.get(PROJECT_BUILD_PATH_LOCAL_NAME, null);
 		if (buildPath == null) {
-			final String newBuildPath = getDefaultBuldPath();
+			final String newBuildPath = getDefaultBuildPath();
 			Display.getDefault().asyncExec(new Runnable() {
 				public void run() {
 					try {

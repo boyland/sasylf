@@ -44,8 +44,7 @@ public class Context implements Cloneable {
 	public Map<String,Module> modMap = new HashMap<String, Module>();
 	public Map<List<ElemType>,ClauseDef> parseMap = new HashMap<List<ElemType>,ClauseDef>();
 	public List<GrmRule> ruleSet = new ArrayList<GrmRule>();
-
-	public int version; // incremented to indicate that caches should be abandoned.
+	private static int version; // incremented to indicate that caches should be abandoned.
 	
 	/// The remainder fields represent contextual (local) information
 
@@ -73,6 +72,22 @@ public class Context implements Cloneable {
 	public Context(ModuleFinder mf, CompUnit cu) {
 		moduleFinder = mf;
 		compUnit = cu;
+	}
+	
+	/**
+	 * Gives the current version of this context. (NEW)
+	 * @return the current version
+	 */
+	public int version() {
+		return version;
+	}
+ 	
+	/**
+	 * Updates if a change has happened, thus incrementing
+	 * the version.
+	 */
+	public static void updateVersion() {
+		++version;
 	}
 
 	/** Return a copy of this context

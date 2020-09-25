@@ -15,7 +15,7 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * Find modules within the SASyLF library
  */
-public class ResourceModuleProvider implements ModuleProvider {
+public class ResourceModuleProvider extends AbstractModuleProvider {
 
 	@Override
 	public boolean has(ModuleId id) {

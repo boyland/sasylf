@@ -42,6 +42,22 @@ public class QualName extends Node {
 	public QualName(Location loc, String name) {
 		this(null,loc,name);
 	}
+	
+	/**
+	 * Updates if a change has happened, thus incrementing
+	 * the version.
+	 */
+	public void updateVersion() {
+		++version;
+	}
+	
+	/**
+	 * Gives the current version of this QualName.
+	 * @return the current version
+	 */
+	public int version() {
+		return version;
+	}
 
 	/**
 	 * Get last part of a qualified name,
@@ -68,9 +84,10 @@ public class QualName extends Node {
 	 */
 	public Object resolve(Context ctx) {
 		if (ctx == null) return resolution;
-		if (version != ctx.version) resolution = null;
+		//System.out.println("version = " + ctx.version());
+		if (version != ctx.version()) resolution = null;
 		if (resolution == null) {
-			version = ctx.version;
+			version = ctx.version();
 			if (source == null) {
 				resolution = ctx.modMap.get(name);
 				if (resolution == null) resolution = ctx.getSyntax(name);
