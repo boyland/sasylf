@@ -14,9 +14,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.sasylf.ProofChecker;
-import org.sasylf.project.ProofBuilder;
-
-import edu.cmu.cs.sasylf.module.ModuleFinder;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.

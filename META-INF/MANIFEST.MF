@@ -106,5 +106,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface.text,
  org.eclipse.jdt.ui,
  org.eclipse.ui.navigator,
- org.eclipse.ltk.core.refactoring
+ org.eclipse.ltk.core.refactoring,
+ org.eclipse.swt
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
