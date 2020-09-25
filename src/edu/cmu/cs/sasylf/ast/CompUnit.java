@@ -24,7 +24,7 @@ public class CompUnit extends Node implements Module {
 		packageDecl=pack; 
 		moduleName = n; 
 	}
-	
+
 	/**
 	 * Add a chunk that is required by this module.
 	 * @param c part to add, must not be null
@@ -32,7 +32,7 @@ public class CompUnit extends Node implements Module {
 	public void addParameterChunk(Part c) {
 		params.add(c); 
 	}
-	
+
 	/**
 	 * Add a part to this compilation unit.
 	 * @param c
@@ -48,7 +48,7 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public String getName() { return moduleName; }
-	
+
 	@Override
 	public boolean isAbstract() {
 		return !params.isEmpty();
@@ -58,7 +58,7 @@ public class CompUnit extends Node implements Module {
 	private String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
-	
+
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#prettyPrint(java.io.PrintWriter)
 	 */
@@ -69,7 +69,7 @@ public class CompUnit extends Node implements Module {
 		if (moduleName != null) {
 			out.println("module " + moduleName);
 		}
-		
+
 		if (!params.isEmpty()) {
 			out.println("requires");
 			for (Part part : params) {
@@ -92,7 +92,7 @@ public class CompUnit extends Node implements Module {
 	public boolean typecheck() {
 		return typecheck(NullModuleFinder.get(),(ModuleId)null);  
 	}
-	
+
 	/** Typechecks this compilation unit, returning true if the check was successful,
 	 * false if there were one or more errors.
 	 */
@@ -123,7 +123,7 @@ public class CompUnit extends Node implements Module {
 			part.typecheck(ctx);
 		}
 	}
-	
+
 	private void checkFilename(ModuleId id) {
 		packageDecl.typecheck(id.packageName);
 
@@ -136,7 +136,7 @@ public class CompUnit extends Node implements Module {
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#collectTopLevel(java.util.Collection)
 	 */
@@ -149,7 +149,7 @@ public class CompUnit extends Node implements Module {
 			part.collectTopLevel(things);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#collectRuleLike(java.util.Map)
 	 */
@@ -163,12 +163,29 @@ public class CompUnit extends Node implements Module {
 		}
 	}
 
+	/**
+	 * Get the {@link ModulePart}s associated with this {@link CompUnit}.
+	 * @return the list of module parts in this comp unit.
+	 */
+	@Deprecated
+	public List<ModulePart> getModuleParts() {
+		List<ModulePart> moduleParts = new ArrayList<ModulePart>();
+
+		for (Part part : parts) {
+			if (part instanceof ModulePart) {
+				moduleParts.add((ModulePart) part);
+			}
+		}
+
+		return moduleParts;
+	}
+
 	private Map<String,Object> declCache = new HashMap<String,Object>();
 	private int cacheVersion = -1;
-	
+
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
-		if (cacheVersion != ctx.version) {
+		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 			this.collectTopLevel(things);
@@ -184,7 +201,7 @@ public class CompUnit extends Node implements Module {
 					declCache.put(jd.getName(),jd);
 				}
 			}
-			cacheVersion = ctx.version;
+			cacheVersion = ctx.version();
 		}
 		return declCache.get(name);
 	}

@@ -35,7 +35,7 @@ public class OpenDeclarationHandler extends AbstractHandler {
 		} else {
 			Position pos = element.getPosition();
 			//TODO: later we may need to open an editor:
-			ISourceViewer sourceViewer = proofEditor.getSourceViweer();
+			ISourceViewer sourceViewer = proofEditor.getPublicSourceViewer();
 			sourceViewer.setRangeIndication(pos.getOffset(), pos.getLength(), true);
 		}
 		return null;

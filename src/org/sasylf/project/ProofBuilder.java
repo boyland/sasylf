@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -25,6 +26,7 @@ import org.sasylf.Proof;
 import org.sasylf.util.Cell;
 
 import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.ModuleProvider;
 
 public class ProofBuilder extends IncrementalProjectBuilder {
 
@@ -280,6 +282,18 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 			}
 			return new ModuleId(pkg,path.lastSegment());
 		} else return null;
+	}
+	
+	public IFile getResource(ModuleId id) {
+		ProjectModuleFinder f = getModuleFinder();
+		
+		ModuleProvider provider = f.lookupModule(id);
+		
+		if (provider instanceof ProjectModuleProvider) {
+			return ((ProjectModuleProvider) provider).getFileFromModuleId(id);			
+		}
+		
+		return null;
 	}
 
 	/**

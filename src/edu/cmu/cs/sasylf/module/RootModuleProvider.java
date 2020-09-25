@@ -16,8 +16,8 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * A module provider using a root directory to look things up.
  */
-public class RootModuleProvider implements ModuleProvider {
-	public final File rootDirectory;
+public class RootModuleProvider extends AbstractModuleProvider {
+	protected final File rootDirectory;
 
 	/**
 	 * Create a root module provider looking at this directory.
@@ -30,14 +30,23 @@ public class RootModuleProvider implements ModuleProvider {
 
 	@Override
 	public boolean has(ModuleId id) {
-		File f = id.asFile(rootDirectory);
+		File f = getFile(id);
 		return f.isFile();
+	}
+	
+	/**
+	 * Get the {@link File} from a {@link ModuleId}.
+	 * @param id the module id to search for
+	 * @return the root file created from the given module id
+	 */
+	protected File getFile(ModuleId id) {
+		return id.asFile(rootDirectory);
 	}
 
 	@Override
 	public CompUnit get(PathModuleFinder mf, ModuleId id, Span location) {
 		CompUnit result;
-		File f = id.asFile(rootDirectory);
+		File f = getFile(id);
 		result = parseAndCheck(mf,f,id, location);
 		return result;
 	}
