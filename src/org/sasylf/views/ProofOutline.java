@@ -87,8 +87,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				int lineOffset = document.getLineOffset(loc.getLine() - 1);
 				int lineLength = document.getLineLength(loc.getLine() - 1);
 				pos = new Position(lineOffset, lineLength);
-				document.addPosition(pos);
+				document.addPosition(SEGMENTS, pos);
 			} catch (BadLocationException e) {
+				e.printStackTrace();
+			} catch (BadPositionCategoryException e) {
 				e.printStackTrace();
 			}
 			return pos;

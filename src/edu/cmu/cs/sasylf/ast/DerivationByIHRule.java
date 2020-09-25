@@ -121,14 +121,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
 		if (ruleLike instanceof Theorem) {        
 			mustAvoid.addAll(conclusionFreeVars);
-		} else if (contextCheckNeeded) {
-			for (FreeVar v : conclusionFreeVars) {
-				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
-				Term actual = v.substitute(callSub);
-				if (ctx.isVarFree(actual)) continue;
-				ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
-						" discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
-			}
 		}
 
 		if (!callSub.avoid(mustAvoid)) {
@@ -141,6 +133,17 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					this, "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")");
 		}  
 
+		if (contextCheckNeeded) {
+			for (FreeVar v : conclusionFreeVars) {
+				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
+				Term actual = v.substitute(callSub);
+				if (ctx.isVarFree(actual)) continue;
+				System.out.println(actual + "(was " + v + ") is not free: " + ctx.varFreeNTmap.keySet());
+				ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
+						" discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
+			}
+		}
+		
 		// See good37.slf
 		Set<FreeVar> poorVars = callSub.selectUnavoidable(subject.getFreeVariables());
 		poorVars.removeAll(ctx.outputVars); // output variables are often not-free

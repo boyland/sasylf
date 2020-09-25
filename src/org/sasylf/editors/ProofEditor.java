@@ -23,6 +23,7 @@ import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Composite;
@@ -117,6 +118,18 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	public ISourceViewer getPublicSourceViewer() {
 		return super.getSourceViewer();
 	}
+	
+	  /**
+	   * Return the cursor position as an offset within the document.
+	   * (Why isn't this standard?)
+	   * @return offset with the document of the editor "caret".
+	   * @see #getCursorPosition()
+	   */
+	  public int getCursorOffset() {
+	    final ISourceViewer sourceViewer = getSourceViewer();
+	    StyledText styledText= sourceViewer.getTextWidget();
+	    return widgetOffset2ModelOffset(sourceViewer, styledText.getCaretOffset());
+	  }
 
 	private ProofOutline fOutlinePage;
 
@@ -129,11 +142,12 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		return fOutlinePage;	  
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getAdapter(Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (IContentOutlinePage.class.equals(adapter)) {
-			return getProofOutline();
+			@SuppressWarnings("unchecked")
+			T outline = (T)getProofOutline();
+			return outline;
 		}
 		return super.getAdapter(adapter);
 	}

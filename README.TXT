@@ -1,4 +1,4 @@
-SASyLF version 1.4.1a6
+SASyLF version 1.5.0a1
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -14,7 +14,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 INSTALLATION
 
-To run SASyLF, you must have Java version SE 6 or later installed.  You
+To run SASyLF, you must have Java version SE 8 or later installed.  You
 can get Java at:
 
 http://java.sun.com/javase/downloads/index.jsp
@@ -112,9 +112,10 @@ analysis.  Its use is deprecated.
 
 RELEASE HISTORY
 
-1.4.1	Modules without parameters
+1.5.0	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules
-    Resolved issues #65, #84, #85, #86, #88, #89, #91, #92
+    Substitution can be used in induction
+    Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #95
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)
