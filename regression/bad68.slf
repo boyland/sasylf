@@ -890,7 +890,7 @@ is
            where T1 := T //! replaced bak with old variable
             and T2 := T //! caused internal error
         is
-            proof by unproved
+            proof by unproved //! ignore
         end case
     end case analysis
 	dtT' : * |- t' : T1 by induction hypothesis on d1, ds
