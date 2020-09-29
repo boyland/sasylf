@@ -286,8 +286,9 @@ public class WhereClause extends Node {
 			checked.put(matchingVar, true);
 			
 			Term rhsUser = userSub.getSubstituted(matchingVar);
-			Util.debug("Correct = ",rhsCorrect,",User = ",rhsUser);
-			
+			Util.debug("For " + matchingVar + ", Correct = ",rhsCorrect,",User = ",rhsUser);
+			if (rhsUser == null) rhsUser = matchingVar; // can happen if we remove a NOP subst from rhsUser
+
 			int userLambdas = rhsUser.countLambdas();
 			int correctLambdas = rhsCorrect.countLambdas();
 			if (userLambdas != correctLambdas) {

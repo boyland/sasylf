@@ -233,6 +233,7 @@ proof by case analysis on dtv:
     case rule
         ----------------------------- V-Abs
         _: (lambda x : T0 => t0[x]) value
+        where t := lambda x:T0 => t1[x] //! forces t0 and t1 to be same 
     is
         proof by rule equality
     end case
@@ -242,6 +243,7 @@ proof by case analysis on dtv:
     case rule
         -------------------------------- V-Tabs
         _: (lambda X <: T0 => t0[X]) value
+        where t := lambda X <: T0 => t0[X]
     is
         proof by case analysis on dtt:
             case rule
@@ -363,6 +365,7 @@ proof by case analysis on dtv:
     case rule
         ----------------------------- V-Abs
         _: (lambda x : T0 => t0[x]) value
+        where t := lambda x : T0 => t0[x]
     is
         proof by case analysis on dtt:
             case rule
@@ -413,6 +416,8 @@ case rule
 	dp2t: * |- t2 : T11
 	---------------------------------- T-App
 	d3: * |- t1 t2 : T12
+	where t := t1 t2
+	 and T := T12
 
 is
 
@@ -800,7 +805,7 @@ case rule
 	d2: * |- t2 : T1
 	---------------------------------- T-App
 	d3: * |- t1 t2 : T
-
+        
 is
 	dt' : * |- t' : T by case analysis on ds:
 	case rule
@@ -871,14 +876,25 @@ is
 end case
 
 case rule
-	d1: * |- t : T'
-	d2: * |- T' <: T
+	d1: * |- t : T1
+	d2: * |- T1 <: T2
 	---------------- T-Sub
-	d3: * |- t : T
+	d3: * |- t : T2
+	where T := T2
 is
 
-	dtT' : * |- t' : T' by induction hypothesis on d1, ds
-	dt' : * |- t' : T by rule T-Sub on dtT', d2
+    do case analysis on d2: // just for bad68.slf
+       case rule
+           ----------- SA-Refl
+           _: * |- T <: T
+           where T1 := T //! replaced bak with old variable
+            and T2 := T //! caused internal error
+        is
+            proof by unproved
+        end case
+    end case analysis
+	dtT' : * |- t' : T1 by induction hypothesis on d1, ds
+	dt' : * |- t' : T2 by rule T-Sub on dtT', d2
 
 end case
 end induction
