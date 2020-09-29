@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -335,6 +336,9 @@ public class WhereClause extends Node {
 					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
 					if (fv == null || ctx.isKnown(fv.getName())) {
 						Term body = Term.getWrappingAbstractions(e.getValue(), null);
+						if (body instanceof Application) {
+							body = ((Application)body).getFunction();
+						}
 						String vals = TermPrinter.toString(ctx, null, userWC.second.getLocation(), body, false);
 						ErrorHandler.recoverableError("Replacement too specific, probably needs a fresh variable instead of " + vals, userWC.second);
 						continue nextUserClause;
