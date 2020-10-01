@@ -39,6 +39,7 @@ public class Main {
 			System.err.println("   --help        print this message");
 			System.err.println("   --compwhere   makes where clauses compulsory (will check them even if not)");
 			System.err.println("   --verbose     prints out theorem names as it checks them");
+			System.err.println("   --task        print out task comments");
 			System.err.println("   --LF          extra info about LF terms in certain error messages");
 			System.err.println("   --path=dir... use the given directories for package/module checking.");
 			return;
@@ -56,6 +57,10 @@ public class Main {
 			}
 			if (args[i].equals("--LF")) {
 				edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO = true;
+				continue;
+			}
+			if (args[i].equals("--task")) {
+				edu.cmu.cs.sasylf.util.Util.SHOW_TASK_COMMENTS = true;
 				continue;
 			}
 			if (args[i].equals("--verbose")) {

@@ -262,7 +262,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		if (monitor == null) monitor = new NullProgressMonitor();
 		monitor.beginTask("clean", 100);
 		try {
-			getProject().deleteMarkers(Marker.MARKER_ID, true, IResource.DEPTH_INFINITE);
+			getProject().deleteMarkers(Marker.ERROR_MARKER_ID, true, IResource.DEPTH_INFINITE);
 			monitor.worked(90);
 			getModuleFinder().clear();
 			monitor.worked(10);
