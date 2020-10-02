@@ -162,7 +162,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 					for (Pair<Term,Substitution> p : e.getValue()) {
 						Pair<Term,Substitution> newPair;
 						try {
-							Util.debug("term = ", p.first);
+							Util.debug("Saved case:\nterm = ", p.first);
 							Util.debug("sub = ", p.second);
 							Util.debug("current = ", ctx.currentSub);
 							Substitution newSubstitution = new Substitution(p.second);
@@ -171,10 +171,13 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 								Util.debug("case no lomger feasible (relaxation): ");
 								continue;
 							}
-							if (caseNT != null) {
-								FreeVar v = new FreeVar(caseNT.getSymbol(),p.first.getType(new ArrayList<Pair<String,Term>>()));
-								newSubstitution.add(v,p.first);
-							}
+							/* crashed on good46.slf.  Seems unneeded anyway
+								if (caseNT != null) {
+									FreeVar v = new FreeVar(caseNT.getSymbol(),p.first.getType(new ArrayList<Pair<String,Term>>()));
+									System.out.println("adding " + v + " -> " + p.first + " to " + newSubstitution);
+									newSubstitution.add(v,p.first);
+								}
+							 */
 							Util.debug("newSub = ", newSubstitution);
 							if (caseNT != null) newPair = p;
 							else newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
@@ -186,6 +189,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 					}
 					ctx.caseTermMap.put(e.getKey(), newSet);
 				}
+
 			} else if (caseNT != null) {
 				if (!ctx.inputVars.contains(caseNT.computeTerm(null))) {
 					ErrorHandler.report("Undeclared syntax: " + caseNT +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), targetDerivation);

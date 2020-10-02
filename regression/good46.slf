@@ -1,0 +1,112 @@
+// problems with do case analysis on terms with contexts
+package regression;
+
+terminals fn bound var value
+
+syntax
+  t ::= fn x -> t[x]
+     | t t
+     | x
+
+  G ::= *
+     | G, x bound
+
+
+judgment isvar : G |- t var
+assumes G
+
+  ------------------- var
+  G, x bound |- x var
+
+
+judgment cbv: G |- t -> t
+assumes G
+
+  G |- t2 -/>
+  ---------------------------------- cbv-beta
+  G |- (fn x -> t1[x]) t2 -> t1[t2]
+
+  G |- t1 -> t1'
+  -------------------- cbv-app-1
+  G |- t1 t2 -> t1' t2
+
+  G |- t1 -/>
+  G |- t2 -> t2'
+  -------------------- cbv-app-2
+  G |- t1 t2 -> t1 t2'
+
+judgment cbv-stuck: G |- t -/>
+assumes G
+
+  G |- t var
+  ----------- stuck-var
+  G |- t -/>
+
+  ----------------------- stuck-fn
+  G |- (fn x -> t[x]) -/>
+
+  G |- t1 var
+  G |- t2 -/>
+  ----------------- stuck-app-var
+  G |- (t1 t2) -/>
+
+  G |- t11 t12 -/>
+  G |- t2 -/>
+  ----------------------- stuck-app-app
+  G |- ((t11 t12) t2) -/>
+
+theorem cbv-decidable: assumes G
+    forall t assumes G
+    exists G |- t -> t' or G |- t -/>.
+    proof by case analysis on t:
+      case x assumes G', x bound is
+        v: G', x bound |- x var by rule var
+	d: G |- t var by v
+	_: G |- t -/> by rule stuck-var on d
+      end case
+      case fn x -> t1[x] is
+        _: G |- (fn x -> t1[x]) -/> by rule stuck-fn
+      end case
+      case t1 t2 is
+	ch2: G |- t2 -> t2' or G |- t2 -/> by induction hypothesis on t2
+        do case analysis on t1:
+	  case fn x -> t11[x] is
+	    proof by case analysis on ch2:
+	      case or e2: G |- t2 -> t2' is
+	        s1: G |- (fn x -> t11[x]) -/> by rule stuck-fn
+	        _: G |- (fn x -> t11[x]) t2 -> (fn x -> t11[x]) t2' by rule cbv-app-2 on s1, e2
+	      end case
+	      case or s2: G |- t2 -/> is
+	   	 _: G |- (fn x -> t11[x]) t2 -> t11[t2] by rule cbv-beta on s2
+	      end case
+	    end case analysis
+	  end case
+	end case analysis
+	ch1 : G |- t1 -> t1' or G |- t1 -/> by induction hypothesis on t1
+	proof by case analysis on ch1:
+	  case or e1: G |- t1 -> t1' is
+	    _: G |- t1 t2 -> t1' t2 by rule cbv-app-1 on e1
+	  end case
+	  case or s1: G |- t1 -/> is
+	    proof by case analysis on ch2:
+	      case or e2: G |- t2 -> t2' is
+	         _: G |- (t1 t2) -> (t1 t2') by rule cbv-app-2 on s1, e2
+	      end case
+	      case or s2: G |- t2 -/> is
+	        proof by case analysis on t1: // internal error in 1.5.0a2
+	          case t11 t12 is
+		    _: G |- (t11 t12) t2 -/> by rule stuck-app-app on s1, s2
+	          end case
+	          case x assumes G', x bound is
+		    v1: G', x bound |- x var by rule var
+		    v:  G |- t1 var by v1
+	            _: G |- t1 t2 -/>  by rule stuck-app-var on v, s2
+	          end case
+		end case analysis
+	      end case
+	    end case analysis
+	  end case
+	end case analysis
+      end case
+    end case analysis
+end theorem
