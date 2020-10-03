@@ -138,7 +138,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
 				Term actual = v.substitute(callSub);
 				if (ctx.isVarFree(actual)) continue;
-				System.out.println(actual + "(was " + v + ") is not free: " + ctx.varFreeNTmap.keySet());
+				// System.out.println(actual + "(was " + v + ") is not free: " + ctx.varFreeNTmap.keySet());
 				ErrorHandler.recoverableError("passing " + v.getName() + " implicitly to " + ruleLike.getName() +
 						" discards its context " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
 			}
