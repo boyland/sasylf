@@ -110,3 +110,47 @@ theorem cbv-decidable: assumes G
       end case
     end case analysis
 end theorem
+
+
+// problems with inversion
+judgment equal: t == t
+
+  ------ eq
+  t == t
+  
+
+lemma stuck-is-lam:
+  forall s: * |- t -/>
+  exists t == fn x -> t0[x] .
+  use induction on s
+  do case analysis on s: // avoid the non-lam cases
+    case rule
+      v: * |- t var
+      ------------- stuck-var
+      _: * |- t -/>
+    is
+      proof by contradiction on v
+    end case
+    case rule
+      v1: * |- t1 var
+      s2: * |- t2 -/>
+      --------------- stuck-app-var
+      _: * |- t1 t2 -/>
+      where t := t1 t2
+    is
+      proof by contradiction on v1
+    end case
+    case rule
+      s1: * |- (t11 t12) -/>
+      s2: * |- t2 -/>
+      --------------------- stuck-app-app
+      _: * |- (t11 t12) t2 -/>
+    is
+      eq: (t11 t12) == (fn x -> t0[x]) by induction hypothesis on s1
+      proof by contradiction on eq
+    end case
+  end case analysis
+  use inversion of rule stuck-fn on s
+    where t := fn x -> t0[x] // claims "t0" is used more that once
+  proof by rule eq
+end lemma

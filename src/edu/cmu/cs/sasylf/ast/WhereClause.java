@@ -324,6 +324,8 @@ public class WhereClause extends Node {
 				Substitution unifyingSub = rhsUser.unify(rhsCorrect);
 				Set<FreeVar> needSpecifics = unifyingSub.selectUnavoidable(freeVars);
 				Util.debug("unifyingSub = ",unifyingSub);
+				Set<FreeVar> correctVars = rhsCorrect.getFreeVariables();
+				Util.debug(" free are ", correctVars);
 				if (needSpecifics.size() > 0) {
 					ErrorHandler.recoverableError("replacement too general, perhaps these variables should be replaced with something specific: " + needSpecifics, userWC.second);
 					continue nextUserClause;
@@ -332,6 +334,10 @@ public class WhereClause extends Node {
 					if (!e.getKey().isGenerated()) {
 						ErrorHandler.recoverableError("replacement too specific, imposes constraint on free variable " + e.getKey(), userWC.second);
 						continue nextUserClause;
+					}
+					if (!correctVars.contains(e.getKey())) {
+						// this variable is irrelevant
+						continue;
 					}
 					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
 					if (fv == null || ctx.isKnown(fv.getName())) {
