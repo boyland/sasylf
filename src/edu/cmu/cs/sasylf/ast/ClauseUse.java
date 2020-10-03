@@ -172,6 +172,9 @@ public class ClauseUse extends Clause {
 		if (ai < 0) {
 			return null;
 		}
+		if (ai >= getElements().size()) {
+			System.out.println("Cannot find ai(" + ai + ") in " + getElements());
+		}
 		Element e = getElements().get(ai);
 		if (e == null) {
 			System.out.println("null root in " + getElements() + " at " + ai);
