@@ -1,0 +1,30 @@
+package regression;
+
+terminals λ bound
+
+syntax
+   t ::= λ x • t[x]
+      | t t
+      | x
+
+   Γ ::= *
+      | Γ, x bound
+      
+judgment any : Γ |- t ~> t
+assumes Γ
+
+
+  --------------------------- any-beta
+  Γ |- (λ x • t1[x]) t2 ~> t1[t2]
+
+  Γ |- t1 ~> t1'
+  ----------------------------- any-app-1
+  Γ |- t1 t2 ~> t1' t2
+
+  Γ |- t2 ~> t2'
+  ----------------------------- any-app-2
+  Γ |- t1 t2 ~> t1 t2'
+
+      Γ |- t[x] ~> t'[x] //! should give an unbound variable error
+   ------------------------------- any-inside-error
+   Γ |- λ x • t[x] ~> λ x • t'[x]
