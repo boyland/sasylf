@@ -96,12 +96,35 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			return pos;
 		}
 
-		public void newCompUnit(IFile documentFile, IDocument document, Module cu) {
+		private Map<String,ProofElement> makeReuseIndex() {
+			Map<String,ProofElement> index = new HashMap<String,ProofElement>();
+			for (ProofElement pe : pList) {
+				index.put(pe.toString(), pe);
+			}
+			return index;
+		}
+		
+		private void useReuseIndex(Map<String, ProofElement> index) {
+			List<ProofElement> newElements = new ArrayList<ProofElement>(pList);
 			pList.clear();
-
+			for (ProofElement newer : newElements) {
+				ProofElement older = index.remove(newer.toString());
+				if (older == null) pList.add(newer);
+				else {
+					// System.out.println("Found existing: " + older);
+					older.updateTo(newer);
+					pList.add(older);
+				}
+			}
+		}
+		
+		public void newCompUnit(IFile documentFile, IDocument document, Module cu) {
 			if(cu == null) {
 				return;
 			}
+			
+			Map<String,ProofElement> reuseIndex = makeReuseIndex();
+			pList.clear();
 
 			List<Node> contents = new ArrayList<Node>();
 			cu.collectTopLevel(contents);
@@ -188,6 +211,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					pList.add(pe);
 				}
 			}
+			useReuseIndex(reuseIndex);
 		}
 
 		Stack<ProofElement> cStack = new Stack<ProofElement>();
@@ -475,7 +499,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	 */
 	public void setInput(IEditorInput input) {
 		fInput= input;
-		IFile f = (IFile)fInput.getAdapter(IFile.class);
+		IFile f = fInput.getAdapter(IFile.class);
 		proofChecked(f,Proof.getProof(f), 0);
 	}
 
@@ -495,7 +519,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						ContentProvider provider = (ContentProvider)viewer.getContentProvider();
 						IDocument doc = fDocumentProvider.getDocument(fInput);
 						provider.newCompUnit(file,doc,pf.getCompilation());
-						viewer.expandAll();
+						// viewer.expandAll();
 						control.setRedraw(true);
 						viewer.refresh(); // doesn't work if inside the controlled area.
 					}
