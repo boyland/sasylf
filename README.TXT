@@ -1,4 +1,4 @@
-SASyLF version 1.5.0a3
+SASyLF version 1.5.0a4
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -115,7 +115,7 @@ RELEASE HISTORY
 1.5.0	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules
     Substitution can be used in induction
-    Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95
+    Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95, #100
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)
