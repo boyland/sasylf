@@ -730,7 +730,7 @@ lemma subst2 :
             ----------------------------------------------- T-Sub
             _: ((Gamma, x : T1), X <: T) |- t2[x][X] : T2[X]
         is
-            dt1': Gamma |- t2[t1][S] : T0[S] by induction hypothesis on dt1, d1, s
+            dt1': Gamma |- t2[t1][S] : T0[S] by induction hypothesis on dt1, d1, s //! no declared induction
             s': Gamma, x : T1 |- S <: T by weakening on s
             s1': Gamma, x : T1 |- T0[S] <: T2[S] by substitution on s1, s'
             s1'': Gamma |- T0[S] <: T2[S] by substitution on s1', d1

@@ -24,5 +24,6 @@ and
 lemma impossible1 :
   forall n
   exists contradiction .
+  use induction on n
   _: contradiction by lemma impossible on n
 end lemma

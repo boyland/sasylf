@@ -68,6 +68,7 @@ theorem subtyping-transitive:
     forall s1: Γ |- T1 <: T2
     forall s2: Γ |- T2 <: T3
     exists Γ |- T1 <: T3.
+    use induction on T2
     proof by case analysis on s1:
         case rule
             --------------- SA-Top
@@ -143,6 +144,7 @@ lemma trivial:
     forall s1: Γ, X<:T' |- T11[X] <: T22[X] // Also: BUG: T1, T2 should be OK.
     forall s2: Γ |- T <: T'
     exists Γ, X<:T' |- T11[X] <: T22[X].
+    use induction on s1
     proof by s1
 end lemma
  

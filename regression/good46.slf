@@ -58,6 +58,7 @@ assumes G
 theorem cbv-decidable: assumes G
     forall t assumes G
     exists G |- t -> t' or G |- t -/>.
+    use induction on t
     proof by case analysis on t:
       case x assumes G', x bound is
         v: G', x bound |- x var by rule var
