@@ -37,7 +37,7 @@ ADDTESTS= \
 	examples/poplmark-2a.slf \
 	examples/test-mutual.slf \
 	examples/test-structural.slf
-	
+
 SUBJECT=bin
 
 test: unit-test regression-test
@@ -45,7 +45,8 @@ test: unit-test regression-test
 unit-test:
 	java -cp ${SUBJECT} edu/cmu/cs/sasylf/term/UnitTests
 	java -cp ${SUBJECT} edu/cmu/cs/sasylf/util/UnitTests
-	
+	java -cp ${SUBJECT} edu/cmu/cs/sasylf/reduction/UnitTests
+
 regression-test:
 	@echo "Regression Tests: " `echo regression/*.slf ${ADDTESTS} | wc -w`
 	@-for f in regression/*.slf ${ADDTESTS}; do \
@@ -55,6 +56,6 @@ regression-test:
 	done
 	@echo "  Done."
 	@rm test.out
-	
+
 clean:
 	rm -rf bin SASyLF.jar org.sasylf*.jar
