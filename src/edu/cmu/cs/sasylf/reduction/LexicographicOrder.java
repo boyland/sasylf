@@ -66,7 +66,7 @@ public class LexicographicOrder extends InductionSchema {
 		}
 
 		for (int i=0; i < size(); ++i) {
-			if (!schemas.get(i).matches(model.get(i), errorPoint, false)) return false;
+			if (!schemas.get(i).matches(model.get(i), errorPoint, equality)) return false;
 		}
 
 		return true;
@@ -85,7 +85,7 @@ public class LexicographicOrder extends InductionSchema {
 	@Override
 	public String describe() {
 		StringBuilder sb = null;
-		if (schemas.size() == 0) return "[none]";
+		if (schemas.size() == 0) return "(none)";
 		for (InductionSchema is : schemas) {
 			if (sb == null) sb = new StringBuilder("(");
 			else sb.append(", ");
