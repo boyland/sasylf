@@ -1,17 +1,24 @@
 package edu.cmu.cs.sasylf.ast;
 
+import static edu.cmu.cs.sasylf.util.Util.verify;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -27,13 +34,11 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class Relaxation {
 
-	private final ClauseUse		 context; // e.g. Gamma', x:T
 	private final List<Term>     types;
 	private final List<FreeVar>  values;
 	private final NonTerminal    result;
 
-	public Relaxation(ClauseUse container, List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
-		context = container;
+	public Relaxation(List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
 		types = new ArrayList<Term>();
 		for (Abstraction a : abs) {
 			types.add(a.getArgType());
@@ -45,15 +50,13 @@ public class Relaxation {
 		result = r;
 	}
 
-	private Relaxation(ClauseUse container, List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
-		context = container;
+	private Relaxation(List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
 		types = ts;
 		values = vals;
 		result = r;
 	}
 
-	public Relaxation(ClauseUse container, List<Pair<String,Term>> ps, FreeVar val, NonTerminal r) {
-		context = container;
+	public Relaxation(List<Pair<String,Term>> ps, FreeVar val, NonTerminal r) {
 		types = new ArrayList<Term>(ps.size());
 		values = new ArrayList<FreeVar>(ps.size());
 		result = r;
@@ -156,7 +159,7 @@ public class Relaxation {
 			}
 		}
 		if (changed) {
-			return new Relaxation(context,newTypes,newValues,result,false); // NB: can't substitute in context.
+			return new Relaxation(newTypes,newValues,result,false);
 		}
 		return this;
 	}
@@ -221,5 +224,100 @@ public class Relaxation {
 	@Override
 	public String toString() {
 		return "Relaxation(" + types + "," + values + "," + result + ")";
+	}
+
+	/**
+	 * Compute a relaxation for the pattern matching of the assumption rule
+	 * @param ctx context: for error messages.  The current substitution may also be updated.
+	 * @param subject the subject term matching the assumption conclusion.  
+	 * 	It may be null if the pattern is guaranteed to be valid.
+	 * @param subjectRoot The context for the subject term
+	 * @param subjectTerm The term for the subject
+	 * @param patternRoot The context for the pattern.  It may be null if it is unknown, unspecified.
+	 * @param patternTerm The term for the pattern
+	 * @param theRule The assumption rule
+	 * @param theNode The node for which to report errors
+	 * @return a relaxation, never null.  It may be a reuse of an existing relaxation
+	 * or may be a new relaxation, that is not installed in the map.
+	 */
+	public static Relaxation computeRelaxation(Context ctx,
+			ClauseUse subject, 
+			NonTerminal subjectRoot, Term subjectTerm, 
+			NonTerminal patternRoot, Term patternTerm,
+			Rule theRule, Node theNode) {
+		int diff = patternTerm.countLambdas() - subjectTerm.countLambdas();
+		verify(theRule.isAssumptionSize() == diff, "pattern is invalid");
+		// we need to make sure the subject pattern has a simple variable where
+		// we are going to have a variable because we need this for the relaxation.
+		List<FreeVar> relaxVars = new ArrayList<FreeVar>();
+		// the following is messy and should be extracted.
+		{
+			Application bareSubject = (Application)Term.getWrappingAbstractions(subjectTerm, null);
+			ClauseUse ruleConc = (ClauseUse)theRule.getConclusion();
+			int j=0;
+			int n = ruleConc.getElements().size();
+			int ai = ((ClauseDef)theRule.getJudgment().getForm()).getAssumeIndex();
+			
+			for (int i=0; i < n; ++i) {
+				if (i == ai) continue;
+				Element e = ruleConc.getElements().get(i);
+				if (e instanceof Variable) {
+					Term t = bareSubject.getArguments().get(j);
+					if (t instanceof FreeVar) {
+						relaxVars.add((FreeVar)t);
+					} else if (!(t instanceof Application) || !(((Application)t).getFunction() instanceof FreeVar)) {
+						verify(subject != null, "didn't anticipate pattern error");
+						ErrorHandler.report("Rule " + theRule.getName() + " cannot apply since "+ 
+								subject.getElements().get(i) + " cannot be a variable.", theNode);
+					} else {
+						Application app = (Application)t;
+						FreeVar funcVar = (FreeVar)app.getFunction();
+						List<Abstraction> argTypes = new ArrayList<Abstraction>();
+						Constant baseType = (Constant)Term.getWrappingAbstractions(funcVar.getType(), argTypes);
+						FreeVar newVar = FreeVar.fresh(baseType.toString(),baseType);
+						relaxVars.add(newVar);
+						Substitution canonSub = new Substitution();
+						canonSub.add(funcVar, Term.wrapWithLambdas(argTypes, newVar));
+						Util.debug("Found canonSub = ",canonSub);
+						// subjectTerm = subjectTerm.substitute(canonSub);
+						ctx.composeSub(canonSub);
+					}
+					++j;
+				} else if (e instanceof NonTerminal || e instanceof Binding) {
+					++j;
+				}
+			}
+			relaxVars.add(null); // for the assumption itself
+		}
+		
+		Relaxation relax = null;
+		if (ctx.relaxationMap != null) { // try to find an existing relaxation
+			for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
+				Relaxation r = e.getValue();
+				if (r.getResult().equals(subjectRoot) &&
+						r.getValues().equals(relaxVars)) {
+					if (patternRoot == null || e.getKey().equals(patternRoot)) {
+						relax = r;
+					} else {
+						ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + patternRoot, theNode);
+					}
+					break;
+				}
+			}
+		}
+		
+		if (relax == null) {
+			if (patternRoot != null && ctx.isKnownContext(patternRoot)) {
+				ErrorHandler.report("Context already in use: " + patternRoot, theNode);
+			}
+			List<Abstraction> newWrappers = new ArrayList<Abstraction>();
+			Term.getWrappingAbstractions(patternTerm, newWrappers, diff);
+			Util.debug("Introducing ",patternRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
+			relax = new Relaxation(newWrappers,relaxVars,subjectRoot);
+			// System.out.println("Relaxation is " + relax);
+		}
+		
+		// We don't add the relaxation to the context
+		return relax;
 	}
 }

@@ -8,13 +8,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
-import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.EOCUnificationFailed;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -148,86 +146,12 @@ public class RuleCase extends Case {
 				Util.debug("diff = ", diff, "assumption size = ", rule.isAssumptionSize());
 				ErrorHandler.report("assumption rule should introduce exactly one level of context",this);
 			}
-			
-			// TODO: At this point I'd like to grab the Element that represents the
-			// syntax of the new context, the "G', x : T" that can be relaxed to "G".
-			ClauseUse container = concClause.getAssumesContaining(thisRoot);
-			Util.debug("  relaxation source: " + container);
-			verify(container != null,"no use of " + thisRoot + " in " + concClause + "?");
 
-
-			// we need to make sure the subject pattern has a simple variable where
-			// we are going to have a variable because we need this for the relaxation.
-			List<FreeVar> relaxVars = new ArrayList<FreeVar>();
-			// the following is messy and should be extracted.
-			{
-				Application bareSubject = (Application)Term.getWrappingAbstractions(subjectTerm, null);
-				int j=0;
-				ClauseUse ruleConc = (ClauseUse)rule.getConclusion();
-				int n = ruleConc.getElements().size();
-				int ai = ((ClauseDef)rule.getJudgment().getForm()).getAssumeIndex();
-				
-				for (int i=0; i < n; ++i) {
-					if (i == ai) continue;
-					Element e = ruleConc.getElements().get(i);
-					if (e instanceof Variable) {
-						Term t = bareSubject.getArguments().get(j);
-						if (t instanceof FreeVar) {
-							relaxVars.add((FreeVar)t);
-						} else if (!(t instanceof Application) || !(((Application)t).getFunction() instanceof FreeVar)) {
-							ErrorHandler.report("Rule " + rule.getName() + " cannot apply since "+ 
-									((ClauseUse)ctx.currentCaseAnalysisElement).getElements().get(i) + " cannot be a variable.", this);
-						} else {
-							Application app = (Application)t;
-							FreeVar funcVar = (FreeVar)app.getFunction();
-							List<Abstraction> argTypes = new ArrayList<Abstraction>();
-							Constant baseType = (Constant)Term.getWrappingAbstractions(funcVar.getType(), argTypes);
-							FreeVar newVar = FreeVar.fresh(baseType.toString(),baseType);
-							relaxVars.add(newVar);
-							Substitution canonSub = new Substitution();
-							canonSub.add(funcVar, Term.wrapWithLambdas(argTypes, newVar));
-							Util.debug("Found canonSub = ",canonSub);
-							subjectTerm = subjectTerm.substitute(canonSub);
-							ctx.composeSub(canonSub);
-						}
-						++j;
-					} else if (e instanceof NonTerminal || e instanceof Binding) {
-						++j;
-					}
-				}
-				relaxVars.add(null); // for the assumption itself
-			}
+			relax = Relaxation.computeRelaxation(ctx, (ClauseUse)ctx.currentCaseAnalysisElement, subjectRoot,
+					subjectTerm, thisRoot, patternConc, rule, this);
 			
-			Relaxation former = ctx.relaxationMap == null ? null : ctx.relaxationMap.get(thisRoot);
-			if (former != null) {
-				if (!former.getValues().equals(relaxVars)) {
-					ErrorHandler.report("Context " + thisRoot + " already in use for analyzing " + former.getRelaxationVars(), this);
-				}
-				// System.out.println("Former Relaxation is " + former);
-				adaptedSubjectTerm = former.adapt(subjectTerm);
-			} else if (ctx.isKnownContext(thisRoot)) {
-				ErrorHandler.report("Context already in use: " + thisRoot, this);
-			} else {
-				List<Abstraction> newWrappers = new ArrayList<Abstraction>();
-				Term.getWrappingAbstractions(patternConc, newWrappers, diff);
-				Util.debug("Introducing ",thisRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
-				// set up relaxation info
-				relax = new Relaxation(container,newWrappers,relaxVars,subjectRoot);
-				// System.out.println("Relaxation is " + relax);
-				adaptedSubjectTerm = relax.adapt(subjectTerm);
-				if (ctx.relaxationMap != null) {
-					// maybe we SHOULD have used an existing context!
-					for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
-						Relaxation r = e.getValue();
-						if (r.getResult().equals(relax.getResult()) &&
-								r.getRelaxationVars().equals(relax.getRelaxationVars())) {
-							ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + thisRoot, this);
-							break;
-						}
-					}
-				}
-			}
-			
+			subjectTerm = subjectTerm.substitute(ctx.currentSub);
+			adaptedSubjectTerm = relax.adapt(subjectTerm);
 			Util.debug("subject = ", subjectTerm);
 			Util.debug("adapted is ", adaptedSubjectTerm);
 
@@ -449,7 +373,7 @@ public class RuleCase extends Case {
 
 		super.typecheck(ctx, isSubderivation);
 	}
-
+	
 	/**
 	 * We take a rule application and if (as is the case with the assumption rule)
 	 * the conclusion has a context, we move that context outside.  This is because

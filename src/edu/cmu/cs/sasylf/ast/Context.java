@@ -333,7 +333,7 @@ public class Context implements Cloneable {
 			relaxationMap = new HashMap<NonTerminal,Relaxation>();
 			relaxationVars = new HashSet<FreeVar>();
 		}
-		relaxationMap.put(key, relax);
+		if (relaxationMap.put(key, relax) == relax) return; // NOP
 		Set<FreeVar> newVars = relax.getRelaxationVars();
 		relaxationVars.addAll(newVars);
 		relax.getFreeVars(inputVars); //XXX: What is this doing?  It doesn't do anything?!?
@@ -534,7 +534,7 @@ public class Context implements Cloneable {
 		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
 			FreeVar key = e.getKey();
 			if (key instanceof FreeVar) {
-				FreeVar fv = (FreeVar)key;
+				FreeVar fv = key;
 				if (fv.getStamp() != 0) {
 					Util.debug("removing unreachable variable binding: ", fv, " = ", e.getValue());
 					changed = true;
@@ -593,6 +593,7 @@ public class Context implements Cloneable {
 	 */
 	public boolean isRelaxationInScope(NonTerminal root, FreeVar fv) {
 		Relaxation r;
+		if (relaxationMap == null) return false;
 		while ((r = relaxationMap.get(root)) != null) {
 			if (r.getRelaxationVars().contains(fv)) return true;
 			root = r.getResult();

@@ -217,10 +217,6 @@ public class SyntaxCase extends Case {
 			if (ctx.isLocallyKnown(newRoot.getSymbol())) {
 				ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
 			}
-			ClauseUse container = ((ClauseUse)(ae.getAssumes())).getAssumesContaining(newRoot);
-			Util.debug("  relaxation source: " + container);
-			verify(container != null,"no use of " + newRoot + " in " + ae + "?");
-
 
 			// If currentCaseAnalysis is an abstraction, bind it to a fresh variable,
 			// and use this variable in the relaxation.
@@ -247,7 +243,7 @@ public class SyntaxCase extends Case {
 			List<Abstraction> addedContext = new ArrayList<Abstraction>();
 			Term.getWrappingAbstractions(computedCaseTerm,addedContext,lambdaDifference);
 
-			Relaxation relax = new Relaxation(container,addedContext,Collections.singletonList(relaxationVar),ctx.currentCaseAnalysisElement.getRoot());
+			Relaxation relax = new Relaxation(addedContext,Collections.singletonList(relaxationVar),ctx.currentCaseAnalysisElement.getRoot());
 			ctx.addRelaxation(newRoot, relax);
 
 			adaptedCaseAnalysis = ctx.adapt(adaptedCaseAnalysis, addedContext, true);/*
