@@ -166,7 +166,7 @@ public class RuleCase extends Case {
 				ClauseUse ruleConc = (ClauseUse)rule.getConclusion();
 				int n = ruleConc.getElements().size();
 				int ai = ((ClauseDef)rule.getJudgment().getForm()).getAssumeIndex();
-				Substitution canonSub = null;
+				
 				for (int i=0; i < n; ++i) {
 					if (i == ai) continue;
 					Element e = ruleConc.getElements().get(i);
@@ -184,19 +184,16 @@ public class RuleCase extends Case {
 							Constant baseType = (Constant)Term.getWrappingAbstractions(funcVar.getType(), argTypes);
 							FreeVar newVar = FreeVar.fresh(baseType.toString(),baseType);
 							relaxVars.add(newVar);
-							if (canonSub == null) canonSub = new Substitution();
+							Substitution canonSub = new Substitution();
 							canonSub.add(funcVar, Term.wrapWithLambdas(argTypes, newVar));
+							Util.debug("Found canonSub = ",canonSub);
+							subjectTerm = subjectTerm.substitute(canonSub);
+							ctx.composeSub(canonSub);
 						}
 						++j;
-					} else if (e instanceof NonTerminal) {
+					} else if (e instanceof NonTerminal || e instanceof Binding) {
 						++j;
 					}
-				}
-				if (canonSub != null) {
-					Util.debug("Found canonSub = ",canonSub);
-					subjectTerm = subjectTerm.substitute(canonSub);
-					ctx.composeSub(canonSub);
-					canonSub = null;
 				}
 				relaxVars.add(null); // for the assumption itself
 			}
