@@ -80,6 +80,7 @@ theorem typing-unique :
             _: Γ', x : τ1 ⊢ x : τ1
         is
             use inversion of T-Var on d2
+	    where τ2 := τ1
             _: τ1 == τ2 by rule type-eq
         end case
 

@@ -334,7 +334,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				for (Rule rule : judge.getRules()) {
 					if (!rule.isInterfaceOK()) continue; // avoid these
 					Set<Pair<Term,Substitution>> caseResult = rule.caseAnalyze(ctx, ctx.currentCaseAnalysis, (ClauseUse) ctx.currentCaseAnalysisElement, this);
-					// System.out.println("  case Result = " + caseResult);
+					// System.out.println(this.getLocation().getLine() + ":  case Result = " + caseResult);
 					ctx.caseTermMap.put(rule, caseResult);
 				}
 			}

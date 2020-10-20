@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -215,6 +216,7 @@ public class WhereClause extends Node {
 		if (su.equals(userSub)) return; // everything matches!
 		if (userSub.isEmpty() && !Util.COMP_WHERE) return;
 		// ErrorHandler.warning("user sub " + userSub + " doesn't exactly match " + su, errorSpan);
+		Util.debug("IW: cas = ",cas,"\n    rcc = ", rcc, "\n    su = ",su);
 		
 		
 		// create map of vars to check clauses for, from s_u
@@ -224,6 +226,7 @@ public class WhereClause extends Node {
 		int clausesNeeded = 0;
 		for (FreeVar v : su.getMap().keySet()) {
 			checked.put(v, false);
+			Util.debug("where clause needed for ", v);
 			clausesNeeded++;
 		}
 
@@ -387,7 +390,13 @@ public class WhereClause extends Node {
 				// "unparse" suggestion
 				// false here maintains new binding names in suggestion, and free variable names
 				TermPrinter termPrinter = new TermPrinter(ctx, null, errorSpan.getLocation(), false);
-				String suggestion = termPrinter.asElement(rhsCorrect).toString();
+				String suggestion;
+				try {
+					suggestion = termPrinter.asElement(rhsCorrect).toString();
+				} catch (RuntimeException ex) {
+					ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ": " + ex.toString(), this);
+					suggestion = "(interal) " + rhsCorrect.toString();
+				}
 				int i = suggestion.indexOf("assumes"); // don't print "assumes ..."
 				if (i != -1)
 					suggestion = suggestion.substring(0, i - 1);
