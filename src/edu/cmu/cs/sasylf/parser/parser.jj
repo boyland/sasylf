@@ -1451,7 +1451,7 @@ CompUnit CompilationUnit() :
   [ LOOKAHEAD(3) firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   {
     if (pkg == null)
-		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
+		pkg = new PackageDeclaration(new Location(currentFile,1,1), null, new Location(currentFile,1,1));
     cu = new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName);
   }
   
@@ -1495,9 +1495,9 @@ CompUnit CompilationUnit() :
 void matchEOF() : {} { <EOF> { return; } }
 
 PackageDeclaration PackageDeclaration() :
-{ Token t, u; List<String> l; }
+{ Token t, u; QualName q; Location e; }
 {
-  t=<PACKAGE> l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
+  t=<PACKAGE> q=QualName() (u=<SEMICOLON> { e = Location.endOf(u); }| { e = q.getEndLocation(); }) { return new PackageDeclaration(new Location(t), q, e); }
 }
 
 Part Part(boolean abstractOK) :
@@ -1576,19 +1576,6 @@ Token Keyword() :
   ) { return t; }
 }
  
-List<String> Name() :
-/*
- * A lookahead of 2 is required below since "Name" can be followed
- * by a ".*" when used in the context of an "ImportDeclaration".
- */
-{Token t; List<String> l = new ArrayList<String>(); }
-{
-  t=<IDENTIFIER> { l.add(t.image); }
-  ( LOOKAHEAD(2) "." t=<IDENTIFIER> { l.add(t.image); }
-  )*
-  { return l; }
-}
-
 QualName QualName() :
 { StringSpan t;
   QualName result;
