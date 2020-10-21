@@ -140,10 +140,11 @@ public class Grammar {
 					//successful parsings and remove it from the queue.
 					done.add(a); 
 					parseTrees.add(a.results());
-					if(parseTrees.size() >= 2)
-						break;
-					else
-						continue;
+					// Originally, we stopped if the parse
+					// was already ambiguous, but we have disambiguation techniques
+					// that require all the trees
+					// Formerly: if(parseTrees.size() >= 2) break;
+					continue;
 				}
 			} catch (AmbiguousSentenceException e) { //If we encountered a conflict...
 				//Create a new automaton for each possible action we can take

@@ -503,7 +503,14 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			ErrorHandler.report("Cannot parse any syntactic case or judgment for expression "+ this /*+ " with  " + symList/*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
 		} catch (AmbiguousSentenceException e) {
-			if (e.getParseTrees().size() == 1)
+			final Set<RuleNode> trees = e.getParseTrees();
+			Util.debug_parse("ambiguous trees number: "+trees.size());
+			if (Util.DEBUG_PARSE) {
+				for (ParseNode pn : trees) {
+					printTreeVerbose(pn,1);
+				}
+			}
+			if (trees.size() == 1)
 				debug_parse("ambiguous parse trees are actually equal!");
 			// if inBinding and only one parse tree has a potentially variable type, try to escape
 			if (inBinding) {
@@ -513,7 +520,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				}
 				//System.err.println(varTypes.toString());
 				Set<RuleNode> keptTrees = new HashSet<RuleNode>();
-				for (RuleNode tree : e.getParseTrees()) {
+				for (RuleNode tree : trees) {
 					String key = ((RuleNode)tree.getChildren().get(0)).getRule().getLeftSide().toString();
 					if (varTypes.contains(key))
 						keptTrees.add(tree);
@@ -531,7 +538,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				Symbol grmSymbol = nt.getGrmSymbol();
 				RuleNode follows = null;
 				int found = 0;
-				for (RuleNode tree : e.getParseTrees()) {
+				for (RuleNode tree : trees) {
 					Rule treeRule = tree.getRule();
 					List<Symbol> symbols = treeRule.getRightSide();
 					if (symbols.size() == 1 && symbols.get(0) == grmSymbol) {
@@ -542,10 +549,25 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (found == 1)
 					return computeClause(follows);
 			}
-			
+						
 			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " +
-				e.getParseTrees() /*+" with elements " + elemTypes*/, this);
+				trees /*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
+		}
+	}
+	
+	public static void printTreeVerbose(ParseNode pn, int indent) {
+		for (int i=0; i < indent; ++i) {
+			System.out.print("  ");
+		}
+		if (pn instanceof RuleNode) {
+			RuleNode rn = (RuleNode)pn;
+			System.out.println(rn.getRule());
+			for (ParseNode ch : rn.getChildren()) {
+				printTreeVerbose(ch,indent+1);
+			}
+		} else {
+			System.out.println(pn);
 		}
 	}
 

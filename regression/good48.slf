@@ -1,0 +1,34 @@
+// parser only takes first two ambiguous sentences which conflicts with diambiguation for cases
+package regression;
+
+terminals S taut
+
+syntax
+   n ::= 0 | S n
+   
+   f ::= n
+   
+   C ::= n
+   
+   m ::= n
+
+   c ::= e
+   
+   e ::= m | e c
+   
+judgment tautology: taut
+
+   ---- taut
+   taut
+   
+theorem useless:
+    forall m
+    exists taut.
+    proof by case analysis on m:
+        case n is // need to get third possibility
+            proof by rule taut
+        end case
+    end case analysis
+end theorem
+
+
