@@ -29,12 +29,14 @@ assumes Gamma
 theorem trivial:
   forall db: * |- t t'
   exists * |- t t'.
+  use induction on db
   proof by rule B-Taut
 end theorem
   and
 theorem trivial2:
   forall dbx: *, x |- t'[x] t'[x]
   exists      *, x |- t'[x] t'[x].
+  use induction on dbx
   proof by rule B-Taut
 end theorem
   
@@ -42,11 +44,13 @@ end theorem
 lemma irrelevant:
   forall t
   exists t = t.
+  use induction on t
   proof by rule eq
 end lemma
   and
 lemma irrelevant2:
   forall t[x] assumes (*, x)
   exists fn x:Unit => t[x] = fn x:Unit => t[x].
+  use induction on (t[x] assumes (*, x))
   proof by rule eq
 end lemma   

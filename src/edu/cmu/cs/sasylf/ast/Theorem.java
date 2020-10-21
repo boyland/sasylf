@@ -143,11 +143,11 @@ public class Theorem extends RuleLike {
 				}
 			}
 			if (inductionScheme == null) {
-				if (foralls.size() == 0) {
-					inductionScheme = InductionSchema.nullInduction;
-				}
-				else {
+				if (this != firstInGroup || this.andTheorem != null) {
+					ErrorHandler.warning("All theorems in a mutual induction group should have an induction declaration.", this);
 					inductionScheme = StructuralInduction.create(this, foralls.get(0).getName(), this);
+				} else { 
+					inductionScheme = InductionSchema.nullInduction;
 				}
 			}
 			if (this != firstInGroup) {

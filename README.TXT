@@ -116,6 +116,7 @@ RELEASE HISTORY
     Added the ability to refer to syntax/judgments/theorems in other named modules
     Substitution can be used in induction
     Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95, #100
+                    #101, #103
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)

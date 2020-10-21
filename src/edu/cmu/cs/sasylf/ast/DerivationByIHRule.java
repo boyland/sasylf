@@ -10,6 +10,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.Reduction;
+import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -411,6 +412,10 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	protected void checkInduction(Context ctx, Theorem self, Theorem other) {
 		InductionSchema mySchema = self.getInductionSchema();
 		InductionSchema yourSchema = other.getInductionSchema();
+		if (self == other && mySchema == InductionSchema.nullInduction) {
+			ErrorHandler.warning("Implicit induction deprecated.  Please use explicit induction", this);
+			mySchema = yourSchema = StructuralInduction.create(self, self.getForalls().get(0).getName(), this);
+		}
 		if (mySchema.matches(yourSchema, this, false)) {
 			Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
 			switch (r) {

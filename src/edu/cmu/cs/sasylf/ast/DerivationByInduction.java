@@ -34,7 +34,7 @@ public class DerivationByInduction extends DerivationByAnalysis {
 
 		// special case: handle "use induction by"
 		if (getClause() instanceof AndClauseUse && ((AndClauseUse)getClause()).getClauses().isEmpty()) {
-			Util.debug("use induction detected.");
+			Util.debug("use induction detected: " + is);
 			return;
 		}
 
