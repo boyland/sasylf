@@ -234,6 +234,15 @@ public abstract class Term {
 	}
 
 	/**
+	 * Return true if this term is stand-alone, it doesn't have bound variables
+	 * outside of their abstractions.
+	 * @return true if the term has no bound variables outside of their abstractions. 
+	 */
+	public boolean isClosed() {
+		return !hasBoundVarAbove(0);
+	}
+	
+	/**
 	 * Return true if this bound var is used in this term.
 	 * @param i index of bound variable to check
 	 * @return true bound variable is used.

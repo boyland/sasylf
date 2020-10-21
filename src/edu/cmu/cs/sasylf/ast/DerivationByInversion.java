@@ -12,7 +12,6 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -131,32 +130,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 				Util.debug("  after adapt/subst, result = ", result);
 				Util.debug("  case = ",pair.first);
 				Util.debug("inversion gets substitution ",pair.second);
+				ctx.composeSub(pair.second);
 				
-				// TODO: Instead of using the pair sub (pair.second),
-				// we should construct the adapted target term and then
-				// unify it with the candidate (pair.first)
-				if (targetTerm.countLambdas() != pair.first.countLambdas()) {
-					// We cannot use the pairSub (pair.second),
-					// because it has "bad" things in it like
-					// t -> BoundVar2
-					// A long-term solution is perhaps to avoid putting
-					// those things in the pairSub.
-					// For now: create a use-once relaxation
-					// and use that t create a unifySub as is done in RuleCase.
-					Relaxation relax = Relaxation.computeRelaxation(ctx, targetClause, targetClause.getRoot(), targetTerm, null, pair.first, rule, this);
-					targetTerm = targetTerm.substitute(ctx.currentSub);
-					Term adaptedTargetTerm = relax.adapt(Facade.App(rule.getRuleAppConstant(),targetTerm));
-					Util.debug("adaptedTargetTerm = ", adaptedTargetTerm);
-					Util.debug("candidate = ", pair.first);
-					Substitution unifySub = adaptedTargetTerm.unify(pair.first); // should never fail
-					unifySub.avoid(ctx.inputVars);
-					unifySub.avoid(userSubFree);
-					Util.debug("inversion assumption unifySub = ", unifySub);
-					ctx.composeSub(unifySub);
-				} else {
-					// The following compose is disastrous if we should have used relaxation
-					ctx.composeSub(pair.second); // ctx sub changes from inversion with internal "fresh" rule
-				}
 				List<Abstraction> outer = new ArrayList<Abstraction>();
 				Application ruleInstance = (Application)Term.getWrappingAbstractions(pair.first,outer);
 				List<Term> pieces = new ArrayList<Term>(ruleInstance.getArguments());

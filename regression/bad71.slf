@@ -96,7 +96,7 @@ theorem nothing-bound:
 		    _: x bound in (Γ', x bound)
 		    where t := x //! x is unbound and where clause not needed
 		is
-		    proof by unproved //! expected warning
+		    proof by contradiction on v //! expected error
 		end case
 	    end case analysis
 	    // Now we show two situations that illustrate a bug:

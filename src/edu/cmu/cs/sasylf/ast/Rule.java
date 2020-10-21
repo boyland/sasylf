@@ -160,6 +160,9 @@ public class Rule extends RuleLike implements CanBeCase {
 		Element assumeElement = getConclusion().getElements().get(assumeIndex);
 		if (!(assumeElement instanceof ClauseUse))
 			return; // default false
+		
+		// At this point, we have a rule without premises
+		// which has a non-NT assumption.  
 
 		// look for sub-part of gamma clause, a NonTerminal with same type as gamma
 		ClauseUse assumeClauseUse = (ClauseUse) assumeElement;
@@ -168,6 +171,11 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
 		int n = assumeClauseDef.getElements().size();
 
+		// isAssumpt = 2; // XXX: Long-term we should generalize
+		
+		// We consider this rule to be an attempt of an assumption
+		// and will generate errors for problems noticed.
+
 		int countVariables = 0;
 		int countNTs = 0;
 		int concSize = conclusion.getElements().size();
@@ -175,18 +183,19 @@ public class Rule extends RuleLike implements CanBeCase {
 			if (i == assumeIndex) continue;
 			Element e = conclusion.getElements().get(i);
 			if (e instanceof Variable) {
-				Util.verify(countVariables==0, "can't handle more than one variable binding at a time");
+				if (countVariables > 0) { // XXX: Point for extension
+					ErrorHandler.report("Can't handle more than one variable in assumption rule", this);
+				}
 				clauseVarIndex = i;
 				appVarIndex = countNTs;
 				++countVariables;
 				++countNTs;
-			} else if (e instanceof NonTerminal) {
+			} else if (e instanceof NonTerminal || e instanceof Binding) {
 				++countNTs;
 			}
 		}
 
 		isAssumpt = 1 + countVariables;
-		// now we generate errors if there is a problem
 
 		if (assumeClauseDef.assumptionRule != null &&
 				assumeClauseDef.assumptionRule != this) // idempotency
@@ -355,7 +364,7 @@ public class Rule extends RuleLike implements CanBeCase {
 				}
 				List<Term> oldTypes = newTypes;
 				if (appVarIndex >= 0) { // if no variables (error, or extension), don't try
-					Util.debug("** bare = ", bare, ", appVarIndex = ", appVarIndex);
+					Util.debug("** bare = ", bare, ", appVarIndex = ", appVarIndex,", relaxVars = ", ctx.relaxationVars);
 					Term wouldBeVar = ((Application)bare).getArguments().get(appVarIndex);
 					if (ctx.relaxationVars != null && ctx.relaxationVars.contains(wouldBeVar)) {
 						Util.debug("\t !! would be var: ",wouldBeVar," is already identified as a relax var.");
@@ -372,15 +381,29 @@ public class Rule extends RuleLike implements CanBeCase {
 				if (oldTypes != null && oldTypes.get(0).equals(newTypes.get(0))) {
 					Substitution adaptSub = new Substitution();
 					term.bindInFreeVars(newTypes, adaptSub);
+					Util.debug("bare = ",bare,", bareGoal = ",bareGoal);
+					int n = ((Application)bare).getArguments().size();
+					for (int i=0; i < n; ++i) {
+						final Term argi = ((Application)bareGoal).getArguments().get(i);
+						Util.debug("argi = ",argi,", isClosed? ", argi.isClosed());
+						if (argi.isClosed()) {
+							// any variables in the corresponding place should not be adapted.
+							Set<FreeVar> free = ((Application)bare).getArguments().get(i).getFreeVariables();
+							for (FreeVar fv : free) {
+								Util.debug("  removing adaptation for ",fv);
+								adaptSub.remove(fv);
+							}
+						}
+					}
 					Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
 					// pattern = \assumpt . \context . goal(^size(context))
 					Term newGoal = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size())));
 					Term pattern = Term.wrapWithLambdas(newGoal.substitute(adaptSub),oldTypes);
 					Util.debug("adaptSub = ", adaptSub);
-					Util.debug("  pairs = " + pairs);
-					Util.debug("  adaptedSubject = " + adaptedSubject);
-					Util.debug("  pattern = " + pattern);
-					checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, oldTypes == newTypes? adaptSub : null, source);
+					Util.debug("  pairs = ", pairs);
+					Util.debug("  adaptedSubject = ", adaptedSubject);
+					Util.debug("  pattern = ", pattern);
+					checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
 				}
 			} else {
 				Util.debug("no root, so no special assumption rule");
@@ -436,16 +459,8 @@ public class Rule extends RuleLike implements CanBeCase {
 			sub = null;
 		}
 		if (sub != null) {
-			if (adaptSub != null) {
-				adaptSub.compose(sub); // see what changes had to be done to adaptations
-				adaptSub.avoid(ctx.inputVars); // but also try to avoid binding input variables
-				// tdebug("new adaptSub = ",adaptSub);
-				sub.compose(adaptSub); // now compose back.  
-				// XXX: The substitution may have some weird things in it like X -> BoundVar
-				// We should think this through carefully.
-			}
 			sub.avoid(ctx.inputVars); // try to avoid so we don't unnecessarily replace input vars
-			Util.debug("at check, sub = " + sub + ", adaptSub = ",adaptSub);
+			Util.debug("at check, sub = " + sub);
 			if (!ctx.canCompose(sub)) return;
 			Util.debug("\t added result: ", term, sub);
 			result.add(new Pair<Term,Substitution>(term.substitute(sub),sub));
