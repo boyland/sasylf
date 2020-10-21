@@ -1593,7 +1593,7 @@ QualName QualName() :
 StringSpan RuleName() :
 {Token t, t1; StringSpan s; }
 {
-  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT>) { s = new StringSpan(t1); }
+  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT> | t1=<AND> | t1=<OR>) { s = new StringSpan(t1); }
   ( LOOKAHEAD({ isRulePart() }) (
       t=<MINUS>
     | t=<OPERATOR>
