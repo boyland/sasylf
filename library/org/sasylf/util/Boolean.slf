@@ -1,0 +1,580 @@
+package org.sasylf.util
+
+terminals T
+    
+syntax
+  b ::= ⊤ | ⊥
+  
+  T := ⊤
+  
+judgment equality: b = b
+
+  ----- eq
+  b = b
+  
+judgment negation: ¬ b = b
+
+  ------- not-false
+  ¬ ⊥ = ⊤
+  
+  ------- not-true
+  ¬ ⊤ = ⊥
+  
+judgment conjunction: b ∧ b = b
+
+  --------- and-true
+  T ∧ T = T
+  
+  --------- and-false1
+  ⊥ ∧ b = ⊥
+  
+  --------- and-false2
+  b ∧ ⊥ = ⊥
+  
+judgment disjunction: b ∨ b = b
+
+  --------- or-false
+  ⊥ ∨ ⊥ = ⊥
+  
+  ---------- or-true1
+  T ∨ b = T
+  
+  --------- or-true2
+  b ∨ T = T
+  
+
+theorem eq-symmetric:
+    forall e: b1 = b2
+    exists b2 = b1
+    use inversion of rule eq on e 
+    where b1 := b2
+    proof by rule eq
+end theorem
+
+
+theorem not-unique:
+    forall d1: ¬ b = b1
+    forall d2: ¬ b = b2
+    exists b1 = b2
+    proof by case analysis on d1:
+        case rule
+            ------------- not-false
+            _: ¬ ⊥ = ⊤
+            where b := ⊥
+              and b1 := ⊤
+        is
+            use inversion of rule not-false on d2 where b2 := ⊤
+            proof by rule eq
+        end case
+
+        case rule
+            ------------- not-true
+            _: ¬ ⊤ = ⊥
+            where b := ⊤
+              and b1 := ⊥
+        is
+            use inversion of rule not-true on d2 where b2 := ⊥
+            proof by rule eq
+        end case
+
+    end case analysis
+end theorem
+     
+theorem not-total:
+    forall b
+    exists ¬ b = b'
+    proof by case analysis on b:
+        case ⊤ is
+            proof by rule not-true
+        end case
+
+        case ⊥ is
+            proof by rule not-false
+        end case
+    end case analysis
+end theorem
+    
+theorem not-anti-reflexive:
+    forall d: ¬ b = b
+    exists contradiction
+    proof by contradiction on d
+end theorem
+
+theorem not-symmetric:
+    forall d: ¬ b1 = b2
+    exists ¬ b2 = b1 
+    proof by case analysis on d:
+        case rule
+            ------------- not-false
+            _: ¬ ⊥ = ⊤
+            where b1 := ⊥ 
+              and b2 := ⊤
+        is
+            proof by rule not-true
+        end case
+
+        case rule
+            ------------- not-true
+            _: ¬ ⊤ = ⊥
+            where b1 := ⊤ 
+              and b2 := ⊥
+        is
+            proof by rule not-false
+        end case
+
+    end case analysis
+end theorem
+
+
+theorem and-unique:
+    forall d1: b1 ∧ b2 = b3
+    forall d2: b1 ∧ b2 = b4
+    exists b3 = b4
+    proof by case analysis on d1:
+        case rule
+            --------------- and-true
+            _: ⊤ ∧ ⊤ = ⊤
+            where b1 := ⊤
+              and b2 := ⊤
+              and b3 := ⊤
+        is
+            use inversion of rule and-true on d2
+            where b4 := ⊤
+            proof by rule eq
+        end case
+
+        case rule
+            --------------- and-false1
+            _: ⊥ ∧ b2 = ⊥
+            where b1 := ⊥
+              and b3 := ⊥
+        is
+            proof by case analysis on d2:
+                case rule
+                    --------------- and-false1
+                    _: ⊥ ∧ b2 = ⊥
+                    where b4 := ⊥
+                is
+                    proof by rule eq
+                end case
+
+                case rule
+                    --------------- and-false2
+                    _: ⊥ ∧ ⊥ = ⊥
+                    where b2 := ⊥
+                      and b4 := ⊥
+                is
+                    proof by rule eq
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            --------------- and-false2
+            _: b1 ∧ ⊥ = ⊥
+            where b2 := ⊥
+              and b3 := ⊥
+        is
+            proof by case analysis on d2:
+                case rule
+                    --------------- and-false1
+                    _: ⊥ ∧ ⊥ = ⊥
+                    where b1 := ⊥
+                      and b4 := ⊥
+                is
+                    proof by rule eq
+                end case
+
+                case rule
+                    --------------- and-false2
+                    _: b1 ∧ ⊥ = ⊥
+                    where b4 := ⊥
+                is
+                    proof by rule eq
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+
+lemma and-left-true:
+    forall b
+    exists ⊤ ∧ b = b
+    proof by case analysis on b:
+        case ⊤ is
+            proof by rule and-true
+        end case
+
+        case ⊥ is
+            proof by rule and-false2
+        end case
+    end case analysis
+end lemma
+
+lemma and-right-true:
+    forall b
+    exists b ∧ ⊤ = b
+    proof by case analysis on b:
+        case ⊤ is
+            proof by rule and-true
+        end case
+
+        case ⊥ is
+            proof by rule and-false1
+        end case
+    end case analysis
+end lemma
+         
+lemma and-left-false-inversion:
+    forall d: ⊥ ∧ b = b'
+    exists b' = ⊥
+    proof by case analysis on d:
+        case rule
+            --------------- and-false1
+            _: ⊥ ∧ b = ⊥
+            where b' := ⊥
+        is
+            proof by rule eq
+        end case
+
+        case rule
+            --------------- and-false2
+            _: ⊥ ∧ ⊥ = ⊥
+            where b := ⊥ and b' := ⊥
+        is
+            proof by rule eq
+        end case
+
+    end case analysis
+end lemma
+
+lemma and-right-false-inversion:
+    forall d: b ∧ ⊥ = b'
+    exists b' = ⊥
+    proof by case analysis on d:
+        case rule
+            --------------- and-false1
+            _: ⊥ ∧ ⊥ = ⊥
+            where b := ⊥ and b' := ⊥
+        is
+            proof by rule eq
+        end case
+
+        case rule
+            --------------- and-false2
+            _: b ∧ ⊥ = ⊥
+            where b' := ⊥
+        is
+            proof by rule eq
+        end case
+
+    end case analysis
+end lemma
+
+theorem and-total:
+    forall b1
+    forall b2
+    exists b1 ∧ b2 = b3.
+    proof by case analysis on b1:
+        case ⊤ is
+            proof by lemma and-left-true on b2
+        end case
+
+        case ⊥ is
+            proof by rule and-false1
+        end case
+
+    end case analysis
+end theorem
+
+theorem and-commutative:
+    forall d: b1 ∧ b2 = b3
+    exists b2 ∧ b1 = b3.
+    proof by case analysis on d:
+        case rule
+            --------------- and-true
+            _: ⊤ ∧ ⊤ = ⊤
+            where b1 := ⊤ 
+              and b2 := ⊤ 
+              and b3 := ⊤
+        is
+            proof by d
+        end case
+
+        case rule
+            --------------- and-false1
+            _: ⊥ ∧ b2 = ⊥
+            where b1 := ⊥
+              and b3 := ⊥
+        is
+            proof by rule and-false2
+        end case
+
+        case rule
+            --------------- and-false2
+            _: b1 ∧ ⊥ = ⊥
+            where b2 := ⊥
+              and b3 := ⊥
+        is
+            proof by rule and-false1
+        end case
+
+    end case analysis
+end theorem
+
+theorem and-associative:
+    forall a12: b1 ∧ b2 = b3
+    forall a34: b3 ∧ b4 = b7
+    exists b2 ∧ b4 = b6 and b1 ∧ b6 = b7.
+    proof by case analysis on a12:
+        case rule
+            --------------- and-true
+            _: ⊤ ∧ ⊤ = ⊤
+            where b1 := ⊤ 
+              and b2 := ⊤ 
+              and b3 := ⊤
+        is
+            a16: ⊤ ∧ b7 = b7 by lemma and-left-true on b7
+            proof by a34, a16
+        end case
+
+        case rule
+            --------------- and-false1
+            _: ⊥ ∧ b2 = ⊥
+            where b1 := ⊥
+              and b3 := ⊥
+        is
+            a24: b2 ∧ b4 = b6 by theorem and-total on b2, b4
+            e7: b7 = ⊥ by lemma and-left-false-inversion on a34
+            use inversion of rule eq on e7 where b7 := ⊥
+            a16: ⊥ ∧ b6 = ⊥ by rule and-false1
+            proof by a24, a16
+        end case
+
+        case rule
+            --------------- and-false2
+            _: b1 ∧ ⊥ = ⊥
+            where b2 := ⊥
+              and b3 := ⊥
+        is
+            e7: b7 = ⊥ by lemma and-left-false-inversion on a34
+            use inversion of rule eq on e7 where b7 := ⊥
+            proof by a34, a12
+        end case
+
+    end case analysis
+end theorem
+
+
+lemma or-left-false:
+    forall b
+    exists ⊥ ∨ b = b
+    proof by case analysis on b:
+        case ⊤ is
+            proof by rule or-true2
+        end case
+
+        case ⊥ is
+            proof by rule or-false
+        end case
+
+    end case analysis
+end lemma
+
+lemma or-right-false:
+    forall b
+    exists b ∨ ⊥ = b
+    proof by case analysis on b:
+        case ⊤ is
+            proof by rule or-true1
+        end case
+
+        case ⊥ is
+            proof by rule or-false
+        end case
+
+    end case analysis
+end lemma
+
+lemma or-left-true-inversion:
+    forall d: ⊤ ∨ b = b'
+    exists b' = ⊤
+    proof by case analysis on d:
+        case rule
+            ---------------- or-true1
+            _: ⊤ ∨ b = ⊤
+            where b' := ⊤
+        is
+            proof by rule eq
+        end case
+
+        case rule
+            --------------- or-true2
+            _: ⊤ ∨ ⊤ = ⊤
+            where b := ⊤ and b' := ⊤
+        is
+            proof by rule eq
+        end case
+
+    end case analysis
+end lemma
+
+lemma or-right-true-inversion:
+    forall d: b ∨ ⊤ = b'
+    exists b' = ⊤
+    proof by case analysis on d:
+        case rule
+            ---------------- or-true1
+            _: ⊤ ∨ ⊤ = ⊤
+            where b := ⊤ and b' := ⊤
+        is
+            proof by rule eq
+        end case
+
+        case rule
+            --------------- or-true2
+            _: b ∨ ⊤ = ⊤
+            where b' := ⊤
+        is
+            proof by rule eq
+        end case
+
+    end case analysis
+end lemma
+
+theorem or-total:
+    forall b1
+    forall b2
+    exists b1 ∨ b2 = b3
+    proof by case analysis on b1:
+        case ⊤ is
+            proof by rule or-true1
+        end case
+
+        case ⊥ is
+            proof by lemma or-left-false on b2
+        end case
+
+    end case analysis
+end theorem
+
+theorem or-unique:
+    forall d1: b1 ∨ b2 = b3
+    forall d2: b1 ∨ b2 = b4
+    exists b3 = b4
+    proof by case analysis on d1:
+        case rule
+            --------------- or-false
+            _: ⊥ ∨ ⊥ = ⊥
+            where b1 := ⊥
+              and b2 := ⊥
+              and b3 := ⊥
+        is
+            use inversion of rule or-false on d2
+            where b4 := ⊥
+            proof by rule eq
+        end case
+
+        case rule
+            ---------------- or-true1
+            _: ⊤ ∨ b2 = ⊤
+            where b1 := ⊤ and b3 := ⊤
+        is
+            e4: b4 = ⊤ by lemma or-left-true-inversion on d2
+            proof by theorem eq-symmetric on e4
+        end case
+
+        case rule
+            --------------- or-true2
+            _: b1 ∨ ⊤ = ⊤
+            where b2 := ⊤
+              and b3 := ⊤
+        is
+            e4: b4 = ⊤ by lemma or-right-true-inversion on d2
+            proof by theorem eq-symmetric on e4
+        end case
+
+    end case analysis
+end theorem
+
+theorem or-commutative:
+    forall d: b1 ∨ b2 = b3
+    exists b2 ∨ b1 = b3
+    proof by case analysis on d:
+        case rule
+            --------------- or-false
+            _: ⊥ ∨ ⊥ = ⊥
+            where b1 := ⊥
+              and b2 := ⊥
+              and b3 := ⊥
+        is
+            proof by rule or-false
+        end case
+
+        case rule
+            ---------------- or-true1
+            _: ⊤ ∨ b2 = ⊤
+            where b1 := ⊤
+              and b3 := ⊤
+        is
+            proof by rule or-true2
+        end case
+
+        case rule
+            --------------- or-true2
+            _: b1 ∨ ⊤ = ⊤
+            where b2 := ⊤
+              and b3 := ⊤
+        is
+            proof by rule or-true1
+        end case
+
+    end case analysis
+end theorem
+
+theorem or-associative:
+    forall d12: b1 ∨ b2 = b3
+    forall d34: b3 ∨ b4 = b7
+    exists b2 ∨ b4 = b6 and b1 ∨ b6 = b7
+    proof by case analysis on d12:
+        case rule
+            --------------- or-false
+            _: ⊥ ∨ ⊥ = ⊥
+            where b1 := ⊥
+              and b2 := ⊥
+              and b3 := ⊥
+        is
+            o16: ⊥ ∨ b7 = b7 by lemma or-left-false on b7
+            proof by d34, o16
+        end case
+
+        case rule
+            ---------------- or-true1
+            _: ⊤ ∨ b2 = ⊤
+            where b1 := ⊤
+              and b3 := ⊤
+        is
+            o24: b2 ∨ b4 = b6 by theorem or-total on b2, b4
+            e7: b7 = ⊤ by lemma or-left-true-inversion on d34
+            use inversion of rule eq on e7 where b7 := ⊤
+            o16: ⊤ ∨ b6 = ⊤ by rule or-true1
+            proof by o24, o16
+        end case
+
+        case rule
+            --------------- or-true2
+            _: b1 ∨ ⊤ = ⊤
+            where b2 := ⊤
+              and b3 := ⊤
+        is
+            o24: ⊤ ∨ b4 = ⊤ by rule or-true1
+            e7: b7 = ⊤ by lemma or-left-true-inversion on d34
+            use inversion of rule eq on e7 where b7 := ⊤
+            proof by o24, d12
+        end case
+
+    end case analysis
+end theorem
