@@ -168,7 +168,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 							Substitution newSubstitution = new Substitution(p.second);
 							newSubstitution.compose(ctx.currentSub);
 							if (!ctx.canCompose(newSubstitution)) {
-								Util.debug("case no lomger feasible (relaxation): ");
+								Util.debug("case no longer feasible (relaxation): ");
 								continue;
 							}
 							/* crashed on good46.slf.  Seems unneeded anyway

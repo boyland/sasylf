@@ -1986,7 +1986,7 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; StringSpan s; QualName q; Element e; Clause cl; Token of; QualName qn;
+  DerivationByCaseAnalysis dca; StringSpan s; QualName q; Element e; Clause cl; Token of = null; QualName qn;
 }
 { // args should include expressions
   <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
@@ -2024,6 +2024,23 @@ Derivation Justification(Token startT, Clause c) :
   | LOOKAHEAD(2) <CONTRADICTION> <ON> t=<IDENTIFIER>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
       dca.setEndLocation(Location.endOf(t)); return dca; }
+  | LOOKAHEAD(4)
+  (	<INVERSION> [of=<IDENTIFIER>] <OR> <ON> t=<IDENTIFIER>
+	{
+	  Element lhs=null; Clause rhs=null;
+	  WhereClause whereClauses = null;
+      if (of == null) {
+          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion'",new Location(t));
+      } else if (!of.image.equals("of")) {
+          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+      }
+    }
+    whereClauses=WhereClauses()
+    {
+   	  return new DerivationByOrInversion(startT.image, new Location(startT), Location.endOf(t),
+   	      c, t.image, whereClauses);
+	}
+  ) 
   | LOOKAHEAD(3)
   (
     <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() [ <ON> t=<IDENTIFIER> ]

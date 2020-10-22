@@ -1,4 +1,4 @@
-SASyLF version 1.5.0a4
+SASyLF version 1.5.0a5
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -115,6 +115,7 @@ RELEASE HISTORY
 1.5.0	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules
     Substitution can be used in induction
+    Inversion can be used with 'or' clauses
     Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95, #100
                     #101, #103
 1.4.0	"where" clauses

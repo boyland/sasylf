@@ -463,4 +463,11 @@ public class WhereClause extends Node {
 		clauses = Collections.emptyList();
 	}
 
+	/**
+	 * Return true if there are no user-supplied where clauses.
+	 * @return whether this is an absent where clause
+	 */
+	public boolean isEmpty() {
+		return clauses.isEmpty();
+	}
 }
