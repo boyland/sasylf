@@ -10,7 +10,6 @@ import java.util.Stack;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.DefaultPositionUpdater;
@@ -74,10 +73,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		protected final static String FORALL = "∀";
 		protected final static String EXISTS = "∃";
 
-		private boolean inResource(Location loc, IResource res) {
+		private boolean inDocument(Location loc, String docName) {
 			String name = loc.getFile();
-			if (res.getName().equals(name)) return true;
-			System.out.println("Are modules implemented? " + res.getName() + " != " + name);
+			if (docName.equals(name)) return true;
+			System.out.println("Are modules implemented? " + docName + " != " + name);
 			return true;
 		}
 
@@ -118,7 +117,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			}
 		}
 		
-		public void newCompUnit(IFile documentFile, IDocument document, Module cu) {
+		public void newCompUnit(IDocument document, String documentName, Module cu) {
 			if(cu == null) {
 				return;
 			}
@@ -131,9 +130,9 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			
 			ProofElement pe;			
 			for (Node decl : contents) {
+				if (!inDocument(decl.getLocation(), documentName)) continue;
 				if (decl instanceof Syntax) {
 					Syntax syn = (Syntax)decl;
-					if (!inResource(syn.getLocation(), documentFile)) continue;
 					pe = new ProofElement("Syntax", syn.toString());
 					pe.setPosition(convertLocToPos(document,syn.getLocation()));
 					pList.add(pe);
@@ -148,7 +147,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof Judgment) {
 					Judgment judg = (Judgment)decl;
-					if (!inResource(judg.getLocation(), documentFile)) continue;
 					pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
 					pe.setPosition(convertLocToPos(document, judg.getLocation()));
 					pList.add(pe);
@@ -183,7 +181,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof Theorem) {
 					Theorem theo = (Theorem)decl;
-					if (!inResource(theo.getLocation(), documentFile)) continue;
 					StringBuilder sb = new StringBuilder();
 					sb.append(theo.getName());
 					sb.append(": ");
@@ -206,7 +203,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof ModulePart) {
 					ModulePart mpart = (ModulePart)decl;
-					pe = new ProofElement("Module", mpart.getName() + "= " + mpart.getModule().toString());
+					pe = new ProofElement("Module", mpart.getName() + ": " + mpart.getModule().toString());
 					pe.setPosition(convertLocToPos(document,mpart.getLocation()));
 					pList.add(pe);
 				}
@@ -268,7 +265,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					if(newInput instanceof IFileEditorInput) {
 						//String filePath = ((IFileEditorInput) newInput).getFile().getLocationURI().getPath().replaceFirst("/", "");
 						IFile file = ((IFileEditorInput)newInput).getFile(); // new File(filePath);
-						newCompUnit(file, document, Proof.getCompUnit(file));
+						newCompUnit(document, file.getName(), Proof.getCompUnit(file));
 					}
 				}
 			}
@@ -440,8 +437,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 	/**
 	 * Creates a content outline page using the given provider and the given editor.
-	 * XXX: do it at every check, not just at save.
-	 * XXX: but perhaps this must wait for a builder....
 	 * @param provider the document provider
 	 * @param editor the editor
 	 */
@@ -518,7 +513,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						control.setRedraw(false);
 						ContentProvider provider = (ContentProvider)viewer.getContentProvider();
 						IDocument doc = fDocumentProvider.getDocument(fInput);
-						provider.newCompUnit(file,doc,pf.getCompilation());
+						provider.newCompUnit(doc,file.getName(),pf.getCompilation());
 						// viewer.expandAll();
 						control.setRedraw(true);
 						viewer.refresh(); // doesn't work if inside the controlled area.
