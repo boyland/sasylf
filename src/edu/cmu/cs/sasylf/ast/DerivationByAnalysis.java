@@ -33,13 +33,11 @@ import edu.cmu.cs.sasylf.util.Util;
 public abstract class DerivationByAnalysis extends DerivationWithArgs {
 	public DerivationByAnalysis(String n, Location l, Clause c, String derivName) {
 		super(n,l,c); 
-		Clause cl = new Clause(l);
-		cl.getElements().add(new NonTerminal(derivName,l));
-		super.getArgStrings().add(cl);
+		super.addArgString(derivName);
 	}
 	public DerivationByAnalysis(String n, Location l, Clause c, Clause subject) {
 		super(n,l,c);
-		super.getArgStrings().add(subject);
+		super.addArgString(subject);
 	}
 	public DerivationByAnalysis(String n, Location l, Clause c) {
 		super(n,l,c);

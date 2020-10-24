@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Errors.DERIVATION_NOT_FOUND;
+import static edu.cmu.cs.sasylf.util.Errors.VAR_STRUCTURE_KNOWN;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,8 +24,9 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInversion extends DerivationWithArgs {
 	
+	public static final QualName OR = new QualName(new Location("",0,0), "or");
+	
 	private final QualName ruleName;
-	private final String inputName;
 	private final WhereClause whereClauses;
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
@@ -33,28 +34,46 @@ public class DerivationByInversion extends DerivationWithArgs {
 		super(n, start, c);
 		setEndLocation(end); // overwrite end location to include entire justification
 		ruleName = rule;
-		inputName = relation;
+		addArgString(relation);
 		whereClauses = wcs;
 	}
 
 	@Override
 	public String prettyPrintByClause() {
-		return " by inversion of " + ruleName + " on " + inputName;
+		if (ruleName == null) return " by inversion" ;
+		return " by inversion of " + ruleName;
 	}
+
+	public String getTargetDerivationName() { return super.getArgStrings().get(0).getElements().get(0).toString(); }
 
 	@Override
 	public void typecheck(Context ctx) {    
 		super.typecheck(ctx);
 
-		Fact targetDerivation = ctx.derivationMap.get(inputName);
-		if (targetDerivation == null) {
-			ErrorHandler.report(DERIVATION_NOT_FOUND, "Cannot find a derivation named "+ inputName, this);
-			return;
+		Fact targetDerivation = super.getArgs().get(0);
+		String inputName = getTargetDerivationName();
+		
+		final Element targetElement = targetDerivation.getElement();
+		final Term targetTerm = ctx.toTerm(targetElement);
+		
+		if (targetElement.getType() instanceof SyntaxDeclaration) {
+			if (ruleName != null) {
+				ErrorHandler.report("inversion on syntax doesn't use rules; just write 'inversion on " + inputName + "'", this);
+			}
+			FreeVar fv = targetTerm.getEtaEquivFreeVar();
+			if (fv == null) {
+				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of " + targetDerivation+" is already known",this);
+			} else if (ctx.isRelaxationVar(fv)) {
+				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", this);
+			} else if (!ctx.inputVars.contains(fv)) {
+				ErrorHandler.report("Undeclared syntax: " + targetDerivation +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), targetDerivation);
+			}
+			ErrorHandler.report("Inversion on syntax not yet implemented", this);
 		}
-		if (!(targetDerivation.getElement() instanceof ClauseUse)) {
+		if (!(targetElement instanceof ClauseUse)) {
 			ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
-		ClauseUse targetClause = (ClauseUse)targetDerivation.getElement();
+		ClauseUse targetClause = (ClauseUse)targetElement;
 		if (!(targetClause.getType() instanceof Judgment)) {
 			ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
@@ -73,8 +92,6 @@ public class DerivationByInversion extends DerivationWithArgs {
 		Set<FreeVar> userSubFree = userSub.getFreeVariables();
 		
 		// Do a mini-case analysis, and see if we find result in premises
-
-		Term targetTerm = ctx.toTerm(targetClause);
 
 		// build a sigma_u (substitution imposed by this inversion)
 		// starting with the current sigma

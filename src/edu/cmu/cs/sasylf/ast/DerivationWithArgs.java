@@ -10,7 +10,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 public abstract class DerivationWithArgs extends Derivation {
-	
+	// TODO: change to have Element instead, and change names
 	private List<Clause> argStrings = new ArrayList<Clause>();
 	private List<Fact> args = new ArrayList<Fact>();
 	
@@ -18,6 +18,10 @@ public abstract class DerivationWithArgs extends Derivation {
 		super(n,l,c);
 	}
 
+	/**
+	 * Add an argument, and update the end location
+	 * @param cl clause to add, must not be null
+	 */
 	public void addArgString(Clause cl) {
 		argStrings.add(cl);
 		Location endLocation = cl.getEndLocation();
@@ -25,6 +29,19 @@ public abstract class DerivationWithArgs extends Derivation {
 			setEndLocation(endLocation);
 		}
 	}
+	
+	/**
+	 * Add an argument which is just a string.
+	 * @param s string to add, must not be null
+	 */
+	public void addArgString(String s) {
+		final Location l = super.getEndLocation();
+		Clause cl = new Clause(l);
+		cl.getElements().add(new NonTerminal(s,l));
+		argStrings.add(cl);
+	}
+	
+	
 
 	public List<Clause> getArgStrings() { return argStrings; }
 	public List<Fact> getArgs() { return args; }

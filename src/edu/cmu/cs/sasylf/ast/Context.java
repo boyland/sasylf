@@ -610,6 +610,16 @@ public class Context implements Cloneable {
 	public boolean isRelaxationVar(NonTerminal nt) {
 		return relaxationVars != null && relaxationVars.contains(new FreeVar(nt.toString(),null));
 	}
+	
+	/**
+	 * Return true if the argument is a relaxation variable 
+	 * and so cannot be matched with anything other than the bound variable already in scope.
+	 * @param fv free variable being checked
+	 * @return if the variable is bound already
+	 */
+	public boolean isRelaxationVar(FreeVar fv) {
+		return relaxationVars != null && relaxationVars.contains(fv);
+	}
 
 	public List<Term> getRelaxationTypes(FreeVar relaxVar) {
 		for (Relaxation r : relaxationMap.values()) {
