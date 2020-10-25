@@ -1941,7 +1941,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; StringSpan s; QualName q; Case ca; Clause c; Clause c2; Derivation d; Token of;}
+{ Token t; Token t2; Token a; StringSpan s; QualName q = null; Case ca; Clause c; Clause c2; Derivation d; Token of = null;}
 {
    (
      t=<IDENTIFIER> <COLON> c=Expr()
@@ -1953,11 +1953,11 @@ Derivation Derivation() :
    <BY> d=Justification(t, c)
   { return d; }
 | LOOKAHEAD(<USE> <INVERSION>)
-  (    t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() <ON> t2=<IDENTIFIER>
+  (    t=<USE> <INVERSION> [of=<IDENTIFIER> [<RULE>] q=QualName()] <ON> t2=<IDENTIFIER>
     {
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
-      if (!of.image.equals("of")) {
+      if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
@@ -1986,7 +1986,7 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; StringSpan s; QualName q; Element e; Clause cl; Token of = null; QualName qn;
+  DerivationByCaseAnalysis dca; StringSpan s; QualName q = null; Element e; Clause cl; Token of = null; QualName qn;
 }
 { // args should include expressions
   <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
@@ -2043,14 +2043,15 @@ Derivation Justification(Token startT, Clause c) :
   ) 
   | LOOKAHEAD(3)
   (
-    <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() [ <ON> t=<IDENTIFIER> ]
+    t2=<INVERSION> (of=<IDENTIFIER> [<RULE>] q=QualName() [<ON> t=<IDENTIFIER>]
+                   |<ON> t=<IDENTIFIER>) 
     {
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (t == null) {
-          ErrorHandler.recoverableError("inversion " + of.image + " " + q + " on what?",new Location(of));
+          ErrorHandler.recoverableError("inversion on what?",new Location(t2));
           t = new Token(IDENTIFIER,"<missing>");
-      } else if (!of.image.equals("of")) {
+      } else if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
@@ -2059,7 +2060,7 @@ Derivation Justification(Token startT, Clause c) :
    	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
    	      c, q, t.image, whereClauses);
 	}
-  )+
+  )
     // args should include expressions *****
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);

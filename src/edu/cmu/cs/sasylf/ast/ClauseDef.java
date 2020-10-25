@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -9,12 +10,17 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SingletonSet;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class ClauseDef extends Clause {
 	public ClauseDef(Clause copy, ClauseType type) {
@@ -266,4 +272,71 @@ public class ClauseDef extends Clause {
 			ctx.boundVarCount = origBoundVarCount;
 		}
 	}
+	@Override
+	public Set<Pair<Term, Substitution>> caseAnalyze(Context ctx, Term targetTerm,
+			Element target, Node source) {
+		Util.verify(getType() instanceof SyntaxDeclaration, "case analyze should be called on syntax clauses, not " + this);		
+		SyntaxDeclaration syntax = (SyntaxDeclaration)getType();
+		
+		NonTerminal root = target.getRoot();
+		List<Abstraction> context = new ArrayList<Abstraction>();
+		Term.getWrappingAbstractions(targetTerm, context);
+
+		if (isVarOnlyClause()) {
+			Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
+			// Special case (1): any of the variables in the context that are relevant.
+			int n = context.size();
+			for (int i=0; i < n; ++i) {
+				Abstraction a = context.get(i);
+				if (a.getArgType().equals(syntax.typeTerm())) {
+					Term term = Term.wrapWithLambdas(context, new BoundVar(n-i));
+					set.add(new Pair<Term,Substitution>(term,new Substitution()));
+				}
+			}
+			// Special case (2): we have a new variable
+			if (root != null) {
+				ClauseDef contextClause = syntax.getContextClause();
+				Rule assumptionRule = contextClause.assumptionRule;
+				List<Abstraction> newContext = new ArrayList<Abstraction>();
+				if (assumptionRule != null) {
+					Application ruleFresh = assumptionRule.getFreshAdaptedRuleTerm(Collections.<Abstraction>emptyList(), null);
+					Term.getWrappingAbstractions(ruleFresh.getArguments().get(0),newContext);
+				} else {
+					newContext.add((Abstraction) Facade.Abs(syntax.typeTerm(), new BoundVar(1)));
+				}
+				newContext.addAll(context);
+				Term term = Term.wrapWithLambdas(newContext,  new BoundVar(newContext.size()));
+				Util.debug("adding pattern ",term);
+				set.add(new Pair<Term,Substitution>(term,new Substitution()));
+			}
+			return set;
+		}
+
+		Term term = getSampleTerm();
+		Substitution freshSub = term.freshSubstitution(new Substitution());
+		term = term.substitute(freshSub);
+		// adaptation!
+		term = ctx.adapt(term, context, true);
+
+		Util.debug("------Unify?");
+		Util.debug("term = ",term);
+		Util.debug("subj = ",targetTerm);
+		Substitution checkSub;
+		try {
+			checkSub = term.unify(ctx.currentCaseAnalysis);
+		} catch (UnificationFailed ex) {
+			Util.debug("error = ",ex.getMessage());
+			ErrorHandler.report(Errors.INTERNAL_ERROR, "Unification should not fail",this);
+			return null; // NOTREACHED
+		}
+		Util.debug("checking checkSub = ",checkSub);
+		if (!ctx.canCompose(checkSub)) {
+			Util.debug("can't compose.");
+			return Collections.emptySet();
+		}
+		
+		return SingletonSet.create(new Pair<Term,Substitution>(term, checkSub));
+	}
+	
+	
 }

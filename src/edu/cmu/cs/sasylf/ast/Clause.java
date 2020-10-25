@@ -23,6 +23,7 @@ import edu.cmu.cs.sasylf.grammar.Rule;
 import edu.cmu.cs.sasylf.grammar.RuleNode;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -661,6 +662,11 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		PrintWriter pw = new PrintWriter(sw);
 		prettyPrint(pw);
 		return sw.toString();*/
+	}
+	@Override
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, Element target,
+			Node source) {
+		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
 }

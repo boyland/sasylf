@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -318,15 +319,20 @@ public class Rule extends RuleLike implements CanBeCase {
 		return nts;
 	}
 
-	/** Returns a fresh term for the rule and a substitution that matches the term.
-	 * sub will be null if no case analysis is possible
-	 * @param source TODO
-	 * @param term2 TODO
-	 * @param clauseUse TODO
+	/**
+	 * Returns a fresh term for the rule and a substitution that matches the term.
+	 * The result will be empty if no case analysis is possible.
+	 * The result can return a set of more than one possibility if variables are involved.
+	 * @param ctx context, must not be null
+	 * @param term target term being analyzed
+	 * @param clause source-level of term
+	 * @param source location to indicate errors and debugging messages
+	 * @return possibilities that this rule could match the target
 	 */
-	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, ClauseUse clause, Node source) {
-		Set<Pair<Term,Substitution>> result = new HashSet<Pair<Term,Substitution>>();
-
+	@Override
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, Element target, Node source) {
+		Util.verify(target instanceof ClauseUse, "Case analyzing for a rule must be a clause: " + target);
+		ClauseUse clause = (ClauseUse)target;
 		// Special case: if the variable is known to be var-free, we can't match this rule
 		// XXX: This will need to change if we permit variable free assumptions!
 		// Rewrite to not use a special case here, but rather where we try to put variables
@@ -338,7 +344,7 @@ public class Rule extends RuleLike implements CanBeCase {
 						clause.getElements().get(i) instanceof NonTerminal &&
 						ctx.isVarFree((NonTerminal)clause.getElements().get(i))) {
 					Util.debug("no vars in ", clause);
-					return result;
+					return Collections.emptySet();
 				}
 			}
 		}

@@ -44,7 +44,7 @@ public class RuleCase extends Case {
 		whereClauses = wcs;
 	}
 	public String getRuleName() { return ruleName; }
-	public Rule getRule() { return rule; }
+	public CanBeCase getRule() { return rule; }
 	public List<Derivation> getPremises() { return premises; }
 	public Derivation getConclusion() { return conclusion; }
 

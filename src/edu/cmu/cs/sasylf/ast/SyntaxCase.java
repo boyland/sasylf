@@ -166,7 +166,7 @@ public class SyntaxCase extends Case {
 				continue;
 			}
 			computedCaseTerm = pair.first;
-			verify(pair.second.getMap().size() == 0, "syntax case substitution should be empty, not " + pair.second);
+			// verify(pair.second.getMap().size() == 0, "syntax case substitution should be empty, not " + pair.second);
 			caseResult.remove(pair);
 
 			Set<FreeVar> free = pair.first.getFreeVariables();

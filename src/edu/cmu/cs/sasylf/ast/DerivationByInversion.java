@@ -1,13 +1,12 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Errors.VAR_STRUCTURE_KNOWN;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -15,7 +14,6 @@ import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -60,14 +58,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 			if (ruleName != null) {
 				ErrorHandler.report("inversion on syntax doesn't use rules; just write 'inversion on " + inputName + "'", this);
 			}
-			FreeVar fv = targetTerm.getEtaEquivFreeVar();
-			if (fv == null) {
-				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of " + targetDerivation+" is already known",this);
-			} else if (ctx.isRelaxationVar(fv)) {
-				ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", this);
-			} else if (!ctx.inputVars.contains(fv)) {
-				ErrorHandler.report("Undeclared syntax: " + targetDerivation +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), targetDerivation);
-			}
+			DerivationByAnalysis.checkSyntaxAnalysis(ctx, inputName, targetTerm, this);
 			ErrorHandler.report("Inversion on syntax not yet implemented", this);
 		}
 		if (!(targetElement instanceof ClauseUse)) {
@@ -78,6 +69,10 @@ public class DerivationByInversion extends DerivationWithArgs {
 			ErrorHandler.report(Errors.INVERSION_REQUIRES_CLAUSE,this);
 		}
 		Judgment judge = (Judgment)targetClause.getType();
+		
+		if (ruleName == null || ruleName == OR) {
+			ErrorHandler.report("inversion still requires rule name", this);
+		}
 		Object resolution = ruleName.resolve(ctx);
 		if (resolution == null) return; // error already signaled
 		if (!(resolution instanceof Rule)) {
@@ -92,42 +87,19 @@ public class DerivationByInversion extends DerivationWithArgs {
 		Set<FreeVar> userSubFree = userSub.getFreeVariables();
 		
 		// Do a mini-case analysis, and see if we find result in premises
+		Map<CanBeCase,Set<Pair<Term,Substitution>>> caseMap = new HashMap<CanBeCase,Set<Pair<Term,Substitution>>>();		
+		DerivationByAnalysis.caseAnalyze(ctx, inputName, targetElement, this, caseMap);
+		
+		boolean found_rulel = false;
 
 		// build a sigma_u (substitution imposed by this inversion)
 		// starting with the current sigma
 		// sigma_u mappings from CAS variables will need where clauses
 		Substitution su = new Substitution(ctx.currentSub);
 		
-		boolean found_rulel = false;
-
-		// see if each rule, in turn, applies
 		for (Rule rule : judge.getRules()) {
-			if (!rule.isInterfaceOK()) continue; // avoid these
-			Set<Pair<Term,Substitution>> caseResult;
-			if (ctx.savedCaseMap != null && ctx.savedCaseMap.containsKey(inputName)) {
-				caseResult = new HashSet<Pair<Term,Substitution>>();
-				for (Pair<Term,Substitution> p : ctx.savedCaseMap.get(inputName).get(rule)) {
-					// TODO: refactor this with DerivationByAnalysis
-					Pair<Term,Substitution> newPair;
-					try {
-						Util.debug("for rule = ",rule.getName());
-						Util.debug("  term = ", p.first);
-						Util.debug("  sub = ", p.second);
-						Util.debug("  current = ", ctx.currentSub);
-						Substitution newSubstitution = new Substitution(p.second);
-						newSubstitution.compose(ctx.currentSub);
-						Util.debug("  newSub = ", newSubstitution);
-						newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
-					} catch (UnificationFailed ex) {
-						Util.debug("case no longer feasible.");
-						continue;
-					}
-					caseResult.add(newPair);
-				}
-			} else {
-				caseResult = rule.caseAnalyze(ctx, targetTerm, targetClause, this);
-			}
-			if (caseResult.isEmpty()) continue;
+			Set<Pair<Term,Substitution>> caseResult = caseMap.get(rule);
+			if (caseResult == null || caseResult.isEmpty()) continue;
 
 			Iterator<Pair<Term, Substitution>> iterator = caseResult.iterator();
 			if (rule == resolution) {
@@ -244,5 +216,18 @@ public class DerivationByInversion extends DerivationWithArgs {
 			Pair<Fact, Integer> newPair = new Pair<Fact,Integer>(pair.first,pair.second+1);
 			ctx.subderivations.put(this,newPair);
 		} 
+	}
+	
+	/**
+	 * Compute the (remaining) size of a case analysis
+	 * @param map the case analysis map
+	 * @return the number of elements in all the sets
+	 */
+	public static int caseAnalysisSize(Map<CanBeCase,Set<Pair<Term,Substitution>>> map) {
+		int result = 0;
+		for (Set<Pair<Term,Substitution>> s : map.values()) {
+			result += s.size();
+		}
+		return result;
 	}
 }

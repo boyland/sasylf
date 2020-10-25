@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -17,12 +18,17 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Status;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -484,4 +490,52 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 			}
 		}
 	}
+
+	@Override
+	public void analyze(Context ctx, Element target, Node source, 
+			Map<CanBeCase, Set<Pair<Term, Substitution>>> result) {
+		if (isAbstract()) {
+			ErrorHandler.report("Cannot case analyze an abstract syntax: " + getName(),source);
+		}
+
+		Term targetTerm = ctx.toTerm(target);
+		for (Clause cl : elements) {
+			NonTerminal root = target.getRoot();
+			List<Abstraction> context = new ArrayList<Abstraction>();
+			Term.getWrappingAbstractions(targetTerm, context);
+			Set<Pair<Term,Substitution>> set;
+			if (cl.isVarOnlyClause()) {
+				set = new HashSet<Pair<Term,Substitution>>();
+				// Special case (1): any of the variables in the context that are relevant.
+				int n = context.size();
+				for (int i=0; i < n; ++i) {
+					Abstraction a = context.get(i);
+					if (a.getArgType().equals(this.typeTerm())) {
+						Term term = Term.wrapWithLambdas(context, new BoundVar(n-i));
+						set.add(new Pair<Term,Substitution>(term,new Substitution()));
+					}
+				}
+				// Special case (2): we have a new variable
+				if (root != null) {
+					ClauseDef contextClause = this.getContextClause();
+					Rule assumptionRule = contextClause.assumptionRule;
+					List<Abstraction> newContext = new ArrayList<Abstraction>();
+					if (assumptionRule != null) {
+						Application ruleFresh = assumptionRule.getFreshAdaptedRuleTerm(Collections.<Abstraction>emptyList(), null);
+						Term.getWrappingAbstractions(ruleFresh.getArguments().get(0),newContext);
+					} else {
+						newContext.add((Abstraction) Facade.Abs(this.typeTerm(), new BoundVar(1)));
+					}
+					newContext.addAll(context);
+					Term term = Term.wrapWithLambdas(newContext,  new BoundVar(newContext.size()));
+					Util.debug("adding pattern ",term);
+					set.add(new Pair<Term,Substitution>(term,new Substitution()));
+				}
+			} else {
+				set = cl.caseAnalyze(ctx, targetTerm, target, source);
+			}
+			result.put(cl, set);
+		}
+	}
+	
 }
