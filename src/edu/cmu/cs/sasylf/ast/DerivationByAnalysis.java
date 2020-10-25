@@ -136,106 +136,9 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				return;
 			}
 			if (error != null) throw error;
-
-			StringBuilder missingMessages = null;
-			StringBuilder missingCaseTexts = null;
-			for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> entry : ctx.caseTermMap.entrySet()) {
-				if (!entry.getValue().isEmpty()) {
-					CanBeCase cbc = entry.getKey();
-					for (Pair<Term,Substitution> missing : entry.getValue()) {
-						// Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
-						String missingCaseText = null;
-						// System.out.println("Missing: " + missing);
-						Substitution sub = missing.second;
-						Substitution revSub = new Substitution();
-						//XXX: Shouldn't this be done using selectUnavoidable ?
-						for (Map.Entry<FreeVar,Term> e2 : sub.getMap().entrySet()) {
-							if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue()) && ctx.inputVars.contains(e2.getKey())) {
-								// System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
-								revSub.add((FreeVar)e2.getValue(), e2.getKey());
-							}
-						}
-						Term missingCase = missing.first.substitute(revSub);
-						Element targetGamma = null;
-						if (ctx.currentCaseAnalysisElement instanceof ClauseUse) {
-							ClauseUse target = (ClauseUse)ctx.currentCaseAnalysisElement;
-							if (target.getConstructor().getAssumeIndex() >= 0) {
-								targetGamma = target.getElements().get(target.getConstructor().getAssumeIndex());
-							}
-						} else if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
-							targetGamma = ((AssumptionElement)ctx.currentCaseAnalysisElement).getAssumes();
-						} else if (ctx.currentCaseAnalysisElement instanceof NonTerminal) {
-							if (!ctx.isVarFree((NonTerminal)ctx.currentCaseAnalysisElement)) {
-								targetGamma = ctx.assumedContext;
-							}
-						}
-						if (ctx.currentCaseAnalysis.countLambdas() < missingCase.countLambdas()) {
-							if (targetGamma instanceof ClauseUse) {
-								targetGamma = ((ClauseUse)targetGamma).getRoot();
-							}
-							NonTerminal gammaNT = (NonTerminal)targetGamma;
-							NonTerminal newGammaNT = null;
-							if (ctx.relaxationMap != null) {
-								Set<FreeVar> free = ctx.currentCaseAnalysis.getFreeVariables();
-								free.retainAll(ctx.relaxationVars);
-								if (!free.isEmpty()) {
-									for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
-										if (e.getValue().getRelaxationVars().containsAll(free)) {
-											newGammaNT = e.getKey();
-										}
-									}
-								}
-							}
-							if (newGammaNT == null) {
-								String newName = gammaNT.getSymbol()+"'";
-								int i=0;
-								while (ctx.isKnownContext(newGammaNT = new NonTerminal(newName, gammaNT.getLocation()))) {
-									newName = gammaNT.getSymbol()+i;
-									++i;
-								}
-							}
-							newGammaNT.setType(gammaNT.getType());
-							targetGamma = newGammaNT;
-						}
-						//XXX: The work to get Gamma' here is ignored in TermPrinter for SyntaxCase: 
-						// it gets Gamma0 which is more correct, but uglier (it makes sure it is unique), 
-						// but this fact shows some disconnect.
-
-						String missingMessage = cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx);
-						try {
-							TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,this.getLocation());
-							missingCaseText = termPrinter.caseToString(missingCase);
-						} catch (RuntimeException ex) {
-							System.err.println("Couldn't print term: " + missingCase);
-							ex.printStackTrace();
-							ErrorHandler.report(Errors.MISSING_CASE, missingMessage,getArgStrings().get(0));
-						}
-						// System.out.println("missing: " + missing);
-						if (missingCaseText != null) {
-							// System.out.println("Missing Case:");
-							// System.out.println(missingCaseText);
-						}
-						if (missingMessages == null) {
-							missingMessages = new StringBuilder();
-							missingCaseTexts = new StringBuilder();
-						}
-						missingMessages.append(missingMessage);
-						missingMessages.append('\n');
-						missingCaseTexts.append(missingCaseText);
-						missingCaseTexts.append('\n');
-					}
-				}
-			}
-
-			if (missingMessages != null) {
-				missingMessages.setLength(missingMessages.length()-1);
-				int firstNL = missingMessages.indexOf("\n");
-				if (firstNL > -1) {
-					missingMessages.insert(0, '\n');
-				}
-				// Util.debug("adaptationSub = ",ctx.adaptationSub);
-				ErrorHandler.report(Errors.MISSING_CASE, missingMessages.toString(), getArgStrings().get(0), missingCaseTexts.toString());
-			}
+			
+			generateMissingCaseError(ctx, targetElement, targetTerm, Errors.MISSING_CASE,
+					getArgStrings().get(0), ctx.caseTermMap);
 
 		} finally {
 			ctx.caseTermMap = oldCaseTermMap;
@@ -280,6 +183,9 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			ErrorHandler.report("Undeclared syntax: " + targetName +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), source);
 		}
 	}
+	
+	/// Case analysis methods:
+	// These are used also by inversion, and so are factored out.
 	
 	/** Case analyze a target in the current context and store the
 	 * results in the map passed in.  This code first checks the saved map,
@@ -327,6 +233,133 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			debug("*********** case analyzing line ", source.getLocation().getLine());
 			final ClauseType ctype = (ClauseType)targetElement.getType();
 			ctype.analyze(ctx, targetElement, source, map);
+		}
+	}
+
+	/**
+	 * Compute the (remaining) size of a case analysis
+	 * @param map the case analysis map
+	 * @return the number of elements in all the sets
+	 */
+	public static int caseAnalysisSize(Map<CanBeCase,Set<Pair<Term,Substitution>>> map) {
+		int result = 0;
+		for (Set<Pair<Term,Substitution>> s : map.values()) {
+			result += s.size();
+		}
+		return result;
+	}
+
+	/**
+	 * Generate an error report if there are missing cases (if the map contains any cases still).
+	 * @param ctx
+	 * @param targetElement
+	 * @param targetTerm
+	 * @param errorClass error to report
+	 * @param errorClause location to report error on
+	 * @param caseMap map of remaining cases
+	 */
+	public static void generateMissingCaseError(Context ctx,
+			final Element targetElement, final Term targetTerm,
+			final Errors errorClass, final Node errorClause,
+			final Map<CanBeCase, Set<Pair<Term, Substitution>>> caseMap) {
+		StringBuilder missingMessages = null;
+		StringBuilder missingCaseTexts = null;
+		for (Map.Entry<CanBeCase, Set<Pair<Term,Substitution>>> entry : caseMap.entrySet()) {
+			if (!entry.getValue().isEmpty()) {
+				CanBeCase cbc = entry.getKey();
+				for (Pair<Term,Substitution> missing : entry.getValue()) {
+					// Pair<Term,Substitution> missing = entry.getValue().iterator().next();  
+					String missingCaseText = null;
+					// System.out.println("Missing: " + missing);
+					Substitution sub = missing.second;
+					Substitution revSub = new Substitution();
+					//XXX: Shouldn't this be done using selectUnavoidable ?
+					for (Map.Entry<FreeVar,Term> e2 : sub.getMap().entrySet()) {
+						if (e2.getValue() instanceof FreeVar && !ctx.inputVars.contains(e2.getValue()) && ctx.inputVars.contains(e2.getKey())) {
+							// System.out.println("Adding reverse substitution: " + e2.getValue() + " to " + e2.getKey());
+							revSub.add((FreeVar)e2.getValue(), e2.getKey());
+						}
+					}
+					Term missingCase = missing.first.substitute(revSub);
+					Element targetGamma = null;
+					if (targetElement instanceof ClauseUse) {
+						ClauseUse target = (ClauseUse)targetElement;
+						if (target.getConstructor().getAssumeIndex() >= 0) {
+							targetGamma = target.getElements().get(target.getConstructor().getAssumeIndex());
+						}
+					} else if (targetElement instanceof AssumptionElement) {
+						targetGamma = ((AssumptionElement)targetElement).getAssumes();
+					} else if (targetElement instanceof NonTerminal) {
+						if (!ctx.isVarFree((NonTerminal)targetElement)) {
+							targetGamma = ctx.assumedContext;
+						}
+					}
+					if (targetTerm.countLambdas() < missingCase.countLambdas()) {
+						if (targetGamma instanceof ClauseUse) {
+							targetGamma = ((ClauseUse)targetGamma).getRoot();
+						}
+						NonTerminal gammaNT = (NonTerminal)targetGamma;
+						NonTerminal newGammaNT = null;
+						if (ctx.relaxationMap != null) {
+							Set<FreeVar> free = targetTerm.getFreeVariables();
+							free.retainAll(ctx.relaxationVars);
+							if (!free.isEmpty()) {
+								for (Map.Entry<NonTerminal, Relaxation> e : ctx.relaxationMap.entrySet()) {
+									if (e.getValue().getRelaxationVars().containsAll(free)) {
+										newGammaNT = e.getKey();
+									}
+								}
+							}
+						}
+						if (newGammaNT == null) {
+							String newName = gammaNT.getSymbol()+"'";
+							int i=0;
+							while (ctx.isKnownContext(newGammaNT = new NonTerminal(newName, gammaNT.getLocation()))) {
+								newName = gammaNT.getSymbol()+i;
+								++i;
+							}
+						}
+						newGammaNT.setType(gammaNT.getType());
+						targetGamma = newGammaNT;
+					}
+					//XXX: The work to get Gamma' here is ignored in TermPrinter for SyntaxCase: 
+					// it gets Gamma0 which is more correct, but uglier (it makes sure it is unique), 
+					// but this fact shows some disconnect.
+	
+					String missingMessage = cbc.getErrorDescription(entry.getValue().iterator().next().first, ctx);
+					try {
+						TermPrinter termPrinter = new TermPrinter(ctx,targetGamma,errorClause.getLocation());
+						missingCaseText = termPrinter.caseToString(missingCase);
+					} catch (RuntimeException ex) {
+						System.err.println("Couldn't print term: " + missingCase);
+						ex.printStackTrace();
+						ErrorHandler.report(errorClass, missingMessage,errorClause);
+					}
+					// System.out.println("missing: " + missing);
+					if (missingCaseText != null) {
+						// System.out.println("Missing Case:");
+						// System.out.println(missingCaseText);
+					}
+					if (missingMessages == null) {
+						missingMessages = new StringBuilder();
+						missingCaseTexts = new StringBuilder();
+					}
+					missingMessages.append(missingMessage);
+					missingMessages.append('\n');
+					missingCaseTexts.append(missingCaseText);
+					missingCaseTexts.append('\n');
+				}
+			}
+		}
+	
+		if (missingMessages != null) {
+			missingMessages.setLength(missingMessages.length()-1);
+			int firstNL = missingMessages.indexOf("\n");
+			if (firstNL > -1) {
+				missingMessages.insert(0, '\n');
+			}
+			// Util.debug("adaptationSub = ",ctx.adaptationSub);
+			ErrorHandler.report(errorClass, missingMessages.toString(), errorClause, missingCaseTexts.toString());
 		}
 	}
 
