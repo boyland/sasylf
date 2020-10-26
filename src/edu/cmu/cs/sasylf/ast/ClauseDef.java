@@ -10,7 +10,6 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -276,41 +275,9 @@ public class ClauseDef extends Clause {
 	public Set<Pair<Term, Substitution>> caseAnalyze(Context ctx, Term targetTerm,
 			Element target, Node source) {
 		Util.verify(getType() instanceof SyntaxDeclaration, "case analyze should be called on syntax clauses, not " + this);		
-		SyntaxDeclaration syntax = (SyntaxDeclaration)getType();
 		
-		NonTerminal root = target.getRoot();
 		List<Abstraction> context = new ArrayList<Abstraction>();
 		Term.getWrappingAbstractions(targetTerm, context);
-
-		if (isVarOnlyClause()) {
-			Set<Pair<Term,Substitution>> set = new HashSet<Pair<Term,Substitution>>();
-			// Special case (1): any of the variables in the context that are relevant.
-			int n = context.size();
-			for (int i=0; i < n; ++i) {
-				Abstraction a = context.get(i);
-				if (a.getArgType().equals(syntax.typeTerm())) {
-					Term term = Term.wrapWithLambdas(context, new BoundVar(n-i));
-					set.add(new Pair<Term,Substitution>(term,new Substitution()));
-				}
-			}
-			// Special case (2): we have a new variable
-			if (root != null) {
-				ClauseDef contextClause = syntax.getContextClause();
-				Rule assumptionRule = contextClause.assumptionRule;
-				List<Abstraction> newContext = new ArrayList<Abstraction>();
-				if (assumptionRule != null) {
-					Application ruleFresh = assumptionRule.getFreshAdaptedRuleTerm(Collections.<Abstraction>emptyList(), null);
-					Term.getWrappingAbstractions(ruleFresh.getArguments().get(0),newContext);
-				} else {
-					newContext.add((Abstraction) Facade.Abs(syntax.typeTerm(), new BoundVar(1)));
-				}
-				newContext.addAll(context);
-				Term term = Term.wrapWithLambdas(newContext,  new BoundVar(newContext.size()));
-				Util.debug("adding pattern ",term);
-				set.add(new Pair<Term,Substitution>(term,new Substitution()));
-			}
-			return set;
-		}
 
 		Term term = getSampleTerm();
 		Substitution freshSub = term.freshSubstitution(new Substitution());
@@ -323,10 +290,12 @@ public class ClauseDef extends Clause {
 		Util.debug("subj = ",targetTerm);
 		Substitution checkSub;
 		try {
-			checkSub = term.unify(ctx.currentCaseAnalysis);
+			checkSub = term.unify(targetTerm);
 		} catch (UnificationFailed ex) {
 			Util.debug("error = ",ex.getMessage());
-			ErrorHandler.report(Errors.INTERNAL_ERROR, "Unification should not fail",this);
+			Util.debug("term = ",term,": ",term.getType());
+			Util.debug("subj = ",targetTerm,": ",targetTerm.getType());
+			ErrorHandler.report(Errors.INTERNAL_ERROR, ": Unification should not fail: " + term + " ? " + targetTerm,this);
 			return null; // NOTREACHED
 		}
 		Util.debug("checking checkSub = ",checkSub);
