@@ -2030,15 +2030,15 @@ Derivation Justification(Token startT, Clause c) :
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (of == null) {
-          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion'",new Location(t));
+          ErrorHandler.recoverableError("expected 'inversion of or', not 'inversion or'",new Location(t));
       } else if (!of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
     whereClauses=WhereClauses()
     {
-   	  return new DerivationByOrInversion(startT.image, new Location(startT), Location.endOf(t),
-   	      c, t.image, whereClauses);
+   	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
+   	      c, DerivationByInversion.OR, t.image, whereClauses);
 	}
   ) 
   | LOOKAHEAD(3)

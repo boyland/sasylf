@@ -63,14 +63,9 @@ public class DerivationByInversion extends DerivationWithArgs {
 				ErrorHandler.report("cannot prove anything with inversion on syntax.  Suggest 'use inversion'", this);
 			}			
 			DerivationByAnalysis.checkSyntaxAnalysis(ctx, inputName, targetTerm, this);
-			ErrorHandler.report("Inversion on syntax not yet implemented", this);
 		}
 		
 		Object resolution = null;
-		
-		if (ruleName == null) {
-			ErrorHandler.report("inversion still requires rule name", this);
-		}
 		
 		if (ruleName == OR) {
 			if (!(caseType instanceof OrJudgment)) {
@@ -129,6 +124,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		Set<Pair<Term,Substitution>> caseResult = caseMap.get(only);
 		Util.verify(caseResult.size() == 1, "Computered as such!");
 		Pair<Term,Substitution> pair = caseResult.iterator().next();
+		Util.debug("Inversion on " + this.getLocation());
 		Util.debug("before inversion: targetTerm = " + targetTerm);
 		Util.debug("inversion: before, sub = " + ctx.currentSub);
 		Util.debug("inversion: caseResult = ", caseResult);

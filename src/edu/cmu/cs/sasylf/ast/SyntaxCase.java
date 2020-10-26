@@ -65,9 +65,12 @@ public class SyntaxCase extends Case {
 
 		// make sure we were case-analyzing a nonterminal
 		if (!(ctx.currentCaseAnalysisElement instanceof NonTerminal) &&
-				!(ctx.currentCaseAnalysisElement instanceof AssumptionElement))
+				!(ctx.currentCaseAnalysisElement instanceof AssumptionElement)) {
+			if (ctx.currentCaseAnalysisElement instanceof OrClauseUse) {
+				ErrorHandler.report(Errors.SYNTAX_CASE_FOR_DISJUNCTION, this);
+			}
 			ErrorHandler.report(SYNTAX_CASE_FOR_DERIVATION, this);
-
+		}
 		NonTerminal caseNT;
 		if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
 			AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;

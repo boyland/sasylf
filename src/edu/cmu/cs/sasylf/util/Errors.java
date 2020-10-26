@@ -47,6 +47,7 @@ public enum Errors {
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	SYNTAX_CASE_FOR_DERIVATION ("When case-analyzing a derivation, must use rule cases, not syntax cases"),
+	SYNTAX_CASE_FOR_DISJUNCTION ("When case-analyzing a disjunction, must use 'or' cases, not syntax cases"),
 	UNBOUND_VAR_CASE,
 	VAR_REBOUND ("This variable already has been declared here: "),
 	VAR_UNBOUND ("This variable has not been declared here: "),
