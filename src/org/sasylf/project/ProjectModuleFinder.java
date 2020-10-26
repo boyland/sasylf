@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.sasylf.ProofChecker;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -122,26 +122,21 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		if (monitor == null) monitor = new NullProgressMonitor();
 		Set<ModuleId> todo = new HashSet<ModuleId>(toRecheck);
 		toRecheck.clear();
-		monitor.beginTask("rechecking proofs", todo.size());
-		try {
-			for (ModuleId id : todo) {
-				IProgressMonitor subMonitor = new SubProgressMonitor(monitor,1);
-				subMonitor.beginTask("rechecking " + id, 1);
-				try {
-					super.findModule(id, null);
-					subMonitor.worked(1);
-				} catch (SASyLFError e) {
-					// muffle
-					subMonitor.worked(1);
-				} finally {
-					subMonitor.done();
-				}
-				if (monitor.isCanceled()) {
-					throw new OperationCanceledException("Build stopped");
-				}
+		SubMonitor sub = SubMonitor.convert(monitor, "rechecking proofs", todo.size());
+
+		for (ModuleId id : todo) {
+			IProgressMonitor subMonitor = sub.split(1);
+			subMonitor.beginTask("rechecking " + id, 1);
+			try {
+				super.findModule(id, null);
+				subMonitor.worked(1);
+			} catch (SASyLFError e) {
+				// muffle
+				subMonitor.worked(1);
 			}
-		} finally {
-			monitor.done();
+			if (monitor.isCanceled()) {
+				throw new OperationCanceledException("Build stopped");
+			}
 		}
 	}
 

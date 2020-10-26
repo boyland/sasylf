@@ -19,7 +19,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.sasylf.Marker;
 import org.sasylf.Proof;
@@ -229,31 +229,25 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 
 	protected void fullBuild(final IProgressMonitor monitor)
 			throws CoreException {
-		monitor.beginTask("Full Build", 1000);
+		SubMonitor sub = SubMonitor.convert(monitor, "Full Build", 1000);
+		
+		getModuleFinder().clear();
+		sub.worked(10);
 		try {
-			getModuleFinder().clear();
-			monitor.worked(10);
-			try {
-				getProject().accept(new ProofResourceVisitor());
-			} catch (CoreException e) {
-			}
-			monitor.worked(90);
-			getModuleFinder().recheckAll(new SubProgressMonitor(monitor,900));
-		} finally {
-			monitor.done();
+			getProject().accept(new ProofResourceVisitor());
+		} catch (CoreException e) {
 		}
+		sub.worked(90);
+		getModuleFinder().recheckAll(sub.split(900));
 	}
 
 	protected void incrementalBuild(IResourceDelta delta,
 			IProgressMonitor monitor) throws CoreException {
-		monitor.beginTask("Incremental Build", 1000);
-		try {
-			delta.accept(new ProofDeltaVisitor());
-			monitor.worked(100);
-			getModuleFinder().recheckAll(new SubProgressMonitor(monitor,900));
-		} finally {
-			monitor.done();
-		}
+		SubMonitor sub = SubMonitor.convert(monitor, "Incremental Build", 1000);
+
+		delta.accept(new ProofDeltaVisitor());
+		sub.worked(100);
+		getModuleFinder().recheckAll(sub.split(900));
 	}
 
 	@Override

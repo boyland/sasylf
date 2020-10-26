@@ -89,6 +89,12 @@ public class Proof {
 		}
 	}
 	
+	/**
+	 * Get the resource associated with this proof
+	 * @return resource connected with this proof
+	 * @deprecated not all proofs are associated with a resource
+	 */
+	@Deprecated
 	public IResource getResource() {
 		return resource;
 	}
