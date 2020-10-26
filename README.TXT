@@ -115,7 +115,7 @@ RELEASE HISTORY
 1.5.0	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules
     Substitution can be used in induction
-    Inversion can be used with 'or' clauses
+    Inversion can be used with 'or' clauses, with syntax, and without naming rule
     Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95, #100
                     #101, #103
 1.4.0	"where" clauses
