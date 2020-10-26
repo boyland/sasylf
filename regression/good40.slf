@@ -79,4 +79,13 @@ theorem gt-anti-refl-w:
         proof by induction hypothesis on n', p
 end theorem
 
-
+theorem gt-anti-refl-use-w2:
+        forall n1
+        forall d: n1 > n1
+        exists contradiction .
+	use induction on n1
+        use inversion of rule gt-more on d
+          where n1 := s n // previously would complain "n0" was taken
+        p: n > n by theorem succ-cancels-gt on d
+        proof by induction hypothesis on n, p
+end theorem

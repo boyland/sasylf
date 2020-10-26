@@ -343,7 +343,8 @@ public class WhereClause extends Node {
 						continue;
 					}
 					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
-					if (fv == null || ctx.isKnown(fv.getName())) {
+					if (fv == null || ctx.isLocallyKnown(fv.getName())) {
+						Util.debug("fv = ",fv);
 						Term body = Term.getWrappingAbstractions(e.getValue(), null);
 						if (body instanceof Application) {
 							body = ((Application)body).getFunction();
