@@ -1,0 +1,55 @@
+// smarter about and+or
+package regression;
+
+terminals S max
+
+syntax
+  n ::= 0 | S n
+
+judgment eq: n == n
+
+  ------ nat-eq
+  n == n
+  
+judgment ge: n1 >= n2
+
+  ------ ge-eq
+  n >= n
+
+  n1 >= n2
+  --------- ge-more
+  S n1 >= n2
+
+judgment maximum: max n , n = n
+
+  n1 >= n2
+  ------------- max-1
+  max n1,n2 = n1
+
+  n2 >= n1
+  -------------- max-2
+  max n1,n2 = n2
+
+// not very useful but demonstrates and/or
+lemma max-implies:
+    forall d: max n1,n2 = n3
+    exists (n1 == n3 or n2 == n3) and (n1 >= n2 or n2 >= n1)
+    proof by case analysis on d:
+	case rule
+	    ge: n1 >= n2
+	    ----------------- max-1
+	    _: max n1,n2 = n1
+	is
+	    eq: n1 == n3 by rule nat-eq
+	    proof by eq, ge
+	end case
+	case rule
+	    ge: n2 >= n1
+	    ----------------- max-2
+	    _: max n1,n2 = n2
+	is
+	    eq: n2 == n3 by rule nat-eq
+	    proof by eq, ge
+	end case
+    end case analysis
+end lemma
