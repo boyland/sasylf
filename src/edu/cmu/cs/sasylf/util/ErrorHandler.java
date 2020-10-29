@@ -127,6 +127,9 @@ public class ErrorHandler {
 	}
 	
 	public static List<Report> getReports() { return reports.get(); }
+	/**
+	 * Start a new check session.
+	 */
 	public static void clearAll() {
 		reports.remove();
 		FreeVar.reinit();

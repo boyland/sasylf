@@ -164,7 +164,6 @@ public class Main {
 				ps.println(" reported.");
 				if (newErrorCount > 0) exitCode = -1;
 			}
-			ErrorHandler.clearAll();
 		}
 		System.exit(exitCode);
 	}
@@ -180,6 +179,7 @@ public class Main {
 	 */
 	public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
 			ModuleId id, Reader r) {
+		ErrorHandler.clearAll();
 		CompUnit cu = null;
 		try {
 			cu = DSLToolkitParser.read(filename,r);
@@ -197,7 +197,7 @@ public class Main {
 	 * @param id
 	 * @param cu
 	 */
-	public static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
+	private static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
 		if (mf == null) cu.typecheck();
 		else {
 			mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE : id.packageName);
