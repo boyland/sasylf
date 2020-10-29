@@ -185,10 +185,11 @@ public class DerivationByInversion extends DerivationWithArgs {
 						ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
 					}
 					// avoid mapping user-written variables
-					ctx.avoidIfPossible(mt.getFreeVariables());
+					Substitution changed = ctx.avoidIfPossible(mt.getFreeVariables());
 
 					// continue building up sigma_u from the user-written premises
-					su.compose(ctx.currentSub);
+					su.compose(changed); 
+					su.avoid(mt.getFreeVariables()); // not automatic after last composition
 
 					// If the derivation has no implicit context, we
 					// skip the context check
@@ -214,8 +215,9 @@ public class DerivationByInversion extends DerivationWithArgs {
 		for (FreeVar v : targetTerm.getFreeVariables()) {
 			if (su.getSubstituted(v) == null) { // favor user-defined mappings
 				Term mapped = ctx.currentSub.getSubstituted(v);
-				if (mapped != null)
+				if (mapped != null) {
 					su.add(v, mapped);
+				}
 			}
 		}
 		
