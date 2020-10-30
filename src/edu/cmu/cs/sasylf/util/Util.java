@@ -55,6 +55,18 @@ public class Util {
 			throw new RuntimeException(message);
 		}
 	}
+	
+	/**
+	 * A helper method that prints a message and returns false.
+	 * It is useful in a routine (e.g. "wellFormed") that is returning
+	 * a boolean to an assertion.
+	 * @param message message to print to stderr
+	 * @return false (always)
+	 */
+	public static boolean report(String message) {
+		System.err.println("Invariant error: " + message);
+		return false;
+	}
 
 	public static boolean isNumber(char ch) {
 		return Character.isDigit(ch) || Character.getType(ch) == Character.OTHER_NUMBER;

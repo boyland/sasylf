@@ -139,6 +139,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 	}
 
+	@Override
+	public String getName() {
+		return this.toString();
+	}
 	public static boolean addSpace(Element e1, Element e2) {
 		if (!(e2 instanceof Terminal)) return true;
 		String thisTerminal = e2.toString();

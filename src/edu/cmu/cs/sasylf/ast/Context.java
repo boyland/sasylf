@@ -420,13 +420,17 @@ public class Context implements Cloneable {
 	/**
 	 * Check if the substitution passed in is compatible with the 
 	 * current relaxation.
-	 * XXX: This method should probably check whether the substitution
-	 * is compatible with the current substitution too.
+	 * <p>
+	 * It's not clear what to do if the argument is illegal; should
+	 * we use the (new) {@link Substitution#canCompose(Substitution)} method
+	 * to check for this?  If so, then an internal error may silently be ignored
+	 * possibly being converted into unsoundness.
 	 * For now {@link DerivationByAnalysis} does the other check as well.
 	 * @param sub substitution to check, must not be null
 	 * @return true composition does not interfere with relaxation variables.
 	 */
 	public boolean canCompose(Substitution sub) {
+		//if (!currentSub.canCompose(sub)) return false;
 		// We have to reject a substitution that changes a relaxation variable to anything but another free variable.
 		// An earlier version of this code permitted it to be substituted with a bound variable,
 		// presumably its own variable, but:

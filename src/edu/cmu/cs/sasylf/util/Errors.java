@@ -94,6 +94,7 @@ public enum Errors {
 	ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
 	OR_SYNTAX("can only or 'or' with judgments, not syntax"),
 	OR_CASE_NOT_APPLICABLE("derivation under consideration is not a disjunction"),
+	UNIFICATION_INCOMPLETE("Unification incomplete for case "),
 	INTERNAL_ERROR("SASyLF Internal Error")
 	;
 

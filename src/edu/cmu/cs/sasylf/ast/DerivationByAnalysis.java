@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -212,13 +213,17 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 						Util.debug("sub = ", p.second);
 						Util.debug("current = ", ctx.currentSub);
 						Substitution newSubstitution = new Substitution(p.second);
-						newSubstitution.compose(ctx.currentSub);
+						newSubstitution.merge(ctx.currentSub); // need merge, not compose
 						if (!ctx.canCompose(newSubstitution)) {
 							Util.debug("case no longer feasible (relaxation): ");
 							continue;
 						}
 						Util.debug("newSub = ", newSubstitution);
 						newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
+					} catch (UnificationIncomplete ex) {
+						Util.debug("case cannot be checked");
+						ErrorHandler.report(Errors.UNIFICATION_INCOMPLETE, e.getKey().toString(), source);
+						continue;
 					} catch (UnificationFailed ex) {
 						Util.debug("case no longer feasible.");
 						continue;

@@ -189,7 +189,6 @@ public class DerivationByInversion extends DerivationWithArgs {
 
 					// continue building up sigma_u from the user-written premises
 					su.compose(changed); 
-					su.avoid(mt.getFreeVariables()); // not automatic after last composition
 
 					// If the derivation has no implicit context, we
 					// skip the context check

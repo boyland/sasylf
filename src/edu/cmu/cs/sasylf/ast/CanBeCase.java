@@ -8,7 +8,12 @@ import edu.cmu.cs.sasylf.util.Pair;
 
 // interface for Rule and Clause
 public interface CanBeCase {
-
+	/**
+	 * A user-informative string for this case
+	 * @return an identifying string
+	 */
+	String getName();
+	
 	String getErrorDescription(Term t, Context ctx);
 
 	/**
