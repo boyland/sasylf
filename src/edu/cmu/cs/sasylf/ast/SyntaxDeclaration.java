@@ -499,10 +499,11 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 		}
 
 		Term targetTerm = ctx.toTerm(target);
+		List<Abstraction> context = new ArrayList<Abstraction>();
+		Term bare = Term.getWrappingAbstractions(targetTerm, context);
+		
 		for (Clause cl : elements) {
 			NonTerminal root = target.getRoot();
-			List<Abstraction> context = new ArrayList<Abstraction>();
-			Term.getWrappingAbstractions(targetTerm, context);
 			Set<Pair<Term,Substitution>> set;
 			if (cl.isVarOnlyClause()) {
 				set = new HashSet<Pair<Term,Substitution>>();
@@ -536,6 +537,22 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 			}
 			result.put(cl, set);
 		}
+		
+		// see bad72.slf:
+		// The following is not needed for correctness, but to give a better
+		// error message.  Alternatively, we could permit the analysis,
+		// but then we have to modify the adaptation to skip these variables,
+		// while leaving them in the context.
+		Constant termType = targetTerm.getType().baseTypeFamily();
+		for (int i=0; i < context.size(); ++i) {
+			Abstraction abs = context.get(i);
+			if (FreeVar.canAppearIn(abs.varType.baseTypeFamily(),termType) &&
+					!bare.hasBoundVar(context.size()-i)) {
+				ErrorHandler.recoverableError("Variable " + abs.varName + " is not used, so remove it from the assumed context",target);
+			}
+		}
+
+
 	}
 	
 }
