@@ -22,6 +22,10 @@ public class UnitTests extends SimpleTestSuite {
 		return new FreeVar(n,t);
 	}
 
+	static Pair<String,Term> pv(FreeVar v, Term t) {
+		return p(v.getName(), t);
+	}
+	
 	static BoundVar b(int n) {
 		return new BoundVar(n);
 	}
@@ -63,6 +67,7 @@ public class UnitTests extends SimpleTestSuite {
 			new Constant("T-VarTERM", Abs(Abs(e, Abs(App(hast, b(1), v("T",t)), App(hast, b(2), v("T",t)))),
 					tvarFamily));
 
+	@SafeVarargs
 	static Substitution subst(Pair<String,? extends Term>... pairs) {
 		List<FreeVar> vars = new ArrayList<FreeVar>();
 		List<Term> terms = new ArrayList<Term>();
@@ -128,6 +133,7 @@ public class UnitTests extends SimpleTestSuite {
 		testStripLambdas();
 		testBindVars();
 		testAvoidHO();
+		testCompose();
 	}
 
 	private void testType() {
@@ -168,7 +174,6 @@ public class UnitTests extends SimpleTestSuite {
 		assertEqual("bound var correctly",t,Abs(a,b(1)));
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void testAvoidHO() {
 		FreeVar v1 = v("F",Abs(a,a));
 		Term v1etalong = Abs(a, App(v1, new BoundVar(1)));
@@ -178,8 +183,102 @@ public class UnitTests extends SimpleTestSuite {
 		assertTrue("can avoid F", sub1.avoid(Collections.singleton(v1)));
 		assertEqual("should eta expand F",v1etalong,sub1.getSubstituted(v2));
 	}
+	
+	private void testCompose() {
+		FreeVar v1 = v("F",Abs(a,a));
+		Term v1etalong = Abs(a, App(v1, new BoundVar(1)));
+		FreeVar v2 = v("G",Abs(a,a));
+		Term v2etalong = Abs(a, App(v2, new BoundVar(1)));
+		FreeVar v3 = v("H",Abs(a,a));
+		Term v3etalong = Abs(a, App(v3, new BoundVar(1)));
+		Term Ka1 = Abs(a, a1);
+		Term a2etalong = Abs(a, App(a2, new BoundVar(1)));
+		Substitution  empty = subst(pv(v1,v1etalong));
+		assertTrue("NOP subst should be empty", empty.isEmpty());
+		Substitution sFG = subst(pv(v1,v2etalong));
+		assertTrue("FG subst should have one element", sFG.getMap().size() == 1);
+		Substitution sFH_GH = subst(pv(v1,v3etalong),pv(v2,v3etalong));
+		assertTrue("FH+GH subst should have two elements", sFH_GH.getMap().size() == 2);
+		Substitution sFG_GH = subst(pv(v1,v2etalong),pv(v2,v3etalong));
+		assertTrue("FG+GH should = FH+GH: " + sFG_GH + " != " + sFH_GH, sFG_GH.equals(sFH_GH));
+		Substitution sGH = subst(pv(v2,v3etalong));
+		Substitution sGF = subst(pv(v2,v1etalong));
+		Substitution sHG = subst(pv(v3,v2etalong));
+		Substitution sFG_HG = subst(pv(v1,v2etalong),pv(v3,v2etalong));
+		Substitution sGa1 = subst(pv(v2,Ka1));
+		Substitution sHa1 = subst(pv(v3,Ka1));
+		Substitution sHa2 = subst(pv(v3,a2etalong));
+		assertCompose("left identity",empty,sFG,sFG);
+		assertCompose("right identity",sGH,empty,sGH);
+		assertCompose("transitive",sFG,sGH,sFG_GH);
+		assertCompose("transitive",sGH,sHa2,subst(pv(v2,a2etalong),pv(v3,a2etalong)));
+		assertCompose("parallel",sFG,sHG,sFG_HG);
+		assertCompose("'rotate' F->G back to G->F",sFG,sGF,sGF);
+		assertCompose("'rotate' G->H back to H->G",sFH_GH,sHG,sFG_HG);
+		assertCompose("idempotent",sFG,sFG,sFG);
+		assertCompose("idempotent",sGa1,sGa1,sGa1);
+		assertCompose("inconsistent",sGF,sGa1,null);
+		assertCompose("occurs check",sGa1,sFG,null);
+		
+		// merge tests
+		assertMerge("left identity",empty,sFG,sFG);
+		assertMerge("right identity",sHa1,empty,sHa1);
+		assertMerge("transitive",sFG,sGH,sFG_GH);
+		assertMerge("transitive",sGH,sHa2,subst(pv(v2,a2etalong),pv(v3,a2etalong)));
+		assertMerge("parallel",sFG,sHG,sFG_HG);
+		assertMerge("attempted 'rotate' F->G back to G->F",sFG,sGF,sFG);
+		assertMerge("attempted 'rotate' G->H back to H->G",sFH_GH,sHG,sFH_GH);
+		assertMerge("idempotent",sFG,sFG,sFG);
+		assertMerge("idempotent",sGa1,sGa1,sGa1);
+		assertMerge("mergable",sGF,sGa1,subst(pv(v1,Ka1),pv(v2,Ka1)));
+		assertMerge("reverse comp",sGa1,sFG,subst(pv(v1,Ka1),pv(v2,Ka1)));
+		assertMerge("unmergable",sHa1,sHa2,null);
+	}
+	
+	private void assertCompose(String name, Substitution s1, Substitution s2, Substitution s12) {
+		final String description = name + ": " + s1 + ".compose(" + s2 + ")";
+		Substitution mut1 = new Substitution(s1);
+		Substitution mut2 = new Substitution(s2);
+		try {
+			mut1.compose(mut2);
+			if (s12 == null) {
+				assertTrue(description + " should have failed, but produced " + mut1,false);
+			} else {
+				assertEqual(description, s12, mut1);
+			}
+		} catch (RuntimeException ex) {
+			if (s12 == null) {
+				assertTrue(description + "correctly failed", true);			
+			} else {
+				ex.printStackTrace();
+				assertTrue(description + " failed with exception: " + ex, false);
+			}
+		}
+		assertEqual("Composition argument afterwards",s2,mut2);
+	}
 
-	@SuppressWarnings("unchecked")
+	private void assertMerge(String name, Substitution s1, Substitution s2, Substitution s12) {
+		final String description = name + ": " + s1 + ".merge(" + s2 + ")";
+		Substitution mut1 = new Substitution(s1);
+		Substitution mut2 = new Substitution(s2);
+		try {
+			mut1.merge(mut2);
+			if (s12 == null) {
+				assertTrue(description + " should have failed, but produced " + mut1,false);
+			} else {
+				assertEqual(description, s12, mut1);
+			}
+		} catch (RuntimeException ex) {
+			if (s12 == null) {
+				assertTrue(description + "correctly failed", true);			
+			} else {
+				ex.printStackTrace();
+				assertTrue(description + " failed with exception: " + ex, false);
+			}
+		}
+		assertEqual("Merge argument afterwards",s2,mut2);
+	}
+
 	private void testUnify() {
 		testUnification("var to constant", subst(p("A",a1)), v("A",a), a1);
 		Term t2 = App(a2,a1);
