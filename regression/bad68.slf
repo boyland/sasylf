@@ -1,7 +1,7 @@
 // Edited version of poplmark-2a.slf
 // testing bad "where" clauses
 
-package examples;
+package regression;
 
 terminals lambda all Top value
 
@@ -882,17 +882,18 @@ case rule
 	d3: * |- t : T2
 	where T := T2
 is
-
+   /* not sure this represents a problem whether we reject or accept:
     do case analysis on d2: // just for bad68.slf
        case rule
            ----------- SA-Refl
            _: * |- T <: T
-           where T1 := T //! replaced bak with old variable
-            and T2 := T //! caused internal error
+           where T1 := T //? replaced back with old variable
+            and T2 := T //? caused internal error
         is
-            proof by unproved //! ignore
+            proof by unproved //?! ignore
         end case
     end case analysis
+     */
 	dtT' : * |- t' : T1 by induction hypothesis on d1, ds
 	dt' : * |- t' : T2 by rule T-Sub on dtT', d2
 
