@@ -241,7 +241,7 @@ public class Substitution {
 			Term t1 = varMap.get(fv).substitute(other);
 			Term t2 = other.varMap.get(fv);
 			if (!t1.equals(t2)) {
-				Util.tdebug( t1, " is not equal to ", t2, " when trying ", this, ".compose(", other, ")");
+				Util.debug( t1, " is not equal to ", t2, " when trying ", this, ".compose(", other, ")");
 				if (!doIt) return false;
 				throw new IllegalArgumentException(this + " cannot compose " + other + " because of inconsistency for " + fv);				
 			}
@@ -252,7 +252,7 @@ public class Substitution {
 			if (varMap.containsKey(fv)) {
 				Term newTerm = varMap.get(fv).substitute(other);
 				if (fv != newTerm.getEtaEquivFreeVar()) {
-					Util.tdebug(newTerm, " is not ", fv, " when trying ", this, ".compose(", other, ")");
+					Util.debug(newTerm, " is not ", fv, " when trying ", this, ".compose(", other, ")");
 					if (!doIt) return false;
 					throw new IllegalArgumentException(this + " cannot compose " + other + " because of occurs on " + fv);
 				}
