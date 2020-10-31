@@ -1,0 +1,67 @@
+// syntax cases with assumptions with NOP conversions
+package regression;
+
+terminals S λ bound tautology
+
+syntax
+   n ::= 0 | S n
+   
+   t ::= n
+      | x
+      | t t
+      | λ x • t[x]
+      
+   m ::= t
+      | m * n 
+
+  Γ ::= *
+     | Γ, x bound
+
+
+judgment variable: t bound ∈ Γ
+assumes Γ
+
+  ---------------------- var
+  x bound ∈ (Γ, x bound)
+  
+judgment always: tautology
+
+  --------- taut
+  tautology
+  
+lemma nothing:
+    assumes Γ
+    forall m[x] assumes (Γ, x bound)
+    exists tautology
+    proof by case analysis on (m[x] assumes Γ, x bound):
+        case t[x] assumes Γ, x bound is
+            proof by case analysis on (t[x] assumes Γ, x bound):
+                case n assumes (Γ, x bound) is
+                    proof by rule taut
+                end case
+                case t1[x] t2[x] assumes (Γ, x bound) is
+                    proof by rule taut
+                end case
+                case λ x' • t'[x][x'] assumes (Γ, x bound) is
+                    proof by rule taut
+                end case
+                case x assumes (Γ, x bound) is
+                    proof by rule taut
+                end case
+                case x' assumes (Γ', x' bound, x bound) is
+                    proof by rule taut
+                end case
+            end case analysis
+        end case
+
+        case m'[x] * n assumes Γ, x bound is
+            proof by rule taut
+        end case
+
+    end case analysis
+end lemma
+
+// judgment ...
+
+// theorem ...
+

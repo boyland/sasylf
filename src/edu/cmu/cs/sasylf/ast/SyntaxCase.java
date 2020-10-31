@@ -117,9 +117,12 @@ public class SyntaxCase extends Case {
 		}		  
 
 		if (assumes != null) {
-			concElem = new AssumptionElement(getLocation(),concElem,assumes);
+			final AssumptionElement newElem = new AssumptionElement(getLocation(),concElem,assumes);
+			concElem = newElem;
 			concElem.typecheck(ctx);
+			newElem.computeClause(ctx, caseNT);
 		}
+		
 		Term concTerm = concElem.asTerm();
 		Util.debug("concTerm = ", concTerm);
 
@@ -151,7 +154,7 @@ public class SyntaxCase extends Case {
 
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(concDef);
-
+		
 		if (concElem instanceof ClauseUse) {
 			verify(caseResult.size() <= 1, "internal invariant violated");
 		}

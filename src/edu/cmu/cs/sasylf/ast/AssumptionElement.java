@@ -74,6 +74,16 @@ public class AssumptionElement extends Element {
 		return this;
 	}
 
+	public Element computeClause(Context ctx, NonTerminal nt) {
+		if (!(base instanceof Clause)) {
+			final Clause clause = new Clause(base.getLocation());
+			clause.add(base);
+			base = clause;
+		}
+		base = ((Clause)base).computeClause(ctx, nt);
+		return this;
+	}
+	
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
 		base.prettyPrint(out,ctx);
