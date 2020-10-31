@@ -1834,7 +1834,7 @@ Clause SimpleExpr() :
 		c.add(e);
 	}
     | t=<LPAREN> e=Expr()
-      [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(e.getLocation(), e, a); } ]
+      [ <ASSUMES> a=Expr() { e = new AssumptionElement(e.getLocation(), e, a); } ]
       t2=<RPAREN>
 	{
 		c = new Clause(new Location(t));
