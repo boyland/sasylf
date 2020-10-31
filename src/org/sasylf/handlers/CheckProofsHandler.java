@@ -43,7 +43,7 @@ public class CheckProofsHandler extends AbstractHandler {
 				if (seg instanceof IResource) {
 					IResource res = (IResource)seg;
 					if ("slf".equals(res.getFileExtension())) {
-						IFile f = (IFile)res.getAdapter(IFile.class);
+						IFile f = res.getAdapter(IFile.class);
 						// System.out.println("  with correct extension");
 						IProject p = f.getProject();
 						ProofBuilder pb = ProofBuilder.getProofBuilder(p);
@@ -53,7 +53,7 @@ public class CheckProofsHandler extends AbstractHandler {
 						} else {
 							System.out.println("use proof builder");
 							pb.forceBuild(f);
-						}			
+						}
 					}
 				}
 				// System.out.println("Selected is " + seg + " of class " + (seg== null ? "<null>" : seg.getClass().toString()));
@@ -61,7 +61,7 @@ public class CheckProofsHandler extends AbstractHandler {
 			return null;
 		}
 		IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
-		IResource res = (IResource)activeEditor.getEditorInput().getAdapter(IResource.class);
+		IResource res = activeEditor.getEditorInput().getAdapter(IResource.class);
 		if (res != null) {
 			IProject p = res.getProject();
 			ProofBuilder pb = ProofBuilder.getProofBuilder(p);
