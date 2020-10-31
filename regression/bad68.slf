@@ -201,6 +201,7 @@ is
 	d5: * |- T1 <: T21' and
 	d6: * |- T22' <: T2 by induction hypothesis on d2
 	use inversion of rule type-equality on d4
+	where T' := T21' > T22' //! bad syntax
 	d8: T == T1'' -> T3 and
 	d9: * |- T21' <: T1'' and
     d10: * |- T3 <: T22' by induction hypothesis on d1
@@ -339,6 +340,7 @@ case rule
 	d2: *, X <: T11'' |- T12'[X] <: T12[X]
 	----------------------------------------------------------------- SA-All
 	d3: * |- all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] 
+        where T'' := all X <: T11' -> T12'[X] //! -> in place of =>
 is
 	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d1, d2
 end case
@@ -882,18 +884,18 @@ case rule
 	d3: * |- t : T2
 	where T := T2
 is
-   /* not sure this represents a problem whether we reject or accept:
+   /* not sure this represents a problem whether we reject or accept: */
     do case analysis on d2: // just for bad68.slf
        case rule
            ----------- SA-Refl
            _: * |- T <: T
            where T1 := T //? replaced back with old variable
-            and T2 := T //? caused internal error
+            and T2 := T //! redundant replacement
         is
-            proof by unproved //?! ignore
+            proof by unproved //! ignore
         end case
     end case analysis
-     */
+     
 	dtT' : * |- t' : T1 by induction hypothesis on d1, ds
 	dt' : * |- t' : T2 by rule T-Sub on dtT', d2
 

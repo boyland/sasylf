@@ -216,7 +216,8 @@ public class WhereClause extends Node {
 		if (su.equals(userSub)) return; // everything matches!
 		if (userSub.isEmpty() && !Util.COMP_WHERE) return;
 		// ErrorHandler.warning("user sub " + userSub + " doesn't exactly match " + su, errorSpan);
-		Util.debug("IW: cas = ",cas,"\n    rcc = ", rcc, "\n    su = ",su);
+		Util.debug("in where at ", getLocation(), ", cas = ",cas,"\n    rcc = ", rcc, "\n    su = ",su, "\n    current sub = ",ctx.currentSub, "\n  user sub = ",userSub);
+	
 		
 		
 		// create map of vars to check clauses for, from s_u
@@ -280,7 +281,13 @@ public class WhereClause extends Node {
 				);
 				continue nextUserClause;
 			}
-
+			rhsCorrect = rhsCorrect.substitute(ctx.currentSub); // working on bad68.slf
+			if (matchingVar.equals(rhsCorrect.getEtaEquivFreeVar())) {
+				ErrorHandler.recoverableError(
+						"Where clause not needed for: " + matchingVar, userWC.first
+					);
+					continue nextUserClause;
+			}
 			// make sure this isn't a duplicate clause (will check the RHS anyway, tentatively)
 			if (checked.get(matchingVar)) {
 				ErrorHandler.recoverableError(
@@ -291,7 +298,7 @@ public class WhereClause extends Node {
 			
 			Term rhsUser = userSub.getSubstituted(matchingVar);
 			Util.debug("For " + matchingVar + ", Correct = ",rhsCorrect,",User = ",rhsUser);
-			if (rhsUser == null) rhsUser = matchingVar; // can happen if we remove a NOP subst from rhsUser
+			if (rhsUser == null) rhsUser = matchingVar; //?? continue nextUserClause; // can come from NOP removal OR error in parsing where clause
 
 			int userLambdas = rhsUser.countLambdas();
 			int correctLambdas = rhsCorrect.countLambdas();
@@ -328,7 +335,7 @@ public class WhereClause extends Node {
 				Set<FreeVar> needSpecifics = unifyingSub.selectUnavoidable(freeVars);
 				Util.debug("unifyingSub = ",unifyingSub);
 				Set<FreeVar> correctVars = rhsCorrect.getFreeVariables();
-				Util.debug(" free are ", correctVars);
+				Util.debug("  correctVars are ", correctVars);
 				if (needSpecifics.size() > 0) {
 					ErrorHandler.recoverableError("replacement too general, perhaps these variables should be replaced with something specific: " + needSpecifics, userWC.second);
 					continue nextUserClause;
@@ -344,7 +351,7 @@ public class WhereClause extends Node {
 					}
 					FreeVar fv = e.getValue().getEtaPermutedEquivFreeVar(null, null);
 					if (fv == null || ctx.isLocallyKnown(fv.getName())) {
-						Util.debug("fv = ",fv);
+						Util.debug("fv = ",fv,", key = " + e.getKey(),", userWC = ", userWC, ", currentSub = ", ctx.currentSub);
 						Term body = Term.getWrappingAbstractions(e.getValue(), null);
 						if (body instanceof Application) {
 							body = ((Application)body).getFunction();
@@ -359,6 +366,7 @@ public class WhereClause extends Node {
 					}
 				}
 				rhsCorrect = rhsCorrect.substitute(unifyingSub);
+				su.compose(unifyingSub); // XXX: could this cause a CME ?
 				ctx.composeSub(unifyingSub);
 			} catch (UnificationFailed e) {
 				// can't handle discrepancy
