@@ -81,7 +81,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			Term explanationTerm = null;
 			String explanationString = null;
 			try {
-				System.out.println(newSubject + ".unify(" + pattern + ")");
+				Util.debug(newSubject,".unify(",pattern,")");
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
 				explanationTerm = learnAboutErrors.getSubstituted(concVar);
