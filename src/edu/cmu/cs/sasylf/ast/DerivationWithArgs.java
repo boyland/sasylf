@@ -93,7 +93,7 @@ public abstract class DerivationWithArgs extends Derivation {
 				Element e = c.typecheck(ctx);
 				if (e instanceof Clause) {
 					Clause cl = (Clause)e;
-					if (cl.getElements().size() == 1 && cl.getElements().get(0) instanceof NonTerminal) {
+					if (cl.getElements().size() == 1 && !(cl.getElements().get(0) instanceof Terminal)) {
 						e = cl.getElements().get(0);
 					} else {
 						e = cl.computeClause(ctx, false);
