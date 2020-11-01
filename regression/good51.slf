@@ -1,12 +1,13 @@
 // syntax cases with assumptions with NOP conversions
 package regression;
 
-terminals S λ bound tautology
+terminals S λ bound unit tautology
 
 syntax
    n ::= 0 | S n
    
    t ::= n
+      | unit
       | x
       | t t
       | λ x • t[x]
@@ -36,6 +37,9 @@ lemma nothing:
     proof by case analysis on (m[x] assumes Γ, x bound):
         case t[x] assumes Γ, x bound is
             proof by case analysis on (t[x] assumes Γ, x bound):
+	        case unit assumes (Γ, x bound) is
+                    proof by rule taut
+                end case
                 case n assumes (Γ, x bound) is
                     proof by rule taut
                 end case

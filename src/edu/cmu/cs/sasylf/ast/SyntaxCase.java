@@ -117,10 +117,9 @@ public class SyntaxCase extends Case {
 		}		  
 
 		if (assumes != null) {
-			final AssumptionElement newElem = new AssumptionElement(getLocation(),concElem,assumes);
-			concElem = newElem;
+			Util.debug("concElem = ",concElem," : ", concElem.getClass());
+			concElem = new AssumptionElement(getLocation(),concElem,assumes);
 			concElem.typecheck(ctx);
-			newElem.computeClause(ctx, caseNT);
 		}
 		
 		Term concTerm = concElem.asTerm();

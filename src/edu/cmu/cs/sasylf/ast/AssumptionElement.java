@@ -22,7 +22,7 @@ public class AssumptionElement extends Element {
 
 	public AssumptionElement(Location l, Element e, Element assumes) {
 		super(l);
-		while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
+		while (e instanceof Clause && !(e instanceof ClauseUse) && ((Clause)e).getElements().size() == 1) {
 			Clause cl = (Clause)e;
 			e = cl.getElements().get(0);
 		}
@@ -71,16 +71,6 @@ public class AssumptionElement extends Element {
 		if (base instanceof Clause) {
 			base = ((Clause)base).computeClause(ctx,false);
 		}
-		return this;
-	}
-
-	public Element computeClause(Context ctx, NonTerminal nt) {
-		if (!(base instanceof Clause)) {
-			final Clause clause = new Clause(base.getLocation());
-			clause.add(base);
-			base = clause;
-		}
-		base = ((Clause)base).computeClause(ctx, nt);
 		return this;
 	}
 	
