@@ -1,0 +1,177 @@
+// testing "and/or" with (equal) non-atomic contexts
+package regression;
+
+terminals unit λ bound tautology
+
+syntax
+   
+   t ::= unit
+      | x
+      | t t
+      | λ x • t[x]
+      
+  Γ ::= *
+     | Γ, x bound
+
+
+judgment variable: t bound ∈ Γ
+assumes Γ
+
+  ---------------------- var
+  x bound ∈ (Γ, x bound)
+  
+
+judgment inscope: Γ ⊢ t
+assumes Γ
+
+  t bound ∈ Γ
+  ----------- B-Var
+   Γ ⊢ t
+
+  --------- B-Unit
+   Γ ⊢ unit
+
+   Γ ⊢ t1
+   Γ ⊢ t2
+   ---------- B-App
+   Γ ⊢ t1 t2
+
+   Γ, x bound ⊢ t[x]
+   ----------------- B-Abs
+   Γ ⊢ (λ x • t[x])
+
+judgment full-beta: Γ ⊢ t → t
+assumes Γ
+  
+  Γ ⊢ t1 → t1'
+  ------------------ E-App1
+  Γ ⊢ t1 t2 → t1' t2
+  
+  Γ ⊢ t2 → t2'
+  ------------------ E-App2
+  Γ ⊢ t1 t2 → t1 t2'
+  
+  ----------------------------- E-AppAbs
+  Γ ⊢ (λ x • t1[x]) t2 → t1[t2]
+  
+  Γ, x bound ⊢ t[x] → t'[x]
+  -------------------------------- E-Abs
+  Γ ⊢ (λ x • t[x]) → (λ x • t'[x])
+  
+judgment normal: Γ ⊢ t ↛
+assumes Γ
+
+  ------------ NE-Unit
+  Γ ⊢ unit ↛
+  
+  t bound ∈ Γ
+  ------------ NE-Var
+  Γ ⊢ t ↛
+  
+  t1 bound ∈ Γ
+  Γ ⊢ t2 ↛
+  --------------- NE-AppVar
+  Γ ⊢ t1 t2 ↛
+  
+  Γ ⊢ t2 ↛
+  --------------- NE-AppUnit
+  Γ ⊢ unit t2 ↛
+  
+  Γ ⊢ t11 t12 ↛
+  Γ ⊢ t2 ↛
+  ------------------ NE-AppApp
+  Γ ⊢ (t11 t12) t2 ↛
+  
+  Γ, x bound ⊢ t[x] ↛
+  -------------------- NE-Abs
+  Γ ⊢ λ x • t[x] ↛
+  
+theorem eval-decidable:
+    assumes Γ
+    forall t assumes Γ
+    exists Γ ⊢ t → t' or Γ ⊢ t ↛
+    proof by induction on t:
+
+        // The case that causes problem in SASyLF before 1.5.0a5
+        case λ x • t0[x] is
+            ch1: Γ, x bound ⊢ t0[x] → t0'[x] or Γ, x bound ⊢ t0[x] ↛ by induction hypothesis on (t0[x] assumes Γ, x bound)
+            proof by case analysis on ch1:
+                case or e0: Γ, x bound ⊢ t0[x] → t0'[x] is
+                    _: Γ ⊢ (λ x • t0[x]) → (λ x • t0'[x]) by rule E-Abs on e0
+                end case
+                case or n0: Γ, x bound ⊢ t0[x] ↛ is
+                    _: Γ ⊢ (λ x • t0[x]) ↛ by rule NE-Abs on n0
+                end case
+            end case analysis
+        end case
+
+            case unit is
+            _: Γ ⊢ unit ↛ by rule NE-Unit
+        end case
+
+        case x assumes Γ', x bound is
+            v: x bound ∈ (Γ', x bound) by rule var
+            b: t bound ∈ Γ by v
+            _: Γ ⊢ t ↛ by rule NE-Var on b
+        end case
+
+        case t1 t2 is
+            ch1: Γ ⊢ t1 → t1' or Γ ⊢ t1 ↛ by induction hypothesis on t1
+            do case analysis on ch1:
+                case or e1: Γ ⊢ t1 → t1' is
+                    _: Γ ⊢ t1 t2 → t1' t2 by rule E-App1 on e1
+                end case
+            end case analysis
+            n1: Γ ⊢ t1 ↛ by case analysis on ch1:
+                case or n1: Γ ⊢ t1 ↛ is
+                    proof by n1
+                end case
+            end case analysis
+            ch2: Γ ⊢ t2 → t2' or Γ ⊢ t2 ↛ by induction hypothesis on t2
+            do case analysis on ch2:
+                case or e2: Γ ⊢ t2 → t2' is
+                    _: Γ ⊢ t1 t2 → t1 t2' by rule E-App2 on e2
+                end case
+            end case analysis
+            n2: Γ ⊢ t2 ↛ by case analysis on ch2:
+                case or n2: Γ ⊢ t2 ↛ is
+                    proof by n2
+                end case
+            end case analysis
+            proof by case analysis on t1:
+                case unit is
+                    _: Γ ⊢ unit t2 ↛ by rule NE-AppUnit on n2
+                end case
+                case x assumes Γ', x bound is
+                    v: x bound ∈ (Γ', x bound) by rule var
+                    b: t1 bound ∈ Γ by v
+                    _: Γ ⊢ t1 t2 ↛ by rule NE-AppVar on b, n2
+                end case
+                case λ x • t11[x] is
+                    _: Γ ⊢ (λ x • t11[x]) t2 → t11[t2] by rule E-AppAbs
+                end case
+                case t11 t12 is
+                    _: Γ ⊢ (t11 t12) t2 ↛ by rule NE-AppApp on n1, n2
+                end case
+            end case analysis
+        end case
+    end induction
+end theorem
+
+lemma invert-B-App:
+    assumes Γ
+    forall e: Γ, x bound ⊢ t1[x] t2[x] 
+    exists Γ, x bound ⊢ t1[x] and  Γ, x bound ⊢ t2[x]
+    do case analysis on e:
+      case rule
+            v: (t1[x] t2[x]) bound ∈ (Γ, x bound)
+	    ------------------------------------- B-Var
+	    _: Γ, x bound ⊢ t1[x] t2[x]
+	is
+	    proof by contradiction on v
+	end case  
+    end case analysis
+    proof by inversion of B-App on e
+end lemma
+
+
