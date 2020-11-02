@@ -234,6 +234,6 @@ public class DerivationByInversion extends DerivationWithArgs {
 	
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
-		ruleName.visit(consumer);
+		if (ruleName != null) ruleName.visit(consumer);
 	}
 }

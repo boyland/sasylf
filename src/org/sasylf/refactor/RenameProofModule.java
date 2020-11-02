@@ -177,6 +177,7 @@ public class RenameProofModule extends RenameParticipant {
 	protected void createDependencyChanges(IFile file, IProgressMonitor pm, RefactoringStatus status) 
 			throws OperationCanceledException, CoreException
 	{
+		if (file == null) return;
 		IPath fullPath = file.getFullPath();
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
