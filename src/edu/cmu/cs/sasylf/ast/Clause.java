@@ -443,16 +443,15 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 							subClause = stack.pop();
 						}
 					}
-					subClause.elements.add(element);
+					if (subClause.elements.isEmpty()) { // first to add!
+						subClause.setLocation(element.getLocation());
+					}
+					subClause.add(element);
 				}
 				// using a subClause forces the error to print correctly.
 				Element e = subClause.parseClause(ctx,inBinding,g,sublist,null);
 				if (e instanceof ClauseUse) {
 					ClauseUse cu = (ClauseUse)e;
-					if (!clauses.isEmpty() && cu.getElements().size() > 0) {
-						// set location, which otherwise refers to the whole thing
-						cu.setLocation(cu.getElements().get(0).getLocation());
-					}
 					ClauseType ty = cu.getConstructor().getType();
 					if (ty instanceof Judgment) types.add((Judgment)ty);
 					else ErrorHandler.report("cannot "+sepList.get(0)+" syntax only judgments", this);
