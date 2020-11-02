@@ -65,9 +65,12 @@ public class SyntaxCase extends Case {
 
 		// make sure we were case-analyzing a nonterminal
 		if (!(ctx.currentCaseAnalysisElement instanceof NonTerminal) &&
-				!(ctx.currentCaseAnalysisElement instanceof AssumptionElement))
+				!(ctx.currentCaseAnalysisElement instanceof AssumptionElement)) {
+			if (ctx.currentCaseAnalysisElement instanceof OrClauseUse) {
+				ErrorHandler.report(Errors.SYNTAX_CASE_FOR_DISJUNCTION, this);
+			}
 			ErrorHandler.report(SYNTAX_CASE_FOR_DERIVATION, this);
-
+		}
 		NonTerminal caseNT;
 		if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
 			AssumptionElement ae = (AssumptionElement)ctx.currentCaseAnalysisElement;
@@ -114,9 +117,11 @@ public class SyntaxCase extends Case {
 		}		  
 
 		if (assumes != null) {
+			Util.debug("concElem = ",concElem," : ", concElem.getClass());
 			concElem = new AssumptionElement(getLocation(),concElem,assumes);
 			concElem.typecheck(ctx);
 		}
+		
 		Term concTerm = concElem.asTerm();
 		Util.debug("concTerm = ", concTerm);
 
@@ -148,7 +153,7 @@ public class SyntaxCase extends Case {
 
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(concDef);
-
+		
 		if (concElem instanceof ClauseUse) {
 			verify(caseResult.size() <= 1, "internal invariant violated");
 		}
@@ -166,7 +171,7 @@ public class SyntaxCase extends Case {
 				continue;
 			}
 			computedCaseTerm = pair.first;
-			verify(pair.second.getMap().size() == 0, "syntax case substitution should be empty, not " + pair.second);
+			// verify(pair.second.getMap().size() == 0, "syntax case substitution should be empty, not " + pair.second);
 			caseResult.remove(pair);
 
 			Set<FreeVar> free = pair.first.getFreeVariables();
@@ -217,10 +222,6 @@ public class SyntaxCase extends Case {
 			if (ctx.isLocallyKnown(newRoot.getSymbol())) {
 				ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
 			}
-			ClauseUse container = ((ClauseUse)(ae.getAssumes())).getAssumesContaining(newRoot);
-			Util.debug("  relaxation source: " + container);
-			verify(container != null,"no use of " + newRoot + " in " + ae + "?");
-
 
 			// If currentCaseAnalysis is an abstraction, bind it to a fresh variable,
 			// and use this variable in the relaxation.
@@ -247,7 +248,7 @@ public class SyntaxCase extends Case {
 			List<Abstraction> addedContext = new ArrayList<Abstraction>();
 			Term.getWrappingAbstractions(computedCaseTerm,addedContext,lambdaDifference);
 
-			Relaxation relax = new Relaxation(container,addedContext,Collections.singletonList(relaxationVar),ctx.currentCaseAnalysisElement.getRoot());
+			Relaxation relax = new Relaxation(addedContext,Collections.singletonList(relaxationVar),ctx.currentCaseAnalysisElement.getRoot());
 			ctx.addRelaxation(newRoot, relax);
 
 			adaptedCaseAnalysis = ctx.adapt(adaptedCaseAnalysis, addedContext, true);/*

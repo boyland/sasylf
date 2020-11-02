@@ -125,6 +125,31 @@ public class QualName extends Node {
 	}
 	
 	/**
+	 * Force the resolution of this qual name as a package.
+	 * This also resolves the parent (if any) qual name as a package as well.
+	 * @return the array of strings representing this package.
+	 */
+	public String[] resolveAsPackage() {
+		if (!(resolution instanceof String[])) {
+			int n = 0;
+			for (QualName q = this; q != null; q = q.source) {
+				++n;
+			}
+			for (QualName q = this; q != null; q = q.source) {
+				String[] resolution = new String[n];
+				q.resolution = resolution;
+				int m = n-1;
+				for (QualName r = q; r != null; r = r.source) {
+					resolution[m] = r.name;
+					--m;
+				}
+				--n;
+			}
+		}
+		return (String[])resolution;
+	}
+	
+	/**
 	 * Indicate what sort of thing this resolution is.
 	 * @param resolution (returned from resolve)
 	 * @return string indicating kind of thing this is

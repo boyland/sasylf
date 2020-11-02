@@ -10,7 +10,6 @@ import java.util.Stack;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.DefaultPositionUpdater;
@@ -74,10 +73,10 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		protected final static String FORALL = "∀";
 		protected final static String EXISTS = "∃";
 
-		private boolean inResource(Location loc, IResource res) {
+		private boolean inDocument(Location loc, String docName) {
 			String name = loc.getFile();
-			if (res.getName().equals(name)) return true;
-			System.out.println("Are modules implemented? " + res.getName() + " != " + name);
+			if (docName.equals(name)) return true;
+			System.out.println("Are modules implemented? " + docName + " != " + name);
 			return true;
 		}
 
@@ -87,28 +86,53 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				int lineOffset = document.getLineOffset(loc.getLine() - 1);
 				int lineLength = document.getLineLength(loc.getLine() - 1);
 				pos = new Position(lineOffset, lineLength);
-				document.addPosition(pos);
+				document.addPosition(SEGMENTS, pos);
 			} catch (BadLocationException e) {
+				e.printStackTrace();
+			} catch (BadPositionCategoryException e) {
 				e.printStackTrace();
 			}
 			return pos;
 		}
 
-		public void newCompUnit(IFile documentFile, IDocument document, Module cu) {
+		private Map<String,ProofElement> makeReuseIndex() {
+			Map<String,ProofElement> index = new HashMap<String,ProofElement>();
+			for (ProofElement pe : pList) {
+				index.put(pe.toString(), pe);
+			}
+			return index;
+		}
+		
+		private void useReuseIndex(Map<String, ProofElement> index) {
+			List<ProofElement> newElements = new ArrayList<ProofElement>(pList);
 			pList.clear();
-
+			for (ProofElement newer : newElements) {
+				ProofElement older = index.remove(newer.toString());
+				if (older == null) pList.add(newer);
+				else {
+					// System.out.println("Found existing: " + older);
+					older.updateTo(newer);
+					pList.add(older);
+				}
+			}
+		}
+		
+		public void newCompUnit(IDocument document, String documentName, Module cu) {
 			if(cu == null) {
 				return;
 			}
+			
+			Map<String,ProofElement> reuseIndex = makeReuseIndex();
+			pList.clear();
 
 			List<Node> contents = new ArrayList<Node>();
 			cu.collectTopLevel(contents);
 			
 			ProofElement pe;			
 			for (Node decl : contents) {
+				if (!inDocument(decl.getLocation(), documentName)) continue;
 				if (decl instanceof Syntax) {
 					Syntax syn = (Syntax)decl;
-					if (!inResource(syn.getLocation(), documentFile)) continue;
 					pe = new ProofElement("Syntax", syn.toString());
 					pe.setPosition(convertLocToPos(document,syn.getLocation()));
 					pList.add(pe);
@@ -123,7 +147,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof Judgment) {
 					Judgment judg = (Judgment)decl;
-					if (!inResource(judg.getLocation(), documentFile)) continue;
 					pe = new ProofElement("Judgment", (judg.getName() + ": " + judg.getForm()));
 					pe.setPosition(convertLocToPos(document, judg.getLocation()));
 					pList.add(pe);
@@ -158,7 +181,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof Theorem) {
 					Theorem theo = (Theorem)decl;
-					if (!inResource(theo.getLocation(), documentFile)) continue;
 					StringBuilder sb = new StringBuilder();
 					sb.append(theo.getName());
 					sb.append(": ");
@@ -181,11 +203,12 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				}
 				else if (decl instanceof ModulePart) {
 					ModulePart mpart = (ModulePart)decl;
-					pe = new ProofElement("Module", mpart.getName() + "= " + mpart.getModule().toString());
+					pe = new ProofElement("Module", mpart.getName() + ": " + mpart.getModule().toString());
 					pe.setPosition(convertLocToPos(document,mpart.getLocation()));
 					pList.add(pe);
 				}
 			}
+			useReuseIndex(reuseIndex);
 		}
 
 		Stack<ProofElement> cStack = new Stack<ProofElement>();
@@ -242,7 +265,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					if(newInput instanceof IFileEditorInput) {
 						//String filePath = ((IFileEditorInput) newInput).getFile().getLocationURI().getPath().replaceFirst("/", "");
 						IFile file = ((IFileEditorInput)newInput).getFile(); // new File(filePath);
-						newCompUnit(file, document, Proof.getCompUnit(file));
+						newCompUnit(document, file.getName(), Proof.getCompUnit(file));
 					}
 				}
 			}
@@ -414,8 +437,6 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 	/**
 	 * Creates a content outline page using the given provider and the given editor.
-	 * XXX: do it at every check, not just at save.
-	 * XXX: but perhaps this must wait for a builder....
 	 * @param provider the document provider
 	 * @param editor the editor
 	 */
@@ -473,7 +494,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	 */
 	public void setInput(IEditorInput input) {
 		fInput= input;
-		IFile f = (IFile)fInput.getAdapter(IFile.class);
+		IFile f = fInput.getAdapter(IFile.class);
 		proofChecked(f,Proof.getProof(f), 0);
 	}
 
@@ -492,8 +513,8 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						control.setRedraw(false);
 						ContentProvider provider = (ContentProvider)viewer.getContentProvider();
 						IDocument doc = fDocumentProvider.getDocument(fInput);
-						provider.newCompUnit(file,doc,pf.getCompilation());
-						viewer.expandAll();
+						provider.newCompUnit(doc,file.getName(),pf.getCompilation());
+						// viewer.expandAll();
 						control.setRedraw(true);
 						viewer.refresh(); // doesn't work if inside the controlled area.
 					}

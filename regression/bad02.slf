@@ -21,7 +21,7 @@ lemma impossible :
   end induction
 end lemma
 and
-lemma impossible1 :
+lemma impossible1 : //! induction must be explicit
   forall n
   exists contradiction .
   _: contradiction by lemma impossible on n

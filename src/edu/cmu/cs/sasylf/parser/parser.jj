@@ -149,6 +149,11 @@ public class DSLToolkitParser {
     	return getToken(1).kind == LPAREN && notNL(getToken(1).specialToken);
     }
 
+    boolean isLogicNoNL() {
+      Token t = getToken(1);
+      return (t.kind == OR || t.kind == NOT) && notNL(t.specialToken);
+    }
+
     boolean isVarBindingArg() {
 		return (getToken(1).kind == IDENTIFIER && getToken(2).kind == RBRACK);
     }
@@ -237,9 +242,12 @@ SPECIAL_TOKEN :
 }
 
 SPECIAL_TOKEN : {
-    < SINGLE_LINE_COMMENT: "//"(~["\n","\r"])* ("\n"|"\r"|"\r\n")? > 
+    < SINGLE_LINE_COMMENT: "//"(~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
+    {
+      TaskReport.checkForTaskTag(matchedToken);
+    }
 } 
-    
+   
 /* COMMENTS */
 
 MORE :
@@ -252,13 +260,21 @@ MORE :
 <IN_FORMAL_COMMENT>
 SPECIAL_TOKEN :
 {
-  <FORMAL_COMMENT: "*/" > : DEFAULT
+  <FORMAL_COMMENT: "*/" > 
+    {
+      TaskReport.checkForTaskTag(matchedToken);
+    }
+    : DEFAULT
 }
 
 <IN_MULTI_LINE_COMMENT>
 SPECIAL_TOKEN :
 {
-  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+  <MULTI_LINE_COMMENT: "*/" >
+    {
+      TaskReport.checkForTaskTag(matchedToken);
+    }
+    : DEFAULT
 }
 
 <IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
@@ -1440,7 +1456,7 @@ CompUnit CompilationUnit() :
   [ LOOKAHEAD(3) firstToken=<MODULE> t=<IDENTIFIER> { moduleName = t.image; } ]
   {
     if (pkg == null)
-		pkg = new PackageDeclaration(new Location(currentFile,1,1), Collections.<String>emptyList(), new Location(currentFile,1,1));
+		pkg = new PackageDeclaration(new Location(currentFile,1,1), null, new Location(currentFile,1,1));
     cu = new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName);
   }
   
@@ -1484,9 +1500,9 @@ CompUnit CompilationUnit() :
 void matchEOF() : {} { <EOF> { return; } }
 
 PackageDeclaration PackageDeclaration() :
-{ Token t, u; List<String> l; }
+{ Token t, u; QualName q; Location e; }
 {
-  t=<PACKAGE> l=Name() u=<SEMICOLON> { return new PackageDeclaration(new Location(t), l, Location.endOf(u)); }
+  t=<PACKAGE> q=QualName() (u=<SEMICOLON> { e = Location.endOf(u); }| { e = q.getEndLocation(); }) { return new PackageDeclaration(new Location(t), q, e); }
 }
 
 Part Part(boolean abstractOK) :
@@ -1565,19 +1581,6 @@ Token Keyword() :
   ) { return t; }
 }
  
-List<String> Name() :
-/*
- * A lookahead of 2 is required below since "Name" can be followed
- * by a ".*" when used in the context of an "ImportDeclaration".
- */
-{Token t; List<String> l = new ArrayList<String>(); }
-{
-  t=<IDENTIFIER> { l.add(t.image); }
-  ( LOOKAHEAD(2) "." t=<IDENTIFIER> { l.add(t.image); }
-  )*
-  { return l; }
-}
-
 QualName QualName() :
 { StringSpan t;
   QualName result;
@@ -1595,7 +1598,7 @@ QualName QualName() :
 StringSpan RuleName() :
 {Token t, t1; StringSpan s; }
 {
-  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT>) { s = new StringSpan(t1); }
+  (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT> | t1=<AND> | t1=<OR>) { s = new StringSpan(t1); }
   ( LOOKAHEAD({ isRulePart() }) (
       t=<MINUS>
     | t=<OPERATOR>
@@ -1760,9 +1763,9 @@ Rule RuleDeclaration() :
 }
 
 Clause ExprToNL() :
-{ Token t1, t2; Element e; Clause c = null; }
+{ Token t, t1, t2; Element e; Clause a, c = null; }
 {
-  ( t1=<LPAREN> e=Expr() t2=<RPAREN>
+  ( t1=<LPAREN> e=Expr() (t=<AND> c=Expr() { AndJudgment.addAnd((Clause)e,makeSpan(t),c); c = null; } )* t2=<RPAREN>
 	{
 		c = new Clause(new Location(t1));
 		c.add(e);
@@ -1780,10 +1783,15 @@ Clause ExprToNL() :
 		c.add(e);
 	}
     | LOOKAHEAD({ lParenNoNL() })
-    <LPAREN> e=Expr() t2=<RPAREN>
+    <LPAREN> e=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd((Clause)e,makeSpan(t),a); } )*t2=<RPAREN>
 	{
 		c.add(e);
 		c.setEndLocation(new Location(t2).add(1));
+	}
+    |  LOOKAHEAD( {  isLogicNoNL() })
+    (t=<OR>|t=<NOT>) 
+	{ 
+		c.add(getNonTerminal(t)); // strange, but NonTerminal knows how to handle these keywords
 	}
   )*
   { return c; }
@@ -1826,7 +1834,7 @@ Clause SimpleExpr() :
 		c.add(e);
 	}
     | t=<LPAREN> e=Expr()
-      [ t=<ASSUMES> a=Expr() { e = new AssumptionElement(e.getLocation(), e, a); } ]
+      [ <ASSUMES> a=Expr() { e = new AssumptionElement(e.getLocation(), e, a); } ]
       t2=<RPAREN>
 	{
 		c = new Clause(new Location(t));
@@ -1913,7 +1921,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
-  <EXISTS> c=Expr() (t=<AND> a=Expr() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
+  <EXISTS> c=ExprToNL() (t=<AND> a=ExprToNL() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
   (".")? { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA> | sp=RuleName() { tp = null; } )
@@ -1933,7 +1941,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; StringSpan s; QualName q; Case ca; Clause c; Clause c2; Derivation d; Token of;}
+{ Token t; Token t2; Token a; StringSpan s; QualName q = null; Case ca; Clause c; Clause c2; Derivation d; Token of = null;}
 {
    (
      t=<IDENTIFIER> <COLON> c=Expr()
@@ -1945,11 +1953,11 @@ Derivation Derivation() :
    <BY> d=Justification(t, c)
   { return d; }
 | LOOKAHEAD(<USE> <INVERSION>)
-  (    t=<USE> <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() <ON> t2=<IDENTIFIER>
+  (    t=<USE> <INVERSION> [of=<IDENTIFIER> [<RULE>] q=QualName()] <ON> t2=<IDENTIFIER>
     {
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
-      if (!of.image.equals("of")) {
+      if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
@@ -1978,7 +1986,7 @@ Derivation Derivation() :
 
 Derivation Justification(Token startT, Clause c) :
 { Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
-  DerivationByCaseAnalysis dca; StringSpan s; QualName q; Element e; Clause cl; Token of; QualName qn;
+  DerivationByCaseAnalysis dca; StringSpan s; QualName q = null; Element e; Clause cl; Token of = null; QualName qn;
 }
 { // args should include expressions
   <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
@@ -2016,16 +2024,34 @@ Derivation Justification(Token startT, Clause c) :
   | LOOKAHEAD(2) <CONTRADICTION> <ON> t=<IDENTIFIER>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
       dca.setEndLocation(Location.endOf(t)); return dca; }
+  | LOOKAHEAD(4)
+  (	<INVERSION> [of=<IDENTIFIER>] <OR> <ON> t=<IDENTIFIER>
+	{
+	  Element lhs=null; Clause rhs=null;
+	  WhereClause whereClauses = null;
+      if (of == null) {
+          ErrorHandler.recoverableError("expected 'inversion of or', not 'inversion or'",new Location(t));
+      } else if (!of.image.equals("of")) {
+          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+      }
+    }
+    whereClauses=WhereClauses()
+    {
+   	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
+   	      c, DerivationByInversion.OR, t.image, whereClauses);
+	}
+  ) 
   | LOOKAHEAD(3)
   (
-    <INVERSION> of=<IDENTIFIER> [<RULE>] q=QualName() [ <ON> t=<IDENTIFIER> ]
+    t2=<INVERSION> (of=<IDENTIFIER> [<RULE>] q=QualName() [<ON> t=<IDENTIFIER>]
+                   |<ON> t=<IDENTIFIER>) 
     {
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (t == null) {
-          ErrorHandler.recoverableError("inversion " + of.image + " " + q + " on what?",new Location(of));
+          ErrorHandler.recoverableError("inversion on what?",new Location(t2));
           t = new Token(IDENTIFIER,"<missing>");
-      } else if (!of.image.equals("of")) {
+      } else if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
       }
     }
@@ -2034,7 +2060,7 @@ Derivation Justification(Token startT, Clause c) :
    	  return new DerivationByInversion(startT.image, new Location(startT), Location.endOf(t),
    	      c, q, t.image, whereClauses);
 	}
-  )+
+  )
     // args should include expressions *****
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);

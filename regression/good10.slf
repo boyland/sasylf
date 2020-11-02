@@ -24,10 +24,10 @@ n = n
 
 
 theorem right-identity-zero:
-    // induction implicitly on "n"
     forall n1
     forall p : n1 + n2 = n1
     exists n2 = 0.
+    use induction on n1
     proof by case analysis on p:
         case rule
             ------------ plus-0

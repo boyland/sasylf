@@ -1,0 +1,2193 @@
+package examples
+
+// definition of LF closely following Harper & Licata (2007)
+module LF
+
+provides
+
+
+// use natural numbers for identifiers (constructors and atomic types)
+// HOAS is used for variables, to avoid naming issues 
+module Natural = org.sasylf.util.Natural
+
+module Boolean = org.sasylf.util.Boolean
+
+syntax
+   n = Natural.n ::= 0 | 1+ n
+
+judgment equal = Natural.equal : n == n
+judgment not-equal = Natural.notequal : n != n
+
+terminals type Π λ
+    
+syntax
+  K ::= type | Π x:A • K[x]
+  
+  A ::= P | Π x:A • A[x]
+  P ::= a | P M
+  
+  M ::= R | λ x • M[x]
+  R ::= x | c | R M
+  
+  E ::= K | A | M
+  
+  Σ ::= • | Σ, c:A | Σ, a:K
+  
+  Γ ::= • | Γ, x:A
+  
+  a ::= n
+  c ::= n
+     
+judgment var : R:A ∈ Γ
+assumes Γ
+
+  -------------- var
+  x:A ∈ (Γ, x:A)
+
+
+judgment equality: Γ ⊢ E == E
+assumes Γ
+
+  ---------- term-eq
+  Γ ⊢ E == E
+  
+  
+  
+/////// SIGNATURE access
+
+// we define ∈ and # for signatures
+
+judgment signature-base: a:K ∈ Σ
+
+  -------------- sig-base-here
+  a:K ∈ (Σ, a:K)
+  
+      a:K ∈ Σ
+  ---------------- sig-base-there
+  a:K ∈ (Σ, a':K')
+
+      a:K ∈ Σ
+  ---------------- sig-term-base-there
+  a:K ∈ (Σ, c:A)
+  
+judgment signature-con: c:A ∈ Σ
+
+  -------------- sig-con-here
+  c:A ∈ (Σ, c:A)
+  
+      c:A ∈ Σ
+  ---------------- sig-con-there
+  c:A ∈ (Σ, c':A')
+  
+      c:A ∈ Σ
+  ---------------- sig-fam-con-there
+  c:A ∈ (Σ, a:K)
+
+judgment base-equal: a = a
+
+   ----- eq-base
+   a = a
+   
+judgment con-equal: c = c
+
+   ------ eq-con
+   c = c
+   
+judgment signature-no-base: a # Σ
+
+  ----- empty-no-base
+  a # •
+  
+  a # Σ
+  a = n
+  n != n'
+  ----------- here-fam-no-base
+  a # (Σ, n':K)
+
+  a # Σ
+  ----------- here-term-no-base
+  a # (Σ, c:A)
+
+judgment signature-no-con: c # Σ
+
+  ----- empty-no-con
+  c # •
+  
+  c # Σ
+  c = n
+  n != n'
+  ----------- here-no-con
+  c # (Σ, n':A)
+
+  c # Σ
+  ----------- here-fam-no-con
+  c # (Σ, a:K)
+   
+// some obvious lemmas stating that signature lookup and freeness have the expected properties
+
+lemma signature-con-decidable:
+    forall Σ
+    forall c
+    exists c:A ∈ Σ or c # Σ
+    proof by induction on Σ:
+        case • is
+            _: c # Σ by rule empty-no-con
+        end case
+
+        case Σ1, c1 : A1 is
+            use inversion on c where c := n
+            use inversion on c1 where c1 := n1
+            comp: n == n1 or n != n1 by theorem Natural.eq-or-ne on n, n1
+            do case analysis on comp:
+                case or eq: n == n1 is
+                    use inversion on eq where n1 := n
+                    _: c1:A1 ∈ Σ by rule sig-con-here
+                end case
+            end case analysis
+            ne: n != n1 by inversion on comp
+            ch1: c:A ∈ Σ1 or c#Σ1 by induction hypothesis on Σ1, c
+            proof by case analysis on ch1:
+                case or i1: n : A ∈ Σ1 is
+                    _: c:A ∈ Σ by rule sig-con-there on i1
+                end case
+
+                case or o1: c # Σ1 is
+                    eqc: c = n by rule eq-con
+                    _: c#Σ by rule here-no-con on o1, eqc, ne
+                end case
+
+            end case analysis
+        end case
+
+        case Σ1, a : K is
+            ch1: c:A ∈ Σ1 or c # Σ1 by induction hypothesis on Σ1, c
+            proof by case analysis on ch1:
+                case or h1: c : A ∈ Σ1 is
+                    _: c:A ∈ Σ by rule sig-fam-con-there on h1
+                end case
+
+                case or n1: c # Σ1 is
+                    _: c # Σ by rule here-fam-no-con on n1
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+
+lemma signature-con-free-contradiction:
+    forall i: c:A ∈ Σ
+    forall f: c#Σ
+    exists contradiction
+    proof by induction on i:
+        case rule
+            -------------------- sig-con-here
+            _: c : A ∈ (Σ1, c : A)
+            where Σ := (Σ1, c : A)
+        is
+            _: c#Σ1 and
+            eqc: c = n' and
+            neq: n' != n by inversion on f where c := n
+            use inversion on eqc where n' := n
+             proof by theorem Natural.ne-anti-reflexive on neq
+        end case
+
+        case rule
+            i1: c : A ∈ Σ1
+            ---------------------- sig-con-there
+            _: c : A ∈ (Σ1, c1 : A1)
+            where Σ := (Σ1, c1 : A1)
+        is
+            f1: c#Σ1 and
+            _: c = n' and
+            _: n' != n1 by inversion on f where c1 := n1
+            proof by induction hypothesis on i1, f1
+        end case
+
+        case rule
+            i1: c : A ∈ Σ1
+            ---------------------- sig-fam-con-there
+            _: c : A ∈ (Σ1, a : K)
+            where Σ := (Σ1, a : K)
+        is
+            f1: c#Σ1 by inversion on f
+            proof by induction hypothesis on i1, f1
+        end case
+
+    end induction
+end lemma
+
+lemma signature-fam-free-contradiction:
+    forall i: a:K ∈ Σ
+    forall f: a#Σ
+    exists contradiction
+    proof by induction on i:
+        case rule
+            -------------------- sig-base-here
+            _: a : K ∈ (Σ1, a : K)
+            where Σ := (Σ1, a : K)
+        is
+            _: a#Σ1 and
+            eqa: a = n' and
+            neq: n' != n by inversion of rule here-fam-no-base on f where a := n
+            use inversion on eqa where n' := n
+            proof by theorem Natural.ne-anti-reflexive on neq
+        end case
+
+        case rule
+            i1: a:K ∈ Σ1
+            ---------------------- sig-base-there
+            _: a : K ∈ (Σ1, a1 : K1)
+            where Σ := (Σ1, a1 : K1)
+        is
+            f1: a#Σ1 and
+            _: a = n' and
+            _: n' != n1 by inversion on f where a1 := n1
+            proof by induction hypothesis on i1, f1
+        end case
+
+        case rule
+            i1: a : K ∈ Σ1
+            ---------------------- sig-term-base-there
+            _: a : K ∈ (Σ1, c : A)
+            where Σ := (Σ1, c : A)
+        is
+            f1: a#Σ1 by inversion on f
+            proof by induction hypothesis on i1, f1
+        end case
+
+    end induction
+end lemma
+
+// we define "head" of a type. 
+// Since the types can have bound variables, we define it in a context.
+ 
+terminals p
+    
+judgment head: Γ ⊢ |A| = a
+assumes Γ
+
+  Γ, x:A' ⊢  |A[x]| = a
+  ----------------------- head-dpt
+  Γ ⊢ |Π x:A' • A[x]| = a
+  
+  ----------- head-atom
+  Γ ⊢ |a| = a
+    
+   Γ ⊢ |P| = a
+  ------------- heap-app
+  Γ ⊢ |P M| = a
+
+
+//////////////// SUBORDINATION
+// Rather than have subordination be a parameter,
+// we compute the smallest subordination consistest with Σ
+
+judgment required-for-type: A ⇒ a ⪯ a
+
+     • ⊢ |A1| = a1
+     • ⊢ |A2[0]| = a2
+  -------------------------- req-prod
+  (Π x:A1 • A2[x]) ⇒ a1 ⪯ a2
+  
+     A1 ⇒ a1 ⪯ a2
+  -------------------------- req-prod-in1
+  (Π x:A1 • A2[x]) ⇒ a1 ⪯ a2
+  
+     A2[0] ⇒ a1 ⪯ a2
+  -------------------------- req-prod-in2
+  (Π x:A1 • A2[x]) ⇒ a1 ⪯ a2
+  
+judgment required-for-kind: K ⇒ a ⪯ a
+
+     A ⇒ a1 ⪯ a2
+  -------------------------- req-kind-in1
+  (Π x:A • K[x]) ⇒ a1 ⪯ a2
+  
+     K[0] ⇒ a1 ⪯ a2
+  -------------------------- req-kind-in2
+  (Π x:A • K[x]) ⇒ a1 ⪯ a2
+
+judgment dependent-types: a ∈ K
+
+    • ⊢ |A| = a
+  ---------------- dep-types-here
+  a ∈ Π x:A • K[x]
+  
+     a ∈ K[0]
+  ---------------- dep-types-there
+  a ∈ Π x:A • K[x]
+  
+judgment subordination: a ⪯Σ a
+
+  ------ sub-reflexive
+  a ⪯Σ a
+  
+  a1 ⪯Σ a2
+  a2 ⪯Σ a3
+  -------- sub-transitive
+  a1 ⪯Σ a3
+  
+  a:K ∈ Σ
+  K ⇒ a1 ⪯ a2
+  ------------ sub-req-kind
+  a1 ⪯Σ a2
+  
+  a2:K ∈ Σ
+  a1 ∈ K
+  ------------ sub-base-index
+  a1 ⪯Σ a2
+  
+  c:A ∈ Σ
+  A ⇒ a1 ⪯ a2
+  ------------ sub-req-type
+  a1 ⪯Σ a2
+
+
+///////////// WELL-FORMEDNESS
+
+terminals sig kind   p m r
+
+// we define substitution as a syntax and then define a judgment to perform the substitution
+syntax
+  α ::= a | α → α
+  
+  σK ::= x/M   α K[x]
+  σA ::= x/M   α A[x]
+  σP ::= x/M p α P[x]
+  σM ::= x/M m α M[x]
+  σR ::= x/M r α R[x]
+  
+  σ ::= σK | σA | σP | σM | σR
+  
+judgment simple-equality: α = α
+
+  ------ simple-eq
+  α = α
+  
+judgment subst-equality: σ == σ
+
+  ------ subst-eq
+  σ == σ
+  
+judgment sig-ok: ⊢ Σ sig
+
+  ------- Sig-Empty
+  ⊢ • sig
+
+  ⊢ Σ sig
+  • ⊢Σ A type
+  c # Σ
+  -------------- Sig-Term
+  ⊢ (Σ, c:A) sig
+
+  ⊢ Σ sig
+  • ⊢Σ K kind
+  a # Σ
+  -------------- Sig-Fam
+  ⊢ (Σ, a:K) sig
+  
+judgment canon-kind: Γ ⊢Σ K kind
+assumes Γ
+
+  --------------- Canon-Kind-Type
+  Γ ⊢Σ type kind
+  
+  Γ ⊢Σ A type
+  Γ, x:A ⊢Σ K[x] kind
+  ------------------------ Canon-Kind-Pi
+  Γ ⊢Σ (Π x:A • K[x]) kind
+
+judgment canon-fam: Γ ⊢Σ A type
+assumes Γ
+
+  Γ ⊢Σ P ⇒ type
+  -------------- Canon-Fam-Atom
+  Γ ⊢Σ P type
+
+  Γ ⊢Σ A1 type
+  Γ, x:A1 ⊢Σ A2[x] type
+  Γ ⊢ |A1| = a1
+  Γ, x:A ⊢ |A2[x]| = a2
+  a1 ⪯Σ a2
+  -------------------------- Canon-Fam-Pi
+  Γ ⊢Σ (Π x:A • A2[x]) type
+  
+judgment atom-fam: Γ ⊢Σ P ⇒ K
+assumes Γ
+
+  a:K ∈ Σ
+  ---------- Atom-Fam-Const
+  Γ ⊢Σ a ⇒ K
+  
+  Γ ⊢Σ P ⇒ (Π x:A • K[x])
+  Γ ⊢Σ M ⇐ A
+  Γ ⊢ (A)⁻ = α
+  Γ ⊢ x/M α K[x] = K'
+  -------------------- Atom-Fam-App
+  Γ ⊢Σ (P M) ⇒ K'
+  
+judgment canon-term: Γ ⊢Σ M ⇐ A
+assumes Γ
+
+  Γ ⊢Σ R ⇒ P
+  ----------- Canon-Term-Atom
+  Γ ⊢Σ R ⇐ P
+  
+  Γ, x:A1 ⊢Σ M[x] ⇐ A2[x] 
+  ----------------------------- Canon-Term-Lam
+  Γ ⊢Σ λ x • M[x] ⇐ (Π x:A1 • A2[x])
+
+judgment atom-term: Γ ⊢Σ R ⇒ A
+assumes Γ
+
+  R:A ∈ Γ
+  ---------- Atom-Term-Var
+  Γ ⊢Σ R ⇒ A
+  
+  c:A ∈ Σ
+  ----------- Atom-Term-Const
+  Γ ⊢Σ c ⇒ A
+  
+  Γ ⊢Σ R ⇒ (Π x:A1 • A2[x])
+  Γ ⊢Σ M ⇐ A1
+  Γ ⊢ (A1)⁻ = α 
+  Γ ⊢ x/M α A2[x] = A'
+  --------------------- Atom-Term-App 
+  Γ ⊢Σ (R M) ⇒ A'
+  
+judgment simple-type: Γ ⊢ A⁻ = α 
+assumes Γ
+
+  ------------ simple-fam
+  Γ ⊢ (a)⁻ = a 
+  
+  Γ ⊢ (P)⁻ = α
+  -------------- simple-app
+  Γ ⊢ (P M)⁻ = α 
+  
+  Γ ⊢ (A1)⁻ = α1
+  Γ, x:A1 ⊢ (A2[x])⁻ = α2 
+  ------------------------------- simple-prod
+  Γ ⊢ (Π x:A1 • A2[x])⁻ = α1 → α2 
+
+judgment subst-k: Γ ⊢ σK = K
+assumes Γ
+
+  ------------------------ Subst-K-Type
+  Γ ⊢ x0/M0 α type = type 
+  
+  Γ ⊢ x0/M0 α A[x0] = A'
+  Γ, x:A' ⊢ x0/M0 α K[x0][x] = K'[x]
+  ---------------------------------------------------- Subst-K-Pi
+  Γ ⊢ x0/M0 α (Π x:A[x0] • K[x0][x]) = (Π x:A' • K'[x])
+
+judgment subst-a: Γ ⊢ σA = A
+assumes Γ
+
+  Γ ⊢ x0/M0 p α P[x0] = P'
+  ------------------------ Subst-A-P
+  Γ ⊢ x0/M0   α P[x0] = P'
+  
+  Γ ⊢ x0/M0 α A1[x0] = A1'
+  Γ, x:A1' ⊢ x0/M0 α A2[x0][x] = A2'[x]
+  --------------------------------------------------------- Subst-A-Pi
+  Γ ⊢ x0/M0 α (Π x:A1[x0] • A2[x0][x]) = (Π x:A1' • A2'[x])
+  
+judgment subst-p: Γ ⊢ σP = P
+assumes Γ
+
+  ------------------ Subst-P-Fam
+  Γ ⊢ x0/M0 p α a = a
+
+  Γ ⊢ x0/M0 p α P[x0] = P'
+  Γ ⊢ x0/M0 m α M[x0] = M'
+  ------------------------------- Subst-P-App
+  Γ ⊢ x0/M0 p α P[x0] M[x0] = P' M'
+
+judgment subst-m: Γ ⊢ σM = M
+assumes Γ
+
+  Γ ⊢ x0/M0 r α R[x0] = R'
+  ------------------------- Subst-M-R
+  Γ ⊢ x0/M0 m α R[x0] = R'
+
+  Γ ⊢ x0/M0 r α R[x0] = M' : α'
+  ------------------------------ Subst-M-RH 
+  Γ ⊢ x0/M0 m α R[x0] = M'
+  
+  Γ, x:0 ⊢ x0/M0 m α M[x0][x] = M'[x]
+  -------------------------------------------- Subst-M-Lam 
+  Γ ⊢ x0/M0 m α (λ x • M[x0][x]) = λ x • M'[x]
+
+judgment subst-rh: Γ ⊢ σR = M : α
+assumes Γ
+
+  ------------------------------ Subst-RH-Var
+  Γ ⊢ x0/M0 r α0 x0 = M0 : α0
+
+  Γ ⊢ x0/M0 r α0 R1[x0] = λ x • M1'[x] : α2 → α
+  Γ ⊢ x0/M0 m α0 M2[x0] = M2'
+  Γ ⊢ x/M2' m α2 M1'[x] = M'
+  ------------------------------------- Subst-RH-App
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] = M' : α
+  
+judgment subst-r: Γ ⊢ σR = R
+assumes Γ
+
+  R:A ∈ Γ
+  ------------------- Subst-R-Var
+  Γ ⊢ x0/M0 r α R = R
+
+  ------------------- Subst-R-Const
+  Γ ⊢ x0/M0 r α c = c
+
+  Γ ⊢ x0/M0 r α R[x0] = R'
+  Γ ⊢ x0/M0 m α M[x0] = M'
+  ------------------------------- Subst-R-App
+  Γ ⊢ x0/M0 r α R[x0] M[x0] = R' M'
+  
+judgment subexpression:  α ≤ α
+
+  ----- sub-eq
+  α ≤ α
+  
+  α ≤ α1
+  ------------- sub-arrow1
+  α ≤ α1 → α2
+  
+  α ≤ α2
+  ------------- sub-arrow2
+  α ≤ α1 → α2
+
+lemma subexpression-transitive:
+    forall s12: α1 ≤ α2
+    forall s23: α2 ≤ α3
+    exists α1 ≤ α3
+    proof by induction on s23:
+        case rule
+            ----------- sub-eq
+            _: α2 ≤ α2
+            where α3 := α2
+        is
+            proof by s12
+        end case
+
+        case rule
+            s231: α2 ≤ α31
+            ------------------- sub-arrow1
+            _: α2 ≤ (α31 → α32)
+            where α3 := (α31 → α32)
+        is
+            s131: α1 ≤ α31 by induction hypothesis on s12, s231
+            proof by rule sub-arrow1 on s131
+        end case
+
+        case rule
+            s232: α2 ≤ α32
+            ------------------- sub-arrow2
+            _: α2 ≤ (α31 → α32)
+            where α3 := (α31 → α32)
+        is
+            s132: α1 ≤ α32 by induction hypothesis on s12, s232
+            proof by rule sub-arrow2 on s132
+        end case
+
+    end induction
+end lemma     
+  
+lemma subexpression-arrow-inversion:
+    forall sbe: α11 → α12 ≤ α2
+    exists α2 = α21 → α22 and (α11 ≤ α21 or α11 ≤ α22 ) and (α12 ≤ α21 or α12 ≤ α22)
+    sb11: α11 ≤ α11 by rule sub-eq
+    sb111: α11 ≤ α11 → α12 by rule sub-arrow1 on sb11
+    sb12: α12 ≤ α12 by rule sub-eq
+    sb121: α12 ≤ α11 → α12 by rule sub-arrow2 on sb12
+    proof by case analysis on sbe:
+        case rule
+            --------------------------- sub-eq
+            _: (α11 → α12) ≤ (α11 → α12)
+            where α2 := α11 → α12
+        is
+            d1: (α11 → α12) = (α11 → α12) by rule simple-eq
+            d2: α11 ≤ α11 by rule sub-eq
+            d3: α12 ≤ α12 by rule sub-eq
+            proof by d1, d2, d3
+        end case
+
+        case rule
+            sb1: (α11 → α12) ≤ α21
+            --------------------------- sub-arrow1
+            _: (α11 → α12) ≤ (α21 → α22)
+            where α2 := α21 → α22
+        is
+            d1: (α21 → α22) = (α21 → α22) by rule simple-eq
+            d2: α11 ≤ α21 by lemma subexpression-transitive on sb111, sb1
+            d3: α12 ≤ α21 by lemma subexpression-transitive on sb121, sb1
+            proof by d1, d2, d3
+        end case
+
+        case rule
+            sb2: (α11 → α12) ≤ α22
+            ------------------- sub-arrow2
+            _: (α11 → α12) ≤ (α21 → α22)
+            where α2 := α21 → α22
+        is
+            d1: (α21 → α22) = (α21 → α22) by rule simple-eq
+            d2: α11 ≤ α22 by lemma subexpression-transitive on sb111, sb2
+            d3: α12 ≤ α22 by lemma subexpression-transitive on sb121, sb2
+            proof by d1, d2, d3
+        end case
+
+    end case analysis
+end lemma
+
+/// lemma 2.2
+theorem head-substitution-size:
+    assumes Γ
+    forall s: Γ ⊢ x0 / M0 r α0 R[x0] = M' : α
+    exists α ≤ α0
+    proof by induction on s:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ ⊢ (x0 / M0 r α0 x0) = M0 : α0
+            where R[x0] := x0 and M' := M0 and α := α0
+        is
+            proof by rule sub-eq
+        end case
+
+        case rule
+            s': Γ ⊢ (x0 / M0 r α0 R1[x0]) = (λ x • M1[x]) : (α1 → α)
+            _: Γ ⊢ (x0 / M0 m α0 M2[x0]) = M2'
+            _: Γ ⊢ (x / M2' m α1 M1[x]) = M'
+            ------------------------------------------- Subst-RH-App
+            _: Γ ⊢ (x0 / M0 r α0 (R1[x0] M2[x0])) = M' : α
+            where R[x0] := R1[x0] M2[x0]
+        is
+            sub1: α1 → α ≤ α0 by induction hypothesis on s'
+            refl: α ≤ α by rule sub-eq
+            step: α ≤ α1 → α by rule sub-arrow2 on refl
+            proof by lemma subexpression-transitive on step, sub1
+        end case
+
+    end induction
+end theorem
+
+
+/// Lemma 2.3 (Uniqueness of Substitution and Synthesis)
+// This has four parts
+
+// first some helper lemmas
+theorem simple-type-unique:
+    assumes Γ
+    forall s1: Γ ⊢ (A)⁻ = α'
+    forall s2: Γ ⊢ (A)⁻ = α'' 
+    exists α' = α''  
+    proof by induction on s1:
+        case rule
+            -------------- simple-fam
+            _: Γ ⊢ (a)⁻ = a
+            where A := a and α' := a
+        is
+            use inversion on s2 where α'' := a
+            proof by rule simple-eq
+        end case
+
+        case rule
+            s11: Γ ⊢ (P)⁻ = α'
+            ---------------- simple-app
+            _: Γ ⊢ (P M)⁻ = α'
+            where A := P M
+        is
+            s21: Γ ⊢ (P)⁻ = α'' by inversion on s2
+            proof by induction hypothesis on s11, s21
+        end case
+
+        case rule
+            s11: Γ ⊢ (A1)⁻ = α1'
+            s12: Γ, x:A1 ⊢ (A2[x])⁻ = α2'
+            --------------------------------- simple-prod
+            _: Γ ⊢ (Π x : A1 • A2[x]) ⁻= (α1' → α2')
+            where A := Π x : A1 • A2[x] and α' := α1' → α2'
+        is
+            proof by case analysis on s2:
+                case rule
+                    s21: Γ ⊢ (A1)⁻ = α1''
+                    s22: Γ, x : A1 ⊢ (A2[x])⁻ = α2''
+                    ------------------------------------- simple-prod
+                    _: Γ ⊢ (Π x : A1 • A2[x])⁻ = (α1'' → α2'')
+                    where α'' := α1'' → α2''
+                is
+                    eq1: α1' = α1'' by induction hypothesis on s11, s21
+                    eq2: α2' = α2'' by induction hypothesis on s12, s22
+                    use inversion on eq1 where α1' := α1''
+                    use inversion on eq2 where α2' := α2''
+                    proof by rule simple-eq
+                end case
+            end case analysis
+        end case
+    end induction
+end theorem
+
+
+// Lemma 2.3 (1)
+theorem subst-r-rh-incompatible:
+    assumes Γ
+    forall s1: Γ ⊢ σR = R1
+    forall s2: Γ ⊢ σR = M2 : α'
+    exists contradiction
+    use inversion on σR where σR := x0/M0 r α0 R[x0]
+    proof by induction on s1:
+        case rule
+            i: R1 : A0 ∈ Γ
+            ------------------------- Subst-R-Var
+            _: Γ ⊢ (x / M0 r α0 R1) = R1
+            where R[x] := R1
+        is
+            proof by case analysis on i:
+                case rule
+                    --------------- var
+                    _: x : A0 ∈ (Γ', x : A0)
+                is
+                    proof by contradiction on s2
+                end case
+            end case analysis
+        end case
+
+        case rule
+            ------------------------- Subst-R-Const
+            _: Γ ⊢ (x / M0 r α0 c) = c
+            where R[x] := c and R1 := c
+        is
+            proof by contradiction on s2
+        end case
+
+        case rule
+            s1': Γ ⊢ (x0 / M0 r α0 R0[x0]) = R0'
+            _: Γ ⊢ (x0 / M0 m α0 M1[x0]) = M1'
+            ------------------------------------- Subst-R-App
+            _: Γ ⊢ (x0 / M0 r α0 (R0[x0] M1[x0])) = (R0' M1')
+            where R[x0] := R0[x0] M1[x0] and R1 := R0' M1'
+        is
+            s2': Γ ⊢ x0/M0 r α0 R0[x0] = λ x • M0'[x] : α2 → α' and
+            _:   Γ ⊢ x0/M0 m α0 M1[x0] = M1'' and
+            _:   Γ ⊢ x /M1'' m α2 M0'[x] = M2 by inversion on s2
+            proof by induction hypothesis on s1', s2'
+        end case
+    end induction
+end theorem
+
+// Lemma 2.3 (2)
+theorem subst-k-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σK = K1
+    forall s2: Γ ⊢ σK = K2
+    exists Γ ⊢ K1 == K2
+    use inversion on σK where σK := x0 / M0 α0 K[x0]
+    proof by induction on s1:
+        case rule
+            ------------------------------ Subst-K-Type
+            _: Γ ⊢ (x0 / M0 α0 type) = type
+            where K[x] := type and K1 := type
+        is
+            use inversion on s2 where K2 := type
+            proof by rule term-eq
+        end case
+
+        case rule
+            s11: Γ ⊢ (x / M0 α0 A0[x]) = A1
+            s12: Γ, x : A1 ⊢ (x0 / M0 α0 K0[x0][x]) = K'[x]
+            ---------------------------------------------------------- Subst-K-Pi
+            _: Γ ⊢ (x0 / M0 α0 (Π x : A0[x0] • K0[x0][x])) = (Π x : A1 • K'[x])
+            where K[x0] := Π x : A0[x0] • K0[x0][x] and K1 := Π x : A1 • K'[x]
+        is
+            proof by case analysis on s2:
+                case rule
+                    s21: Γ ⊢ (x / M0 α0 A0[x]) = A2
+                    s22: (Γ, x : A2) ⊢ (x' / M0 α0 K0[x'][x]) = K''[x]
+                    ---------------------------------------------------------- Subst-K-Pi
+                    _: Γ ⊢ (x / M0 α0 (Π x' : A0[x] • K0[x][x'])) = (Π x : A2 • K''[x])
+                    where K2 := Π x : A2 • K''[x]
+                is
+                    eqA: Γ ⊢ A1 == A2 by theorem subst-a-unique on s11, s21
+                    use inversion on eqA where A2 := A1
+                    eqK: Γ, x:A1 ⊢ K'[x] == K''[x] by induction hypothesis on s12, s22
+                    use inversion on eqK where K''[x] := K'[x]
+                    proof by rule term-eq
+                end case
+            end case analysis
+        end case
+
+    end induction
+end theorem
+and 
+theorem subst-a-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σA = A'
+    forall s2: Γ ⊢ σA = A''
+    exists Γ ⊢ A' == A''
+    use inversion on σA where σA := x0/M0 α A[x0]
+    proof by induction on s1:
+        case rule
+            s11: Γ ⊢ x0 / M0 p α P[x0] = P'
+            ------------------------------ Subst-A-P
+            _:   Γ ⊢ x0 / M0   α P[x0] = P'
+            where A[x0] := P[x0] and A' := P'
+        is
+            s21: Γ ⊢ x0 / M0 p α P[x0] = P'' by inversion on s2 where A'' := P''
+            proof by theorem subst-p-unique on s11, s21
+        end case
+
+        case rule
+            s11: Γ ⊢ (x0 / M0 α A1[x0]) = A1'
+            s12: Γ, x : A1' ⊢ (x0 / M0 α A2[x0][x]) = A2'[x]
+            --------------------------------------------------------------- Subst-A-Pi
+            _: Γ ⊢ (x0 / M0 α (Π x : A1[x0] • A2[x0][x])) = (Π x : A1' • A2'[x])
+            where A[x0] := Π x : A1[x0] • A2[x0][x] and A' := Π x : A1' • A2'[x]
+        is
+            /* cannot handle because of context difference
+            s21: Γ ⊢ (x0 / M0 α A1[x0]) = A1'' and
+            s22: Γ, x : A1'' ⊢ (x0 / M0 α A2[x0][x]) = A2''[x] by inversion on s2
+            */
+            proof by case analysis on s2:
+                case rule
+                    s21: Γ ⊢ (x0 / M0 α A1[x0]) = A1''
+                    s22: Γ, x : A1'' ⊢ (x0 / M0 α A2[x0][x]) = A2''[x]
+                    --------------------------------------------------------------- Subst-A-Pi
+                    _: Γ ⊢ (x0 / M0 α (Π x : A1[x0] • A2[x0][x])) = (Π x : A1'' • A2''[x])
+                    where A'' := Π x : A1'' • A2''[x]
+                is
+                    eqA: Γ ⊢ A1' == A1'' by induction hypothesis on s11, s21
+                    use inversion on eqA where A1'' := A1'
+                    eqB: Γ, x : A1' ⊢ A2'[x] == A2''[x] by induction hypothesis on s12, s22
+                    use inversion on eqB where A2''[x] := A2'[x]
+                    proof by rule term-eq
+                end case
+            end case analysis
+        end case
+
+    end induction
+end theorem
+and 
+theorem subst-p-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σP = P'
+    forall s2: Γ ⊢ σP = P''
+    exists Γ ⊢ P' == P''
+    use inversion on σP where σP := x0/M0 p α P[x0]
+    proof by induction on s1:
+        case rule
+            ------------------------ Subst-P-Fam
+            _: Γ ⊢ (x0 / M0 p α a) = a
+            where P[x0] := a and P' := a
+        is
+            use inversion on s2 where P'' := a
+            proof by rule term-eq
+        end case
+
+        case rule
+            s11: Γ ⊢ (x / M0 p α P1[x]) = P1'
+            s12: Γ ⊢ (x / M0 m α M1[x]) = M1'
+            ------------------------------------- Subst-P-App
+            _: Γ ⊢ (x / M0 p α (P1[x] M1[x])) = (P1' M1')
+            where P[x0] := P1[x0] M1[x0] and P' := P1' M1'
+        is
+            s21: Γ ⊢ (x / M0 p α P1[x]) = P1'' and
+            s22: Γ ⊢ (x / M0 m α M1[x]) = M1'' by inversion on s2
+            where P'' := P1'' M1''
+            eqF: Γ ⊢ P1' == P1'' by induction hypothesis on s11, s21
+            eqA: Γ ⊢ M1' == M1'' by theorem subst-m-unique on s12, s22 
+            use inversion on eqF where P1'' := P1'
+            use inversion on eqA where M1'' := M1'
+            proof by rule term-eq
+        end case
+
+    end induction
+end theorem
+and 
+theorem subst-m-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σM = M'
+    forall s2: Γ ⊢ σM = M''
+    exists Γ ⊢ M' == M''
+    use induction on s1
+    use inversion on σM where σM := x0/M0 m α M[x0]
+    proof by induction on s1:
+        case rule
+            s11: Γ ⊢ (x0 / M0 r α R[x0]) = R'
+            ------------------------------- Subst-M-R
+            _:   Γ ⊢ (x0 / M0 m α R[x0]) = R'
+            where M[x] := R[x] and M' := R'
+        is
+            proof by case analysis on s2:
+                case rule
+                    s21: Γ ⊢ (x / M0 r α R[x]) = R''
+                    ------------------------------- Subst-M-R
+                    _:   Γ ⊢ (x / M0 m α R[x]) = R''
+                    where M'' := R''
+                is
+                    proof by theorem subst-r-unique on s11, s21
+                end case
+
+                case rule
+                    s21: Γ ⊢ (x / M0 r α R[x]) = M'' : α''
+                    ------------------------------------ Subst-M-RH
+                    _: Γ ⊢ (x / M0 m α R[x]) = M''
+                is
+                    _: contradiction by theorem subst-r-rh-incompatible on s11, s21
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            s11: Γ ⊢ (x0 / M0 r α R[x0]) = M' : α'
+            ------------------------------------ Subst-M-RH
+            _:   Γ ⊢ (x0 / M0 m α R[x0]) = M'
+            where M[x] := R[x]
+        is
+            proof by case analysis on s2:
+                case rule
+                    s21: Γ ⊢ (x / M0 r α R[x]) = R''
+                    ------------------------------- Subst-M-R
+                    _:   Γ ⊢ (x / M0 m α R[x]) = R''
+                    where M'' := R''
+                is
+                    _: contradiction by theorem subst-r-rh-incompatible on s21, s11
+                end case
+
+                case rule
+                    s21: Γ ⊢ (x / M0 r α R[x]) = M'' : α''
+                    ------------------------------------ Subst-M-RH
+                    _: Γ ⊢ (x / M0 m α R[x]) = M''
+                is
+                    eqM: Γ ⊢ M' == M'' and
+                    eqST: α' = α'' by theorem subst-rh-unique on s11, s21
+                    proof by eqM
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            s11: Γ, x : 0 ⊢ (x0 / M0 m α M1[x0][x]) = M1'[x]
+            -------------------------------------------------- Subst-M-Lam
+            _:   Γ ⊢ (x0 / M0 m α (λ x • M1[x0][x])) = (λ x • M1'[x])
+            where M[x0] := λ x • M1[x0][x] and M' := λ x • M1'[x]
+        is
+            s21: Γ, x : 0 ⊢ (x0 / M0 m α M1[x0][x]) = M1''[x] by inversion on s2
+            where M'' := λ x • M1''[x]
+            eqL: Γ, x:0 ⊢ M1'[x] == M1''[x] by induction hypothesis on s11, s21
+            use inversion on eqL where M1''[x] := M1'[x]
+            proof by rule term-eq
+        end case
+
+    end induction
+end theorem
+and 
+theorem subst-r-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σR = R1
+    forall s2: Γ ⊢ σR = R2
+    exists Γ ⊢ R1 == R2
+    use induction on s1
+    use inversion on σR where σR := x0/M0 r α R[x0]
+    do case analysis on s2:
+        case rule
+            v2: R2 : A2 ∈ Γ
+            ------------------------- Subst-R-Var
+            _: Γ ⊢ (x / M0 r α R2) = R2
+            where R[x] := R2
+        is
+            proof by case analysis on v2:
+                case rule
+                    ------------------------ var
+                    _: x : A2 ∈ (Γ', x : A2)
+                is
+                    v1: R1 : A1 ∈ Γ by inversion of rule Subst-R-Var on s1
+                    where R2 := R1
+                    proof by rule term-eq
+                end case
+            end case analysis
+        end case
+    end case analysis
+    proof by case analysis on s1:
+        case rule
+            v1: R1 : A1 ∈ Γ
+            ------------------------- Subst-R-Var
+            _: Γ ⊢ (x / M0 r α R1) = R1
+            where R[x] := R1
+        is
+            proof by case analysis on v1:
+                case rule
+                    --------------- var
+                    _: x : A1 ∈ (Γ', x : A1)
+                is
+                    proof by contradiction on s2
+                end case
+            end case analysis
+        end case
+
+        case rule
+            ------------------------- Subst-R-Const
+            _: Γ ⊢ (x / M0 r α c) = c
+            where R[x] := c and R1 := c
+        is
+            use inversion on s2 where R2 := c
+            proof by rule term-eq
+        end case
+
+        case rule
+            f1: Γ ⊢ (x / M0 r α R0[x]) = R0'
+            a1: Γ ⊢ (x / M0 m α M1[x]) = M1'
+            ------------------------------------- Subst-R-App
+            _: Γ ⊢ (x / M0 r α (R0[x] M1[x])) = (R0' M1')
+            where R[x] := R0[x] M1[x] and R1 := R0' M1'
+        is
+            f2: Γ ⊢ (x / M0 r α R0[x]) = R0'' and
+            a2: Γ ⊢ (x / M0 m α M1[x]) = M1'' by inversion on s2
+            where R2 := R0'' M1''
+            e1: Γ ⊢ R0' == R0'' by induction hypothesis on f1, f2
+            e2: Γ ⊢ M1' == M1'' by theorem subst-m-unique on a1, a2
+            use inversion on e1 where R0'' := R0'
+            use inversion on e2 where M1'' := M1'
+            proof by rule term-eq
+        end case
+
+    end case analysis
+end theorem
+and 
+theorem subst-rh-unique:
+    assumes Γ
+    forall s1: Γ ⊢ σR = M' : α1
+    forall s2: Γ ⊢ σR = M'' : α2
+    exists Γ ⊢ M' == M'' and α1 = α2
+    use induction on s1
+    use inversion on σR where σR := x0/M0 r α0 R[x0]
+    proof by induction on s1:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ ⊢ (x / M0 r α0 x) = M0 : α0
+            where R[x] := x and M' := M0 and α1 := α0
+        is
+            use inversion on s2 where M'' := M0 and α2 := α0
+            eq1: Γ ⊢ M' == M'' by rule term-eq
+            eq2: α1 = α2 by rule simple-eq
+            proof by eq1, eq2
+        end case
+
+        case rule
+            s11: Γ ⊢ (x / M0 r α0 R0[x]) = (λ x • M0'[x]) : (α' → α1)
+            s12: Γ ⊢ (x / M0 m α0 M[x]) = M1'
+            s13: Γ ⊢ (x / M1' m α' M0'[x]) = M'
+            ------------------------------------------- Subst-RH-App
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M[x])) = M' : α1
+            where R[x] := R0[x] M[x]
+        is
+            s21: Γ ⊢ (x / M0 r α0 R0[x]) = (λ x • M0''[x]) : (α'' → α2) and
+            s22: Γ ⊢ (x / M0 m α0 M[x]) = M1'' and
+            s23: Γ ⊢ (x / M1'' m α'' M0''[x]) = M'' by inversion on s2
+            eqL: Γ ⊢ (λ x • M0'[x]) == (λ x • M0''[x]) and 
+            eqST: (α' → α1) = (α'' → α2) by induction hypothesis on s11, s21
+            use inversion on eqL where M0''[x] := M0'[x]
+            use inversion on eqST where α'' := α' and α2 := α1
+            eqA: Γ ⊢ M1' == M1'' by theorem subst-m-unique on s12, s22
+            use inversion on eqA where M1'' := M1'
+            eqR: Γ ⊢ M' == M'' by theorem subst-m-unique on s13, s23  
+            eqST': α1 = α2 by rule simple-eq 
+            proof by eqR, eqST'
+        end case
+
+    end induction
+end theorem
+
+// another helper lemma:
+lemma good-sig-fam-unique:
+    forall ok: ⊢ Σ sig
+    forall l1: a:K' ∈ Σ
+    forall l2: a:K'' ∈ Σ
+    exists • ⊢ K' == K''
+    proof by induction on l1:
+        case rule
+            -------------------- sig-base-here
+            _: a : K' ∈ (Σ1, a : K')
+            where Σ := (Σ1, a:K')
+        is
+            proof by case analysis on l2:
+                case rule
+                    -------------------- sig-base-here
+                    _: a : K' ∈ (Σ1, a : K')
+                    where K'' := K'
+                is
+                    proof by rule term-eq
+                end case
+
+                case rule
+                    l21: a : K'' ∈ Σ1
+                    ---------------------- sig-base-there
+                    _: a : K'' ∈ (Σ1, a : K')
+                is
+                    _: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 K' kind and
+                    nl: a # Σ1 by inversion on ok 
+                    _: contradiction by lemma signature-fam-free-contradiction on l21, nl
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            l11: a : K' ∈ Σ1
+            ---------------------- sig-base-there
+            _: a : K' ∈ (Σ1, a1 : K1)
+            where Σ := Σ1, a1 : K1
+        is
+            proof by case analysis on l2:
+                case rule
+                    -------------------- sig-base-here
+                    _: a : K'' ∈ (Σ1, a : K'')
+                    where a1 := a and K1 := K''
+                is                  
+                    _: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 K'' kind and
+                    nl: a # Σ1 by inversion on ok 
+                    _: contradiction by lemma signature-fam-free-contradiction on l11, nl
+                end case
+
+                case rule
+                    l21: a : K'' ∈ Σ1
+                    ---------------------- sig-base-there
+                    _: a : K'' ∈ (Σ1, a1 : K1)
+                is
+                    ok1: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 K1 kind and
+                    _: a1 # Σ1 by inversion on ok 
+                    proof by induction hypothesis on ok1, l11, l21
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            l11: a : K' ∈ Σ1
+            ---------------------- sig-term-base-there
+            _: a : K' ∈ (Σ1, c : A)
+            where Σ := Σ1, c:A
+        is
+            l21: a:K'' ∈ Σ1 by inversion on l2
+            ok1: ⊢ Σ1 sig and
+            _: • ⊢Σ1 A type and
+            _: c # Σ1 by inversion on ok 
+            proof by induction hypothesis on ok1, l11, l21
+        end case
+
+    end induction
+end lemma
+
+// Lemma 2.3 (3)
+theorem atom-fam-unique:
+    assumes Γ
+    forall ok: ⊢ Σ sig
+    forall d1: Γ ⊢Σ P ⇒ K'
+    forall d2: Γ ⊢Σ P ⇒ K''
+    exists Γ ⊢ K' == K''
+    proof by induction on d1:
+        case rule
+            l1: a : K' ∈ Σ
+            ---------------- Atom-Fam-Const
+            _: Γ ⊢ Σ a ⇒ K'
+            where P := a
+        is
+            l2: a : K'' ∈ Σ by inversion on d2
+            e: • ⊢ K' == K'' by lemma good-sig-fam-unique on ok, l1, l2
+            proof by weakening on e
+        end case
+
+        case rule
+            d11: Γ ⊢ Σ P1 ⇒ (Π x : A' • K1'[x])
+            _: Γ ⊢ Σ M0 ⇐ A'
+            st1: Γ ⊢ (A')⁻ = α'
+            s1: Γ ⊢ (x / M0 α' K1'[x]) = K'
+            -------------------------- Atom-Fam-App
+            _: Γ ⊢ Σ (P1 M0) ⇒ K'
+            where P := P1 M0
+        is
+            d21: Γ ⊢ Σ P1 ⇒ (Π x : A'' • K1''[x]) and
+            _: Γ ⊢ Σ M0 ⇐ A'' and
+            st2: Γ ⊢ (A'')⁻ = α'' and
+            s2: Γ ⊢ (x / M0 α'' K1''[x]) = K'' by inversion on d2
+            eqP: Γ ⊢ (Π x : A' • K1'[x]) == (Π x : A'' • K1''[x]) by induction hypothesis on ok, d11, d21
+            use inversion on eqP where A'' := A' and K1''[x] := K1'[x]
+            eqS: α' = α'' by theorem simple-type-unique on st1, st2
+            use inversion on eqS where α' := α''
+            proof by theorem subst-k-unique on s1, s2
+        end case
+
+    end induction
+end theorem
+
+// another helper lemma:
+lemma good-sig-con-unique:
+    forall ok: ⊢ Σ sig
+    forall l1: c:A' ∈ Σ
+    forall l2: c:A'' ∈ Σ
+    exists • ⊢ A' == A''
+    proof by induction on l1:
+        case rule
+            -------------------- sig-con-here
+            _: c : A' ∈ (Σ1, c : A')
+            where Σ := (Σ1, c:A')
+        is
+            proof by case analysis on l2:
+                case rule
+                    -------------------- sig-con-here
+                    _: c : A' ∈ (Σ1, c : A')
+                    where A'' := A'
+                is
+                    proof by rule term-eq
+                end case
+
+                case rule
+                    l21: c : A'' ∈ Σ1
+                    ---------------------- sig-con-there
+                    _: c : A'' ∈ (Σ1, c : A')
+                is
+                    _: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 A' type and
+                    nl: c # Σ1 by inversion on ok 
+                    _: contradiction by lemma signature-con-free-contradiction on l21, nl
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            l11: c : A' ∈ Σ1
+            ---------------------- sig-con-there
+            _: c : A' ∈ (Σ1, c1 : A1)
+            where Σ := Σ1, c1 : A1
+        is
+            proof by case analysis on l2:
+                case rule
+                    -------------------- sig-con-here
+                    _: c : A'' ∈ (Σ1, c : A'')
+                    where c1 := c and A1 := A''
+                is                  
+                    _: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 A'' type and
+                    nl: c # Σ1 by inversion on ok 
+                    _: contradiction by lemma signature-con-free-contradiction on l11, nl
+                end case
+
+                case rule
+                    l21: c : A'' ∈ Σ1
+                    ---------------------- sig-con-there
+                    _: c : A'' ∈ (Σ1, c1 : A1)
+                is
+                    ok1: ⊢ Σ1 sig and
+                    _: • ⊢Σ1 A1 type and
+                    _: c1 # Σ1 by inversion on ok 
+                    proof by induction hypothesis on ok1, l11, l21
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            l11: c : A' ∈ Σ1
+            ---------------------- sig-fam-con-there
+            _: c : A' ∈ (Σ1, a : K)
+            where Σ := Σ1, a:K
+        is
+            l21: c:A'' ∈ Σ1 by inversion on l2
+            ok1: ⊢ Σ1 sig and
+            _: • ⊢Σ1 K kind and
+            _: a # Σ1 by inversion on ok 
+            proof by induction hypothesis on ok1, l11, l21
+        end case
+
+    end induction
+end lemma
+
+// Lemma 2.3 (4)
+theorem atom-term-unique:
+    assumes Γ
+    forall ok: ⊢ Σ sig
+    forall d1: Γ ⊢Σ R ⇒ A'
+    forall d2: Γ ⊢Σ R ⇒ A''
+    exists Γ ⊢ A' == A''
+    do case analysis on d2:
+        case rule
+            v2: R : A'' ∈ Γ
+            ---------------- Atom-Term-Var
+            _: Γ ⊢ Σ R ⇒ A''
+        is
+            proof by case analysis on v2:
+                case rule
+                    ------------------------- var
+                    _: x : A'' ∈ (Γ', x : A'')
+                is
+                    v1: R : A' ∈ Γ by inversion on d1
+                    use inversion on v1 where A' := A''
+                    proof by rule term-eq
+                end case
+            end case analysis
+        end case
+    end case analysis
+    proof by induction on d1:
+        case rule
+            v1: R : A' ∈ Γ
+            ---------------- Atom-Term-Var
+            _: Γ ⊢ Σ R ⇒ A'
+        is
+            proof by case analysis on v1:
+                case rule
+                    --------------- var
+                    _: x : A' ∈ (Γ', x : A')
+                is
+                    proof by contradiction on d2
+                end case
+            end case analysis
+        end case
+
+        case rule
+            l1: c : A' ∈ Σ
+            ----------------- Atom-Term-Const
+            _: Γ ⊢ Σ c ⇒ A'
+            where R := c
+        is
+            l2: c : A'' ∈ Σ by inversion on d2
+            eq: • ⊢ A' == A'' by lemma good-sig-con-unique on ok, l1, l2
+            proof by weakening on eq
+        end case
+
+        case rule
+            r1: Γ ⊢Σ R1 ⇒ (Π x : A1' • A2'[x])
+            _:  Γ ⊢Σ M1 ⇐ A1'
+            t1:  Γ ⊢ (A1')⁻ = α'
+            s1: Γ ⊢ (x / M1 α' A2'[x]) = A'
+            --------------------------- Atom-Term-App
+            _: Γ ⊢Σ (R1 M1) ⇒ A'
+            where R := R1 M1
+        is
+            r2: Γ ⊢ Σ R1 ⇒ (Π x : A1'' • A2''[x]) and
+            _: Γ ⊢ Σ M1 ⇐ A1'' and
+            t2: Γ ⊢ (A1'')⁻ = α'' and
+            s2: Γ ⊢ (x / M1 α'' A2''[x]) = A'' by inversion on d2
+            eqF: Γ ⊢ (Π x : A1' • A2'[x]) == (Π x : A1'' • A2''[x]) by induction hypothesis on ok, r1, r2
+            use inversion on eqF where A1' := A1'' and A2'[x] := A2''[x]
+            eqST: α' = α'' by theorem simple-type-unique on t1, t2
+            use inversion on eqST where α' := α''
+            proof by theorem subst-a-unique on s1, s2
+        end case
+
+    end induction
+end theorem
+
+//// Decidability of substitution
+
+// We want to prove that substitution terminates: either it exists or it is
+// not possible.  In the truncated Twelf proof (which doesn't model signatures or
+// subordination), it just proves "termination", but that doesn't give any
+// ability to use substitution in anything.
+
+// Here, in contrast, we give a definition of "impossible" and prove that
+// either substitution is possible or that it's not possible.
+// First, we show that our definition of impossible doesn't overlap
+// with possible substitution
+
+judgment simple-not-equal: α ≠ α
+
+     n != n'
+     ------- ne-base
+     n ≠ n'
+     
+     ----------- ne-base-arrow
+     a ≠ (α → α')
+         
+     ------------ ne-arrow-base
+     (α → α') ≠ a
+     
+           α1 ≠ α2          
+     ---------------------- ne-arrow-1
+     (α1 → α1') ≠ (α2 → α2')
+     
+           α1' ≠ α2'          
+     ---------------------- ne-arrow-2
+     (α1 → α1') ≠ (α2 → α2')
+     
+theorem simple-not-equal-anti-reflexive:
+    forall ne: α ≠ α
+    exists contradiction
+    proof by induction on ne:
+        case rule
+            ne1: n != n
+            ------------- ne-base
+            _: n ≠ n
+            where α := n
+        is
+            proof by theorem Natural.ne-anti-reflexive on ne1
+        end case
+
+        case rule
+            ne1: α1 ≠ α1
+            ---------------------------- ne-arrow-1
+            _: (α1 → α1') ≠ (α1 → α1')
+            where α := (α1 → α1')
+        is
+            proof by induction hypothesis on ne1
+        end case
+
+        case rule
+            ne1: α1' ≠ α1'
+            ---------------------------- ne-arrow-2
+            _: (α1 → α1') ≠ (α1 → α1')
+            where α := (α1 → α1')
+        is
+            proof by induction hypothesis on ne1
+        end case
+    end induction
+end theorem
+
+lemma simple-eq-decidable:
+    forall α1
+    forall α2
+    exists α1 = α2 or α1 ≠ α2
+    proof by induction on α1:
+        case a1 is
+            proof by case analysis on α2:
+                case a2 is
+                    use inversion on a1 where a1 := n1
+                    use inversion on a2 where a2 := n2
+                    ch: n1 == n2 or n1 != n2 by theorem Natural.eq-or-ne on n1, n2
+                    proof by case analysis on ch:
+                        case or eq: n1 == n2 is
+                            use inversion on eq where n1 := n2
+                            _: α1 = α2 by rule simple-eq
+                        end case
+
+                        case or ne: n1 != n2 is
+                            _: a1 ≠ a2 by rule ne-base on ne
+                        end case
+                    end case analysis
+                end case
+
+                case α21 → α22 is
+                    _: a1 ≠ α21 → α22 by rule ne-base-arrow
+                end case
+
+            end case analysis
+        end case
+
+        case α11 → α12 is
+            proof by case analysis on α2:
+                case a2 is
+                    _: α11 → α12 ≠ a2 by rule ne-arrow-base
+                end case
+
+                case α21 → α22 is
+                    ch1: α11 = α21 or α11 ≠ α21 by induction hypothesis on α11, α21
+                    do case analysis on ch1:
+                        case or ne1: α11 ≠ α21 is
+                            _: α11 → α12 ≠ α21 → α22 by rule ne-arrow-1 on ne1
+                        end case
+                    end case analysis
+                    eq1: α11 = α21 by inversion on ch1
+                    use inversion on eq1 where α21 := α11
+                    ch2: α12 = α22 or α12 ≠ α22 by induction hypothesis on α12, α22
+                    do case analysis on ch2:
+                        case or ne2: α12 ≠ α22 is
+                            _: α11 → α12 ≠ α21 → α22 by rule ne-arrow-2 on ne2
+                        end case
+                    end case analysis
+                    eq2: α12 = α22 by inversion on ch2
+                    use inversion on eq2 where α22 := α12
+                    _: α11 → α12 = α11 → α12 by rule simple-eq
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
+
+terminals undefined
+
+judgment no-subst: Γ ⊢ σ undefined
+assumes Γ
+
+  Γ ⊢ x0/M0 α A[x0] undefined
+  ---------------------------------------------------- No-Subst-K-Pi-1
+  Γ ⊢ x0/M0 α (Π x:A[x0] • K[x0][x]) undefined
+
+  Γ ⊢ x0/M0 α A[x0] = A'
+  Γ, x:A' ⊢ x0/M0 α K[x0][x] undefined
+  ---------------------------------------------------- No-Subst-K-Pi-2
+  Γ ⊢ x0/M0 α (Π x:A[x0] • K[x0][x]) undefined
+
+  Γ ⊢ x0/M0 p α P[x0] undefined
+  ----------------------------- No-Subst-A-P
+  Γ ⊢ x0/M0   α P[x0] undefined
+  
+  Γ ⊢ x0/M0 α A1[x0] undefined
+  ---------------------------------------------- No-Subst-A-Pi-1
+  Γ ⊢ x0/M0 α (Π x:A1[x0] • A2[x0][x]) undefined
+  
+  Γ ⊢ x0/M0 α A1[x0] = A1'
+  Γ, x:A1' ⊢ x0/M0 α A2[x0][x] undefined
+  ---------------------------------------------- No-Subst-A-Pi-2
+  Γ ⊢ x0/M0 α (Π x:A1[x0] • A2[x0][x]) undefined
+  
+  Γ ⊢ x0/M0 p α P[x0] undefined
+  ----------------------------------- No-Subst-P-App-1
+  Γ ⊢ x0/M0 p α P[x0] M[x0] undefined
+  
+  Γ ⊢ x0/M0 m α M[x0] undefined
+  ----------------------------------- No-Subst-P-App-2
+  Γ ⊢ x0/M0 p α P[x0] M[x0] undefined
+
+  Γ ⊢ x0/M0 r α R[x0] undefined
+  ------------------------------ No-Subst-M-R
+  Γ ⊢ x0/M0 m α R[x0] undefined
+
+  Γ, x:0 ⊢ x0/M0 m α M[x0][x] undefined
+  -------------------------------------------- No-Subst-M-Lam 
+  Γ ⊢ x0/M0 m α (λ x • M[x0][x]) undefined
+
+  Γ ⊢ x0/M0 r α0 R1[x0] undefined
+  -------------------------------------- No-Subst-R-App-1
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] undefined
+
+  Γ ⊢ x0/M0 m α0 M2[x0] undefined
+  -------------------------------------- No-Subst-R-App-2
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] undefined
+
+  Γ ⊢ x0/M0 r α0 R1[x0] = M1 : a
+  ------------------------------------- No-Subst-RH-App-Base
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] undefined
+  
+  Γ ⊢ x0/M0 r α0 R1[x0] = R' : α
+  ------------------------------------- No-Subst-RH-App-Prim
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] undefined
+  
+  Γ ⊢ x0/M0 r α0 R1[x0] = λ x • M1'[x] : α2 → α
+  Γ ⊢ x0/M0 m α0 M2[x0] = M2'
+  Γ ⊢ x/M2' m α2 M1'[x] undefined
+  ------------------------------------- No-Subst-RH-App-3
+  Γ ⊢ x0/M0 r α0 R1[x0] M2[x0] undefined
+  
+theorem no-subst-k:
+    assumes Γ
+    forall ns: Γ ⊢ σK undefined
+    forall sk: Γ ⊢ σK = K'
+    exists contradiction
+    use inversion on σK where σK := x0/M0 α0 K[x0]
+    use induction on ns
+    proof by case analysis on sk:
+        case rule
+            ------------------------------ Subst-K-Type
+            _: Γ ⊢ (x0 / M0 α0 type) = type
+            where K[x0] := type and K' := type
+        is
+            proof by contradiction on ns
+        end case
+
+        case rule
+            sba: Γ ⊢ (x0 / M0 α0 A1[x0]) = A1'
+            sbb: Γ, x : A1' ⊢ (x0 / M0 α0 K1[x0][x]) = K1'[x]
+            ---------------------------------------------------------- Subst-K-Pi
+            _: Γ ⊢ (x0 / M0 α0 (Π x : A1[x0] • K1[x0][x])) = (Π x : A1' • K1'[x])
+            where K[x0] := Π x : A1[x0] • K1[x0][x] and K' := Π x : A1' • K1'[x]
+        is
+            proof by case analysis on ns:
+                case rule
+                    nsa: Γ ⊢ (x / M0 α0 A1[x]) undefined
+                    ---------------------------------------------------------- No-Subst-K-Pi-1
+                    _: Γ ⊢ (x / M0 α0 (Π x' : A1[x] • K1[x][x'])) undefined
+                is
+                    proof by theorem no-subst-a on nsa, sba
+                end case
+
+                case rule
+                    sba2: Γ ⊢ (x / M0 α0 A1[x]) = A1''
+                    nsb: Γ, x : A1'' ⊢ (x' / M0 α0 K1[x'][x]) undefined
+                    ---------------------------------------------------------- No-Subst-K-Pi-2
+                    _: Γ ⊢ (x / M0 α0 (Π x' : A1[x] • K1[x][x'])) undefined
+                is
+                    eqA: Γ ⊢ A1' == A1'' by theorem subst-a-unique on sba, sba2
+                    use inversion on eqA where A1' := A1''
+                    proof by induction hypothesis on nsb, sbb
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+and
+theorem no-subst-a:
+    assumes Γ
+    forall ns: Γ ⊢ σA undefined
+    forall sa: Γ ⊢ σA = A'
+    exists contradiction
+    use inversion on σA where σA := x0/M0 α0 A[x0]
+    use induction on ns
+    proof by case analysis on sa:
+        case rule
+            sba: Γ ⊢ (x0 / M0 α0 A1[x0]) = A1'
+            sbb: Γ, x : A1' ⊢ (x0 / M0 α0 A2[x0][x]) = A2'[x]
+            --------------------------------------------------------------- Subst-A-Pi
+            _: Γ ⊢ (x0 / M0 α0 (Π x : A1[x0] • A2[x0][x])) = (Π x : A1' • A2'[x])
+            where A[x0] := Π x : A1[x0] • A2[x0][x] and A' := Π x : A1' • A2'[x]
+        is
+            proof by case analysis on ns:
+                case rule
+                    nsa: Γ ⊢ (x / M0 α0 A1[x]) undefined
+                    ---------------------------------------------------- No-Subst-A-Pi-1
+                    _: Γ ⊢ (x / M0 α0 (Π x' : A1[x] • A2[x][x'])) undefined
+                is
+                    proof by induction hypothesis on nsa, sba
+                end case
+
+                case rule
+                    sba': Γ ⊢ (x0 / M0 α0 A1[x0]) = A1''
+                    nsb: Γ, x : A1'' ⊢ (x0 / M0 α0 A2[x0][x]) undefined
+                    ---------------------------------------------------- No-Subst-A-Pi-2
+                    _: Γ ⊢ (x0 / M0 α0 (Π x : A1[x0] • A2[x0][x])) undefined
+                is
+                    eqA: Γ ⊢ A1' == A1'' by theorem subst-a-unique on sba, sba'
+                    use inversion on eqA where A1' := A1''
+                    proof by induction hypothesis on nsb, sbb
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            sbp: Γ ⊢ (x / M0 p α0 P[x]) = P'
+            ------------------------------ Subst-A-P
+            _: Γ ⊢ (x / M0 α0 P[x]) = P'
+            where A[x] := P[x] and A' := P'
+        is
+            nsp: Γ ⊢ x0/M0 p α0 P[x0] undefined by inversion on ns
+            proof by theorem no-subst-p on nsp, sbp
+        end case
+    end case analysis
+end theorem
+and
+theorem no-subst-p:
+    assumes Γ
+    forall ns: Γ ⊢ σP undefined
+    forall sb: Γ ⊢ σP = P'
+    exists contradiction
+    use inversion on σP where σP := x0/M0 p α0 P[x0]
+    do case analysis on sb:
+        case rule
+            ----------------------- Subst-P-Fam
+            _: Γ ⊢ x0/M0 p α0 a = a
+            where P[x0] := a and P' := a
+        is
+            proof by contradiction on ns
+        end case
+    end case analysis
+    sbf: Γ ⊢ x0/M0 p α0 P1[x0] = P1' and
+    sba: Γ ⊢ x0/M0 m α0 M2[x0] = M2' by inversion on sb
+    where P[x] := P1[x] M2[x] and P' := P1' M2'
+    proof by induction on ns:
+        case rule
+            nsf: Γ ⊢ (x / M0 p α0 P1[x]) undefined
+            ----------------------------------------- No-Subst-P-App-1
+            _: Γ ⊢ (x / M0 p α0 (P1[x] M2[x])) undefined
+        is
+            proof by induction hypothesis on nsf, sbf
+        end case
+
+        case rule
+            nsa: Γ ⊢ (x / M0 m α0 M2[x]) undefined
+            ----------------------------------------- No-Subst-P-App-2
+            _: Γ ⊢ (x / M0 p α0 (P1[x] M2[x])) undefined
+        is
+            proof by theorem no-subst-m on nsa, sba
+        end case
+    end induction
+end theorem
+and
+theorem no-subst-m:
+    assumes Γ
+    forall ns: Γ ⊢ σM undefined
+    forall sb: Γ ⊢ σM = M'
+    exists contradiction
+    use inversion on σM where σM := x0/M0 m α0 M[x0]
+    proof by induction on ns:
+        case rule
+            ns1: Γ ⊢ (x / M0 r α0 R[x]) undefined
+            ------------------------------------ No-Subst-M-R
+            _: Γ ⊢ (x / M0 m α0 R[x]) undefined
+            where M[x] := R[x]
+        is
+            proof by case analysis on sb:
+                case rule
+                    sb1: Γ ⊢ (x / M0 r α0 R[x]) = R'
+                    ------------------------------- Subst-M-R
+                    _: Γ ⊢ (x / M0 m α0 R[x]) = R'
+                    where M' := R'
+                is
+                    proof by theorem no-subst-r on ns1, sb1
+                end case
+
+                case rule
+                    srh: Γ ⊢ (x / M0 r α0 R[x]) = M' : α1
+                    ------------------------------------ Subst-M-RH
+                    _: Γ ⊢ (x / M0 m α0 R[x]) = M'
+                is
+                    proof by theorem no-subst-rh on ns1, srh
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ns1: Γ, x : 0 ⊢ (x0 / M0 m α0 M1[x0][x]) undefined
+            -------------------------------------------------- No-Subst-M-Lam
+            _: Γ ⊢ (x0 / M0 m α0 (λ x • M1[x0][x])) undefined
+            where M[x0] := λ x • M1[x0][x]
+        is
+            sb1: Γ, x : 0 ⊢ (x0 / M0 m α0 M1[x0][x]) = M1'[x] by inversion on sb
+            where M' := λ x • M1'[x]
+            proof by induction hypothesis on ns1, sb1
+        end case
+
+    end induction
+end theorem
+and
+theorem no-subst-r:
+    assumes Γ
+    forall ns: Γ ⊢ σR undefined
+    forall sr: Γ ⊢ σR = R'
+    exists contradiction
+    use inversion on σR where σR := x0/M0 r α0 R[x0]
+    do case analysis on sr:
+        case rule
+            v: R':A ∈ Γ
+            ---------------- Subst-R-Var
+            _: Γ ⊢ x0/M0 r α0 R' = R'
+            where R[x] := R'
+        is
+            proof by case analysis on v:
+                case rule
+                    ------------------- var
+                    _: x : A ∈ (Γ', x : A)
+                is
+                    proof by contradiction on ns
+                end case
+            end case analysis
+        end case
+        
+        case rule
+            --------------------------- Subst-R-Const
+            _: Γ ⊢ (x / M0 r α0 c) = c
+            where R[x] := c and R' := c
+        is
+            proof by contradiction on ns
+        end case
+    end case analysis
+    sbf: Γ ⊢ (x0 / M0 r α0 R0[x0]) = R1 and
+    sba: Γ ⊢ (x0 / M0 m α0 M1[x0]) = M2 by inversion on sr
+    where R[x0] := R0[x0] M1[x0] and R' := R1 M2
+    proof by induction on ns:
+        case rule
+            unf: Γ ⊢ (x / M0 r α0 R0[x]) undefined
+            -------------------------------------------- No-Subst-R-App-1
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by induction hypothesis on unf, sbf
+        end case
+
+        case rule
+            una: Γ ⊢ (x / M0 m α0 M1[x]) undefined
+            -------------------------------------------- No-Subst-R-App-2
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by theorem no-subst-m on una, sba
+        end case
+
+        case rule
+            srh: Γ ⊢ (x / M0 r α0 R0[x]) = M0' : a0
+            ------------------------------------------- No-Subst-RH-App-Base
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by theorem subst-r-rh-incompatible on sbf, srh
+        end case
+
+        case rule
+            srh: Γ ⊢ (x / M0 r α0 R0[x]) = R2 : α1
+            ------------------------------------------- No-Subst-RH-App-Prim
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by theorem subst-r-rh-incompatible on sbf, srh
+        end case
+
+        case rule
+            srh: Γ ⊢ (x / M0 r α0 R0[x]) = (λ x • M3[x]) : (α1 → α2)
+            _: Γ ⊢ (x / M0 m α0 M1[x]) = M4
+            _: Γ ⊢ (x / M4 m α1 M3[x]) undefined
+            ------------------------------------------- No-Subst-RH-App-3
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by theorem subst-r-rh-incompatible on sbf, srh
+        end case
+
+ 
+    end induction
+end theorem
+and
+theorem no-subst-rh:
+    assumes Γ
+    forall ns: Γ ⊢ σR undefined
+    forall sr: Γ ⊢ σR = M' : α
+    exists contradiction
+    use inversion on σR where σR := x0/M0 r α0 R[x0]
+    do case analysis on sr:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ ⊢ (x / M0 r α0 x) = M0 : α0
+            where R[x0] := x0 and M' := M0 and α := α0
+        is
+            proof by contradiction on ns
+        end case
+    end case analysis
+    srh:Γ ⊢ (x0/M0 r α0 R0[x0]) = λ x • M2[x] : α2 → α and
+    sba:Γ ⊢ (x0/M0 m α0 M1[x0]) = M20 and
+    sb3:Γ ⊢ (x/M20 m α2 M2[x]) = M' by inversion on sr
+    where R[x] := R0[x] M1[x]
+    proof by induction on ns:
+        case rule
+            ns1: Γ ⊢ (x0 / M0 r α0 R0[x0]) undefined
+            -------------------------------------------- No-Subst-R-App-1
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by induction hypothesis on ns1, srh
+        end case
+
+        case rule
+            ns1: Γ ⊢ (x / M0 m α0 M1[x]) undefined
+            -------------------------------------------- No-Subst-R-App-2
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            proof by theorem no-subst-m on ns1, sba
+        end case
+
+        case rule
+            sb1: Γ ⊢ (x / M0 r α0 R0[x]) = M0' : a
+            ------------------------------------------- No-Subst-RH-App-Base
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            eqL: Γ ⊢ M0' == (λ x • M2[x]) and
+            eqS: a = α2 → α by theorem subst-rh-unique on sb1, srh
+            proof by contradiction on eqS
+        end case
+
+        case rule
+            sb1: Γ ⊢ (x / M0 r α0 R0[x]) = R1 : α1
+            ------------------------------------------- No-Subst-RH-App-Prim
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+            eqL: Γ ⊢ R1 == (λ x • M2[x]) and
+            eqS: α1 = α2 → α by theorem subst-rh-unique on sb1, srh
+            proof by contradiction on eqL
+        end case
+
+        case rule
+            sb11: Γ ⊢ (x / M0 r α0 R0[x]) = (λ x • M3'[x]) : (α2' → α')
+            sb12: Γ ⊢ (x / M0 m α0 M1[x]) = M3
+            sb13: Γ ⊢ (x / M3 m α2' M3'[x]) undefined
+            ------------------------------------------- No-Subst-RH-App-3
+            _: Γ ⊢ (x / M0 r α0 (R0[x] M1[x])) undefined
+        is
+             eqL: Γ ⊢ λ x • M3'[x] == (λ x • M2[x]) and
+            eqS: α2' → α' = α2 → α by theorem subst-rh-unique on sb11, srh
+            use inversion on eqL where M3'[x] := M2[x]
+            use inversion on eqS where α2' := α2 and α' := α
+            eqM: Γ ⊢ M3 == M20 by theorem subst-m-unique on sb12, sba
+            use inversion on eqM where M3 := M20
+            proof by theorem no-subst-m on sb13, sb3
+        end case
+    end induction
+end theorem
+
+
+/// Theorem 2.4 (Decidability of Substitution)
+
+// We prove first prove with mutual induction the m and r parts
+// Then afterwards prove the p, a and k parts
+
+theorem subst-m-decidable:
+    assumes Γ
+    forall M[x0] assumes Γ, x0 : A0
+    forall M0 assumes Γ
+    forall α
+    forall subterm: α0 ≤ α
+    exists Γ ⊢ x0 / M0 m α0 M[x0] = M' or Γ ⊢ x0 / M0 m α0 M[x0] undefined
+    use induction on α, (M[x0] assumes Γ, x0 : A0)
+    // handle induction if α0 < α
+    do case analysis on subterm:
+        case rule
+            sub': α0 ≤ α1
+            ----------------- sub-arrow1
+            _: α0 ≤ α1 → α2
+            where α := α1 → α2
+        is
+            proof by induction hypothesis on (M[x0] assumes Γ, x0 : A0), M0, α1, sub'
+        end case
+        case rule
+            sub': α0 ≤ α2
+            ----------------- sub-arrow2
+            _: α0 ≤ α1 → α2
+            where α := α1 → α2
+        is
+            proof by induction hypothesis on (M[x0] assumes Γ, x0 : A0), M0, α2, sub'
+        end case
+    end case analysis
+    use inversion on subterm where α0 := α
+    proof by case analysis on (M[x0] assumes Γ, x0 : A0):
+        case R[x] assumes Γ, x : A0 is
+            ch: Γ ⊢ x0 / M0 r α0 R[x0] = R' or Γ ⊢ x0 / M0 r α0 R[x0] = M0' : α' or Γ ⊢ x0 / M0 r α0 R[x0] undefined by theorem subst-r-decidable on (R[x0] assumes Γ, x0 : A0), M0, α0
+            proof by case analysis on ch:
+                case or sb: Γ ⊢ (x0 / M0 r α R[x0]) = R' is
+                    _: Γ ⊢ x0 / M0 m α0 R[x0] = R' by rule Subst-M-R on sb
+                end case
+
+                case or sb: Γ ⊢ (x / M0 r α R[x]) = M0' : α' is
+                    _: Γ ⊢ x0 / M0 m α0 R[x0] = M0' by rule Subst-M-RH on sb
+                end case
+
+                case or u: Γ ⊢ (x / M0 r α R[x]) undefined is
+                    _: Γ ⊢ x0 / M0 m α0 R[x0] undefined by rule No-Subst-M-R on u
+                end case
+
+            end case analysis
+        end case
+
+        case λ x • M1[x0][x] assumes Γ, x0 : A0 is
+            ch: Γ, x:0 ⊢ x0 / M0 m α0 M1[x0][x] = M1'[x] or Γ, x:0 ⊢ x0 / M0 m α0 M1[x0][x] undefined by induction hypothesis on (M1[x0][x] assumes Γ, x:0, x0:A0), M0, α0, subterm            
+            proof by case analysis on ch:
+                case or subb: Γ, x : 0 ⊢ (x0 / M0 m α M1[x0][x]) = M1'[x] is
+                    _: Γ ⊢ x0 / M0 m α0 (λ x • M1[x0][x]) = λ x • M1'[x] by rule Subst-M-Lam on subb
+                end case
+
+                case or ub: Γ, x : 0 ⊢ (x0 / M0 m α M1[x0][x]) undefined is
+                    _: Γ ⊢ x0 / M0 m α0 (λ x • M1[x0][x]) undefined by rule No-Subst-M-Lam on ub
+                end case
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+and
+theorem subst-r-decidable:
+    assumes Γ
+    forall R[x0] assumes Γ, x0 : A0
+    forall M0 assumes Γ
+    forall α0
+    exists Γ ⊢ x0 / M0 r α0 R[x0] = R' or Γ ⊢ x0 / M0 r α0 R[x0] = M':α' or Γ ⊢ x0 / M0 r α0 R[x0] undefined
+    use induction on α0, (R[x0] assumes Γ, x0 : A0)
+    proof by case analysis on (R[x0] assumes Γ, x0 : A0):
+        case x0 assumes Γ, x0 : A0 is
+            _: Γ ⊢ x0 / M0 r α0 (x0) = M0:α0 by rule Subst-RH-Var
+        end case
+
+        case x assumes Γ', x : A, x0 : A0 is
+            v1: x:A ∈ Γ', x:A by rule var
+            v2: R[0]:A ∈ Γ by v1 
+            _: Γ ⊢ x0 / M0 r α0 R[x0] = R[0] by rule Subst-R-Var on v2
+        end case
+
+        case c assumes Γ, x0 : A0 is
+            _: Γ ⊢ x0 / M0 r α0 c = c by rule Subst-R-Const
+        end case
+
+        case R0[x0] M1[x0] assumes Γ, x0 : A0 is
+            ch1: Γ ⊢ x0 / M0 r α0 R0[x0] = R0' or Γ ⊢ x0 / M0 r α0 R0[x0] = M0':α0' or Γ ⊢ x0 / M0 r α0 R0[x0] undefined by induction hypothesis on (R0[x0] assumes Γ, x0:A0), M0, α0
+            sb0: α0 ≤ α0 by rule sub-eq
+            ch2: Γ ⊢ x0 / M0 m α0 M1[x0] = M1' or Γ ⊢ x0 / M0 m α0 M1[x0] undefined by theorem subst-m-decidable on (M1[x0] assumes Γ, x0:A0), M0, α0, sb0
+            do case analysis on ch2:
+                case or u1: Γ ⊢ x0 / M0 m α0 M1[x0] undefined is
+                    _: Γ ⊢ (x / M0 r α0 R0[x] M1[x]) undefined by rule No-Subst-R-App-2 on u1
+                end case
+            end case analysis
+            suba: Γ ⊢ x0 / M0 m α0 M1[x0] = M1'  by inversion on ch2
+            proof by case analysis on ch1:
+                case or subf: Γ ⊢ (x0 / M0 r α0 R0[x0]) = R0' is
+                    _: Γ ⊢ x0 / M0 r α0 R0[x0] M1[x0] = R0' M1' by rule Subst-R-App on subf, suba
+                end case
+
+                case or subf: Γ ⊢ (x0 / M0 r α0 R0[x0]) = M0' : α0' is
+                    do case analysis on M0':
+                        case R00' is
+                            _: Γ ⊢ (x0 / M0 r α0 R0[x0] M1[x0]) undefined by rule No-Subst-RH-App-Prim on subf
+                        end case
+                    end case analysis
+                    use inversion on M0' where M0' := λ x • M2[x]
+                    do case analysis on α0':
+                        case a0' is
+                            _: Γ ⊢ (x0 / M0 r α0 R0[x0] M1[x0]) undefined by rule No-Subst-RH-App-Base on subf
+                        end case
+                    end case analysis
+                    use inversion on α0' where α0' := α2 → α'
+                    subex: α2 → α' ≤ α0 by theorem head-substitution-size on subf
+                    sub22: α2 ≤ α2 by rule sub-eq
+                    sub22': α2 ≤ α2 → α' by rule sub-arrow1 on sub22
+                    ch3: Γ ⊢ x / M1' m α2 M2[x] = M' or Γ ⊢ x / M1' m α2 M2[x] undefined by case analysis on subex:
+                        case rule
+                            ------------------------ sub-eq
+                            _: (α2 → α') ≤ (α2 → α')
+                            where α0 := α2 → α' 
+                        is
+                            proof by theorem subst-m-decidable on (M2[x] assumes Γ, x:A2), M1', α2, sub22
+                        end case
+
+                        case rule
+                            sub21: (α2 → α') ≤ α01
+                            ------------------- sub-arrow1
+                            _: (α2 → α') ≤ (α01 → α02)
+                            where α0 := α01 → α02
+                        is
+                            subex': α2 ≤ α01 by lemma subexpression-transitive on sub22', sub21
+                            proof by theorem subst-m-decidable on (M2[x] assumes Γ, x:A2), M1', α01, subex'
+                        end case
+
+                        case rule
+                            sub202: (α2 → α') ≤ α02
+                            ------------------- sub-arrow2
+                            _: (α2 → α') ≤ (α01 → α02)
+                            where α0 := α01 → α02
+                        is
+                            subex': α2 ≤ α02 by lemma subexpression-transitive on sub22', sub202
+                            proof by theorem subst-m-decidable on (M2[x] assumes Γ, x:A2), M1', α02, subex'
+                        end case
+                    end case analysis
+                    proof by case analysis on ch3:
+                        case or sub3: Γ ⊢ (x / M1' m α2 M2[x]) = M' is
+                            _: Γ ⊢ (x0 / M0 r α0 R0[x0] M1[x0]) = M' : α' by rule Subst-RH-App on subf, suba, sub3
+                        end case
+
+                        case or u3: Γ ⊢ (x / M1' m α2 M2[x]) undefined is
+                            _: Γ ⊢ (x0 / M0 r α0 R0[x0] M1[x0]) undefined  by rule No-Subst-RH-App-3 on subf, suba, u3
+                        end case
+
+                    end case analysis
+                end case
+
+                case or u0: Γ ⊢ (x / M0 r α0 R0[x]) undefined is
+                    _: Γ ⊢ (x / M0 r α0 R0[x] M1[x]) undefined by rule No-Subst-R-App-1 on u0
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+    
+theorem subst-p-decidable:
+    assumes Γ
+    forall P[x0] assumes Γ, x0 : A0
+    forall M0 assumes Γ
+    forall α0
+    exists Γ ⊢ x0 / M0 p α0 P[x0] = P' or Γ ⊢ x0 / M0 p α0 P[x0] undefined
+    proof by induction on (P[x0] assumes Γ, x0 : A0):
+        case a assumes Γ, x : A0 is
+            _: Γ ⊢ x0 / M0 p α0 a = a by rule Subst-P-Fam
+        end case
+
+        case P1[x] M[x] assumes Γ, x : A0 is
+            ch1: Γ ⊢ x0 / M0 p α0 P1[x0] = P1' or Γ ⊢ x0 / M0 p α0 P1[x0] undefined by induction hypothesis on (P1[x0] assumes Γ, x0:A0), M0, α0
+            do case analysis on ch1:
+                case or uf: Γ ⊢ x0 / M0 p α0 P1[x0] undefined is
+                    _: Γ ⊢ x0 / M0 p α0 P1[x0] M[x0] undefined by rule No-Subst-P-App-1 on uf
+                end case
+            end case analysis
+            subf: Γ ⊢ x0 / M0 p α0 P1[x0] = P1' by inversion on ch1
+            subexp: α0 ≤ α0 by rule sub-eq
+            ch2: Γ ⊢ x0 / M0 m α0 M[x0] = M' or Γ ⊢ x0 / M0 m α0 M[x0] undefined by theorem subst-m-decidable on (M[x0] assumes Γ, x0:A0), M0, α0, subexp 
+            do case analysis on ch2:
+                case or ua: Γ ⊢ x0 / M0 m α0 M[x0] undefined is
+                    _: Γ ⊢ x0 / M0 p α0 P1[x0] M[x0] undefined by rule No-Subst-P-App-2 on ua
+                end case
+            end case analysis
+            suba: Γ ⊢ x0 / M0 m α0 M[x0] = M' by inversion on ch2
+            _: Γ ⊢ x0 / M0 p α0 P1[x0] M[x0] = P1' M' by rule Subst-P-App on subf, suba
+        end case
+    end induction
+end theorem
+    
+theorem subst-a-decidable:
+    assumes Γ
+    forall A[x0] assumes Γ, x0 : A0
+    forall M0 assumes Γ
+    forall α0
+    exists Γ ⊢ x0 / M0 α0 A[x0] = A' or Γ ⊢ x0 / M0 α0 A[x0] undefined
+    proof by induction on (A[x0] assumes Γ, x0 : A0):
+        case P[x0] assumes Γ, x0 : A0 is
+            ch: Γ ⊢ x0 / M0 p α0 P[x0] = P' or Γ ⊢ x0 / M0 p α0 P[x0] undefined by theorem subst-p-decidable on (P[x0] assumes Γ, x0:A0), M0, α0
+            proof by case analysis on ch:
+                case or sub: Γ ⊢ (x0 / M0 p α0 P[x0]) = P' is
+                    _: Γ ⊢ x0 / M0 α0 P[x0] = P' by rule Subst-A-P on sub
+                end case
+
+                case or u: Γ ⊢ (x / M0 p α0 P[x]) undefined is
+                    _: Γ ⊢ x0 / M0 α0 P[x0] undefined by rule No-Subst-A-P on u 
+                end case
+            end case analysis
+        end case
+
+        case Π x : A1[x0] • A2[x0][x] assumes Γ, x0 : A0 is
+            ch1: Γ ⊢ x0 / M0 α0 A1[x0] = A1' or Γ ⊢ x0 / M0 α0 A1[x0] undefined by induction hypothesis on (A1[x0] assumes Γ, x0:A0), M0, α0
+            do case analysis on ch1:
+                case or u1: Γ ⊢ x0 / M0 α0 A1[x0] undefined is
+                    _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • A2[x0][x]) undefined by rule No-Subst-A-Pi-1 on u1
+                end case
+            end case analysis
+            subt: Γ ⊢ x0 / M0 α0 A1[x0] = A1' by inversion on ch1
+            ch2: Γ, x:A1' ⊢ x0 / M0 α0 A2[x0][x] = A2'[x] or Γ, x:A1' ⊢ x0 / M0 α0 A2[x0][x] undefined by induction hypothesis on (A2[x0][x] assumes Γ, x:A1', x0:A0), M0, α0
+            do case analysis on ch2:
+                case or u2:  Γ, x:A1' ⊢ x0 / M0 α0 A2[x0][x] undefined is
+                    _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • A2[x0][x]) undefined by rule No-Subst-A-Pi-2 on subt, u2
+                end case
+            end case analysis
+            subb: Γ, x:A1' ⊢ x0 / M0 α0 A2[x0][x] = A2'[x] by inversion on ch2
+            _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • A2[x0][x]) = (Π x : A1' • A2'[x]) by rule Subst-A-Pi on subt, subb
+        end case
+
+    end induction
+end theorem
+
+theorem subst-k-decidable:
+    assumes Γ
+    forall K[x0] assumes Γ, x0 : A0
+    forall M0 assumes Γ
+    forall α0
+    exists Γ ⊢ x0 / M0 α0 K[x0] = K' or Γ ⊢ x0 / M0 α0 K[x0] undefined
+    proof by induction on (K[x0] assumes Γ, x0 : A0):
+        case type assumes Γ, x0 : A0 is
+            _: Γ ⊢ x0 / M0 α0 type = type by rule Subst-K-Type
+        end case
+
+        case Π x : A1[x0] • K2[x0][x] assumes Γ, x0 : A0 is
+            ch1: Γ ⊢ x0 / M0 α0 A1[x0] = A1' or Γ ⊢ x0 / M0 α0 A1[x0] undefined by theorem subst-a-decidable on (A1[x0] assumes Γ, x0:A0), M0, α0
+            do case analysis on ch1:
+                case or u1: Γ ⊢ x0 / M0 α0 A1[x0] undefined is
+                    _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • K2[x0][x]) undefined by rule No-Subst-K-Pi-1 on u1
+                end case
+            end case analysis
+            subt: Γ ⊢ x0 / M0 α0 A1[x0] = A1' by inversion on ch1
+            ch2: Γ, x:A1' ⊢ x0 / M0 α0 K2[x0][x] = K2'[x] or Γ, x:A1' ⊢ x0 / M0 α0 K2[x0][x] undefined by induction hypothesis on (K2[x0][x] assumes Γ, x:A1', x0:A0), M0, α0
+            do case analysis on ch2:
+                case or u2:  Γ, x:A1' ⊢ x0 / M0 α0 K2[x0][x] undefined is
+                    _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • K2[x0][x]) undefined by rule No-Subst-K-Pi-2 on subt, u2
+                end case
+            end case analysis
+            subb: Γ, x:A1' ⊢ x0 / M0 α0 K2[x0][x] = K2'[x] by inversion on ch2
+            _: Γ ⊢ x0 / M0 α0 (Π x : A1[x0] • K2[x0][x]) = (Π x : A1' • K2'[x]) by rule Subst-K-Pi on subt, subb
+        end case
+
+    end induction
+end theorem

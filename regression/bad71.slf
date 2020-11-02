@@ -1,0 +1,142 @@
+// use inversion on special rule causes problem in context starting 1.3.4a2
+package regression;
+
+terminals λ bound notbound in S
+
+syntax
+   t ::= λ x • t[x]
+      | t t
+      | x
+
+   Γ ::= *
+      | Γ, x bound
+
+   n ::= 0 | S n
+   
+judgment var : t bound in Γ
+assumes Γ
+
+   ----------------------- var
+   x bound in (Γ, x bound)
+
+
+judgment non-var : t notbound in Γ
+assumes Γ
+
+    --------------------------- nonvar-abs
+    (λ x • t[x]) notbound in Γ
+
+    ----------------------- nonvar-app
+    (t1 t2) notbound in Γ
+
+judgment case :  Γ |- t
+assumes  Γ
+
+     t bound in  Γ
+     ------------- C-Var
+       Γ |- t
+
+
+     Γ, x bound |- t[x]
+     ------------------- C-Abs
+     Γ |- λ x • t[x]
+
+
+     Γ |- t1
+     Γ |- t2
+     ----------- C-App
+     Γ |- t1 t2
+
+
+theorem useless: // added to give test that causes error
+    assumes Γ
+    forall c: Γ |- t1 t2
+    exists (t1 t2) notbound in Γ.
+    proof by case analysis on c:
+        case rule
+	    v: (t1 t2) bound in Γ
+            --------------------- C-Var
+            _:  Γ |- t1 t2
+	is
+	    proof by case analysis on v:
+	        case rule //! (t1 t2) cannot be a variable
+		    ------------------------------- var
+		    _: (t1 t2) bound in Γ', x bound
+		is
+		    proof by unproved // expected, but skipped
+		end case
+	    end case analysis
+	end case
+	case rule
+            _:  Γ |- t1
+            _:  Γ |- t2
+	    --------------- C-App
+            _:  Γ |- t1 t2
+	is
+	    proof by rule nonvar-app
+	end case	
+    end case analysis
+end theorem
+
+theorem nothing-bound:
+    assumes Γ
+    forall n // so we can demonstrate two errors
+    forall c: Γ |- t
+    exists t notbound in Γ.
+    proof by case analysis on c:
+        case rule
+	    v: t bound in Γ
+	    --------------- C-Var
+	     _: Γ |- t
+	is
+	    // The following case analysis doesn't illustrate any bugs
+	    proof by case analysis on v:
+	        case rule
+	            ---------------------------- var
+		    _: x bound in (Γ', x bound)
+		    where t := x //! x is unbound and where clause not needed
+		is
+		    proof by contradiction on v //! expected error
+		end case
+	    end case analysis
+	    // Now we show two situations that illustrate a bug:
+	    proof by case analysis on n:
+	        case 0 is
+	            use inversion of var on v
+	            where t := x //! x is unbound and where clause not needed
+		    proof by unproved //! expected
+		end case
+		case S n' is
+	            use inversion of var on v
+	            proof by contradiction on c //! shouldn't be permitted
+		end case
+            end case analysis
+	end case
+	case rule
+	     _: Γ, x bound |- t1[x]
+             ---------------------- C-Abs
+             _: Γ |- λ x • t1[x]
+	     // where t := λ x • t1[x]
+	is
+	    proof by rule nonvar-abs
+	end case
+	case rule
+            _: Γ |- t1
+            _: Γ |- t2
+            ----------- C-App
+            _: Γ |- t1 t2
+	is
+	    proof by rule nonvar-app
+	end case
+    end case analysis
+end theorem
+
+theorem impossible:
+    exists contradiction.
+    v: x bound in (*, x bound) by rule var
+    c: *, x bound |- x by rule C-Var on v
+    n: x notbound in (*, x bound) by theorem nothing-bound on 0, c
+    proof by contradiction on n
+end theorem
+
+

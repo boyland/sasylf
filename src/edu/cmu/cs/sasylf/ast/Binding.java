@@ -161,6 +161,15 @@ public class Binding extends Element {
 
 
 	@Override
+	void checkVariables(Set<String> bound, boolean defining) {
+		super.checkVariables(bound, defining);
+		for (Element e : elements) {
+			e.checkVariables(bound, defining);
+		}
+	}
+
+
+	@Override
 	public NonTerminal getRoot() {
 		return null; // same reason as for NonTerminal (q.v.)
 	}

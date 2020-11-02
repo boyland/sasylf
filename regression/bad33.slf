@@ -1,4 +1,4 @@
-// default package
+package regression;
 
 terminals S
 
@@ -25,6 +25,7 @@ judgment gt: n > n
 theorem test:
     forall d: n1 > n2
     exists n1 = S n2.
+    use inversion of gt-more-broken on d //! bad rule
     use inversion of gt-one on d
     proof by rule eq
 end theorem

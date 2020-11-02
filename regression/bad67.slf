@@ -85,6 +85,27 @@ theorem loses-context-fn:
   _: G |- fn x:T => t[x] value by rule val2 on v1
 end theorem
 
+lemma ok-context-fn:
+    forall t
+    exists fn x:Unit => t value.
+    proof by rule val-fn
+end lemma
+
+theorem loses-context-through-complication: 
+    assumes G
+    forall t assumes G
+    exists G |- fn x:Unit => ((t t)(t t)) value.
+    v4: fn x:Unit => ((t t)(t t)) value by lemma ok-context-fn on ((t t)(t t)) //! should warn about discarding context
+    proof by rule val2 on v4
+end theorem
+
+theorem complicated:
+    exists contradiction.
+    v2: *, x:Unit |- fn x':Unit => ((x x)(x x)) value by theorem loses-context-through-complication on (x assumes *,x:Unit)
+    proof by case analysis on v2:
+    end case analysis
+end theorem
+
 theorem test:
   exists contradiction.
   v1: *, x1:Unit |- x1:Unit by rule T-Var

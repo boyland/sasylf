@@ -22,7 +22,7 @@ public class AssumptionElement extends Element {
 
 	public AssumptionElement(Location l, Element e, Element assumes) {
 		super(l);
-		while (e instanceof Clause && ((Clause)e).getElements().size() == 1) {
+		while (e instanceof Clause && !(e instanceof ClauseUse) && ((Clause)e).getElements().size() == 1) {
 			Clause cl = (Clause)e;
 			e = cl.getElements().get(0);
 		}
@@ -73,7 +73,7 @@ public class AssumptionElement extends Element {
 		}
 		return this;
 	}
-
+	
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
 		base.prettyPrint(out,ctx);

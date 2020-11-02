@@ -75,7 +75,16 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 
 		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
-		// TODO: Is it ever safe to do induction after a substitution?
+		// Permit induction on this term if source was a subderivation
+		if (ctx.subderivations.containsKey(getArgs().get(0))) {
+			// Must require that substitution does not include course type!
+			// System.out.println("Type of base is " + subContext.getTypeFamily());
+			// System.out.println("Type of actual is " + source.getTypeFamily());
+			if (!FreeVar.canAppearIn(subContext.getTypeFamily(),source.getTypeFamily())) {
+				ctx.subderivations.put(this,ctx.subderivations.get(getArgs().get(0)));
+			}
+		}
+
 	}
 
 	/**

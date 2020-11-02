@@ -1,0 +1,89 @@
+// testing case analysis on terms with variables
+package regression;
+
+terminals fn Unit unit bound in varfree
+
+syntax
+  t ::= unit
+     | x
+     | t t
+     | fn x => t[x]
+
+Gamma ::= * | Gamma, x bound
+
+judgment isvar: t bound in Gamma
+assumes Gamma
+
+  --------------------------- var
+  x bound in (Gamma, x bound)
+
+judgment equality: Gamma |- t == t
+assumes Gamma
+
+  --------------- eq
+  Gamma |- t == t
+
+judgment varfree: Gamma |- t varfree
+assumes Gamma
+
+  --------------------- F-Unit
+  Gamma |- unit varfree
+
+  Gamma |- t1 varfree
+  Gamma |- t2 varfree
+  ---------------------- F-App
+  Gamma |- t1 t2 varfree
+
+  Gamma |- t[unit] varfree
+  ----------------------------- T-Abs
+  Gamma |- fn x => t[x] varfree
+
+
+theorem swap1:
+    forall e: *, x bound, x' bound |- t[x][x'] == t[x][x']
+    exists *, x bound, x' bound |- t[x][x'] == t[x'][x]
+    proof by case analysis on (t[unit][unit]): //! should not permit
+        case unit is
+            proof by rule eq
+        end case
+	case t1 t2 is
+	    proof by rule eq
+	end case
+	case fn x'' => t1[x''] is
+	    proof by rule eq
+	end case
+    end case analysis
+end theorem
+
+theorem swap2:
+    forall e: *, x bound, x' bound |- t[x][x'] == t[x][x']
+    exists *, x bound, x' bound |- t[x][x'] == t[x'][x]
+    proof by case analysis on (t[unit][unit] assumes *, x bound, x' bound): //! should not permit
+        case unit is
+            proof by rule eq
+        end case
+	case t1 t2 is
+	    proof by rule eq
+	end case
+	case fn x'' => t1[x''] is
+	    proof by rule eq
+	end case
+    end case analysis
+end theorem
+
+
+theorem swap3:
+    forall e: *, x bound, x' bound |- t[x][x'] == t[x][x']
+    exists *, x bound, x' bound |- t[x][x'] == t[x'][x]
+    proof by case analysis on (t[x][x''] assumes *, x bound, x' bound, x'' bound): //! missing cases
+        case unit assumes *, x bound, x' bound, x'' bound is
+            proof by rule eq
+        end case
+	case t1[x][x''] t2[x][x''] assumes *, x bound, x'' bound, x' bound is //! x' unused
+	    proof by rule eq //! No
+	end case
+	case fn x3 => t3[x3] assumes *, x bound, x'' bound, x' bound is //! not enough
+	    proof by rule eq
+	end case
+    end case analysis
+end theorem

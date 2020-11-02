@@ -99,13 +99,14 @@ public class ClauseUse extends Clause {
 		//   Gamma, x':T'' |- (fn x : T => t[x][x']) : T -> T'
 		int ai = cons.getAssumeIndex();
 		boolean copied = false;
-		// System.out.println("Checking " + this + " with ai=" + ai + " defining? " + defining);
+		// System.out.println("(a) Checking " + this + ":" + getClass() + " with ai=" + ai + " defining? " + defining + ", bound = " + bound);
 		for (int i=0; i < elements.size(); ++i) {
 			if (i == ai || cons.getElements().get(i) instanceof Variable) {
 				if (!copied && !defining) bound = new HashSet<String>(bound);
 				elements.get(i).checkVariables(bound, true);
 			}
 		}
+		// System.out.println("(b) Checking " + this + ":" + getClass() + " with ai=" + ai + " defining? " + defining + ", bound = " + bound);
 		for (int i=0; i < elements.size(); ++i) {
 			if (i != ai) {
 				elements.get(i).checkVariables(bound, false);
@@ -122,14 +123,11 @@ public class ClauseUse extends Clause {
 	public Fact asFact(Context ctx, Element assumes) {
 		Element localAssumes = null;
 		// accept assumes only if we have something that the context can affect.
-		if (assumes != null) {
+		if (assumes != null && !ctx.isVarFree(this)) {
 			SyntaxDeclaration contextSyntax = (SyntaxDeclaration)assumes.getType();
-			for (Element e : getElements()) {
-				if (e instanceof NonTerminal || e instanceof Binding) {
-					if (contextSyntax.canAppearIn(e.getTypeTerm())) {
-						localAssumes = assumes;
-					}
-				}
+			Term myType = getType().typeTerm();
+			if (contextSyntax.canAppearIn(myType)) {
+				localAssumes = assumes;
 			}
 		}
 		return new ClauseAssumption(this,getLocation(),localAssumes);
@@ -174,6 +172,9 @@ public class ClauseUse extends Clause {
 		int ai = cons.getAssumeIndex();
 		if (ai < 0) {
 			return null;
+		}
+		if (ai >= getElements().size()) {
+			System.out.println("Cannot find ai(" + ai + ") in " + getElements());
 		}
 		Element e = getElements().get(ai);
 		if (e == null) {

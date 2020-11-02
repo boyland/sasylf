@@ -74,8 +74,23 @@ public class Unordered extends InductionSchema {
 			return false;
 		}
 
+		List<InductionSchema> others = new ArrayList<InductionSchema>(model.schemas);
 		for (int i=0; i < size(); ++i) {
-			if (!schemas.get(i).matches(model.get(i), errorPoint, false)) return false;
+			boolean found = false;
+			for (int j=0; j < others.size(); ++j) {
+				if (schemas.get(i).matches(others.get(j), null, equality)) {
+					found = true;
+					others.remove(j);
+					break;
+				}
+			}
+			if (!found) {
+				if (errorPoint != null) {
+					// for side-effect
+					schemas.get(i).matches(others.get(0), errorPoint, equality);
+				}
+				return false;
+			}
 		}
 
 		return true;
@@ -115,13 +130,13 @@ public class Unordered extends InductionSchema {
 	@Override
 	public String describe() {
 		StringBuilder sb = null;
-		if (schemas.size() == 0) return "[none]";
+		if (schemas.size() == 0) return "{}";
 		for (InductionSchema is : schemas) {
-			if (sb == null) sb = new StringBuilder("(");
-			else sb.append(" ");
+			if (sb == null) sb = new StringBuilder("{");
+			else sb.append(", ");
 			sb.append(is.describe());
 		}
-		sb.append(")");
+		sb.append("}");
 		return sb.toString();
 	}
 

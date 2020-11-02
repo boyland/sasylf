@@ -1,0 +1,49 @@
+// when multiple variables match, got outermost, not innermost
+// this wasn't a problem because shadowing wasn't permitted
+// but sugar definitions cause shadowing invisbly
+package regression;
+
+terminals λ bound
+
+syntax
+   t ::= λ x • t[x]
+      | t t
+      | x
+
+   Γ ::= *
+      | Γ, x bound
+      
+judgment any : Γ |- t ~> t
+assumes Γ
+
+
+  --------------------------- any-beta
+  Γ |- (λ x • t1[x]) t2 ~> t1[t2]
+
+  Γ |- t1 ~> t1'
+  ----------------------------- any-app-1
+  Γ |- t1 t2 ~> t1' t2
+
+  Γ |- t2 ~> t2'
+  ----------------------------- any-app-2
+  Γ |- t1 t2 ~> t1 t2'
+
+terminals fls tru pair fst snd
+
+syntax
+  tru := λ x • λ x' • x
+  fls := λ x • λ x' • x'
+ pair := λ x • λ x' • λ x'' • ((x'' x) x')
+  fst := λ x • (x tru)
+  snd := λ x • (x fls)
+
+lemma  pair-tru: // works fine
+  exists * |- pair tru ~> λ x' • λ x'' • ((x'' tru) x').
+  proof by rule any-beta
+end lemma
+
+lemma pair-fls: // fails in 1.5.0a3
+  exists * |- pair fls ~> λ x' • λ x'' • ((x'' fls) x').
+  proof by rule any-beta
+end lemma
+

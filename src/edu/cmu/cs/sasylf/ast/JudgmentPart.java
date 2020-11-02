@@ -74,9 +74,12 @@ public class JudgmentPart implements Part {
 				if (r.isAssumption()) {
 					Util.debug("subordination: ", jType, " < ", jType, " forced");
 					FreeVar.setAppearsIn(jType,jType);
+					// Do we say that any assumption of a context nonterminal
+					// means that we depend on anything that that context can have?
+					// See good45.slf for why we answer: No.
 					Term cType = r.getAssumes().getTypeTerm();
-					Util.debug("subordination: ", jType, " < ", cType, " forced.");
-					FreeVar.setAppearsIn(jType,cType);
+					Util.debug("subordination: ", jType, " < ", cType, " not forced.");
+					// Not: FreeVar.setAppearsIn(jType,cType);
 				}
 				for (Clause cl : r.getPremises()) {
 					if (!(cl instanceof ClauseUse)) continue; // avoid recovered error -> internal error

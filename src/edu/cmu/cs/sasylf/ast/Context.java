@@ -333,7 +333,7 @@ public class Context implements Cloneable {
 			relaxationMap = new HashMap<NonTerminal,Relaxation>();
 			relaxationVars = new HashSet<FreeVar>();
 		}
-		relaxationMap.put(key, relax);
+		if (relaxationMap.put(key, relax) == relax) return; // NOP
 		Set<FreeVar> newVars = relax.getRelaxationVars();
 		relaxationVars.addAll(newVars);
 		relax.getFreeVars(inputVars); //XXX: What is this doing?  It doesn't do anything?!?
@@ -420,13 +420,17 @@ public class Context implements Cloneable {
 	/**
 	 * Check if the substitution passed in is compatible with the 
 	 * current relaxation.
-	 * XXX: This method should probably check whether the substitution
-	 * is compatible with the current substitution too.
+	 * <p>
+	 * It's not clear what to do if the argument is illegal; should
+	 * we use the (new) {@link Substitution#canCompose(Substitution)} method
+	 * to check for this?  If so, then an internal error may silently be ignored
+	 * possibly being converted into unsoundness.
 	 * For now {@link DerivationByAnalysis} does the other check as well.
 	 * @param sub substitution to check, must not be null
 	 * @return true composition does not interfere with relaxation variables.
 	 */
 	public boolean canCompose(Substitution sub) {
+		//if (!currentSub.canCompose(sub)) return false;
 		// We have to reject a substitution that changes a relaxation variable to anything but another free variable.
 		// An earlier version of this code permitted it to be substituted with a bound variable,
 		// presumably its own variable, but:
@@ -534,7 +538,7 @@ public class Context implements Cloneable {
 		for (Map.Entry<FreeVar,Term> e : currentSub.getMap().entrySet()) {
 			FreeVar key = e.getKey();
 			if (key instanceof FreeVar) {
-				FreeVar fv = (FreeVar)key;
+				FreeVar fv = key;
 				if (fv.getStamp() != 0) {
 					Util.debug("removing unreachable variable binding: ", fv, " = ", e.getValue());
 					changed = true;
@@ -593,6 +597,7 @@ public class Context implements Cloneable {
 	 */
 	public boolean isRelaxationInScope(NonTerminal root, FreeVar fv) {
 		Relaxation r;
+		if (relaxationMap == null) return false;
 		while ((r = relaxationMap.get(root)) != null) {
 			if (r.getRelaxationVars().contains(fv)) return true;
 			root = r.getResult();
@@ -608,6 +613,16 @@ public class Context implements Cloneable {
 	 */
 	public boolean isRelaxationVar(NonTerminal nt) {
 		return relaxationVars != null && relaxationVars.contains(new FreeVar(nt.toString(),null));
+	}
+	
+	/**
+	 * Return true if the argument is a relaxation variable 
+	 * and so cannot be matched with anything other than the bound variable already in scope.
+	 * @param fv free variable being checked
+	 * @return if the variable is bound already
+	 */
+	public boolean isRelaxationVar(FreeVar fv) {
+		return relaxationVars != null && relaxationVars.contains(fv);
 	}
 
 	public List<Term> getRelaxationTypes(FreeVar relaxVar) {

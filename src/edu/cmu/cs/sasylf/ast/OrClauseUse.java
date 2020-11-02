@@ -7,17 +7,11 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.util.Location;
 
-public class OrClauseUse extends ClauseUse {
+public class OrClauseUse extends AndOrClauseUse {
 
 	public OrClauseUse(Location loc, List<Element> elems, ClauseDef cd, List<ClauseUse> clauses) {
-		super(loc, elems, cd);
-		this.clauses = clauses;
+		super(loc, elems, cd, clauses);
 	}
-
-	public List<ClauseUse> getClauses() { return clauses; }
-
-	private List<ClauseUse> clauses;
-
 
 	public static OrClauseUse makeOrClause(Location loc, Context ctx, List<ClauseUse> parts) {
 		List<Element> elems = new ArrayList<Element>();
@@ -40,7 +34,7 @@ public class OrClauseUse extends ClauseUse {
 
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
-		if (clauses.isEmpty()) {
+		if (getClauses().isEmpty()) {
 			out.print("contradiction");
 		} else {
 			super.prettyPrint(out, ctx);

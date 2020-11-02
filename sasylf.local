@@ -1,4 +1,4 @@
 #!/bin/bash
 SASYLF_HOME=`dirname $0`
 cp -r $SASYLF_HOME/library/org $SASYLF_HOME/bin
-java -cp $SASYLF_HOME/bin edu.cmu.cs.sasylf.Main "$@"
+java -ea -cp $SASYLF_HOME/bin edu.cmu.cs.sasylf.Main "$@"

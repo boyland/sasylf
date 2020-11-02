@@ -33,26 +33,30 @@ ADDTESTS= \
 	examples/lambda-loc.slf \
 	examples/lambda-unicode.slf \
 	examples/lambda.slf \
+	examples/LF.slf \
 	examples/object-calculus.slf \
 	examples/poplmark-2a.slf \
 	examples/test-mutual.slf \
 	examples/test-structural.slf
-	
+
+SUBJECT=bin
+
 test: unit-test regression-test
 
 unit-test:
-	java -cp bin edu/cmu/cs/sasylf/term/UnitTests
-	java -cp bin edu/cmu/cs/sasylf/util/UnitTests
-	
+	java -cp ${SUBJECT} edu/cmu/cs/sasylf/term/UnitTests
+	java -cp ${SUBJECT} edu/cmu/cs/sasylf/util/UnitTests
+	java -cp ${SUBJECT} edu/cmu/cs/sasylf/reduction/UnitTests
+
 regression-test:
 	@echo "Regression Tests: " `echo regression/*.slf ${ADDTESTS} | wc -w`
 	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
-	  ./sasylf.local $$f 2>&1 | sed "s#Internal SASyLF error.*#$$f:0:Internal error#" | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
+	  java -ea -cp ${SUBJECT} edu.cmu.cs.sasylf.Main --root=. $$f 2>&1 | sed "s#Internal SASyLF error.*#$$f:0:Internal error#" | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
 	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
 	done
 	@echo "  Done."
 	@rm test.out
-	
+
 clean:
 	rm -rf bin SASyLF.jar org.sasylf*.jar

@@ -1,5 +1,7 @@
 // poor handling of contexts (relaxation)
 // Also a "where" clause failure
+package regression;
+
 terminals fn unit in 
 
 
@@ -55,7 +57,7 @@ theorem typing-unique:
   forall d1: Gamma |- e : tau1
   forall d2: Gamma |- e : tau2
   exists tau1 == tau2
-  proof by case analysis on d1:
+  proof by induction on d1:
     case rule
       -------------------------------- t-unit
       _: Gamma |- "("")" : unit
@@ -116,7 +118,7 @@ theorem typing-unique:
      proof by rule type-eq
     end case
 
-  end case analysis
+  end induction
 end theorem
 
 theorem typing-unique-unit:

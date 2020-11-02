@@ -32,5 +32,6 @@ and
 lemma test2 :
   forall n
   exists n + 0 = n.
+  use induction on n
   _: n + 0 = n by lemma test1 on n
 end lemma

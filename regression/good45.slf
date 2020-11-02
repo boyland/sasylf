@@ -1,0 +1,148 @@
+package regression;
+
+terminals λ value
+
+syntax
+  t ::= x
+     | λ x:T • t[x]
+     | t t
+     
+  T ::= X
+     | T → T
+     | ∀ X • T[X]
+
+  Γ ::= *
+     | Γ, X
+     | Γ, x:T
+
+judgment value: t value
+
+  ------------------ val-abs
+  λ x:T • t[x] value
+  
+judgment eval : t → t
+
+  t1 → t1'
+  -------------- E-App1
+  t1 t2 → t1' t2
+  
+  t1 value
+  t2 → t2'
+  -------------- E-App2
+  t1 t2 → t1 t2'
+  
+  t2 value
+  --------------------------- E-AppAbs
+  (λ x:T • t1[x]) t2 → t1[t2]
+  
+judgment typing: Γ ⊢ t : T
+assumes Γ
+
+  ------------- T-Var
+  Γ, x:T ⊢ x:T
+  
+  Γ, x:T ⊢ t[x] : T'
+  ------------------------ T-Abs
+  Γ ⊢ λ x:T • t[x] : T → T'
+  
+  Γ ⊢ t1 : T → T'
+  Γ ⊢ t2 : T
+  ----------------- T-App
+  Γ ⊢ t1 t2 : T'
+  
+  Γ, X ⊢ t : T[X]
+  ------------------------- T-TAbs
+  Γ ⊢ t : ∀X • T[X]
+  
+  Γ ⊢ t : ∀X • T[X]
+  Γ ⊢ T'
+  ------------------ T-TApp
+  Γ ⊢ t : T[T']
+  
+judgment typevalid: Γ ⊢ T
+assumes Γ
+
+  -------- V-Var
+  Γ, X ⊢ X
+
+  Γ ⊢ T1
+  Γ ⊢ T2
+  ----------- V-Arrow
+  Γ ⊢ T1 → T2
+  
+  Γ, X ⊢ T[X]
+  ------------- V-All
+  Γ ⊢ ∀X • T[X]
+
+theorem progress:
+    forall d: * ⊢ t : T
+    exists t value or t → t'.
+    proof by induction on d:
+        case rule
+            _: *, x : T1 ⊢ t1[x] : T2
+            ------------------------------ T-Abs
+            _: * ⊢ (λ x : T1 • t1[x]) : T1 → T2
+        is
+            _: t value by rule val-abs
+        end case
+
+        case rule
+            d0: * ⊢ t0 : (T0 → T)
+            d1: * ⊢ t1 : T0
+            ----------------------- T-App
+            _: * ⊢ (t0 t1) : T
+        is
+            p0: t0 value or t0 → t0' by induction hypothesis on d0
+            p1: t1 value or t1 → t1' by induction hypothesis on d1
+            proof by case analysis on p0:
+                case or v0: t0 value is
+                    proof by case analysis on p1:
+                        case or v1: t1 value is
+                            proof by case analysis on v0:
+                                case rule
+                                    ------------------------ val-abs
+                                    _: (λ x : T1 • t2[x]) value
+                                is
+                                    _: (λ x : T1 • t2[x]) t1 → t2[t1] by rule E-AppAbs on v1
+                                end case
+
+                            end case analysis
+                        end case
+
+                        case or e1: t1 → t1' is
+                            _: t0 t1 → t0 t1' by rule E-App2 on v0, e1
+                        end case
+
+                    end case analysis
+                end case
+
+                case or e0: t0 → t0' is
+                    _: t0 t1 → t0' t1 by rule E-App1 on e0
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            d1: *, X ⊢ t : T1[X]
+            ------------------------------- T-TAbs
+            _: * ⊢ t : (∀ X • T1[X])
+        is
+            v0: *, X ⊢ X by rule V-Var
+            v1: * ⊢ ∀ X•X by rule V-All on v0
+            d1' : * ⊢ t : T1[∀X•X] by substitution on d1, v1
+            proof by induction hypothesis on d1'
+        end case
+
+        case rule
+            d': * ⊢ t : (∀ X • T0[X])
+            _: * ⊢ T1
+            ------------------------ T-TApp
+            _: * ⊢ t : T0[T1]
+        is
+            proof by induction hypothesis on d'
+        end case
+
+    end induction
+end theorem
+

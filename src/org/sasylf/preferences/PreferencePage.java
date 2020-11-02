@@ -1,8 +1,11 @@
 package org.sasylf.preferences;
 
-import org.eclipse.jface.preference.*;
-import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.sasylf.Activator;
 
 /**
@@ -39,6 +42,11 @@ implements IWorkbenchPreferencePage {
 				new IntegerFieldEditor(
 						PreferenceConstants.FORMATTER_INDENT_SIZE,
 						"&Indentation of SASyLF constructs",
+						getFieldEditorParent()));
+		addField(
+				new BooleanFieldEditor(
+						PreferenceConstants.EDITOR_MATCHING_BRACKETS,
+						"&Enable parenthesis and bracket matching",
 						getFieldEditorParent()));
 		addField(
 				new StringFieldEditor(

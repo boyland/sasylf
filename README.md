@@ -7,3 +7,7 @@ SASyLF (pronounced "Sassy Elf") is an LF-based proof assistant specialized to ch
 See the Wiki for documentation.
 
 See README.TXT for release notes
+
+## Contributing
+
+Third-party contributors are welcome to submit pull requests.  Development requires an Eclipse "for Eclipse committers" IDE using Java 7 or 8.  JavaCC is required as well.

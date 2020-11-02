@@ -1,0 +1,192 @@
+// test lots of different kinds of inversion
+
+package regression;
+
+terminals S
+
+syntax
+  n ::= 0 | S n
+  
+  l ::= n
+  
+judgment equal: n == n
+
+  ------ nat-eq
+  n == n
+  
+judgment label-equal: l = l
+
+  ------- lab-eq
+  l = l
+  
+judgment gt: n > n
+
+  ------- gt-one
+  S n > n
+
+  n1 > n2
+  --------- gt-more
+  S n1 > n2
+
+judgment ne: n <> n
+
+  n1 > n2
+  -------- ne-gt
+  n1 <> n2
+  
+  n2 > n1
+  -------- ne-lt
+  n1 <> n2
+  
+judgment label-ne: l ≠ l
+
+  n1 <> n2
+  -------- lab-ne
+  n1 ≠ n2
+  
+theorem succ-preserves-gt:
+    forall g: n1 > n2
+    exists S n1 > S n2
+    proof by induction on g:
+        case rule
+            ------------- gt-one
+            _: (S n2) > n2
+            where n1 := S n2
+        is
+            proof by rule gt-one
+        end case
+
+        case rule
+            g': n1' > n2
+            --------------- gt-more
+            _: (S n1') > n2
+            where n1 := S n1'
+        is
+            d': S n1' > S n2 by induction hypothesis on g'
+            proof by rule gt-more on d'
+        end case
+
+    end induction
+end theorem
+
+theorem succ-cances-gt:
+    forall g: S n1 > S n2
+    exists n1 > n2 // testing motting "optional" period
+    do case analysis on n1:
+        case 0 is
+            // inversion without specifying rule
+            x: 0 > S n2 by inversion on g 
+            proof by contradiction on x
+        end case
+    end case analysis
+    // use inversion on syntax
+    use inversion on n1 where n1 := S n1'
+    use induction on g
+    do case analysis on g:
+        case rule
+            g': S n1' > S n2
+            ------------- gt-more
+            _: S S n1' > S n2
+        is
+            d': n1' > n2 by induction hypothesis on g'
+            proof by rule gt-more on d'
+        end case
+    end case analysis
+    // inversion of rule with "use"
+    use inversion on g where n1' := n2
+    proof by rule gt-one
+end theorem
+
+lemma positive-gt-zero:
+    forall n
+    exists S n > 0
+    proof by induction on n:
+        case 0 is
+            proof by rule gt-one
+        end case
+        case S n' is
+            d: S n' > 0 by induction hypothesis on n'
+            proof by rule gt-more on d
+        end case
+    end induction
+end lemma
+
+theorem eq-decidable:
+    forall n1
+    forall n2
+    exists n1 == n2 or n1 <> n2
+    do case analysis on n2:
+        case 0 is
+            proof by case analysis on n1:
+                case 0 is
+                    _: 0 == 0 by rule nat-eq
+                end case
+
+                case S n1' is
+                    g: S n1' > 0 by lemma positive-gt-zero on n1'
+                    _: S n1' <> 0 by rule ne-gt on g
+                end case
+            end case analysis
+        end case
+    end case analysis
+    use inversion on n2 where n2 := S n2'
+    proof by induction on n1:
+        case 0 is
+            g': S n2' > 0 by lemma positive-gt-zero on n2'
+            _: 0 <> S n2' by rule ne-lt on g'
+        end case
+
+        case S n1' is
+            ch: n1' == n2' or n1' <> n2' by induction hypothesis on n1', n2'
+            do case analysis on ch:
+                case or eq: n1' == n2' is
+                    // another use inversion without naming rule
+                    use inversion on eq where n2' := n1'
+                    _: n1 == n2 by rule nat-eq
+                end case
+            end case analysis
+            // ugly or inversion syntax
+            ne: n1' <> n2' by inversion of or on ch
+            do case analysis on ne:
+                case rule
+                    g': n1' > n2'
+                    ------------- ne-gt
+                    _: n1' <> n2'
+                is
+                    d: n1 > n2 by theorem succ-preserves-gt on g'
+                    _: n1 <> n2 by rule ne-gt on d
+                end case
+            end case analysis
+            // another ruleless inversion
+            g': n2' > n1' by inversion on ne
+            d: S n2' > S n1' by theorem succ-preserves-gt on g'
+            _: n1 <> n2 by rule ne-lt on d
+        end case
+
+    end induction
+end theorem
+
+theorem trichotomy:
+    forall n1
+    forall n2
+    exists n1 > n2 or n1 == n2 or n2 > n1
+    ch: n1 == n2 or n1 <> n2 by theorem eq-decidable on n1, n2
+    do case analysis on ch:
+        case or eq: n1 == n2 is
+            use inversion on eq // assuming where clause not compulsory 
+            _: n1 == n2 by rule nat-eq
+        end case
+    end case analysis 
+    ne: n1 <> n2 by inversion on ch
+    do case analysis on ne:
+        case rule 
+            gt: n1 > n2
+            ------------ ne-gt
+            _: n1 <> n2
+        is
+            _: n1 > n2 by gt
+        end case
+    end case analysis
+    x: n2 > n1 by inversion on ne
+end theorem                 
+

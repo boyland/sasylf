@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,10 +12,14 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SingletonSet;
+import edu.cmu.cs.sasylf.util.Util;
 
 public class ClauseDef extends Clause {
 	public ClauseDef(Clause copy, ClauseType type) {
@@ -266,4 +271,41 @@ public class ClauseDef extends Clause {
 			ctx.boundVarCount = origBoundVarCount;
 		}
 	}
+	@Override
+	public Set<Pair<Term, Substitution>> caseAnalyze(Context ctx, Term targetTerm,
+			Element target, Node source) {
+		Util.verify(getType() instanceof SyntaxDeclaration, "case analyze should be called on syntax clauses, not " + this);		
+		
+		List<Abstraction> context = new ArrayList<Abstraction>();
+		Term.getWrappingAbstractions(targetTerm, context);
+
+		Term term = getSampleTerm();
+		Substitution freshSub = term.freshSubstitution(new Substitution());
+		term = term.substitute(freshSub);
+		// adaptation!
+		term = ctx.adapt(term, context, true);
+
+		Util.debug("------Unify?");
+		Util.debug("term = ",term);
+		Util.debug("subj = ",targetTerm);
+		Substitution checkSub;
+		try {
+			checkSub = term.unify(targetTerm);
+		} catch (UnificationFailed ex) {
+			Util.debug("error = ",ex.getMessage());
+			Util.debug("term = ",term,": ",term.getType());
+			Util.debug("subj = ",targetTerm,": ",targetTerm.getType());
+			ErrorHandler.report(Errors.INTERNAL_ERROR, ": Unification should not fail: " + term + " ? " + targetTerm,this);
+			return null; // NOTREACHED
+		}
+		Util.debug("checking checkSub = ",checkSub);
+		if (!ctx.canCompose(checkSub)) {
+			Util.debug("can't compose.");
+			return Collections.emptySet();
+		}
+		
+		return SingletonSet.create(new Pair<Term,Substitution>(term, checkSub));
+	}
+	
+	
 }

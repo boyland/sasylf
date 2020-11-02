@@ -410,7 +410,7 @@ public class TermPrinter {
 					args2.add(it.next());
 					tt2 = ((Abstraction)tt2).getBody();
 				}
-				contents.add(appAsClause(con2,args2));
+				contents.addAll(appAsClause(con2,args2).getElements());
 			}
 		} else {
 			contents = new ArrayList<Element>(cd.getElements());

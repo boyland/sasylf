@@ -37,6 +37,7 @@ public enum Errors {
 	OTHER_JUSTIFIED   ("Claimed fact is not the one justified"),
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	MISSING_CASE			("must provide a case for "),
+	TOO_MANY_CASES	        ("Inversion cannot be used since one must provide a case for "),
 	EXTRA_CASE				("case is redundant or unnecessary"),
 	PARTIAL_CASE_ANALYSIS ("'do case analysis' only handles special cases, you need a full proof still"),
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
@@ -46,9 +47,10 @@ public enum Errors {
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	SYNTAX_CASE_FOR_DERIVATION ("When case-analyzing a derivation, must use rule cases, not syntax cases"),
+	SYNTAX_CASE_FOR_DISJUNCTION ("When case-analyzing a disjunction, must use 'or' cases, not syntax cases"),
 	UNBOUND_VAR_CASE,
-	VAR_REBOUND ("This variable already has been declared here."),
-	VAR_UNBOUND ("This variable has not been declared here."),
+	VAR_REBOUND ("This variable already has been declared here: "),
+	VAR_UNBOUND ("This variable has not been declared here: "),
 	DERIVATION_NOT_FOUND,
 	NONTERMINAL_CASE,
 	INVALID_CASE,
@@ -62,6 +64,7 @@ public enum Errors {
 	JUDGMENT_EXPECTED,
 	SYNTAX_EXPECTED ("cannot create judgment by syntax"),
 	WRONG_JUDGMENT,
+	WRONG_RULE,
 	EMPTY_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have an empty context"), 
 	VAR_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have a context with variables"),
 	PREMISE_CONTEXT_MISMATCH ("premise cannot use a context variable not present in conclusion"),
@@ -91,6 +94,7 @@ public enum Errors {
 	ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
 	OR_SYNTAX("can only or 'or' with judgments, not syntax"),
 	OR_CASE_NOT_APPLICABLE("derivation under consideration is not a disjunction"),
+	UNIFICATION_INCOMPLETE("Unification incomplete for case "),
 	INTERNAL_ERROR("SASyLF Internal Error")
 	;
 

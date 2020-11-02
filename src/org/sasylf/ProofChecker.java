@@ -40,7 +40,9 @@ import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Report;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.TaskReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -99,32 +101,35 @@ public class ProofChecker  {
 	}
 
 
-	private static final String MARKER_ID = Marker.MARKER_ID;
-
-	private static void reportProblem(ErrorReport report, IDocument doc, IResource res) {
+	private static void report(Report report, IDocument doc, IResource res) {
 		IMarker marker;
+		String markerId;
+		if (report instanceof ErrorReport) markerId = Marker.ERROR_MARKER_ID;
+		else if (report instanceof TaskReport) markerId = Marker.TASK_MARKER_ID;
+		else markerId = Marker.UNKNOWN_MARKER_ID;
 		try {
-			marker = res.createMarker(MARKER_ID);
-			marker.setAttribute(IMarker.MESSAGE, report.getShortMessage());
-			System.out.println(report.getShortMessage());
-			marker.setAttribute(IMarker.LINE_NUMBER, report.loc.getLocation().getLine());
+			marker = res.createMarker(markerId);
+			marker.setAttribute(IMarker.MESSAGE, report.getMessage());
+			marker.setAttribute(IMarker.LINE_NUMBER, report.getSpan().getLocation().getLine());
 			try {
-				Position p = DocumentUtil.getPosition(report.loc, doc);
+				Position p = DocumentUtil.getPosition(report.getSpan(), doc);
 				marker.setAttribute(IMarker.CHAR_START, p.offset);
 				marker.setAttribute(IMarker.CHAR_END, p.offset+p.length);
 			} catch (BadLocationException e) {
 				System.err.println("bad location? " + e);
 			}
-
-			marker.setAttribute(IMarker.SEVERITY,
-					report.isError ? IMarker.SEVERITY_ERROR
-							: IMarker.SEVERITY_WARNING);
-			if (report.errorType != null) {
-				marker.setAttribute(Marker.SASYLF_ERROR_TYPE, report.errorType.toString());
-			}
-			marker.setAttribute(Marker.SASYLF_ERROR_INFO, report.debugInfo);
-			if (MarkerResolutionGenerator.hasProposals(marker)) {
-				marker.setAttribute(Marker.HAS_QUICK_FIX, true);
+			if (report instanceof ErrorReport) {
+				ErrorReport er = (ErrorReport)report;
+				marker.setAttribute(IMarker.SEVERITY,
+						report.isError() ? IMarker.SEVERITY_ERROR
+								: IMarker.SEVERITY_WARNING);
+				if (er.errorType != null) {
+					marker.setAttribute(Marker.SASYLF_ERROR_TYPE, er.errorType.toString());
+				}
+				marker.setAttribute(Marker.SASYLF_ERROR_INFO, er.debugInfo);
+				if (MarkerResolutionGenerator.hasProposals(marker)) {
+					marker.setAttribute(Marker.HAS_QUICK_FIX, true);
+				}
 			}
 		} catch (CoreException e) {
 			e.printStackTrace();
@@ -133,7 +138,8 @@ public class ProofChecker  {
 
 	public static void deleteAuditMarkers(IResource project) {
 		try {
-			project.deleteMarkers(MARKER_ID, false, IResource.DEPTH_INFINITE);
+			project.deleteMarkers(Marker.ERROR_MARKER_ID, false, IResource.DEPTH_INFINITE);
+			project.deleteMarkers(Marker.TASK_MARKER_ID, false, IResource.DEPTH_INFINITE);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
@@ -264,9 +270,9 @@ public class ProofChecker  {
 			e.printStackTrace();
 		} finally {
 			deleteAuditMarkers(res);
-			for (ErrorReport er : ErrorHandler.getReports()) {
-				reportProblem(er, doc, res);
-				++errors;
+			for (Report r : ErrorHandler.getReports()) {
+				report(r, doc, res);
+				if (r instanceof ErrorReport) ++errors;
 			}
 			ErrorHandler.clearAll();
 		}

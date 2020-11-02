@@ -6,12 +6,12 @@ public class SASyLFError extends RuntimeException {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private ErrorReport report;
+	private Report report;
 
-	SASyLFError(ErrorReport report) {  // package-private constructor - can only be called from ErrorHandler
-		super(report.getMessage());
+	SASyLFError(Report report) {  // package-private constructor - can only be called from ErrorHandler
+		super(report.formatMessage());
 		this.report = report;
 	}
 
-	public ErrorReport getReport() { return report; }
+	public Report getReport() { return report; }
 }

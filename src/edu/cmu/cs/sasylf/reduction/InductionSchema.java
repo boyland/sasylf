@@ -65,6 +65,9 @@ public abstract class InductionSchema {
 	@Override
 	public abstract int hashCode();
 
+	/**
+	 * The default induction scheme which does not permit induction (recursion) in theorems.
+	 */
 	public static final InductionSchema nullInduction = LexicographicOrder.create();
 
 	/**

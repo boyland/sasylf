@@ -1,11 +1,10 @@
 package edu.cmu.cs.sasylf.util;
 
 
-public class ErrorReport {
+public class ErrorReport extends Report {
 	public ErrorReport(Errors errorType, String msg, Span loc, String debugInfo, boolean isError) {
+		super(loc,msg);
 		this.errorType = errorType;
-		this.customMessage = msg;
-		this.loc = loc;
 		this.debugInfo = debugInfo;
 		this.isError = isError;
 	}
@@ -13,31 +12,33 @@ public class ErrorReport {
 	/**
 	 * @return The detailed error message including file, line, and actual error text message
 	 */
-	public String getMessage() {
-		String msg = loc == null ? "unknown file: " : loc.getLocation().toString() + ": ";
-		if (!isError)
+	@Override
+	public String formatMessage() {
+		String msg = getSpan() == null ? "unknown file: " : getSpan().getLocation().toString() + ": ";
+		if (!isError())
 			msg = msg + "warning: ";
-		msg = msg + getShortMessage();
+		msg = msg + getMessage();
 		return msg;
 	}
 
 	/**
 	 * @return The actual error text message
 	 */
-	public String getShortMessage() {
+	@Override
+	public String getMessage() {
 		String msg = "";
 		if (errorType != null)
-			msg = msg + errorType.getText();
-		msg = msg + customMessage;
+			msg = errorType.getText();
+		msg = msg + super.getMessage();
 		return msg;
 	}
 
-
-
+	@Override
+	public boolean isError() {
+		return isError;
+	}
 
 	public final Errors errorType;
-	public final String customMessage;
-	public final Span loc;
 	public final String debugInfo;
-	public final boolean isError;
+	private final boolean isError;
 }

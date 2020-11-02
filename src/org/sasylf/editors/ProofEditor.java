@@ -11,18 +11,23 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
+import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.ICharacterPairMatcher;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Composite;
@@ -34,12 +39,17 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
+import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
+import org.sasylf.Activator;
 import org.sasylf.Proof;
 import org.sasylf.ProofChecker;
 import org.sasylf.handlers.QuickFixHandler;
+import org.sasylf.preferences.PreferenceConstants;
+import org.sasylf.preferences.PreferenceInitializer;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
+import org.sasylf.util.PreferenceTransfer;
 import org.sasylf.views.ProofOutline;
 
 import edu.cmu.cs.sasylf.ast.Case;
@@ -117,6 +127,18 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	public ISourceViewer getPublicSourceViewer() {
 		return super.getSourceViewer();
 	}
+	
+	  /**
+	   * Return the cursor position as an offset within the document.
+	   * (Why isn't this standard?)
+	   * @return offset with the document of the editor "caret".
+	   * @see #getCursorPosition()
+	   */
+	  public int getCursorOffset() {
+	    final ISourceViewer sourceViewer = getSourceViewer();
+	    StyledText styledText= sourceViewer.getTextWidget();
+	    return widgetOffset2ModelOffset(sourceViewer, styledText.getCaretOffset());
+	  }
 
 	private ProofOutline fOutlinePage;
 
@@ -129,11 +151,12 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		return fOutlinePage;	  
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getAdapter(Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (IContentOutlinePage.class.equals(adapter)) {
-			return getProofOutline();
+			@SuppressWarnings("unchecked")
+			T outline = (T)getProofOutline();
+			return outline;
 		}
 		return super.getAdapter(adapter);
 	}
@@ -160,7 +183,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	public void init(IEditorSite site, IEditorInput input)
 			throws PartInitException {
 		super.init(site, input);
-		IContextService service = (IContextService) site.getService(IContextService.class);
+		IContextService service = site.getService(IContextService.class);
 		if (service == null) {
 			System.err.println("can't find a context service");
 		} else {
@@ -309,6 +332,37 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		return annotationModel;
 	}
 
+	// https://insights.sigasi.com/tech/how-implement-highlight-matching-brackets-your-custom-editor-eclipse/
+	@Override
+	protected void configureSourceViewerDecorationSupport (SourceViewerDecorationSupport support) {
+		super.configureSourceViewerDecorationSupport(support);		
+		
+		char[] matchChars = {'(', ')', '[', ']'};	
+		ICharacterPairMatcher matcher = new DefaultCharacterPairMatcher(matchChars ,
+				IDocumentExtension3.DEFAULT_PARTITIONING);
+		support.setCharacterPairMatcher(matcher);
+		support.setMatchingCharacterPainterPreferenceKeys(
+				PreferenceConstants.EDITOR_MATCHING_BRACKETS,
+				PreferenceConstants.EDITOR_MATCHING_BRACKETS_COLOR);
+		initEditorPreferences();
+	}
+
+	private static volatile boolean transfered = false;
+	
+	/**
+	 * Set up the editor preferences to get relevant SASyLF preferences.
+	 * This needs to happen only once.
+	 */
+	protected void initEditorPreferences() {
+		if (!transfered) {
+			transfered = true;
+			IPreferenceStore store = getPreferenceStore();
+			PreferenceInitializer.initializeEditorPreferences(store);
+			PreferenceTransfer.copy(Activator.getDefault().getPreferenceStore(), store, 
+					PreferenceConstants.EDITOR_MATCHING_BRACKETS,
+					PreferenceConstants.EDITOR_MATCHING_BRACKETS_COLOR);
+		}
+	}
 
 	@Override
 	public void proofChecked(IFile file, Proof pf, int errors) {

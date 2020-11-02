@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,26 @@ public class Substitution {
 	private Map<FreeVar, Term> varMap = new HashMap<FreeVar, Term>();
 	private Map<FreeVar, Term> unmodifiableMap;
 	
-	public Substitution() { }
+	private boolean wellFormed() {
+		if (varMap == null) {
+			if (unmodifiableMap == null || unmodifiableMap.isEmpty()) return true;
+			return Util.report("immutable cache of empty substitution is wrong: " + unmodifiableMap);
+		}
+		Set<FreeVar> freeSet = new HashSet<>();
+		for (Map.Entry<FreeVar, Term> e : varMap.entrySet()) {
+			e.getValue().getFreeVariables(freeSet);
+			freeSet.retainAll(varMap.keySet());
+			if (!freeSet.isEmpty()) return Util.report("badly formed substitution: both maps " + freeSet + " and uses in binding " + e.getKey() + " -> " + e.getValue());
+		}
+		if (unmodifiableMap != null) {
+			if (!unmodifiableMap.equals(varMap)) return Util.report("Immutable cahce is wrong " + unmodifiableMap);
+		}
+		return true;
+	}
+	
+	public Substitution() { 
+		assert wellFormed() : "Invariant failed in constructor";
+	}
 
 	/** var may not be free in term
 	 */
@@ -41,6 +61,7 @@ public class Substitution {
 	/** Copy constructor */
 	public Substitution(Substitution other) {
 		varMap.putAll(other.varMap);
+		assert wellFormed() : "Invariant failed in copy constructor";
 	}
 
 	/**
@@ -93,13 +114,20 @@ public class Substitution {
 			}
 		}
 
+		assert wellFormed() : "Invariant broken in selecUnavoidable";
 		return result;
 	}
 
-	/** guarantees compositionality, ensures no recursion in substitution (including mutual recursion)
+	/** 
+	 * Add a binding to this substitution.  The binding is substituted to follow
+	 * the current substitution, thus
+	 * guaranteeing compositionality, ensures no recursion in substitution (including mutual recursion)
 	 * but allows substituting X for X (this leaves the map unchanged). If the variable
 	 * already has a binding, the two values are unified, which might produce a
 	 * unification exception, which must be caught.
+	 * <p>
+	 * This method cannot be used to 'rotate' a substitution
+	 * unless the original binding is removed first.
 	 * @throws EOCUnificationFailed occurrence check failed (var bound to something including itself)
 	 * @throws UnificationFailed two binding for the variable failed to unify.
 	 */
@@ -137,11 +165,13 @@ public class Substitution {
 			Term oldTerm = varMap.get(var);
 			Substitution unifier = oldTerm.unify(tSubstituted);
 			tSubstituted = tSubstituted.substitute(unifier);
+			assert wellFormed() : "Invariant fails on recursive call to compose";
 			compose(unifier);
 		}
 
 		// add the new entry to the map
 		varMap.put(var, tSubstituted);
+		assert wellFormed() : "Invariant failed at end of 'add'";
 	}
 
 	/**
@@ -151,10 +181,13 @@ public class Substitution {
 	 * @return former mapping for this variable.
 	 */
 	public Term remove(FreeVar v) {
-		return varMap.remove(v);
+		Term result = varMap.remove(v);
+		assert wellFormed() : "Invariant broken in remove";
+		return result;
 	}
 
 	public void removeAll(Collection<FreeVar> col) {
+		assert wellFormed() : "Invariant broken in removeAll";
 		varMap.keySet().removeAll(col);
 	}
 	
@@ -186,28 +219,111 @@ public class Substitution {
 		return result;
 	}
 	
+	/**
+	 * Check whether this substitution can be successfully added to this.
+	 * There are two reasons why substitution might not be permitted:
+	 * <ol>
+	 * <li> The second substitution re-introduces a variable the first one substituted, 
+	 * but does not successfully map it back to itself.</li>
+	 * <li> The second substitution maps an existing variable to a different thing than the first.
+	 * </ol>
+	 * @param other another composition, must not be null
+	 * @param doit start performing the substitution, by removing mappings.
+	 * If a problem happens, we throw an exception
+	 * @throws IllegalArgumentException if doit and the result is false.
+	 * NB: this object is unchanged when the exception is thrown
+	 * @return false 
+	 */
+	protected boolean checkComposition(Substitution other, boolean doIt) throws IllegalArgumentException {
+		Set<FreeVar> common = new HashSet<>(varMap.keySet());
+		common.retainAll(other.varMap.keySet());
+		for (FreeVar fv : common) {
+			Term t1 = varMap.get(fv).substitute(other);
+			Term t2 = other.varMap.get(fv);
+			if (!t1.equals(t2)) {
+				Util.debug( t1, " is not equal to ", t2, " when trying ", this, ".compose(", other, ")");
+				if (!doIt) return false;
+				throw new IllegalArgumentException(this + " cannot compose " + other + " because of inconsistency for " + fv);				
+			}
+		}
+		Set<FreeVar> free = other.getFreeVariables();
+		for (Iterator<FreeVar> it = free.iterator(); it.hasNext(); ) {
+			FreeVar fv = it.next();
+			if (varMap.containsKey(fv)) {
+				Term newTerm = varMap.get(fv).substitute(other);
+				if (fv != newTerm.getEtaEquivFreeVar()) {
+					Util.debug(newTerm, " is not ", fv, " when trying ", this, ".compose(", other, ")");
+					if (!doIt) return false;
+					throw new IllegalArgumentException(this + " cannot compose " + other + " because of occurs on " + fv);
+				}
+			} else it.remove();
+		}
+		if (doIt && !free.isEmpty()) varMap.keySet().removeAll(free);
+		return true;
+	}
+	
+	/**
+	 * Return true if the parameter can be successfully composed with this one.
+	 * It returns false if the substitution would cause an occurs-check problem
+	 * or an inconsistency.
+	 * @param other another substitution.  If null, this method returns false.
+	 * @return whether this substitution received this substitution in composition.
+	 */
+	public boolean canCompose(Substitution other) {
+		if (other == null) return false;
+		if (other == this) return true;
+		return checkComposition(other,false);
+	}
+	
 	/** Modifies this substitution to incorporate the existing
-	 * substitution plus the other substitution.
+	 * substitution plus the other substitution.  This method supports "rotating"
+	 * a substitution (e.g. changing A -> B to B -> A), but not "reintroducing" 
+	 * a variable that was mapped already to something other than a variable.
+	 * @see #merge(Substitution)
 	 */
 	public void compose(Substitution other) {
+		if (other == this) return; // NOP
+		
+		checkComposition(other,true);
+		
+		for (Map.Entry<FreeVar,Term> e : varMap.entrySet()) {
+			e.setValue(e.getValue().substitute(other));
+		}
+		
 		for (FreeVar v : other.varMap.keySet()) {
-			//if (varMap.containsKey(v))
-			//throw new RuntimeException("bad composition: " + this + " and " + other);
-			add(v, other.varMap.get(v));
+			if (!varMap.containsKey(v)) {
+				varMap.put(v, other.varMap.get(v));
+			}
 		}
 
-		//return this;
+		assert wellFormed() : "composition broken invariant";
+	}
+	
+	/**
+	 * Combine the argument substitution with this one.
+	 * If they both map the same variable, we unify their results,
+	 * which might cause a unification error (incomplete or failure).
+	 * This method cannot be used to (reliably) perform a "rotation" of a variable.
+	 * @param other another substitution, must be null
+	 */
+	public void merge(Substitution other) throws UnificationFailed {
+		if (other == this) return; // NOP
+		for (FreeVar v : other.varMap.keySet()) {
+			add(v, other.varMap.get(v));
+		}
 	}
 
 	public final void incrFreeDeBruijn(int amount) {
 		for (FreeVar v: varMap.keySet()) {
 			varMap.put(v, varMap.get(v).incrFreeDeBruijn(amount));
 		}
+		assert wellFormed() : "Invariant broken in incrFreeDeBruijn";
 	}
 	
 	public Map<FreeVar, Term> getMap() {
 		if (unmodifiableMap == null)
 			unmodifiableMap = Collections.unmodifiableMap(varMap);
+		assert wellFormed() : "invariant broken in getMap()";
 		return unmodifiableMap;
 	}
 

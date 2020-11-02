@@ -1,14 +1,20 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -137,7 +143,7 @@ public class Judgment extends Node implements ClauseType {
 	 * @param c constant to check
 	 * @return rule usign this constant, or null if none found
 	 */
-	public Rule findRule(Constant c) {
+	public CanBeCase findRule(Constant c) {
 		for (Rule r : rules) {
 			if (r.getRuleAppConstant() == c) return r;
 		}
@@ -161,5 +167,26 @@ public class Judgment extends Node implements ClauseType {
 	}
 
 	private Constant term = null;
+
+	@Override
+	public void analyze(Context ctx, Element target, Node source, 
+			Map<CanBeCase, Set<Pair<Term, Substitution>>>  result) {
+		if (isAbstract()) {
+			ErrorHandler.report("Cannot case analyze an abstract judgment: " + getName(),source);
+		}
+		Util.verify(target instanceof ClauseUse, "Judgment#analyze called with bad element: " + target);
+		ClauseUse cl = (ClauseUse)target;
+		Term t = ctx.toTerm(target);
+		for (Rule rule : getRules()) {
+			Set<Pair<Term,Substitution>> caseResult = null;
+			if (rule.isInterfaceOK()) {
+				caseResult = rule.caseAnalyze(ctx, t, cl, source);
+			}
+			if (caseResult == null) caseResult = Collections.emptySet(); 
+			result.put(rule, caseResult);
+		}
+	}
+	
+	
 }
 

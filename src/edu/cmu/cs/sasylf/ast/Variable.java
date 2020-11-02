@@ -134,7 +134,7 @@ public class Variable extends Element {
 	@Override
 	public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
 		int index = -1;
-		for (int i = 0; i < varBindings.size(); ++i) {
+		for (int i = varBindings.size()-1; i >= 0; --i) {
 			if (varBindings.get(i).first.equals(symbol)) {
 				index = i;
 				break;

@@ -2110,6 +2110,7 @@ theorem divrem-implies-gt-quotient:
       proof by lemma succ-preserves-gt on g2'
     end case
   end case analysis
+  use induction on d
   proof by case analysis on d:
     case rule
       _: n2 > n1

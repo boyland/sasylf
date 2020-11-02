@@ -23,6 +23,7 @@ import edu.cmu.cs.sasylf.grammar.Rule;
 import edu.cmu.cs.sasylf.grammar.RuleNode;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -138,6 +139,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 	}
 
+	@Override
+	public String getName() {
+		return this.toString();
+	}
 	public static boolean addSpace(Element e1, Element e2) {
 		if (!(e2 instanceof Terminal)) return true;
 		String thisTerminal = e2.toString();
@@ -438,16 +443,15 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 							subClause = stack.pop();
 						}
 					}
-					subClause.elements.add(element);
+					if (subClause.elements.isEmpty()) { // first to add!
+						subClause.setLocation(element.getLocation());
+					}
+					subClause.add(element);
 				}
 				// using a subClause forces the error to print correctly.
 				Element e = subClause.parseClause(ctx,inBinding,g,sublist,null);
 				if (e instanceof ClauseUse) {
 					ClauseUse cu = (ClauseUse)e;
-					if (!clauses.isEmpty() && cu.getElements().size() > 0) {
-						// set location, which otherwise refers to the whole thing
-						cu.setLocation(cu.getElements().get(0).getLocation());
-					}
 					ClauseType ty = cu.getConstructor().getType();
 					if (ty instanceof Judgment) types.add((Judgment)ty);
 					else ErrorHandler.report("cannot "+sepList.get(0)+" syntax only judgments", this);
@@ -503,7 +507,14 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			ErrorHandler.report("Cannot parse any syntactic case or judgment for expression "+ this /*+ " with  " + symList/*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
 		} catch (AmbiguousSentenceException e) {
-			if (e.getParseTrees().size() == 1)
+			final Set<RuleNode> trees = e.getParseTrees();
+			Util.debug_parse("ambiguous trees number: "+trees.size());
+			if (Util.DEBUG_PARSE) {
+				for (ParseNode pn : trees) {
+					printTreeVerbose(pn,1);
+				}
+			}
+			if (trees.size() == 1)
 				debug_parse("ambiguous parse trees are actually equal!");
 			// if inBinding and only one parse tree has a potentially variable type, try to escape
 			if (inBinding) {
@@ -513,7 +524,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				}
 				//System.err.println(varTypes.toString());
 				Set<RuleNode> keptTrees = new HashSet<RuleNode>();
-				for (RuleNode tree : e.getParseTrees()) {
+				for (RuleNode tree : trees) {
 					String key = ((RuleNode)tree.getChildren().get(0)).getRule().getLeftSide().toString();
 					if (varTypes.contains(key))
 						keptTrees.add(tree);
@@ -531,7 +542,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				Symbol grmSymbol = nt.getGrmSymbol();
 				RuleNode follows = null;
 				int found = 0;
-				for (RuleNode tree : e.getParseTrees()) {
+				for (RuleNode tree : trees) {
 					Rule treeRule = tree.getRule();
 					List<Symbol> symbols = treeRule.getRightSide();
 					if (symbols.size() == 1 && symbols.get(0) == grmSymbol) {
@@ -542,10 +553,25 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (found == 1)
 					return computeClause(follows);
 			}
-			
+						
 			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " +
-				e.getParseTrees() /*+" with elements " + elemTypes*/, this);
+				trees /*+" with elements " + elemTypes*/, this);
 			throw new RuntimeException("should be unreachable");
+		}
+	}
+	
+	public static void printTreeVerbose(ParseNode pn, int indent) {
+		for (int i=0; i < indent; ++i) {
+			System.out.print("  ");
+		}
+		if (pn instanceof RuleNode) {
+			RuleNode rn = (RuleNode)pn;
+			System.out.println(rn.getRule());
+			for (ParseNode ch : rn.getChildren()) {
+				printTreeVerbose(ch,indent+1);
+			}
+		} else {
+			System.out.println(pn);
 		}
 	}
 
@@ -639,6 +665,11 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		PrintWriter pw = new PrintWriter(sw);
 		prettyPrint(pw);
 		return sw.toString();*/
+	}
+	@Override
+	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, Element target,
+			Node source) {
+		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
 }

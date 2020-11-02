@@ -13,9 +13,9 @@ public class ErrorHandler {
 		if (loc == null)
 			loc = lastSpan.get();
 		ErrorReport rep = new ErrorReport(errorType, msg, loc, debugInfo, isError);
-		reports.get().add(rep);
+		logReport(rep);
 		if (print)
-			System.err.println(rep.getMessage());
+			System.err.println(rep.formatMessage());
 		if (debugInfo != null && edu.cmu.cs.sasylf.util.Util.EXTRA_ERROR_INFO)
 			System.err.println(debugInfo);
 		if (isError) {
@@ -23,6 +23,13 @@ public class ErrorHandler {
 		}
 	}
 
+	public static void report(Report r, boolean print) {
+		logReport(r);
+		if (print) {
+			System.err.println(r.formatMessage());
+		}
+	}
+	
 	public static void recoverableError(Errors x, Span obj) {
 		try {
 			report(x,obj);
@@ -115,20 +122,33 @@ public class ErrorHandler {
 		report(errorType, msg, obj, debugInfo, true, true);
 	}
 
-	public static List<ErrorReport> getReports() { return reports.get(); }
+	private static void logReport(Report r) {
+		reports.get().add(r);
+	}
+	
+	public static List<Report> getReports() { return reports.get(); }
+	/**
+	 * Start a new check session.
+	 */
 	public static void clearAll() {
 		reports.remove();
 		FreeVar.reinit();
 	}
 	public static int getErrorCount() {
 		int errorCount = 0;
-		for (ErrorReport r : reports.get()) {
-			if (r.isError) ++errorCount;
+		for (Report r : reports.get()) {
+			if (r.isError()) ++errorCount;
 		}
 		return errorCount;
 	}
 	public static int getWarningCount() { 
-		return reports.get().size() - getErrorCount();
+		int warnCount = 0;
+		for (Report r : reports.get()) {
+			if (r.isError()) continue;
+			if (!(r instanceof ErrorReport)) continue;
+			++warnCount;
+		}
+		return warnCount;
 	}
 
 	public static void recordLastSpan(Span s) {
@@ -139,10 +159,10 @@ public class ErrorHandler {
 
 	private static ThreadLocal<Span> lastSpan = new ThreadLocal<Span>();
 
-	private static ThreadLocal<List<ErrorReport>> reports = new ThreadLocal<List<ErrorReport>>(){
+	private static ThreadLocal<List<Report>> reports = new ThreadLocal<List<Report>>(){
 		@Override
-		protected List<ErrorReport> initialValue() {
-			return new ArrayList<ErrorReport>();
+		protected List<Report> initialValue() {
+			return new ArrayList<Report>();
 		}
 	};
 

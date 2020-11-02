@@ -1,5 +1,6 @@
 // SASyLF would crash if a syntax pattern used a meta-variable
 // with inconsistent bindings.
+package regression;
 
 terminals fn Unit unit
 

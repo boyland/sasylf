@@ -1,6 +1,6 @@
 // parsing didn't terminate until 1.3.3
 
-package ch.ethz.inf.ts.hw10;
+package regression;
 
 terminals λ µ fold unfold Top
 

@@ -40,6 +40,20 @@
       </persistent>
    </extension>
    <extension
+         id="org.sasylf.taskmarker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.taskmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   
+   <extension
          point="org.eclipse.ui.handlers">
       <handler
             class="org.sasylf.handlers.CheckProofsHandler"
@@ -63,6 +77,18 @@
             contextId="org.sasylf.context"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+I">
+      </key>
+      <key
+            commandId="org.sasylf.commands.addComment"
+            contextId="org.sasylf.context"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+/">
+      </key>
+      <key
+            commandId="org.sasylf.commands.removeComment"
+            contextId="org.sasylf.context"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+\">
       </key>
    </extension>
    
@@ -389,6 +415,20 @@
             description="Correct indentation of lines in selection"
             id="org.sasylf.commands.reindent"
             name="Correct Indentation">
+      </command>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            defaultHandler="org.sasylf.handlers.AddCommentHandler"
+            description="Comment out all lines selected (or current line)"
+            id="org.sasylf.commands.addComment"
+            name="Add Comment">
+      </command>
+      <command
+            categoryId="org.sasylf.commands.proofs"
+            defaultHandler="org.sasylf.handlers.RemoveCommentHandler"
+            description="Uncomment all lines selected (or current line)"
+            id="org.sasylf.commands.removeComment"
+            name="Remove Comment">
       </command>
       <command
             defaultHandler="org.sasylf.handlers.OpenDeclarationHandler"
