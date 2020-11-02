@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -226,5 +227,10 @@ public class DerivationByInversion extends DerivationWithArgs {
 			Pair<Fact, Integer> newPair = new Pair<Fact,Integer>(pair.first,pair.second+1);
 			ctx.subderivations.put(this,newPair);
 		} 
+	}
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		ruleName.visit(consumer);
 	}
 }

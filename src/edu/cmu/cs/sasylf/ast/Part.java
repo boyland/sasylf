@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * A part of a compilation unit/module.
@@ -28,4 +29,6 @@ public interface Part {
 	 * @param map destination, must not be null.
 	 */
 	public abstract void collectRuleLike(Map<String,? super RuleLike> map);
+	
+	public abstract void collectQualNames(Consumer<QualName> consumer);
 }

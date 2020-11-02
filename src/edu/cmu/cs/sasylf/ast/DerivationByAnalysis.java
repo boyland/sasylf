@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -463,4 +464,11 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 
 	private List<Case> cases = new ArrayList<Case>();
 	private Fact targetDerivation;
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Case c : cases) {
+			c.collectQualNames(consumer);
+		}
+	}
 }

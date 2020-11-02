@@ -106,6 +106,7 @@ public class ProofChecker  {
 		try {
 			marker = res.createMarker(MARKER_ID);
 			marker.setAttribute(IMarker.MESSAGE, report.getShortMessage());
+			System.out.println(report.getShortMessage());
 			marker.setAttribute(IMarker.LINE_NUMBER, report.loc.getLocation().getLine());
 			try {
 				Position p = DocumentUtil.getPosition(report.loc, doc);
@@ -175,7 +176,7 @@ public class ProofChecker  {
 	 */
 	public static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res) {
 		IDocument doc = EclipseUtil.getDocumentFromResource(res);
-		IFile f = (IFile)res.getAdapter(IFile.class);
+		IFile f = res.getAdapter(IFile.class);
 		if (doc == null && f == null) {
 			System.out.println("cannot get contents of resource");
 			return null;

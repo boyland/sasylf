@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -88,5 +89,8 @@ public class RenameJudgment extends Judgment {
 		return super.computeTypeTerm();
 	}
 
-	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		source.visit(consumer);
+	}
 }
