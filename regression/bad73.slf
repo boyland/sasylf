@@ -1,0 +1,49 @@
+package regression;
+
+terminals λ bound in
+
+syntax
+   t ::= λ x • t[x]
+      | t t
+      | x
+
+   Γ ::= *
+      | Γ, x bound
+
+judgment variable: t bound in Γ
+assumes Γ
+
+  ----------------------- var
+  x bound in (Γ, x bound)
+  
+judgment any : Γ |- t ~> t
+assumes Γ
+
+
+  --------------------------- any-beta
+  Γ |- (λ x • t1[x]) t2 ~> t1[t2]
+
+  Γ |- t1 ~> t1'
+  ----------------------------- any-app-1
+  Γ |- t1 t2 ~> t1' t2
+
+  Γ |- t2 ~> t2'
+  ----------------------------- any-app-2
+  Γ |- t1 t2 ~> t1 t2'
+
+      Γ, x bound |- t[x] ~> t'[x]
+   ------------------------------- any-inside
+   Γ |- λ x • t[x] ~> λ x • t'[x]
+
+theorem cannot-work:
+    assumes Γ
+    forall t assumes Γ
+    exists Γ |- t ~> t' .
+    do case analysis on t:
+        case λ x • t1[x] is
+	   e: Γ, x bound |- t1[x] ~> t1'[x] by induction hypothesis on (t[x] assumes Γ, x bound)//! bad var -- interal error in all sasylf prior to 1.5.0a5
+	   proof by rule any-inside on e
+	end case
+    end case analysis
+    proof by unproved //! expected
+end theorem
