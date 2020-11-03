@@ -3,10 +3,11 @@ package edu.cmu.cs.sasylf.ast;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.StringSpan;
 
 public class DerivationByTheorem extends DerivationByIHRule {
 
-	public DerivationByTheorem(String n, Location l, Clause c, QualName name, String kind) {
+	public DerivationByTheorem(String n, Location l, Clause c, QualName name, StringSpan kind) {
 		super(n, l, c);
 		theoremName = name;
 		setEndLocation(name.getEndLocation());
@@ -33,18 +34,18 @@ public class DerivationByTheorem extends DerivationByIHRule {
 				ErrorHandler.report(Errors.RULE_BAD, theoremName.toString(), this);
 			}
 			if (!(theorem instanceof Theorem)) {
-				if (theoremKind.length() == 0) {
+				if (theoremKind == null || theoremKind.length() == 0) {
 					String kind = "rule";
-					ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, "by\nby "+kind);
+					ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, theoremName, "by\nby "+kind);
 				} else {
-					ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName.toString(), this, theoremKind +"\nrule");
+					ErrorHandler.recoverableError(Errors.RULE_NOT_THEOREM, theoremName.toString(), theoremKind, theoremKind +"\nrule");
 				}
 			} else { 
 				String kind = ((Theorem)theorem).getKind();
-				if (theoremKind.length() == 0) {
-					ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, this, "by\nby "+kind);
-				} else if (!kind.equals(theoremKind)) {
-					ErrorHandler.recoverableError(Errors.THEOREM_KIND_WRONG, theoremKind + " " + theoremName, this, theoremKind+"\n"+kind);
+				if (theoremKind == null || theoremKind.length() == 0) {
+					ErrorHandler.recoverableError(Errors.THEOREM_KIND_MISSING, kind, theoremName, "by\nby "+kind);
+				} else if (!kind.equals(theoremKind.toString())) {
+					ErrorHandler.recoverableError(Errors.THEOREM_KIND_WRONG, theoremKind + " " + theoremName, theoremKind, theoremKind+"\n"+kind);
 				}
 			}
 		}
@@ -69,7 +70,7 @@ public class DerivationByTheorem extends DerivationByIHRule {
 		return " by " + theoremKind + " " + theoremName;
 	}
 
-	private String theoremKind;
+	private StringSpan theoremKind;
 	private QualName theoremName;
 	private RuleLike theorem;
 

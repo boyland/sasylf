@@ -1994,7 +1994,7 @@ Derivation Justification(Token startT, Clause c) :
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
     { return d; }
-  | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, t.image); }
+  | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, new StringSpan(t)); }
     [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
     ]
@@ -2098,14 +2098,14 @@ Derivation Justification(Token startT, Clause c) :
       d.setEndLocation(Location.endOf(t)); 
       return d; }
   | LOOKAHEAD({isRulePart2()}) qn = QualName() 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, ""); }
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
      (<ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* | {} )
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
        return d;
      }
   | LOOKAHEAD(2) t=<IDENTIFIER> {qn = new QualName(new Location(t), t.image);} 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, ""); }
+     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
      <ON> cl=SimpleExpr() { d.addArgString(cl); }
       ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));

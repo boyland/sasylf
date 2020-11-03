@@ -19,6 +19,10 @@ public class StringSpan extends DefaultSpan {
 		this.shiftEndLocation(s.length());
 	}
 
+	public int length() {
+		return builder.length();
+	}
+	
 	@Override
 	public String toString() {
 		return builder.toString();
