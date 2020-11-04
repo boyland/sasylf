@@ -174,4 +174,60 @@ lemma invert-B-App:
     proof by inversion of B-App on e
 end lemma
 
-
+lemma variable-swap-preserves-eval:
+    assumes Γ
+    forall e: Γ, x bound, x' bound ⊢ t1[x][x'] → t2[x][x']
+    exists Γ, x bound, x' bound ⊢ t1[x'][x] → t2[x'][x]
+    // there's an easy way to prove this, but we are testing
+    // do-case-analysis plus inversion
+    use induction on e
+    do case analysis on (t1[x][x'] assumes Γ, x bound, x' bound):
+        case unit assumes Γ, x bound, x' bound is
+	    proof by contradiction on e
+	end case
+        case x assumes Γ, x bound, x' bound is
+	    proof by contradiction on e
+	end case
+        case x' assumes Γ, x bound, x' bound is
+	    proof by contradiction on e
+	end case
+        case x'' assumes Γ, x'' bound, x bound, x' bound is
+	    proof by contradiction on e
+	end case
+	case (λ x'' • t11[x][x'][x'']) assumes Γ, x bound, x' bound is
+	    e1: Γ, x bound, x' bound, x'' bound ⊢ t11[x][x'][x''] → t12[x][x'][x''] by inversion of rule E-Abs on e
+	    e2:  Γ, x'' bound, x bound, x' bound ⊢ t11[x][x'][x''] → t12[x][x'][x''] by exchange on e1
+	    e3: Γ, x'' bound, x bound, x' bound ⊢ t11[x'][x][x''] → t12[x'][x][x''] by induction hypothesis on e2
+	    e4: Γ, x bound, x' bound, x'' bound ⊢ t11[x'][x][x''] → t12[x'][x][x''] by exchange on e3
+	    proof by rule E-Abs on e4
+	end case
+    end case analysis
+    use inversion on (t1[x][x'] assumes Γ, x bound, x' bound)
+    where t1[x][x'] := t11[x][x'] t12[x][x']
+    proof by case analysis on e:
+        case rule
+	    e1: Γ, x bound, x' bound ⊢ t11[x][x'] → t21[x][x']
+	    --------------------------------------------------- E-App1
+	    _:  Γ, x bound, x' bound ⊢ t11[x][x'] t12[x][x'] → t21[x][x'] t12[x][x']
+	    where t2[x][x'] := t21[x][x'] t12[x][x']
+	is
+	    e1': Γ, x bound, x' bound ⊢ t11[x'][x] → t21[x'][x] by induction hypothesis on e1
+	    proof by rule E-App1 on e1'
+	end case
+        case rule
+	    e1: Γ, x bound, x' bound ⊢ t12[x][x'] → t22[x][x']
+	    --------------------------------------------------- E-App2
+	    _:  Γ, x bound, x' bound ⊢ t11[x][x'] t12[x][x'] → t11[x][x'] t22[x][x']
+	    where t2[x][x'] := t11[x][x'] t22[x][x']
+	is
+	    e1': Γ, x bound, x' bound ⊢ t12[x'][x] → t22[x'][x] by induction hypothesis on e1
+	    proof by rule E-App2 on e1'
+	end case
+	case rule
+	    -------------------------------------------------------------- E-AppAbs
+	    _: Γ, x bound, x' bound ⊢ (λ x'' • t111[x][x'][x'']) t12[x][x'] → t111[x][x'][t12[x][x']]
+	is
+	    proof by rule E-AppAbs
+	end case
+end case analysis
+end lemma

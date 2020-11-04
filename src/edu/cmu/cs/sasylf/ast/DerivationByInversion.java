@@ -27,7 +27,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 	private final WhereClause whereClauses;
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
-			QualName rule, String relation, WhereClause wcs) {
+			QualName rule, Clause relation, WhereClause wcs) {
 		super(n, start, c);
 		setEndLocation(end); // overwrite end location to include entire justification
 		ruleName = rule;
@@ -41,7 +41,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		return " by inversion of " + ruleName;
 	}
 
-	public String getTargetDerivationName() { return super.getArgStrings().get(0).getElements().get(0).toString(); }
+	public String getTargetDerivationName() { return super.getArgs().get(0).getName(); }
 
 	@Override
 	public void typecheck(Context ctx) {    
