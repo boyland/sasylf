@@ -256,7 +256,7 @@ public abstract class RuleLike extends Node {
 				if (isPattern)
 					ErrorHandler.report("all derivations in the rule pattern must add the same bindings", inputs.get(i));
 				else
-					ErrorHandler.report(name + " requires weakening to be used for " + getName(), errorPoint,
+					ErrorHandler.report(name + " requires a different context (perhaps using weakening or exchange) to be used for " + getName(), errorPoint,
 							"SASyLF computed needed context as " + Term.wrappingAbstractionsToString(addedContext));
 			}
 		}
