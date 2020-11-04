@@ -353,13 +353,12 @@ terminals sig kind   p m r
 syntax
   α ::= a | α → α
   
-  σK ::= x/M   α K[x]
-  σA ::= x/M   α A[x]
-  σP ::= x/M p α P[x]
-  σM ::= x/M m α M[x]
-  σR ::= x/M r α R[x]
+  σ ::= x/M   α K[x]
+     |  x/M   α A[x]
+     |  x/M p α P[x]
+     |  x/M m α M[x]
+     |  x/M r α R[x]
   
-  σ ::= σK | σA | σP | σM | σR
   
 judgment simple-equality: α = α
 
@@ -483,9 +482,6 @@ assumes Γ
   ---------------------------------------------------- Subst-K-Pi
   Γ ⊢ x0/M0 α (Π x:A[x0] • K[x0][x]) = (Π x:A' • K'[x])
 
-//judgment subst-a: Γ ⊢ σA = A
-//assumes Γ
-
   Γ ⊢ x0/M0 p α P[x0] = P'
   ------------------------ Subst-A-P
   Γ ⊢ x0/M0   α P[x0] = P'
@@ -494,9 +490,6 @@ assumes Γ
   Γ, x:A1' ⊢ x0/M0 α A2[x0][x] = A2'[x]
   --------------------------------------------------------- Subst-A-Pi
   Γ ⊢ x0/M0 α (Π x:A1[x0] • A2[x0][x]) = (Π x:A1' • A2'[x])
-  
-//judgment subst-p: Γ ⊢ σP = P
-//assumes Γ
 
   ------------------ Subst-P-Fam
   Γ ⊢ x0/M0 p α a = a
@@ -505,9 +498,6 @@ assumes Γ
   Γ ⊢ x0/M0 m α M[x0] = M'
   ------------------------------- Subst-P-App
   Γ ⊢ x0/M0 p α P[x0] M[x0] = P' M'
-
-//judgment subst-m: Γ ⊢ σM = M
-//assumes Γ
 
   Γ ⊢ x0/M0 r α R[x0] = R'
   ------------------------- Subst-M-R
@@ -520,9 +510,6 @@ assumes Γ
   Γ, x:0 ⊢ x0/M0 m α M[x0][x] = M'[x]
   -------------------------------------------- Subst-M-Lam 
   Γ ⊢ x0/M0 m α (λ x • M[x0][x]) = λ x • M'[x]
-
-//judgment subst-r: Γ ⊢ σR = R
-//assumes Γ
 
   R:A ∈ Γ
   ------------------- Subst-R-Var
@@ -2670,8 +2657,336 @@ end theorem
 // But the lemma is not true if the later type (B) is dependent on the earlier binding: a:A
 // It's not clear whether H&L took this into account.
 
+// With substitution (and erasure: see below under Lemma 2.9), 
+// the type of the variables in the context can be changed, 
+// so we can get exchange by changing y:B[x] to y:B' and then perform the exchange.
 
-// Lemma 2.8 (Vacuous Substitutions)
+lemma subst-r-ignores-variable-type:
+    assumes Γ
+    forall s: Γ, x:A1 ⊢ x0/M0[x] r α0 R[x0][x] = R'[x]
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] r α0 R[x0][x] = R'[x]
+    use induction on s
+    proof by case analysis on s:
+        case rule
+            s1: R'[x] : A'[x] ∈ (Γ, x : A1)
+            -------------------------------------------- Subst-R-Var
+            _: Γ, x : A1 ⊢ (x0 / M0[x] r α0 R'[x]) = R'[x]
+            where R[x0][x] := R'[x]
+        is
+            proof by case analysis on s1:
+                case rule
+                    --------------- var
+                    _: x' : A00 ∈ (Γ', x' : A00, x : A11[x'])
+                    where A'[x] := A00 
+                is
+                    v: x' : A00 ∈ (Γ', x' : A00) by rule var
+                    v': R'[0] : A00 ∈ Γ by v
+                    v'': R'[0] : A00 ∈ (Γ, x:A2) by weakening on v'
+                    proof by rule Subst-R-Var on v''
+                end case
+
+                case rule
+                    --------------- var
+                    _: x : A1 ∈ (Γ, x : A1)
+                    where R'[x] := x and A'[x] := A1
+                is
+                    v: x: A2 ∈ (Γ, x : A2) by rule var
+                    proof by rule Subst-R-Var on v
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ------------------------- Subst-R-Const
+            _: Γ, x : A1 ⊢ (x0 / M0[x] r α0 c) = c
+            where R[x0][x] := c and R'[x] := c
+        is
+            proof by rule Subst-R-Const
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] r α0 R1[x0][x]) = R1'[x]
+            s2: Γ, x : A1 ⊢ (x0 / M0[x] m α0 M1[x0][x]) = M1'[x]
+            ------------------------------------- Subst-R-App
+            _: Γ, x : A1 ⊢ (x0 / M0[x] r α0 (R1[x0][x] M1[x0][x])) = (R1'[x] M1'[x])
+            where R[x0][x] := R1[x0][x] M1[x0][x] and R'[x] := R1'[x] M1'[x]
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x] r α0 R1[x0][x]) = R1'[x] by induction hypothesis on s1, A2
+            sx: α0 ≤ α0 by rule sub-eq
+            s2': Γ, x : A2 ⊢ (x0 / M0[x] m α0 M1[x0][x]) = M1'[x] by lemma subst-m-ignores-variable-type on s2, A2
+            proof by rule Subst-R-App on s1', s2'
+        end case
+
+    end case analysis
+end lemma
+and
+lemma subst-rh-ignores-variable-type:
+    assumes Γ
+    forall s: Γ, x:A1 ⊢ x0/M0[x] r α0 R[x0][x] = M'[x] : α'
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] r α0 R[x0][x] = M'[x] : α'
+    use induction on s
+    proof by case analysis on s:
+        case rule
+            -------------------------------------------- Subst-RH-Var
+            _: (Γ, x : A1) ⊢ (x' / M0[x] r α0 x') = M0[x] : α0
+            where R[x0][x] := x0 and M'[x] := M0[x] and α' := α0
+        is
+            proof by rule Subst-RH-Var
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x]  r α0 R1[x0][x]) = (λ x' • M1'[x][x']) : (α2 → α')
+            s2: Γ, x : A1 ⊢ (x0 / M0[x]  m α0 M2[x0][x]) = M2'[x]
+            s3: Γ, x : A1 ⊢ (x' / M2'[x] m α2 M1'[x][x']) = M'[x]
+            ------------------------------------------- Subst-RH-App
+            _:  Γ, x : A1 ⊢ (x0 / M0[x]  r α0 (R1[x0][x] M2[x0][x])) = M'[x] : α'
+            where R[x0][x] := R1[x0][x] M2[x0][x]
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x]  r α0 R1[x0][x]) = (λ x' • M1'[x][x']) : (α2 → α') by induction hypothesis on s1, A2
+            s2': Γ, x : A2 ⊢ (x0 / M0[x]  m α0 M2[x0][x]) = M2'[x] by lemma subst-m-ignores-variable-type on s2, A2
+            s3': Γ, x : A2 ⊢ (x' / M2'[x] m α2 M1'[x][x']) = M'[x] by lemma subst-m-ignores-variable-type on s3, A2
+            proof by rule Subst-RH-App on s1', s2', s3'
+        end case
+
+    end case analysis
+end lemma
+and
+lemma subst-m-ignores-variable-type:
+    assumes Γ
+    forall s: Γ, x:A1 ⊢ x0/M0[x] m α0 M[x0][x] = M'[x]
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] m α0 M[x0][x] = M'[x]
+    use induction on s
+    proof by case analysis on s:
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] r α0 R[x0][x]) = R'[x]
+            --------------------------------------------------- Subst-M-R
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] m α0 R[x0][x]) = R'[x]
+            where M[x0][x] := R[x0][x] and M'[x] := R'[x]
+        is
+            s1':Γ, x : A2 ⊢ (x0 / M0[x] r α0 R[x0][x]) = R'[x] by lemma subst-r-ignores-variable-type on s1, A2
+            proof by rule Subst-M-R on s1'
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] r α0 R[x0][x]) = M'[x] : α1
+            ------------------------------------------------------ Subst-M-RH
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] m α0 R[x0][x]) = M'[x]
+           where M[x0][x] := R[x0][x]
+        is
+            s1':Γ, x : A2 ⊢ (x0 / M0[x] r α0 R[x0][x]) = M'[x] : α1 by lemma subst-rh-ignores-variable-type on s1, A2
+            proof by rule Subst-M-RH on s1'
+        end case
+
+        case rule
+            s1:  Γ, x : A1, x' : 0 ⊢ (x0 / M0[x] m α0 M1[x0][x][x']) = M1'[x][x']
+            -------------------------------------------------------------------------- Subst-M-Lam
+            _:   Γ, x : A1 ⊢ (x0 / M0[x] m α0 (λ x' • M1[x0][x][x'])) = (λ x' • M1'[x][x'])
+            where M[x0][x] := λ x' • M1[x0][x][x'] and M'[x] := λ x' • M1'[x][x']
+        is
+            // exchange works here because we had no type to use for x' 
+            s1a: Γ, x' : 0, x : A1 ⊢ (x0 / M0[x] m α0 M1[x0][x][x']) = M1'[x][x'] by exchange on s1
+            s1': Γ, x' : 0, x : A2 ⊢ (x0 / M0[x] m α0 M1[x0][x][x']) = M1'[x][x'] by induction hypothesis on s1a, A2
+            s1b: Γ, x : A2, x' : 0 ⊢ (x0 / M0[x] m α0 M1[x0][x][x']) = M1'[x][x'] by exchange on s1'
+            proof by rule Subst-M-Lam on s1b
+        end case
+
+    end case analysis
+end lemma
+
+lemma subst-p-ignores-variable-type:
+    assumes Γ
+    forall s: Γ, x:A1 ⊢ x0/M0[x] p α0 P[x0][x] = P'[x]
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] p α0 P[x0][x] = P'[x]
+    proof by induction on s:
+        case rule
+            ------------------------ Subst-P-Fam
+            _: Γ, x : A1 ⊢ (x0 / M0[x] p α0 a) = a
+            where P[x0][x] := a and P'[x] := a
+        is
+            proof by rule Subst-P-Fam
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] p α0 P1[x0][x]) = P1'[x]
+            s2: Γ, x : A1 ⊢ (x0 / M0[x] m α0 M1[x0][x]) = M1'[x]
+            --------------------------------------------------------------- Subst-P-App
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] p α0 (P1[x0][x] M1[x0][x])) = (P1'[x] M1'[x])
+            where P[x0][x] := P1[x0][x] M1[x0][x] and P'[x] := P1'[x] M1'[x]
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x] p α0 P1[x0][x]) = P1'[x] by induction hypothesis on s1, A2
+            s2': Γ, x : A2 ⊢ (x0 / M0[x] m α0 M1[x0][x]) = M1'[x] by lemma subst-m-ignores-variable-type on s2, A2
+            proof by rule Subst-P-App on s1', s2'
+        end case
+
+    end induction
+end lemma
+
+lemma subst-a-ignores-variable-type:
+    assumes Γ
+    forall A[x0][x] assumes Γ, x0:A0, x:A1
+    forall s: Γ, x:A1 ⊢ x0/M0[x] α0 A[x0][x] = A'[x]
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] α0 A[x0][x] = A'[x]
+    use induction on (A[x0][x] assumes Γ, x0:A0, x:A1)
+    proof by case analysis on s:
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] p α0 P[x0][x]) = P'[x]
+            ------------------------------------------------ Subst-A-P
+            _:  Γ, x : A1 ⊢ (x0 / M0[x]   α0 P[x0][x]) = P'[x]
+            where A[x0][x] := P[x0][x] and A'[x] := P'[x]
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x] p α0 P[x0][x]) = P'[x] by lemma subst-p-ignores-variable-type on s1, A2
+            proof by rule Subst-A-P on s1'
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] α0 A3[x0][x]) = A3'[x]
+            s2: Γ, x : A1, x' : A3'[x] ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x']
+            --------------------------------------------------------------- Subst-A-Pi
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] α0 (Π x' : A3[x0][x] • A4[x0][x][x'])) = (Π x' : A3'[x] • A4'[x][x'])
+            where A[x0][x] := Π x' : A3[x0][x] • A4[x0][x][x'] and A'[x] := Π x' : A3'[x] • A4'[x][x']
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x] α0 A3[x0][x]) = A3'[x] by induction hypothesis on (A3[x0][x] assumes Γ, x0:A0, x:A1), s1, A2
+            s2a: Γ, x : A1, x' : A2 ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x'] by induction hypothesis on (A4[x0][x][x'] assumes Γ, x:A1, x0:A0, x':A3'[x]), s2, A2
+            s2b: Γ, x' : A2, x : A1 ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x'] by exchange on s2a
+            s2c: Γ, x' : A2, x : A2 ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x'] by induction hypothesis on (A4[x0][x][x'] assumes Γ, x':A2, x0:A0, x:A1), s2b, A2
+            s2d: Γ, x : A2, x' : A2 ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x'] by exchange on s2c
+            s2': Γ, x : A2, x' : A3'[x] ⊢ (x0 / M0[x] α0 A4[x0][x][x']) = A4'[x][x'] by induction hypothesis on (A4[x0][x][x'] assumes Γ, x:A2, x0:A0, x':A2), s2d, (A3'[x] assumes Γ, x:A2)
+            proof by rule Subst-A-Pi on s1', s2'
+        end case
+
+    end case analysis
+end lemma
+
+lemma subst-k-ignores-variable-type:
+    assumes Γ
+    forall K[x0][x] assumes Γ, x0:A0, x:A1
+    forall s: Γ, x:A1 ⊢ x0/M0[x] α0 K[x0][x] = K'[x]
+    forall A2 assumes Γ
+    exists    Γ, x:A2 ⊢ x0/M0[x] α0 K[x0][x] = K'[x]
+    use induction on (K[x0][x] assumes Γ, x0:A0, x:A1)
+    proof by case analysis on s:
+        case rule
+            ------------------------------------------------ Subst-K-Type
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] α0 type) = type
+            where K[x0][x] := type and K'[x] := type
+        is
+            proof by rule Subst-K-Type
+        end case
+
+        case rule
+            s1: Γ, x : A1 ⊢ (x0 / M0[x] α0 A3[x0][x]) = A3'[x]
+            s2: Γ, x : A1, x' : A3'[x] ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x']
+            --------------------------------------------------------------- Subst-K-Pi
+            _:  Γ, x : A1 ⊢ (x0 / M0[x] α0 (Π x' : A3[x0][x] • K4[x0][x][x'])) = (Π x' : A3'[x] • K4'[x][x'])
+            where K[x0][x] := Π x' : A3[x0][x] • K4[x0][x][x'] and K'[x] := Π x' : A3'[x] • K4'[x][x']
+        is
+            s1': Γ, x : A2 ⊢ (x0 / M0[x] α0 A3[x0][x]) = A3'[x] by lemma subst-a-ignores-variable-type on (A3[x0][x] assumes Γ, x0:A0, x:A1), s1, A2
+            s2a: Γ, x : A1, x' : A2 ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x'] by induction hypothesis on (K4[x0][x][x'] assumes Γ, x:A1, x0:A0, x':A3'[x]), s2, A2
+            s2b: Γ, x' : A2, x : A1 ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x'] by exchange on s2a
+            s2c: Γ, x' : A2, x : A2 ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x'] by induction hypothesis on (K4[x0][x][x'] assumes Γ, x':A2, x0:A0, x:A1), s2b, A2
+            s2d: Γ, x : A2, x' : A2 ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x'] by exchange on s2c
+            s2': Γ, x : A2, x' : A3'[x] ⊢ (x0 / M0[x] α0 K4[x0][x][x']) = K4'[x][x'] by induction hypothesis on (K4[x0][x][x'] assumes Γ, x:A2, x0:A0, x':A2), s2d, (A3'[x] assumes Γ, x:A2)
+            proof by rule Subst-K-Pi on s1', s2'
+        end case
+
+    end case analysis
+end lemma
+
+// Take the previous lemmas and wrap them up for convenience
+lemma subst-ignores-variable-type:
+    assumes Γ
+    forall s: Γ, x:A1 ⊢ σ[x] = E'[x]
+    forall A2 assumes Γ
+    exists Γ, x:A2 ⊢ σ[x] = E'[x]
+    // this turned out to be a bigger struggle than I anticipated, with little benefit
+    proof by case analysis on (σ[x] assumes Γ, x:A1):
+        case x0 / M0[x] α0 K[x][x0] assumes Γ, x : A1 is
+            do case analysis on (E'[x] assumes Γ, x:A1):
+                case A[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+                case M[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (E'[x] assumes Γ, x:A1) where E'[x] := K'[x]
+            proof by lemma subst-k-ignores-variable-type on (K[x][x0] assumes Γ, x0:A0, x:A1), s, A2
+        end case
+
+        case x0 / M0[x] α0 A[x][x0] assumes Γ, x : A1 is
+             do case analysis on (E'[x] assumes Γ, x:A1):
+                case K[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+                case M[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (E'[x] assumes Γ, x:A1) where E'[x] := A'[x]
+            proof by lemma subst-a-ignores-variable-type on (A[x][x0] assumes Γ, x0:A0, x:A1), s, A2
+        end case
+
+        case x0 / M0[x] p α0 P[x][x0] assumes Γ, x : A1 is
+           do case analysis on (E'[x] assumes Γ, x:A1):
+                case K[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+                case M[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (E'[x] assumes Γ, x:A1) where E'[x] := A'[x]
+            do case analysis on (A'[x] assumes Γ, x:A1):
+                case Π x' : A3[x] • A4[x][x'] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (A'[x] assumes Γ, x:A1) where A'[x] := P'[x]
+            proof by lemma subst-p-ignores-variable-type on s, A2
+        end case
+
+        case x0 / M0[x] m α0 M[x][x0] assumes Γ, x : A1 is
+             do case analysis on (E'[x] assumes Γ, x:A1):
+                case K[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+                case A[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (E'[x] assumes Γ, x:A1) where E'[x] := M'[x]
+            proof by lemma subst-m-ignores-variable-type on s, A2
+        end case
+
+        case x0 / M0[x] r α0 R[x][x0] assumes Γ, x : A1 is
+             do case analysis on (E'[x] assumes Γ, x:A1):
+                case K[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+                case A[x] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (E'[x] assumes Γ, x:A1) where E'[x] := M'[x]
+            do case analysis on (M'[x] assumes Γ, x:A1):
+                case λ x' • M1[x][x'] assumes Γ, x:A1 is
+                    proof by contradiction on s
+                end case
+            end case analysis
+            use inversion on (M'[x] assumes Γ, x:A1) where M'[x] := R'[x]
+            proof by lemma subst-r-ignores-variable-type on s, A2
+        end case
+    end case analysis
+end lemma
+
+
+/// Lemma 2.8 (Vacuous Substitutions)
 
 theorem nop-subst-r:
     assumes Γ
