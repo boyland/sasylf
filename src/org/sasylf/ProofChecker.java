@@ -110,13 +110,17 @@ public class ProofChecker  {
 		try {
 			marker = res.createMarker(markerId);
 			marker.setAttribute(IMarker.MESSAGE, report.getMessage());
-			marker.setAttribute(IMarker.LINE_NUMBER, report.getSpan().getLocation().getLine());
-			try {
-				Position p = DocumentUtil.getPosition(report.getSpan(), doc);
-				marker.setAttribute(IMarker.CHAR_START, p.offset);
-				marker.setAttribute(IMarker.CHAR_END, p.offset+p.length);
-			} catch (BadLocationException e) {
-				System.err.println("bad location? " + e);
+			if (report.getSpan() == null || report.getSpan().getLocation() == null) {
+				System.err.println("Bad report: " + report);
+			} else {
+				marker.setAttribute(IMarker.LINE_NUMBER, report.getSpan().getLocation().getLine());
+				try {
+					Position p = DocumentUtil.getPosition(report.getSpan(), doc);
+					marker.setAttribute(IMarker.CHAR_START, p.offset);
+					marker.setAttribute(IMarker.CHAR_END, p.offset+p.length);
+				} catch (BadLocationException e) {
+					System.err.println("bad location? " + e);
+				}
 			}
 			if (report instanceof ErrorReport) {
 				ErrorReport er = (ErrorReport)report;
