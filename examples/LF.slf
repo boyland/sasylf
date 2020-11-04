@@ -276,7 +276,7 @@ assumes Γ
   Γ ⊢ |a| = a
     
    Γ ⊢ |P| = a
-  ------------- heap-app
+  ------------- head-app
   Γ ⊢ |P M| = a
 
 
@@ -3221,6 +3221,140 @@ theorem subst-a-preserves-erasure:
                 end case
             end case analysis
         end case
-
     end induction
  end theorem
+ 
+ // We prove the same thing for "head"
+lemma head-p-independent-of-assumption:
+    assumes Γ
+    forall h: Γ, x:A0 ⊢ |P[x]| = a
+    forall R assumes Γ
+    exists Γ ⊢ |P[R]| = a
+    use induction on h
+    proof by case analysis on h:
+        case rule
+            ----------------- head-atom
+            _: Γ, x : A0 ⊢ |a| = a
+            where P[x] := a
+        is
+            proof by rule head-atom
+        end case
+
+        case rule
+            h1: Γ, x : A0 ⊢ |P1[x]| = a
+            ------------------- head-app
+            _:  Γ, x : A0 ⊢ |P1[x] M1[x]| = a
+            where P[x] := P1[x] M1[x]
+        is
+            h2: Γ ⊢ |P1[R]| = a by induction hypothesis on h1, R
+            proof by rule head-app on h2
+        end case
+    end case analysis
+end lemma
+
+lemma head-independent-of-assumption:
+    assumes Γ
+    forall A[x] assumes Γ, x:A0
+    forall h: Γ, x:A0 ⊢ |A[x]| = a
+    forall R assumes Γ
+    exists Γ ⊢ |A[R]| = a
+    use induction on (A[x] assumes Γ, x:A0)
+    do case analysis on (A[x] assumes Γ, x:A0):
+        case P[x] assumes Γ, x:A0 is
+            proof by lemma head-p-independent-of-assumption on h, R
+        end case
+    end case analysis
+    use inversion on (A[x] assumes Γ, x:A0)
+    where A[x] := Π x' : A3[x] • A4[x][x']
+    proof by case analysis on h:
+        case rule
+            h1: Γ, x : A0, x' : A3[x] ⊢ |A4[x][x']| = a
+            ------------------------------------------ head-dpt
+            _:  Γ, x : A0 ⊢ |Π x' : A3[x] • A4[x][x']| = a
+        is
+            h1a: Γ, x0 : A3[R], x : A0, x' : A3[x] ⊢ |A4[x][x']| = a by weakening on h1
+            h1b: Γ, x0 : A3[R], x : A0 ⊢ |A4[x][x0]| = a by induction hypothesis on (A4[x][x'] assumes Γ, x0:A3[R], x:A0, x':A3[x]), h1a, (x0 assumes Γ, x0:A3[R], x:A0)
+            h1c: Γ, x0 : A3[R] ⊢ |A4[R][x0]| = a by induction hypothesis on (A4[x][x0] assumes Γ, x0 : A3[R], x : A0), h1b, R
+            proof by rule head-dpt on h1c
+        end case
+    end case analysis
+end lemma
+
+lemma head-independent-of-assumption-type:
+    assumes Γ
+    forall h: Γ, x:A1 ⊢ |A[x]| = a
+    forall A2 assumes Γ
+    exists Γ, x:A2 ⊢ |A[x]| = a
+    h1: Γ, x':A2, x:A1 ⊢ |A[x]| = a by weakening on h
+    h2: Γ, x':A2 ⊢ |A[x']| = a by lemma head-independent-of-assumption on (A[x] assumes Γ, x':A2, x:A1), h1, (x' assumes Γ, x':A2)
+    proof by h2
+end lemma
+     
+// now the lemma that "head" is preserved by substitution
+theorem subst-p-preserves-head:
+    assumes Γ
+    forall e: Γ, x0:A0 ⊢ |P[x0]| = a
+    forall s: Γ ⊢ x0/M0 p α0 P[x0] = P'
+    exists Γ ⊢ |P'| = a
+    proof by induction on s:
+        case rule
+            ------------------------ Subst-P-Fam
+            _: Γ ⊢ (x / M0 p α0 a0) = a0
+            where P[x0] := a0 and P' := a0
+        is
+            use inversion on e where a0 := a
+            proof by rule head-atom
+        end case
+
+        case rule
+            s1: Γ ⊢ (x0 / M0 p α0 P1[x0]) = P1'
+            _:  Γ ⊢ (x0 / M0 m α0 M1[x0]) = M1'
+            ------------------------------------- Subst-P-App
+            _: Γ ⊢ (x0 / M0 p α0 (P1[x0] M1[x0])) = (P1' M1')
+            where P[x0] := P1[x0] M1[x0] and P' := P1' M1'
+        is
+            e1: Γ, x0:A0 ⊢ |P1[x0]| = a by inversion on e
+            e1': Γ ⊢ |P1'| = a by induction hypothesis on e1, s1
+            proof by rule head-app on e1'
+        end case
+    end induction
+end theorem
+
+theorem subst-a-preserves-head:
+    assumes Γ
+    forall h: Γ, x0:A0 ⊢ |A[x0]| = a
+    forall s: Γ ⊢ x0/M0 α0 A[x0] = A'
+    exists Γ ⊢ |A'| = a
+    proof by induction on s:
+        case rule
+            s1: Γ ⊢ (x0 / M0 p α0 P[x0]) = P'
+            ------------------------------ Subst-A-P
+            _:  Γ ⊢ (x0 / M0 α0 P[x0]) = P'
+            where A[x0] := P[x0] and A' := P'
+        is
+            proof by theorem subst-p-preserves-head on h, s1
+        end case
+
+        case rule
+            s1: Γ ⊢ (x0 / M0 α0 A1[x0]) = A1'
+            s2: Γ, x : A1' ⊢ (x0 / M0 α0 A2[x0][x]) = A2'[x]
+            --------------------------------------------------------------- Subst-A-Pi
+            _: Γ ⊢ (x0 / M0 α0 (Π x : A1[x0] • A2[x0][x])) = (Π x : A1' • A2'[x])
+            where A[x0] := Π x : A1[x0] • A2[x0][x] and A' := Π x : A1' • A2'[x]
+        is
+            proof by case analysis on h:
+                case rule
+                    h2: Γ, x0:A0, x:A1[x0] ⊢ |A2[x0][x]| = a
+                    ---------------------------------------------------- head-dpt
+                    _:  Γ, x0:A0 ⊢ |Π x : A1[x0] • A2[x0][x]| = a
+                is
+                    h21: Γ, x0:A0, x:A1' ⊢ |A2[x0][x]| = a by lemma head-independent-of-assumption-type on h2, A1'
+                    h22: Γ, x:A1', x0:A0 ⊢ |A2[x0][x]| = a by exchange on h21
+                    h2': Γ, x:A1' ⊢ |A2'[x]| = a by induction hypothesis on h22, s2
+                    proof by rule head-dpt on h2'
+                end case
+            end case analysis
+        end case
+    end induction
+end theorem
+
