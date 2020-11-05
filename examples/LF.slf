@@ -3358,3 +3358,485 @@ theorem subst-a-preserves-head:
     end induction
 end theorem
 
+
+
+//// Lemma 2.10 (Composition of Substitution)
+// Lemma 2.10 (1) has a version for each E ∈ {M,R,P,A,K} 
+// Lemma 2.10 (2) and (3) are proved mutually with the first two parts of (1)
+
+// We need a lemma that probably should have been included as (4)
+theorem subst-rh-rh-impossible:
+    assumes Γ
+    forall s2: Γ, x0:A0 ⊢ M2[x0]/x r α2 R1[x0][x] = M[x0] : α
+    forall s3: Γ, x:A ⊢ M0/x0 r α0 R1[x0][x] = M1'[x] : α'
+    exists contradiction
+    proof by induction on s2:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ, x0 : A0 ⊢ (M2[x0] / x r α2 x) = M2[x0] : α2
+            where R1[x0][x] := x and M[x0] := M2[x0] and α := α2
+        is
+            proof by contradiction on s3
+        end case
+
+        case rule
+            s2': Γ, x0 : A0 ⊢ (M2[x0]  / x r α2 R11[x0][x]) = (λ x' • M112[x0][x']) : (α1 → α)
+            _:   Γ, x0 : A0 ⊢ (M2[x0]  / x m α2 M12[x0][x]) = M22[x0]
+            _:   Γ, x0 : A0 ⊢ (M22[x0] / x m α1 M112[x0][x]) = M[x0]
+            ------------------------------------------------------------------- Subst-RH-App
+            _:   Γ, x0 : A0 ⊢ (M2[x0] / x r α2 (R11[x0][x] M12[x0][x])) = M[x0] : α
+            where R1[x0][x] := R11[x0][x] M12[x0][x]
+        is
+            s3': Γ, x : A ⊢ (M0/x0    r α0  R11[x0][x]) = (λ x' • M113[x][x']) : (α1' → α') and
+            _:   Γ, x : A ⊢ (M0/x0    m α0  M12[x0][x]) = M32[x] and
+            _:   Γ, x : A ⊢ (M4[x]/x' m α1' M111[x][x']) = M1'[x] by inversion on s3
+            proof by induction hypothesis on s2', s3'
+        end case
+    end induction
+end theorem
+
+// Lemma 2.10 (1) M
+theorem subst-m-compose:
+    assumes Γ
+    forall α0
+    forall α1
+    forall sx: α2 ≤ α1
+    forall s1: Γ ⊢ M0/x0 m α0 M2[x0] = M2'
+    forall s2: Γ, x0:A0 ⊢ M2[x0]/x m α2 M1[x0][x] = M[x0]
+    forall s3: Γ, x:A ⊢ M0/x0 m α0 M1[x0][x] = M1'[x]
+    exists Γ ⊢ M0/x0 m α0 M[x0] = M' and Γ ⊢ M2'/x m α2 M1'[x] = M'
+    use induction on { α0, α1 }, s2    
+    do case analysis on sx:
+        case rule
+            sx23: α2 ≤ α3
+            ------------------- sub-arrow1
+            _: α2 ≤ (α3 → α4)
+            where α1 := (α3 → α4)
+        is
+            proof by induction hypothesis on α0 , α3, sx23, s1, s2, s3
+        end case
+
+        case rule
+            sx24: α2 ≤ α4
+            ------------------- sub-arrow2
+            _: α2 ≤ (α3 → α4)
+            where α1 := (α3 → α4)
+        is
+            proof by induction hypothesis on α0 , α4, sx24, s1, s2, s3
+        end case
+    end case analysis
+    use inversion of rule sub-eq on sx where α1 := α2
+    proof by case analysis on s2:
+        case rule
+            s2': Γ, x0 : A0 ⊢ (M2[x0]/x r α2 R1[x0][x]) = R[x0]
+            ---------------------------------------------------- Subst-M-R
+            _:   Γ, x0 : A0 ⊢ (M2[x0]/x m α2 R1[x0][x]) = R[x0]
+            where M1[x0][x] := R1[x0][x] and M[x0] := R[x0]
+        is
+            proof by case analysis on s3:
+                case rule
+                    s3': Γ, x : A ⊢ (M0 / x0 r α0 R1[x0][x]) = R1'[x]
+                    ------------------------------- Subst-M-R
+                    _:   Γ, x : A ⊢ (M0 / x0 m α0 R1[x0][x]) = R1'[x]
+                    where M1'[x] := R1'[x]
+                is
+                    s4': Γ ⊢ M0/x0 r α0 R[x0] = R' and 
+                    s5': Γ ⊢ M2'/x r α2 R1'[x] = R' by theorem subst-r-compose on α0, α2, s1, s2', s3'
+                    s4: Γ ⊢ M0/x0 m α0 M[x0] = R' by rule Subst-M-R on s4'
+                    s5: Γ ⊢ M2'/x m α2 M1'[x] = R' by rule Subst-M-R on s5'
+                    proof by s4, s5
+                end case
+
+                case rule
+                    s3': Γ, x : A ⊢ (M0 / x0 r α0 R1[x0][x]) = M1'[x] : α'
+                    ------------------------------------------------- Subst-M-RH
+                    _:   Γ, x : A ⊢ (M0 / x0 m α0 R1[x0][x]) = M1'[x]
+                is
+                    s4': Γ ⊢ M0/x0 r α0 R[x0] = M' : α' and 
+                    s5:  Γ ⊢ M2'/x m α2 M1'[x] = M' by theorem subst-r-rh-compose on α0, α2, s1, s2', s3'
+                    s4:  Γ ⊢ M0/x0 m α0 M[x0] = M' by rule Subst-M-RH on s4'
+                    proof by s4, s5
+                end case
+            end case analysis
+        end case
+
+        case rule
+            s2': Γ, x0 : A0 ⊢ (M2[x0] / x r α2 R1[x0][x]) = M[x0] : α'
+            ------------------------------------------------------ Subst-M-RH
+            _:  Γ, x0 : A0 ⊢ (M2[x0] / x m α2 R1[x0][x]) = M[x0]
+            where M1[x0][x] := R1[x0][x]
+        is
+            proof by case analysis on s3:
+                case rule
+                    s3': Γ, x : A ⊢ (M0 / x0 r α0 R1[x0][x]) = R1'[x]
+                    ------------------------------------------------ Subst-M-R
+                    _:   Γ, x : A ⊢ (M0 / x0 m α0 R1[x0][x]) = R1'[x]
+                    where M1'[x] := R1'[x]
+                is
+                    s4:  Γ ⊢ M0/x0 m α0 M[x0] = M' and 
+                    s5': Γ ⊢ M2'/x r α2 R1'[x] = M' : α' by theorem subst-rh-r-compose on α0, α2, s1, s2', s3' 
+                    s5:  Γ ⊢ M2'/x m α2 M1'[x] = M' by rule Subst-M-RH on s5'
+                    proof by s4, s5
+                end case
+
+                case rule
+                    s3': Γ, x : A ⊢ (M0 / x0 r α0 R1[x0][x]) = M1'[x] : α''
+                    ------------------------------------------------- Subst-M-RH
+                    _: Γ, x : A ⊢ (M0 / x0 m α0 R1[x0][x]) = M1'[x]
+                is
+                    _: contradiction by theorem subst-rh-rh-impossible on s2', s3'
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            s21: Γ, x0 : A0, x' : 0 ⊢ (M2[x0] / x m α2 M11[x0][x][x']) = M12[x0][x']
+            ---------------------------------------------------------------------- Subst-M-Lam
+            _:   Γ, x0 : A0 ⊢ (M2[x0] / x m α2 (λ x' • M11[x0][x][x'])) = (λ x' • M12[x0][x'])
+            where M1[x0][x] := λ x' • M11[x0][x][x'] and M[x0] := λ x' • M12[x0][x']
+        is
+            s22: Γ, x' : 0, x0 : A0 ⊢ (M2[x0] / x m α2 M11[x0][x][x']) = M12[x0][x'] by exchange on s21
+            s31: Γ, x : A, x' : 0 ⊢ M0/x0 m α0 M11[x0][x][x'] = M13[x][x'] by inversion on s3
+            where M1'[x] :=  λ x' • M13[x][x']
+            s32: Γ, x' : 0, x : A ⊢ M0/x0 m α0 M11[x0][x][x'] = M13[x][x'] by exchange on s31
+            s12: Γ, x' : 0 ⊢ M0/x0 m α0 M2[x0] = M2' by weakening on s1
+            s4': Γ, x' : 0 ⊢ M0/x0 m α0 M12[x0][x'] = M14'[x'] and 
+            s5': Γ, x' : 0 ⊢ M2'/x m α2 M13[x] [x'] = M14'[x'] by induction hypothesis on α0, α2, sx, s12, s22, s32 
+            s4: Γ ⊢ M0/x0 m α0 (λ x' • M12[x0][x']) = λ x' • M14'[x'] by rule Subst-M-Lam on s4'
+            s5: Γ ⊢ M2'/x m α2 (λ x' • M13[x] [x']) = λ x' • M14'[x'] by rule Subst-M-Lam on s5' 
+            proof by s4, s5
+        end case
+    end case analysis
+end theorem
+and
+// Lemma 2.10 (1) R
+theorem subst-r-compose:
+    assumes Γ
+    forall α0
+    forall α2
+    forall s1: Γ ⊢ M0/x0 m α0 M2[x0] = M2'
+    forall s2: Γ, x0:A0 ⊢ M2[x0]/x r α2 R1[x0][x] = R[x0]
+    forall s3: Γ, x:A ⊢ M0/x0 r α0 R1[x0][x] = R1'[x]
+    exists Γ ⊢ M0/x0 r α0 R[x0] = R' 
+    and    Γ ⊢ M2'/x r α2 R1'[x] = R'
+    use induction on { α0, α2 }, s2
+    sx: α2 ≤ α2 by rule sub-eq
+    do case analysis on s3:
+        case rule
+            v3: R1'[x] : A2[x] ∈ (Γ, x : A)
+            ------------------------- Subst-R-Var
+            _: Γ, x : A ⊢ M0 / x0 r α0 R1'[x] = R1'[x]
+            where R1[x0][x] := R1'[x]
+        is
+            proof by case analysis on v3:
+                case rule
+                    --------------- var
+                    _: x : A ∈ (Γ, x : A)
+                    where R1'[x] := x and A2[x] := A
+                is
+                    proof by contradiction on s2
+                end case
+
+                case rule
+                    ------------------------------------ var
+                    _: x' : A' ∈ (Γ', x' : A', x : A1[x'])
+                    where A2[x] := A'
+                is
+                    // inversion didn't work to set R[x] := R'  (make goodXX.slf)
+                    proof by case analysis on s2:
+                        case rule
+                            vx: R' : A3[x] ∈ (Γ, x : A0)
+                            ------------------------- Subst-R-Var
+                            _: (Γ, x : A0) ⊢ (M2[x] / x' r α2 R') = R'
+                            where R[x] := R'
+                        is
+                            v': x' : A' ∈ (Γ', x':A') by rule var
+                            v2: R0 : A' ∈ Γ by v'
+                            s4: Γ ⊢ M0/x0 r α0 R' = R' by rule Subst-R-Var on v2
+                            s5: Γ ⊢ M2'/x r α2 R' = R' by rule Subst-R-Var on v2
+                            proof by s4, s5
+                        end case
+
+                    end case analysis
+                end case
+
+            end case analysis
+        end case
+    end case analysis
+    proof by case analysis on s2:
+        case rule
+            v: R[x0] : A1[x0] ∈ (Γ, x0 : A0)
+            ------------------------- Subst-R-Var
+            _: Γ, x0 : A0 ⊢ (M2[x0]/x r α2 R[x0]) = R[x0]
+            where R1[x0][x] := R[x0]
+        is
+            proof by case analysis on v:
+                case rule
+                    ------------------------------------ var
+                    _: x' : A' ∈ (Γ', x' : A', x0 : A3[x'])
+                    where A1[x0] := A'
+                is
+                    proof by contradiction on s3
+                end case
+
+                case rule
+                    -------------------------------- var
+                    _: x0 : A0 ∈ (Γ, x0 : A0)
+                    where A1[x0] := A0 and R[x0] := x0
+                is
+                    proof by contradiction on s3
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ------------------------- Subst-R-Const
+            _: Γ, x0 : A0 ⊢ (M2[x0] / x r α2 c) = c
+            where R1[x0][x] := c and R[x] := c
+        is
+            use inversion of rule Subst-R-Const on s3 where R1'[x] := c
+            s4: Γ ⊢ M0/x0 r α0 c = c by rule Subst-R-Const
+            s5: Γ ⊢ M2'/x r α2 c = c by rule Subst-R-Const
+            proof by s4, s5
+        end case
+
+        case rule
+            s21: Γ, x0 : A0 ⊢ (M2[x0]/x r α2 R11[x0][x]) = R21[x0]
+            s22: Γ, x0 : A0 ⊢ (M2[x0]/x m α2 M12[x0][x]) = M22[x0]
+            ------------------------------------- Subst-R-App
+            _:   Γ, x0 : A0 ⊢ (M2[x0]/x r α2 (R11[x0][x] M12[x0][x])) = (R21[x0] M22[x0])
+            where R1[x0][x] := R11[x0][x] M12[x0][x] 
+             and  R[x0] := R21[x0] M22[x0]
+        is
+            s31: Γ, x:A ⊢ M0/x0 r α0 R11[x0][x] = R31[x] and
+            s32: Γ, x:A ⊢ M0/x0 m α0 M12[x0][x] = M32[x] by inversion on s3
+            where R1'[x] := R31[x] M32[x]
+            s41: Γ ⊢ M0/x0 r α0 R21[x0] = R4 and 
+            s51: Γ ⊢ M2'/x r α2 R31[x] = R4 by induction hypothesis on α0, α2, s1, s21, s31
+            s42: Γ ⊢ M0/x0 m α0 M22[x0] = M4 and
+            s52: Γ ⊢ M2'/x m α2 M32[x] = M4 by theorem subst-m-compose on α0, α2, sx, s1, s22, s32
+            s4:  Γ ⊢ M0/x0 r α0 R21[x0] M22[x0] = R4 M4 by rule Subst-R-App on s41, s42
+            s5:  Γ ⊢ M2'/x r α2 R31[x] M32[x] = R4 M4 by rule Subst-R-App on s51, s52
+            proof by s4, s5
+        end case
+
+    end case analysis
+end theorem
+and
+// Lemma 2.10 (2)
+theorem subst-rh-r-compose:
+    assumes Γ
+    forall α0
+    forall α2
+    forall s1: Γ ⊢ M0/x0 m α0 M2[x0] = M2'
+    forall s2: Γ, x0:A0 ⊢ M2[x0]/x r α2 R1[x0][x] = M[x0] : α
+    forall s3: Γ, x:A ⊢ M0/x0 r α0 R1[x0][x] = R1'[x]
+    exists Γ ⊢ M0/x0 m α0 M[x0] = M' and Γ ⊢ M2'/x r α2 R1'[x] = M' : α
+    use induction on { α0, α2 }, s2
+    sx: α2 ≤ α2 by rule sub-eq
+    do case analysis on s3:
+        case rule
+            v3: R1'[x] : A2[x] ∈ (Γ, x : A)
+            ------------------------- Subst-R-Var
+            _: Γ, x : A ⊢ M0 / x0 r α0 R1'[x] = R1'[x]
+            where R1[x0][x] := R1'[x]
+        is
+            proof by case analysis on v3:
+                case rule
+                    --------------- var
+                    _: x : A ∈ (Γ, x : A)
+                    where R1'[x] := x and A2[x] := A
+                is
+                    use inversion of rule Subst-RH-Var on s2
+                    where M[x0] := M2[x0] and α := α2
+                    s5: Γ ⊢ M2'/x r α2 x = M2' : α2 by rule Subst-RH-Var
+                    proof by s1, s5
+                end case
+
+                case rule
+                    ------------------------------------ var
+                    _: x' : A' ∈ (Γ', x' : A', x : A1[x'])
+                    where A2[x] := A'
+                is
+                    proof by contradiction on s2
+                end case
+
+            end case analysis
+        end case
+    end case analysis
+    proof by case analysis on s2:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ, x0 : A0 ⊢ (M2[x0] / x r α2 x) = M2[x0] : α2
+            where R1[x0][x] := x and M[x0] := M2[x0] and α := α2
+        is
+            proof by contradiction on s3
+        end case
+
+        case rule // Γ, x0:A0 ⊢ M2[x0]/x r α2 R1[x0][x] = M[x0] : α
+            s21: Γ, x0:A0 ⊢ (M2[x0]/x  r α2 R11[x0][x]) = (λ x' • M11[x0][x']) : (α1 → α)
+            s22: Γ, x0:A0 ⊢ (M2[x0]/x  m α2 M12[x0][x]) = M4[x0]
+            s23: Γ, x0:A0 ⊢ (M4[x0]/x' m α1 M11[x0][x']) = M[x0]
+            ----------------------------------------------------- Subst-RH-App
+            _: Γ, x0:A0 ⊢ (M2[x0]/x r α2 (R11[x0][x] M12[x0][x])) = M[x0] : α
+            where R1[x0][x] := R11[x0][x] M12[x0][x] 
+        is
+            s31: Γ, x:A ⊢ M0/x0 r α0 R11[x0][x] = R31[x] and
+            s32: Γ, x:A ⊢ M0/x0 m α0 M12[x0][x] = M32[x] by inversion on s3
+            where R1'[x] := R31[x] M32[x]
+            s41: Γ ⊢ M0/x0 m α0 (λ x' • M11[x0][x']) = M41 and
+            s51: Γ ⊢ M2'/x r α2 R31[x] = M41 : α1 → α by induction hypothesis on α0, α2, s1, s21, s31
+            s44: Γ, x' : 0 ⊢ (M0/x0 m α0 M11[x0][x']) = M411[x'] by inversion of rule Subst-M-Lam on s41
+            where M41 := λ x • M411[x] 
+            s42: Γ ⊢ M0/x0 m α0 M4[x0] = M51 and
+            s52: Γ ⊢ M2'/x m α2 M32[x] = M51 by theorem subst-m-compose on α0, α2, sx, s1, s22, s32
+            sbx: α1 → α ≤ α2 by theorem head-substitution-size on s21
+            sb11: α1 ≤ α1 by rule sub-eq
+            sub11': α1 ≤ α1 → α by rule sub-arrow1 on sb11
+            s4: Γ ⊢ M0/x0  m α0 M[x0] = M' and
+            s53:Γ ⊢ M51/x' m α1 M411[x'] = M' by case analysis on sbx:
+                case rule
+                    ------------------------ sub-eq
+                    _: (α1 → α) ≤ (α1 → α)
+                    where α2 := α1 → α
+                is
+                    proof by theorem subst-m-compose on α0, α1, sb11, s42, s23, s44
+                end case
+
+                case rule
+                    sub13: (α1 → α) ≤ α3
+                    ------------------- sub-arrow1
+                    _: (α1 → α) ≤ (α3 → α4)
+                    where α2 := α3 → α4
+                is
+                    sbx': α1 ≤ α3 by lemma subexpression-transitive on sub11', sub13
+                    proof by theorem subst-m-compose on α0, α3, sbx', s42, s23, s44
+                end case
+
+                case rule
+                    sub14: (α1 → α) ≤ α4
+                    ------------------- sub-arrow2
+                    _: (α1 → α) ≤ (α3 → α4)
+                    where α2 := α3 → α4
+                is
+                    sbx': α1 ≤ α4 by lemma subexpression-transitive on sub11', sub14
+                    proof by theorem subst-m-compose on α0, α4, sbx', s42, s23, s44
+                end case
+            end case analysis
+            s5: Γ ⊢ M2'/x r α2 R31[x] M32[x] = M' : α by rule Subst-RH-App on s51, s52, s53
+            proof by s4,s5
+        end case
+
+    end case analysis
+end theorem   
+and
+// Lemma 2.10 (3)
+theorem subst-r-rh-compose:
+    assumes Γ
+    forall α0
+    forall α2
+    forall s1: Γ ⊢ M0/x0 m α0 M2[x0] = M2'
+    forall s2: Γ, x0:A0 ⊢ M2[x0]/x r α2 R1[x0][x] = R[x0]
+    forall s3: Γ, x:A ⊢ M0/x0 r α0 R1[x0][x] = M1'[x] : α
+    exists Γ ⊢ M0/x0 r α0 R[x0] = M' : α and Γ ⊢ M2'/x m α2 M1'[x] = M'
+    use induction on { α0, α2 }, s2
+    do case analysis on s2:
+        case rule
+            v: R[x0] : A1[x0] ∈ (Γ, x0 : A0)
+            ---------------------------------------------- Subst-R-Var
+            _: Γ, x0 : A0 ⊢ (M2[x0] / x r α2 R[x0]) = R[x0]
+            where R1[x0][x] := R[x0]
+        is
+            proof by case analysis on v:
+                case rule
+                    ------------------------------------- var
+                    _: x : A2 ∈ (Γ', x : A2, x0 : A3[x])
+                    where A1[x0] := A2
+                is
+                    proof by contradiction on s3
+                end case
+
+                case rule
+                    ---------------------- var
+                    _: x : A0 ∈ (Γ, x : A0)
+                    where R[x0] := x0 and A1[x0] := A0
+                is
+                    use inversion of rule Subst-RH-Var on s3
+                    where M1'[x] := M0 and α := α0
+                    s4: Γ ⊢ M0/x0 r α0 x0 = M0 : α0 by rule Subst-RH-Var 
+                    s5: Γ ⊢ M2'/x m α2 M0 = M0 by theorem nop-subst-m on M2', α2, M0
+                    proof by s4, s5
+                end case
+            end case analysis
+        end case
+    end case analysis
+    proof by case analysis on s3:
+        case rule
+            ------------------------------------ Subst-RH-Var
+            _: Γ, x : A ⊢ (M0 / x0 r α0 x0) = M0 : α0
+            where R1[x0][x] := x0 and α := α0 and M1'[x] := M0
+        is
+            proof by contradiction on s2
+        end case
+
+        case rule
+            s31: Γ, x : A ⊢ (M0/x0    r α0 R11[x0][x]) = (λ x' • M111[x][x']) : (α1 → α)
+            s32: Γ, x : A ⊢ (M0/x0    m α0 M12[x0][x]) = M4[x]
+            s33: Γ, x : A ⊢ (M4[x]/x' m α1 M111[x][x']) = M1'[x]
+            ------------------------------------------- Subst-RH-App
+            _: Γ, x : A ⊢ (M0/x0 r α0 (R11[x0][x] M12[x0][x])) = M1'[x] : α
+            where R1[x0][x] := R11[x0][x] M12[x0][x] 
+        is
+            s21: Γ, x0 : A0 ⊢ (M2[x0]/x r α2 R11[x0][x]) = R21[x0] and
+            s22: Γ, x0 : A0 ⊢ (M2[x0]/x m α2 M12[x0][x]) = M22[x0] by inversion on s2
+            where R[x0] := R21[x0] M22[x0]
+            s41: Γ ⊢ M0/x0 r α0 R21[x0] = M21' : α1 → α and
+            s51: Γ ⊢ M2'/x m α2 (λ x' • M111[x][x']) = M21' by induction hypothesis on α0, α2, s1, s21, s31
+            s23: Γ, x':0 ⊢ M2'/x m α2 M111[x][x'] = M211[x'] by inversion on s51
+            where M21' := λ x' • M211[x']
+            sx22: α2 ≤ α2 by rule sub-eq
+            s42: Γ ⊢ M0/x0 m α0 M22[x0] = M22' and
+            s52: Γ ⊢ M2'/x m α2 M4[x] = M22' by theorem subst-m-compose on α0, α2, sx22, s1, s22, s32
+            sbx: α1 → α ≤ α0 by theorem head-substitution-size on s31
+            sx11: α1 ≤ α1 by rule sub-eq
+            sx11': α1 ≤ α1 → α by rule sub-arrow1 on sx11
+            s5: Γ ⊢ M2'/x m α2 M1'[x] = M' and
+            s43: Γ ⊢ M22'/x' m α1 M211[x'] = M' by case analysis on sbx:
+                case rule
+                    --------------------- sub-eq
+                    _: (α1 → α) ≤ (α1 → α)
+                    where α0 := (α1 → α)
+                is
+                    proof by theorem subst-m-compose on α2, α1, sx11, s52, s33, s23
+                end case
+
+                case rule
+                    sx103: (α1 → α) ≤ α3
+                    ------------------- sub-arrow1
+                    _: (α1 → α) ≤ (α3 → α4)
+                    where α0 := (α3 → α4)
+                is
+                    sx13: α1 ≤ α3 by lemma subexpression-transitive on sx11', sx103
+                    proof by theorem subst-m-compose on α2, α3, sx13, s52, s33, s23
+                end case
+
+                case rule
+                    sx104: (α1 → α) ≤ α4
+                    ------------------- sub-arrow2
+                    _: (α1 → α) ≤ (α3 → α4)
+                    where α0 := (α3 → α4)
+                is
+                    sx14: α1 ≤ α4 by lemma subexpression-transitive on sx11', sx104
+                    proof by theorem subst-m-compose on α2, α4, sx14, s52, s33, s23
+                end case
+
+            end case analysis
+            s4: Γ ⊢ M0/x0 r α0 R21[x0] M22[x0] = M' : α by rule Subst-RH-App on s41, s42, s43
+            proof by s4, s5
+        end case
+
+    end case analysis
+end theorem
+ 
