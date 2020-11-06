@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -47,5 +48,12 @@ public class Case extends Node {
 
 	private List<Derivation> derivations = new ArrayList<Derivation>();
 	private final Span span;
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Derivation derivation : derivations) {
+			derivation.collectQualNames(consumer);
+		}
+	}
 }
 

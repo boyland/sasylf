@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
@@ -327,6 +328,14 @@ public class Theorem extends RuleLike {
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
 	private final boolean isAbstract;
+	
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Derivation derivation : derivations) {
+			derivation.collectQualNames(consumer);
+		}
+	}
 
 }
 

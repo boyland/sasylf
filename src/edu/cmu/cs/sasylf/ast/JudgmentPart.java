@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -103,6 +104,13 @@ public class JudgmentPart implements Part {
 			for (Rule r : j.getRules()) {
 				map.put(r.getName(),r);
 			}
+		}
+	}
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Judgment j : judgments) {
+			j.collectQualNames(consumer);
 		}
 	}
 

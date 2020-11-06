@@ -59,6 +59,7 @@ public class ProjectModuleProvider extends RootModuleProvider implements IResour
 		//System.out.println("got relevant change for project " + project);
 
 		IResourceDeltaVisitor visitor = new IResourceDeltaVisitor() {
+			@Override
 			public boolean visit(IResourceDelta delta) {
 				IResource resource = delta.getResource();
 				

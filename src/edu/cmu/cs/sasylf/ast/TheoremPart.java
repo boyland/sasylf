@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
@@ -55,4 +56,10 @@ public class TheoremPart implements Part {
 		}
 	}
 
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Theorem theorem : theorems) {
+			theorem.collectQualNames(consumer);
+		}
+	}
 }

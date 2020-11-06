@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -162,5 +163,18 @@ public class QualName extends Node {
 		if (resolution instanceof Theorem) return ((Theorem)resolution).getKind();
 		if (resolution instanceof Syntax) return "syntax";
 		return resolution.getClass().getSimpleName().toLowerCase();
+	}
+	
+	/**
+	 * Visit all qual names linked, accepting each one to the consumer.
+	 */
+	public void visit(Consumer<QualName> consumer) {
+		consumer.accept(this);
+		
+		// check if source == null
+		if (source == null) return;
+		
+		// otherwise, visit the source and do the same thing recursively
+		source.visit(consumer);
 	}
 }

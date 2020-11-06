@@ -5,6 +5,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -172,5 +173,10 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	@Override
 	public void computeSubordination() {
 		// Nothing to do.
+	}
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		source.visit(consumer);
 	}
 }

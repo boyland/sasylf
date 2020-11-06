@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -77,5 +78,13 @@ public class ModulePart extends Node implements Part {
 	public void collectRuleLike(Map<String, ? super RuleLike> map) {
 		// Nothing
 	}
-
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		module.visit(consumer);
+		
+		for (QualName name : arguments) {
+			name.visit(consumer);
+		}
+	}
 }

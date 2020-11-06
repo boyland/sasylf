@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.util.function.Consumer;
+
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -41,4 +43,9 @@ public class DerivationByRule extends DerivationByIHRule {
 
 	private QualName ruleName;
 	private RuleLike rule;
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		ruleName.visit(consumer);
+	}
 }
