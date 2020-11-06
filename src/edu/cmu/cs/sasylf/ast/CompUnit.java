@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -160,6 +161,21 @@ public class CompUnit extends Node implements Module {
 		}
 		for (Part part : parts) {
 			part.collectRuleLike(map);
+		}
+	}
+	
+	/**
+	 * 
+	 * @param consumer
+	 */
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Part part : params) {
+			part.collectQualNames(consumer);
+		}
+		
+		for (Part part : parts) {
+			part.collectQualNames(consumer);
 		}
 	}
 

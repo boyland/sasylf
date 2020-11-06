@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Syntax declarations that may be mutually recursive.
@@ -80,4 +81,10 @@ public class SyntaxPart implements Part {
 		// do nothing
 	}
 
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Syntax syn : syntax) {
+			syn.collectQualNames(consumer);
+		}
+	}
 }

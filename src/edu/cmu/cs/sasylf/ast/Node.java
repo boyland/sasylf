@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
@@ -49,5 +50,8 @@ public abstract class Node implements Span {
 	protected void tdebug(Object... args) {
 		Util.tdebug(args);
 	}
-
+	
+	public void collectQualNames(Consumer<QualName> consumer) {
+		// nothing
+	}
 }

@@ -1,6 +1,9 @@
 package org.sasylf.refactor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
@@ -37,7 +40,6 @@ import org.sasylf.project.ProofBuilder;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Context;
-import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.PackageDeclaration;
 import edu.cmu.cs.sasylf.ast.QualName;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -221,17 +223,27 @@ public class MoveProofFile extends MoveParticipant {
 			RefactoringStatus status, String oldPackage) throws BadLocationException {
 		// first see if we can get a CompUnit:
 		CompUnit cu = Proof.getCompUnit(file);
-		TextFileChange result = new TextFileChange("move package", file);
 		if (cu == null) {
 			status.addWarning("proof file is not syntactically legal; package declaration may be mislocated");
 		}	
 		IRegion moduleLoc = null;
 		if (cu != null) {
-			for (ModulePart part : cu.getModuleParts()) {
-				//CompUnit c = (CompUnit) part.getModule().resolve(null);
+			List<QualName> qualNames = new ArrayList<>();
+			Consumer<QualName> consumer = name -> {
+				//Object o = name.resolve(null);
+				if (name.getLastSegment().equals(oldPackage)) {
+					System.out.println("Matched name " + name);
+					qualNames.add(name);
+				}
+			};
 
-				moduleLoc = getModuleLocation(oldPackage, doc, part.getModule());
-
+			cu.collectQualNames(consumer);
+			System.out.println("Done finding qual names in this file!");
+			for (int i = qualNames.size() - 1; i >= 0; --i) {
+				QualName name = qualNames.get(i);
+				TextFileChange result = new TextFileChange("move package", file);
+				moduleLoc = getModuleLocation(oldPackage, doc, name);
+				
 				int offset = moduleLoc.getOffset();
 				int length = moduleLoc.getLength();
 
@@ -244,6 +256,23 @@ public class MoveProofFile extends MoveParticipant {
 				createEdit(result, moduleLoc);
 				change.add(result);
 			}
+//			for (ModulePart part : cu.getModuleParts()) {
+//				//CompUnit c = (CompUnit) part.getModule().resolve(null);
+//
+//				moduleLoc = getModuleLocation(oldPackage, doc, part.getModule());
+//
+//				int offset = moduleLoc.getOffset();
+//				int length = moduleLoc.getLength();
+//
+//				if (doc.get(offset, length).equals(newPackage)) {
+//					// no change needed
+//					continue;
+//				}
+//				System.out.println("Replacing " + doc.get(offset, length) + " with " + newPackage);
+//
+//				createEdit(result, moduleLoc);
+//				change.add(result);
+//			}
 		} else {
 			moduleLoc = new FindReplaceDocumentAdapter(doc).find(0,"module",true,true,true,false);
 			if (moduleLoc == null) {
