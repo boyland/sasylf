@@ -11,105 +11,6 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 
 
-
-INSTALLATION
-
-To run SASyLF, you must have Java version SE 8 or later installed.  You
-can get Java at:
-
-http://java.sun.com/javase/downloads/index.jsp
-
-
-
-
-RUNNING SASyLF
-
-You can run SASyLF within Eclipse by downloading the plugin into
-the "dropins" folder of your Eclipse distribution.
-The plugin is a file of the form org.sasylf_Major.Minor.Release.vDate.jar
-(The SASyLF.jar file will *not* work as a plugin).
- 
- 
-You can run SASyLF on the command line
-by explicitly invoking java on the SASyLF.jar (or plugin) file,
-as in:
-
-java -jar SASyLF.jar <filename>.slf
-
-
-Or, you can use the sasylf/sasylf.bat files provided for Unix/Windows,
-as follows:
-
-sasylf <filename>.slf
-
-
-
-SASyLF EXAMPLES
-
-Exercises to learn SASyLF are in the exercises/ directory
- * exercise1.slf - A simple inductive proof without variable binding
-			(solution is examples/sum.slf)
- * exercise2.slf - Adding let to the simply-typed lambda calculus
-			(solution is exercises/solution2.slf
-
-
-Tutorial examples (with comments that explain the SASyLF syntax) in the
-examples/ directory include:
-
- * sum.slf - Commutativity of addition
- * lambda.slf - Type Soundness for the Simply-Typed Lambda Calculus
- * while1.slf - A derivation of program execution in Hoare's While language
-		(assumes an oracle for arithmetic)
- * while2.slf - A proof that factorial in While computes factorial
-		(assumes an oracle for arithmetic)
- * poplmark-2a.slf - POPLmark challenge 2A: Type Soundness for System Fsub
-
-Other examples include:
- * lambda-loc.slf - shows preservation of a well-formed store in the untyped lambda calculus
- * object-calculus.slf - Definition of Abadi and Cardelli's Simply Typed Object Calculus
- * featherweight-java.slf - Definition of Featherweight Java (soundness proof to come)
- * lambda-unicode.slf - version of lambda.slf using unicode identifiers and operators
- * cut-elimination - demonstrate some of the more advanced features of SASyLF 1.3
-
-
-
-COMPILING SASyLF
-
-This directory is an Eclipse project and can be compiled with Eclipse 4.2
-(Juno) or later.  You will need to compile the edu/cmu/cs/sasylf/parser/parser.jj 
-file with the JavaCC Eclipse plugin, available from update site
-http://eclipse-javacc.sourceforge.net/ (compile the .jj file to .java
-by right-clicking on parser.jj and choosing Compile with JavaCC).
-
-Alternatively, if you fetch the source from github, you can build SASyLF
-(under Unix) assuming you have java and javacc in your path using
-	make build
-
-Currently, there's no easy way to build the Eclipse plugin from the command-line.
-
-
-CONTACT
-
-If you have any trouble installing or running SASyLF, or understanding
-how to use the tool or interpret its output, contact John Boyland
-<boyland@uwm.edu> or else submit an issue report on the github site,
-or discuss the problem on the Google group http://groups.google.com/group/sasylf-users
-
-
-
-KNOWN LIMITATIONS (incomplete list)
-
-Only one context nonterminal permitted per judgment/theorem.
-
-Error messages point to the line of code and the kind of error, but
-could use some improvement.
-
-The automated prover ("by solve") works poorly.  It works only
-for straightforward derivations without the use of induction or case
-analysis.  Its use is deprecated.
-
-
-
 RELEASE HISTORY
 
 1.5.0	Modules without parameters
@@ -118,10 +19,12 @@ RELEASE HISTORY
     Inversion can be used with 'or' clauses, with syntax, and without naming rule
     Resolved issues #65, #84, #85, #86, #88, #89, #91, #92, #94, #95, #100
                     #101, #103, #104
+
 1.4.0	"where" clauses
 	Added alternate syntax (e.g.: S, T ::= Unit | S -> T)
 	Added syntactic sugar (e.g.: 1 := s 0)
     Resolved issues #25, #63, #68, #70, #71, #72, #74, #75, #76, #77, #78, #79, #81, #82, #83
+
 1.3.4	Plugin improvements
 	Incremental proof checking
 	re-check after revert.
@@ -162,6 +65,7 @@ RELEASE HISTORY
     Eclipse plugin updated to add project and package support and builders
     Editor has fold support
     Resolved issues #45
+
 1.2.6   Bug fixes to stable 1.2
     Unproved warning now gives derivation to prove
     Substitution semantics changed for complex contexts, poplmark-2a proof updated
@@ -196,6 +100,7 @@ RELEASE HISTORY
 	Fixed issues #18, #19, #20, #22
 	Added "proof" and "and" as highlightable keywords
 1.2.0	Integrated Eclipse plugin source
+
 1.1.3	Bug fix
 1.1.2	Bug fixes
     Address Issue #17
@@ -215,6 +120,7 @@ RELEASE HISTORY
 	Improved error messages
 1.0.2	Various bug fixes
 	Better error messages
+
 0.23	Fixed bug where an exception was thrown if substitution was used with too few arguments
 	Fixed bug due to not correctly expanding free variables in part of a rule application check with an expanded Gamma
 	Fixed bug with bindings nested within bindings
