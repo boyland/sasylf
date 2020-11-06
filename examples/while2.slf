@@ -196,11 +196,11 @@ theorem factInvariant :	forall nat1
 							forall dinv: {} |- nat3 == (nat1 - nat2)! => true
 							forall dfin: {} |- nat4 == nat1! => true
 							exists
-{ n -> nat1, i -> nat2, r -> nat3 } |-
-while 0 < i do
+({ n -> nat1, i -> nat2, r -> nat3 } |-
+ while 0 < i do
 	(i := i - s(0);
 	r := r * (n - i))
-=> { n -> nat1, i -> 0, r -> nat4 }.
+=> { n -> nat1, i -> 0, r -> nat4 }).
 
 /** Ok, now we've got to prove this by induction, so we just use the
  * "by induction" justification.  We have to say what we're doing induction on.

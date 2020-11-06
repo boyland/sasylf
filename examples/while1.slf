@@ -222,12 +222,12 @@ E |- (while b do S) => E
  * assumptions we've stated as "forall".  Here, that's all there is
  * to it; later we'll add induction and other constructs as well.
  */
-theorem fact2equals2 : exists
+theorem fact2equals2 : exists (
 {n -> 2}	|-	i := 1; (r := 1;			// our judgment is just a statement that
         	while i < n do					// if n = 2, running the program results in
         		(i := i + 1;				// the environment at the bottom.  Note that
         		r := r * i))				// the result r = n! = 2.
-            => {n -> 2, i -> 2, r -> 2}.
+            => {n -> 2, i -> 2, r -> 2}).
 
 /** The actual proof is a series of statements of the form:
  *
