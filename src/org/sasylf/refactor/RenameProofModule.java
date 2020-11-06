@@ -205,7 +205,6 @@ public class RenameProofModule extends RenameParticipant {
 
 	private void createModulePartRenameChange(IFile file, IDocument doc, 
 			RefactoringStatus status) throws BadLocationException {
-		System.out.println("Document: " + doc);
 		// first see if we can get a CompUnit:
 		CompUnit cu = Proof.getCompUnit(file);
 		if (cu == null) {
@@ -216,15 +215,14 @@ public class RenameProofModule extends RenameParticipant {
 		if (cu != null) {
 			List<QualName> qualNames = new ArrayList<>();
 			Consumer<QualName> consumer = name -> {
-				//Object o = name.resolve(null);
 				if (name.getLastSegment().equals(oldName)) {
-					System.out.println("Matched name " + name);
+					//System.out.println("Matched name " + name);
 					qualNames.add(name);
 				}
 			};
 
 			cu.collectQualNames(consumer);
-			System.out.println("Done finding qual names in this file!");
+			//System.out.println("Done finding qual names in this file!");
 
 			for (int i = qualNames.size() - 1; i >= 0; --i) {
 				QualName name = qualNames.get(i);
@@ -284,7 +282,7 @@ public class RenameProofModule extends RenameParticipant {
 		Set<ModuleId> dependencies = moduleFinder.getDependencies(id);
 
 		for (ModuleId dependency : dependencies) {
-			System.out.println("IFile: " + pb.getResource(dependency));
+			//System.out.println("IFile: " + pb.getResource(dependency));
 			createDependencyChanges(pb.getResource(dependency), pm, status);
 		}
 

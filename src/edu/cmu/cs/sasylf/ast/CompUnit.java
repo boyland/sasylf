@@ -165,8 +165,8 @@ public class CompUnit extends Node implements Module {
 	}
 	
 	/**
-	 * 
-	 * @param consumer
+	 * Collect all {@link QualName}s using the given consumer.
+	 * @param consumer The consumer that accepts conditions based on the given {@link QualName}.
 	 */
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
@@ -177,23 +177,6 @@ public class CompUnit extends Node implements Module {
 		for (Part part : parts) {
 			part.collectQualNames(consumer);
 		}
-	}
-
-	/**
-	 * Get the {@link ModulePart}s associated with this {@link CompUnit}.
-	 * @return the list of module parts in this comp unit.
-	 */
-	@Deprecated
-	public List<ModulePart> getModuleParts() {
-		List<ModulePart> moduleParts = new ArrayList<ModulePart>();
-
-		for (Part part : parts) {
-			if (part instanceof ModulePart) {
-				moduleParts.add((ModulePart) part);
-			}
-		}
-
-		return moduleParts;
 	}
 
 	private Map<String,Object> declCache = new HashMap<String,Object>();

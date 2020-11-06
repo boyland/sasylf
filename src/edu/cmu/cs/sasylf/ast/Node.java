@@ -51,6 +51,10 @@ public abstract class Node implements Span {
 		Util.tdebug(args);
 	}
 	
+	/**
+	 * Collect all {@link QualName}s using the given consumer.
+	 * @param consumer The consumer that accepts conditions based on the given {@link QualName}.
+	 */
 	public void collectQualNames(Consumer<QualName> consumer) {
 		// nothing
 	}
