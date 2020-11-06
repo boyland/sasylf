@@ -122,11 +122,4 @@ public abstract class DerivationWithArgs extends Derivation {
 		Term argTerm = ctx.toTerm(element);
 		return argTerm;
 	}
-	
-//	@Override
-//	public void collectQualNames(Consumer<QualName> consumer) {
-//		for (Fact fact : args) {
-//			fact.collectQualNames(consumer);
-//		}
-//	}
 }
