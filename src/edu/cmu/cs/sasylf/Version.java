@@ -27,8 +27,8 @@ public class Version {
 
 	/**
 	 * Compute the version string by trying to find the file "README.TXT"
-	 * and reading the first line. 
-	 * @return
+	 * or "ChangeLog.txt" and reading the first line. 
+	 * @return version string, never null but possibly without a version
 	 */
 	private static String getVersionString() {
 		String version = "SASyLF version ???";
@@ -36,6 +36,7 @@ public class Version {
 		// This is rather more complex than I hoped; if we are packed up in a JAR,
 		// it's easy to find, but otherwise, we have to go hunting.
 		InputStream s = Main.class.getClassLoader().getResourceAsStream("README.TXT");
+		if (s == null) s = Main.class.getClassLoader().getResourceAsStream("ChangeLog.txt");
 		if (s == null) {
 			URL execdir = Main.class.getClassLoader().getResource(".");
 			URI uri;
@@ -48,6 +49,7 @@ public class Version {
 			if (uri.getScheme().equals("file")) {
 				File dir = new File(uri.getPath());
 				File rfile = new File(dir.getParentFile(),"README.TXT");
+				if (!rfile.canRead()) rfile = new File(dir.getParentFile(),"ChangeLog.txt");
 				try {
 					s = new FileInputStream(rfile);
 				} catch (FileNotFoundException ex) {
