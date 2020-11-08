@@ -268,7 +268,7 @@ public class Relaxation {
 						ErrorHandler.report("Rule " + theRule.getName() + " cannot apply since "+ 
 								subject.getElements().get(i) + " cannot be a variable.", theNode);
 					} else {
-						// XXX: Why create a new variable?  Maybe this is an eta-equivalent variable?
+						// Why create a new variable?  We need to because the old one had parameters, the new one not.
 						Application app = (Application)t;
 						FreeVar funcVar = (FreeVar)app.getFunction();
 						List<Abstraction> argTypes = new ArrayList<Abstraction>();
