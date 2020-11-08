@@ -52,7 +52,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 		String inputName = getTargetDerivationName();
 		
 		final Element targetElement = targetDerivation.getElement();
-		final Term targetTerm = ctx.toTerm(targetElement);		
+		final Term targetTerm = ctx.toTerm(targetElement);
+		Term adaptedTargetTerm = targetTerm; // changed for an assumption rule
 		final ElementType caseType = targetElement.getType();
 		
 		if (caseType instanceof SyntaxDeclaration) {
@@ -138,7 +139,6 @@ public class DerivationByInversion extends DerivationWithArgs {
 		Util.debug("  after adapt/subst, result = ", result);
 		Util.debug("  case = ",pair.first);
 		Util.debug("inversion gets substitution ",pair.second);
-		ctx.composeSub(pair.second);
 
 		if (only instanceof Rule) {
 			Rule rule = (Rule)only;
@@ -174,6 +174,30 @@ public class DerivationByInversion extends DerivationWithArgs {
 						ErrorHandler.report("inversion yields " + pieces.size() + " but only accepting " + clauses.size(), this);
 					}
 				}
+				if (rule.isAssumption()) {
+					Relaxation relax = Relaxation.computeRelaxation(ctx, targetClause, targetElement.getRoot(),
+							targetTerm, null, pair.first /*originalCandidate*/, rule, this);
+					
+					Util.debug("inversion relaxation: ", relax);
+					adaptedTargetTerm = relax.adapt(targetTerm);
+					Util.debug("target = ", targetTerm);
+					Util.debug("adapted is ", adaptedTargetTerm);
+					
+					NonTerminal newRoot = ctx.findRelaxation(relax);
+					if (newRoot == null) {
+						SyntaxDeclaration sd = targetClause.getRoot().getType();
+						FreeVar oldVar = (FreeVar)targetClause.getRoot().asTerm();
+						newRoot = new NonTerminal(oldVar.freshify().toString(),null,sd);
+						Util.debug("Adding relaxation for generated ", newRoot);
+						ctx.addRelaxation(newRoot, relax);
+					} else {
+						Util.debug("Reusing relaxation for ", newRoot);
+					}
+				}
+				
+				// must be after creating relaxation:
+				ctx.composeSub(pair.second);
+				
 				for (int i=0; i < clauses.size(); ++i) {
 					ClauseUse cu = clauses.get(i);
 					Term mt = cu.asTerm(); // want user-level variables
@@ -208,11 +232,13 @@ public class DerivationByInversion extends DerivationWithArgs {
 					checkRootMatch(ctx,rule.getPremises().get(i),this.getElement(),this);
 				}
 			}
+		} else {
+			ctx.composeSub(pair.second);
 		}
 
 		// add to sigma_u new mappings from CAS variables to generated terms
 		// (for which the user has not provided their own terms in premises)
-		for (FreeVar v : targetTerm.getFreeVariables()) {
+		for (FreeVar v : adaptedTargetTerm.getFreeVariables()) {
 			if (su.getSubstituted(v) == null) { // favor user-defined mappings
 				Term mapped = ctx.currentSub.getSubstituted(v);
 				if (mapped != null) {
@@ -222,7 +248,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		}
 		
 		// verify user-written where clauses
-		whereClauses.checkWhereClauses(ctx, targetTerm, null, su, this);
+		whereClauses.checkWhereClauses(ctx, adaptedTargetTerm, null, su, this);
 
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(targetDerivation)) {

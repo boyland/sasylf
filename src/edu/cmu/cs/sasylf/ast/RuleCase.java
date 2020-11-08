@@ -127,12 +127,12 @@ public class RuleCase extends Case {
 			}
 			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
-				ErrorHandler.report("Should not add to context in case analysis",this);
+				ErrorHandler.report("Should not change context in case analysis",this);
 			}
 		} else if (subjectRoot.equals(thisRoot)) {
 			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
-				ErrorHandler.report("Should not add to context in case analysis",this);
+				ErrorHandler.report("Should not change context in case analysis",this);
 			}
 		} else {
 			if (thisRoot == null) {
@@ -152,6 +152,7 @@ public class RuleCase extends Case {
 			
 			subjectTerm = subjectTerm.substitute(ctx.currentSub);
 			adaptedSubjectTerm = relax.adapt(subjectTerm);
+			Util.debug("In case of assumption rule case at ",getLocation()," relaxation = ",relax);
 			Util.debug("subject = ", subjectTerm);
 			Util.debug("adapted is ", adaptedSubjectTerm);
 

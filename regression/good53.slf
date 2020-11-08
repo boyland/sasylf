@@ -1,0 +1,282 @@
+// inversion of assumption rules up to 1.5.0a5 not strong enough
+// inversion doesn't seem to ask about unifications from the subject
+package edu.northeastern.cs7480;
+
+terminals true false if then else value
+          Bool in fn
+
+
+syntax
+
+t ::= true 
+  | false
+  | if t then t else t
+  | fn x:T => t[x]
+  | x
+  | t t
+
+T ::= Bool
+  | T -> T
+
+Gamma ::= *
+      | Gamma, x : T
+
+
+
+judgment equality: t == t
+
+------ eq
+t == t
+
+t1 == t1'
+-------------- eq1
+t1 t2 == t1' t2
+
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+
+judgment isvar: t : T in Gamma
+assumes Gamma
+
+----------------------- var
+x : T in (Gamma, x : T)
+
+
+judgment type: Gamma |- t : T
+assumes Gamma
+
+-------------------- T-True
+Gamma |- true : Bool
+
+--------------------- T-False
+Gamma |- false : Bool
+
+Gamma |- t1 : Bool
+Gamma |- t2 : T
+Gamma |- t3 : T
+---------------------------------- T-If
+Gamma |- if t1 then t2 else t3 : T
+
+t : T in Gamma
+-------------- T-Var
+Gamma |- t : T
+
+Gamma, x : T1 |- t[x] : T2
+------------------------------------- T-Abs
+Gamma |- (fn x:T1 => t[x]) : T1 -> T2
+
+Gamma |- t1 : T2 -> T1
+Gamma |- t2 : T2
+----------------------- T-App
+Gamma |- t1 t2 : T1
+
+
+theorem typing-unique :
+    assumes Gamma
+    forall d1: Gamma |- t : T1
+    forall d2: Gamma |- t : T2
+    exists T1 == T2 .
+    // first get rid of the T-Var case for d2
+    do case analysis on d2:
+        case rule
+            v2: t : T2 in Gamma
+            ------------------- T-Var
+            _: Gamma |- t : T2
+        is
+            proof by case analysis on v2:
+                case rule
+                    ----------------------------- var
+                    _: x : T2 in (Gamma', x : T2)
+                is
+                    proof by case analysis on d1:
+                        case rule
+                            v1: t : T1 in Gamma
+                            -------------------- T-Var
+                            _: Gamma |- t : T1
+                        is
+			    // first: "case analysis" can handle task:
+			    proof by case analysis on v1:
+			        case rule
+				    ---------------------------- var
+				    _: x : T1 in (Gamma', x:T1)
+				    where T2 := T1
+				is
+				    proof by rule type-eq
+				 end case
+			    end case analysis // */
+			    use inversion of rule var on v1
+			    where T2 := T1 //? not needed
+                            proof by rule type-eq // works
+                        end case
+                    end case analysis
+                end case
+            end case analysis
+	    // try the second time:
+            proof by case analysis on v2:
+                case rule
+                    ----------------------------- var
+                    _: x : T2 in (Gamma', x : T2)
+                is
+                    proof by case analysis on d1:
+                        case rule
+                            v1: t : T1 in Gamma
+                            -------------------- T-Var
+                            _: Gamma |- t : T1
+                        is
+			    use inversion of rule var on v1
+			    where T1 := T2 // works
+                            proof by rule type-eq // works
+                        end case
+                    end case analysis
+                end case
+            end case analysis
+	    // try third time
+	    use inversion of rule var on v2
+	    v1: t : T1 in Gamma by inversion of rule T-Var on d1 //? need other rules
+	    use inversion of rule var on v1
+	    where T2 := T1 //? not needed
+	    proof by rule type-eq //? restricts T2
+        end case
+    end case analysis
+    // now, do case analysis on d1, knowing d2 will never be T-Var
+    _: T1 == T2 by induction on d1:
+	case rule
+	    ----------------------- T-True
+	    _: Gamma |- true : Bool
+	    where t := true and T1 := Bool
+	is
+	    _: Bool == T2 by case analysis on d2:
+		case rule
+		    ----------------------- T-True
+		    _: Gamma |- true : Bool
+		    where T2 := Bool
+		is
+		    _: Bool == Bool by rule type-eq
+		end case
+	    end case analysis
+	end case
+
+	case rule
+	    ----------------------- T-False
+	    _: Gamma |- false : Bool
+	    where t := false and T1 := Bool
+	is
+	    _: Bool == T2 by case analysis on d2:
+		case rule
+		    ----------------------- T-False
+		    _: Gamma |- false : Bool
+		    where T2 := Bool
+		is
+		    _: Bool == Bool by rule type-eq
+		end case
+	    end case analysis
+	end case
+
+	case rule
+	    d11: Gamma |- t1 : Bool
+	    d12: Gamma |- t2 : T1
+	    d13: Gamma |- t3 : T1
+	    -------------------------------------- T-If
+	    _: Gamma |- if t1 then t2 else t3 : T1
+	    where t := if t1 then t2 else t3
+	is
+	    _: T1 == T2 by case analysis on d2:
+		case rule
+		    d21: Gamma |- t1 : Bool
+		    d22: Gamma |- t2 : T2
+		    d23: Gamma |- t3 : T2
+		    -------------------------------------- T-If
+		    _: Gamma |- if t1 then t2 else t3 : T2
+		is
+		    _: T1 == T2 by induction hypothesis on d12,d22
+		end case
+	    end case analysis
+	end case
+
+	case rule
+	    v1: t:T1 in Gamma
+	    ----------------- T-Var
+	    _: Gamma |- t:T1
+	is
+	    proof by case analysis on v1:
+	        case rule
+	            ----------------------------- var
+	            _: x : T1 in (Gamma', x : T1)
+	        is
+	            proof by contradiction on d2 // Requires 1.4.1a2
+	        end case
+	    end case analysis
+	end case
+
+	case rule
+	    d11: Gamma, x:T |- t1[x] : T1'
+	    -------------------------------------- T-Abs
+	    _: Gamma |- (fn x:T => t1[x]) : T->T1'
+	    where t := fn x:T => t1[x]
+	     and T1 := T -> T1'
+	is
+	    _: T1 == T2 by case analysis on d2:
+		case rule
+		    d21: Gamma, x:T |- t1[x] : T2'
+		    ------------------------------------- T-Abs
+		    _: Gamma |- (fn x:T => t1[x]): T->T2'
+		    where T2 := T -> T2'
+		is
+		    e: T1' == T2' by induction hypothesis on d11,d21
+		    use inversion of rule type-eq on e
+		    where T1' := T2'
+		    proof by rule type-eq
+		end case
+	    end case analysis
+	end case
+
+	case rule
+	    d11: Gamma |- t1 : T12 -> T1
+	    d12: Gamma |- t2 : T12
+	    ---------------------------- T-App
+	    _  : Gamma |- t1 t2 : T1
+	    where t := t1 t2
+	is
+	    _: T1 == T2 by case analysis on d2:
+		case rule
+		    d21: Gamma |- t1 : T22 -> T2
+		    d22: Gamma |- t2 : T22
+		    ---------------------------- T-App
+		    _  : Gamma |- t1 t2 : T2
+		is
+		    e: T12 -> T1 == T22 -> T2 by induction hypothesis on d11,d21
+		    use inversion of type-eq on e 
+		    where T22 := T12 and T2 := T1
+		    _: T1 == T1 by rule type-eq
+		end case
+	    end case analysis
+	end case
+    end induction
+end theorem
+
+lemma app-eq-implies-eq2:
+    forall eq: t1 t2 == t1' t2'
+    exists t1 == t1' and t2 == t2' .
+    do case analysis on eq:
+        case rule
+            ----------------- eq
+	    _: t1 t2 == t1 t2
+	is
+	    e1: t1 == t1 by rule eq
+	    e2: t2 == t2 by rule eq
+	    proof by e1, e2
+	end case
+    end case analysis
+    e1: t1 == t1' by inversion on eq
+    where t2' := t2
+    e2: t2 == t2 by rule eq
+    proof by e1, e2
+end lemma
+
+
+
