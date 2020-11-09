@@ -355,33 +355,6 @@
                style="push">
          </command>
       </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
-         <command
-               commandId="org.sasylf.commands.togglenature"
-               icon="icons/slf.gif"
-               label="Toggle SASyLF Nature"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <reference
-                        definitionId="org.sasylf.inPerspective">
-                  </reference>
-                  <with
-                        variable="selection">
-                     <iterate
-                           ifEmpty="false">
-                        <instanceof
-                              value="org.eclipse.core.resources.IProject">
-                        </instanceof>
-                     </iterate>
-                  </with>
-               </and>
-            </visibleWhen>
-         </command>
-      </menuContribution>
    </extension>
    
    <extension
