@@ -96,6 +96,12 @@ public class NewProofWizardPage extends WizardPage {
 		setControl(container);
 	}
 
+	@Override
+	public void setVisible(boolean visible) {
+		fileText.setFocus(); // https://www.eclipse.org/forums/index.php/t/163588/
+		super.setVisible(visible);
+	}
+
 	/**
 	 * Tests if the current workbench selection is a suitable container to use.
 	 */
@@ -114,7 +120,7 @@ public class NewProofWizardPage extends WizardPage {
 				else
 					container = ((IResource) obj).getParent();
 			} else if (obj instanceof IAdaptable) {
-				container = (IContainer)((IAdaptable)obj).getAdapter(IContainer.class);
+				container = ((IAdaptable)obj).getAdapter(IContainer.class);
 			}
 			if (container != null) {
 				containerText.setText(container.getFullPath().toString());
