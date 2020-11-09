@@ -5,7 +5,6 @@ import java.io.InputStream;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.PlatformObject;
 
@@ -83,23 +82,4 @@ public class IFileAdapter extends PlatformObject implements IProjectStorage {
 	 * @return an adapted file, must not be null
 	 */
 	public static IFileAdapter create(IFile f) { return new IFileAdapter(f); }
-	
-	/**
-	 * Cast the argument as a project storage if possible or adapt as a file
-	 * and then create a file adapter for it.
-	 * @param obj object to test, may be null
-	 * @return null if cannot adapt
-	 */
-	public static IProjectStorage adapt(Object obj) {
-		IProjectStorage result = null;
-		if (obj instanceof IAdaptable) {
-			final IAdaptable pobj = (IAdaptable)obj;
-			result = pobj.getAdapter(IProjectStorage.class);
-			if (result == null) {
-				final IFile file = pobj.getAdapter(IFile.class);
-				if (file != null) result = create(file);
-			}
-		}
-		return result;
-	}
 }
