@@ -42,6 +42,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
 	public SyntaxDeclaration(Location loc, NonTerminal nt, List<Clause> l) { 
 		super(loc); 
 		nonTerminal = nt; 
+		nt.setType(this);
 		elements = l; 
 		isAbstract = l.isEmpty();
 		if (!l.isEmpty()) {

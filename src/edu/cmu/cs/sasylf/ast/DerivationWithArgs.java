@@ -8,6 +8,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Util;
 
 public abstract class DerivationWithArgs extends Derivation {
 	// TODO: change to have Element instead, and change names
@@ -46,6 +47,18 @@ public abstract class DerivationWithArgs extends Derivation {
 	public List<Clause> getArgStrings() { return argStrings; }
 	public List<Fact> getArgs() { return args; }
 
+	/**
+	 * Return the expected clause type for the specified argument.
+	 * This is used to break ambiguity in parsing, and is really
+	 * only useful if the return is a nonterminal.
+	 * This information in only advisory; we don't promise to check it.
+	 * @param i index of parameter (0 based)
+	 * @return type expected for the i'th parameter or null if there is no special expectation
+	 */
+	protected ClauseType getClauseTypeExpected(Context ctx, int i) {
+		return null;
+	}
+	
 	protected abstract String prettyPrintByClause();
 
 	@Override
@@ -95,8 +108,14 @@ public abstract class DerivationWithArgs extends Derivation {
 					Clause cl = (Clause)e;
 					if (cl.getElements().size() == 1 && !(cl.getElements().get(0) instanceof Terminal)) {
 						e = cl.getElements().get(0);
+						Util.verify(!(e instanceof Clause), "clause should have been removed before");
 					} else {
-						e = cl.computeClause(ctx, false);
+						ClauseType expected = getClauseTypeExpected(ctx,i);
+						if (expected instanceof SyntaxDeclaration) {
+							e = cl.computeClause(ctx, ((SyntaxDeclaration)expected).getNonTerminal());
+						} else {
+							e = cl.computeClause(ctx, false);
+						}
 					}
 				}
 				if (e instanceof Variable) {
