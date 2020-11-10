@@ -47,6 +47,7 @@ theorem test:
                 end case
 
             end case analysis
+            proof by eq, g
             _: n = S n' and _: n > 0 by eq,g
         end case
 
