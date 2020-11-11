@@ -2071,7 +2071,6 @@ Derivation Justification(Token startT, Clause c) :
    	      c, q, cl, whereClauses);
 	}
   )
-    // args should include expressions *****
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
       if (cl != null) {
@@ -2121,12 +2120,11 @@ Derivation Justification(Token startT, Clause c) :
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
        return d;
      }
-  | t=<IDENTIFIER>
+  | cl=SimpleExpr()
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
-      d.setEndLocation(Location.endOf(t)); 
-      d.addArgString(clauseFor(t));
+      d.addArgString(cl);
     }
-    ( <COMMA> t=<IDENTIFIER> { d.addArgString(clauseFor(t)); } )*
+    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
 	{ return d; }
 }
 
