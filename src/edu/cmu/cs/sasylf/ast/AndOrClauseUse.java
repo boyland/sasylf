@@ -29,36 +29,50 @@ public abstract class AndOrClauseUse extends ClauseUse {
 	}
 	
 	public AndOrClauseUse create(Location loc, Context ctx, List<ClauseUse> parts) {
-		AndOrJudgment judg = (AndOrJudgment)getType();
-		Terminal sep = judg.makeSeparator(loc);
+		AndOrJudgment rcvr = (AndOrJudgment)getType();
+		Terminal sep = rcvr.makeSeparator(loc);
 		Element prefix = null;
+		NonTerminal assumption = null;
 		List<Judgment> types = new ArrayList<>();
 		for (ClauseUse p : parts) {
 			ClauseType type = p.getType();
 			if (!(type instanceof Judgment)) {
 				ErrorHandler.report("can only "+sep+" clauses together, not syntax", p);
 			}
-			types.add((Judgment)type);
+			final Judgment judg = (Judgment)type;
+			types.add(judg);
+			final NonTerminal localAssume = judg.getAssume();
+			if (localAssume == null) continue;
+			if (assumption == null) assumption = localAssume;
+			else if (!assumption.equals(localAssume)) {
+				if (p.getRoot() == null) continue; // OK -- not involved with prefix
+				ErrorHandler.report("cannot "+sep+" judgments with different assumptions", p);
+			}
 			Element e = p.getAssumes();
-			if (e != null) {
-				if (prefix == null) prefix = e;
-				else try {
-					prefix = ContextJudgment.getCommonPrefix(prefix, e);
-				} catch (NoCommonPrefixException e1) {
-					ErrorHandler.report("all "+sep+"ed judgments must share a common prefix context", p);								
-				}
+			Util.verify(e != null, "How can it be null if the judgment has an assumption?");
+			if (prefix == null) prefix = e;
+			else try {
+				prefix = ContextJudgment.getCommonPrefix(prefix, e);
+			} catch (NoCommonPrefixException e1) {
+				ErrorHandler.report("all "+sep+"ed judgments must share a common prefix context", p);								
 			}
 		}
 		List<ClauseUse> clauses = new ArrayList<>(parts); // so we can mutate
 		int n = types.size();
 		for (int i=0; i < n; ++i) {
 			Judgment j = types.get(i);
-			if (j.getAssume() == null) continue;
 			ClauseUse cu = clauses.get(i);
-			Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
+			if (j.getAssume() == null) continue;
+			Element context = cu.getAssumes();
 			if (context.equals(prefix)) continue;
-			j = ContextJudgment.create(getLocation(), ctx, j, prefix, context);
-			cu = ContextJudgment.convert(cu, prefix);
+			if (!j.getAssume().equals(assumption)) {
+				Util.verify(cu.getRoot() == null, "This was checked already.");
+				j = ContextJudgment.create(getLocation(), ctx, j, null, context);
+				cu = ContextJudgment.convert(cu, null);
+			} else {
+				j = ContextJudgment.create(getLocation(), ctx, j, prefix, context);
+				cu = ContextJudgment.convert(cu, prefix);				
+			}
 			Util.debug("converted: ",cu);
 			types.set(i, j);
 			clauses.set(i, cu);
@@ -66,7 +80,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		List<Element> newElements = new ArrayList<Element>();
 		for (ClauseUse cl : clauses) {
 			if (!newElements.isEmpty()) {
-				newElements.add(judg.makeSeparator(loc));
+				newElements.add(rcvr.makeSeparator(loc));
 			}
 			for (Element e : cl.getElements()) {
 				newElements.add(e);

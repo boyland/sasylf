@@ -22,6 +22,9 @@ import edu.cmu.cs.sasylf.util.Util;
  * in the premise with an expanded context.  We don't add this to the parser since
  * it would cause parsing ambiguity.  Judgments of this form are created when we want to conjoin
  * two clauses with different contexts.
+ * <p>
+ * If the context clause is the empty context, then the generated judgment doesn't have
+ * any context at all, which is convenient for combining with other clauses with and/or.
  */
 public class ContextJudgment extends Judgment {
 
@@ -29,7 +32,7 @@ public class ContextJudgment extends Judgment {
 	private final ClauseDef context;
 	
 	private ContextJudgment(Location loc, Judgment b, ClauseDef assume) {
-		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,assume),b.getAssume());
+		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,assume),assume.getAssumeIndex() >= 0 ? b.getAssume() : null);
 		base = b;
 		context = assume;
 		NonTerminal root = b.getAssume();
@@ -145,8 +148,8 @@ public class ContextJudgment extends Judgment {
 			if (!l1.get(i).equals(l2.get(i))) break;
 			last = i;
 		}
-		if (last == -1) throw new NoCommonPrefixException(e1,e2);
-		return l1.get(last);
+		if (last >= 0) return l1.get(last);
+		throw new NoCommonPrefixException(e1,e2);
 	}
 	
 	protected static void addPrefixes(Element e, List<Element> list) {
@@ -185,7 +188,7 @@ public class ContextJudgment extends Judgment {
 	 */
 	public static Judgment create(Location loc, Context ctx, Judgment base, Element prefix, Element context) {
 		Judgment result = base;
-		while (!context.equals(prefix)) {
+		while (context != prefix && !context.equals(prefix)) {
 			ClauseUse cu = (ClauseUse)context;
 			ClauseDef form = cu.getConstructor();
 			result = create(loc, ctx, result, form);
@@ -206,7 +209,7 @@ public class ContextJudgment extends Judgment {
 		Judgment judg = (Judgment)current.getConstructor().getType();
 		Element context = current.getAssumes();
 		if (context == null) return current;
-		while (!context.equals(prefix)) {
+		while (context != prefix && !context.equals(prefix)) {
 			ClauseUse cu = (ClauseUse)context;
 			ClauseDef form = cu.getConstructor();
 			ContextJudgment newJudg = cache.get(Pair.create(judg, form));
@@ -230,7 +233,7 @@ public class ContextJudgment extends Judgment {
 	public static ClauseUse unwrap(ClauseUse current) {
 		ClauseUse result = current;
 		Judgment judg = (Judgment)current.getConstructor().getType();
-		if (judg.getAssume() == null) return current;
+		// if (judg.getAssume() == null) return current;
 		while (judg instanceof ContextJudgment) {
 			Judgment newJudg = ((ContextJudgment)judg).getBase();
 			ClauseDef context = ((ContextJudgment)judg).getContext();

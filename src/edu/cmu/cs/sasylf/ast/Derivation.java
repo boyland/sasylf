@@ -171,6 +171,15 @@ public abstract class Derivation extends Fact {
 	 * @return
 	 */
 	public static boolean checkMatchWithImplicitCoercions(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
+		// XXX: It's not clear whether unwrapping is needed
+		if (match.getType() instanceof ContextJudgment) {
+			Util.debug("Found context judgment in match!");
+			// match = ContextJudgment.unwrap((ClauseUse)match);
+		}
+		if (supplied.getType() instanceof ContextJudgment) {
+			Util.debug("FOund context judgment in supplied!");
+			// supplied = ContextJudgment.unwrap((ClauseUse)supplied);
+		}
 		if (supplied instanceof OrClauseUse) {
 			for (ClauseUse provided : ((OrClauseUse)supplied).getClauses()) {
 				boolean result = checkMatchWithImplicitCoercions(node,ctx,match,provided,errorMsg);
@@ -185,12 +194,6 @@ public abstract class Derivation extends Fact {
 			}
 			if (errorMsg == null) return false;
 			ErrorHandler.report(errorMsg + "\nNone of the possibilities matched.", node);
-		}
-		if (match.getType() instanceof ContextJudgment) {
-			//XXX: System.out.println("Found context judgment in match!");
-		}
-		if (supplied.getType() instanceof ContextJudgment) {
-			//XXX: System.out.println("FOund context judgment in supplied!");
 		}
 		if (match instanceof AndClauseUse) {
 			if (!(supplied instanceof AndClauseUse)) {
