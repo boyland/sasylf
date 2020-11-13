@@ -39,23 +39,8 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		if (sourceClauses.size() > 1) {
 			Util.debug("Making and clause for " + sourceClauses);
 			source = AndClauseUse.makeAndClause(source.getLocation(), ctx, sourceClauses);
+			Util.debug("  " + source);
 		}
-		/*if (this.getArgStrings().size() > 1) {
-			if (!(cl instanceof AndClauseUse)) {
-				ErrorHandler.report("Claimed fact is not a conjunction, remove extra arguments", this);
-			}
-			List<ClauseUse> results = ((AndClauseUse)cl).getClauses();
-			int n = results.size();
-			if (n != getArgStrings().size()) {
-				ErrorHandler.report("Wrong number of facts for conjuction, expected " + n, this);
-			}
-			for (int i=0; i < n; ++i) {
-				ClauseUse source = sourceClauses.get(i);
-				ClauseUse result = results.get(i);
-				Derivation.checkMatchWithImplicitCoercions(this,ctx,result,source,"Claimed conjunct #" + (i+1) + ": " + result + " is not equivalent to previous: " + source);
-			}
-			return;
-		}*/
 
 		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, source, "Claimed " + cl + " not justified by " + source);
 		Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));

@@ -90,7 +90,7 @@ public abstract class Derivation extends Fact {
 			Pair<Fact,Integer> derivationInfo = ctx.subderivations.get(this);
 			for (int i=0; i < names.length; ++i) {
 				if (i == clauses.size()) break;
-				Fact fact = new DerivationByAssumption(names[i],this.getLocation(),clauses.get(i));
+				Fact fact = new DerivationByAssumption(names[i],this.getLocation(),ContextJudgment.unwrap(clauses.get(i)));
 				fact.addToDerivationMap(ctx);
 				if (derivationInfo != null) {
 					ctx.subderivations.put(fact,derivationInfo);
@@ -185,6 +185,12 @@ public abstract class Derivation extends Fact {
 			}
 			if (errorMsg == null) return false;
 			ErrorHandler.report(errorMsg + "\nNone of the possibilities matched.", node);
+		}
+		if (match.getType() instanceof ContextJudgment) {
+			//XXX: System.out.println("Found context judgment in match!");
+		}
+		if (supplied.getType() instanceof ContextJudgment) {
+			//XXX: System.out.println("FOund context judgment in supplied!");
 		}
 		if (match instanceof AndClauseUse) {
 			if (!(supplied instanceof AndClauseUse)) {

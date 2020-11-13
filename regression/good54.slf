@@ -1,0 +1,100 @@
+package regression;
+
+terminals λ a b c d
+
+syntax
+  t ::= x
+     | λ x:T • t[x]
+     | t1 t2 
+     | c
+     | d
+     
+  T ::= a
+     | b
+     | T t
+     | { x:T } T[x]
+     
+  S ::= a
+     | b
+     | S → S 
+
+  Γ ::= •
+     | Γ, x:T
+     
+
+judgment typing: Γ ⊢ t : T
+assumes Γ
+
+  -------------- T-Var
+  Γ, x:T ⊢ x:T
+  
+  ----------- T-C
+  Γ ⊢ c : a
+  
+  ----------- T-D
+  Γ ⊢ d : b c
+  
+  Γ, x:T ⊢ t[x] : T'[x]
+  ------------------------------- T-Abs
+  Γ ⊢ λ x:T • t[x] : {x:T} T'[x]
+  
+  Γ ⊢ t1 : {x:T} T'[x]
+  Γ ⊢ t2 : T
+  --------------------- T-App
+  Γ ⊢ t1 t2 : T'[t2]
+  
+judgment simple-type: Γ ⊢ |T| = S
+assumes Γ
+
+  ----------- S-FamA
+  Γ ⊢ |a| = a
+  
+  ----------- S-FamB
+  Γ ⊢ |b| = b
+  
+  Γ ⊢ |T| = S
+  ------------- S-App
+  Γ ⊢ |T t| = S
+  
+  Γ ⊢ |T| = S
+  Γ, x:T ⊢ |T'[x]| = S'
+  -------------------------- S-Pi
+  Γ ⊢ |{x:T} T'[x]| = S → S'
+  
+judgment type-equality: Γ ⊢ T = T
+assumes Γ
+
+  ---------- type-eq
+  Γ ⊢ T = T
+  
+judgment simple-equality: S = S
+
+   ----- simple-eq
+   S = S
+   
+lemma T-App-depend-inversion:
+    assumes Γ
+    forall dt: Γ, x:T ⊢ t1[x] t2[x] : T'[x]
+    exists Γ, x:T ⊢ t1[x] : {x':T1[x]} T2[x][x'] and
+           Γ, x:T ⊢ t2[x] : T1[x] and
+           Γ, x:T ⊢ T'[x] = T2[x][t2[x]] 
+    d1: Γ, x:T ⊢ t1[x] : {x':T1[x]} T2[x][x'] and
+    d2: Γ, x:T ⊢ t2[x] : T1[x] by inversion of rule T-App on dt where T'[x] := T2[x][t2[x]]
+    eq: Γ, x:T ⊢ T'[x] = T2[x][t2[x]] by rule type-eq
+    proof by d1, d2, eq
+end lemma
+
+lemma S-Pi-inversion:
+    assumes Γ
+    forall st: Γ ⊢ |{x:T1} T2[x]| = S
+    exists S = S1 → S2 and Γ ⊢ |T1| = S1 and Γ, x:T1 ⊢ |T2[x]| = S2.
+    d1: Γ ⊢ |T1| = S1 and 
+    d2: Γ, x:T1 ⊢ |T2[x]| = S2 by inversion of rule S-Pi on st where S := S1 → S2
+    d2': Γ, x:T1 ⊢ |T2[x]| = S2 by d2
+    eq: S = S1 → S2 by rule simple-eq
+    proof by eq, d1, d2
+    proof by eq, d1, d2'
+end lemma
+     
+// theorem ...
+
