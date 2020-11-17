@@ -42,7 +42,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 			Util.debug("  " + source);
 		}
 
-		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, source, "Claimed " + cl + " not justified by " + source);
+		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, source, "Result not justified by provided");
 		Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
 		if (p != null) ctx.subderivations.put(this, p);
 	}

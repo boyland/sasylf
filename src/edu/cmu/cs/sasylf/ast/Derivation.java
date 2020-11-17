@@ -220,6 +220,7 @@ public abstract class Derivation extends Fact {
 		}
 		
 		if (checkRelax(ctx,match,supplied)) return true;
+		if (errorMsg != null) errorMsg += " " + supplied.toString();
 		return checkMatch(node,ctx,match,supplied,errorMsg);
 	}
 
@@ -239,7 +240,7 @@ public abstract class Derivation extends Fact {
 			source = newSource;
 			srcRoot = r.getResult();
 		}
-		if (checkMatch(null,ctx, target, source, null)) {
+		if (checkMatch(supplied,ctx, target, source, null)) {
 			Util.debug("could relax ",source," to ",target);
 			return true;
 		} else {
@@ -258,7 +259,7 @@ public abstract class Derivation extends Fact {
 	/**
 	 * Check that the supplied term satisfies the requirements of the match term,
 	 * possibly changing the values of output variables.
-	 * @param node location of matching, for errors
+	 * @param node location of matching, for errors, should not be null (even if errorMsg is)
 	 * @param ctx context, will be modified
 	 * @param matchTerm required term
 	 * @param suppliedTerm given term
@@ -277,12 +278,12 @@ public abstract class Derivation extends Fact {
 			// must not require instantiating free variables
 			if (!instanceSub.avoid(ctx.inputVars)) {
 				Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
-				return report(errorMsg," restricts " + unavoidable,node,"  could not avoid vars ", unavoidable);
+				return report(errorMsg, " restricts " + unavoidable,node,"  could not avoid vars ", unavoidable);
 			}
 			debug("Adding to ctx: ", instanceSub);
 			ctx.composeSub(instanceSub);
 		} catch (UnificationFailed e) {
-			return report(errorMsg, null, node, "\twas checking ",suppliedTerm," instance of ",matchTerm,": ", e.getMessage());
+			return report(errorMsg, " does not match " + TermPrinter.toString(ctx, null, node.getLocation(), matchTerm, true), node, "\twas checking ",suppliedTerm," instance of ",matchTerm,": ", e.getMessage());
 		}
 		return true;
 	}
