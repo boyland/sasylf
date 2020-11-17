@@ -122,6 +122,8 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 				return;
 			}
 			
+			document.addPositionCategory(SEGMENTS);
+			
 			Map<String,ProofElement> reuseIndex = makeReuseIndex();
 			pList.clear();
 
