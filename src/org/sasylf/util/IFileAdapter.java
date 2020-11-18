@@ -7,6 +7,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.part.FileEditorInput;
 
 /**
  * An adapter class that lets us treat an IFile as a project storage object.
@@ -44,6 +47,10 @@ public class IFileAdapter extends PlatformObject implements IProjectStorage {
 		if (adapter.isInstance(this)) return adapter.cast(this);
 		if (IProject.class.equals(adapter)) return adapter.cast(file.getProject());
 		if (adapter.isInstance(file)) return adapter.cast(file);
+		if (adapter.equals(IEditorInput.class)) {
+			IFileEditorInput editorInput= new FileEditorInput(file);
+			return adapter.cast(editorInput);					
+		}
 		return file.getAdapter(adapter);
 	}
 
