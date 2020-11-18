@@ -13,7 +13,7 @@ import edu.cmu.cs.sasylf.util.Location;
 /**
  * Using a module as a part of a compilation unit.
  */
-public class ModulePart extends Node implements Part {
+public class ModulePart extends Node implements Part, Named {
 	private String name;
 	private QualName module;
 	private List<QualName> arguments;
@@ -25,6 +25,7 @@ public class ModulePart extends Node implements Part {
 		this.arguments = arguments;
 	}
 	
+	@Override
 	public String getName() {
 		return name;
 	}

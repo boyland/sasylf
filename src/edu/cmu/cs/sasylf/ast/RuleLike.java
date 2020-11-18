@@ -24,7 +24,7 @@ import edu.cmu.cs.sasylf.util.Util;
 
 
 /** Common interface for Rules and Theorems */
-public abstract class RuleLike extends Node {
+public abstract class RuleLike extends Node implements Named {
 	private String name;
 
 	public RuleLike(String n, Location l) { super(l); name = n; }
@@ -34,6 +34,7 @@ public abstract class RuleLike extends Node {
 	public abstract Set<FreeVar> getExistentialVars();
 	public abstract Clause getConclusion();
 
+	@Override
 	public String getName() { return name; }
 	public abstract String getKind();
 

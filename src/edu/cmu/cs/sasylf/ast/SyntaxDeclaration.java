@@ -38,7 +38,7 @@ import edu.cmu.cs.sasylf.util.Util;
  * as "abstract syntax" (no rules) or as "concrete syntax" in which case
  * we have CFG productions.  This class serves as an LF type.
  */
-public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType {
+public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, Named {
 	public SyntaxDeclaration(Location loc, NonTerminal nt, List<Clause> l) { 
 		super(loc); 
 		nonTerminal = nt; 

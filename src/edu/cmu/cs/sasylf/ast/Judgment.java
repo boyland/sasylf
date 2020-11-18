@@ -19,7 +19,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 
-public class Judgment extends Node implements ClauseType {
+public class Judgment extends Node implements ClauseType, Named {
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
 		super(loc); 
 		name=n; 
