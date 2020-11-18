@@ -26,7 +26,7 @@ public class ResourceModuleProvider extends AbstractModuleProvider {
 	 * @param id module identifier to convert
 	 * @return string
 	 */
-	protected String asResourceString(ModuleId id) {
+	public String asResourceString(ModuleId id) {
 		StringBuilder sb = new StringBuilder("/");
 		for (String p : id.packageName) {
 			sb.append(p);
