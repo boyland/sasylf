@@ -61,6 +61,8 @@ import edu.cmu.cs.sasylf.ast.Theorem;
 
 
 public class ProofEditor extends TextEditor implements ProofChecker.Listener {
+	public static String ID = "org.sasylf.editors.ProofEditor";
+	
 	public ProofEditor() {
 		ProofChecker.getInstance().addListener(this);
 	}
