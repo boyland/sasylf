@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 public abstract class DerivationWithArgs extends Derivation {
@@ -42,7 +44,16 @@ public abstract class DerivationWithArgs extends Derivation {
 		argStrings.add(cl);
 	}
 	
-	
+	/**
+	 * Get the span of the list of arguments
+	 * @return
+	 */
+	public Span getArgSpan() {
+		if (argStrings.isEmpty()) return this.getEndLocation();
+		Location l1 = argStrings.get(0).getLocation();
+		Location l2 = argStrings.get(argStrings.size()-1).getEndLocation();
+		return new DefaultSpan(l1,l2);
+	}
 
 	public List<Clause> getArgStrings() { return argStrings; }
 	public List<Fact> getArgs() { return args; }
@@ -168,7 +179,9 @@ public abstract class DerivationWithArgs extends Derivation {
 			if (!(element instanceof ClauseUse)) return null;
 			clauses.add((ClauseUse)element);
 		}
-		final DerivationByAssumption result = new DerivationByAssumption(sb.toString(),cl.getLocation(),AndClauseUse.makeAndClause(cl.getLocation(), ctx, clauses));
+		final AndClauseUse combined = AndClauseUse.makeAndClause(cl.getLocation(), ctx, clauses);
+		combined.setEndLocation(cl.getEndLocation());
+		final DerivationByAssumption result = new DerivationByAssumption(sb.toString(),cl.getLocation(),combined);
 		result.setEndLocation(cl.getEndLocation());
 		return result;
 	}

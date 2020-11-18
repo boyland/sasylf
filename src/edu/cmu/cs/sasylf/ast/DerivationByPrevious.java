@@ -38,7 +38,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		ClauseUse source = sourceClauses.get(0);
 		if (sourceClauses.size() > 1) {
 			Util.debug("Making and clause for " + sourceClauses);
-			source = AndClauseUse.makeAndClause(source.getLocation(), ctx, sourceClauses);
+			source = AndClauseUse.makeAndClause(getArgSpan(), ctx, sourceClauses);
 			Util.debug("  " + source);
 		}
 
