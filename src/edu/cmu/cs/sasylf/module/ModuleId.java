@@ -45,6 +45,24 @@ public final class ModuleId {
 		return filename.substring(0,filename.length()-4);
 	}
 
+	/**
+	 * Create a module id from a non-empty array of strings
+	 * @param pieces non-empty array of (non-null) strings
+	 */
+	public ModuleId(String[] pieces) {
+		if (pieces.length < 1) throw new IllegalArgumentException("Module ID cannot be empty");
+		if (Arrays.asList(pieces).contains(null)) {
+			throw new NullPointerException("null package component");
+		}
+		final int n = pieces.length-1;
+		packageName = new String[n];
+		for (int i=0; i < n; ++i) {
+			packageName[i] = pieces[i];
+		}
+		moduleName = pieces[n];
+		hash = computeHash();
+	}
+	
 	public ModuleId(String[] p, String n) {
 		if (Arrays.asList(p).contains(null) || n == null) {
 			throw new NullPointerException("null package component or module");
