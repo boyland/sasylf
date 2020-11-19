@@ -196,7 +196,7 @@ judgment subtyping: Gamma |- T <: S
 assumes Gamma
 
 
------------------ SA-Top
+----------------- S-Top
 Gamma |- T <: Top
 
 
@@ -208,29 +208,29 @@ Gamma |- T <: Top
  * a different judgment.
  */
 
------------------------ SA-Var
+----------------------- S-Var
 Gamma, X <: T |- X <: T
 
 
------------------------ SA-Refl
+----------------------- S-Refl
 Gamma |- T <: T
 
 
 Gamma |- T1 <: T2
 Gamma |- T2 <: T3
------------------------ SA-Trans
+----------------------- S-Trans
 Gamma |- T1 <: T3
 
 
 Gamma |- T1 <: S1
 Gamma |- S2 <: T2
-------------------------------- SA-Arrow
+------------------------------- S-Arrow
 Gamma |- S1 -> S2 <: T1 -> T2
 
 
 Gamma |- T1 <: T1'
 Gamma, X <: T1 |- T2'[X] <: T2[X]
-------------------------------------------------------- SA-All
+------------------------------------------------------- S-All
 Gamma |- all X' <: T1' => T2'[X'] <: all X <: T1 => T2[X] 
 
 
@@ -253,14 +253,14 @@ T == T
  * Inverting the subtyping of a forall type has two judgments,
  * that have different contexts, which SASyLF's "and" semantics cannot
  * handle, so we define a helper judgment:
- */
+ *
 judgment Tarrow-sub: T'' == T <: T
 
 * |- T11'' <: T11'
 *, X <: T11'' |- T12'[X] <: T12[X]
 ---------------------------------------------------------------------------------- Tarrow-sub
 (all X <: T11' => T12'[X]) == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
-
+*/
 
 
 /************************ THEOREMS **************************************/
@@ -321,12 +321,12 @@ lemma arrow-sub-arrow:
 proof by induction on dsub:
 
 case rule
-	------------------- SA-Refl //! this case conceals binding of T (warning)
+	------------------- S-Refl //! this case conceals binding of T (warning)
 	d1: * |- T <: T
 is
     deq: T1 -> T2 == T1 -> T2 by rule type-equality
-	dsub1: * |- T1 <: T1 by rule SA-Refl
-	dsub2: * |- T2 <: T2 by rule SA-Refl
+	dsub1: * |- T1 <: T1 by rule S-Refl
+	dsub2: * |- T2 <: T2 by rule S-Refl
 	// An "and" judgment is justified by each of the pieces
 	proof by deq, dsub1, dsub2
 end case
@@ -334,7 +334,7 @@ end case
 case rule
 	d1: * |- T <: T'
 	d2: * |- T' <: T1 -> T2
-	---------------------------- SA-Trans
+	---------------------------- S-Trans
 	d3: * |- T <: T1 -> T2
 is
     // The induction hypothesis gives us back an and judgment with three results,
@@ -350,15 +350,15 @@ is
     d10: * |- T3 <: T22' by induction hypothesis on d1
     use inversion of rule type-equality on d8
     d11: T1'' -> T3 == T1'' -> T3 by rule type-equality
-    d12: * |- T1 <: T1'' by rule SA-Trans on d5, d9
-	d13: * |- T3 <: T2 by rule SA-Trans on d10, d6
+    d12: * |- T1 <: T1'' by rule S-Trans on d5, d9
+	d13: * |- T3 <: T2 by rule S-Trans on d10, d6
 	proof by d11,d12,d13
 end case
 	
 case rule
 	d1: * |- T1 <: T1'
 	d2: * |- T2' <: T2
-	----------------------------------- SA-Arrow
+	----------------------------------- S-Arrow
 	d3: * |- T1' -> T2' <: T1 -> T2
 is
     d0: T1' -> T2' == T1' -> T2' by rule type-equality
@@ -418,30 +418,24 @@ end lemma
 
 lemma Tarrow-sub-Tarrow: 
     forall dsub: * |- T'' <: all X <: T11'' => T12[X]
-    exists T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X].
-    
-    /* Currently in SASyLF, "and" can't be used to conjoin statements with 
-     * different Gamma contexts, and so we can't use the more natural output
-     * seen here:
-     */
-    // exists T'' == all X <: T11' => T12'[X] and * |- T11'' <: T11' and *, X <: T11'' |- T12'[X] <: T12[X].
+    exists T'' == all X <: T11' => T12'[X] and * |- T11'' <: T11' and *, X <: T11'' |- T12'[X] <: T12[X].
 	
 
 deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by induction on dsub:
 
 case rule
-	----------------------------------------------------------------- SA-Refl
+	----------------------------------------------------------------- S-Refl
 	d1: * |- all X <: T11'' => T12[X] <: all X <: T11'' => T12[X]
 is
-	dsub1: * |- T11'' <: T11'' by rule SA-Refl
-	dsub2: *, X <: T11'' |- T12[X] <: T12[X] by rule SA-Refl
+	dsub1: * |- T11'' <: T11'' by rule S-Refl
+	dsub2: *, X <: T11'' |- T12[X] <: T12[X] by rule S-Refl
 	deq: all X <: T11'' => T12[X] == all X <: T11'' => T12[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on dsub1, dsub2
 end case
 
 case rule
 	d1: * |- T'' <: T2'
 	d2: * |- T2' <: all X <: T11'' => T12[X]
-	---------------------------------------- SA-Trans
+	---------------------------------------- S-Trans
 	d3: * |- T'' <: all X <: T11'' => T12[X]
 is
 	d4: T2' == all X <: T21' => T22[X] <: all X <: T11'' => T12[X] by induction hypothesis on d2
@@ -462,14 +456,14 @@ is
 			------------------------------------------------------------------------------------- Tarrow-sub
 			d11: all X <: T11''' => T12''[X] == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X]
 		is
-			d12: * |- T11'' <: T11''' by rule SA-Trans on d5, d9
-			xx1: *, X' <: T11'' |- X' <: T11'' by rule SA-Var
+			d12: * |- T11'' <: T11''' by rule S-Trans on d5, d9
+			xx1: *, X' <: T11'' |- X' <: T11'' by rule S-Var
 			xx2: *, X' <: T11'' |- T11'' <: T21' by weakening on d5
-			xx3: *, X' <: T11'' |- X' <: T21' by rule SA-Trans on xx1, xx2
+			xx3: *, X' <: T11'' |- X' <: T21' by rule S-Trans on xx1, xx2
 			// the following two steps replace the need for a narrowing lemma
 			d10':*, X' <: T11'', X <: T21' |- T12''[X] <: T22[X] by weakening on d10
 			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10', xx3
-			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule SA-Trans on d13, d6
+			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule S-Trans on d13, d6
 			deq: T'' == all X <: T11''' => T12''[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d12, d14
 		end case
 
@@ -482,7 +476,7 @@ end case
 case rule
 	d1: * |- T11'' <: T11'
 	d2: *, X <: T11'' |- T12'[X] <: T12[X]
-	----------------------------------------------------------------- SA-All
+	----------------------------------------------------------------- S-All
 	d3: * |- all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] 
 is
 	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d1, d2
@@ -730,7 +724,7 @@ is
 	d5: * |- T1 <: T1' and
 	d6: * |- T' <: T by lemma arrow-sub-arrow on d2
 	use inversion of rule type-equality on d4
-	d8: * |- T2 <: T1' by rule SA-Trans on dsub, d5
+	d8: * |- T2 <: T1' by rule S-Trans on dsub, d5
 	d9: * |- t12[t2] : T' by induction hypothesis on d1, dt2, d8
 	dt12: * |- t12[t2] : T by rule T-Sub on d9, d6
 end case
@@ -773,7 +767,7 @@ is
 		d7: all X <: T11' => T12'[X] == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
 		
 	is
-		d8: * |- T2 <: T11' by rule SA-Trans on dsub1, d5
+		d8: * |- T2 <: T11' by rule S-Trans on dsub1, d5
 		d9: * |- t12[T2] : T12'[T2] by induction hypothesis on d1, d8
 		d11: * |- T12'[T2] <: T12[T2] by substitution on d6, dsub1
 		dt12: * |- t12[T2] : T12[T2] by rule T-Sub on d9, d11
@@ -841,7 +835,7 @@ is
 		------------------------------------- E-AppAbs
 		d5: (lambda x:T11 => t12[x]) t2 -> t12[t2]
 	is
-		d6: * |- T1 <: T1 by rule SA-Refl
+		d6: * |- T1 <: T1 by rule S-Refl
 		d7: * |- t12[t2] : T by lemma invert-lambda on d1, d2, d6
 	end case
 	end case analysis
