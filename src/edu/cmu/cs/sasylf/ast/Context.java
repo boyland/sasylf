@@ -228,9 +228,17 @@ public class Context implements Cloneable {
 		return varFreeNTmap.get(nt.getSymbol()) != null;
 	}
 
+	/**
+	 * Return true if the element could never include <i>implicit</i> references to
+	 * variables in a named context.
+	 * @param e element to examine
+	 * @return true if the element could never depend on a variable
+	 * hidden inside a named context.
+	 */
 	public boolean isVarFree(Element e) {
 		if (e instanceof Terminal) return true;
 		if (e instanceof NonTerminal) return varFreeNTmap.get(e.toString()) != null;
+		else if (e instanceof Variable) return true; // method is asking about variable from context nonterminal
 		else if (e instanceof Binding) {
 			Binding b = (Binding)e;
 			if (!isVarFree(b.getNonTerminal())) return false;
