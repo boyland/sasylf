@@ -96,5 +96,16 @@ lemma S-Pi-inversion:
     proof by eq, d1, d2'
 end lemma
      
-// theorem ...
+lemma type-eq-reflexive:
+    assumes Γ
+    forall T assumes Γ
+    exists Γ ⊢ T = T
+    proof by rule type-eq
+end lemma
+
+lemma innocous:
+    assumes Γ
+    exists Γ ⊢ ({x:a} (b x)) = ({x:a} (b x))
+    proof by lemma type-eq-reflexive on ({x:a} (b x))
+end lemma 
 
