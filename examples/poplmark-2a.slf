@@ -249,19 +249,6 @@ judgment type-equality: T == T
 T == T
 
 
-/*
- * Inverting the subtyping of a forall type has two judgments,
- * that have different contexts, which SASyLF's "and" semantics cannot
- * handle, so we define a helper judgment:
- *
-judgment Tarrow-sub: T'' == T <: T
-
-* |- T11'' <: T11'
-*, X <: T11'' |- T12'[X] <: T12[X]
----------------------------------------------------------------------------------- Tarrow-sub
-(all X <: T11' => T12'[X]) == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
-*/
-
 
 /************************ THEOREMS **************************************/
 
@@ -317,8 +304,21 @@ lemma arrow-sub-arrow:
 // "proof" is short for "_: <judgment>" where <judgment> is what is needed to be proved.
 // "by induction" means structural induction on the given derivation/syntax,
 // and a case analysis on the thing on which induction is done. 
-// See below "theorem progress" for more explanation of case analysis.
+
 proof by induction on dsub:
+
+/** Inside the induction proof, we do a case analysis, with one case for each rule
+ * that could have been used to produce the indicated judgment.  If we are doing
+ * induction over syntax, then we will have cases for each case in the BNF
+ * definition.
+ *
+ * A rule case is of the form "case rule <rule> is <derivation>"
+ * Here <rule> is a rule defined above, but instantiated with actual
+ * expressions as appropriate for the judgment we are doing case analysis over.
+ * Any fresh variables in <rule> are bound for the derivation and can be used there.
+ * SASyLF checks to make sure you don't get the case analysis wrong, for example, by
+ * assuming more than is justified about the premises of the rule.
+ */
 
 case rule
 	------------------- S-Refl //! this case conceals binding of T (warning)
@@ -418,18 +418,24 @@ end lemma
 
 lemma Tarrow-sub-Tarrow: 
     forall dsub: * |- T'' <: all X <: T11'' => T12[X]
-    exists T'' == all X <: T11' => T12'[X] and * |- T11'' <: T11' and *, X <: T11'' |- T12'[X] <: T12[X].
+    exists T'' == all X <: T11' => T12'[X] 
+    and * |- T11'' <: T11' 
+    and *, X <: T11'' |- T12'[X] <: T12[X].
 	
+	// This lemma is proving an "and" judgment which requires one to prove each
+	// part and then join them together with "proof by d1,d2,d3"
+	// When a lemma returns and "and" result, the caller lists each result separately joined with "and".
 
-deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by induction on dsub:
+proof by induction on dsub:
 
 case rule
 	----------------------------------------------------------------- S-Refl
 	d1: * |- all X <: T11'' => T12[X] <: all X <: T11'' => T12[X]
 is
+    eq: T'' == all X <: T11' => T12'[X]  by rule type-equality
 	dsub1: * |- T11'' <: T11'' by rule S-Refl
 	dsub2: *, X <: T11'' |- T12[X] <: T12[X] by rule S-Refl
-	deq: all X <: T11'' => T12[X] == all X <: T11'' => T12[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on dsub1, dsub2
+	proof by eq, dsub1, dsub2 // proving each thing
 end case
 
 case rule
@@ -438,39 +444,24 @@ case rule
 	---------------------------------------- S-Trans
 	d3: * |- T'' <: all X <: T11'' => T12[X]
 is
-	d4: T2' == all X <: T21' => T22[X] <: all X <: T11'' => T12[X] by induction hypothesis on d2
-	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by case analysis on d4:
-
-	case rule
-		d5: * |- T11'' <: T21'
-		d6: *, X <: T11'' |- T22[X] <: T12[X]
-		---------------------------------------------------------------------------------- Tarrow-sub
-		d7: all X <: T21' => T22[X] == all X <: T21' => T22[X] <: all X <: T11'' => T12[X]
-	is
-		d8: T'' == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X] by induction hypothesis on d1
-		deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by case analysis on d8:
-
-		case rule
-			d9: * |- T21' <: T11'''
-			d10: *, X <: T21' |- T12''[X] <: T22[X]
-			------------------------------------------------------------------------------------- Tarrow-sub
-			d11: all X <: T11''' => T12''[X] == all X <: T11''' => T12''[X] <: all X <: T21' => T22[X]
-		is
-			d12: * |- T11'' <: T11''' by rule S-Trans on d5, d9
-			xx1: *, X' <: T11'' |- X' <: T11'' by rule S-Var
-			xx2: *, X' <: T11'' |- T11'' <: T21' by weakening on d5
-			xx3: *, X' <: T11'' |- X' <: T21' by rule S-Trans on xx1, xx2
-			// the following two steps replace the need for a narrowing lemma
-			d10':*, X' <: T11'', X <: T21' |- T12''[X] <: T22[X] by weakening on d10
-			d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10', xx3
-			d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule S-Trans on d13, d6
-			deq: T'' == all X <: T11''' => T12''[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d12, d14
-		end case
-
-		end case analysis
-	end case
-
-	end case analysis
+    // the next three derivations are the conjoined result of using the induction hypothesis:
+    d4: T2' == all X <: T21' => T22[X] and
+    d5: * |- T11'' <: T21' and
+    d6: *, X <: T11'' |- T22[X] <: T12[X] by induction hypothesis on d2
+    use inversion of rule type-equality on d4
+    d7: T'' == all X <: T11' => T12'[X] and
+    d9: * |- T21' <: T11''' and
+    d10: *, X <: T21' |- T12''[X] <: T22[X] by induction hypothesis on d1
+    use inversion of rule type-equality on d7
+    d12: * |- T11'' <: T11''' by rule S-Trans on d5, d9
+	xx1: *, X' <: T11'' |- X' <: T11'' by rule S-Var
+	xx2: *, X' <: T11'' |- T11'' <: T21' by weakening on d5
+    xx3: *, X' <: T11'' |- X' <: T21' by rule S-Trans on xx1, xx2
+	// the following two steps replace the need for a narrowing lemma
+	d10':*, X' <: T11'', X <: T21' |- T12''[X] <: T22[X] by weakening on d10
+	d13: *, X <: T11'' |- T12''[X] <: T22[X] by substitution on d10', xx3
+	d14: *, X <: T11'' |- T12''[X] <: T12[X] by rule S-Trans on d13, d6
+	proof by d7, d12, d14
 end case
 
 case rule
@@ -479,7 +470,8 @@ case rule
 	----------------------------------------------------------------- S-All
 	d3: * |- all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] 
 is
-	deq: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by rule Tarrow-sub on d1, d2
+    eq: T'' == all X <: T11' => T12'[X] by rule type-equality
+	proof by eq, d1, d2
 end case
 
 end induction
@@ -511,18 +503,11 @@ proof by case analysis on dtv:
 		         ------------------------------------ T-Sub
 		         d3': * |- t : all X <: T1 => T2[X]
 	        is
-		        d4: T' == all X <: T1'' => T2'[X] <: all X <: T1 => T2[X] by lemma Tarrow-sub-Tarrow on d2'
-                proof by case analysis on d4:
-                    case rule
-                        _: * |- T1 <: T1''
-                        _: (*, X <: T1) |- T2'[X] <: T2[X]
-                        ----------------------------------- Tarrow-sub
-                        _: (all X <: T1'' => T2'[X]) == (all X <: T1'' => T2'[X]) <: (all X <: T1 => T2[X])
-                    is
-                        proof by induction hypothesis on dtv, d1'
-                    end case
-
-                end case analysis
+	            d4: T' == all X <: T1'' => T2'[X] and
+	            _: * |- T1 <: T1'' and
+                _: (*, X <: T1) |- T2'[X] <: T2[X] by lemma Tarrow-sub-Tarrow on d2'
+                use inversion of rule type-equality on d4
+                proof by induction hypothesis on dtv, d1'
             end case	
 	    end case analysis	
     end case
@@ -540,25 +525,12 @@ end lemma
  */
 theorem progress : forall dt : * |- t : T exists t value or t -> t'.
 
-/** Now the real fun begins--a proof by induction.  We use a "by induction on X :"
+/** Now another proof by induction.  We use a "by induction on X :"
  * justification, where X is the derivation or syntax that we are doing induction
  * over.  This does a case analysis as well as marking the induction argument.
  */
 
 proof by induction on dt :
-
-/** Inside the induction proof, we do a case analysis, with one case for each rule
- * that could have been used to produce the indicated judgment.  If we are doing
- * induction over syntax, then we will have cases for each case in the BNF
- * definition.
- *
- * A rule case is of the form "case rule <rule> is <derivation>"
- * Here <rule> is a rule defined above, but instantiated with actual
- * expressions as appropriate for the judgment we are doing case analysis over.
- * Any fresh variables in <rule> are bound for the derivation and can be used there.
- * SASyLF checks to make sure you don't get the case analysis wrong, for example, by
- * assuming more than is justified about the premises of the rule.
- */
 
 
 // variable case is impossible since Gamma must be *
@@ -757,22 +729,14 @@ case rule
 	----------------------------------------------------------- T-Sub
 	d3: * |- lambda X <: T11 => t12[X] : all X <: T11'' => T12[X]
 is
-	d4: T'' == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X] by lemma Tarrow-sub-Tarrow on d2
-	dt12: * |- t12[T2] : T12[T2] by case analysis on d4:
-	case rule
-
-		d5: * |- T11'' <: T11'
-		d6: *, X <: T11'' |- T12'[X] <: T12[X]
-		--------------------------------------------------------------- Tarrow-sub
-		d7: all X <: T11' => T12'[X] == all X <: T11' => T12'[X] <: all X <: T11'' => T12[X]
-		
-	is
-		d8: * |- T2 <: T11' by rule S-Trans on dsub1, d5
-		d9: * |- t12[T2] : T12'[T2] by induction hypothesis on d1, d8
-		d11: * |- T12'[T2] <: T12[T2] by substitution on d6, dsub1
-		dt12: * |- t12[T2] : T12[T2] by rule T-Sub on d9, d11
-	end case
-	end case analysis
+	d4: T'' == all X <: T11' => T12'[X] and
+	d5: * |- T11'' <: T11' and
+    d6: *, X <: T11'' |- T12'[X] <: T12[X] by lemma Tarrow-sub-Tarrow on d2
+    use inversion of type-equality on d4
+    d8: * |- T2 <: T11' by rule S-Trans on dsub1, d5
+	d9: * |- t12[T2] : T12'[T2] by induction hypothesis on d1, d8
+	d11: * |- T12'[T2] <: T12[T2] by substitution on d6, dsub1
+	dt12: * |- t12[T2] : T12[T2] by rule T-Sub on d9, d11
 end case
 
 end induction
@@ -801,6 +765,8 @@ is
 	    // There are no cases, because nothing matches.
 	    // An empty case analysis can prove anything.
 	end case analysis
+	// an emoty case analysis like this can be written 
+	// "by contradiction on ds" as a short-hand
 end case
 
 
@@ -848,7 +814,7 @@ case rule
 	d2: * |- lambda X <: T1 => t2[X] : all X <: T1 => T2[X]
 
 is
-    // We have syntactic sugar for an empty case analysis:
+    // Syntactic sugar for an empty case analysis:
 	dt' : * |- t' : T by contradiction on ds
 end case
 
