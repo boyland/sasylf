@@ -233,6 +233,7 @@ public class Theorem extends RuleLike {
 					NonTerminal root = f.getElement().getRoot();
 					if (assumes.equals(root)) foundAssumption = true;
 				}
+				if (assumes.equals(exists.getRoot())) foundAssumption = true;
 				if (!foundAssumption) {
 					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
 				}
