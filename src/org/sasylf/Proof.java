@@ -12,14 +12,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
+import org.sasylf.util.DocumentUtil;
+import org.sasylf.util.IProjectStorage;
 import org.sasylf.util.TrackDirtyRegions;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.ModulePart;
+import edu.cmu.cs.sasylf.ast.Named;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.RuleLike;
 import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * Information about a SASyLF Proof:
@@ -27,7 +36,7 @@ import edu.cmu.cs.sasylf.module.Module;
  */
 public class Proof {
 
-	private IResource resource;
+	private IProjectStorage resource;
 	private IDocument document;
 	private TrackDirtyRegions tracker;
 	private CompUnit compilation;
@@ -40,11 +49,14 @@ public class Proof {
 	 * otherwise specified.  This information is not registered.
 	 * @see #setCompilation(CompUnit)
 	 * @see #changeProof(Proof, Proof)
-	 * @param res resource for this proof, must not be null
+	 * @param res resource/project storage for this proof, must not be null
 	 * @param doc document for the proof source, may be null (no tracking desired)
 	 */
-	public Proof(IResource res, IDocument doc) {
-		resource = res;
+	public Proof(IAdaptable res, IDocument doc) {
+		resource = IProjectStorage.Adapter.adapt(res);
+		if (resource == null) {
+			throw new NullPointerException("No project storage for " + res);
+		}
 		document = doc;
 		if (doc != null) {
 			tracker = new TrackDirtyRegions();
@@ -53,6 +65,11 @@ public class Proof {
 		compilation = null;
 	}
 
+	@Override
+	public String toString() {
+		return "Proof(" + resource + "," + (compilation == null ? "<no contents>" : "<contents>") + ")";
+	}
+	
 	/**
 	 * Set the compilation unit for this proof.  This may be done only
 	 * once (setting to a non-null compilation).
@@ -90,15 +107,24 @@ public class Proof {
 	}
 	
 	/**
-	 * Get the resource associated with this proof
-	 * @return resource connected with this proof
-	 * @deprecated not all proofs are associated with a resource
+	 * Get the resource associated with this proof (or null).
+	 * @return resource connected with this proof (if any)
+	 * @deprecated not all proofs are associated with a resource.
+	 * Use {@link #getStorage()} instead.
 	 */
 	@Deprecated
 	public IResource getResource() {
-		return resource;
+		return resource.getAdapter(IResource.class);
 	}
 
+	/**
+	 * Get the storage associated with this proof.
+	 * @return storage that was parsed for this proof.
+	 */
+	public IProjectStorage getStorage() {
+		return resource;
+	}
+	
 	public List<TrackDirtyRegions.IDirtyRegion> getChanges(IDocument doc) {
 		if (doc != document || tracker == null) return null;
 		return tracker.getDirtyRegions();
@@ -108,6 +134,33 @@ public class Proof {
 		return compilation;
 	}
 
+	/**
+	 * Convert a location in a proof file to an offset in the proof's document
+	 * @param l location to convert, must not be null
+	 * @return offset in document
+	 * @throws BadLocationException in the location wasn't in the proof
+	 */
+	public int convert(Location l) throws BadLocationException {
+		if (l == null) throw new NullPointerException("null location!");
+		if (document == null) {
+			System.err.println("null document for " + this);
+			throw new BadLocationException("document is null");
+		}
+		return DocumentUtil.getOffset(l, document);
+	}
+	
+	/**
+	 * Convert a span inside this proof file into a region within the document
+	 * @param sp span to convert, must not be null
+	 * @return region within the proof document
+	 * @throws BadLocationException  if the span didn't correspond to this proof
+	 */
+	public IRegion convert(Span sp) throws BadLocationException {
+		int l1 = convert(sp.getLocation());
+		int l2 = convert(sp.getEndLocation());
+		return new Region(l1,l2-l1);
+	}
+	
 	/**
 	 * Return all declarations in this proof.
 	 * @return
@@ -122,10 +175,11 @@ public class Proof {
 	 * @return rule-like in this proof that has the given name, or null if none such exists.
 	 */
 	public RuleLike findRuleLikeByName(String name) {
+		if (ruleLikeCache == null) return null;
 		return ruleLikeCache.get(name);
 	}
 	
-	/** Find all rule-likes in teh given compilation unit that start with the given prefix.
+	/** Find all rule-likes in the given compilation unit that start with the given prefix.
 	 * @param prefix key to start with, must not be null
 	 * @return submap (never null) of rule-likes that start with the given prefix.
 	 */
@@ -133,6 +187,16 @@ public class Proof {
 		return ruleLikeCache.subMap(prefix, prefix+Character.MAX_VALUE);
 	}
 	
+	public Named findDeclarationByName(String name) {
+		if (declarations == null) return null;
+		for (Node d : declarations) {
+			if (d instanceof Named) {
+				Named decl = (Named)d;
+				if (decl.getName().equals(name)) return decl;
+			}
+		}
+		return null;
+	}
 	/**
 	 * If this proof object is collecting incremental changes, stop doing that,
 	 * and release resources.  If the proof thus changed is the current object
@@ -159,18 +223,18 @@ public class Proof {
 		compilation = null;
 	}
 
-	private static ConcurrentMap<IResource,Proof> proofs = new ConcurrentHashMap<IResource,Proof>();
+	private static ConcurrentMap<IProjectStorage,Proof> proofs = new ConcurrentHashMap<IProjectStorage,Proof>();
 
 	/**
 	 * Return the proof object for this resource, if there is one.
 	 * @param res
 	 * @return proof object or null
 	 */
-	public static Proof getProof(IResource res) {
-		return proofs.get(res);
+	public static Proof getProof(IAdaptable res) {
+		return proofs.get(IProjectStorage.Adapter.adapt(res));
 	}
 
-	public static CompUnit getCompUnit(IResource res) {
+	public static CompUnit getCompUnit(IAdaptable res) {
 		Proof p = getProof(res);
 		if (p != null) return p.compilation;
 		return null;
@@ -183,8 +247,13 @@ public class Proof {
 	 * @param res resource to remove proof for, must not be null
 	 * @return whether there was a proof to remove
 	 */
-	public static boolean removeProof(IResource res) {
-		Proof oldProof = proofs.remove(res);
+	public static boolean removeProof(IAdaptable res) {
+		IProjectStorage ps = IProjectStorage.Adapter.adapt(res);
+		if (ps == null) {
+			System.err.println("Warning: Cannot find proof file for " + res);
+			return false;
+		}
+		Proof oldProof = proofs.remove(ps);
 		if (oldProof != null) {
 			oldProof.stopTracking();
 		}
@@ -212,5 +281,12 @@ public class Proof {
 		}
 		newProof.dispose();
 		return false;
+	}
+	
+	public static void listProofs() {
+		System.out.println("Proofs maintained:");
+		for (Proof p : proofs.values()) {
+			System.out.println(p);
+		}
 	}
 }

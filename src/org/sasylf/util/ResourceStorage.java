@@ -46,6 +46,11 @@ public class ResourceStorage extends PlatformObject implements IProjectStorage {
 		return resourceString.equals(rs.resourceString) && project.equals(rs.project);
 	}
 
+	@Override
+	public String toString() {
+		return project + "#" + resourceString;
+	}
+
 	/**
 	 * Return resource string for this resource
 	 * @return resource string

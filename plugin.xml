@@ -432,11 +432,9 @@
          point="org.eclipse.core.expressions.definitions">
       <definition
             id="org.sasylf.isProofFile">
-         <adapt type="org.eclipse.core.resources.IResource">
-             <test property="org.eclipse.core.resources.extension"
-                   value="slf">
-             </test>
-         </adapt>
+         <with variable="activeEditorId">
+           <equals value="org.sasylf.editors.ProofEditor"/>
+         </with>
       </definition>
       <definition id="org.sasylf.inPerspective">
           <with variable="activeWorkbenchWindow.activePerspective">
@@ -682,6 +680,14 @@
                </iterate>
             </with></enablement>
       </renameParticipant>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.documentProviders">
+      <provider
+            class="org.sasylf.util.ResourceDocumentProvider"
+            id="org.sasylf.editors.ResourceDocumentProvider"
+            inputTypes="org.sasylf.util.ResourceEditorInput">
+      </provider>
    </extension>
 
 </plugin>

@@ -50,6 +50,7 @@ import org.sasylf.preferences.PreferenceInitializer;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.PreferenceTransfer;
+import org.sasylf.util.ResourceEditorInput;
 import org.sasylf.views.ProofOutline;
 
 import edu.cmu.cs.sasylf.ast.Case;
@@ -423,6 +424,22 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 
 	}
 
+	// resources cannot be edited:
+	
+	@Override
+	public boolean isEditable() {
+		return !(getEditorInput() instanceof ResourceEditorInput);
+	}
+
+	@Override
+	public boolean isEditorInputReadOnly() {
+		return getEditorInput() instanceof ResourceEditorInput;
+	}
+
+	@Override
+	public boolean isEditorInputModifiable() {
+		return !(getEditorInput() instanceof ResourceEditorInput);
+	}
 
 	@Override
 	public void dispose() {

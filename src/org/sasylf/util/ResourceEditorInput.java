@@ -19,6 +19,23 @@ public class ResourceEditorInput extends PlatformObject implements IEditorInput 
 	}
 	
 	@Override
+	public int hashCode() {
+		return storage.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof ResourceEditorInput)) return false;
+		ResourceEditorInput other = (ResourceEditorInput)obj;
+		return storage.equals(other.storage);
+	}
+
+	@Override
+	public String toString() {
+		return "ResourceEditorInput(" + storage + ")";
+	}
+
+	@Override
 	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter.isInstance(storage)) return adapter.cast(storage);
 		return super.getAdapter(adapter);

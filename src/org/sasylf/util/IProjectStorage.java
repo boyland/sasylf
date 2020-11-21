@@ -34,6 +34,5 @@ public interface IProjectStorage extends IEncodedStorage {
 			}
 			return result;
 		}
-
 	}
 }

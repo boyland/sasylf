@@ -28,7 +28,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
@@ -36,6 +35,7 @@ import org.sasylf.Activator;
 import org.sasylf.Proof;
 import org.sasylf.ProofChecker;
 import org.sasylf.util.DocumentUtil;
+import org.sasylf.util.IProjectStorage;
 
 import edu.cmu.cs.sasylf.ast.Case;
 import edu.cmu.cs.sasylf.ast.Clause;
@@ -73,10 +73,13 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		protected final static String FORALL = "∀";
 		protected final static String EXISTS = "∃";
 
-		private boolean inDocument(Location loc, String docName) {
-			String name = loc.getFile();
-			if (docName.equals(name)) return true;
-			System.out.println("Are modules implemented? " + docName + " != " + name);
+		private boolean inDocument(Location loc, IDocument doc, String docName) {
+			try {
+				// XXX: It would better to find a way to do this without risking a exception
+				DocumentUtil.getOffset(loc, doc);
+			} catch (BadLocationException ex) {
+				return false;
+			}
 			return true;
 		}
 
@@ -132,7 +135,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 			
 			ProofElement pe;			
 			for (Node decl : contents) {
-				if (!inDocument(decl.getLocation(), documentName)) continue;
+				if (!inDocument(decl.getLocation(), document, documentName)) continue;
 				if (decl instanceof Syntax) {
 					Syntax syn = (Syntax)decl;
 					pe = new ProofElement("Syntax", syn.toString());
@@ -264,10 +267,9 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 					document.addPositionCategory(SEGMENTS);
 					document.addPositionUpdater(fPositionUpdater);
 
-					if(newInput instanceof IFileEditorInput) {
-						//String filePath = ((IFileEditorInput) newInput).getFile().getLocationURI().getPath().replaceFirst("/", "");
-						IFile file = ((IFileEditorInput)newInput).getFile(); // new File(filePath);
-						newCompUnit(document, file.getName(), Proof.getCompUnit(file));
+					IProjectStorage st = IProjectStorage.Adapter.adapt(newInput);
+					if(st != null) {
+						newCompUnit(document, st.getName(), Proof.getCompUnit(st));
 					}
 				}
 			}
@@ -496,15 +498,27 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	 */
 	public void setInput(IEditorInput input) {
 		fInput= input;
-		IFile f = fInput.getAdapter(IFile.class);
-		proofChecked(f,Proof.getProof(f), 0);
+		IProjectStorage f = IProjectStorage.Adapter.adapt(input);
+		if (f != null) {
+			updateViewer(Proof.getProof(f), f.getName());
+		}
 	}
-
 
 	@Override
 	public void proofChecked(final IFile file, final Proof pf, int errors) {
-		if (file == null || pf == null || pf.getCompilation() == null || fInput == null) return;
+		if (file == null || fInput == null) return;
 		if (!file.equals(fInput.getAdapter(IFile.class))) return;
+		final String proofName = file.getName();
+		updateViewer(pf, proofName);
+	}
+
+	/**
+	 * Update the outline with the proof given.
+	 * @param pf proof to outline
+	 * @param proofName name of file in which the proof is located.
+	 */
+	protected void updateViewer(final Proof pf, final String proofName) {
+		if (pf == null || pf.getCompilation() == null) return;
 		final TreeViewer viewer= getTreeViewer();
 		if (viewer != null) {
 			Display.getDefault().asyncExec(new Runnable() {
@@ -515,7 +529,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						control.setRedraw(false);
 						ContentProvider provider = (ContentProvider)viewer.getContentProvider();
 						IDocument doc = fDocumentProvider.getDocument(fInput);
-						provider.newCompUnit(doc,file.getName(),pf.getCompilation());
+						provider.newCompUnit(doc,proofName,pf.getCompilation());
 						// viewer.expandAll();
 						control.setRedraw(true);
 						viewer.refresh(); // doesn't work if inside the controlled area.

@@ -13,6 +13,7 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -24,9 +25,12 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.sasylf.Marker;
 import org.sasylf.Proof;
 import org.sasylf.util.Cell;
+import org.sasylf.util.IProjectStorage;
+import org.sasylf.util.ResourceStorage;
 
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ModuleProvider;
+import edu.cmu.cs.sasylf.module.ResourceModuleProvider;
 
 public class ProofBuilder extends IncrementalProjectBuilder {
 
@@ -207,6 +211,10 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 			throws CoreException {
 		// we pass on the monitor to the the builder to use.
 		if (monitor == null) monitor = new NullProgressMonitor();
+		if (kind == CLEAN_BUILD) {
+			getModuleFinder().clear();
+			kind = FULL_BUILD;
+		}
 		if (kind == FULL_BUILD) {
 			fullBuild(monitor);
 		} else {
@@ -265,7 +273,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		}
 	}
 
-	public static ModuleId getId(IResource res) {
+	public static ModuleId getId(IAdaptable res) {
 		IPath path = getProofFolderRelativePath(res);
 		if ("slf".equals(path.getFileExtension())) {
 			path = path.removeFileExtension();
@@ -278,7 +286,18 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		} else return null;
 	}
 	
+	/**
+	 * Get the file associated with this module ID, if any.
+	 * There are two reasons why a module ID might not be associated with a file:
+	 * (1) There could be nothing in the project that has the ID, or
+	 * (2) The module ID could be associated with a entry from a JAR or a library file.
+	 * @param id module ID to look up, must not be null
+	 * @return file associated with this ID or null if no file is associated.
+	 */
 	public IFile getResource(ModuleId id) {
+		IProjectStorage st = getStorage(id);
+		if (st != null) return st.getAdapter(IFile.class);
+		/*
 		ProjectModuleFinder f = getModuleFinder();
 		
 		ModuleProvider provider = f.lookupModule(id);
@@ -286,7 +305,28 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		if (provider instanceof ProjectModuleProvider) {
 			return ((ProjectModuleProvider) provider).getFileFromModuleId(id);			
 		}
+		*/
 		
+		return null;
+	}
+	
+	/**
+	 * Get the storage associated with this module ID, if any.
+	 * If nothing in the project is associated with the ID, return null.
+	 * @param id module ID to look up, must not be null
+	 * @return storage associated with this ID or null if none is associated.
+	 */
+	public IProjectStorage getStorage(ModuleId id) {
+		ProjectModuleFinder f = getModuleFinder();
+		ModuleProvider provider = f.lookupModule(id);
+		if (provider instanceof ProjectModuleProvider) {
+			final ProjectModuleProvider pmp = (ProjectModuleProvider)provider;
+			return IProjectStorage.Adapter.adapt(pmp.getFileFromModuleId(id));
+		} else if (provider instanceof ResourceModuleProvider) {
+			final ResourceModuleProvider rmp = (ResourceModuleProvider)provider;
+			String resourceString = rmp.asResourceString(id);
+			return new ResourceStorage(resourceString,getProject());
+		}
 		return null;
 	}
 
@@ -294,13 +334,24 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	 * Return the path from the path folder to this resource.
 	 * If the resource is not in the proof folder, we instead
 	 * return the relative path from the root of the project.
-	 * @param res resource to return path for, must not be null
+	 * @param src resource to return path for, must be adaptable as a project storage or a resource
 	 * @return relative path from proof folder or project to this resource.
 	 */
-	public static IPath getProofFolderRelativePath(IResource res) {
-		IPath p = res.getProjectRelativePath();
-		IPath base = res.getProject().getProjectRelativePath();
-		IContainer pf = getProofFolder(res.getProject());
+	public static IPath getProofFolderRelativePath(IAdaptable src) {
+		IProject proj;
+		IPath p;
+		if (src instanceof IResource) {
+			IResource resource = (IResource)src;
+			proj = resource.getProject();
+			p = resource.getProjectRelativePath();
+		} else {
+			IProjectStorage st = IProjectStorage.Adapter.adapt(src);
+			if (st == null) throw new IllegalArgumentException("Not a proof storage: " + src);
+			proj = st.getProject();
+			p = st.getFullPath();
+		}
+		IPath base = proj.getProjectRelativePath();
+		IContainer pf = getProofFolder(proj.getProject());
 		if (pf != null) base = pf.getProjectRelativePath();
 		IPath rpath = p.makeRelativeTo(base);
 		return rpath;
