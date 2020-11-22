@@ -1,0 +1,64 @@
+package regression;
+
+terminals λ lambda A
+
+syntax
+  t ::= x
+     | t t
+     | λ x:T . t[x]
+     
+  T ::= A
+     | T → T
+
+  Gamma, 
+  Γ ::= •
+     | Γ, x:T 
+
+// now define some ASCII long-hands for Unicode things:
+            
+  (*) := •
+  
+  (T1 -> T2) := (T1 → T2)
+  
+  (lambda x:T . t[x]) := (λ x:T . t[x])
+
+
+judgment typing: Γ ⊢ t : T
+assumes Γ
+
+  ------------- T-Var
+  Γ, x:T ⊢ x:T
+  
+  Γ ⊢ t1 : T2 → T
+  Γ ⊢ t2 : T2
+  ----------------- T-App
+  Γ ⊢ t1 t2 : T
+  
+  Γ, x:T1 ⊢ t[x] : T2
+  ---------------------------- T-Abs
+  Γ ⊢ λ x:T1 . t[x] : T1 → T2
+  
+judgment asciityping = typing : Gamma |- t : T
+assumes Gamma
+
+lemma type-id:
+    exists * |- (lambda x:A . x) : A -> A
+    d1: *, x:A |- x:A by rule T-Var
+    d2: * |- (lambda x:A . x) : A -> A by rule T-Abs on d1
+end lemma
+
+theorem subst:
+    assumes Γ
+    forall d1: Γ, x:T2 ⊢ t1[x] : T1
+    forall d2: Γ ⊢ t2 : T2
+    exists Γ ⊢ t1[t2]  : T1
+    proof by substitution on d1, d2
+end theorem 
+
+theorem subst2:
+    assumes Gamma
+    forall d1: Gamma, x:T2 |- t1[x] : T1
+    forall d2: Gamma |- t2 : T2
+    exists Gamma |- t1[t2] : T1
+    proof by theorem subst on d1, d2
+end theorem
