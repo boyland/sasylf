@@ -45,13 +45,13 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 	};*/
 
 	public SASyLFCodeScanner(SASyLFColorProvider provider)	{
-		TextAttribute kwAtt = new TextAttribute (provider.getColor(SASyLFColorProvider.KEYWORD), null,SWT.BOLD);
+		TextAttribute kwAtt = new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Keyword), null,SWT.BOLD);
 		Token keyword = new Token (kwAtt);
 
-		IToken comment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.SINGLE_LINE_COMMENT)));
-		IToken other = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.DEFAULT)));
-		IToken multiLineComment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT)));
-		IToken rule = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.RULE)));
+		IToken comment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.SingleLineComment)));
+		IToken other = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Default)));
+		IToken multiLineComment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.MultiLineComment)));
+		IToken rule = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Rule)));
 
 		List<IRule> rules = new ArrayList<IRule> ();
 		rules.add (new EndOfLineRule ("//", comment));
@@ -91,7 +91,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 						while (c != ICharacterScanner.EOF && fDetector.isWordPart((char) c));
 						scanner.unread();
 
-						IToken token = (IToken) fWords.get(_buffer.toString()/*.toLowerCase()*/);
+						IToken token = fWords.get(_buffer.toString()/*.toLowerCase()*/);
 						if(token != null) {
 							return token;
 						}
