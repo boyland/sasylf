@@ -149,14 +149,3 @@ public class ProjectModuleFinder extends PathModuleFinder {
 		super.clearCache();
 	}
 }
-
-
-
-/*
-Notes:
-
-parseAndCheck() does indeed go through first if statement
-   - both "id" and "last" are the same
-   - what does adding things to "deps" actually do for us?
-need to figure out how to add dependencies from other files
-*/

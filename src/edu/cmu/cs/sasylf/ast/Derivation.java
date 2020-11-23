@@ -114,7 +114,7 @@ public abstract class Derivation extends Fact {
 		clause.checkBindings(ctx.bindingTypes, this);
 		clause.checkVariables(Collections.<String>emptySet(), false);
 
-		if (wasProof) {
+		if (!ctx.outputVars.isEmpty()){
 			Set<FreeVar> vs = new HashSet<FreeVar>(ctx.outputVars);
 			vs.retainAll(ctx.inputVars);
 			if (!vs.isEmpty()) {
@@ -244,18 +244,36 @@ public abstract class Derivation extends Fact {
 			// must not require instantiating free variables
 			if (!instanceSub.avoid(ctx.inputVars)) {
 				Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
-				if (errorMsg == null) return false;
-				ErrorHandler.report(errorMsg,node,"  could not avoid vars " + unavoidable);
+				return report(errorMsg,node,"  could not avoid vars ", unavoidable);
 			}
 			debug("Adding to ctx: ", instanceSub);
 			ctx.composeSub(instanceSub);
 		} catch (UnificationFailed e) {
-			if (errorMsg == null) return false;
-			ErrorHandler.report(errorMsg, node, "\twas checking " + suppliedTerm + " instance of " + matchTerm);
+			return report(errorMsg, node, "\twas checking ",suppliedTerm," instance of ",matchTerm);
 		}
 		return true;
 	}
 
+	/**
+	 * Report an error for this node (if given a non-null error message)
+	 * @param errorMsg error message, or null to just return false
+	 * @param node node to report error on, must not be null
+	 * @param extraInfo extra LF info to put into error report
+	 * @return false always
+	 */
+	protected static boolean report(String errorMsg, Node node, Object... extraInfo) {
+		if (errorMsg == null) return false;
+		if (node instanceof Derivation && ((Derivation)node).suspectOutputVarError != null) {
+			errorMsg += "\nPerhaps these output variables were set prematurely: " + ((Derivation)node).suspectOutputVarError;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (Object o : extraInfo) {
+			sb.append(o == null ? "<null>" : o.toString());
+		}
+		ErrorHandler.report(errorMsg, node, sb.toString());
+		return false;
+	}
+	
 	/**
 	 * Give an error for this node if copying from the source to the target
 	 * involves changing the variable context.

@@ -9,7 +9,6 @@ import java.io.PrintStream;
 import java.io.Reader;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
@@ -18,6 +17,7 @@ import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TokenSpan;
 
@@ -49,7 +49,8 @@ public class Main {
 			return;
 		}
 		String dir = null;
-		ModuleFinder mf = null;
+		PathModuleFinder mf = null;
+		PathModuleFinder defaultMF = new PathModuleFinder("");
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("--compwhere")) {
 				edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
@@ -97,53 +98,39 @@ public class Main {
 			String filename = args[i];
 			File file;
 			ModuleId id = null;
-			if (dir == null) {
-				file = new File(filename);
-			} else {
-				file = new File(dir,filename);
-				try {
-					id = new ModuleId(filename);
-				} catch (RuntimeException ex) {
-					System.err.println(ex.getMessage());
-					exitCode = -1;
-					continue;
-				}
-			}
-			if (!file.canRead()) {
-				System.err.println("Could not open file " + filename);
-				exitCode = -1;
-				continue;
-			}
-			Reader r;
 			try {
-				r = new InputStreamReader(new FileInputStream(file),"UTF-8");
-			} catch(FileNotFoundException ex) {
-				System.err.println("Could not open file " + filename);
-				exitCode = -1;
-				continue;
-			}
-			try {
-				/* long start = System.nanoTime(); */
-				@SuppressWarnings("unused")
-				Module cu = parseAndCheck(mf, filename, id, r);
-				/*
-				long mid = System.nanoTime();
-				if (cu != null) {
-				  check(mf,id,cu);
-				  long end = System.nanoTime();
-				  System.out.println("Parse and check: " + (mid - start));
-				  System.out.println("        recheck: " + (end-mid));
+				if (mf != null) {
+					try {
+						id = new ModuleId(filename);
+					} catch (RuntimeException ex) {
+						System.err.println(ex.getMessage());
+						exitCode = -1;
+						continue;
+					}
+					mf.findModule(id, new Location("<commandline>",0,0));
+				} else {
+					file = new File(filename);
+					if (!file.canRead()) {
+						System.err.println("Could not open file " + filename);
+						exitCode = -1;
+						continue;
+					}
+					try (Reader r = new InputStreamReader(new FileInputStream(file),"UTF-8")) {
+						parseAndCheck(defaultMF, filename, null, r);
+					} catch(FileNotFoundException ex) {
+						System.err.println("Could not open file " + filename);
+						exitCode = -1;
+						continue;
+					} catch (SASyLFError e) {
+						// ignore the error; it has already been reported
+						//e.printStackTrace();
+					} catch (RuntimeException e) {
+						// System.err.println("Internal SASyLF error analyzing " + filename + " !");
+						e.printStackTrace(); // unexpected exception
+						ErrorHandler.recoverableError("Internal error: " + e.toString(), null); // "recoverable" = "don't throw"
+					} 
 				}
-				 */
-			} catch (SASyLFError e) {
-				// ignore the error; it has already been reported
-				//e.printStackTrace();
-			} catch (RuntimeException e) {
-				// System.err.println("Internal SASyLF error analyzing " + filename + " !");
-				e.printStackTrace(); // unexpected exception
-				ErrorHandler.recoverableError("Internal error: " + e.toString(), null); // "recoverable" = "don't throw"
 			} finally {
-				r.close();
 				int newErrorCount = ErrorHandler.getErrorCount();
 				int newWarnings = ErrorHandler.getWarningCount();
 				@SuppressWarnings("resource")

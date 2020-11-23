@@ -327,6 +327,19 @@ public class Context implements Cloneable {
 		}
 	}
 
+	/**
+	 * See if there is an existing relaxation and return the key if so
+	 * @param r relaxation to look for
+	 * @return key that is defined by this relaxation
+	 */
+	public NonTerminal findRelaxation(Relaxation r) {
+		if (relaxationMap == null) return null;
+		for (Map.Entry<NonTerminal, Relaxation> e : relaxationMap.entrySet()) {
+			if (e.getValue().equals(r)) return e.getKey();
+		}
+		return null;
+	}
+	
 	public void addRelaxation(NonTerminal key, Relaxation relax) {
 		Util.debug("Adding relaxation: ",key,"->",relax);
 		if (relaxationMap == null) {

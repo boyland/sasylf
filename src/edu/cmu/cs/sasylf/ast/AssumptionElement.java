@@ -5,6 +5,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -74,6 +75,13 @@ public class AssumptionElement extends Element {
 		return this;
 	}
 	
+	@Override
+	void checkBindings(Map<String, List<ElemType>> bindingTypes,
+			Node nodeToBlame) {
+		context.checkBindings(bindingTypes, nodeToBlame);
+		base.checkBindings(bindingTypes, nodeToBlame); 
+	}
+
 	@Override
 	public void prettyPrint(PrintWriter out, PrintContext ctx) {
 		base.prettyPrint(out,ctx);

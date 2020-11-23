@@ -249,7 +249,6 @@ public class Relaxation {
 		// we need to make sure the subject pattern has a simple variable where
 		// we are going to have a variable because we need this for the relaxation.
 		List<FreeVar> relaxVars = new ArrayList<FreeVar>();
-		// the following is messy and should be extracted.
 		{
 			Application bareSubject = (Application)Term.getWrappingAbstractions(subjectTerm, null);
 			ClauseUse ruleConc = (ClauseUse)theRule.getConclusion();
@@ -269,6 +268,7 @@ public class Relaxation {
 						ErrorHandler.report("Rule " + theRule.getName() + " cannot apply since "+ 
 								subject.getElements().get(i) + " cannot be a variable.", theNode);
 					} else {
+						// Why create a new variable?  We need to because the old one had parameters, the new one not.
 						Application app = (Application)t;
 						FreeVar funcVar = (FreeVar)app.getFunction();
 						List<Abstraction> argTypes = new ArrayList<Abstraction>();

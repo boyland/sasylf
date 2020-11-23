@@ -51,7 +51,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 			for (int i=0; i < n; ++i) {
 				ClauseUse source = sourceClauses.get(i);
 				ClauseUse result = results.get(i);
-				Derivation.checkMatchWithImplicitCoercions(this,ctx,result,source,"Claimed conjunct #" + (i+1) + " is not equivalent to previous");
+				Derivation.checkMatchWithImplicitCoercions(this,ctx,result,source,"Claimed conjunct #" + (i+1) + ": " + result + " is not equivalent to previous: " + source);
 			}
 			return;
 		}

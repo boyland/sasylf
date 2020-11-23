@@ -308,7 +308,12 @@ public class Theorem extends RuleLike {
 	@Override
 	public NonTerminal getAssumes() { return assumes; }
 
-	public void setExists(Clause c) { exists = c; }
+	public void setExists(Clause c) { 
+		while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
+			c = (Clause)c.getElements().get(0);
+		}
+		exists = c; 
+	}
 
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";

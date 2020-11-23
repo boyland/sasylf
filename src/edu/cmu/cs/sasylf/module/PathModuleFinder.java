@@ -26,8 +26,8 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 	 * @param p a single provider, must not be null
 	 */
 	protected PathModuleFinder(ModuleProvider p) {
-		addProvider(new ResourceModuleProvider());
 		addProvider(p);
+		addProvider(new ResourceModuleProvider()); // TODO: Enable Eclipse version to substitute a different default
 	}
 	
 	/**

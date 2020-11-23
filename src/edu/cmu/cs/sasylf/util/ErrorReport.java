@@ -14,7 +14,10 @@ public class ErrorReport extends Report {
 	 */
 	@Override
 	public String formatMessage() {
-		String msg = getSpan() == null ? "unknown file: " : getSpan().getLocation().toString() + ": ";
+		String msg;
+		if (getSpan() == null) msg = "unknown file: ";
+		else if (getSpan().getLocation() == null) msg = "unknown file (in bad span " + (getSpan().getClass()) + "): ";
+		else msg = getSpan().getLocation().toString() + ": ";
 		if (!isError())
 			msg = msg + "warning: ";
 		msg = msg + getMessage();

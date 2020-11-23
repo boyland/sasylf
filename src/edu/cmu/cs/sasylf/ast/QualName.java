@@ -53,6 +53,14 @@ public class QualName extends Node {
 	}
 	
 	/**
+	 * Get the previous qualified name attached to this {@link QualName}.
+	 * @return the source {@link QualName}
+	 */
+	public QualName getSource() {
+		return source;
+	}
+	
+	/**
 	 * Gives the current version of this QualName.
 	 * @return the current version
 	 */
