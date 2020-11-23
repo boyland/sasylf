@@ -4156,7 +4156,7 @@ theorem subst-preserves-canon-term:
                     // serious problem: ct12 is not true in general:
                     // we are prematurely substituting the type of x' so that we
                     // can exchange it before x0.
-                    ct12: Γ, x' : A1', x0 : A0 ⊢Σ M1[x0][x'] ⇐ A2[x0][x'] by unproved
+                    ct12: Γ, x' : A1', x0 : A0 ⊢Σ M1[x0][x'] ⇐ A2[x0][x'] by unproved //! expected
                     arga: Γ, x' : A1' ⊢Σ M0 ⇐ A0 by weakening on arg
                     sima: Γ, x' : A1' ⊢ (A0)⁻ = α0 by weakening on sim
                     sbM1a: Γ, x':A1' ⊢ {M0/x0} m α0 M1[x0][x'] = M1'[x'] and
