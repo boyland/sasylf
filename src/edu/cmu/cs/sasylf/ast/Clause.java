@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -522,12 +523,23 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					return computeClause(follows);
 			}
 						
-			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " +
-				trees /*+" with elements " + elemTypes*/, this);
+			List<String> possibilities = getAmbiguousParses(trees);
+			ErrorHandler.report("Ambiguous expression "+ this + " has differing interpretations " +
+				possibilities, this, "The underlying parse trees are " + trees);
 			throw new RuntimeException("should be unreachable");
 		}
 	}
 	
+	private static final int SHOW_AMBIGUOUS_COUNT = 2;
+	private List<String> getAmbiguousParses(Set<RuleNode> trees) {
+		List<String> possibilities = new ArrayList<>();
+		int n = 0;
+		for (Iterator<RuleNode> it = trees.iterator(); it.hasNext() && n < SHOW_AMBIGUOUS_COUNT; ++n) {
+			RuleNode poss = it.next();
+			possibilities.add(computeClause(poss).toString());
+		}
+		return possibilities;
+	}
 	
 	public static void printTreeVerbose(ParseNode pn, int indent) {
 		for (int i=0; i < indent; ++i) {
