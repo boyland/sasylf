@@ -43,7 +43,8 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 		reconciler.setDamager (dr, IDocument.DEFAULT_CONTENT_TYPE);
 		reconciler.setRepairer (dr, IDocument.DEFAULT_CONTENT_TYPE);
 
-		dr = new DefaultDamagerRepairer (new SingleTokenScanner(new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT))));
+		dr = new DefaultDamagerRepairer (new SingleTokenScanner(new TextAttribute (
+				provider.getColor(SASyLFColorProvider.Fragments.MultiLineComment))));
 		reconciler.setDamager (dr, "__java_multiline_comment");
 		reconciler.setRepairer (dr, "__java_multiline_comment");
 		return reconciler;

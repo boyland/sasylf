@@ -15,4 +15,13 @@ public class PreferenceConstants {
 	public static final String COMPULSORY_WHERE_CLAUSES = "org.sasylf.proof.compwhere";
 	
 	public static final String EXPERIMENTAL_FEATURES = "org.sasylf.proof.experimental";
+
+	// Preferences for syntax highlighting colors
+	public static final String PREF_COLOR_DEFAULT = "Pref_Color_Default";
+	public static final String PREF_COLOR_KEYWORD = "Pref_Color_Keyword";
+	public static final String PREF_COLOR_RULE =    "Pref_Color_Rule";
+	public static final String PREF_COLOR_BACKGROUND = "Pref_Color_Background";
+	public static final String PREF_COLOR_ML_COMMENT = "Pref_Color_Multiline_Comment";
+	public static final String PREF_COLOR_SL_COMMENT = "Pref_Color_Singleline_Comment";
+
 }
