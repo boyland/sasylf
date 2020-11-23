@@ -72,6 +72,13 @@ public class Main {
 				edu.cmu.cs.sasylf.util.Util.DEBUG = true;
 				continue;
 			}
+			if (args[i].equals("--waitForCR")) {
+				System.out.println("Press <ENTER> to continue");
+				while (System.in.read() != '\n') {
+					// do nothing
+				}
+				continue;
+			}
 			if (args[i].equals("--XContextIsSyntax")) {
 				edu.cmu.cs.sasylf.util.Util.X_CONTEXT_IS_SYNTAX = true;
 				continue;
