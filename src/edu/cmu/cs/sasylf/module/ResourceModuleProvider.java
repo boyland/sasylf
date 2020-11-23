@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.module;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -27,9 +26,15 @@ public class ResourceModuleProvider extends AbstractModuleProvider {
 	 * @param id module identifier to convert
 	 * @return string
 	 */
-	protected String asResourceString(ModuleId id) {
-		String result = id.asFile(new File("/")).toString();
-		return result;
+	public String asResourceString(ModuleId id) {
+		StringBuilder sb = new StringBuilder("/");
+		for (String p : id.packageName) {
+			sb.append(p);
+			sb.append("/");
+		}
+		sb.append(id.moduleName);
+		sb.append(".slf");
+		return sb.toString();
 	}
 
 	@Override

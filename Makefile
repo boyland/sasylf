@@ -16,8 +16,8 @@ build :
 	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org
 
 TESTBIN= bin/org/sasylf/Activator.class
-build-plugin : ${TESTBIN} ChangeLog.txt
-	cp -r library/org bin/.
+TESTLIB= bin/org/sasylf/util/Natural.slf
+build-plugin : ${TESTBIN} ${TESTLIB} ChangeLog.txt
 	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml ChangeLog.txt icons/*.gif icons/*.png -C bin . 
 
 ${TESTBIN}:
@@ -26,6 +26,14 @@ ${TESTBIN}:
 	@echo Then come back and make build-plugin
 	false
 
+${TESTLIB}:
+	${MAKE} install-lib
+
+.PHONY: install-lib
+install-lib:
+	cp -r library/org bin/.
+
+	
 ADDTESTS= \
 	examples/and.slf \
 	examples/cut-elimination.slf \

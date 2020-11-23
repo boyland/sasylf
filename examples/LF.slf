@@ -548,6 +548,73 @@ judgment subexpression:  α ≤ α
   ------------- sub-arrow2
   α ≤ α1 → α2
 
+
+lemma simple-type-unique:
+    assumes Γ 
+    forall sm1: Γ ⊢ (A)⁻ = α' 
+    forall sm2: Γ ⊢ (A)⁻ = α''
+    exists α' = α''
+    proof by induction on sm1:
+        case rule
+            ------------------ simple-fam
+            _: Γ ⊢ (a)⁻ = a
+            where A := a and α' := a
+        is
+            use inversion on sm2 where α'' := a
+            eq: α' = α'' by rule simple-eq
+        end case
+
+        case rule
+            sm1': Γ ⊢ (P)⁻ = α'
+            -------------------- simple-app
+            _: Γ ⊢ (P M) ⁻= α'
+            where A := (P M)
+        is
+            sm2': Γ ⊢ (P)⁻ = α'' by inversion on sm2
+            proof by induction hypothesis on sm1', sm2'
+        end case
+
+        case rule
+            sm11: Γ ⊢ (A1)⁻ = α1'
+            sm12: Γ, x : A1 ⊢ (A2[x])⁻ = α2'
+            ------------------------------------- simple-prod
+            _: Γ ⊢ (Π x : A1 • A2[x])⁻ = (α1' → α2')
+            where A := Π x : A1 • A2[x] and α' := α1' → α2'
+        is
+            sm21: Γ ⊢ (A1)⁻ = α1'' and
+            sm22: Γ, x : A1 ⊢ (A2[x])⁻ = α2'' by inversion of rule simple-prod on sm2
+            where α'' := α1'' → α2''
+            eq1: α1' = α1'' by induction hypothesis on sm11, sm21
+            eq2: α2' = α2'' by induction hypothesis on sm12, sm22
+            use inversion on eq1 where α1' := α1''
+            use inversion on eq2 where α2' := α2''
+            proof by rule simple-eq
+        end case
+    end induction
+end lemma
+
+lemma simple-prod-inversion:
+    assumes Γ
+    forall sim12: Γ ⊢ (Π x:A1 • A2[x])⁻ = α12 
+    forall sim1: Γ ⊢ (A1)⁻ = α1 
+    exists α12 = α1 → α2  and Γ, x:A1 ⊢ (A2[x])⁻ = α2 
+    proof by case analysis on sim12:
+        case rule
+            sim1': Γ ⊢ (A1)⁻ = α1'
+            sim2': Γ, x : A1 ⊢ (A2[x])⁻ = α2
+            ------------------------------------- simple-prod
+            _: Γ ⊢ (Π x : A1 • A2[x])⁻ = (α1' → α2)
+            where α12 := α1' → α2
+        is
+            eq: α1 = α1' by lemma simple-type-unique on sim1, sim1'
+            use inversion on eq where α1' := α1
+            eq12: α1 → α2 = α1 → α2 by rule simple-eq
+            proof by eq12, sim2'
+        end case
+    end case analysis
+end lemma
+
+
 lemma subexpression-transitive:
     forall s12: α1 ≤ α2
     forall s23: α2 ≤ α3
@@ -666,56 +733,6 @@ end theorem
 // This has four parts
 
 // first some helper lemmas
-theorem simple-type-unique:
-    assumes Γ
-    forall s1: Γ ⊢ (A)⁻ = α'
-    forall s2: Γ ⊢ (A)⁻ = α'' 
-    exists α' = α''  
-    proof by induction on s1:
-        case rule
-            -------------- simple-fam
-            _: Γ ⊢ (a)⁻ = a
-            where A := a and α' := a
-        is
-            use inversion on s2 where α'' := a
-            proof by rule simple-eq
-        end case
-
-        case rule
-            s11: Γ ⊢ (P)⁻ = α'
-            ---------------- simple-app
-            _: Γ ⊢ (P M)⁻ = α'
-            where A := P M
-        is
-            s21: Γ ⊢ (P)⁻ = α'' by inversion on s2
-            proof by induction hypothesis on s11, s21
-        end case
-
-        case rule
-            s11: Γ ⊢ (A1)⁻ = α1'
-            s12: Γ, x:A1 ⊢ (A2[x])⁻ = α2'
-            --------------------------------- simple-prod
-            _: Γ ⊢ (Π x : A1 • A2[x]) ⁻= (α1' → α2')
-            where A := Π x : A1 • A2[x] and α' := α1' → α2'
-        is
-            proof by case analysis on s2:
-                case rule
-                    s21: Γ ⊢ (A1)⁻ = α1''
-                    s22: Γ, x : A1 ⊢ (A2[x])⁻ = α2''
-                    ------------------------------------- simple-prod
-                    _: Γ ⊢ (Π x : A1 • A2[x])⁻ = (α1'' → α2'')
-                    where α'' := α1'' → α2''
-                is
-                    eq1: α1' = α1'' by induction hypothesis on s11, s21
-                    eq2: α2' = α2'' by induction hypothesis on s12, s22
-                    use inversion on eq1 where α1' := α1''
-                    use inversion on eq2 where α2' := α2''
-                    proof by rule simple-eq
-                end case
-            end case analysis
-        end case
-    end induction
-end theorem
 
 
 // Lemma 2.3 (1)
@@ -1178,7 +1195,7 @@ theorem atom-fam-unique:
             s2: Γ ⊢ ({M0/x} α'' K1''[x]) = K'' by inversion on d2
             eqP: Γ ⊢ (Π x : A' • K1'[x]) == (Π x : A'' • K1''[x]) by induction hypothesis on ok, d11, d21
             use inversion on eqP where A'' := A' and K1''[x] := K1'[x]
-            eqS: α' = α'' by theorem simple-type-unique on st1, st2
+            eqS: α' = α'' by lemma simple-type-unique on st1, st2
             use inversion on eqS where α' := α''
             proof by theorem subst-unique on s1, s2
         end case
@@ -1336,7 +1353,7 @@ theorem atom-term-unique:
             s2: Γ ⊢ ({M1/x} α'' A2''[x]) = A'' by inversion on d2
             eqF: Γ ⊢ (Π x : A1' • A2'[x]) == (Π x : A1'' • A2''[x]) by induction hypothesis on ok, r1, r2
             use inversion on eqF where A1' := A1'' and A2'[x] := A2''[x]
-            eqST: α' = α'' by theorem simple-type-unique on t1, t2
+            eqST: α' = α'' by lemma simple-type-unique on t1, t2
             use inversion on eqST where α' := α''
             proof by theorem subst-unique on s1, s2
         end case
@@ -3442,7 +3459,7 @@ theorem subst-m-composeI:
                     where M1'[x] := R1'[x]
                 is
                     s4': Γ ⊢ {M0/x0} r α0 R[x0] = R' and 
-                    s5': Γ ⊢ {M2'/x} r α2 R1'[x] = R' by theorem subst-r-compose on α0, α2, s1, s2', s3'
+                    s5': Γ ⊢ {M2'/x} r α2 R1'[x] = R' by theorem subst-r-composeI on α0, α2, s1, s2', s3'
                     s4: Γ ⊢ {M0/x0} m α0 M[x0] = R' by rule Subst-M-R on s4'
                     s5: Γ ⊢ {M2'/x} m α2 M1'[x] = R' by rule Subst-M-R on s5'
                     proof by s4, s5
@@ -3512,7 +3529,7 @@ theorem subst-m-composeI:
 end theorem
 and
 // Lemma 2.10 (1) R
-theorem subst-r-compose:
+theorem subst-r-composeI:
     assumes Γ
     forall α0
     forall α2
@@ -3853,6 +3870,18 @@ theorem subst-m-compose:
     proof by theorem subst-m-composeI on α0, α2, sx, s1, s2, s3
 end theorem
 
+// Lemma 2.10 (1) R
+// without induction arguments
+theorem subst-r-compose:
+    assumes Γ
+    forall s1: Γ ⊢ {M0/x0} m α0 M2[x0] = M2'
+    forall s2: Γ, x0:A0 ⊢ {M2[x0]/x} r α2 R1[x0][x] = R[x0]
+    forall s3: Γ, x:A ⊢ {M0/x0} r α0 R1[x0][x] = R1'[x]
+    exists Γ ⊢ {M0/x0} r α0 R[x0] = R' 
+    and    Γ ⊢ {M2'/x} r α2 R1'[x] = R'
+    proof by theorem subst-r-composeI on α0, α2, s1, s2, s3
+end theorem
+
 // Lemma 2.10 (1) P
 theorem subst-p-compose:
     assumes Γ
@@ -4033,4 +4062,258 @@ theorem subst-k-compose:
     exists Γ ⊢ {M0/x0} α0 K[x0] = K' 
     and    Γ ⊢ {M2'/x} α2 K1'[x] = K'
     proof by theorem subst-k-composeI on (K1[x0][x] assumes Γ, x:A, x0:A0), s1, s2, s3
+end theorem
+
+
+/// Substitution theorems
+
+// We follow the proof sketch of H&L but because we can't
+// reason about things in the middle of the context, we assume Γ_R is empty
+// and in induction, we perform substitution so that we can "exchange" the
+// relevant context item to the front.  Unfortunately this isn't sound:
+// see the "unproved" step below:
+
+theorem subst-preserves-canon-term:
+    assumes Γ
+    forall α0
+    forall α1
+    forall sx: α0 ≤ α1
+    forall M[x0] assumes Γ, x0:A0
+    forall ct1: Γ, x0:A0 ⊢Σ M[x0] ⇐ A[x0]
+    forall arg: Γ ⊢Σ M0 ⇐ A0
+    forall sim: Γ ⊢ (A0)⁻ = α0 
+    forall sbA: Γ ⊢ {M0/x0} α0 A[x0] = A'
+    exists Γ ⊢ {M0/x0} m α0 M[x0] = M'
+    and Γ ⊢Σ M' ⇐ A'
+    use induction on α1, (M[x0] assumes Γ, x0:A0)
+    do case analysis on sx:
+        case rule
+            sx2: α0 ≤ α2
+            ------------------- sub-arrow1
+            _: α0 ≤ (α2 → α3)
+            where α1 := (α2 → α3)
+        is
+            proof by induction hypothesis on α0, α2, sx2, (M[x0] assumes Γ, x0:A0), ct1, arg, sim, sbA
+        end case
+
+        case rule
+            sx3: α0 ≤ α3
+            ------------------- sub-arrow2
+            _: α0 ≤ (α2 → α3)
+            where α1 := (α2 → α3)
+        is
+            proof by induction hypothesis on α0, α3, sx3, (M[x0] assumes Γ, x0:A0), ct1, arg, sim, sbA
+        end case
+    end case analysis
+    use inversion on sx where α1 := α0
+    proof by case analysis on ct1:
+        case rule
+            at1: Γ, x0 : A0 ⊢Σ R[x0] ⇒ P[x0]
+            ----------------------------- Canon-Term-Atom
+            _:   Γ, x0 : A0 ⊢Σ R[x0] ⇐ P[x0]
+            where M[x0] := R[x0] and A[x0] := P[x0]
+        is
+            sbP: Γ ⊢ {M0/x0} p α0 P[x0] = P' by inversion on sbA
+            where A' := P'
+            sbA': Γ ⊢ {M0/x0} α0 P[x0] = A'' and
+            rest: ((Γ ⊢ {M0/x0} r α0 R[x0] = R'' and Γ ⊢Σ R'' ⇒ A'') or
+                   (Γ ⊢ {M0/x0} r α0 R[x0] = M'' : α'' and Γ ⊢Σ M'' ⇐ A'' and Γ ⊢ (A'')⁻ = α'' ))
+            by theorem subst-preserves-atom-term on α0, (R[x0] assumes Γ, x0:A0), at1, arg, sim 
+            eqP: Γ ⊢ P' == A'' by theorem subst-unique on sbA, sbA'
+            use inversion on eqP where A'' := P'
+            proof by case analysis on rest:
+                case or sbR: Γ ⊢ {M0/x} r α0 R[x] = R'' and at2: Γ ⊢Σ R'' ⇒ P' is
+                    sbM: Γ ⊢ {M0/x0} m α0 R[x0] = R'' by rule Subst-M-R on sbR
+                    ct2: Γ ⊢Σ R'' ⇐ P' by rule Canon-Term-Atom on at2
+                    proof by sbM, ct2
+                end case
+
+                case or sbRH: Γ ⊢ {M0/x} r α0 R[x] = M'' : α'' and 
+                    ct2: Γ ⊢ Σ M'' ⇐ P' and
+                    sim'': Γ ⊢ (A'')⁻ = α'' 
+                is
+                    sbM: Γ ⊢ {M0/x} m α0 R[x] = M'' by rule Subst-M-RH on sbRH
+                    proof by sbM, ct2
+                 end case
+            end case analysis
+        end case
+
+        case rule
+            ct11: Γ, x0 : A0, x' : A1[x0] ⊢ Σ M1[x0][x'] ⇐ A2[x0][x']
+            -------------------------------------------------------- Canon-Term-Lam
+            _:    Γ, x0 : A0 ⊢ Σ (λ x' • M1[x0][x']) ⇐ (Π x' : A1[x0] • A2[x0][x'])
+            where M[x0] := λ x' • M1[x0][x']
+             and  A[x0] := Π x' : A1[x0] • A2[x0][x']
+        is
+            proof by case analysis on sbA:
+                case rule
+                    sbA1: Γ ⊢ {M0/x} α0 A1[x] = A1'
+                    sbA2: Γ, x' : A1' ⊢ {M0/x0} α0 A2[x0][x'] = A2'[x']
+                    --------------------------------------------------------------- Subst-A-Pi
+                    _: Γ ⊢ {M0/x0} α0 (Π x' : A1[x0] • A2[x0][x']) = (Π x' : A1' • A2'[x'])
+                    where A' := Π x' : A1' • A2'[x']
+                is
+                    // serious problem: ct12 is not true in general:
+                    // we are prematurely substituting the type of x' so that we
+                    // can exchange it before x0.
+                    ct12: Γ, x' : A1', x0 : A0 ⊢Σ M1[x0][x'] ⇐ A2[x0][x'] by unproved //! expected
+                    arga: Γ, x' : A1' ⊢Σ M0 ⇐ A0 by weakening on arg
+                    sima: Γ, x' : A1' ⊢ (A0)⁻ = α0 by weakening on sim
+                    sbM1a: Γ, x':A1' ⊢ {M0/x0} m α0 M1[x0][x'] = M1'[x'] and
+                    ct11': Γ, x' : A1' ⊢Σ M1'[x'] ⇐ A2'[x'] by theorem subst-preserves-canon-term on α0, α0, sx, (M1[x0][x'] assumes Γ, x':A1', x0:A0), ct12, arga, sima, sbA2
+                    sbM1: Γ, x':0 ⊢ {M0/x0} m α0 M1[x0][x'] = M1'[x'] by lemma subst-ignores-variable-type on sbM1a, (0)
+                    sbM: Γ ⊢ {M0/x0} m α0 λ x' • M1[x0][x'] = λ x' • M1'[x'] by rule Subst-M-Lam on sbM1
+                    ct2: Γ ⊢Σ λ x' • M1'[x'] ⇐ Π x' : A1' • A2'[x'] by rule Canon-Term-Lam on ct11'
+                    proof by sbM, ct2
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end theorem
+and
+theorem subst-preserves-atom-term:
+    assumes Γ
+    forall α0
+    forall R[x0] assumes Γ, x0:A0
+    forall at1: Γ, x0:A0 ⊢Σ R[x0] ⇒ A[x0]
+    forall arg: Γ ⊢Σ M0 ⇐ A0
+    forall sim: Γ ⊢ (A0)⁻ = α0 
+    exists // test complex and/or derivations
+     Γ ⊢ {M0/x0} α0 A[x0] = A' and
+     ((Γ ⊢ {M0/x0} r α0 R[x0] = R' and
+       Γ ⊢Σ R' ⇒ A') or
+      (Γ ⊢ {M0/x0} r α0 R[x0] = M' : α' and
+       Γ ⊢Σ M' ⇐ A' and
+       Γ ⊢ (A')⁻ = α' ))
+    use induction on α0, (R[x0] assumes Γ, x0:A0)
+    sx: α0 ≤ α0 by rule sub-eq
+    proof by case analysis on at1:
+        case rule
+            in: R[x0] : A[x0] ∈ (Γ, x0 : A0)
+            ---------------- Atom-Term-Var
+            _: Γ, x0 : A0 ⊢ Σ R[x0] ⇒ A[x0]
+        is
+            proof by case analysis on in:
+                case rule
+                    --------------- var
+                    _: x0 : A0 ∈ (Γ, x0 : A0)
+                    where R[x0] := x0 and A[x0] := A0
+                is
+                    sbp: Γ ⊢ {M0/x0} α0 A0 = A0 by theorem nop-subst-a on M0, α0, A0
+                    sbr: Γ ⊢ {M0/x0} r α0 R[x0] = M0 : α0 by rule Subst-RH-Var
+                    proof by sbp, (sbr, arg, sim)
+                end case
+
+                case rule
+                    --------------- var
+                    _: x : A' ∈ (Γ', x : A', x0 : A1[x])
+                    where A[x0] := A'
+                is
+                    sbp: Γ ⊢ {M0/x0} α0 A' = A' by theorem nop-subst-a on M0, α0, A'
+                    v: x : A' ∈ (Γ', x : A') by rule var
+                    v': R[0] : A' ∈ Γ by v
+                    sbr: Γ ⊢ {M0/x0} r α0 R[x0] = R[0] by rule Subst-R-Var on v'
+                    at2: Γ ⊢Σ R[0] ⇒ A' by rule Atom-Term-Var on v'
+                    proof by sbp, (sbr, at2)
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            l: c : A' ∈ Σ
+            ----------------- Atom-Term-Const
+            _: Γ, x0 : A0 ⊢Σ c ⇒ A'
+            where R[x0] := c and A[x0] := A'
+        is
+            sbp: Γ ⊢ {M0/x0} α0 A' = A' by theorem nop-subst-a on M0, α0, A'
+            sbr: Γ ⊢ {M0/x0} r α0 c = c by rule Subst-R-Const
+            at2: Γ ⊢Σ c ⇒ A' by rule Atom-Term-Const on l
+            proof by sbp, (sbr, at2)
+        end case
+
+        case rule
+            atf: Γ, x0 : A0 ⊢Σ R1[x0] ⇒ (Π x' : A1[x0] • A2[x0][x'])
+            cta: Γ, x0 : A0 ⊢Σ M1[x0] ⇐ A1[x0]
+            sta: Γ, x0 : A0 ⊢ (A1[x0])⁻ = α1
+            sbt: Γ, x0 : A0 ⊢ {M1[x0]/x'} α1 A2[x0][x'] = A[x0]
+            ----------------------------------------------- Atom-Term-App
+            _: Γ, x0 : A0 ⊢Σ (R1[x0] M1[x0]) ⇒ A[x0]
+            where R[x0] := R1[x0] M1[x0]
+        is
+            sbft: Γ ⊢ {M0/x0} α0 (Π x' : A1[x0] • A2[x0][x']) = A12' and
+            orf: ((Γ ⊢ {M0/x0} r α0 R1[x0] = R1' and
+                  Γ ⊢Σ R1' ⇒ A12') or
+                 (Γ ⊢ {M0/x0} r α0 R1[x0] = M12' : α12' and
+                  Γ ⊢Σ M12' ⇐ A12' and
+                  Γ ⊢ (A12')⁻ = α12' )) by induction hypothesis on α0, (R1[x0] assumes Γ, x0:A0), atf, arg, sim
+            sbA1: Γ ⊢ {M0/x0} α0 A1[x0] = A1' and
+            sbA2: Γ, x' : A1' ⊢ {M0/x0} α0 A2[x0][x'] = A2'[x'] by inversion on sbft
+            where A12' := Π x' : A1' • A2'[x']
+            sta': Γ ⊢ (A1')⁻ = α1 by theorem subst-a-preserves-erasure on sta, sbA1
+            sbM1: Γ ⊢ {M0/x0} m α0 M1[x0] = M1' and
+            ctM1: Γ ⊢Σ M1' ⇐ A1' by theorem subst-preserves-canon-term on α0, α0, sx, (M1[x0] assumes Γ, x0:A0), cta, arg, sim, sbA1
+            sbA: Γ ⊢ {M0/x0} α0 A[x0] = A' and
+            sbA2': Γ ⊢ {M1'/x} α1 A2'[x] = A' by theorem subst-a-compose on sbM1, sbt, sbA2
+            proof by case analysis on orf:
+                case or sbf: Γ ⊢ {M0/x0} r α0 R1[x0] = R1' and 
+                    atf': Γ ⊢Σ R1' ⇒ (Π x : A1' • A2'[x]) 
+                is
+                    sb2: Γ ⊢ {M0/x0} r α0 R1[x0] M1[x0] = R1' M1' by rule Subst-R-App on sbf, sbM1
+                    at2: Γ ⊢Σ R1' M1' ⇒ A' by rule Atom-Term-App on atf', ctM1, sta', sbA2'
+                    proof by sbA, (sb2, at2)
+                end case
+
+                case or sbf: Γ ⊢ {M0/x0} r α0 R1[x0] = M12' : α12' and 
+                    ctf': Γ ⊢Σ M12' ⇐ (Π x1 : A1' • A2'[x1]) and 
+                    sm12: Γ ⊢ (Π x1 : A1' • A2'[x1])⁻ = α12' 
+                is
+                    sx12: α12' ≤ α0 by theorem head-substitution-size on sbf
+                    ctb: Γ, x1 : A1' ⊢Σ M2[x1] ⇐ A2'[x1] by inversion on ctf'
+                    where M12' := λ x1 • M2[x1]
+                    eq12: α12' = α1 → α' and 
+                    sim2: Γ, x1:A1' ⊢ (A2'[x1])⁻ = α' by lemma simple-prod-inversion on sm12, sta'
+                    use inversion on eq12 where α12' := α1 → α'
+                    sim': Γ ⊢ (A')⁻ = α' by theorem subst-a-preserves-erasure on sim2, sbA2'
+                    sx1: α1 ≤ α1 by rule sub-eq
+                    sx1': α1 ≤ α1 → α' by rule sub-arrow1 on sx1
+                    sbM2 : Γ ⊢ {M1'/x1} m α1 M2[x1] = M' and
+                    ct2': Γ ⊢Σ M' ⇐ A' by case analysis on sx12:
+                        case rule
+                            ----------- sub-eq
+                            _: (α1 → α') ≤ (α1 → α')
+                            where α0 := α1 → α'
+                        is
+                            proof by theorem subst-preserves-canon-term on α1, α1, sx1, (M2[x1] assumes Γ, x1:A1'), ctb, ctM1, sta', sbA2'
+                        end case
+
+                        case rule
+                            sx2: (α1 → α') ≤ α2
+                            ------------------- sub-arrow1
+                            _: (α1 → α') ≤ (α2 → α3)
+                            where α0 := α2 → α3
+                        is
+                            sx2': α1 ≤ α2 by lemma subexpression-transitive on sx1', sx2
+                            proof by theorem subst-preserves-canon-term on α1, α2, sx2', (M2[x1] assumes Γ, x1:A1'), ctb, ctM1, sta', sbA2'
+                        end case
+
+                        case rule
+                            sx3: (α1 → α') ≤ α3
+                            ------------------- sub-arrow2
+                            _: (α1 → α') ≤ (α2 → α3)
+                            where α0 := α2 → α3
+                        is
+                            sx3': α1 ≤ α3 by lemma subexpression-transitive on sx1', sx3
+                            proof by theorem subst-preserves-canon-term on α1, α3, sx3', (M2[x1] assumes Γ, x1:A1'), ctb, ctM1, sta', sbA2'
+                        end case
+                    end case analysis
+                    sb2: Γ ⊢ {M0/x0} r α0 R1[x0] M1[x0] = M' : α' by rule Subst-RH-App on sbf, sbM1, sbM2
+                    proof by sbA, (sb2, ct2', sim')
+                end case
+            end case analysis
+        end case
+
+    end case analysis
 end theorem

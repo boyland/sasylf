@@ -90,7 +90,7 @@ public abstract class Derivation extends Fact {
 			Pair<Fact,Integer> derivationInfo = ctx.subderivations.get(this);
 			for (int i=0; i < names.length; ++i) {
 				if (i == clauses.size()) break;
-				Fact fact = new DerivationByAssumption(names[i],this.getLocation(),clauses.get(i));
+				Fact fact = new DerivationByAssumption(names[i],this.getLocation(),ContextJudgment.unwrap(clauses.get(i)));
 				fact.addToDerivationMap(ctx);
 				if (derivationInfo != null) {
 					ctx.subderivations.put(fact,derivationInfo);
@@ -171,6 +171,15 @@ public abstract class Derivation extends Fact {
 	 * @return
 	 */
 	public static boolean checkMatchWithImplicitCoercions(Node node, Context ctx, Element match, Element supplied, String errorMsg) {
+		// XXX: It's not clear whether unwrapping is needed
+		if (match.getType() instanceof ContextJudgment) {
+			Util.debug("Found context judgment in match!");
+			// match = ContextJudgment.unwrap((ClauseUse)match);
+		}
+		if (supplied.getType() instanceof ContextJudgment) {
+			Util.debug("FOund context judgment in supplied!");
+			// supplied = ContextJudgment.unwrap((ClauseUse)supplied);
+		}
 		if (supplied instanceof OrClauseUse) {
 			for (ClauseUse provided : ((OrClauseUse)supplied).getClauses()) {
 				boolean result = checkMatchWithImplicitCoercions(node,ctx,match,provided,errorMsg);
@@ -184,9 +193,34 @@ public abstract class Derivation extends Fact {
 				if (result == true) return true;
 			}
 			if (errorMsg == null) return false;
-			// fall through
+			ErrorHandler.report(errorMsg + "\nNone of the possibilities matched.", node);
 		}
+		if (match instanceof AndClauseUse) {
+			if (!(supplied instanceof AndClauseUse)) {
+				if (errorMsg == null) return false;
+				ErrorHandler.report(errorMsg + "\nExpected multiple clauses.", node);
+			}
+			List<ClauseUse> matchList = ((AndClauseUse)match).getClauses();
+			List<ClauseUse> suppliedList = ((AndClauseUse)supplied).getClauses();
+			if (matchList.size() != suppliedList.size()) {
+				if (errorMsg == null) return false;
+				ErrorHandler.report(errorMsg + "\nMismatch because expected " + matchList.size() + " conjuncts but got " + suppliedList.size(), node);
+			}
+			for (int i=0; i < matchList.size(); ++i) {
+				String newMsg = errorMsg;
+				if (newMsg != null) {
+					newMsg += " (conjunct #" + (i+1) + ")";
+				}
+				if (!checkMatchWithImplicitCoercions(node,ctx,matchList.get(i),suppliedList.get(i),newMsg)) return false;
+			}
+			return true;
+		} else if (supplied instanceof AndClauseUse) {
+			if (errorMsg == null) return false;
+			ErrorHandler.report(errorMsg + "\nUnexpected multiple clauses.", node);
+		}
+		
 		if (checkRelax(ctx,match,supplied)) return true;
+		if (errorMsg != null) errorMsg += " " + supplied.toString();
 		return checkMatch(node,ctx,match,supplied,errorMsg);
 	}
 
@@ -206,7 +240,7 @@ public abstract class Derivation extends Fact {
 			source = newSource;
 			srcRoot = r.getResult();
 		}
-		if (checkMatch(null,ctx, target, source, null)) {
+		if (checkMatch(supplied,ctx, target, source, null)) {
 			Util.debug("could relax ",source," to ",target);
 			return true;
 		} else {
@@ -225,7 +259,7 @@ public abstract class Derivation extends Fact {
 	/**
 	 * Check that the supplied term satisfies the requirements of the match term,
 	 * possibly changing the values of output variables.
-	 * @param node location of matching, for errors
+	 * @param node location of matching, for errors, should not be null (even if errorMsg is)
 	 * @param ctx context, will be modified
 	 * @param matchTerm required term
 	 * @param suppliedTerm given term
@@ -244,12 +278,12 @@ public abstract class Derivation extends Fact {
 			// must not require instantiating free variables
 			if (!instanceSub.avoid(ctx.inputVars)) {
 				Set<FreeVar> unavoidable = instanceSub.selectUnavoidable(ctx.inputVars);
-				return report(errorMsg,node,"  could not avoid vars ", unavoidable);
+				return report(errorMsg, " restricts " + unavoidable,node,"  could not avoid vars ", unavoidable);
 			}
 			debug("Adding to ctx: ", instanceSub);
 			ctx.composeSub(instanceSub);
 		} catch (UnificationFailed e) {
-			return report(errorMsg, node, "\twas checking ",suppliedTerm," instance of ",matchTerm);
+			return report(errorMsg, " does not match " + TermPrinter.toString(ctx, null, node.getLocation(), matchTerm, true), node, "\twas checking ",suppliedTerm," instance of ",matchTerm,": ", e.getMessage());
 		}
 		return true;
 	}
@@ -261,8 +295,9 @@ public abstract class Derivation extends Fact {
 	 * @param extraInfo extra LF info to put into error report
 	 * @return false always
 	 */
-	protected static boolean report(String errorMsg, Node node, Object... extraInfo) {
+	protected static boolean report(String errorMsg, String addendum, Node node, Object... extraInfo) {
 		if (errorMsg == null) return false;
+		if (addendum != null) errorMsg += addendum;
 		if (node instanceof Derivation && ((Derivation)node).suspectOutputVarError != null) {
 			errorMsg += "\nPerhaps these output variables were set prematurely: " + ((Derivation)node).suspectOutputVarError;
 		}

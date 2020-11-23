@@ -200,6 +200,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 				
 				for (int i=0; i < clauses.size(); ++i) {
 					ClauseUse cu = clauses.get(i);
+					cu = ContextJudgment.unwrap(cu);
 					Term mt = cu.asTerm(); // want user-level variables
 					Term piece = pieces.get(i).substitute(ctx.currentSub);
 					// ctx sub changes as a result of each checkMatch,

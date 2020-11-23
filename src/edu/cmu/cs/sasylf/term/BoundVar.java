@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.term;
 
-import static edu.cmu.cs.sasylf.util.Util.verify;
-
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -9,8 +7,9 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
-public class BoundVar extends Term {
+public class BoundVar extends Atom {
 	public BoundVar(int index) {
+		super(null);
 		//verify(index > 0, "de brejn indexes must be positive");
 		if (index <= 0) {
 			Util.debug("warning: de bruijn indexes are generally positive - exceptions only for substitutions that capture vars");
@@ -69,7 +68,10 @@ public class BoundVar extends Term {
 
 	@Override
 	public Term apply(List<? extends Term> arguments, int whichApplied) {
-		verify(whichApplied >= arguments.size(), "type invariant broken in term system");
+		if (whichApplied < arguments.size()) {
+			return super.apply(arguments, whichApplied);
+		}
+		// Util.verify(whichApplied >= arguments.size(), "type invariant broken in term system");
 		int argIndex = whichApplied - index;
 		if (argIndex >= 0 && argIndex < arguments.size()) {
 			Term result = arguments.get(argIndex);
@@ -142,4 +144,10 @@ public class BoundVar extends Term {
 
 		return varBindings.get(indexToUse).second;
 	}
+	
+	@Override
+	public Term getType() {
+		return Constant.UNKNOWN_TYPE;
+	}
+	
 }

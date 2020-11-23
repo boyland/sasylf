@@ -233,6 +233,7 @@ public class Theorem extends RuleLike {
 					NonTerminal root = f.getElement().getRoot();
 					if (assumes.equals(root)) foundAssumption = true;
 				}
+				if (assumes.equals(exists.getRoot())) foundAssumption = true;
 				if (!foundAssumption) {
 					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
 				}
@@ -309,8 +310,23 @@ public class Theorem extends RuleLike {
 	public NonTerminal getAssumes() { return assumes; }
 
 	public void setExists(Clause c) { 
-		while (c.getElements().size() == 1 && c.getElements().get(0) instanceof Clause) {
-			c = (Clause)c.getElements().get(0);
+		List<Element> elems = c.getElements();
+		int n = elems.size();
+		// We remove the "dot" at the end, if it is there (old style)
+		if (n >= 1) {
+			Element last = elems.get(n-1);
+			if (last instanceof Terminal && ((Terminal)last).getName().equals(".")) {
+				elems.remove(n-1);
+				--n;
+				if (n > 0) {
+					c.setEndLocation((elems.get(n-1).getEndLocation()));
+				}
+			}
+		}
+		while (n == 1 && elems.get(0) instanceof Clause) {
+			c = (Clause)elems.get(0);
+			elems = c.getElements();
+			n = elems.size();
 		}
 		exists = c; 
 	}

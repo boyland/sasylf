@@ -134,6 +134,7 @@ public class UnitTests extends SimpleTestSuite {
 		testBindVars();
 		testAvoidHO();
 		testCompose();
+		testHigherOrder();
 	}
 
 	private void testType() {
@@ -182,6 +183,16 @@ public class UnitTests extends SimpleTestSuite {
 		Substitution sub1 = subst(p(v1.getName(),v2etalong));
 		assertTrue("can avoid F", sub1.avoid(Collections.singleton(v1)));
 		assertEqual("should eta expand F",v1etalong,sub1.getSubstituted(v2));
+	}
+	
+	private void testHigherOrder() {
+		FreeVar v1 = v("A",a);
+		Term b = App(new BoundVar(1), v1);
+		Term f = Abs(Abs(a,a),b);
+		FreeVar v2 = v("F",Abs(a,a));
+		Term v2etalong = Abs(a, App(v2, new BoundVar(1)));
+		Term r = App(v2,v1);
+		assertEqual("should substitute properly",r,App(f,v2etalong));
 	}
 	
 	private void testCompose() {

@@ -423,8 +423,6 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			}
 			symLists.add(aList);
 			List<ClauseUse> clauses = new ArrayList<ClauseUse>();
-			List<Judgment> types = new ArrayList<Judgment>();
-			Element sharedContext = null;
 			for (List<GrmTerminal> sublist : symLists) {
 				stripParens(sublist);
 				// The following crashes if it starts with a paren:
@@ -451,41 +449,12 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				// using a subClause forces the error to print correctly.
 				Element e = subClause.parseClause(ctx,inBinding,g,sublist,null);
 				if (e instanceof ClauseUse) {
-					ClauseUse cu = (ClauseUse)e;
-					ClauseType ty = cu.getConstructor().getType();
-					if (ty instanceof Judgment) types.add((Judgment)ty);
-					else ErrorHandler.report("cannot "+sepList.get(0)+" syntax only judgments", this);
-					clauses.add(cu);
-
-					if (((Judgment)ty).getAssume() != null) {
-						Element context = cu.getElements().get(cu.getConstructor().getAssumeIndex());
-						if (sharedContext != null) {
-							if (!sharedContext.equals(context)) {
-								ErrorHandler.report("all "+sepList.get(0)+"ed judgments must use the same context", this);
-							}
-						} else {
-							sharedContext = context;
-						}
-					}
+					clauses.add((ClauseUse)e);
 				} else {
 					ErrorHandler.report("can only "+sepList.get(0)+" clauses together, not nonterminals", this);
 				}
 			}
-			List<Element> newElements = new ArrayList<Element>();
-			Iterator<GrmTerminal> seps = sepList.iterator();
-			for (ClauseUse cl : clauses) {
-				for (Element e : cl.getElements()) {
-					newElements.add(e);
-				}
-				if (seps.hasNext()) newElements.add(seps.next().getElement());
-			}
-			if (hasAnd) {
-				ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(getLocation(), ctx, types).getForm();
-				return new AndClauseUse(getLocation(),newElements,cd,clauses);
-			} else {
-				ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(getLocation(), ctx, types).getForm();
-				return new OrClauseUse(getLocation(),newElements,cd,clauses);
-			}
+			return AndOrClauseUse.create(hasAnd, getLocation(), ctx, clauses);
 		}
 		/*
 		 * JTB: End of section to implement parsing of "and"/"or" judgments
@@ -554,10 +523,22 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					return computeClause(follows);
 			}
 						
-			ErrorHandler.report("Ambiguous expression "+ this + " has differing parse trees " +
-				trees /*+" with elements " + elemTypes*/, this);
+			List<String> possibilities = getAmbiguousParses(trees);
+			ErrorHandler.report("Ambiguous expression "+ this + " has differing interpretations " +
+				possibilities, this, "The underlying parse trees are " + trees);
 			throw new RuntimeException("should be unreachable");
 		}
+	}
+	
+	private static final int SHOW_AMBIGUOUS_COUNT = 2;
+	private List<String> getAmbiguousParses(Set<RuleNode> trees) {
+		List<String> possibilities = new ArrayList<>();
+		int n = 0;
+		for (Iterator<RuleNode> it = trees.iterator(); it.hasNext() && n < SHOW_AMBIGUOUS_COUNT; ++n) {
+			RuleNode poss = it.next();
+			possibilities.add(computeClause(poss).toString());
+		}
+		return possibilities;
 	}
 	
 	public static void printTreeVerbose(ParseNode pn, int indent) {

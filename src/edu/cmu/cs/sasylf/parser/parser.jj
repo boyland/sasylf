@@ -96,7 +96,7 @@ public class DSLToolkitParser {
 	      
     /** True if the next token is almost anything but not
      * PIPE
-     * LPAREN, RPAREN, LBRACK, RBRACK, DOT,
+     * LPAREN, RPAREN, LBRACK, RBRACK,
      * AND, NOT, OR
      * other keywords too.
      * These are the things that can be in the concrete syntax
@@ -109,6 +109,7 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == OPERATOR
 			|| getToken(1).kind == COLON
 			|| getToken(1).kind == COLON_EQ
+			|| getToken(1).kind == DOT
 			|| getToken(1).kind == EQUAL
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
@@ -1560,7 +1561,7 @@ Token Operator() :
 		| t=<COMMA>
 		| t=<PIPE>
 		| t=<EQUAL>
-		/* | t=<DOT> */
+		| t=<DOT>
 	) { return t; }
 }
 
@@ -1932,7 +1933,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
     { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
   <EXISTS> c=ExprToNL() (t=<AND> a=ExprToNL() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
-  (".")? { thm.setExists(c); }
+    { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA> | sp=RuleName() { tp = null; } )
   { 
@@ -2071,7 +2072,6 @@ Derivation Justification(Token startT, Clause c) :
    	      c, q, cl, whereClauses);
 	}
   )
-    // args should include expressions *****
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
     { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
       if (cl != null) {
@@ -2121,12 +2121,11 @@ Derivation Justification(Token startT, Clause c) :
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
        return d;
      }
-  | t=<IDENTIFIER>
+  | cl=SimpleExpr()
     { d = new DerivationByPrevious(startT.image, new Location(startT), c);
-      d.setEndLocation(Location.endOf(t)); 
-      d.addArgString(clauseFor(t));
+      d.addArgString(cl);
     }
-    ( <COMMA> t=<IDENTIFIER> { d.addArgString(clauseFor(t)); } )*
+    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
 	{ return d; }
 }
 

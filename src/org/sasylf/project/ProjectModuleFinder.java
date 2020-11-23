@@ -10,23 +10,29 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
+import org.sasylf.Proof;
 import org.sasylf.ProofChecker;
+import org.sasylf.util.ResourceDocumentProvider;
+import org.sasylf.util.ResourceStorage;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
+import edu.cmu.cs.sasylf.module.ResourceModuleProvider;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class ProjectModuleFinder extends PathModuleFinder {
-
+	private final IProject project;
+	
 	private ConcurrentHashMap<ModuleId,Set<ModuleId>> dependencies = new ConcurrentHashMap<ModuleId,Set<ModuleId>>();
 
 	/**
@@ -34,6 +40,8 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	 */
 	public ProjectModuleFinder(IProject p) {
 		super(new ProjectModuleProvider(p));
+		addProvider(new ResourceProvider());
+		project = p;
 	}
 
 	public void dispose() {
@@ -69,9 +77,8 @@ public class ProjectModuleFinder extends PathModuleFinder {
 				deps = dependencies.get(id);
 			}
 			deps.add(last);
-			dependencies.put(id, deps);
-			
-			System.out.println("adding dependency from " + last + " on " + id);
+			// dependencies.put(id, deps); // redundant?!			
+			// System.out.println("adding dependency from " + last + " on " + id);
 		} else {
 			System.out.println("Unknown dependency on " + id);
 		}
@@ -147,5 +154,32 @@ public class ProjectModuleFinder extends PathModuleFinder {
 
 	public void clear() {
 		super.clearCache();
+	}
+	
+	protected class ResourceProvider extends ResourceModuleProvider {
+
+		@Override
+		public CompUnit get(PathModuleFinder mf, ModuleId id, Span loc) {
+			final String resourceName = super.asResourceString(id);
+			ResourceStorage st = new ResourceStorage(resourceName,project);
+			Proof oldProof = Proof.getProof(st);
+			
+			final CompUnit compUnit = super.get(mf, id, loc);
+			if (compUnit == null) return null;
+			
+			final ResourceDocumentProvider provider = ResourceDocumentProvider.getInstance(st.asEditorInput());
+			try {
+				provider.connect(st.asEditorInput());
+			} catch (CoreException e) {
+				System.out.println("Cannot load resource");
+			}
+			Proof newProof = new Proof(st, provider.getDocument(st.asEditorInput()));;
+			newProof.setCompilation(compUnit);
+			if (Proof.changeProof(oldProof, newProof)) {
+				return compUnit;
+			}
+			return Proof.getCompUnit(st);
+		}
+		
 	}
 }

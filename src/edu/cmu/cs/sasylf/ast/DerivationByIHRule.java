@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Util.debug;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,9 +34,19 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 
 
 	@Override
+	protected ClauseType getClauseTypeExpected(Context ctx, int i) {
+		RuleLike rule = getRule(ctx);
+		if (rule != null && rule.getPremises().size() > i) {
+			final ElementType type = rule.getPremises().get(i).getType();
+			if (type instanceof ClauseType) return (ClauseType)type;
+		}
+		return super.getClauseTypeExpected(ctx,i);
+	}
+
+	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		debug("line: ", this.getLocation().getLine());
+		Util.debug("line: ", this.getLocation().getLine());
 
 		RuleLike ruleLike = getRule(ctx);
 		int n = getArgs().size();

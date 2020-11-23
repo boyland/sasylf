@@ -251,8 +251,11 @@ public class TermPrinter {
 				ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
 				vars.add(new Variable("<internal>",location));
 				ClauseUse body = asClause(abs2.getBody(),vars);
+				Util.debug("Trying to replace ",bindingClause," in body: ",body);
 				int ai = body.getConstructor().getAssumeIndex();
-				body.getElements().set(ai, replaceAssume(bindingClause,body.getElements().get(ai)));
+				if (ai >= 0) {
+					body.getElements().set(ai, replaceAssume(bindingClause,body.getElements().get(ai)));
+				}
 				vars.remove(vars.size()-1);
 				vars.remove(vars.size()-1);
 				return body;

@@ -27,7 +27,6 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 	 */
 	protected PathModuleFinder(ModuleProvider p) {
 		addProvider(p);
-		addProvider(new ResourceModuleProvider()); // TODO: Enable Eclipse version to substitute a different default
 	}
 	
 	/**
@@ -41,7 +40,11 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 		return presentCache.get(id);
 	}
 
-	private void addProvider(ModuleProvider p) {
+	/**
+	 * Add a provider to the module finder
+	 * @param p extra provider to add
+	 */
+	protected void addProvider(ModuleProvider p) {
 		providers.add(p);
 		p.addModuleEventListener(this);
 	}
@@ -51,7 +54,6 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 	 * @param l list of providers, must not be null
 	 */
 	protected PathModuleFinder(List<ModuleProvider> l) {
-		addProvider(new ResourceModuleProvider());
 		for (ModuleProvider p : l) {
 			addProvider(p);
 		}

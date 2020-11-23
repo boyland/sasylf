@@ -21,4 +21,8 @@ public class Pair<S,T> {
 	public String toString() {
 		return "Pair[" + first + ", " + second + "]";
 	}
+	
+	public static <S,T> Pair<S,T> create(S v1, T v2) {
+		return new Pair<>(v1,v2);
+	}
 }

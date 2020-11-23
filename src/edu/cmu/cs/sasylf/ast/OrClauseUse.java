@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,17 +13,7 @@ public class OrClauseUse extends AndOrClauseUse {
 	}
 
 	public static OrClauseUse makeOrClause(Location loc, Context ctx, List<ClauseUse> parts) {
-		List<Element> elems = new ArrayList<Element>();
-		List<Judgment> judgments = new ArrayList<Judgment>();
-		for (ClauseUse u : parts) {
-			if (!elems.isEmpty()) elems.add(new OrJudgment.OrTerminal(loc));
-			judgments.add((Judgment)u.getConstructor().getType());
-			for (Element e : u.getElements()) {
-				elems.add(e);
-			}
-		}
-		ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(loc, ctx, judgments).getForm();
-		return new OrClauseUse(loc,elems,cd,parts);
+		return (OrClauseUse)makeEmptyOrClause(loc).create(loc, ctx, parts);
 	}
 
 	public static OrClauseUse makeEmptyOrClause(Location loc) {

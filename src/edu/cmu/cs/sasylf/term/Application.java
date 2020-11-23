@@ -67,17 +67,17 @@ public class Application extends Term {
 
 	@Override
 	public Term apply(List<? extends Term> otherArgs, int whichApplied) {
-		Atom newFunction = function;
+		Term newFunction = function;
 		List<Term> newArgs = new ArrayList<Term>(arguments);
 		if (whichApplied > 0) {
 			for (int i = 0; i < newArgs.size(); ++i) {
 				newArgs.set(i, newArgs.get(i).apply(otherArgs.subList(0, Math.min(otherArgs.size(), whichApplied)), whichApplied));
 			}
-			newFunction = (Atom) newFunction.apply(otherArgs.subList(0, Math.min(otherArgs.size(), whichApplied)), whichApplied);
+			newFunction = newFunction.apply(otherArgs.subList(0, Math.min(otherArgs.size(), whichApplied)), whichApplied);
 		}
 
 		newArgs.addAll(otherArgs.subList(Math.min(otherArgs.size(), whichApplied), otherArgs.size()));
-		return new Application(newFunction, newArgs);
+		return newFunction.apply(newArgs,0);
 	}
 
 	@Override
@@ -653,7 +653,9 @@ public class Application extends Term {
 			Abstraction funTypeAbs = (Abstraction) funType;
 			Term argType = t.getType(varBindings);
 			Term absType = funTypeAbs.varType;
-			verify(argType.typeEquals(absType) || function.toString().contains("TERM"), "types do not match when applying " + argType + " to arg type "+ absType + " in function " + function);
+			if (!argType.typeEquals(absType) && !function.toString().contains("TERM")) {
+				verify(false, "types do not match when applying " + argType + " to arg type "+ absType + " in function " + function);
+			}
 			funType = funTypeAbs.getBody();
 		}
 		return funType;

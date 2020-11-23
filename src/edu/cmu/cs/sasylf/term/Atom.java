@@ -10,7 +10,7 @@ public abstract class Atom extends Term {
 
 	public final String getName() { return name; }
 	@Override
-	public final Term getType(List<Pair<String, Term>> varBindings) { return getType(); }
+	public Term getType(List<Pair<String, Term>> varBindings) { return getType(); }
 	@Override
 	public abstract Term getType();
 	private String name;

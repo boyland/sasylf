@@ -209,11 +209,11 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				Set<Pair<Term, Substitution>> newSet = new SingletonSet<Pair<Term,Substitution>>();
 				for (Pair<Term,Substitution> p : e.getValue()) {
 					Pair<Term,Substitution> newPair;
+					Util.debug("Saved case:\nterm = ", p.first);
+					Util.debug("sub = ", p.second);
+					Util.debug("current = ", ctx.currentSub);
+					Substitution newSubstitution = new Substitution(p.second);
 					try {
-						Util.debug("Saved case:\nterm = ", p.first);
-						Util.debug("sub = ", p.second);
-						Util.debug("current = ", ctx.currentSub);
-						Substitution newSubstitution = new Substitution(p.second);
 						newSubstitution.merge(ctx.currentSub); // need merge, not compose
 						if (!ctx.canCompose(newSubstitution)) {
 							Util.debug("case no longer feasible (relaxation): ");
@@ -222,8 +222,15 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 						Util.debug("newSub = ", newSubstitution);
 						newPair = new Pair<Term,Substitution>(p.first.substitute(newSubstitution),newSubstitution);
 					} catch (UnificationIncomplete ex) {
-						Util.debug("case cannot be checked");
-						ErrorHandler.report(Errors.UNIFICATION_INCOMPLETE, e.getKey().toString(), source);
+						Util.debug("case cannot be checked: ", newSubstitution, "\n cannot merge with ", ctx.currentSub);
+						if (e.getKey() instanceof Rule && !((Rule)e.getKey()).isAssumption()) {
+							Util.debug("  Trying again de novo");
+							// let's try doing a case analysis de novo
+							Term targetTerm = ctx.toTerm(targetElement);
+							newSet = e.getKey().caseAnalyze(ctx, targetTerm, targetElement, source);
+							continue;
+						}
+						ErrorHandler.report(Errors.UNIFICATION_INCOMPLETE, e.getKey().getName(), source, "SASyLF tried to unify " + ex.term1 + " and " + ex.term2);
 						continue;
 					} catch (UnificationFailed ex) {
 						Util.debug("case no longer feasible.");

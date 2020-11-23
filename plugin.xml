@@ -355,33 +355,6 @@
                style="push">
          </command>
       </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
-         <command
-               commandId="org.sasylf.commands.togglenature"
-               icon="icons/slf.gif"
-               label="Toggle SASyLF Nature"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <reference
-                        definitionId="org.sasylf.inPerspective">
-                  </reference>
-                  <with
-                        variable="selection">
-                     <iterate
-                           ifEmpty="false">
-                        <instanceof
-                              value="org.eclipse.core.resources.IProject">
-                        </instanceof>
-                     </iterate>
-                  </with>
-               </and>
-            </visibleWhen>
-         </command>
-      </menuContribution>
    </extension>
    
    <extension
@@ -459,11 +432,9 @@
          point="org.eclipse.core.expressions.definitions">
       <definition
             id="org.sasylf.isProofFile">
-         <adapt type="org.eclipse.core.resources.IResource">
-             <test property="org.eclipse.core.resources.extension"
-                   value="slf">
-             </test>
-         </adapt>
+         <with variable="activeEditorId">
+           <equals value="org.sasylf.editors.ProofEditor"/>
+         </with>
       </definition>
       <definition id="org.sasylf.inPerspective">
           <with variable="activeWorkbenchWindow.activePerspective">
@@ -709,6 +680,14 @@
                </iterate>
             </with></enablement>
       </renameParticipant>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.documentProviders">
+      <provider
+            class="org.sasylf.util.ResourceDocumentProvider"
+            id="org.sasylf.editors.ResourceDocumentProvider"
+            inputTypes="org.sasylf.util.ResourceEditorInput">
+      </provider>
    </extension>
 
 </plugin>
