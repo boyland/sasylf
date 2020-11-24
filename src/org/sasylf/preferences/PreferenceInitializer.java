@@ -42,5 +42,4 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		PreferenceConverter.setDefault(pStore, PreferenceConstants.PREF_COLOR_ML_COMMENT, SASyLFColorProvider.DEF_MULTI_LINE_COMMENT);
 		PreferenceConverter.setDefault(pStore, PreferenceConstants.PREF_COLOR_SL_COMMENT, SASyLFColorProvider.DEF_SINGLE_LINE_COMMENT);
 	}
-
 }

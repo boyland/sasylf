@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.rules.Token;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -14,17 +16,25 @@ import org.sasylf.preferences.PreferenceConstants;
 
 public class SASyLFColorProvider {
 
-	static enum Fragments { 
-		Default, Keyword,
-		Background, Rule,
-		MultiLineComment, SingleLineComment };
-
-	public RGB MULTI_LINE_COMMENT;
-	public RGB SINGLE_LINE_COMMENT;
-	public RGB KEYWORD;
-	public RGB DEFAULT;
-	public RGB BACKGROUND;
-	public RGB RULE;
+	/**
+	 * An enumeration of the classes of tokens
+	 * so that (foreground) colors can be assigned for them.
+	 */
+	public static enum TokenColorClass {
+		Default(PreferenceConstants.PREF_COLOR_DEFAULT), 
+		Keyword(PreferenceConstants.PREF_COLOR_KEYWORD),
+		Background(PreferenceConstants.PREF_COLOR_BACKGROUND), 
+		Rule(PreferenceConstants.PREF_COLOR_RULE),
+		MultiLineComment(PreferenceConstants.PREF_COLOR_ML_COMMENT), 
+		SingleLineComment(PreferenceConstants.PREF_COLOR_SL_COMMENT);
+		private final String prefName;
+		private TokenColorClass (String s) {
+			prefName = s;
+		}
+		public String getPreferenceName() {
+			return prefName;
+		}
+	};
 
 	public static final RGB DEF_MULTI_LINE_COMMENT = new RGB(0, 128, 0);
 	public static final RGB DEF_SINGLE_LINE_COMMENT = new RGB(0, 128, 0);
@@ -33,44 +43,63 @@ public class SASyLFColorProvider {
 	public static final RGB DEF_BACKGROUND = new RGB(255, 255, 255);
 	public static final RGB DEF_RULE = new RGB(127, 0, 85);
 
-	protected Map<RGB, Color> _colorTable = new HashMap<RGB, Color>(10);
-
-	public SASyLFColorProvider() {
-		IPreferenceStore pStore = Activator.getDefault().getPreferenceStore();
-		DEFAULT = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_DEFAULT);
-		KEYWORD = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_KEYWORD);
-		RULE    = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_RULE);
-		BACKGROUND = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_BACKGROUND);
-		MULTI_LINE_COMMENT  = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_ML_COMMENT);
-		SINGLE_LINE_COMMENT = PreferenceConverter.getColor(pStore, PreferenceConstants.PREF_COLOR_SL_COMMENT);
-	}
+	public static final RGB DARK_MULTI_LINE_COMMENT = new RGB(95,175,95);
+	public static final RGB DARK_SINGLE_LINE_COMMENT = new RGB(95,175,95);
+	public static final RGB DARK_KEYWORD = new RGB(127,175,225);
+	public static final RGB DARK_DEFAULT = new RGB(222,222,222);
+	public static final RGB DARK_BACKGROUND = new RGB(33,33,33);
+	public static final RGB DARK_RULE = new RGB(175,95,127);
+	
+	protected Map<RGB, Color> colorTable = new HashMap<RGB, Color>(10);
 
 	public void dispose(){
-		Iterator<Color> e = _colorTable.values().iterator();
+		Iterator<Color> e = colorTable.values().iterator();
 		while(e.hasNext()){
 			e.next().dispose();
 		}
 	}
 
-	public Color getColor(Fragments f){
-		switch (f) {
-		case Default: return getColor(DEFAULT);
-		case Keyword: return getColor(KEYWORD);
-		case Rule:    return getColor(RULE);
-		case Background:        return getColor(BACKGROUND);
-		case MultiLineComment:  return getColor(MULTI_LINE_COMMENT);
-		case SingleLineComment: return getColor(SINGLE_LINE_COMMENT);
-		default: throw new IllegalArgumentException("Unknown fragment to colorize: " + f);
-		}
-	}
-
 	public Color getColor(RGB rgb){
-		Color color = _colorTable.get(rgb);
+		Color color = colorTable.get(rgb);
 		if(color==null){
 			color = new Color(Display.getCurrent(),rgb);
-			_colorTable.put(rgb, color);
+			colorTable.put(rgb, color);
 		}
 		return color;
 	}
 
+	/**
+	 * Create a token with the given text attribute as its data, to be modified
+	 * by the given foreground color class.
+	 * @param attr text attribute (or null) to modify with the foreground color 
+	 * @param fgClass the class of token to be used to set foreground color according to preferences
+	 * @return new token with then given text attribute and foreground color for this class of tokens
+	 */
+	public Token createToken(TextAttribute attr, TokenColorClass fgClass) {
+		TextAttribute modified = makeTextAttribute(attr, fgClass);
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		Token result = new Token(modified);
+		store.addPropertyChangeListener((pce) -> updateToken(result, attr, fgClass));
+		return result;
+	}
+
+	private void updateToken(Token token, TextAttribute attr, TokenColorClass fgClass) {
+		token.setData(makeTextAttribute(attr, fgClass));
+	}
+	
+	/**
+	 * Create a text attribute in which a base attribute is modified
+	 * with the foreground for the token class specified
+	 * @param attr attribute to modify, or null if no defaults
+	 * @param fgClass class of token to get foreground for
+	 * @return new text attribute with foreground color preference for given token class
+	 */
+	protected TextAttribute makeTextAttribute(TextAttribute attr,
+			TokenColorClass fgClass) {
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		RGB rgb = PreferenceConverter.getColor(store, fgClass.getPreferenceName());
+		Color c= getColor(rgb);
+		if (attr == null) return new TextAttribute(c);
+		else return new TextAttribute(c,attr.getBackground(),attr.getStyle(),attr.getFont());
+	}
 }

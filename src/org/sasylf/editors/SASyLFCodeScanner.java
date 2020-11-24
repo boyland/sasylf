@@ -16,6 +16,7 @@ import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
 import org.eclipse.swt.SWT;
+import org.sasylf.editors.SASyLFColorProvider.TokenColorClass;
 
 public class SASyLFCodeScanner extends RuleBasedScanner{
 
@@ -36,32 +37,16 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		"RULENAME", "CONCLUSION", "SYNTAX", "DERIVATION"
 	};
 
-	/*private static String[] _types = {
-
-	};
-
-	private static String[] _constants = {
-
-	};*/
-
 	public SASyLFCodeScanner(SASyLFColorProvider provider)	{
-		TextAttribute kwAtt = new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Keyword), null,SWT.BOLD);
-		Token keyword = new Token (kwAtt);
-
-		IToken comment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.SingleLineComment)));
-		IToken other = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Default)));
-		IToken multiLineComment = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.MultiLineComment)));
-		IToken rule = new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Rule)));
+		IToken keyword = provider.createToken(new TextAttribute(null,null,SWT.BOLD), TokenColorClass.Keyword); // new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Keyword), null,SWT.BOLD));
+		IToken comment = provider.createToken(null, TokenColorClass.SingleLineComment); //new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.SingleLineComment)));
+		IToken other = provider.createToken(null, TokenColorClass.Default); // new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Default)));
+		IToken multiLineComment = provider.createToken(null,  TokenColorClass.MultiLineComment); // new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.MultiLineComment)));
+		IToken rule = provider.createToken(null, TokenColorClass.Rule); // new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Rule)));
 
 		List<IRule> rules = new ArrayList<IRule> ();
 		rules.add (new EndOfLineRule ("//", comment));
 		rules.add (new MultiLineRule ("/*", "*/", multiLineComment));
-		/*rules.add (new SingleLineRule ("N","E",comment));
-		rules.add (new SingleLineRule ("J","T",comment));
-		rules.add (new SingleLineRule ("R","E",comment));
-		rules.add (new SingleLineRule ("C","N",comment));
-		rules.add (new SingleLineRule ("D","N",comment));
-		rules.add (new SingleLineRule ("P","E",comment));*/
 		//rules.add (new EndOfLineRule ("---", rule));
 		rules.add (new LineRule ('-', rule));
 		rules.add (new LineRule ('\u2014', rule));
@@ -156,7 +141,6 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		
 		@Override
 		public IToken evaluate(ICharacterScanner scanner) {
-			// TODO Auto-generated method stub
 			int c = scanner.read();
 			if (c != comp) {
 				scanner.unread();
