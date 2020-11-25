@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -30,20 +31,20 @@ import edu.cmu.cs.sasylf.util.Util;
 public class RuleCase extends Case {
 	
 	private Rule rule;
-	private final String ruleName;
+	private final QualName ruleName;
 	private final List<Derivation> premises;
 	private final Derivation conclusion;
 	private final WhereClause whereClauses;
 	
 	public RuleCase(Location l, Location l1, Location l2,
-			String rn, List<Derivation> ps, Derivation c, WhereClause wcs) {
+			QualName rn, List<Derivation> ps, Derivation c, WhereClause wcs) {
 		super(l, l1, l2);
 		conclusion = c;
 		premises = ps;
 		ruleName = rn;
 		whereClauses = wcs;
 	}
-	public String getRuleName() { return ruleName; }
+	public String getRuleName() { return ruleName.toString(); }
 	public CanBeCase getRule() { return rule; }
 	public List<Derivation> getPremises() { return premises; }
 	public Derivation getConclusion() { return conclusion; }
@@ -74,11 +75,28 @@ public class RuleCase extends Case {
 			if (judg == null) {
 				ErrorHandler.report("It doesn't appear that a rule case makes sense in this context", this, "SASyLF computes the case analysis is on " + ctx.currentCaseAnalysis);
 			}
-			for (Rule r : judg.getRules()) {
-				if (r.getName().equals(ruleName)) rule = r;
-			}
-			if (rule == null) {
-				ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName, this);
+			String stringName = ruleName.toString();
+			if (ruleName.getLastSegment().equals(stringName)) { //XXX change to checkSource
+				for (Rule r : judg.getRules()) {
+					if (r.getName().equals(stringName)) rule = r;
+				}
+				if (rule == null) {
+					ErrorHandler.report(Errors.RULE_NOT_FOUND, stringName, this);
+				}
+				ruleName.resolveAsNamed(rule);
+			} else {
+				Object resolution = ruleName.resolve(ctx);
+				if (!(resolution instanceof Rule)) {
+					ErrorHandler.report("Expected rule, but found " + resolution.getClass().getSimpleName(), ruleName);
+				}
+				for (Rule r : judg.getRules()) {
+					if (r == resolution) rule = r;
+				}
+				if (rule == null) {
+					ErrorHandler.report("Rule belongs to a different judgment: " + rule.getJudgment().getName(), ruleName);
+				} else {
+					ErrorHandler.warning("Rule names in cases don't need qualification", ruleName);
+				}
 			}
 		}
 		if (!rule.isInterfaceOK()) return;
@@ -399,5 +417,13 @@ public class RuleCase extends Case {
 		}
 		return app;
 	}
+	
+	@Override
+	public void collectQualNames(Consumer<QualName> consumer) {
+		ruleName.visit(consumer);
+		super.collectQualNames(consumer);
+	}
+	
+	
 }
 

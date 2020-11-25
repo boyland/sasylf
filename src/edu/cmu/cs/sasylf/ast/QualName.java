@@ -150,6 +150,16 @@ public class QualName extends Node {
 	}
 	
 	/**
+	 * Force the resolution of this qual name to the given declaration.
+	 * (This does nothing to the source of this qual name).
+	 * @param decl declaration to resolve qual name to, must not be null
+	 */
+	public void resolveAsNamed(Named decl) {
+		if (decl == null) throw new NullPointerException("cannot resolve to null");
+		resolution = decl;
+	}
+	
+	/**
 	 * Indicate what sort of thing this resolution is.
 	 * @param resolution (returned from resolve)
 	 * @return string indicating kind of thing this is
