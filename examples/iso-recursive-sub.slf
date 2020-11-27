@@ -1,0 +1,1561 @@
+package examples;
+
+/* Iso-Recursive Subtyping
+* Proved sound using the technique from
+* "Revisiting Iso-Recursive Subtyping"
+* by Yaoda Zhou, Bruno C. d. S. Oliveira, and Jinxu Zhao
+* OOPSLA 2020
+* 
+* Mechanized in SASyLF by John Boyland
+* November 27, 2020
+* (This file requires SASyLF 1.5.0)
+*/
+
+
+// This declaraion indicates identifiers that are being used merely for parsing purposes
+terminals unit value
+    Unit in lambda Rec fold unfold Top
+
+
+syntax
+
+t ::= unit
+   | lambda x:T . t[x] // square brackets means that t may use "x"
+   | x
+   | t t
+   | t, t
+   | t.1
+   | t.2
+   | fold T t
+   | unfold T t
+
+S, T ::= Top
+      | Unit
+      | T -> T
+      | T * T
+      | Rec X . T[X]  // ditto: T may have occurrences of X in it
+      | X
+
+Gamma ::= *
+       | Gamma, x : T
+
+Sigma ::= *
+       | Sigma, X
+
+
+// Equality is not predefined in SASyLF and must be declared if needed
+
+judgment equality: t == t
+
+------ eq
+t == t
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+// we also define equality with a context ("assumes" means we are using LF context)
+// (the previous typeequality relation is legal only in the absence of bound variables)
+judgment typequality2: Sigma |- T == T
+assumes Sigma
+
+---------------- type-eq2
+Sigma |- T == T
+
+
+// We work with the algorithmic subtyping relation
+// in which reflexivity and transitivity must be proved admissible
+
+judgment subtype: Sigma |- S <: T
+assumes Sigma
+
+------------------ S-ReflVar
+Sigma, X |- X <: X
+
+// To handle variables elsewhere than the front, we can use weakening (see "test" below)
+
+--------------------- S-ReflUnit
+Sigma |- Unit <: Unit
+
+----------------- S-Top
+Sigma |- T <: Top
+
+Sigma |- T1 <: S1
+Sigma |- S2 <: T2
+----------------------------- S-Arrow
+Sigma |- S1 -> S2 <: T1 -> T2
+
+Sigma |- S1 <: T1
+Sigma |- S2 <: T2
+--------------------------- S-Pair
+Sigma |- S1 * S2 <: T1 * T2
+ 
+// The new subtyping rule for recursive types:
+// We check first that the bodies are subtypes and 
+// second that the bodies where X is substituted with the bodies are subtypes:
+// Notation: S[U] means use U wherever X occurs in S[X]
+Sigma, X |- S[X] <: T[X]
+Sigma, X |- S[S[X]] <: T[T[X]]
+-------------------------------------------- S-Double
+Sigma |- Rec X . S[X] <: Rec X . T[X]
+
+
+// Examples are used as exercises and also to test adequacy.
+// In this case, reflexivity was an issue, so I worked out
+// the proof of the reflexivity of a complex type with nested recursive types.
+lemma test:
+    forall eq: * |- T0 == Rec X1 . (Unit * (Rec X2 . (X1 * X2)))
+    exists * |- T0 <: T0
+    use inversion on eq where T0 := Rec X1 . (Unit * (Rec X2 . (X1 * X2)))
+    s1: *, X1 |- X1 <: X1 by rule S-ReflVar
+    s12: *, X1, X2 |- X1 <: X1 by weakening on s1 // built-in (LF context)
+    s2:  *, X1, X2 |- X2 <: X2 by rule S-ReflVar
+    sp12: *, X1, X2 |- X1 * X2 <: X1 * X2 by rule S-Pair on s12, s2
+    spf12: *, X1, X2 |- X1 * (X1 * X2) <: X1 * (X1 * X2) by rule S-Pair on s12, sp12
+    sr2: *, X1 |- (Rec X2 . (X1 * X2)) <: (Rec X2 . (X1 * X2)) by rule S-Double on sp12, spf12
+    su: *, X1 |- Unit <: Unit by rule S-ReflUnit
+    sup: *, X1 |- Unit * (Rec X2 . (X1 * X2)) <: Unit * (Rec X2 . (X1 * X2)) by rule S-Pair on su, sr2
+    s12': *, X1, X2, X2' |- X1 <: X1 by weakening on s12
+    s2':  *, X1, X2, X2' |- X2' <: X2' by rule S-ReflVar
+    sp12':*, X1, X2, X2' |- X1 * X2' <: X1 * X2' by rule S-Pair on s12', s2'
+    spf12':*,X1, X2, X2' |- X1 * (X1 * X2') <: X1 * (X1 * X2') by rule S-Pair on s12', sp12'
+    sr2': *, X1, X2 |- (Rec X2' . (X1 * X2')) <: (Rec X2' . (X1 * X2')) by rule S-Double on sp12', spf12'
+    su':  *, X1, X2 |- Unit <: Unit by rule S-ReflUnit
+    sup': *, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) <: (Unit * (Rec X2' . (X1 * X2'))) by rule S-Pair on su', sr2'
+    supp: *, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) * X2 <: (Unit * (Rec X2' . (X1 * X2'))) * X2 by rule S-Pair on sup', s2
+    suppf:*, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) * ((Unit * (Rec X2' . (X1 * X2'))) * X2) <: (Unit * (Rec X2' . (X1 * X2'))) * ((Unit * (Rec X2' . (X1 * X2')))*X2) by rule S-Pair on sup', supp
+    srr2: *, X1 |- Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2) <: Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2) by rule S-Double on supp, suppf
+    supf: *, X1 |- Unit * (Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2)) <: Unit * (Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2)) by rule S-Pair on su, srr2
+    proof by rule S-Double on sup, supf
+end lemma
+     
+     
+// A crucial lemma for reflexivity:
+// We prove that substitution preserves invariance (here simplified to equal types)
+lemma invariant-subst:
+    assumes Sigma // this lemma uses the LF context for variables
+    forall s1: Sigma |- T1 <: T1
+    forall s2: Sigma, X |- T2[X] <: T2[X]
+    exists Sigma |- T2[T1] <: T2[T1]
+    proof by induction on s2:
+        case rule
+            --------------- S-ReflVar
+            _: (Sigma, X) |- X <: X
+            where T2[X] := X
+        is
+            proof by s1
+        end case
+
+        case rule
+            --------------- S-ReflVar
+            _: Sigma', X', X |- X' <: X'
+        is
+            _: Sigma', X' |- X' <: X' by rule S-ReflVar
+        end case
+
+       case rule
+            --------------------------- S-ReflUnit
+            _: Sigma, X |- Unit <: Unit
+            where T2[X] := Unit
+        is
+            proof by rule S-ReflUnit
+        end case
+
+        case rule
+            ----------------------- S-Top
+            _: Sigma, X |- Top <: Top
+            where T2[X] := Top
+        is
+            proof by rule S-Top
+        end case
+
+        case rule
+            s21: Sigma, X |- T21[X] <: T21[X]
+            s22: Sigma, X |- T22[X] <: T22[X]
+            ----------------------------------- S-Arrow
+            _: Sigma, X |- (T21[X] -> T22[X]) <: (T21[X] -> T22[X])
+            where T2[X] := T21[X] -> T22[X]
+        is
+            s21': Sigma |- T21[T1] <: T21[T1] by induction hypothesis on s1, s21
+            s22': Sigma |- T22[T1] <: T22[T1] by induction hypothesis on s1, s22
+            proof by rule S-Arrow on s21', s22'
+        end case
+
+        case rule
+            s21: Sigma, X |- T21[X] <: T21[X]
+            s22: Sigma, X |- T22[X] <: T22[X]
+            ----------------------------------- S-Pair
+            _: Sigma, X |- (T21[X] * T22[X]) <: (T21[X] * T22[X])
+            where T2[X] := T21[X] * T22[X]
+        is
+            s21': Sigma |- T21[T1] <: T21[T1] by induction hypothesis on s1, s21
+            s22': Sigma |- T22[T1] <: T22[T1] by induction hypothesis on s1, s22
+            proof by rule S-Pair on s21', s22'
+        end case
+
+        case rule
+            s21: Sigma, X, X' |- T2'[X][X'] <: T2'[X][X']
+            s22: Sigma, X, X' |- T2'[X][T2'[X][X']] <: T2'[X][T2'[X][X']]
+            -------------------------------------------------------------- S-Double
+            _: Sigma, X |- (Rec X' . T2'[X][X']) <: (Rec X' . T2'[X][X'])
+            where T2[X] := Rec X' . T2'[X][X']
+        is
+            s21a: Sigma, X', X |- T2'[X][X'] <: T2'[X][X'] by exchange on s21
+            s22a: Sigma, X', X |- T2'[X][T2'[X][X']] <: T2'[X][T2'[X][X']] by exchange on s22
+            s1': Sigma, X' |- T1 <: T1 by weakening on s1
+            s21b: Sigma, X' |- T2'[T1][X'] <: T2'[T1][X'] by induction hypothesis on s1', s21a
+            s22b: Sigma, X' |- T2'[T1][T2'[T1][X']] <: T2'[T1][T2'[T1][X']] by induction hypothesis on s1', s22a
+            proof by rule S-Double on s21b, s22b
+        end case
+
+    end induction
+end lemma
+
+      
+theorem subtype-reflexive:
+    assumes Sigma
+    forall T assumes Sigma // T may have variables in the LF context
+    exists Sigma |- T <: T
+    proof by induction on T:
+        case Top is
+            proof by rule S-Top
+        end case
+
+        case Unit is
+            proof by rule S-ReflUnit
+        end case
+
+        case T1 -> T2 is
+            s1: Sigma |- T1 <: T1 by induction hypothesis on T1
+            s2: Sigma |- T2 <: T2 by induction hypothesis on T2
+            proof by rule S-Arrow on s1, s2
+        end case
+
+        case T1 * T2 is
+            s1: Sigma |- T1 <: T1 by induction hypothesis on T1
+            s2: Sigma |- T2 <: T2 by induction hypothesis on T2
+            proof by rule S-Pair on s1, s2
+        end case
+
+        case Rec X . T1[X] is
+            s1: Sigma, X |- T1[X] <: T1[X] by induction hypothesis on (T1[X] assumes Sigma, X)
+            s1a: Sigma, X', X |- T1[X] <: T1[X] by weakening on s1
+            s1b: Sigma, X, X' |- T1[X'] <: T1[X'] by s1a // alpha-conversion
+            s2: Sigma, X |- T1[T1[X]] <: T1[T1[X]] by lemma invariant-subst on s1, s1b
+            proof by rule S-Double on s1, s2
+        end case
+
+        case X assumes Sigma', X is
+            _: Sigma', X |- X <: X by rule S-ReflVar
+        end case
+
+    end induction
+end theorem
+
+
+theorem subtype-transitive:
+    assumes Sigma
+    forall d12: Sigma |- T1 <: T2 
+    forall d23: Sigma |- T2 <: T3
+    exists Sigma |- T1 <: T3
+    // The following declaration indicates that induction is done
+    // on both d12 and d23 at once which may be swapped in induction calls
+    use induction on {d12,d23}
+    proof by case analysis on d23:
+        case rule
+            --------------------- S-ReflVar
+            _: Sigma', X |- X <: X
+        is
+            proof by d12
+        end case
+
+        case rule
+            ------------------------ S-ReflUnit
+            _: Sigma |- Unit <: Unit
+            where T2 := Unit and T3 := Unit
+        is
+            use inversion on d12 where T1 := Unit
+            proof by rule S-ReflUnit
+        end case
+        
+        case rule
+            ----------------------- S-Top
+            _: Sigma |- T2 <: Top
+            where T3 := Top
+        is
+            proof by rule S-Top
+        end case
+
+        case rule
+            d231: Sigma |- T31 <: T21
+            d232: Sigma |- T22 <: T32
+            ----------------------------------- S-Arrow
+            _: Sigma |- (T21 -> T22) <: (T31 -> T32)
+            where T2 := T21 -> T22 and T3 := T31 -> T32
+        is
+            d121: Sigma |- T21 <: T11 and
+            d122: Sigma |- T12 <: T22 by inversion on d12
+            where T1 := T11 -> T12
+            d131: Sigma |- T31 <: T11 by induction hypothesis on d231, d121
+            d132: Sigma |- T12 <: T32 by induction hypothesis on d122, d232
+            proof by rule S-Arrow on d131, d132
+        end case
+
+        case rule
+            d231: Sigma |- T21 <: T31
+            d232: Sigma |- T22 <: T32
+            --------------------------------- S-Pair
+            _: Sigma |- (T21 * T22) <: (T31 * T32)
+            where T2 := T21 * T22 and T3 := T31 * T32
+        is
+            d121: Sigma |- T11 <: T21 and
+            d122: Sigma |- T12 <: T22 by inversion on d12
+            where T1 := T11 * T12
+            d131: Sigma |- T11 <: T31 by induction hypothesis on d121, d231
+            d132: Sigma |- T12 <: T32 by induction hypothesis on d122, d232
+            proof by rule S-Pair on d131, d132
+        end case
+
+        case rule
+            d231: (Sigma, X) |- T2'[X] <: T3'[X]
+            d232: (Sigma, X) |- T2'[T2'[X]] <: T3'[T3'[X]]
+            -------------------------------------------------- S-Double
+            _: Sigma |- (Rec X . T2'[X]) <: (Rec X . T3'[X])
+            where T2 := Rec X . T2'[X]
+             and  T3 := Rec X . T3'[X]
+        is
+            d121: (Sigma, X) |- T1'[X] <: T2'[X] and
+            d122: (Sigma, X) |- T1'[T1'[X]] <: T2'[T2'[X]] by inversion on d12
+            where T1 := Rec X . T1'[X]
+            d131: (Sigma, X) |- T1'[X] <: T3'[X] by induction hypothesis on d121, d231
+            d132: (Sigma, X) |- T1'[T1'[X]] <: T3'[T3'[X]] by induction hypothesis on d122, d232
+            proof by rule S-Double on d131, d132
+        end case
+
+    end case analysis
+end theorem
+
+
+lemma equiv-implies-equal:
+    assumes Sigma
+    forall d1: Sigma, X |- S[X] <: T[X]
+    forall d2: Sigma, X |- T[X] <: S[X]
+    exists Sigma, X |- S[X] == T[X]
+    use induction on {d1,d2}
+    proof by case analysis on d1:
+        case rule
+            --------------------- S-ReflVar
+            _: Sigma, X |- X <: X
+            where S[X] := X
+             and T[X] := X
+        is
+            proof by rule type-eq2
+        end case
+
+        case rule
+            ---------------------------- S-ReflVar
+            _: Sigma', X', X |- X' <: X'
+        is
+            proof by rule type-eq2
+        end case
+             
+        case rule
+            --------------------------- S-ReflUnit
+            _: (Sigma, X) |- Unit <: Unit
+            where S[X] := Unit and T[X] := Unit
+        is
+            proof by rule type-eq2
+        end case
+
+        case rule
+            ----------------------- S-Top
+            _: (Sigma, X) |- S[X] <: Top
+            where T[X] := Top
+        is
+            use inversion on d2 where S[X] := Top
+            proof by rule type-eq2
+        end case
+
+        case rule
+            d11: Sigma, X |- T1[X] <: S1[X]
+            d12: Sigma, X |- S2[X] <: T2[X]
+            ----------------------------------- S-Arrow
+            _: Sigma, X |- (S1[X] -> S2[X]) <: (T1[X] -> T2[X])
+            where S[X] := S1[X] -> S2[X] and T[X] := T1[X] -> T2[X]
+        is
+            d21: Sigma, X |- S1[X] <: T1[X] and
+            d22: Sigma, X |- T2[X] <: S2[X] by inversion on d2
+            d1': Sigma, X |- T1[X] == S1[X] by induction hypothesis on d11, d21
+            d2': Sigma, X |- S2[X] == T2[X] by induction hypothesis on d12, d22
+            use inversion on d1' where T1[X] := S1[X]
+            use inversion on d2' where S2[X] := T2[X]
+            proof by rule type-eq2
+        end case
+
+        case rule
+            d11: Sigma, X |- S1[X] <: T1[X]
+            d12: Sigma, X |- S2[X] <: T2[X]
+            --------------------------------- S-Pair
+            _: Sigma, X |- (S1[X] * S2[X]) <: (T1[X] * T2[X])
+            where S[X] := S1[X] * S2[X] and T[X] := T1[X] * T2[X]
+        is
+            d21: Sigma, X |- T1[X] <: S1[X] and
+            d22: Sigma, X |- T2[X] <: S2[X] by inversion on d2
+            d1': Sigma, X |- S1[X] == T1[X] by induction hypothesis on d11, d21
+            d2': Sigma, X |- S2[X] == T2[X] by induction hypothesis on d12, d22
+            use inversion on d1' where T1[X] := S1[X]
+            use inversion on d2' where S2[X] := T2[X]
+            proof by rule type-eq2
+        end case
+
+        case rule
+            d1': Sigma, X, X' |- S'[X][X'] <: T'[X][X']
+            _: Sigma, X, X' |- S'[X][S'[X][X']] <: T'[X][T'[X][X']]
+            -------------------------------------------------- S-Double
+            _: Sigma, X |- (Rec X' . S'[X][X']) <: (Rec X' . T'[X][X'])
+            where S[X] := Rec X' . S'[X][X']
+             and  T[X] := Rec X' . T'[X][X']
+        is
+            d2':  Sigma, X, X' |- T'[X][X'] <: S'[X][X'] and
+            _: Sigma, X, X' |- T'[X][T'[X][X']] <: S'[X][S'[X][X']] by inversion on d2
+            eq: Sigma, X, X' |- S'[X][X'] == T'[X][X'] by induction hypothesis on d1', d2'
+            use inversion on eq where S'[X][X'] := T'[X][X']
+            proof by rule type-eq2
+        end case
+
+    end case analysis
+end lemma
+
+
+// This is the crucial helper lemma for the unfolding lemma:   
+// We have two mutual inductive versions, one for positive and one for negative positions.
+// Likely these could be collapsed into one lemma using bidirectional subtyping 
+lemma subtype-subst:
+    assumes Sigma
+    forall d: Sigma, X |- S1[X] <: T1[X]
+    forall dds: Sigma, X |- S1[S[X]] <: T1[T[X]]
+    forall s: Sigma |- S2 <: T2
+    forall eqs: Sigma |- S2 == Rec X . S[X]
+    forall eqt: Sigma |- T2 == Rec X . T[X]
+    exists Sigma |- S1[S2] <: T1[T2]
+    use induction on d
+    proof by case analysis on d:
+        case rule
+            --------------------- S-ReflVar
+            _: Sigma, X |- X <: X
+            where T1[X] := X
+            and S1[X] := X
+        is
+            proof by s
+        end case
+
+        case rule
+            ---------------------------- S-ReflVar
+            _: Sigma', X', X |- X' <: X'
+        is
+            s': Sigma', X' |- X' <: X' by rule S-ReflVar
+            proof by s'
+        end case
+
+        case rule
+            --------------------------- S-ReflUnit
+            _: (Sigma, X) |- Unit <: Unit
+            where S1[X] := Unit and T1[X] := Unit
+        is
+            proof by rule S-ReflUnit
+        end case
+
+        case rule
+            ----------------------- S-Top
+            _: (Sigma, X) |- S1[X] <: Top
+            where T1[X] := Top
+        is
+            proof by rule S-Top
+        end case
+
+        case rule
+            d1: Sigma, X |- T11[X] <: S11[X]
+            d2: Sigma, X |- S12[X] <: T12[X]
+            ----------------------------------- S-Arrow
+            _: Sigma, X |- (S11[X] -> S12[X]) <: (T11[X] -> T12[X])
+            where S1[X] := S11[X] -> S12[X] and T1[X] := T11[X] -> T12[X]
+        is
+            dd1: Sigma, X |- T11[T[X]] <: S11[S[X]] and
+            dd2: Sigma, X |- S12[S[X]] <: T12[T[X]] by inversion on dds
+            d1': Sigma |- T11[T2] <: S11[S2] by lemma subtype-subst-rev on d1, dd1, s, eqs, eqt 
+            d2': Sigma |- S12[S2] <: T12[T2] by induction hypothesis on d2, dd2, s, eqs, eqt
+            proof by rule S-Arrow on d1', d2'
+        end case
+
+        case rule
+            d1: Sigma, X |- S11[X] <: T11[X]
+            d2: Sigma, X |- S12[X] <: T12[X]
+            --------------------------------- S-Pair
+            _: Sigma, X |- (S11[X] * S12[X]) <: (T11[X] * T12[X])
+            where S1[X] := S11[X] * S12[X] and T1[X] := T11[X] * T12[X]
+        is
+            dd1: Sigma, X |- S11[S[X]] <: T11[T[X]] and
+            dd2: Sigma, X |- S12[S[X]] <: T12[T[X]] by inversion on dds
+            d1': Sigma |- S11[S2] <: T11[T2] by induction hypothesis on d1, dd1, s, eqs, eqt 
+            d2': Sigma |- S12[S2] <: T12[T2] by induction hypothesis on d2, dd2, s, eqs, eqt
+            proof by rule S-Pair on d1', d2'
+        end case
+
+        case rule
+            d1: Sigma, X, X' |- S11[X][X'] <: T11[X][X']
+            d2: Sigma, X, X' |- S11[X][S11[X][X']] <: T11[X][T11[X][X']]
+            -------------------------------------------------- S-Double
+            _: Sigma, X |- (Rec X' . S11[X][X']) <: (Rec X' . T11[X][X'])
+            where S1[X] := Rec X' . S11[X][X'] and T1[X] := Rec X' . T11[X][X']
+        is
+            dd1: Sigma, X, X' |- S11[S[X]][X'] <: T11[T[X]][X'] and
+            dd2: Sigma, X, X' |- S11[S[X]][S11[S[X]][X']] <: T11[T[X]][T11[T[X]][X']] by inversion on dds
+            d1e: Sigma, X', X |- S11[X][X'] <: T11[X][X'] by exchange on d1
+            d2e: Sigma, X', X |- S11[X][S11[X][X']] <: T11[X][T11[X][X']] by exchange on d2
+            dd1e: Sigma, X', X |- S11[S[X]][X'] <: T11[T[X]][X'] by exchange on dd1
+            dd2e: Sigma, X', X |- S11[S[X]][S11[S[X]][X']] <: T11[T[X]][T11[T[X]][X']] by exchange on dd2
+            s': Sigma, X' |- S2 <: T2 by weakening on s
+            eqs': Sigma, X' |- S2 == Rec X . S[X] by weakening on eqs
+            eqt': Sigma, X' |- T2 == Rec X . T[X] by weakening on eqt
+            d1': Sigma, X' |- S11[S2][X'] <: T11[T2][X'] by induction hypothesis on d1e, dd1e, s', eqs', eqt'
+            d2': Sigma, X' |- S11[S2][S11[S2][X']] <: T11[T2][T11[T2][X']] by induction hypothesis on d2e, dd2e, s', eqs', eqt'
+            proof by rule S-Double on d1', d2'
+        end case
+
+    end case analysis
+end lemma
+and
+lemma subtype-subst-rev:
+    assumes Sigma
+    forall d: Sigma, X |- T1[X] <: S1[X]
+    forall dds: Sigma, X |- T1[T[X]] <: S1[S[X]]
+    forall s: Sigma |- S2 <: T2
+    forall eqs: Sigma |- S2 == Rec X . S[X]
+    forall eqt: Sigma |- T2 == Rec X . T[X]
+    exists Sigma |- T1[T2] <: S1[S2]
+    proof by induction on d:
+        case rule
+            --------------------- S-ReflVar
+            _: Sigma, X |- X <: X
+            where T1[X] := X and S1[X] := X
+        is
+            use inversion on eqs where S2 := Rec X . S[X]
+            use inversion on eqt where T2 := Rec X . T[X]
+            s': (Sigma, X) |- S[X] <: T[X] and
+            ss': (Sigma, X) |- S[S[X]] <: T[T[X]] by inversion on s 
+            eqst: Sigma, X |- S[X] == T[X] by lemma equiv-implies-equal on s', dds
+            use inversion on eqst where S[X] := T[X]
+            proof by theorem subtype-reflexive on (Rec X . T[X])
+        end case
+
+        case rule
+            --------------------------- S-ReflVar
+            _: Sigma', X', X |- X' <: X'
+        is
+            proof by theorem subtype-reflexive on (T1[Top])
+        end case
+
+        case rule
+            --------------------------- S-ReflUnit
+            _: (Sigma, X) |- Unit <: Unit
+            where S1[X] := Unit and T1[X] := Unit
+        is
+            proof by rule S-ReflUnit
+        end case
+
+        case rule
+            ----------------------- S-Top
+            _: (Sigma, X) |- T1[X] <: Top
+            where S1[X] := Top
+        is
+            proof by rule S-Top
+        end case
+
+        case rule
+            d1: Sigma, X |- S11[X] <: T11[X]
+            d2: Sigma, X |- T12[X] <: S12[X]
+            ----------------------------------- S-Arrow
+            _: Sigma, X |- (T11[X] -> T12[X]) <: (S11[X] -> S12[X])
+            where S1[X] := S11[X] -> S12[X] and T1[X] := T11[X] -> T12[X]
+        is
+            dd1: Sigma, X |- S11[S[X]] <: T11[T[X]] and
+            dd2: Sigma, X |- T12[T[X]] <: S12[S[X]] by inversion on dds
+            d1': Sigma |- S11[S2] <: T11[T2] by lemma subtype-subst on d1, dd1, s, eqs, eqt 
+            d2': Sigma |- T12[T2] <: S12[S2] by induction hypothesis on d2, dd2, s, eqs, eqt
+            proof by rule S-Arrow on d1', d2'
+        end case
+
+        case rule
+            d1: Sigma, X |- T11[X] <: S11[X]
+            d2: Sigma, X |- T12[X] <: S12[X]
+            --------------------------------- S-Pair
+            _: Sigma, X |- (T11[X] * T12[X]) <: (S11[X] * S12[X])
+            where S1[X] := S11[X] * S12[X] and T1[X] := T11[X] * T12[X] 
+        is
+            dd1: Sigma, X |- T11[T[X]] <: S11[S[X]] and
+            dd2: Sigma, X |- T12[T[X]] <: S12[S[X]] by inversion on dds
+            d1': Sigma |- T11[T2] <: S11[S2] by induction hypothesis on d1, dd1, s, eqs, eqt 
+            d2': Sigma |- T12[T2] <: S12[S2] by induction hypothesis on d2, dd2, s, eqs, eqt
+            proof by rule S-Pair on d1', d2'
+        end case
+
+        case rule
+            d1: Sigma, X, X' |- T11[X][X'] <: S11[X][X']
+            d2: Sigma, X, X' |- T11[X][T11[X][X']] <: S11[X][S11[X][X']]
+            -------------------------------------------------- S-Double
+            _: Sigma, X |- (Rec X' . T11[X][X']) <: (Rec X' . S11[X][X'])
+            where S1[X] := Rec X' . S11[X][X'] and T1[X] := Rec X' . T11[X][X']
+        is
+            dd1: Sigma, X, X' |- T11[T[X]][X'] <: S11[S[X]][X'] and
+            dd2: Sigma, X, X' |- T11[T[X]][T11[T[X]][X']] <: S11[S[X]][S11[S[X]][X']] by inversion on dds
+            d1e: Sigma, X', X |- T11[X][X'] <: S11[X][X'] by exchange on d1
+            d2e: Sigma, X', X |- T11[X][T11[X][X']] <: S11[X][S11[X][X']] by exchange on d2
+            dd1e: Sigma, X', X |- T11[T[X]][X'] <: S11[S[X]][X'] by exchange on dd1
+            dd2e: Sigma, X', X |- T11[T[X]][T11[T[X]][X']] <: S11[S[X]][S11[S[X]][X']] by exchange on dd2
+            s': Sigma, X' |- S2 <: T2 by weakening on s
+            eqs': Sigma, X' |- S2 == Rec X . S[X] by weakening on eqs
+            eqt': Sigma, X' |- T2 == Rec X . T[X] by weakening on eqt
+            d1': Sigma, X' |- T11[T2][X'] <: S11[S2][X'] by induction hypothesis on d1e, dd1e, s', eqs', eqt'
+            d2': Sigma, X' |- T11[T2][T11[T2][X']] <: S11[S2][S11[S2][X']] by induction hypothesis on d2e, dd2e, s', eqs', eqt'
+            proof by rule S-Double on d1', d2'
+        end case
+
+    end induction
+end lemma
+
+// The important unfold lemma is a corollary:
+lemma unfolding:
+    assumes Sigma
+    forall d: Sigma |- Rec X . S[X] <: Rec X . T[X]
+    exists Sigma |- S[Rec X . S[X]] <: T[Rec X . T[X]]
+    ds:  Sigma, X |- S[X] <: T[X] and
+    dds: Sigma, X |- S[S[X]] <: T[T[X]] by inversion on d
+    eqs: Sigma |- Rec X . S[X] == Rec X . S[X] by rule type-eq2
+    eqt: Sigma |- Rec X . T[X] == Rec X . T[X] by rule type-eq2
+    proof by lemma subtype-subst on ds, dds, d, eqs, eqt
+end lemma
+           
+
+
+/// Dynamic Semantics
+
+// We define a standard call-by-value operational semantics
+
+judgment isavalue: t value
+
+
+---------- val-unit
+unit value
+
+-------------------- val-fn
+lambda x:T . t[x] value
+
+t1 value
+t2 value
+------------- val-pair
+(t1,t2) value
+
+t value
+---------------- val-fold
+fold (T) t value
+
+
+judgment eval: t -> t
+
+t1 -> t1'
+--------------- E-App1
+t1 t2 -> t1' t2
+
+t1 value
+t2 -> t2'
+--------------- E-App2
+t1 t2 -> t1 t2'
+
+t2 value
+------------------------------ E-AppAbs
+(lambda x:T . t1[x]) t2 -> t1[t2]
+
+t1 value
+t2 value
+--------------- E-PairBeta1
+(t1,t2).1 -> t1
+
+t1 value
+t2 value
+--------------- E-PairBeta2
+(t1,t2).2 -> t2
+
+t1 -> t1'
+------------- E-Proj1
+t1.1 -> t1'.1
+
+t1 -> t1'
+------------- E-Proj2
+t1.2 -> t1'.2
+
+t1 -> t1'
+------------------- E-Pair1
+(t1,t2) -> (t1',t2)
+
+t1 value
+t2 -> t2'
+------------------- E-Pair2
+(t1,t2) -> (t1,t2')
+
+t value
+----------------------------- E-UnfoldFold
+unfold (T) (fold (T') t) -> t
+
+t -> t'
+------------------------- E-Fold
+fold (T) t -> fold (T) t'
+
+t -> t'
+----------------------------- E-Unfold
+unfold (T) t -> unfold (T) t'
+
+
+/// Type System
+
+// Now the presentation of the type system
+// (Here I used a declarative system with T-Sub, but an algorithmic system would be essentiall the same)       
+        
+judgment type: Gamma |- t : T
+assumes Gamma
+
+// The following rule uses HOAS:
+// Each varable is allowed one of these rules:
+
+------------------- T-Var
+Gamma, x:T |- x : T
+
+-------------------- T-Unit
+Gamma |- unit : Unit
+
+Gamma, x : T1 |- t[x] : T2
+------------------------------------- T-Abs
+Gamma |- (lambda x:T1 . t[x]) : T1 -> T2
+
+Gamma |- t1 : T2 -> T1
+Gamma |- t2 : T2
+----------------------- T-App
+Gamma |- t1 t2 : T1
+
+Gamma |- t1 : T1
+Gamma |- t2 : T2
+-------------------------- T-Pair
+Gamma |- (t1,t2) : T1 * T2
+
+Gamma |- t : T1 * T2
+-------------------- T-Proj1
+Gamma |- t.1 : T1
+
+Gamma |- t : T1 * T2
+-------------------- T-Proj2
+Gamma |- t.2 : T2
+
+T == (Rec X . T1[X])
+Gamma |- t : T1[T]
+----------------------- T-Fold
+Gamma |- fold (T) t : T
+
+T == (Rec X . T1[X])
+Gamma |- t : T
+----------------------------- T-Unfold
+Gamma |- unfold (T) t : T1[T]
+
+Gamma |- t : S
+* |- S <: T
+----------------- T-Sub
+Gamma |- t : T
+
+
+
+/// Progress
+
+// The canonical forms lemmas are complicated because of the lack of MGUs in higher-order unification.
+// For each, we define a helper version which "hides" the identity of the type
+// of the value until after we have removed the posisbilty of unfolding.
+
+lemma canonical-forms-ArrowH:
+    forall d: * |- t : T
+    forall e: T == T1 -> T2
+    forall v: t value
+    exists t == lambda x:T' . t2[x].
+    use induction on d
+    // a "do case analysis" handles some (not usually all) of the cases
+    // of a derivation ahead of time so that later, we can ignore these cases.
+    do case analysis on d: 
+        case rule
+            d': * |- t : S
+            s: * |- S <: T
+            ----------------------- T-Sub
+            _: * |- t : T
+        is
+            use inversion of rule type-eq on e where T := T1 -> T2
+            use inversion of rule S-Arrow on s where S := S1 -> S2
+            eqs: S == S1 -> S2 by rule type-eq
+            proof by induction hypothesis on d', eqs, v
+        end case
+        
+        // This case can cause higher-order unification to give a =n equivocal result
+        // if T is know to have a special form.
+        // By handling it ahead of time, we ensure that this case is safely removed
+        case rule
+            eq: T' == (Rec X . T11[X])
+            _: * |- t1 : T'
+            ----------------------------- T-Unfold
+            _: * |- unfold (T') t1 : T11[T']
+            where t := unfold (T') t1 and T := T11[T']
+        is
+            // of course, "unfold" terms are never values:
+            proof by contradiction on v
+        end case
+            
+    end case analysis
+    
+    // Now that T-Unfold has been handled, we can safely "reveal" that T is T1 -> T2
+    use inversion of rule type-eq on e where T := T1 -> T2
+    
+    proof by case analysis on v:
+        case rule
+            -------------------------- val-fn
+            _: (lambda x : T0 . t2[x]) value
+            where t := lambda x : T0 . t2[x]
+        is
+            proof by case analysis on d:
+                 case rule
+                    _: *, x : T1 |- t2[x] : T2
+                    ------------------------------------------- T-Abs
+                    _: * |- (lambda x : T1 . t2[x]) : T1 -> T2
+                    where T0 := T1
+                is
+                    proof by rule eq
+                end case
+
+            end case analysis
+        end case
+        case rule
+            --------------------- val-unit
+            _: unit value
+            where t := unit
+        is
+            // "proof by contradiction" means there are no cases possible
+            // Normally T-Sub would be possible here, but it was handled
+            // already in the "do case analysis" above.
+            proof by contradiction on d
+        end case
+        case rule
+            _: t0 value
+            _: t1 value
+            ---------------- val-pair
+            _: (t0,t1) value
+            where t := (t0,t1)
+        is
+            proof by contradiction on d
+        end case
+        case rule
+            _: t' value
+            ---------------------- val-fold
+            _: (fold T' t') value
+            where t := (fold T' t')
+        is
+            proof by case analysis on d:
+                case rule
+                    eqr: (T1 -> T2) == (Rec X . T0[X])
+                    _: * |- t' : T0[T1 -> T2]
+                    ----------------------------- T-Fold
+                    _: * |- (fold (T1 -> T2) t') : (T1 -> T2)
+                    where T' := T1 -> T2
+                is
+                    proof by contradiction on eqr
+                end case
+
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma canonical-forms-Arrow:
+    forall d: * |- t : T1 -> T2
+    forall v: t value
+    exists t == lambda x:T' . t2[x].
+    e: T1 -> T2 == T1 -> T2 by rule type-eq
+    proof by lemma canonical-forms-ArrowH on d, e, v
+end lemma  
+
+lemma canonical-forms-PairH:
+    forall d: * |- t : T
+    forall e: T == T1 * T2
+    forall v: t value
+    exists t == (t1,t2) and t1 value and t2 value.
+    use induction on d
+    do case analysis on d:
+        case rule
+            d': * |- t : S
+            s: * |- S <: T
+            --------------- T-Sub
+            _: * |- t : T
+        is
+            use inversion of rule type-eq on e where T := T1 * T2
+            use inversion of rule S-Pair on s where S := S1 * S2
+            eqs: S == S1 * S2 by rule type-eq
+            proof by induction hypothesis on d', eqs, v
+        end case
+        case rule
+            eq: T' == (Rec X . T11[X])
+            _: * |- t1 : T'
+            ----------------------------- T-Unfold
+            _: * |- unfold (T') t1 : T11[T']
+            where t := unfold (T') t1 and T := T11[T']
+        is
+            proof by contradiction on v
+        end case
+        end case analysis
+    use inversion of rule type-eq on e where T := T1 * T2
+    proof by case analysis on v:
+        case rule
+            -------------------------- val-fn
+            _: (lambda x : T0 . t0[x]) value
+            where t := lambda x : T0 . t0[x]
+        is
+            proof by contradiction on d
+        end case
+        case rule
+            --------------------- val-unit
+            _: unit value
+            where t := unit
+        is
+            proof by contradiction on d
+        end case
+        case rule
+            v1: t1 value
+            v2: t2 value
+            ---------------- val-pair
+            _: (t1,t2) value
+            where t := (t1,t2)
+        is
+            eq: t == (t1,t2) by rule eq
+            proof by eq, v1, v2
+        end case
+        case rule
+            _: t' value
+            ---------------------- val-fold
+            _: (fold T' t') value
+            where t := (fold T' t')
+        is
+            proof by case analysis on d:
+                case rule
+                    eq: T1*T2 == (Rec X . T0[X])
+                    _: * |- t' : T0[T1*T2]
+                    ----------------------------- T-Fold
+                    _: * |- (fold (T1*T2) t') : T1*T2
+                    where T' := T1 * T2
+                is
+                    proof by contradiction on eq
+                end case
+
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma canonical-forms-Pair:
+    forall d: * |- t : T1 * T2
+    forall v: t value
+    exists t == (t1,t2) and t1 value and t2 value.
+    e: T1 * T2 == T1 * T2 by rule type-eq
+    proof by lemma canonical-forms-PairH on d, e, v
+end lemma
+
+lemma canonical-forms-FoldH :
+    forall d: * |- t : T
+    forall e : T == Rec X . T1[X]
+    forall v: t value
+    exists t == fold (Rec X . T2[X]) t' and t' value.
+    use induction on d
+    do case analysis on d:
+        case rule
+            d': * |- t : S
+            s: * |- S <: T
+            --------------- T-Sub
+            _: * |- t : T
+        is
+            use inversion of rule type-eq on e where T := Rec X . T1[X]
+            use inversion of rule S-Double on s where S := Rec X . S1[X]
+            eqs: S == Rec X . S1[X] by rule type-eq
+            proof by induction hypothesis on d', eqs, v
+        end case
+        case rule
+            eq: T' == (Rec X . T11[X])
+            _: * |- t1 : T'
+            ----------------------------- T-Unfold
+            _: * |- unfold (T') t1 : T11[T']
+            where t := unfold (T') t1 and T := T11[T']
+        is
+            proof by contradiction on v
+        end case
+        end case analysis
+    use inversion of rule type-eq on e where T := Rec X . T1[X]
+    proof by case analysis on v:
+        case rule
+            ------------- val-unit
+            _: unit value
+            where t := unit
+        is
+            proof by contradiction on d
+        end case
+
+        case rule
+            --------------------------- val-fn
+            _: (lambda x:T' . t1[x]) value
+            where t := lambda x:T' . t1[x]
+        is
+            proof by contradiction on d
+        end case
+
+        case rule
+            v1: t1 value
+            v2: t2 value
+            ---------------- val-pair
+            _: (t1,t2) value
+            where t := (t1,t2)
+        is
+            proof by contradiction on d
+        end case
+
+        case rule
+            v': t' value
+            -------------------- val-fold
+            _: fold (T') t' value
+            where t := fold (T') t'
+        is
+            proof by case analysis on d:
+                case rule
+                    _: (Rec X . T1[X]) == (Rec X . T1'[X])
+                    _: * |- t' : T1'[Rec X . T1[X]]
+                    --------------------------- T-Fold
+                    _: * |- fold (Rec X . T1[X]) t' : Rec X . T1[X]
+                    where T' := Rec X . T1[X]
+                is
+                    eq: t == fold (Rec X . T1[X]) t' by rule eq
+                    proof by eq, v'
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma canonical-forms-Fold :
+    forall d: * |- t : Rec X . T[X]
+    forall v: t value
+    exists t == fold (Rec X . T1[X]) t' and t' value.
+    e: Rec X . T[X] == Rec X . T[X] by rule type-eq
+    proof by lemma canonical-forms-FoldH on d, e, v
+end lemma
+    
+
+theorem progress :
+    forall d: * |- t : T
+    exists t value or t -> t' .
+    proof by induction on d:
+        // SASyLF knows that T-Vae cannot apply since the contex is empty
+        case rule
+            d': * |- t : S
+            _: * |- S <: T
+            ----------------------- T-Sub
+            _: * |- t : T
+        is
+            proof by induction hypothesis on d'
+        end case
+
+        case rule
+            ------------------ T-Unit
+            _: * |- unit : Unit
+            where t := unit and T := Unit
+        is
+            v: unit value by rule val-unit
+        end case
+
+        case rule
+            d1: *, x:T1 |- t1[x] : T2
+            ------------------------------------ T-Abs
+            _ : * |- lambda x:T1 . t1[x] : T1 -> T2
+            where t := lambda x:T1 . t1[x]
+            and T := T1 -> T2
+        is
+            v : lambda x:T1 . t1[x] value by rule val-fn
+        end case
+
+        case rule
+            d1: * |- t1 : T2 -> T
+            d2: * |- t2 : T2
+            ---------------------- T-App
+            _: * |- t1 t2 : T
+            where t := t1 t2
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            ns2: t2 value or t2 -> t2' by induction hypothesis on d2
+            _: t1 t2 -> t' by case analysis on ns1:
+                case or e1: t1 -> t1' is
+                    e: t1 t2 -> t1' t2 by rule E-App1 on e1
+                end case
+                case or v1: t1 value is
+                    proof by case analysis on ns2:
+                        case or e2: t2 -> t2' is
+                            e: t1 t2 -> t1 t2' by rule E-App2 on v1,e2
+                        end case
+                        case or v2: t2 value is
+                            c: t1 == lambda x:T2' . t11[x] by lemma canonical-forms-Arrow on d1,v1
+                            use inversion of rule eq on c where t1 := lambda x:T2' . t11[x]
+                            proof by rule E-AppAbs on v2
+                        end case
+                    end case analysis
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1: * |- t1 : T1
+            d2: * |- t2 : T2
+            -------------------- T-Pair
+            _: * |- (t1,t2) : T1 * T2
+            where t := (t1, t2) and T := T1 * T2
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            ns2: t2 value or t2 -> t2' by induction hypothesis on d2
+            proof by case analysis on ns1:
+                case or e1: t1 -> t1' is
+                    e: (t1,t2) -> (t1',t2) by rule E-Pair1 on e1
+                end case
+                case or v1: t1 value is
+                    proof by case analysis on ns2:
+                        case or e2: t2 -> t2' is
+                            e: (t1,t2) -> (t1,t2') by rule E-Pair2 on v1,e2
+                        end case
+                        case or v2: t2 value is
+                            v: (t1,t2) value by rule val-pair on v1,v2
+                        end case
+                    end case analysis
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1: * |- t1 : T1 * T2
+            ------------------------- T-Proj1
+            _ : * |- t1.1 : T1
+            where t := t1.1 and T := T1
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            _: t1.1 -> t' by case analysis on ns1:
+                case or  e1: t1 -> t1' is
+                    e: t1.1 -> t1'.1 by rule E-Proj1 on e1
+                end case
+                case or v1: t1 value is
+                    eq: t1 == (t11,t12) and 
+                    v11: t11 value and 
+                    v12: t12 value by lemma canonical-forms-Pair on d1,v1
+                    use inversion of rule eq on eq where t1 := (t11,t12)
+                    proof by rule E-PairBeta1 on v11, v12
+                end case
+            end case analysis
+        end case
+
+
+        case rule
+            d1: * |- t1 : T1 * T2
+            ------------------------- T-Proj2
+            _ : * |- t1.2 : T2
+            where t := t1.2 and T := T2
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            _: t1.2 -> t' by case analysis on ns1:
+                case or  e1: t1 -> t1' is
+                    e: t1.2 -> t1'.2 by rule E-Proj2 on e1
+                end case
+                case or v1: t1 value is
+                    eq: t1 == (t11,t12) and 
+                    v11: t11 value and 
+                    v12: t12 value by lemma canonical-forms-Pair on d1,v1
+                    use inversion of rule eq on eq where t1 := (t11,t12)
+                    proof by rule E-PairBeta2 on v11, v12
+                end case
+            end case analysis
+        end case
+
+        case rule
+            eq: T == (Rec X . T1[X])
+            d1: * |- t1 : T1[T]
+            -------------------------- T-Fold
+            _: * |- fold (T) t1 : T
+            where t := fold (T) t1
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            proof by case analysis on ns1:
+                case or e1: t1 -> t1' is
+                    e: fold (T) t1 -> fold (T) t1' by rule E-Fold on e1
+                end case
+                case or v1: t1 value is
+                    v: fold (T) t1 value by rule val-fold on v1
+                end case
+            end case analysis
+        end case
+
+        case rule
+            eq: T2 == (Rec X . T1[X])
+            d1: * |- t1 : T2
+            ---------------------------------- T-Unfold
+            _: * |- unfold (T2) t1 : T1[T2]
+            where t := unfold (T2) t1 and T := T1[T2]
+        is
+            ns1: t1 value or t1 -> t1' by induction hypothesis on d1
+            proof by case analysis on ns1:
+                case or e1: t1 -> t1' is
+                    e: unfold (T2) t1 -> unfold (T2) t1' by rule E-Unfold on e1
+                end case
+                case or v1: t1 value is
+                    use inversion of rule type-eq on eq where T2 := (Rec X . T1[X])
+                    eq1: t1 == fold (Rec X . T1'[X]) t2 and
+                    v2: t2 value by lemma canonical-forms-Fold on d1, v1
+                    use inversion of rule eq on eq1 where t1 := fold (Rec X . T1'[X]) t2    
+                    _: t -> t2 by rule E-UnfoldFold on v2    
+                end case
+            end case analysis
+        end case
+    end induction
+end theorem
+
+
+/// Preservation
+
+// We use HOAS to get substitution for "free"
+lemma subst :
+    assumes Gamma
+    forall d1: Gamma, x : T2 |- t1[x] : T1
+    forall d2: Gamma |- t2 : T2
+    exists Gamma |- t1[t2] : T1 .
+    proof by substitution on d1, d2
+end lemma
+
+
+lemma type-inversion-Arrow:
+    assumes Gamma
+    forall d: Gamma |- lambda x:S1 . t[x] : T1 -> T2
+    exists Gamma, x:S1 |- t[x] : T2 and * |- T1 <: S1
+    proof by induction on d:
+        case rule
+            d': Gamma, x : T1 |- t[x] : T2
+            ------------------------------------------- T-Abs
+            _: Gamma |- (lambda x : T1 . t[x]) : (T1 -> T2)
+            where S1 := T1
+        is
+            s: * |- T1 <: T1 by theorem subtype-reflexive on T1
+            proof by d', s
+        end case
+
+        case rule
+            d': Gamma |- (lambda x : S1 . t[x]) : T'
+            st: * |- T' <: (T1 -> T2)
+            ---------------------- T-Sub
+            _: Gamma |- (lambda x : S1 . t[x]) : (T1 -> T2)
+        is
+            s1: * |- T1 <: T1' and
+            s2: * |- T2' <: T2 by inversion of S-Arrow on st
+            where T' := T1' -> T2'
+            dt': Gamma, x : S1 |- t[x] : T2' and 
+            s': * |- T1' <: S1 by induction hypothesis on d'
+            s: * |- T1 <: S1 by theorem subtype-transitive on s1, s'
+            dt: Gamma, x : S1 |- t[x] : T2 by rule T-Sub on dt', s2
+            proof by dt, s          
+        end case
+
+    end induction
+end lemma
+
+lemma type-inversion-Pair:
+    assumes Gamma
+    forall d: Gamma |- (t1,t2) : T1 * T2
+    exists Gamma |- t1 : T1 and Gamma |- t2 : T2.
+    proof by induction on d:
+        case rule
+            d1: Gamma |- t1 : T1
+            d2: Gamma |- t2 : T2
+            -------------------------------- T-Pair
+            _: Gamma |- (t1, t2) : (T1 * T2)
+        is
+            proof by d1, d2
+        end case
+
+        case rule
+            d': Gamma |- (t1, t2) : S
+            s: * |- S <: (T1 * T2)
+            ----------------------- T-Sub
+            _: Gamma |- (t1, t2) : (T1 * T2)
+        is
+            st1: * |- S1 <: T1 and
+            st2: * |- S2 <: T2 by inversion of rule S-Pair on s
+            where S := S1 * S2
+            d1': Gamma |- t1 : S1 and 
+            d2': Gamma |- t2 : S2 by induction hypothesis on d'
+            d1: Gamma |- t1 : T1 by rule T-Sub on d1', st1
+            d2: Gamma |- t2 : T2 by rule T-Sub on d2', st2
+            proof by d1,d2
+        end case
+
+    end induction
+end lemma
+
+lemma type-inversion-Fold:
+    forall d: * |- fold (T1) t : T2
+    exists * |- T1 <: T2 and T1 == Rec X . T'[X] and * |- t : T'[T1]
+    proof by induction on d:
+        case rule
+            eq2: T2 == (Rec X . T'[X])
+            d1: * |- t : T'[T2]
+            ----------------------------- T-Fold
+            _: * |- (fold T2 t) : T2
+            where T1 := T2
+        is
+            sub: * |- T1 <: T2 by theorem subtype-reflexive on T2
+            proof by sub, eq2, d1
+        end case
+
+        case rule
+            d': * |- (fold T1 t) : T1'
+            sub: * |- T1' <: T2
+            ----------------------- T-Sub
+            _: * |- (fold T1 t) : T2
+        is
+            sub1': * |- T1 <: T1' and
+            eq1: T1 == Rec X . T'[X] and
+            dt: * |- t : T'[T1] by induction hypothesis on d'
+            sub': * |- T1 <: T2 by theorem subtype-transitive on sub1', sub
+            proof by sub', eq1, dt
+        end case
+
+    end induction
+end lemma
+  
+theorem preservation :
+    forall d: * |- t : T
+    forall e: t -> t'
+    exists * |- t' : T .
+    proof by induction on d:
+        case rule
+            ds: * |- t : S
+            s: * |- S <: T
+            ----------------------- T-Sub
+            _: * |- t : T
+        is
+            ds' : * |- t' : S by induction hypothesis on ds, e
+            proof by rule T-Sub on ds', s
+        end case
+
+        case rule
+            ----------------------- T-Unit
+            _: * |- unit : Unit
+            where t := unit and T := Unit
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            _: *, x : T1 |- t1[x] : T2
+            ---------------------------------------- T-Abs
+            _: * |- (lambda x:T1 . t1[x]) : T1 -> T2
+            where t := (lambda x:T1 . t1[x]) and T := T1 -> T2
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            d1: * |- t1 : T2 -> T
+            d2: * |- t2 : T2
+            --------------------------- T-App
+            _ : * |- t1 t2 : T
+            where t := t1 t2
+        is
+            proof by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ------------------- E-App1
+                    _ : t1 t2 -> t1' t2
+                    where t' := t1' t2
+                is
+                    d1': * |- t1' : T2 -> T by induction hypothesis on d1,e1
+                    d12: * |- t1' t2 : T by rule T-App on d1', d2
+                end case
+                case rule
+                    _ : t1 value
+                    e2: t2 -> t2'
+                    ------------------- E-App2
+                    _ : t1 t2 -> t1 t2'
+                    where t' := t1 t2'
+                is
+                    d2': * |- t2' : T2 by induction hypothesis on d2,e2
+                    d12': * |- t1 t2' : T by rule T-App on d1, d2'
+                end case
+                case rule
+                    _: t2 value
+                    ------------------------------------- E-AppAbs
+                    _: (lambda x:T2' . t11[x]) t2 -> t11[t2]
+                    where t1 := (lambda x:T2' . t11[x]) and t' := t11[t2]
+                is
+                    d11: *, x:T2' |- t11[x] : T and
+                    s2': * |- T2 <: T2' by lemma type-inversion-Arrow on d1
+                    d2': * |- t2 : T2' by rule T-Sub on d2, s2'
+                    d12: * |- t11[t2] : T by lemma subst on d11, d2'
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1: * |- t1 : T1
+            d2: * |- t2 : T2
+            ------------------------------ T-Pair
+            _ : * |- (t1,t2) : T1 * T2
+            where t := (t1,t2) and T := T1 * T2
+        is
+            proof by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ---------------------- E-Pair1
+                    _: (t1,t2) -> (t1',t2)
+                    where t' := (t1',t2)
+                is
+                    d1': * |- t1' : T1 by induction hypothesis on d1,e1
+                    _  : * |- (t1',t2) : T1 * T2 by rule T-Pair on d1',d2
+                end case
+                case rule
+                    _ : t1 value
+                    e2: t2 -> t2'
+                    ---------------------- E-Pair2
+                    _: (t1,t2) -> (t1,t2')
+                    where t' := (t1,t2')
+                is
+                    d2': * |- t2' : T2 by induction hypothesis on d2,e2
+                    _  : * |- (t1,t2') : T1 * T2 by rule T-Pair on d1,d2'
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1: * |- t1 : T * T2
+            ------------------------- T-Proj1
+            _ : * |- t1.1 : T
+            where t := t1.1
+        is
+            proof by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ----------------- E-Proj1
+                    _ : t1.1 -> t1'.1
+                    where t' := t1'.1
+                is
+                    d1': * |- t1' : T * T2 by induction hypothesis on d1,e1
+                    _  : * |- t1'.1 : T by rule T-Proj1 on d1'
+                end case
+                case rule
+                    v11: t11 value
+                    v12: t12 value
+                    --------------------- E-PairBeta1
+                    _: (t11,t12).1 -> t11
+                    where t1 := (t11,t12) and t' := t11
+                is
+                    d11: * |- t11 : T and
+                    _: * |- t12 : T2 by lemma type-inversion-Pair on d1
+                    proof by d11
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d1: * |- t1 : T1 * T
+            ------------------------- T-Proj2
+            _ : * |- t1.2 : T
+            where t := t1.2
+        is
+            proof by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ----------------- E-Proj2
+                    _ : t1.2 -> t1'.2
+                    where t' := t1'.2
+                is
+                    d1': * |- t1' : T1 * T by induction hypothesis on d1,e1
+                    _  : * |- t1'.2 : T by rule T-Proj2 on d1'
+                end case
+                case rule
+                    v11: t11 value
+                    v12: t12 value
+                    --------------------- E-PairBeta2
+                    _: (t11,t12).2 -> t12
+                    where t1 := (t11,t12) and t' := t12
+                is
+                    _: * |- t11 : T1 and
+                    d12: * |- t12 : T by lemma type-inversion-Pair on d1
+                    proof by d12
+                end case
+            end case analysis
+        end case
+
+        case rule
+            eq: T == (Rec X . T1[X])
+            d1: * |- t1 : T1[T]
+            -------------------------- T-Fold
+            _: * |- fold (T) t1 : T
+            where t := fold (T) t1
+        is
+            _: * |- t' : T by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ------------------------------ E-Fold
+                    _: fold (T) t1 -> fold (T) t1'
+                    where t' := fold (T) t1'
+                is
+                    d1': * |- t1' : T1[T] by induction hypothesis on d1,e1
+                    _: * |- fold (T) t1' : T by rule T-Fold on eq,d1'
+                end case
+            end case analysis
+        end case
+
+        case rule
+            eq1: T2 == (Rec X . T1[X])
+            d1: * |- t1 : T2
+            ---------------------------------- T-Unfold
+            _: * |- unfold (T2) t1 : T1[T2]
+            where t := unfold (T2) t1 and T := T1[T2]
+        is
+            _: * |- t' : T1[T2] by case analysis on e:
+                case rule
+                    e1: t1 -> t1'
+                    ------------------------------------ E-Unfold
+                    _: unfold (T2) t1 -> unfold (T2) t1'
+                    where t' := unfold (T2) t1'
+                is
+                    d1': * |- t1' : T2 by induction hypothesis on d1,e1
+                    _: * |- unfold (T2) t1' : T1[T2]
+                    by rule T-Unfold on eq1,d1'
+                end case
+                case rule
+                    v2: t2 value
+                    --------------------------------- E-UnfoldFold
+                    _: unfold (T2) fold (T3) t2 -> t2
+                    where t1 := fold (T3) t2 and t' := t2
+                is
+                    sub: * |- T3 <: T2 and 
+                    eq2: T3 == (Rec X . T3'[X]) and 
+                    dt2: * |- t2 : T3'[T3] by lemma type-inversion-Fold on d1
+                    use inversion on eq1 where T2 := Rec X . T1[X]
+                    use inversion on eq2 where T3 := Rec X . T3'[X]
+                    subu: * |- T3'[T3] <: T1[T2] by lemma unfolding on sub
+                    proof by rule T-Sub on dt2, subu
+                 end case
+            end case analysis
+        end case
+    end induction
+end theorem
+
+

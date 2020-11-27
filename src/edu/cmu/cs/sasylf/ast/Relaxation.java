@@ -4,6 +4,7 @@ import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,11 @@ public class Relaxation {
 			values.add(null);
 		}
 		result = r;
+		Util.verify(values.size() == types.size(), "inconsistent size of relaxation");
 	}
 
 	private Relaxation(List<Term> ts, List<FreeVar> vals, NonTerminal r, boolean ignored) {
+		Util.verify(vals.size() == ts.size(), "inconsistent size of relaxation");
 		types = ts;
 		values = vals;
 		result = r;
@@ -255,14 +258,23 @@ public class Relaxation {
 			int j=0;
 			int n = ruleConc.getElements().size();
 			int ai = ((ClauseDef)theRule.getJudgment().getForm()).getAssumeIndex();
-			
+			Map<Variable,FreeVar> relaxMap = new HashMap<>();
 			for (int i=0; i < n; ++i) {
 				if (i == ai) continue;
 				Element e = ruleConc.getElements().get(i);
 				if (e instanceof Variable) {
 					Term t = bareSubject.getArguments().get(j);
+					FreeVar relaxVar = relaxMap.get(e);
 					if (t instanceof FreeVar) {
-						relaxVars.add((FreeVar)t);
+						if (relaxVar == null) {
+							relaxVars.add((FreeVar)t);
+							relaxMap.put((Variable)e, (FreeVar)t);
+						} else {
+							Substitution canonSub = new Substitution();
+							canonSub.add((FreeVar)t, relaxVar);
+							Util.debug("Found canonSub = ",canonSub);
+							ctx.composeSub(canonSub);
+						}
 					} else if (!(t instanceof Application) || !(((Application)t).getFunction() instanceof FreeVar)) {
 						verify(subject != null, "didn't anticipate pattern error");
 						ErrorHandler.report("Rule " + theRule.getName() + " cannot apply since "+ 
@@ -273,11 +285,15 @@ public class Relaxation {
 						FreeVar funcVar = (FreeVar)app.getFunction();
 						List<Abstraction> argTypes = new ArrayList<Abstraction>();
 						Constant baseType = (Constant)Term.getWrappingAbstractions(funcVar.getType(), argTypes);
-						FreeVar newVar = FreeVar.fresh(baseType.toString(),baseType);
-						relaxVars.add(newVar);
+						if (relaxVar == null) {
+							relaxVar = FreeVar.fresh(baseType.toString(),baseType);
+							relaxVars.add(relaxVar);
+							relaxMap.put((Variable)e, relaxVar);
+						}
 						Substitution canonSub = new Substitution();
-						canonSub.add(funcVar, Term.wrapWithLambdas(argTypes, newVar));
+						canonSub.add(funcVar, Term.wrapWithLambdas(argTypes, relaxVar));
 						Util.debug("Found canonSub = ",canonSub);
+						// bareSubject = (Application) bareSubject.substitute(canonSub);
 						// subjectTerm = subjectTerm.substitute(canonSub);
 						ctx.composeSub(canonSub);
 					}

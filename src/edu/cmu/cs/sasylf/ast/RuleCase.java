@@ -178,7 +178,7 @@ public class RuleCase extends Case {
 		}
 
 		// Now create the "unifyingSub"
-		// tdebug("Unifying " + patternConc + " " + adaptedSubjectTerm);
+		Util.debug("Unifying " + patternConc + " ?\n" + adaptedSubjectTerm);
 		Set<FreeVar> RCCvars = patternConc.getFreeVariables();
 		Substitution unifyingSub = null;
 		try {

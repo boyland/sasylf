@@ -59,7 +59,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	private List<Clause> premises;
 	private Clause conclusion;
 	private int isAssumpt = 0; // 0 = not an assumption, > 0 number of abstractions represented
-	private int clauseVarIndex = -1; // where is variable in the judgment clause
 	private int appVarIndex = -1; // where is variable in the judgment term
 
 	@Override
@@ -177,26 +176,25 @@ public class Rule extends RuleLike implements CanBeCase {
 		// We consider this rule to be an attempt of an assumption
 		// and will generate errors for problems noticed.
 
-		int countVariables = 0;
+		Variable varFound = null;
 		int countNTs = 0;
 		int concSize = conclusion.getElements().size();
 		for (int i=0; i < concSize; ++i) {
 			if (i == assumeIndex) continue;
 			Element e = conclusion.getElements().get(i);
 			if (e instanceof Variable) {
-				if (countVariables > 0) { // XXX: Point for extension
+				if (varFound != null && !varFound.equals(e)) { // XXX: extension point
 					ErrorHandler.report("Can't handle more than one variable in assumption rule", this);
 				}
-				clauseVarIndex = i;
 				appVarIndex = countNTs;
-				++countVariables;
+				varFound = (Variable)e;
 				++countNTs;
 			} else if (e instanceof NonTerminal || e instanceof Binding) {
 				++countNTs;
 			}
 		}
 
-		isAssumpt = 1 + countVariables;
+		isAssumpt = 1 + (varFound == null ? 0 : 1);
 
 		if (assumeClauseDef.assumptionRule != null &&
 				assumeClauseDef.assumptionRule != this) // idempotency
@@ -280,15 +278,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	public int isAssumptionSize() {
 		return isAssumpt;
-	}
-
-	/**
-	 * Return the index of the variable in the clause if this is an assumption rule
-	 * with a variable.  Otherwise return -1
-	 * @return index of variable in the clause
-	 */
-	public int getClauseVarIndex() {
-		return clauseVarIndex;
 	}
 
 	/**
