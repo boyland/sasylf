@@ -1,4 +1,4 @@
-package examples;
+package examples
 
 /* Iso-Recursive Subtyping
 * Proved sound using the technique from
@@ -116,13 +116,8 @@ lemma test:
     sr2: *, X1 |- (Rec X2 . (X1 * X2)) <: (Rec X2 . (X1 * X2)) by rule S-Double on sp12, spf12
     su: *, X1 |- Unit <: Unit by rule S-ReflUnit
     sup: *, X1 |- Unit * (Rec X2 . (X1 * X2)) <: Unit * (Rec X2 . (X1 * X2)) by rule S-Pair on su, sr2
-    s12': *, X1, X2, X2' |- X1 <: X1 by weakening on s12
-    s2':  *, X1, X2, X2' |- X2' <: X2' by rule S-ReflVar
-    sp12':*, X1, X2, X2' |- X1 * X2' <: X1 * X2' by rule S-Pair on s12', s2'
-    spf12':*,X1, X2, X2' |- X1 * (X1 * X2') <: X1 * (X1 * X2') by rule S-Pair on s12', sp12'
-    sr2': *, X1, X2 |- (Rec X2' . (X1 * X2')) <: (Rec X2' . (X1 * X2')) by rule S-Double on sp12', spf12'
-    su':  *, X1, X2 |- Unit <: Unit by rule S-ReflUnit
-    sup': *, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) <: (Unit * (Rec X2' . (X1 * X2'))) by rule S-Pair on su', sr2'
+    sr2': *, X1, X2 |- (Rec X2' . (X1 * X2')) <: (Rec X2' . (X1 * X2')) by weakening on sr2
+    sup': *, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) <: (Unit * (Rec X2' . (X1 * X2'))) by weakening on sup
     supp: *, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) * X2 <: (Unit * (Rec X2' . (X1 * X2'))) * X2 by rule S-Pair on sup', s2
     suppf:*, X1, X2 |- (Unit * (Rec X2' . (X1 * X2'))) * ((Unit * (Rec X2' . (X1 * X2'))) * X2) <: (Unit * (Rec X2' . (X1 * X2'))) * ((Unit * (Rec X2' . (X1 * X2')))*X2) by rule S-Pair on sup', supp
     srr2: *, X1 |- Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2) <: Rec X2 . ((Unit * (Rec X2' . (X1 * X2'))) * X2) by rule S-Double on supp, suppf
@@ -553,7 +548,8 @@ lemma subtype-subst-rev:
             --------------------------- S-ReflVar
             _: Sigma', X', X |- X' <: X'
         is
-            proof by theorem subtype-reflexive on (T1[Top])
+            s': Sigma', X' |- X' <: X' by rule S-ReflVar
+            proof by s'
         end case
 
         case rule
@@ -799,8 +795,8 @@ lemma canonical-forms-ArrowH:
             proof by induction hypothesis on d', eqs, v
         end case
         
-        // This case can cause higher-order unification to give a =n equivocal result
-        // if T is know to have a special form.
+        // This case can cause higher-order unification to give an equivocal result
+        // if T is known to have a special form.
         // By handling it ahead of time, we ensure that this case is safely removed
         case rule
             eq: T' == (Rec X . T11[X])
