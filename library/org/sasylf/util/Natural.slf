@@ -259,6 +259,30 @@ lemma gt-implies-ge-succ:
   end case analysis
 end lemma
 
+lemma ge-succ-implies-gt:
+  forall ge: n1 ≥ S n2
+  exists n1 > n2
+  proof by case analysis on ge:
+    case rule
+      ----------- ge-eq
+      _: (S n2) ≥ (S n2)
+      where n1 := S n2
+    is
+      proof by rule gt-1
+    end case
+
+    case rule
+      g: n1 > (S n2)
+      ------------- ge-gt
+      _: n1 ≥ (S n2)
+    is
+      g1: S n1 > S n2 by rule gt-s on g
+      proof by lemma succ-preserves-gt-converse on g1
+    end case
+  end case analysis
+end lemma 
+
+
 lemma gt-anti-reflexive-star:
   forall n
   forall d: n > n
@@ -404,6 +428,12 @@ theorem ge-anti-symmetric:
   end case analysis
 end theorem
   
+theorem ge-reflexive:
+  forall n
+  exists n ≥ n
+  proof by rule ge-eq
+end theorem
+
 lemma succ-preserves-ge:
   forall d: n1 ≥ n2
   exists S n1 ≥ S n2.
