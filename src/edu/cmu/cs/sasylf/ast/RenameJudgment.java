@@ -78,6 +78,12 @@ public class RenameJudgment extends Judgment {
 
 	
 	@Override
+	public CanBeCase findRule(Constant c) {
+		if (original != null) return original.findRule(c);
+		return super.findRule(c);
+	}
+
+	@Override
 	public List<Rule> getRules() {
 		if (original != null) return original.getRules();
 		return super.getRules();

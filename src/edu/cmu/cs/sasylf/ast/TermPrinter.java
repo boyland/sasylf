@@ -32,7 +32,24 @@ import edu.cmu.cs.sasylf.util.Util;
  * @author boyland
  */
 public class TermPrinter {
+	/**
+	 * Printing can fail through no fault of the rest of the code.
+	 * Catching this exception can avoid an internal error report.
+	 * XXX: We need to move most of the runtime exceptions
+	 * thrown in this class to this exception instead.
+	 * Then change the {@link #toString()} method to catch this exception alone. 
+	 */
+	public static class PrintException extends RuntimeException {
+		/**
+		 * KEH
+		 */
+		private static final long serialVersionUID = 1L;
 
+		public PrintException(String s) {
+			super(s);
+		}
+	}
+	
 	private final Context ctx;
 	private final Element context;
 	private final Location location;
@@ -391,7 +408,7 @@ public class TermPrinter {
 		if (fname.equals("or[]")) return OrClauseUse.makeEmptyOrClause(location);
 		ClauseDef cd = ctx.getProduction(con);
 		if (cd == null) {
-			throw new RuntimeException("no cd for " + fname);
+			throw new PrintException("no cd for " + fname);
 		}
 
 		List<Element> contents;
@@ -528,12 +545,11 @@ public class TermPrinter {
 		if (bareTerm instanceof Application) {
 			Application app = (Application)bareTerm;
 			if (app.getFunction() instanceof Constant) {
-				String funcName = app.getFunction().getName();
-				if (funcName.endsWith("TERM")) {
-					String rName = funcName.substring(0, funcName.length()-4);
-					if (ctx.ruleMap.containsKey(rName)) {
-						Rule rule = (Rule)ctx.ruleMap.get(rName);
-						Judgment j = rule.getJudgment();
+				Constant baseType = app.getFunction().getType().baseTypeFamily();
+				Judgment j = ctx.getJudgment(baseType);
+				if (j != null) {
+					Rule rule = (Rule)j.findRule((Constant)app.getFunction());
+					if (rule != null) {
 						if (j instanceof OrJudgment) {
 							sb.append("or _: ");              
 							Term disj = app.getArguments().get(0);
@@ -544,14 +560,18 @@ public class TermPrinter {
 							for (int i=0; i < n; ++i) {
 								if (i == n-1) {
 									sb.append("--------------- ");
-									sb.append(rName);
+									sb.append(rule.getName());
 									sb.append("\n");
 								}
 								Judgment pj = (Judgment)((ClauseUse)((i == n-1) ? rule.getConclusion() : rule.getPremises().get(i))).getConstructor().getType();
 								Term t = app.getArguments().get(i);
 								if (pj.getAssume() != null && pj.getAssume().equals(j.getAssume())) t = Term.wrapWithLambdas(abs,t);
-								ClauseUse u = asClause(t);
-								prettyPrint(sb,u,false, 0);
+								try {
+									ClauseUse u = asClause(t);
+									prettyPrint(sb,u,false, 0);
+								} catch (PrintException ex) {
+									sb.append("// " + t);
+								}
 								sb.append('\n');
 							}
 						}

@@ -75,6 +75,12 @@ public class Rule extends RuleLike implements CanBeCase {
 		out.println("\n");
 	}
 
+	
+	@Override
+	protected Constant getRuleAppBase() {
+		return judgment.typeTerm();
+	}
+
 	public void typecheck(Context ctx, Judgment judge) {
 		judgment = judge;
 		Map<String, List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
