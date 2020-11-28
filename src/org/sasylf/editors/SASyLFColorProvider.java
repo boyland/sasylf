@@ -8,6 +8,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.Token;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -79,12 +80,14 @@ public class SASyLFColorProvider {
 		TextAttribute modified = makeTextAttribute(attr, fgClass);
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		Token result = new Token(modified);
-		store.addPropertyChangeListener((pce) -> updateToken(result, attr, fgClass));
+		store.addPropertyChangeListener((pce) -> updateToken(pce, result, attr, fgClass));
 		return result;
 	}
 
-	private void updateToken(Token token, TextAttribute attr, TokenColorClass fgClass) {
-		token.setData(makeTextAttribute(attr, fgClass));
+	private void updateToken(PropertyChangeEvent pce, Token token, TextAttribute attr, TokenColorClass fgClass) {
+		if (pce.getProperty().equals(fgClass.getPreferenceName())) {
+			token.setData(makeTextAttribute(attr, fgClass));
+		}
 	}
 	
 	/**
