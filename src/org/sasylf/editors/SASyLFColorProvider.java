@@ -86,7 +86,7 @@ public class SASyLFColorProvider {
 
 	private void updateToken(PropertyChangeEvent pce, Token token, TextAttribute attr, TokenColorClass fgClass) {
 		if (pce.getProperty().equals(fgClass.getPreferenceName())) {
-			token.setData(makeTextAttribute(attr, fgClass));
+			Display.getDefault().asyncExec(() -> token.setData(makeTextAttribute(attr, fgClass)));
 		}
 	}
 	
