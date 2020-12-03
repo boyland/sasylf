@@ -1,6 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -68,22 +70,26 @@ public class DerivationByWeakening extends DerivationWithArgs {
 				source = ab1.getBody();
 				result = ab2.getBody();
 			} else {
-				result = ab2.getBody();
-				/*if (result.hasBoundVar(1)) {
-          ErrorHandler.report(Errors.BAD_WEAKENING,this); // new variable is used
-        }*/
-				result = result.incrFreeDeBruijn(-1); // remove variable
+				// This is presumed to be a variable that is added.
+				// It should not be used (or else it's not a weakening!)
+				// But because the way contexts work, a syntax variable
+				// is ALWAYS used in the next variable (the assumption rule).
+				// So, we can't give an error if it's used
+				// but we also can't just ignore it (see bad74.slf).
+				// So we replace it with a generated free variable.
+				FreeVar v = FreeVar.fresh(ab2.varName, ab2.varType);
+				result = Facade.App(result, v);
 			}
 		}
 		while (result instanceof Abstraction) {
 			result = ((Abstraction)result).getBody();
-			/*if (result.hasBoundVar(1)) {
-        ErrorHandler.report(Errors.BAD_WEAKENING,this); // new variable is used
-      }*/
+			// At this point, it's OK to just ignore the variable.
+			// BY decrementing the deBruijn, we let legitimate variables
+			// match the source, where these supposedly unused new variables go negative.
 			result = result.incrFreeDeBruijn(-1); // remove variable      
 		}
 		if (!result.equals(source)) {
-			ErrorHandler.report(Errors.BAD_WEAKENING, this); // main part of derivation is different
+			ErrorHandler.report(Errors.BAD_WEAKENING, this, result + " != " + source); // main part of derivation is different
 			return;
 		}
 
