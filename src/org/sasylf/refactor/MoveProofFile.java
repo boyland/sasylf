@@ -1,6 +1,7 @@
 package org.sasylf.refactor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -17,7 +18,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
@@ -75,7 +76,6 @@ public class MoveProofFile extends MoveParticipant {
 		}
 	}
 
-
 	@Override
 	public String getName() {
 		return "Move SASyLF Proof File";
@@ -87,6 +87,17 @@ public class MoveProofFile extends MoveParticipant {
 		if (pm == null) pm = new NullProgressMonitor();
 		RefactoringStatus status = new RefactoringStatus();
 		try {
+			
+			if (newPackage.length() == 0) {
+				IProject p = proofFile.getProject();
+				ProofBuilder pb = ProofBuilder.getProofBuilder(p);
+				ProjectModuleFinder moduleFinder = pb.getModuleFinder();
+				ModuleId id = ProofBuilder.getId(proofFile);
+				
+				if (moduleFinder.getDependencies(id).size() > 0) {
+					status.addWarning("Moving file with dependencies into default package");
+				}
+			}
 			change.add(this.createChange(proofFile, pm, status));
 		} catch (CoreException e) {
 			status.addFatalError(e.getStatus().getMessage());
@@ -97,13 +108,14 @@ public class MoveProofFile extends MoveParticipant {
 	@Override
 	public Change createChange(IProgressMonitor pm) throws CoreException,
 	OperationCanceledException {
-		System.out.println("returning the change");
+		//System.out.println("returning the change");
 		return change;
 	}
 
 	protected Change createChange(IFile fileName, IProgressMonitor pm, RefactoringStatus status) 
 			throws OperationCanceledException, CoreException
 	{
+		SubMonitor sub = SubMonitor.convert(pm);
 		IPath fullPath = fileName.getFullPath();
 		TextFileChange result = new TextFileChange("move package", newProofFile);
 		ITextFileBufferManager manager = null;
@@ -115,7 +127,7 @@ public class MoveProofFile extends MoveParticipant {
 			String oldPackage = PackageDeclaration.toString(oldPath.segments());
 			pm.worked(10);
 			manager = FileBuffers.getTextFileBufferManager();
-			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			manager.connect(fullPath, LocationKind.IFILE, sub);
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
 			createPackageReplaceChange(document,result,status,oldPackage);
@@ -125,7 +137,7 @@ public class MoveProofFile extends MoveParticipant {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
 			if (connected) {
-				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+				manager.disconnect(fullPath, LocationKind.IFILE, sub);
 			}
 			pm.done();
 		}
@@ -188,7 +200,7 @@ public class MoveProofFile extends MoveParticipant {
 				edit = new ReplaceEdit(nameLoc.getOffset(),nameLoc.getLength(),newPackage);
 			}
 		}
-		System.out.println("edit is " + edit);
+		//System.out.println("edit is " + edit);
 		change.setEdit(edit);
 	}
 
@@ -198,13 +210,14 @@ public class MoveProofFile extends MoveParticipant {
 		IPath fullPath = fileName.getFullPath();
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
+		SubMonitor sub = SubMonitor.convert(pm);
 		try {
 			IContainer oldFolder = proofFile.getParent();
 			IPath oldPath = ProofBuilder.getProofFolderRelativePath(oldFolder);
 			String oldPackage = PackageDeclaration.toString(oldPath.segments());
 			pm.worked(10);
 			manager = FileBuffers.getTextFileBufferManager();
-			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			manager.connect(fullPath, LocationKind.IFILE, sub);
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
 			createPackageReplaceChangeModule(fileName,document,status,oldPackage);
@@ -213,7 +226,7 @@ public class MoveProofFile extends MoveParticipant {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
 			if (connected) {
-				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+				manager.disconnect(fullPath, LocationKind.IFILE, sub);
 			}
 		}
 
@@ -228,22 +241,33 @@ public class MoveProofFile extends MoveParticipant {
 		}	
 		IRegion moduleLoc = null;
 		if (cu != null) {
+			String fileName = proofFile.getName();
+			String movedFile = fileName.substring(0, fileName.length() - 4);
+			String[] old = oldPackage.split("\\.");
+			
 			List<QualName> qualNames = new ArrayList<>();
 			Consumer<QualName> consumer = name -> {
-				//Object o = name.resolve(null);
-				if (name.getLastSegment().equals(oldPackage)) {
-					System.out.println("Matched name " + name);
-					qualNames.add(name);
+				QualName source = name.getSource();
+				if (source != null) {
+					Object o = source.resolve(null);
+					if (o instanceof String[] && name.getLastSegment().equals(movedFile)) {
+						String[] p = (String[]) o;
+						
+						if (Arrays.equals(old,p)) {
+							//System.out.println("Matched name " + name);
+							qualNames.add(name);
+						}
+					}
 				}
 			};
 
 			cu.collectQualNames(consumer);
-			System.out.println("Done finding qual names in this file!");
+			//System.out.println("Done finding qual names in this file!");
 			for (int i = qualNames.size() - 1; i >= 0; --i) {
 				QualName name = qualNames.get(i);
 				TextFileChange result = new TextFileChange("move package", file);
 				moduleLoc = getModuleLocation(oldPackage, doc, name);
-				
+
 				int offset = moduleLoc.getOffset();
 				int length = moduleLoc.getLength();
 
@@ -256,23 +280,6 @@ public class MoveProofFile extends MoveParticipant {
 				createEdit(result, moduleLoc);
 				change.add(result);
 			}
-//			for (ModulePart part : cu.getModuleParts()) {
-//				//CompUnit c = (CompUnit) part.getModule().resolve(null);
-//
-//				moduleLoc = getModuleLocation(oldPackage, doc, part.getModule());
-//
-//				int offset = moduleLoc.getOffset();
-//				int length = moduleLoc.getLength();
-//
-//				if (doc.get(offset, length).equals(newPackage)) {
-//					// no change needed
-//					continue;
-//				}
-//				System.out.println("Replacing " + doc.get(offset, length) + " with " + newPackage);
-//
-//				createEdit(result, moduleLoc);
-//				change.add(result);
-//			}
 		} else {
 			moduleLoc = new FindReplaceDocumentAdapter(doc).find(0,"module",true,true,true,false);
 			if (moduleLoc == null) {
@@ -281,7 +288,7 @@ public class MoveProofFile extends MoveParticipant {
 			}
 		}
 	}
-	
+
 	private void createEdit(TextFileChange result, IRegion moduleLoc) {
 		TextEdit edit = new ReplaceEdit(moduleLoc.getOffset(),moduleLoc.getLength(),newPackage);
 		Context.updateVersion();	// added this to Context instead of QualName because QualName gets overwritten
@@ -289,15 +296,15 @@ public class MoveProofFile extends MoveParticipant {
 		// System.out.println("edit is " + edit);
 		result.setEdit(edit);  
 	}
-	
+
 	private IRegion getModuleLocation(String oldPackage, IDocument doc, QualName node) throws BadLocationException {
 		Location loc = node.getLocation();
 		IRegion line = doc.getLineInformation(loc.getLine()-1);
-		
+
 		QualName qn = node;
 		loc = qn.getLocation();
 		line = doc.getLineInformation(loc.getLine()-1);
-		
+
 		int length = oldPackage.length();
 		int offset = line.getOffset() + loc.getColumn() - 1;
 		return new Region(offset, length);
@@ -313,7 +320,7 @@ public class MoveProofFile extends MoveParticipant {
 		Set<ModuleId> dependencies = moduleFinder.getDependencies(id);
 
 		for (ModuleId dependency : dependencies) {
-			System.out.println("IFile: " + pb.getResource(dependency));
+			//System.out.println("IFile: " + pb.getResource(dependency));
 			createDependencyChanges(pb.getResource(dependency), pm, status);
 		}
 
