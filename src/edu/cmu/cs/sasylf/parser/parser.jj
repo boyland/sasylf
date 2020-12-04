@@ -2130,7 +2130,8 @@ Derivation Justification(Token startT, Clause c) :
 }
 
 Case Case() :
-{ Token first=null, t,t2,t3,u,a; StringSpan s; Clause cl,ce=null,c2; Case ca; Derivation d;
+{ Token first=null, t,t2,t3,u,a; StringSpan s; QualName q;
+  Clause cl,ce=null,c2; Case ca; Derivation d;
   List<Derivation> premises = new ArrayList<Derivation>();
   Element lhs=null;
   Clause rhs=null;
@@ -2156,7 +2157,7 @@ Case Case() :
         premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce));
       }
     )*
-    u=<BAR> s=RuleName()
+    u=<BAR> q=QualName()
     t3=<IDENTIFIER> <COLON> ce=Expr()
     {
       endLoc = ce.getEndLocation();
@@ -2169,7 +2170,7 @@ Case Case() :
 		new Location(t),
 		new Location(first),
 		endLoc,
-		s.toString(),
+		q,
 		premises,
 		new DerivationByAssumption(t3.image, new Location(t3), ce),
 		whereClauses

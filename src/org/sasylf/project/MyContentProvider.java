@@ -44,9 +44,9 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 		@Override
 		public void propertyChange(PropertyChangeEvent event) {
 			if (event.getProperty().equals(PreferenceConstants.PROOF_FOLDER_NAME)) {
-				viewer.refresh();
+				Display.getDefault().asyncExec(() -> viewer.refresh());
 			} else if (event.getProperty().equals(ProjectProperties.PROJECT_BUILD_PATH_FULL_NAME)) {
-				viewer.refresh(event.getSource());
+				Display.getDefault().asyncExec(() -> viewer.refresh(event.getSource()));
 			}
 		}
 	};

@@ -139,9 +139,9 @@ public class Judgment extends Node implements ClauseType, Named {
 	}
 
 	/**
-	 * FInd a rule for this judgment using the given constant.
+	 * Find a rule for this judgment using the given constant.
 	 * @param c constant to check
-	 * @return rule usign this constant, or null if none found
+	 * @return rule using this constant, or null if none found
 	 */
 	public CanBeCase findRule(Constant c) {
 		for (Rule r : rules) {

@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import edu.cmu.cs.sasylf.ast.AndJudgment.AndTerminal;
 import edu.cmu.cs.sasylf.ast.OrJudgment.OrTerminal;
@@ -32,7 +33,24 @@ import edu.cmu.cs.sasylf.util.Util;
  * @author boyland
  */
 public class TermPrinter {
+	/**
+	 * Printing can fail through no fault of the rest of the code.
+	 * Catching this exception can avoid an internal error report.
+	 * XXX: We need to move most of the runtime exceptions
+	 * thrown in this class to this exception instead.
+	 * Then change the {@link #toString()} method to catch this exception alone. 
+	 */
+	public static class PrintException extends RuntimeException {
+		/**
+		 * KEH
+		 */
+		private static final long serialVersionUID = 1L;
 
+		public PrintException(String s) {
+			super(s);
+		}
+	}
+	
 	private final Context ctx;
 	private final Element context;
 	private final Location location;
@@ -139,7 +157,7 @@ public class TermPrinter {
 			BoundVar v = (BoundVar)x;
 			return vars.get(vars.size()-v.getIndex()); // index is "one" based.
 		} else if (x instanceof Constant) {
-			return appAsClause((Constant)x, Collections.<Element>emptyList());
+			return appAsClause((Constant)x, Collections.<Element>emptyList(), vars);
 		} else if (x instanceof Application) {
 			Application app = (Application)x;
 			List<Element> args = new LinkedList<Element>();
@@ -148,7 +166,7 @@ public class TermPrinter {
 			}
 			Atom func = app.getFunction();
 			if (func instanceof Constant) {
-				return appAsClause((Constant)func,args);
+				return appAsClause((Constant)func,args, vars);
 			} else {
 				return new Binding(location,(NonTerminal)asElement(func),args,location);
 			}
@@ -159,6 +177,9 @@ public class TermPrinter {
 			Term ty = abs.varType;
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			boolean createName = rename;
+			if (vars.contains(new Variable(abs.varName,location))) {
+				createName = true;
+			}
 			if (syn == null) {
 				System.out.println("null syntax for " + ty + " in " + x);
 				createName = false;
@@ -233,7 +254,7 @@ public class TermPrinter {
 			}
 			Atom func = app.getFunction();
 			if (func instanceof Constant) {
-				return appAsClause((Constant)func,args);
+				return appAsClause((Constant)func,args, vars);
 			} else {
 				throw new RuntimeException("not a clause: " + x);
 			}
@@ -241,8 +262,12 @@ public class TermPrinter {
 			Abstraction abs = (Abstraction)x;
 			Term ty = abs.varType;
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
-			Variable v = rename ? new Variable(createVarName(syn,vars),location)
-								: new Variable(abs.varName, location);
+			boolean createName = rename;
+			if (vars.contains(new Variable(abs.varName,location))) {
+				createName = true;
+			}
+			Variable v = createName ? new Variable(createVarName(syn,vars),location)
+								    : new Variable(abs.varName, location);
 			v.setType(syn);
 			vars.add(v);
 			Term body1 = abs.getBody();
@@ -263,7 +288,7 @@ public class TermPrinter {
 				throw new RuntimeException("abstraction with only one arg?: " + x);
 			}
 		} else if (x instanceof Constant) {
-			return appAsClause((Constant)x,Collections.<Element>emptyList());
+			return appAsClause((Constant)x,Collections.<Element>emptyList(), vars);
 		} else {
 			throw new RuntimeException("unknown element: " + x + " of class " + x.getClass());
 		}
@@ -386,12 +411,12 @@ public class TermPrinter {
 		return bindingClause;
 	}
 
-	private ClauseUse appAsClause(Constant con, List<Element> args) {
+	private ClauseUse appAsClause(Constant con, List<Element> args, List<Variable> vars) {
 		String fname = con.getName();
 		if (fname.equals("or[]")) return OrClauseUse.makeEmptyOrClause(location);
 		ClauseDef cd = ctx.getProduction(con);
 		if (cd == null) {
-			throw new RuntimeException("no cd for " + fname);
+			throw new PrintException("no cd for " + fname);
 		}
 
 		List<Element> contents;
@@ -413,14 +438,24 @@ public class TermPrinter {
 					args2.add(it.next());
 					tt2 = ((Abstraction)tt2).getBody();
 				}
-				contents.addAll(appAsClause(con2,args2).getElements());
+				contents.addAll(appAsClause(con2,args2, vars).getElements());
 			}
 		} else {
 			contents = new ArrayList<Element>(cd.getElements());
 			// System.out.println("In " + contents);
 			int n = contents.size();
 			int ai = cd.getAssumeIndex();
-			// System.out.println("AsClause: " + c + " with " + args);
+			// System.out.println("AsClause: " + con + " with " + args);
+			Map<Variable,Variable> varMap = new HashMap<>();
+			for (Element old : contents) {
+				if (old instanceof Variable) {
+					Variable newVar = (Variable)old;
+					if (vars.contains(old)) {
+						newVar = new Variable(createVarName(newVar.getType(),vars),location);
+					}
+					varMap.put((Variable)old, newVar);
+				}
+			}
 			Iterator<Element> actuals = args.iterator();
 			for (int i=0; i < n; ++i) {
 				Element old = contents.get(i);
@@ -428,8 +463,9 @@ public class TermPrinter {
 					Element baseContext = getContext((NonTerminal)old);
 					contents.set(i,baseContext);
 				} else if (old instanceof NonTerminal) {
-					contents.set(i,actuals.next());
+					contents.set(i, actuals.next());
 				} else if (old instanceof Variable) {
+					contents.set(i, varMap.get(old));
 					// do nothing
 				} else if (old instanceof Binding) {
 					Binding b = (Binding)old;
@@ -437,7 +473,8 @@ public class TermPrinter {
 					Element actual = actuals.next();
 					// System.out.println("new = " + actual);
 					if (actual instanceof NonTerminal) {
-						contents.set(i,new Binding(location,(NonTerminal)actual,b.getElements(),location));
+						List<Element> newElems = b.getElements().stream().map((e) -> varMap.get(e)).collect(Collectors.toList());
+						contents.set(i,new Binding(location,(NonTerminal)actual,newElems,location));
 					} else if (actual instanceof AssumptionElement) {
 						AssumptionElement ae = (AssumptionElement)actual;
 						ClauseUse cu = (ClauseUse)ae.getAssumes();
@@ -454,7 +491,7 @@ public class TermPrinter {
 							}
 							if (newVar == null) throw new RuntimeException("Couldn't find newvar in " + cu);
 							// System.out.println("Replacing " + oldVar + " with " + newVar);
-							contents.set(contents.indexOf(oldVar), newVar);
+							contents.set(contents.indexOf(varMap.get(oldVar)), newVar);
 							if (j > 0) {
 								cu = (ClauseUse)cu.getElements().get(cu.getConstructor().getAssumeIndex());
 							}
@@ -528,12 +565,11 @@ public class TermPrinter {
 		if (bareTerm instanceof Application) {
 			Application app = (Application)bareTerm;
 			if (app.getFunction() instanceof Constant) {
-				String funcName = app.getFunction().getName();
-				if (funcName.endsWith("TERM")) {
-					String rName = funcName.substring(0, funcName.length()-4);
-					if (ctx.ruleMap.containsKey(rName)) {
-						Rule rule = (Rule)ctx.ruleMap.get(rName);
-						Judgment j = rule.getJudgment();
+				Constant baseType = app.getFunction().getType().baseTypeFamily();
+				Judgment j = ctx.getJudgment(baseType);
+				if (j != null) {
+					Rule rule = (Rule)j.findRule((Constant)app.getFunction());
+					if (rule != null) {
 						if (j instanceof OrJudgment) {
 							sb.append("or _: ");              
 							Term disj = app.getArguments().get(0);
@@ -544,14 +580,18 @@ public class TermPrinter {
 							for (int i=0; i < n; ++i) {
 								if (i == n-1) {
 									sb.append("--------------- ");
-									sb.append(rName);
+									sb.append(rule.getName());
 									sb.append("\n");
 								}
 								Judgment pj = (Judgment)((ClauseUse)((i == n-1) ? rule.getConclusion() : rule.getPremises().get(i))).getConstructor().getType();
 								Term t = app.getArguments().get(i);
 								if (pj.getAssume() != null && pj.getAssume().equals(j.getAssume())) t = Term.wrapWithLambdas(abs,t);
-								ClauseUse u = asClause(t);
-								prettyPrint(sb,u,false, 0);
+								try {
+									ClauseUse u = asClause(t);
+									prettyPrint(sb,u,false, 0);
+								} catch (PrintException ex) {
+									sb.append("// " + t);
+								}
 								sb.append('\n');
 							}
 						}

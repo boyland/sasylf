@@ -22,9 +22,10 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.sasylf.Activator;
 import org.sasylf.Marker;
 import org.sasylf.Proof;
-import org.sasylf.util.Cell;
 import org.sasylf.util.IProjectStorage;
 import org.sasylf.util.ResourceStorage;
 
@@ -39,24 +40,16 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	/// Registration of the builder with the project
 	// For some reason Eclipse doesn't make this information easy to get, 
 	// so we do it ourselves:
-	private static ConcurrentMap<IProject,Object> builders = new ConcurrentHashMap<IProject,Object>();
+	private static ConcurrentMap<IProject,ProofBuilder> builders = new ConcurrentHashMap<>();
 
 	@Override
 	protected void startupOnInitialize() {
 		// System.out.println("Registering proof builder for " + this.getProject());
 		super.startupOnInitialize();
-		Object previous = builders.put(this.getProject(), this);
-		if (previous instanceof Cell<?>) {
-			// System.out.println("Oops, people are waiting...");
-			synchronized(previous) {
-				@SuppressWarnings("unchecked")
-				Cell<Boolean> bcell = (Cell<Boolean>)previous;
-				bcell.set(true);
-				bcell.notifyAll();
-			}
-			// System.out.println("Everyone should be notified: " + this.getProject());
+		ProofBuilder old = builders.put(this.getProject(), this);
+		if (old instanceof ProofBuilderProxy) {
+			System.out.println("Replaced proxy for " + this.getProject());
 		} else {
-			// System.out.println("Making sure we have an initial build");
 			forceInitialBuild(getProject());
 		}
 	}
@@ -75,33 +68,26 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 			e1.printStackTrace();
 			return;
 		}
-		if (builders.putIfAbsent(project, new Cell<Boolean>(false)) == null) {
+		ProofBuilder pb = builders.get(project);
+		if (pb != null) return;
+		
+		// The use of proxy obviates "doWait"
+		// The old implementation was liable to deadlock.
+		if (builders.putIfAbsent(project, new ProofBuilderProxy(project)) == null) {
+			System.out.println("Using a proxy for " + project);
 			forceInitialBuild(project);
-		}
-		if (!doWait) return;
-		Object x;
-		while ((x = builders.get(project)) instanceof Cell<?>) {
-			// System.out.println("still a cell?");
-			@SuppressWarnings("unchecked")
-			Cell<Boolean> bcell = (Cell<Boolean>)x;
-			// System.out.println("Synching on " + bcell);
-			synchronized (bcell) {
-				while (!bcell.get()) {
-					try {
-						// System.out.println("waiting ...");
-						bcell.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						Thread.currentThread().interrupt();
-						return;
-					}
-				}
-			}
+		} else {
+			// Race because we just checked and a builder wasn't
+			// registered for the project yet, but
+			// Harmless because we created a proxy that will never be used
+			// and will be immediately garbage.
+			System.out.println("Harmless race condition finding builder for " + project);
 		}
 	}
 
 	/**
-	 * @param project
+	 * We ask Eclipse to do a build for this project.
+	 * @param project project to force a build for
 	 */
 	public static void forceInitialBuild(final IProject project) {
 		Job initialBuild = new Job("initial SASyLF build for " + project) {
@@ -136,16 +122,16 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	public static ProofBuilder getProofBuilder(IProject p) {
 		// System.out.println("getProofBuilder(" + p + ")");
 		ensureBuilding(p, true);
-		ProofBuilder pb = (ProofBuilder)builders.get(p);
+		ProofBuilder pb = builders.get(p);
 		// System.out.println("pb = " + pb);
 		return pb;
 	}
 
 	public void dispose() {
-		builders.remove(this.getProject());
+		builders.remove(this.getProject(),this);
 	}
 
-	private ProjectModuleFinder moduleFinder;
+	protected ProjectModuleFinder moduleFinder;
 	public ProjectModuleFinder getModuleFinder() {
 		if (moduleFinder == null) {
 			moduleFinder = new ProjectModuleFinder(this.getProject());
@@ -228,6 +214,11 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		return null;
 	}
 
+	/**
+	 * Indicate that the proof associated with the resource
+	 * needs to be re-checked.  This can take time.
+	 * @param res resource for the proof.
+	 */
 	public void forceBuild(IResource res) {
 		ModuleId id = getId(res);
 		if (id == null) return;
@@ -389,4 +380,75 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		// System.out.println("Proof folder is " + result);
 		return result;
 	}
+}
+
+class ProofBuilderProxy extends ProofBuilder {
+	private final IProject project;
+	ProofBuilderProxy(IProject p) {
+		project = p;
+	}
+	
+	ProofBuilder resolve() {
+		ProofBuilder pb = ProofBuilder.getProofBuilder(project);
+		if (pb instanceof ProofBuilderProxy) return null;
+		return pb;
+	}
+	
+	ProofBuilder resolveOrError() throws CoreException {
+		ProofBuilder pb = resolve();
+		if (pb == null) {
+			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "No SASyLF Proof Builder created for " + project));
+		}
+		return pb;
+	}
+	
+	@Override
+	public ProjectModuleFinder getModuleFinder() {
+		ProofBuilder pb = resolve();
+		if (pb != null) return pb.getModuleFinder();
+		// have to duplicate code here because getProject is final
+		if (moduleFinder == null) {
+			moduleFinder = new ProjectModuleFinder(project);
+		}
+		return moduleFinder;
+	}
+	
+	@Override
+	protected IProject[] build(int kind, Map<String, String> args,
+			IProgressMonitor monitor) throws CoreException {
+		return resolveOrError().build(kind,args,monitor);
+	}
+	
+	@Override
+	protected void fullBuild(IProgressMonitor monitor) throws CoreException {
+		resolveOrError().fullBuild(monitor);
+	}
+	
+	@Override
+	protected void incrementalBuild(IResourceDelta delta,
+			IProgressMonitor monitor) throws CoreException {
+		resolveOrError().incrementalBuild(delta, monitor);
+	}
+	
+	@Override
+	protected void clean(IProgressMonitor monitor) throws CoreException {
+		resolveOrError().clean(monitor);
+	}
+
+	@Override
+	public void forceBuild(IResource res) {
+		ProofBuilder pb = resolve();
+		if (pb != null) {
+			pb.forceBuild(res);
+			return;
+		}
+		MessageDialog.openWarning(null, "SASyLF Proof Check", "This project's builder has not yet been set up.");
+		super.forceBuild(res);
+	}
+
+	@Override
+	public String toString() {
+		return ("ProofBuilderProxy(" + project + ")");
+	}
+
 }

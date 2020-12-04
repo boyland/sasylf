@@ -1,0 +1,43 @@
+package regression;
+
+terminals fn A
+    
+syntax
+  t ::= x
+     | fn x => t[x]
+     | t t
+     
+  T ::= A
+     | T -> T
+     
+  Gamma ::= *
+         | Gamma, x:T
+         
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+  -------------------- T-Var
+  Gamma, x:T |- x : T
+  
+  Gamma, x:T |- t[x] : T'
+  ------------------------------- T-Abs
+  Gamma |- fn x => t[x] : T -> T'
+  
+  Gamma |- t1 : T -> T'
+  Gamma |- t2 : T
+  ---------------------- T-App
+  Gamma |- t1 t2 : T'
+  
+lemma bad:
+    assumes Gamma
+    forall d: Gamma, x:T |- t[x] : A
+    exists Gamma, x':T->T, x:T |- t[x'] : A.
+    proof by weakening on d //! Should not be allowed
+end lemma
+
+lemma impossible:
+    exists contradiction.
+    d1: *, x:A |- x:A by rule T-Var
+    d2: *, x': A->A, x:A |- x':A by weakening on d1 //! should not be allowed.
+    proof by contradiction on d2
+end lemma

@@ -38,6 +38,7 @@ ADDTESTS= \
 	examples/and.slf \
 	examples/cut-elimination.slf \
 	examples/featherweight-java.slf \
+	examples/iso-recursive-sub.slf \
 	examples/lambda-loc.slf \
 	examples/lambda-unicode.slf \
 	examples/lambda.slf \

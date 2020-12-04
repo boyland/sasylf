@@ -4,7 +4,6 @@ import org.eclipse.jface.text.DefaultTextHover;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextHover;
-import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.formatter.ContentFormatter;
@@ -18,14 +17,15 @@ import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
+import org.sasylf.editors.SASyLFColorProvider.TokenColorClass;
 
 
 
 public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 
 	static class SingleTokenScanner extends BufferedRuleBasedScanner {
-		public SingleTokenScanner (TextAttribute attribute) {
-			setDefaultReturnToken(new Token (attribute));
+		public SingleTokenScanner (Token defToken) {
+			setDefaultReturnToken(defToken);
 		}   
 	}
 
@@ -43,7 +43,7 @@ public class ProofViewerConfiguration extends TextSourceViewerConfiguration {
 		reconciler.setDamager (dr, IDocument.DEFAULT_CONTENT_TYPE);
 		reconciler.setRepairer (dr, IDocument.DEFAULT_CONTENT_TYPE);
 
-		dr = new DefaultDamagerRepairer (new SingleTokenScanner(new TextAttribute (provider.getColor(SASyLFColorProvider.MULTI_LINE_COMMENT))));
+		dr = new DefaultDamagerRepairer (new SingleTokenScanner(provider.createToken(null, TokenColorClass.MultiLineComment)));
 		reconciler.setDamager (dr, "__java_multiline_comment");
 		reconciler.setRepairer (dr, "__java_multiline_comment");
 		return reconciler;

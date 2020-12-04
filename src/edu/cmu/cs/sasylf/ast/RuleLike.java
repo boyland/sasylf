@@ -46,10 +46,19 @@ public abstract class RuleLike extends Node implements Named {
 	}
 
 	/**
+	 * Return the type that this rule-like is creating.
+	 * (This method should only be called once).
+	 * @return the constant type that this rule-like creates terms for.
+	 */
+	protected Constant getRuleAppBase() {
+		return Const(getName() + "BASE", Constant.TYPE);
+	}
+	
+	/**
 	 * Create the typed constant for this rule.
 	 */
 	protected void createRuleAppConstant() {
-		Term typeTerm = Const(getName() + "BASE", Constant.TYPE);
+		Term typeTerm = getRuleAppBase();
 		List<Term> argTypes = new ArrayList<Term>();
 
 		for (int i = 0; i < getPremises().size(); ++i) {

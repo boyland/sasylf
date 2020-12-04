@@ -482,6 +482,12 @@
             id="org.sasylf.preferences.PreferencePage"
             name="SASyLF Preferences">
       </page>
+      <page
+            name="Colors"
+            category="org.sasylf.preferences.PreferencePage"
+            class="org.sasylf.preferences.PreferencePageColors"
+            id="org.sasylf.preferences.PreferencePageColors">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
