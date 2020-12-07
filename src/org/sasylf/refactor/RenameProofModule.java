@@ -1,6 +1,7 @@
 package org.sasylf.refactor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -8,6 +9,7 @@ import java.util.function.Consumer;
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -16,7 +18,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
@@ -55,9 +57,11 @@ public class RenameProofModule extends RenameParticipant {
 	protected boolean initialize(Object element) {
 		RenameArguments args = super.getArguments();
 		newName = args.getNewName();
-		change = new CompositeChange("Rename Proof Module"); // better name??
+		change = new CompositeChange("Rename Proof Module");
 		if (element instanceof IFile) {
 			proofFile = (IFile)element;
+			String name = proofFile.getName();
+			oldName = name.substring(0, name.length() - 4);
 			// System.out.println("Participating in renaming " + element);
 			newProofFile = proofFile.getParent().getFile(new Path(newName));
 			return true;
@@ -97,6 +101,7 @@ public class RenameProofModule extends RenameParticipant {
 	{
 		IPath fullPath = file.getFullPath();
 		TextFileChange result = new TextFileChange("rename module", newProofFile);
+		SubMonitor sub = SubMonitor.convert(pm);
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
 		pm.beginTask("Check Rename Module", 100);
@@ -112,18 +117,17 @@ public class RenameProofModule extends RenameParticipant {
 			}
 			pm.worked(10);
 			manager = FileBuffers.getTextFileBufferManager();
-			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			manager.connect(fullPath, LocationKind.IFILE, sub);
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
 			createModuleRenameChange(file,newModuleName,document,result, status);
 			document.getLineInformation(1);
 			pm.worked(40);
-			//checkDependencies(pm, status);
 		} catch (BadLocationException e) {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
 			if (connected) {
-				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+				manager.disconnect(fullPath, LocationKind.IFILE, sub);
 			}
 		}
 		return result; 
@@ -139,9 +143,8 @@ public class RenameProofModule extends RenameParticipant {
 		if (cu != null) {
 			moduleLoc = getModuleLocation(doc, cu);
 			String text = doc.get(moduleLoc.getOffset(), moduleLoc.getLength());
-			//System.out.println("Text: " + text);
-			if (!text.equals("module")) {
-				System.out.println("expected 'module', found '" + text + "'");
+			if (!text.equals("module")) {	// nothing to change within document
+				//System.out.println("expected 'module', found '" + text + "'");
 				return;
 			}
 		} else {
@@ -163,13 +166,13 @@ public class RenameProofModule extends RenameParticipant {
 		}
 		IRegion nameLoc = new Region(offset,length);
 
-		oldName = doc.get(offset, length);
+		String name = doc.get(offset, length);
 
-		if (oldName.equals(newModuleName)) {
+		if (name.equals(newModuleName)) {
 			// no change needed
 			return;
 		}
-		System.out.println("Replacing " + oldName + " with " + newModuleName);
+		System.out.println("Replacing " + name + " with " + newModuleName);
 
 		createEdit(newModuleName, result, nameLoc);
 	}
@@ -181,10 +184,11 @@ public class RenameProofModule extends RenameParticipant {
 		IPath fullPath = file.getFullPath();
 		ITextFileBufferManager manager = null;
 		boolean connected = false;
+		SubMonitor sub = SubMonitor.convert(pm);
 		try {
 			pm.worked(10);
 			manager = FileBuffers.getTextFileBufferManager();
-			manager.connect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+			manager.connect(fullPath, LocationKind.IFILE, sub);
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
 			createModulePartRenameChange(file,document,status);
@@ -194,7 +198,7 @@ public class RenameProofModule extends RenameParticipant {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
 		} finally {
 			if (connected) {
-				manager.disconnect(fullPath, LocationKind.IFILE, new SubProgressMonitor(pm, 25));
+				manager.disconnect(fullPath, LocationKind.IFILE, sub);
 			}
 		}
 	}
@@ -205,32 +209,37 @@ public class RenameProofModule extends RenameParticipant {
 
 	private void createModulePartRenameChange(IFile file, IDocument doc, 
 			RefactoringStatus status) throws BadLocationException {
-		System.out.println("Document: " + doc);
 		// first see if we can get a CompUnit:
 		CompUnit cu = Proof.getCompUnit(file);
 		if (cu == null) {
 			status.addWarning("proof file is not syntactically legal; module name may be mislocated");
 		}
+		IContainer proofFolder = proofFile.getParent();
+		IPath proofPath = ProofBuilder.getProofFolderRelativePath(proofFolder);
+		String[] proofPackage = proofPath.segments();
 		IRegion moduleLoc = null;
 		String newModuleName = getNewName();
 		if (cu != null) {
 			List<QualName> qualNames = new ArrayList<>();
 			Consumer<QualName> consumer = name -> {
-				//Object o = name.resolve(null);
 				if (name.getLastSegment().equals(oldName)) {
-					System.out.println("Matched name " + name);
-					qualNames.add(name);
+					QualName source = name.getSource();
+					if (source != null) {
+						Object o = source.resolve(null);
+						if (o instanceof String[] && Arrays.equals(proofPackage, (String[]) o)) {
+							qualNames.add(name);
+						}
+					}
 				}
 			};
 
 			cu.collectQualNames(consumer);
-			System.out.println("Done finding qual names in this file!");
 
 			for (int i = qualNames.size() - 1; i >= 0; --i) {
 				QualName name = qualNames.get(i);
 				TextFileChange result = new TextFileChange("rename module part", file);
 				moduleLoc = getModuleLocation(doc, name);
-				
+
 				int offset = moduleLoc.getOffset();
 				int length = moduleLoc.getLength();
 
@@ -249,9 +258,8 @@ public class RenameProofModule extends RenameParticipant {
 	private void createEdit(String newModuleName, TextFileChange result,
 			IRegion moduleLoc) {
 		TextEdit edit = new ReplaceEdit(moduleLoc.getOffset(),moduleLoc.getLength(),newModuleName);
-		Context.updateVersion();	// added this to Context instead of QualName because QualName gets overwritten
+		Context.updateVersion();
 
-		// System.out.println("edit is " + edit);
 		result.setEdit(edit);  
 	}
 
@@ -269,7 +277,7 @@ public class RenameProofModule extends RenameParticipant {
 
 		int length = qn.getLastSegment().length();
 		int offset = line.getOffset() + loc.getColumn() - length - 1;
-		
+
 		return new Region(offset, length);
 	}
 
@@ -284,7 +292,6 @@ public class RenameProofModule extends RenameParticipant {
 		Set<ModuleId> dependencies = moduleFinder.getDependencies(id);
 
 		for (ModuleId dependency : dependencies) {
-			System.out.println("IFile: " + pb.getResource(dependency));
 			createDependencyChanges(pb.getResource(dependency), pm, status);
 		}
 
