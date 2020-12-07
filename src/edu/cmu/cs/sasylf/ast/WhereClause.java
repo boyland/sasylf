@@ -77,7 +77,12 @@ public class WhereClause extends Node {
 
 			// parse the LHS; should either be a NonTerminal or a Binding
 			Element lhsElement = userWC.first.typecheck(ctx);
-			
+			try {
+				lhsElement.checkBindings(ctx.bindingTypes, userWC.first);
+			} catch (SASyLFError e) {
+				// already reported
+				// continue nextUserClause; // can't do because otherwise checkWhereClause gets strange errors
+			}
 			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
 			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
 				ErrorHandler.recoverableError(
@@ -409,7 +414,7 @@ public class WhereClause extends Node {
 				int i = suggestion.indexOf("assumes"); // don't print "assumes ..."
 				if (i != -1)
 					suggestion = suggestion.substring(0, i - 1);
-				
+
 				ErrorHandler.recoverableError(
 					"Right-hand side of where clause for " + matchingVar + " is incorrect. " +
 					"Should be: " + suggestion, userWC.second
