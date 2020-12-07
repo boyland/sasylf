@@ -220,7 +220,7 @@ public class MoveProofFile extends MoveParticipant {
 			manager.connect(fullPath, LocationKind.IFILE, sub);
 			connected = true;
 			IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
-			createPackageReplaceChangeModule(fileName,document,status,oldPackage);
+			createPackageReplaceChangeModule(fileName,document,status,oldPackage, oldPath);
 			document.getLineInformation(1);
 		} catch (BadLocationException e) {
 			status.addWarning("couldn't change package info: internal error " + e.getMessage());
@@ -233,7 +233,7 @@ public class MoveProofFile extends MoveParticipant {
 	}
 
 	private void createPackageReplaceChangeModule(IFile file, IDocument doc, 
-			RefactoringStatus status, String oldPackage) throws BadLocationException {
+			RefactoringStatus status, String oldPackage, IPath oldPath) throws BadLocationException {
 		// first see if we can get a CompUnit:
 		CompUnit cu = Proof.getCompUnit(file);
 		if (cu == null) {
@@ -243,7 +243,7 @@ public class MoveProofFile extends MoveParticipant {
 		if (cu != null) {
 			String fileName = proofFile.getName();
 			String movedFile = fileName.substring(0, fileName.length() - 4);
-			String[] old = oldPackage.split("\\.");
+			String[] old = oldPath.segments();
 			
 			List<QualName> qualNames = new ArrayList<>();
 			Consumer<QualName> consumer = name -> {

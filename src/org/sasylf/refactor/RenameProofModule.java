@@ -40,7 +40,6 @@ import org.sasylf.project.ProofBuilder;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Node;
-import edu.cmu.cs.sasylf.ast.PackageDeclaration;
 import edu.cmu.cs.sasylf.ast.QualName;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.Location;
@@ -217,7 +216,7 @@ public class RenameProofModule extends RenameParticipant {
 		}
 		IContainer proofFolder = proofFile.getParent();
 		IPath proofPath = ProofBuilder.getProofFolderRelativePath(proofFolder);
-		String[] proofPackage = PackageDeclaration.toString(proofPath.segments()).split("\\.");
+		String[] proofPackage = proofPath.segments();
 		IRegion moduleLoc = null;
 		String newModuleName = getNewName();
 		if (cu != null) {
