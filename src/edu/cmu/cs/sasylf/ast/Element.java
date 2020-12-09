@@ -1,7 +1,11 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.util.*;
-import java.io.*;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
@@ -9,6 +13,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /*
  * Concrete subclasses include Clause, Terminal, NonTerminal, Variable, and Binding
@@ -74,7 +79,7 @@ public abstract class Element extends Node {
 	 * @param defining true if this element is a defining occurrence.
 	 */
 	void checkVariables(Set<String> bound, boolean defining) {}
-	public Term getTypeTerm() { throw new UnsupportedOperationException(this.getClass().toString()); }
+	public Term getTypeTerm() { return getType().typeTerm(); }
 	protected abstract Term computeTerm(List<Pair<String, Term>> varBindings);
 
 	/**
