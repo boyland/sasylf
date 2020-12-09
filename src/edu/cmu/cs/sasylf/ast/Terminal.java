@@ -32,6 +32,10 @@ public class Terminal extends Element implements ElemType {
 	public String getTerminalSymbolString() { return getSymbol(); }
 	public String getSymbol() { return symbol; }
 
+	public boolean mustQuote() {
+		return mustQuote;
+	}
+	
 	public void setMustQuote() {
 		mustQuote = true;
 	}
@@ -86,6 +90,7 @@ public class Terminal extends Element implements ElemType {
 		return e instanceof Terminal && ((Terminal)e).symbol.equals(s);
 	}
 	
+	@Override
 	public Term typeTerm() {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
