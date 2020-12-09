@@ -610,7 +610,9 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			}*/
 			ErrorHandler.report("internal error: not sure what to do with null ClauseUse on " + newElements, this);
 		}
-		return new ClauseUse(getLocation(), newElements, cd);
+		Location loc = getLocation();
+		if (!newElements.isEmpty()) loc = newElements.get(0).getLocation();
+		return new ClauseUse(loc, newElements, cd);
 	}
 
 
