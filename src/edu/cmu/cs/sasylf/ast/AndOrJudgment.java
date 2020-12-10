@@ -1,9 +1,13 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.IdentityArrayMap;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
@@ -13,14 +17,142 @@ import edu.cmu.cs.sasylf.util.Util;
  * Common superclass for and/or judgments.
  */
 public abstract class AndOrJudgment extends Judgment {
+	public static class OpTerminal extends Terminal {
+		public OpTerminal(String op, Span loc) {
+			super("'"+op+"'",loc);
+		}
+	
+		@Override
+		public void prettyPrint(PrintWriter out, PrintContext ctx) {
+			out.print(getOpName());
+		}
+
+		/**
+		 * Return the operator name for this terminal
+		 * @return string of the operation
+		 */
+		public String getOpName() {
+			final String qopq = super.getName();
+			return qopq.substring(1,qopq.length()-1);
+		}
+	
+	}
+
+	/**
+	 * Create the name for an and/or judgment. 
+	 * @param op operation (either "and" or "or")
+	 * @param parts judgments being joined.
+	 * @return name formed from operator and names of judgments.
+	 */
+	protected static String makeName(String op, List<Judgment> parts) {
+		StringBuilder sb = new StringBuilder(op);
+		sb.append("[");
+		boolean first = true;
+		for (Judgment j : parts) {
+			if (first) first = false; else sb.append(',');
+			sb.append(j.getName());
+		}
+		sb.append(']');
+		return sb.toString();
+	}
+
+	protected static Clause makeForm(String op, Location l, List<Judgment> parts) {
+		Clause result = new Clause(l);
+		boolean started = false;
+		NonTerminal context = null;
+		for (Judgment j : parts) {
+			if (started) result.getElements().add(new OpTerminal(op, l));
+			else started = true;
+			for (Element e : j.getForm().getElements()) {
+				if (e instanceof NonTerminal && ((NonTerminal)e).getType().isInContextForm()) {
+					if (context == null) {
+						context = (NonTerminal)e;
+					} else {
+						if (!context.equals(e)) {
+							ErrorHandler.report("All contexts in an '"+op+"' judgment must be the same", l);
+						}
+					}
+				}
+				result.getElements().add(e);
+			}
+		}
+		return result;
+	}
+
+	protected static NonTerminal findAssume(Location loc, List<Judgment> parts) {
+		NonTerminal result = null;
+		for (Judgment j : parts) {
+			NonTerminal a = j.getAssume();
+			if (a != null) {
+				if (result == null) result = a;
+				else if (!result.equals(a)) {
+					ErrorHandler.report("cannot conjoin judgments with different assumptions", loc);
+				}
+			}
+		}
+		return result;
+	}
+
 	protected List<Judgment> parts;
 
+	protected AndOrJudgment(String op, Location l, List<Judgment> parts, List<ClauseUse> uses) {
+		super(null,makeName(op,parts),new ArrayList<Rule>(),makeForm(op,l,parts),findAssume(l,parts));
+		this.parts = parts;
+		complete(l, parts, uses);
+	}
+	
 	public AndOrJudgment(Location loc, String n, List<Rule> l, Clause c,
 			NonTerminal a) {
 		super(loc, n, l, c, a);
 	}
 
 	public abstract Terminal makeSeparator(Span l);
+
+	/**
+	 * Set the rules for this And/Or Judgment
+	 * @param l location to use for the rules
+	 * @param name name of the judgment
+	 * @param premises premises for the rule(s)
+	 * @param result conclusion of the rule(s)
+	 */
+	protected abstract void setRules(Location l, String name, List<Clause> premises,
+			Clause result);
+
+	/**
+	 * Define the form and rule for this judgment.
+	 * @param l
+	 * @param parts
+	 * @param uses
+	 */
+	protected void complete(Location l, List<Judgment> parts, List<ClauseUse> uses) {
+		String name = super.getName();
+		this.parts = parts;
+		List<Clause> premises = new ArrayList<Clause>();
+		List<Element> concElems = new ArrayList<Element>();
+		ElementGenerator gen = new ElementGenerator();
+		Iterator<ClauseUse> usesIt = uses.iterator();
+		for (Judgment j : parts) {
+			ClauseUse use = usesIt.next();
+			if (!premises.isEmpty()) {
+				concElems.add(makeSeparator(l));
+			}
+			List<Element> es = new ArrayList<Element>();
+			NonTerminal root = j.getAssume();
+			Iterator<Element> useIt = use.getElements().iterator();
+			gen.forgetVariables();
+			for (Element e : j.getForm().getElements()) {
+				Element u = useIt.next();
+				Element newE = gen.makeCopy(e, u, !e.equals(root));
+				es.add(newE);
+				concElems.add(newE);
+			}
+			premises.add(new ClauseUse(l,es,(ClauseDef)j.getForm()));
+		}
+		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
+		super.setForm(cd);
+		Clause result = new ClauseUse(l,concElems,cd);
+		setRules(l, name, premises, result);
+	}
 
 	@Override
 	public void defineConstructor(Context ctx) {
@@ -32,9 +164,6 @@ public abstract class AndOrJudgment extends Judgment {
 	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		for (Rule r : this.getRules()) {
-			r.typecheck(ctx, this);
-		}
 		for (Judgment j : getJudgments()) {
 			Util.debug("subordination: ", j.typeTerm(), " < ", typeTerm());
 			FreeVar.setAppearsIn(j.typeTerm(), typeTerm());

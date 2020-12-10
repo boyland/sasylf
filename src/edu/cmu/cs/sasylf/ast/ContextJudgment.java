@@ -2,13 +2,10 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import edu.cmu.cs.sasylf.term.Constant;
-import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SingletonList;
@@ -31,38 +28,35 @@ public class ContextJudgment extends Judgment {
 	private final Judgment base;
 	private final ClauseDef context;
 	
-	private ContextJudgment(Location loc, Judgment b, ClauseDef assume) {
-		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,assume),assume.getAssumeIndex() >= 0 ? b.getAssume() : null);
+	private ContextJudgment(Location loc, Judgment b, ClauseUse use, ClauseDef assume, ClauseUse assumeUse) {
+		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,use,assume,assumeUse),assume.getAssumeIndex() >= 0 ? b.getAssume() : null);
 		base = b;
 		context = assume;
 		NonTerminal root = b.getAssume();
-		int u = 0;
+		ElementGenerator gen = new ElementGenerator();
 		List<Element> premElems = new ArrayList<>();
 		List<Element> concElems = new ArrayList<>();
 		List<Element> contextElems = new ArrayList<>();
+		Iterator<Element> useIt = assumeUse.elements.iterator();
 		for (Element e : assume.getElements()) {
-			if (e instanceof NonTerminal && !e.equals(root)) {
-				SyntaxDeclaration s = ((NonTerminal)e).getType();
-				NonTerminal gen = new NonTerminal(s.toString()+ ++u,loc);
-				gen.setType(s);
-				contextElems.add(gen);
+			Element u = useIt.next();
+			if (e.equals(root)) {
+				contextElems.add(gen.makeCopy(e, u, false));
 			} else {
-				contextElems.add(e);
+				contextElems.add(gen.makeCopy(e, u, true)); 
 			}
 		}
+		gen.useVariableDependencies();
+		useIt = use.elements.iterator();
 		for (Element e : b.getForm().getElements()) {
+			Element u = useIt.next();
 			if (e.equals(root)) {
 				concElems.addAll(contextElems);
-				premElems.add(new ClauseUse(loc,new ArrayList<>(contextElems),context));
-			} else if (e instanceof NonTerminal) {
-				SyntaxDeclaration s = ((NonTerminal)e).getType();
-				NonTerminal gen = new NonTerminal(s.toString()+ ++u,loc);
-				gen.setType(s);
-				concElems.add(gen);
-				premElems.add(e);
+				premElems.add(new ClauseUse(u.getLocation(),new ArrayList<>(contextElems),context));
 			} else {
-				concElems.add(e);
-				premElems.add(e);
+				Element copy = gen.makeCopy(e, u, true);
+				concElems.add(copy);
+				premElems.add(copy);
 			}
 		}
 		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
@@ -76,31 +70,24 @@ public class ContextJudgment extends Judgment {
 		return base.getName() + "+" + context.getConstructorName();
 	}
 	
-	private static Clause makeForm(Location l, Judgment base, ClauseDef assume) {
+	private static Clause makeForm(Location l, Judgment base, ClauseUse use, ClauseDef assume, ClauseUse assumeUse) {
 		Clause result = new Clause(l);
 		List<Element> elems = result.getElements();
-		Set<Variable> vars = new LinkedHashSet<>();
+		ElementGenerator gen = new ElementGenerator();
+		List<Element> assumeElems = new ArrayList<>();
+		Iterator<Element> useIt = assumeUse.getElements().iterator();
 		for (Element e : assume.getElements()) {
-			if (e instanceof Variable) vars.add((Variable)e);
+			Element u = useIt.next();
+			assumeElems.add(gen.makeCopy(e, u, false));
 		}
+		gen.useVariableDependencies();
+		useIt = use.getElements().iterator();
 		for (Element e : base.getForm().getElements()) {
+			Element u = useIt.next();
 			if (e.equals(base.getAssume())) {
-				for (Element a : assume.getElements()) {
-					elems.add(a);
-				}
-			} else if (e instanceof NonTerminal) {
-				Constant c = e.getType().typeTerm().baseTypeFamily();
-				List<Element> bound = new ArrayList<>();
-				for (Variable v : vars) {
-					Constant cv = v.getType().typeTerm().baseTypeFamily();
-					boolean occur = FreeVar.canAppearIn(cv, c);
-					Util.debug("Checking if ",v," (",cv,") can occur in ",e," (",c,"): ",occur);
-					if (occur) bound.add(v);
-				}
-				if (bound.isEmpty()) elems.add(e);
-				else elems.add(new Binding(l,(NonTerminal) e,bound,l));
+				elems.addAll(assumeElems);
 			} else {
-				elems.add(e);
+				elems.add(gen.makeCopy(e, u, false));
 			}
 		}
 		return result;
@@ -164,10 +151,10 @@ public class ContextJudgment extends Judgment {
 
 	private static Map<Pair<Judgment,ClauseDef>,ContextJudgment> cache = new HashMap<>();
 	
-	public static ContextJudgment create(Location loc, Context ctx, Judgment base, ClauseDef context) {
+	public static ContextJudgment create(Location loc, Context ctx, Judgment base, ClauseUse use, ClauseDef context, ClauseUse contextUse) {
 		ContextJudgment result = cache.get(Pair.create(base,context));
 		if (result != null) return result;
-		result = new ContextJudgment(loc, base, context);
+		result = new ContextJudgment(loc, base, use, context, contextUse);
 		result.defineConstructor(ctx);
 		result.typecheck(ctx);
 		cache.put(Pair.create(base, context),result);
@@ -186,12 +173,12 @@ public class ContextJudgment extends Judgment {
 	 * @param context assumption to generate context judgments for
 	 * @return judgment that takes into account all the context beyond the prefix
 	 */
-	public static Judgment create(Location loc, Context ctx, Judgment base, Element prefix, Element context) {
+	public static Judgment create(Location loc, Context ctx, Judgment base, ClauseUse use, Element prefix, Element context) {
 		Judgment result = base;
 		while (context != prefix && !context.equals(prefix)) {
 			ClauseUse cu = (ClauseUse)context;
 			ClauseDef form = cu.getConstructor();
-			result = create(loc, ctx, result, form);
+			result = create(loc, ctx, result, use, form, cu);
 			context = cu.getAssumes();
 		}
 		return result;

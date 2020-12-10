@@ -68,10 +68,10 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			if (context.equals(prefix)) continue;
 			if (!j.getAssume().equals(assumption)) {
 				Util.verify(cu.getRoot() == null, "This was checked already.");
-				j = ContextJudgment.create(getLocation(), ctx, j, null, context);
+				j = ContextJudgment.create(getLocation(), ctx, j, cu, null, context);
 				cu = ContextJudgment.convert(cu, null);
 			} else {
-				j = ContextJudgment.create(getLocation(), ctx, j, prefix, context);
+				j = ContextJudgment.create(getLocation(), ctx, j, cu, prefix, context);
 				cu = ContextJudgment.convert(cu, prefix);				
 			}
 			Util.debug("converted: ",cu);
@@ -89,10 +89,10 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		}
 		AndOrClauseUse result;
 		if (this instanceof AndClauseUse) {
-			ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(sp.getLocation(), ctx, types).getForm();
+			ClauseDef cd = (ClauseDef)AndJudgment.makeAndJudgment(sp.getLocation(), ctx, types, clauses).getForm();
 			result = new AndClauseUse(sp.getLocation(),newElements,cd,clauses);
 		} else {
-			ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(sp.getLocation(), ctx, types).getForm();
+			ClauseDef cd = (ClauseDef)OrJudgment.makeOrJudgment(sp.getLocation(), ctx, types, clauses).getForm();
 			result = new OrClauseUse(sp.getLocation(),newElements,cd,clauses);
 		}
 		result.setEndLocation(sp.getEndLocation());

@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import edu.cmu.cs.sasylf.ast.AndJudgment.AndTerminal;
-import edu.cmu.cs.sasylf.ast.OrJudgment.OrTerminal;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -623,10 +621,8 @@ public class TermPrinter {
 		}
 		if (e instanceof NonTerminal || e instanceof Variable) {
 			sb.append(e.toString());
-		} else if (e instanceof AndTerminal) {
-			sb.append("and");
-		} else if (e instanceof OrTerminal) {
-			sb.append("or");
+		} else if (e instanceof AndOrJudgment.OpTerminal) {
+			sb.append(((AndOrJudgment.OpTerminal)e).getOpName());
 		} else if (e instanceof Terminal) {
 			String str = ((Terminal)e).getTerminalSymbolString();
 			if (isTerminal(str)) {
@@ -656,7 +652,7 @@ public class TermPrinter {
 				if (i > 0 && insertSpace(lastTerminal, thisTerminal)) sb.append(' ');
 				prettyPrint(sb,e2,true, level+1);
 				lastTerminal = thisTerminal;
-				if (e2 instanceof AndTerminal && !parenthesize) {
+				if (e2 instanceof AndOrJudgment.OpTerminal && !parenthesize) {
 					sb.append(" _:");
 					lastTerminal = null;
 				}

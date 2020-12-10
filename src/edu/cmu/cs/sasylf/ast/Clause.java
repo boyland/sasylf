@@ -382,13 +382,13 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			else if (t == GrmUtil.getRightParen()) --parens;
 			if (parens > 0) continue;
 			Element elem = t.getElement();
-			if (elem instanceof AndJudgment.AndTerminal) {
-				hasAnd = true;
-				if (hasNot) {
-					ErrorHandler.report("ambiguous use of 'not'",this);
+			if (elem instanceof AndOrJudgment.OpTerminal) {
+				switch (((AndOrJudgment.OpTerminal)elem).getOpName()) {
+				case "and": hasAnd = true; break;
+				case "or": hasOr = true; break;
+				default:
+					ErrorHandler.report(Errors.INTERNAL_ERROR, "Unknown operator: " + elem, elem);
 				}
-			} else if (elem instanceof OrJudgment.OrTerminal) {
-				hasOr = true;
 				if (hasNot) {
 					ErrorHandler.report("ambiguous use of 'not'",this);
 				}
@@ -412,8 +412,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (t == GrmUtil.getLeftParen()) ++parens;
 				else if (t == GrmUtil.getRightParen()) --parens;
 				if (parens == 0 &&
-						(t.getElement() instanceof AndJudgment.AndTerminal ||
-								t.getElement() instanceof OrJudgment.OrTerminal)) {
+						(t.getElement() instanceof AndOrJudgment.OpTerminal ||
+								t.getElement() instanceof OrJudgment.OpTerminal)) {
 					symLists.add(aList);
 					aList = new ArrayList<GrmTerminal>();
 					sepList.add(t);

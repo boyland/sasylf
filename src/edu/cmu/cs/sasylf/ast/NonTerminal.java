@@ -145,7 +145,7 @@ public class NonTerminal extends Element {
 			if (syn != null) {
 				nt.setType(syn);
 			} else if (nt.getSymbol().equals("or")) {
-				e = new OrJudgment.OrTerminal(this);
+				e = new AndOrJudgment.OpTerminal("or", this);
 			} else if (nt.getSymbol().equals("not")) {
 				e = new NotJudgment.NotTerminal(this);
 			} else {

@@ -78,6 +78,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 		out.println("\n");
 	}
+
 	public Set<Terminal> getTerminals() {
 		return form.getTerminals();
 	}

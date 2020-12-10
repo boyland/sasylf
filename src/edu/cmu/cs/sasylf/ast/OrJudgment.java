@@ -1,31 +1,17 @@
 package edu.cmu.cs.sasylf.ast;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class OrJudgment extends AndOrJudgment {
-	public static class OrTerminal extends Terminal {
-		public OrTerminal(Span loc) {
-			super("'or'",loc);
-		}
-
-		@Override
-		public void prettyPrint(PrintWriter out, PrintContext ctx) {
-			out.print("or");
-		}
-
-	}
-
 	private static Terminal makeOrTerminal(Span loc) {
-		return new OrTerminal(loc);
+		return new OpTerminal("or", loc);
 	}
 
 	@Override
@@ -33,44 +19,18 @@ public class OrJudgment extends AndOrJudgment {
 		return makeOrTerminal(l);
 	}
 
-
 	public static void addOr(Clause cl, Location or, Clause more) {
-		cl.getElements().add(new OrTerminal(or));
+		cl.getElements().add(makeOrTerminal(or));
 		cl.getElements().addAll(more.getElements());
 	}
 
-	private OrJudgment(Location l, List<Judgment> parts) {
-		super(null,makeName(parts),new ArrayList<Rule>(),makeForm(l,parts),findAssume(l,parts));
-		String name = super.getName();
-		this.parts = parts;
-		int u = 0;
-		List<Clause> premises = new ArrayList<Clause>();
-		List<Element> concElems = new ArrayList<Element>();
-		for (Judgment j : parts) {
-			if (!premises.isEmpty()) {
-				concElems.add(makeOrTerminal(l));
-			}
-			// concElems.add(LParenTerminal);
-			List<Element> es = new ArrayList<Element>();
-			NonTerminal root = j.getAssume();
-			for (Element e : j.getForm().getElements()) {
-				if (e instanceof NonTerminal && !e.equals(root)) {
-					SyntaxDeclaration s = ((NonTerminal)e).getType();
-					NonTerminal gen = new NonTerminal(s.toString()+ ++u,l);
-					gen.setType(s);
-					es.add(gen);
-					concElems.add(gen);
-				} else {
-					es.add(e);
-					concElems.add(e);
-				}
-			}
-			// concElems.add(RParenTerminal);
-			premises.add(new ClauseUse(l,es,(ClauseDef)j.getForm()));
-		}
-		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
-		super.setForm(cd);
-		Clause result = new ClauseUse(l,concElems,cd);
+	private OrJudgment(Location l, List<Judgment> parts, List<ClauseUse> uses) {
+		super("or",l,parts,uses);
+	}
+	
+	@Override
+	protected void setRules(Location l, String name, List<Clause> premises,
+			Clause result) {
 		int i=1;
 		for (Clause premise : premises) {
 			ArrayList<Clause> premiseList = new ArrayList<Clause>(1);
@@ -79,62 +39,8 @@ public class OrJudgment extends AndOrJudgment {
 			++i;
 			super.getRules().add(rule);
 		}
-		this.prettyPrint(new PrintWriter(System.out));
 	}
 
-	/**
-	 * Create the name for an "or" judgment for 
-	 * @param parts
-	 * @return
-	 */
-	private static String makeName(List<Judgment> parts) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("or[");
-		boolean first = true;
-		for (Judgment j : parts) {
-			if (first) first = false; else sb.append(',');
-			sb.append(j.getName());
-		}
-		sb.append(']');
-		return sb.toString();
-	}
-
-	private static Clause makeForm(Location l, List<Judgment> parts) {
-		Clause result = new Clause(l);
-		boolean started = false;
-		NonTerminal context = null;
-		for (Judgment j : parts) {
-			if (started) result.getElements().add(makeOrTerminal(l));
-			else started = true;
-			for (Element e : j.getForm().getElements()) {
-				if (e instanceof NonTerminal && ((NonTerminal)e).getType().isInContextForm()) {
-					if (context == null) {
-						context = (NonTerminal)e;
-					} else {
-						if (!context.equals(e)) {
-							ErrorHandler.report("All contexts in an 'or' judgment must be the same", l);
-						}
-					}
-				}
-				result.getElements().add(e);
-			}
-		}
-		return result;
-	}
-
-	private static NonTerminal findAssume(Location loc, List<Judgment> parts) {
-		NonTerminal result = null;
-		for (Judgment j : parts) {
-			NonTerminal a = j.getAssume();
-			if (a != null) {
-				if (result == null) result = a;
-				else if (!result.equals(a)) {
-					ErrorHandler.report("cannot conjoin judgments with different assumptions", loc);
-				}
-			}
-		}
-		return result;
-	}
 
 	private static Map<List<Judgment>,OrJudgment> cache = new HashMap<List<Judgment>,OrJudgment>();
 
@@ -144,11 +50,11 @@ public class OrJudgment extends AndOrJudgment {
 	 * @param parts list of judgments 
 	 * @return judgment that is the disjunction of the parts
 	 */
-	public static OrJudgment makeOrJudgment(Location loc, Context ctx, List <Judgment> parts) {
+	public static OrJudgment makeOrJudgment(Location loc, Context ctx, List <Judgment> parts, List<ClauseUse> uses) {
 		OrJudgment result = cache.get(parts);
 		if (result == null) {
 			parts = new ArrayList<Judgment>(parts); // defensive programming
-			result = new OrJudgment(loc,parts);
+			result = new OrJudgment(loc,parts,uses);
 			result.defineConstructor(ctx);
 			result.typecheck(ctx);
 			cache.put(parts,result);
@@ -160,7 +66,7 @@ public class OrJudgment extends AndOrJudgment {
 		List<Judgment> empty = Collections.<Judgment>emptyList();
 		OrJudgment result = cache.get(empty);
 		if (result == null) {
-			result = new OrJudgment(loc,empty);
+			result = new OrJudgment(loc,empty,Collections.emptyList());
 			cache.put(empty, result);
 		}
 		return result;
