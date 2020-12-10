@@ -125,88 +125,6 @@ lemma test:
     proof by rule S-Double on sup, supf
 end lemma
      
-     
-// A crucial lemma for reflexivity:
-// We prove that substitution preserves invariance (here simplified to equal types)
-lemma invariant-subst:
-    assumes Sigma // this lemma uses the LF context for variables
-    forall s1: Sigma |- T1 <: T1
-    forall s2: Sigma, X |- T2[X] <: T2[X]
-    exists Sigma |- T2[T1] <: T2[T1]
-    proof by induction on s2:
-        case rule
-            --------------- S-ReflVar
-            _: (Sigma, X) |- X <: X
-            where T2[X] := X
-        is
-            proof by s1
-        end case
-
-        case rule
-            --------------- S-ReflVar
-            _: Sigma', X', X |- X' <: X'
-        is
-            _: Sigma', X' |- X' <: X' by rule S-ReflVar
-        end case
-
-       case rule
-            --------------------------- S-ReflUnit
-            _: Sigma, X |- Unit <: Unit
-            where T2[X] := Unit
-        is
-            proof by rule S-ReflUnit
-        end case
-
-        case rule
-            ----------------------- S-Top
-            _: Sigma, X |- Top <: Top
-            where T2[X] := Top
-        is
-            proof by rule S-Top
-        end case
-
-        case rule
-            s21: Sigma, X |- T21[X] <: T21[X]
-            s22: Sigma, X |- T22[X] <: T22[X]
-            ----------------------------------- S-Arrow
-            _: Sigma, X |- (T21[X] -> T22[X]) <: (T21[X] -> T22[X])
-            where T2[X] := T21[X] -> T22[X]
-        is
-            s21': Sigma |- T21[T1] <: T21[T1] by induction hypothesis on s1, s21
-            s22': Sigma |- T22[T1] <: T22[T1] by induction hypothesis on s1, s22
-            proof by rule S-Arrow on s21', s22'
-        end case
-
-        case rule
-            s21: Sigma, X |- T21[X] <: T21[X]
-            s22: Sigma, X |- T22[X] <: T22[X]
-            ----------------------------------- S-Pair
-            _: Sigma, X |- (T21[X] * T22[X]) <: (T21[X] * T22[X])
-            where T2[X] := T21[X] * T22[X]
-        is
-            s21': Sigma |- T21[T1] <: T21[T1] by induction hypothesis on s1, s21
-            s22': Sigma |- T22[T1] <: T22[T1] by induction hypothesis on s1, s22
-            proof by rule S-Pair on s21', s22'
-        end case
-
-        case rule
-            s21: Sigma, X, X' |- T2'[X][X'] <: T2'[X][X']
-            s22: Sigma, X, X' |- T2'[X][T2'[X][X']] <: T2'[X][T2'[X][X']]
-            -------------------------------------------------------------- S-Double
-            _: Sigma, X |- (Rec X' . T2'[X][X']) <: (Rec X' . T2'[X][X'])
-            where T2[X] := Rec X' . T2'[X][X']
-        is
-            s21a: Sigma, X', X |- T2'[X][X'] <: T2'[X][X'] by exchange on s21
-            s22a: Sigma, X', X |- T2'[X][T2'[X][X']] <: T2'[X][T2'[X][X']] by exchange on s22
-            s1': Sigma, X' |- T1 <: T1 by weakening on s1
-            s21b: Sigma, X' |- T2'[T1][X'] <: T2'[T1][X'] by induction hypothesis on s1', s21a
-            s22b: Sigma, X' |- T2'[T1][T2'[T1][X']] <: T2'[T1][T2'[T1][X']] by induction hypothesis on s1', s22a
-            proof by rule S-Double on s21b, s22b
-        end case
-
-    end induction
-end lemma
-
       
 theorem subtype-reflexive:
     assumes Sigma
@@ -237,7 +155,7 @@ theorem subtype-reflexive:
             s1: Sigma, X |- T1[X] <: T1[X] by induction hypothesis on (T1[X] assumes Sigma, X)
             s1a: Sigma, X', X |- T1[X] <: T1[X] by weakening on s1
             s1b: Sigma, X, X' |- T1[X'] <: T1[X'] by s1a // alpha-conversion
-            s2: Sigma, X |- T1[T1[X]] <: T1[T1[X]] by lemma invariant-subst on s1, s1b
+            s2: Sigma, X |- T1[T1[X]] <: T1[T1[X]] by substitution on s1b, s1 // LF substitution (s1 for S-ReflVar)
             proof by rule S-Double on s1, s2
         end case
 
