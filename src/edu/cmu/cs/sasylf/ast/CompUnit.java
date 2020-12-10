@@ -118,10 +118,18 @@ public class CompUnit extends Node implements Module {
 	public void typecheck(Context ctx, ModuleId id) {
 		if (id != null) checkFilename(id);
 		for (Part part : params) {
-			part.typecheck(ctx);
+			try {
+				part.typecheck(ctx);
+			} catch (SASyLFError ex) {
+				// already reported
+			}
 		}
 		for (Part part : parts) {
-			part.typecheck(ctx);
+			try {
+				part.typecheck(ctx);
+			} catch (SASyLFError ex) {
+				// already reported
+			}
 		}
 	}
 

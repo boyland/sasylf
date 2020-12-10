@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.util.SASyLFError;
+
 /**
  * Syntax declarations that may be mutually recursive.
  */
@@ -52,7 +54,11 @@ public class SyntaxPart implements Part {
 	
 		// Finally, we're ready to check syntax
 		for (Syntax syn: syntax) {
-			syn.typecheck(ctx);
+			try {
+				syn.typecheck(ctx);
+			} catch (SASyLFError ex) {
+				// already reported
+			}
 		}
 	
 		// checks after syntax all defined
