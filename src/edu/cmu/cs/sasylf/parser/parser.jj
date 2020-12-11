@@ -1462,7 +1462,7 @@ CompUnit CompilationUnit() :
   }
   
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
-                  if (moduleName == null) ErrorHandler.recoverableError("'requires' legal only for explicit modules",new Location(t)); }
+                  if (moduleName == null) ErrorHandler.recoverableError(Errors.REQUIRES_IN_MODULE,new Location(t)); }
     (
       LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") )       p=Part(true) {  cu.addParameterChunk(p); }
   	)+
@@ -1470,13 +1470,13 @@ CompUnit CompilationUnit() :
    
   (t=<EXTENDS> usedModule=QualName()
     { if (firstToken == null) firstToken = t;
-      if (moduleName == null) ErrorHandler.recoverableError("'extends' legal only for explicit modules", new Location(t));
-      else ErrorHandler.recoverableError("module 'extends' not implemented yet", new Location(t)); }
+      if (moduleName == null) ErrorHandler.recoverableError(Errors.EXTENDS_IN_MODULE, new Location(t));
+      else ErrorHandler.recoverableError(Errors.EXTENDS_UNIMPLEMENTED, new Location(t)); }
   )*
    
   (t=<PROVIDES> { if (firstToken == null) firstToken = t;
-                  if (moduleName == null) ErrorHandler.recoverableError("'provides' legal only for explicit modules",new Location(t)); }
-  | { if (moduleName != null) ErrorHandler.recoverableError("Expected 'provides'", new Location(t)); }
+                  if (moduleName == null) ErrorHandler.recoverableError(Errors.PROVIDES_IN_MODULE,new Location(t)); }
+  | { if (moduleName != null) ErrorHandler.recoverableError(Errors.PROVIDES_NOT_IN_MODULE, new Location(t)); }
   )
 
   (
@@ -1614,7 +1614,7 @@ StringSpan RuleName() :
     | t=Keyword()) { s.add(t.image); }
   )*
   { if (!(notNL(t1.specialToken))) {
-  		ErrorHandler.recoverableError("Missing a rule name (must be on the same line as the ---)", new Location(t1));
+  		ErrorHandler.recoverableError(Errors.RULE_NAME_EXPECTED, new Location(t1));
   	}
   	return s; }
 }
@@ -1748,7 +1748,7 @@ Judgment JudgmentDeclaration(boolean abstractOK) :
     boolean isAbstract = t.image.equals("abstract");
     NonTerminal assume = t_assume==null ? null : getNonTerminal(t_assume);
     if (isAbstract && !rules.isEmpty()) {
-      ErrorHandler.recoverableError("abstract judgment should not have rules",rules.get(0));
+      ErrorHandler.recoverableError(Errors.JUDGMENT_ABSTRACT,rules.get(0));
     }
     return qn == null ? new Judgment(loc, name, isAbstract ? null : rules, c, assume)
                       : new RenameJudgment(loc, name, qn, rules, c, assume);
@@ -1852,7 +1852,7 @@ Clause SimpleExpr() :
 	| t=<OPERATOR>
 	  {
 	    if (!t.image.equals("{")) {
-	    	ErrorHandler.recoverableError("expected '{', not '" + t.image + "'", new Location(t));
+	    	ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_LBRACE, "'" + t.image + "'", new Location(t));
 	    }
 	    c = new Clause(new Location(t)); }
 	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <LPAREN>) 
@@ -1860,7 +1860,7 @@ Clause SimpleExpr() :
 	  t2=<OPERATOR>
 	{
 	  if (!t2.image.equals("}")) {
-	    	ErrorHandler.recoverableError("expected '}', not '" + t2.image + "'", new Location(t2));
+	    	ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_RBRACE, "'" + t2.image + "'", new Location(t2));
 	  }
 	  c.setEndLocation(new Location(t2).add(1));
 	}
@@ -1895,7 +1895,7 @@ WhereClause WhereClauses() :
       result = new WhereClause(new Location(t));
       result.add(lhs, rhs);
       if (badt != null) {
-        ErrorHandler.recoverableError("Expected ':=' in place of '" + badt.image + "'",
+        ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_COLONEQ, "'" + badt.image + "'",
                                       new StringSpan(badt));
         badt = null;
       }
@@ -1904,7 +1904,7 @@ WhereClause WhereClauses() :
   	  {
         result.add(lhs, rhs);
         if (badt != null) {
-          ErrorHandler.recoverableError("Expected ':=' in place of '" + badt.image + "'",
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_COLONEQ, "'" + badt.image + "'",
                                       new StringSpan(badt));
           badt = null;
         }
@@ -1969,7 +1969,7 @@ Derivation Derivation() :
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (of != null && !of.image.equals("of")) {
-          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF,"'inversion " + of.image + "'", new Location(of));
       }
     }
     whereClauses=WhereClauses()
@@ -2041,9 +2041,9 @@ Derivation Justification(Token startT, Clause c) :
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (of == null) {
-          ErrorHandler.recoverableError("expected 'inversion of or', not 'inversion or'",cl);
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF, "'inversion'",cl);
       } else if (!of.image.equals("of")) {
-          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF, "'inversion " + of.image + "'", new Location(of));
       }
     }
     whereClauses=WhereClauses()
@@ -2060,10 +2060,10 @@ Derivation Justification(Token startT, Clause c) :
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (cl == null) {
-          ErrorHandler.recoverableError("inversion on what?",new Location(t2));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_ON,new Location(t2));
           cl = new Clause(q.getLocation());
       } else if (of != null && !of.image.equals("of")) {
-          ErrorHandler.recoverableError("expected 'inversion of', not 'inversion " + of.image + "'", new Location(of));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF, "'inversion " + of.image + "'", new Location(of));
       }
     }
     whereClauses=WhereClauses()
@@ -2077,7 +2077,7 @@ Derivation Justification(Token startT, Clause c) :
       if (cl != null) {
           d.addArgString(cl);
       } else {
-          ErrorHandler.recoverableError("induction hypothesis on what?",new Location(t));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INDUCTION_HYPO_ON, new Location(t));
       }
     }
     ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
@@ -2140,7 +2140,7 @@ Case Case() :
 }
 {
   LOOKAHEAD(2) d=Derivation() {
-    ErrorHandler.recoverableError("need a case here",d);
+    ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_CASE,d);
     return null;
   }
   | 
@@ -2179,7 +2179,7 @@ Case Case() :
   )
     <IS>
     ( ( d=Derivation() { ca.getDerivations().add(d); } )+
-    | { ErrorHandler.recoverableError("must have at least one derivation",new Location(t)); } )
+    | { ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_DERIVATION, new Location(t)); } )
     t=<END> 
     (LOOKAHEAD(2) u=<CASE> |
      (<CASE> u=<ANALYSIS> | u=<INDUCTION> | u=<LEMMA> | u=<THEOREM>)

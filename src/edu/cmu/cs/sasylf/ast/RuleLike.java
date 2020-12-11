@@ -199,7 +199,7 @@ public abstract class RuleLike extends Node implements Named {
 		Util.verify(addedContext != null && addedContext.isEmpty(), "output parameter should be empty");
 		int n = getPremises().size();
 		if (inputs.size() != n) {
-			ErrorHandler.report(Errors.RULE_PREMISE_NUMBER, getKind()+" "+getName()+", which expects "+n, errorPoint);
+			ErrorHandler.error(Errors.RULE_PREMISE_NUMBER, getKind()+" "+getName()+", which expects "+n, errorPoint);
 		}
 
 		// For better error reporting, do a first stab at type-checking the arguments and result
@@ -208,13 +208,13 @@ public abstract class RuleLike extends Node implements Named {
 			Fact input = inputs.get(i);
 			Element actual = input.getElement();
 			if (formal.getType().typeTerm() != actual.getType().typeTerm()) {
-				ErrorHandler.report("argument #" + (i+1) + " to "+getName()+" is wrong type", isPattern ? input : errorPoint);
+				ErrorHandler.error(Errors.RULE_PREMISE_MISMATCH, (i+1) + ": " + formal.getType().getName(), isPattern ? input : errorPoint);
 			}
 		}
 		Element concElem = output.getElement();
 		if (concElem.getType().typeTerm() != getConclusion().getType().typeTerm()) {
-			ErrorHandler.report(getName() + " can't produce any instance of the claimed judgment\n\t"+
-					concElem.getType().getName() + " != " + getConclusion().getType().getName(), errorPoint);
+			ErrorHandler.error(Errors.RULE_CONCLUSION_MISMATCH, getConclusion().getType().getName() + " != " + concElem.getType().getName(), 
+					isPattern ? output : errorPoint);
 		}
 
 		List<Term> allArgs = new ArrayList<Term>();
@@ -231,13 +231,13 @@ public abstract class RuleLike extends Node implements Named {
 			if (isPattern) { // flow complex
 				if (formal.getRoot() != null && concElem.getRoot() != null) {
 					if (!concElem.getRoot().equals(actual.getRoot())) {
-						ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),input);
+						ErrorHandler.error(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),input);
 					}
 				} else if (concElem.getRoot() == null && actual.getRoot() != null) {
 					ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, input);
 				}
 			} else if (!Derivation.checkRootMatch(ctx,actual,formal,null)) {
-				ErrorHandler.report(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),errorPoint);
+				ErrorHandler.error(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),errorPoint);
 			}
 			getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint);
 		}
@@ -256,7 +256,6 @@ public abstract class RuleLike extends Node implements Named {
 		// Then we use a different error message however.
 		for (int i=0; i < n; ++i) {
 			Element formal = getPremises().get(i);
-			String name = "argument #"+ (i+1);
 			if (formal.getRoot() == null) continue;
 			if (formal.getType() instanceof SyntaxDeclaration) {
 				List<Abstraction> abs = allContexts.get(i);
@@ -264,19 +263,17 @@ public abstract class RuleLike extends Node implements Named {
 				allArgs.set(i,weakenArg(abs,addedContext,t));
 			} else if (allContexts.get(i).size() != addedContext.size()) {
 				if (isPattern)
-					ErrorHandler.report("all derivations in the rule pattern must add the same bindings", inputs.get(i));
+					ErrorHandler.error(Errors.CASE_CONTEXT_INCONSISTENT, inputs.get(i));
 				else
-					ErrorHandler.report(name + " requires a different context (perhaps using weakening or exchange) to be used for " + getName(), errorPoint,
-							"SASyLF computed needed context as " + Term.wrappingAbstractionsToString(addedContext));
+					ErrorHandler.error(Errors.OTHER_CONTEXT_NEEDED, Term.wrappingAbstractionsToString(addedContext), errorPoint);
 			}
 		}
 		if (getConclusion().getRoot() != null &&
 				allContexts.get(n).size() != addedContext.size()) {
 			if (isPattern)
-				ErrorHandler.report("all derivations in the rule pattern must add the same bindings", output);
+				ErrorHandler.error(Errors.CASE_CONTEXT_INCONSISTENT, output);
 			else
-				ErrorHandler.report("Claimed result omits required bindings in the context", output,
-						"SASyLF computed needed context as " + Term.wrappingAbstractionsToString(addedContext));
+				ErrorHandler.error(Errors.OTHER_CONTEXT_JUSTIFIED, Term.wrappingAbstractionsToString(addedContext), errorPoint);
 		}
 
 
@@ -295,17 +292,19 @@ public abstract class RuleLike extends Node implements Named {
 		Term f = formal.asTerm();
 		Term a = actual.asTerm().substitute(ctx.currentSub);
 		int diff = a.countLambdas() - f.countLambdas();
-		if (diff < 0) {
-			ErrorHandler.report(name + " to " + getName() + " expects more in context than given",errorPoint,
+		// Leave context errors until later when we can give specific
+		// error messages depending on whether this is a case or a call
+		/*if (diff < 0) {
+			ErrorHandler.error(name + " to " + getName() + " expects more in context than given",errorPoint,
 					"SASyLF expected the " + name + " to be " +f+ " but was given " + a + " from " + actual);
-		} else if (diff == 0) {
+		} else*/ if (diff <= 0) {
 			allContexts.add(Collections.<Abstraction>emptyList());
 			allArgs.add(a);
 		} else {
-			if (formal.getRoot() == null) {
-				ErrorHandler.report(name + " to " + getName() + " doesn't expect/permit extra bindings", errorPoint,
+			/*if (formal.getRoot() == null) {
+				ErrorHandler.error(name + " to " + getName() + " doesn't expect/permit extra bindings", errorPoint,
 						"SASyLF computed the " + name + " supplied as " + a); 
-			}
+			}*/
 			List<Abstraction> context = new ArrayList<Abstraction>();
 			allContexts.add(context);
 			allArgs.add(Term.getWrappingAbstractions(a, context, diff));
@@ -330,7 +329,7 @@ public abstract class RuleLike extends Node implements Named {
 					while (j < con.size()) {
 						Abstraction b = con.get(j);
 						if (seen.contains(b.varName)) {
-							ErrorHandler.report("Computed context for " + getName() + " has inconsistent placement of " + b.varName, errorPoint);
+							ErrorHandler.error(Errors.RULE_CONTEXT_INCONSISTENT,": " + b.varName, errorPoint);
 						}
 						if (!argNames.add(b.varName)) {
 							while (!result.get(i).varName.equals(b.varName)) {
@@ -346,7 +345,7 @@ public abstract class RuleLike extends Node implements Named {
 						// invariant i and j both point ton abstraction with the name b.varName
 						if (!result.get(i).varType.equals(b.varType)) {
 							// see bad50.slf
-							ErrorHandler.report("Context differs for use of " + getName() + ": (" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")", errorPoint);
+							ErrorHandler.error(Errors.RULE_CONTEXT_INCONSISTENT, ": " + b.varName, errorPoint, "(" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")");
 						}
 						++i; ++j;
 						seen.add(b.varName);

@@ -4,6 +4,7 @@
 
 package edu.cmu.cs.sasylf.prover;
 
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -144,7 +145,7 @@ public class RootNode implements ProvedNode {
 	 * pretty prints the child.
 	 */
 	@Override
-	public void prettyPrint(Substitution sub) {
-		child.prettyPrint(sub);
+	public void prettyPrint(Substitution sub, PrintWriter out) {
+		child.prettyPrint(sub, out);
 	}
 }

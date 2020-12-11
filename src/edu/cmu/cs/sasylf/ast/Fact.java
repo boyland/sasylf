@@ -5,6 +5,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -36,7 +37,7 @@ public abstract class Fact extends Node {
 		Fact old = ctx.derivationMap.put(getName(), this);  
 		if (wasKnown && !(this instanceof SyntaxAssumption) && 
 				old != this && !getName().equals("_") && !getName().equals("proof")) {
-			ErrorHandler.warning("Reusing derivation identifier " + getName(), this);
+			ErrorHandler.warning(Errors.DERIVATION_NAME_REUSED, ": " + getName(), this);
 		}
 		Set<FreeVar> free = getElement().asTerm().getFreeVariables();
 		free.removeAll(ctx.currentSub.getMap().keySet());

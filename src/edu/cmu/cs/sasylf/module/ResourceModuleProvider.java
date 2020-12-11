@@ -43,13 +43,13 @@ public class ResourceModuleProvider extends AbstractModuleProvider {
 			InputStream is = getClass().getResourceAsStream(asResourceString(id));
 			return Main.parseAndCheck(mf, id.toString(), id, new InputStreamReader(is,"UTF-8"));
 		} catch (UnsupportedEncodingException e) {
-			ErrorHandler.report(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		} catch (NullPointerException e) {
-			ErrorHandler.report("Module not found: " + id, loc);
+			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), loc);
 		} catch (SASyLFError ex) {
 			// already reported
 		} catch (RuntimeException e) {
-			ErrorHandler.report(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		}
 		return null;
 	}

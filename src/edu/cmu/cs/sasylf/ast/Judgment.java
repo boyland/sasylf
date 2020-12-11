@@ -112,7 +112,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 
 		if (isAbstract && !rules.isEmpty()) {
-			ErrorHandler.recoverableError("abstract judgments should not have rules", this);
+			ErrorHandler.recoverableError(Errors.JUDGMENT_ABSTRACT, this); // NB: parser currently handles this
 		}
 
 		for (Element f : form.getElements()) {
@@ -125,7 +125,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		if ((getAssume() == null) && contextSyntax != null && !Util.X_CONTEXT_IS_SYNTAX)
 			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
 		else if ((getAssume() != null) && getAssume().getType() == null)
-			ErrorHandler.report(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume() + "\n" +
+			ErrorHandler.error(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume() + "\n" +
 					(contextSyntax == null ? "" : "assumes " + contextSyntax));
 		else if ((getAssume() != null) && !getAssume().getType().equals(contextSyntax))
 			ErrorHandler.recoverableError(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume());
@@ -173,7 +173,7 @@ public class Judgment extends Node implements ClauseType, Named {
 	public void analyze(Context ctx, Element target, Node source, 
 			Map<CanBeCase, Set<Pair<Term, Substitution>>>  result) {
 		if (isAbstract()) {
-			ErrorHandler.report("Cannot case analyze an abstract judgment: " + getName(),source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, ": " + getName(), source);
 		}
 		Util.verify(target instanceof ClauseUse, "Judgment#analyze called with bad element: " + target);
 		ClauseUse cl = (ClauseUse)target;

@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Span;
 
 /**
@@ -102,12 +103,12 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 	@Override
 	public Module findModule(ModuleId id, Span location) {
 		if (!hasCandidate(id)) {
-			ErrorHandler.report("Cannot find module " + id, location);
+			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), location);
 		}
 		if (cache.containsKey(id)) {
 			Module previous = cache.get(id);
 			if (previous == null) {
-				ErrorHandler.report("Module has errors: " + id, location);
+				ErrorHandler.error(Errors.MODULE_ILLFORMED, id.toString(), location);
 			}
 			return previous;
 		}
@@ -119,7 +120,7 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 			}
 			path.append(id);
 			cache.put(id, null);
-			ErrorHandler.report("Cyclic module reference: "+path.toString(), location);
+			ErrorHandler.error(Errors.MODULE_CYCLE, path.toString(), location);
 		}
 		ModuleProvider provider = presentCache.get(id);
 		String[] savedPackage = currentPackage;

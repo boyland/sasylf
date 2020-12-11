@@ -7,6 +7,7 @@ import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 /**
  * Induction on multiple items.
@@ -52,7 +53,7 @@ public class LexicographicOrder extends InductionSchema {
 	public boolean matches(InductionSchema s, Node errorPoint, boolean equality) {
 		if (!(s instanceof LexicographicOrder)) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Expected a single induction: " + s, errorPoint);
+				ErrorHandler.recoverableError(Errors.INDUCTION_MISMATCH, ": " + s, errorPoint);
 			}
 			return false;
 		}
@@ -60,7 +61,7 @@ public class LexicographicOrder extends InductionSchema {
 		LexicographicOrder model = (LexicographicOrder)s;
 		if (model.size() != size()) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Expected " + model.size() + " inductions", errorPoint);
+				ErrorHandler.recoverableError(Errors.INDUCTION_MISMATCH, ": " + model, errorPoint);
 			}
 			return false;
 		}

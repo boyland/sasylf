@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 /**
  * Syntactic sugar productions: syntax that 
@@ -67,14 +68,14 @@ public class Sugar extends Syntax {
 		sugar.typecheck(ctx);
 		for (Element e: sugar.getElements()) {
 			if (e instanceof Clause) {
-				ErrorHandler.report("Productions cannot include substructure", e);
+				ErrorHandler.error(Errors.CLAUSE_DEF_PAREN, e);
 			}
 		}
 		Set<String> lhsVars = new HashSet<String>();
 		for (Element e: sugar.getElements()) {
 			if (e instanceof NonTerminal) {
 				if (!lhsVars.add(((NonTerminal)e).getSymbol())) {
-					ErrorHandler.report("The nonterminal " + e + " occurs more than once",sugar);
+					ErrorHandler.error(Errors.SUGAR_MULTIPLE_USES, ": " + e, sugar);
 				}
 			}
 		}
@@ -82,21 +83,21 @@ public class Sugar extends Syntax {
 			replacement.typecheck(ctx);
 			for (NonTerminal nt : replacement.getFree(true)) {
 				if (!lhsVars.remove(nt.getSymbol())) {
-					ErrorHandler.report("This variable doesn't occur in the syntax:" + nt, this);
+					ErrorHandler.error(Errors.SUGAR_NO_USES, " :" + nt, this);
 				}
 			}
 			if (!lhsVars.isEmpty()) {
-				ErrorHandler.report("The syntactic sugar does not indicate what to do with the given variables: " + lhsVars, this);			
+				ErrorHandler.error(Errors.SUGAR_UNUSED, ": " + lhsVars, this);			
 			}
 		} else {
 			if (type == null) {
 				type = ctx.getSyntax(typeName.getSymbol());
 				if (type == null) {
-					ErrorHandler.report("Unknown syntax " + typeName, this);
+					ErrorHandler.error(Errors.SUGAR_SYNTAX_UNKNOWN, ": " + typeName, this);
 				}
 			}
 			if (!type.isAbstract()) {
-				ErrorHandler.report("Cannot define absract syntactic sugar on concrete syntax",this);
+				ErrorHandler.error(Errors.SUGAR_ABSTRACT,this);
 			}
 		}
 	}
@@ -109,9 +110,9 @@ public class Sugar extends Syntax {
 		if (replacement != null) {
 			Element newClause = replacement.computeClause(ctx, false);
 			if (!(newClause instanceof Clause))
-				ErrorHandler.report("SASyLF cannot figure out what syntax is being defined.", this);
+				ErrorHandler.error(Errors.SUGAR_UNKNOWN, this);
 			else if (!(newClause.getType() instanceof SyntaxDeclaration))
-				ErrorHandler.report("Sugar can only be used for syntax, not judgments",this);
+				ErrorHandler.error(Errors.SUGAR_JUDGMENT,this);
 			replacement = (Clause) newClause;
 			Map<String,List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
 			replacement.checkBindings(bindingTypes, this);

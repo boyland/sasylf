@@ -73,7 +73,11 @@ public class RuleCase extends Case {
 		if (rule == null) {
 			Judgment judg = ctx.getJudgment(ctx.currentCaseAnalysis.baseTypeFamily());
 			if (judg == null) {
-				ErrorHandler.report("It doesn't appear that a rule case makes sense in this context", this, "SASyLF computes the case analysis is on " + ctx.currentCaseAnalysis);
+				if (ctx.currentCaseAnalysisElement.getType() instanceof SyntaxDeclaration) {
+					ErrorHandler.error(Errors.RULE_CASE_SYNTAX, this, "SASyLF computes the case analysis is on " + ctx.currentCaseAnalysis);
+				} else {
+					ErrorHandler.error(Errors.INTERNAL_ERROR, ": Got an instance of a secrete judgment? " + ctx.currentCaseAnalysisElement, this);
+				}
 			}
 			String stringName = ruleName.toString();
 			if (ruleName.getLastSegment().equals(stringName)) { //XXX change to checkSource
@@ -81,25 +85,27 @@ public class RuleCase extends Case {
 					if (r.getName().equals(stringName)) rule = r;
 				}
 				if (rule == null) {
-					ErrorHandler.report(Errors.RULE_NOT_FOUND, stringName, this);
+					ErrorHandler.error(Errors.RULE_NOT_FOUND, stringName, this);
 				}
 				ruleName.resolveAsNamed(rule);
 			} else {
 				Object resolution = ruleName.resolve(ctx);
 				if (!(resolution instanceof Rule)) {
-					ErrorHandler.report("Expected rule, but found " + resolution.getClass().getSimpleName(), ruleName);
+					ErrorHandler.error(Errors.RULE_EXPECTED, QualName.classify(resolution) + " " + ruleName, ruleName);
 				}
 				for (Rule r : judg.getRules()) {
 					if (r == resolution) rule = r;
 				}
 				if (rule == null) {
-					ErrorHandler.report("Rule belongs to a different judgment: " + rule.getJudgment().getName(), ruleName);
+					ErrorHandler.error(Errors.RULE_WRONG_JUDGMENT, judg.getName(), ruleName);
 				} else {
-					ErrorHandler.warning("Rule names in cases don't need qualification", ruleName);
+					ErrorHandler.warning(Errors.RULE_NO_QUALIFICATION, ruleName);
 				}
 			}
 		}
 		if (!rule.isInterfaceOK()) return;
+		
+		// TODO: check caseResult here!
 
 		for (Derivation d : premises) {
 			d.typecheck(ctx);
@@ -115,7 +121,7 @@ public class RuleCase extends Case {
 		
 		// make sure we were case-analyzing a derivation, not a nonterminal
 		if (ctx.currentCaseAnalysisElement instanceof NonTerminal)
-			ErrorHandler.report(Errors.RULE_CASE_SYNTAX, this);
+			ErrorHandler.error(Errors.RULE_CASE_SYNTAX, this);
 		Term subjectTerm = ctx.currentCaseAnalysisElement.asTerm().substitute(ctx.currentSub);
 		Term rcc = conclusion.getClause().asTerm();
 		NonTerminal subjectRoot = ctx.getCurrentCaseAnalysisRoot();
@@ -141,28 +147,28 @@ public class RuleCase extends Case {
 		// Check context changes.  The root and number of "lambdas".
 		if (subjectRoot == null) {
 			if (thisRoot != null) {
-				ErrorHandler.report("Case should not use named context " + thisRoot, this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_ADDED, thisRoot.toString(), this);
 			}
 			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
-				ErrorHandler.report("Should not change context in case analysis",this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 			}
 		} else if (subjectRoot.equals(thisRoot)) {
 			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
-				ErrorHandler.report("Should not change context in case analysis",this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 			}
 		} else {
 			if (thisRoot == null) {
-				ErrorHandler.report(Errors.CONTEXT_DISCARDED,this);
+				ErrorHandler.error(Errors.CONTEXT_DISCARDED,this);
 			}
 			if (!rule.isAssumption()) {
-				ErrorHandler.report("Only assumption rules can change context: " + subjectRoot + " -> " + thisRoot, this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + thisRoot, this);
 			}
 			int diff = patternConc.countLambdas() - subjectTerm.countLambdas();
 			if (diff != rule.isAssumptionSize()) {
 				Util.debug("diff = ", diff, "assumption size = ", rule.isAssumptionSize());
-				ErrorHandler.report("assumption rule should introduce exactly one level of context",this);
+				ErrorHandler.error(Errors.CASE_ASSUMPTION_SINGLE, this);
 			}
 
 			relax = Relaxation.computeRelaxation(ctx, (ClauseUse)ctx.currentCaseAnalysisElement, subjectRoot,
@@ -186,15 +192,15 @@ public class RuleCase extends Case {
 			unifyingSub = adaptedSubjectTerm.unify(patternConc);
 			unifyingSub.selectUnavoidable(RCCvars);
 		} catch (EOCUnificationFailed uf) {
-			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
+			ErrorHandler.error(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
 					+ "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);     
 		} catch (UnificationIncomplete uf) {
-			ErrorHandler.report(INVALID_CASE, "Case too complex for SASyLF to check; consider sending this example to the maintainers", this,
+			ErrorHandler.error(INVALID_CASE, "Case too complex for SASyLF to check; consider sending this example to the maintainers", this,
 					"SASyLF was trying to unify " + uf.term1 + " and " + uf.term2);
 		} catch (UnificationFailed uf) {
 			//uf.printStackTrace();
 			debug(this.getLocation(), ": was unifying ",patternConc, " and ", adaptedSubjectTerm);
-			ErrorHandler.report(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedSubjectTerm + " for the conclusion");
+			ErrorHandler.error(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedSubjectTerm + " for the conclusion");
 		}
 		if (adaptedSubjectTerm != subjectTerm) {
 			Util.debug("pattern = ",patternConc," adaptedSubject = ",adaptedSubjectTerm);
@@ -204,9 +210,9 @@ public class RuleCase extends Case {
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
 		if (caseResult == null)
-			ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this, "suggestion: remove it");
+			ErrorHandler.error(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this, "suggestion: remove it");
 		if (caseResult.isEmpty())
-			ErrorHandler.report(Errors.EXTRA_CASE, this,"suggestion: remove it");
+			ErrorHandler.error(Errors.EXTRA_CASE, this,"suggestion: remove it");
 
 		//Util.debug("caseResult = ",caseResult);
 
@@ -297,7 +303,7 @@ public class RuleCase extends Case {
 							break;
 						}
 						if (ctx.derivationMap.containsKey(v.toString())) {
-							ErrorHandler.warning("Reusing derivation name as a nonterminal: " + v, this.getSpan());
+							ErrorHandler.warning(Errors.DERIVATION_NAME_REUSED, ": " + v, this.getSpan());
 						}
 					}
 					if (errorString != null) {
@@ -314,13 +320,13 @@ public class RuleCase extends Case {
 					if (!fishy.isEmpty()) {
 						FreeVar first = fishy.iterator().next();
 						Term result = pairSub.getSubstituted(first);
-						ErrorHandler.warning("The given pattern is overly general, should restrict " + fishy, this.getSpan(),
+						ErrorHandler.warning(Errors.RULE_CASE_TOO_GENERAL, "" + fishy, this.getSpan(),
 								"SASyLF computes the first restriction as " + first + " -> " + result);
 					} else if (!genVars.isEmpty()) {
-						ErrorHandler.warning("The given pattern is overly general, should restrict " + genVars, this.getSpan(),
+						ErrorHandler.warning(Errors.RULE_CASE_TOO_GENERAL, genVars.toString(), this.getSpan(),
 								"SASyLF computes the first restriction as " + computedSub.getSubstituted(genVars.iterator().next()));
 					} else if (!subVars.isEmpty()) {
-						ErrorHandler.warning("The given pattern uses variables already substituted: " + subVars, this.getSpan());
+						ErrorHandler.warning(Errors.RULE_CASE_USES_OLD, ": " + subVars, this.getSpan());
 					}
 				}
 				
@@ -329,8 +335,9 @@ public class RuleCase extends Case {
 
 				break;
 			} catch (UnificationIncomplete e) {
-				String extraInfo = "\n\tcouldn't unify " + e.term1 + " and " + e.term2;
-				ErrorHandler.report(Errors.INVALID_CASE, "SASyLF ran into incompleteness of unification while checking this rule" + extraInfo, this,
+				// TODO: Change to use TermPrinter
+				String extraInfo = e.term1 + " =?= " + e.term2;
+				ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, extraInfo, this,
 						"(was checking " + candidate + " instance of " + caseTerm + ",\n got exception " + e);      
 				return; // tell Java we're gone.
 
@@ -350,7 +357,7 @@ public class RuleCase extends Case {
 			Util.debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
 			Util.debug("SASyLF generated the LF term: ", candidate);
 			Util.debug("You proposed the LF term: ", caseTerm);
-			ErrorHandler.report(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
+			ErrorHandler.error(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 			// TODO: explain WHY!!!
 		}
 
@@ -370,7 +377,7 @@ public class RuleCase extends Case {
 		}
 		if (conclusionIsUnsound) {
 			if (!conclusion.getName().equals("_")) {
-				ErrorHandler.warning("Conclusion in pattern matching of assumption rule cannot be used", conclusion);
+				ErrorHandler.warning(Errors.CASE_CONCLUSION_UNSOUND, conclusion.getName(), conclusion, null);
 			}
 		} else {
 			conclusion.addToDerivationMap(ctx);

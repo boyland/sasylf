@@ -65,7 +65,7 @@ public class NonTerminal extends Element {
 
 	public void setType(SyntaxDeclaration t) {
 		if (type != null && type != t)
-			ErrorHandler.report("Internal error: can't reset a NonTerminal's type", this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR, "Internal error: can't reset a NonTerminal's type", this);
 		type = t;
 	}
 
@@ -160,7 +160,7 @@ public class NonTerminal extends Element {
 	public Fact asFact(Context ctx, Element assumes) {
 		if (ctx.bindingTypes.containsKey(symbol) &&
 				!ctx.bindingTypes.get(symbol).isEmpty()) {
-			ErrorHandler.report("Cannot use " + symbol + " without its arguments: " + ctx.bindingTypes.get(symbol),this);
+			ErrorHandler.error(Errors.BINDING_INCONSISTENT, symbol, this);
 		}
 		// System.out.println(this+".asFact(_," + assumes + ")");
 		if (ctx.isVarFree(this) || assumes == null ||
@@ -188,7 +188,7 @@ public class NonTerminal extends Element {
 			bindingTypes.put(getSymbol(), myType);
 		} else {
 			if (!prevType.equals(myType))
-				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + this + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame);
+				ErrorHandler.error(BINDING_INCONSISTENT, this.toString() , nodeToBlame);
 		}
 	}
 	@Override

@@ -46,7 +46,7 @@ public class StructuralInduction extends InductionSchema {
 			return !equality || argNum == ((StructuralInduction)s).argNum;
 		}
 		if (errorPoint != null) {
-			ErrorHandler.recoverableError("Expected induction by " + s + ", but found " + describe(), errorPoint);
+			ErrorHandler.recoverableError(Errors.INDUCTION_MISMATCH, ": " + s, errorPoint);
 		}
 		return false;
 	}
@@ -71,7 +71,7 @@ public class StructuralInduction extends InductionSchema {
 			if (inductionSub.equals(inductiveSub)) return Reduction.EQUAL;
 			if (inductionSub.containsProper(inductiveSub)) return Reduction.LESS;
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError(Errors.NOT_SUBDERIVATION, ", " + subject + " not inside of " + source.getName(), errorPoint);
+				ErrorHandler.recoverableError(Errors.NOT_SUBDERIVATION, ": " + subject + " ! < " + source.getName(), errorPoint);
 			}
 			return Reduction.NONE;
 		}
@@ -79,11 +79,11 @@ public class StructuralInduction extends InductionSchema {
 		Pair<Fact,Integer> p = ctx.subderivations.get(subject);
 		if (p == null) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Not a subderivation: " + subject, errorPoint);
+				ErrorHandler.recoverableError(Errors.NOT_SUBDERIVATION, ": " + subject, errorPoint);
 			}
 		} else if (p.first != source) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Not a subderivation of " + source + " : " + subject, errorPoint);
+				ErrorHandler.recoverableError(Errors.NOT_SUBDERIVATION, ": " + subject + " ! < " + source, errorPoint);
 			}
 		} else {
 			return p.second == 0 ? Reduction.EQUAL : Reduction.LESS;

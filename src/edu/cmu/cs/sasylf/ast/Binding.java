@@ -91,7 +91,7 @@ public class Binding extends Element {
 	public Element typecheck(Context ctx) {
 		Element e = nonTerminal.typecheck(ctx);
 		if (!(e instanceof NonTerminal))
-			ErrorHandler.report(Errors.BINDER_MUST_BE_NT, this);
+			ErrorHandler.error(Errors.BINDER_MUST_BE_NT, this);
 		nonTerminal = (NonTerminal) e;
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e2 = elements.get(i).typecheck(ctx);
@@ -154,7 +154,7 @@ public class Binding extends Element {
 			bindingTypes.put(this.getNonTerminal().getSymbol(), myType);
 		} else {
 			if (!prevType.equals(myType))
-				ErrorHandler.report(BINDING_INCONSISTENT, "meta-variable " + nonTerminal + " must have consistent numbers and types of bindings throughout a rule or branch of a theorem", nodeToBlame,
+				ErrorHandler.error(BINDING_INCONSISTENT, nonTerminal.toString(), nodeToBlame,
 						"(" + prevType + " != " + myType + ")");
 		}
 	}

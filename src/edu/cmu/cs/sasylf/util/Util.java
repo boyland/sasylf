@@ -11,6 +11,8 @@ public class Util {
 	public static boolean COMP_WHERE = false;
 	public static boolean X_CONTEXT_IS_SYNTAX = false;
 	public static boolean SHOW_TASK_COMMENTS = false;
+	public static boolean PRINT_ERRORS = true;
+	public static boolean PRINT_SOLVE = true;
 
 	public static void debug_parse(Object o) {
 		if (DEBUG_PARSE)

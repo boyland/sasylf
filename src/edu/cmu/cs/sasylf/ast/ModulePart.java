@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -44,12 +45,12 @@ public class ModulePart extends Node implements Part, Named {
 		if (resolution instanceof Module) {
 			ctx.modMap.put(name, (Module)resolution);
 		} else {
-			ErrorHandler.report("Cannot find module named " + module, this);
+			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
 		}
 		if (!arguments.isEmpty()) {
-			ErrorHandler.report("Module arguments not yet implemented", this);
+			ErrorHandler.error(Errors.MODULE_PARAMETERS, this);
 		} else if (((Module)resolution).isAbstract()) {
-			ErrorHandler.report("Missing module arguments", this);
+			ErrorHandler.error(Errors.MODULE_ABSTRACT, this);
 		}
 	}
 

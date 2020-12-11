@@ -117,7 +117,7 @@ public class Theorem extends RuleLike {
 					NonTerminal root = sa.getRoot();
 					if (root != null) {
 						if (!root.getType().canAppearIn(sa.getSyntax().typeTerm())) {
-							ErrorHandler.report(Errors.EXTRANEOUS_ASSUMES, f, "assumes " + root.toString());
+							ErrorHandler.error(Errors.EXTRANEOUS_ASSUMES, f, "assumes " + root.toString());
 						}
 					}
 				}
@@ -145,7 +145,7 @@ public class Theorem extends RuleLike {
 			}
 			if (inductionScheme == null) {
 				if (this != firstInGroup || this.andTheorem != null) {
-					ErrorHandler.warning("All theorems in a mutual induction group should have an induction declaration.", this);
+					ErrorHandler.warning(Errors.MUTUAL_INDUCTION_NO_INDUCTION, this);
 					inductionScheme = StructuralInduction.create(this, foralls.get(0).getName(), this);
 				} else { 
 					inductionScheme = InductionSchema.nullInduction;
@@ -186,7 +186,7 @@ public class Theorem extends RuleLike {
 
 			if (isAbstract) {
 				if (!derivations.isEmpty()) {
-					ErrorHandler.recoverableError("abstract " + kind + " should not include proof", this);
+					ErrorHandler.recoverableError(Errors.THEOREM_ABSTRACT, this);
 				}
 				return;
 			}
@@ -235,12 +235,12 @@ public class Theorem extends RuleLike {
 				}
 				if (assumes.equals(exists.getRoot())) foundAssumption = true;
 				if (!foundAssumption) {
-					ErrorHandler.warning("Assumption " + assumes + " irrelevant.", this);
+					ErrorHandler.warning(Errors.EXTRANEOUS_ASSUMES, ": " + assumes, assumes);
 				}
 			}
 			if (ctx.knownContexts != null) {
 				if (ctx.knownContexts.size() > 1) {
-					ErrorHandler.recoverableError("SASyLF cannot yet handle theorems using multiple contexts", this);
+					ErrorHandler.recoverableError(Errors.THEOREM_MULTIPLE_CONTEXT, this);
 				} else if (ctx.knownContexts.size() == 1) {
 					NonTerminal root = ctx.knownContexts.iterator().next();
 					if (assumes == null) {
@@ -303,7 +303,7 @@ public class Theorem extends RuleLike {
 
 	public void setAssumes(NonTerminal c) { 
 		if (assumes != null && !assumes.equals(c))
-			ErrorHandler.report(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + assumes + " and " + c, this);
+			ErrorHandler.error(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + assumes + " and " + c, this);
 		assumes = c; 
 	}
 	@Override

@@ -101,7 +101,7 @@ public class TaskReport extends Report {
 		Location start = new Location(file, lineNum, startCol);
 		Span span = new DefaultSpan(start, start.add(length));
 		TaskReport r = new TaskReport(span,within.image.substring(begin, begin+length),pri);
-		ErrorHandler.report(r, Util.SHOW_TASK_COMMENTS);
+		ErrorHandler.report(r);
 	}
 	
 	/**
@@ -125,5 +125,10 @@ public class TaskReport extends Report {
 			++i;
 		}
 		return -1;
+	}
+
+	@Override
+	public boolean shouldPrint() {
+		return Util.SHOW_TASK_COMMENTS;
 	}
 }

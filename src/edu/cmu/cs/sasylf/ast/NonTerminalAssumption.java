@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -35,12 +36,9 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		super.typecheck(ctx);
 		Element e = nonTerminal.typecheck(ctx);
 		if (e != nonTerminal)
-			ErrorHandler.report("No syntax match for " + getName(), this);
+			ErrorHandler.error(Errors.FORALL_NOT_SYNTAX, getName(), this);
 		nonTerminal = (NonTerminal)e;
 		getElementBase().checkBindings(ctx.bindingTypes, this);
-		/*String strippedName = Util.stripId(getName());
-		syntax = ctx.synMap.get(strippedName);
-		if (syntax == null)*/
 	}
 
 	@Override

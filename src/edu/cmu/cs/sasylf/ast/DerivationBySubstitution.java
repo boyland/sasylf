@@ -36,22 +36,22 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		super.typecheck(ctx);
 
 		if (this.getArgs().size() != 2) {
-			ErrorHandler.report(Errors.WRONG_SUBSTITUTION_ARGUMENTS, this);
+			ErrorHandler.error(Errors.WRONG_SUBSTITUTION_ARGUMENTS, this);
 		}
 
 		// get terms for arguments
 		Element arg0 = this.getArgs().get(0).getElement();
 		Element arg1 = this.getArgs().get(1).getElement();
 
-		if (!(arg0 instanceof ClauseUse)) {
-			ErrorHandler.report("First argument of substitution must be a judgment instance.",this);
+		if (!(arg0.getType() instanceof Judgment)) {
+			ErrorHandler.error(Errors.SUBSTITUTION_ARGUMENT, this.getArgStrings().get(0));
 		}
-		if (!(arg1 instanceof ClauseUse)) {
-			ErrorHandler.report("Second argument of substitution must be a judgment instance.", this);
+		if (!(arg1.getType() instanceof Judgment)) {
+			ErrorHandler.error(Errors.SUBSTITUTION_ARGUMENT, this.getArgStrings().get(1));
 		}
 
-		checkRootMatch("exchange", (ClauseUse)arg0, (ClauseUse)getClause(), this);
-		checkRootMatch("exchange", (ClauseUse)arg1, (ClauseUse)getClause(), this);
+		checkRootMatch("substitution", (ClauseUse)arg0, (ClauseUse)getClause(), this);
+		checkRootMatch("substitution", (ClauseUse)arg1, (ClauseUse)getClause(), this);
 
 		Term subContext = ctx.toTerm(arg0);
 		Term source = ctx.toTerm(arg1);
@@ -69,7 +69,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		Util.debug("claimed = ", claimedResult);
 
 		if (!result.equals(claimedResult)) {
-			ErrorHandler.report(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution",this,
+			ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution",this,
 					"  (got " + result + " instead)");
 		} 
 
@@ -100,16 +100,16 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 			if (arg instanceof Abstraction) {
 				Abstraction a = (Abstraction)arg;
 				if (!f.varType.equals(a.varType)) {
-					ErrorHandler.report("Context of first argument to substitution must have as prefix that of second", this);
+					ErrorHandler.error(Errors.SUBSTITUTION_NO_PREFIX, this);
 				}
 				varTypes.push(f.varType);
 				Term result = doSubst(ctx, f.getBody(),a.getBody(),varTypes);
 				varTypes.pop();
 				return Abstraction.make(f.varName, f.varType, result);
 			} else if (f.varType.equals(arg)){
-				ErrorHandler.warning("Internal warning: Using a new feature?", this);
+				ErrorHandler.warning(Errors.INTERNAL_ERROR, "Internal warning: Using a new feature?", this,null);
 				if (f.getBody().hasBoundVar(1)) {
-					ErrorHandler.report("Internal error: uses context derivation?", this);
+					ErrorHandler.error(Errors.INTERNAL_ERROR, "Internal error: uses context derivation?", this);
 				}
 				return f.getBody().incrFreeDeBruijn(-1);
 			} else if (f.getBody() instanceof Abstraction) {
@@ -134,23 +134,23 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 				try {
 					sub = f2.varType.unify(arg);
 				} catch (UnificationFailed e) {
-					ErrorHandler.report(Errors.SUBSTITUTION_FAILED, this, "  (" + f2.varType + " != " + arg + ")");
+					ErrorHandler.error(Errors.SUBSTITUTION_FAILED, this, "  (" + f2.varType + " != " + arg + ")");
 					return null; //NOTREACHED
 				}
 				Set<FreeVar> unavoided = sub.selectUnavoidable(ctx.inputVars);
 				if (!unavoided.isEmpty()) {
-					ErrorHandler.report("Substitution would constrain variables, including " + unavoided.iterator().next(), this);
+					ErrorHandler.error(Errors.SUBSTITUTION_CONSTRAIN, unavoided.toString(), this);
 				}
 				Term result = f2.getBody();
 				if (result.hasBoundVar(1)) {
-					ErrorHandler.report("Internal error: uses context derivation?", this);
+					ErrorHandler.error(Errors.INTERNAL_ERROR,"Internal error: uses context derivation?", this);
 				} 
 				return result.incrFreeDeBruijn(-1).substitute(sub);
 			} else {
-				ErrorHandler.report("Cannot determine where substitution would happen",  this);
+				ErrorHandler.error(Errors.SUBSTITUTION_FAILED,  this);
 			}
 		}
-		ErrorHandler.report("target of substitution does not have more assumptions than argument.", this);
+		ErrorHandler.error(Errors.SUBSTITUTION_NO_HOLE, this);
 		return null;
 	}
 

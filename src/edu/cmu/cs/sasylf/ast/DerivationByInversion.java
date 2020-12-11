@@ -58,11 +58,11 @@ public class DerivationByInversion extends DerivationWithArgs {
 		
 		if (caseType instanceof SyntaxDeclaration) {
 			if (ruleName != null) {
-				ErrorHandler.report("inversion on syntax doesn't use rules; just write 'inversion on " + inputName + "'", this);
+				ErrorHandler.error(Errors.INVERSION_SYNTAX_NO_RULE, this);
 			}
 			if (!(this.getClause() instanceof AndClauseUse) ||
 				!((AndClauseUse)this.getClause()).getClauses().isEmpty()) {
-				ErrorHandler.report("cannot prove anything with inversion on syntax.  Suggest 'use inversion'", this);
+				ErrorHandler.error(Errors.INVERSION_SYNTAX_NO_RESULTS, this);
 			}			
 			DerivationByAnalysis.checkSyntaxAnalysis(ctx, inputName, targetTerm, this);
 		}
@@ -71,21 +71,21 @@ public class DerivationByInversion extends DerivationWithArgs {
 		
 		if (ruleName == OR) {
 			if (!(caseType instanceof OrJudgment)) {
-				ErrorHandler.report("inversion of 'or' can only be applied to a 'or' clause", this,
+				ErrorHandler.error(Errors.OR_CASE_NOT_APPLICABLE, this,
 						"The judgment is " + caseType);
 			}
 		} else if (ruleName != null) {
 			resolution = ruleName.resolve(ctx);
 			if (resolution == null) return; // error already signaled
 			if (!(resolution instanceof Rule)) {
-				ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName.toString(), this);
+				ErrorHandler.error(Errors.RULE_EXPECTED, QualName.classify(resolution) + " " + ruleName, this);
 				return;
 			}
 			if (((Rule)resolution).getJudgment().typeTerm() != caseType.typeTerm()) {
-				ErrorHandler.report(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + targetElement, this);
+				ErrorHandler.error(Errors.RULE_WRONG_JUDGMENT, caseType.getName(), this);
 			}
 			if (!((Rule)resolution).isInterfaceOK()) {
-				ErrorHandler.report("Rule " + ruleName + " cannot be used for inversion until it is fixex.", this);
+				ErrorHandler.error(Errors.INVERSION_BAD_RULE, this);
 			}
 		}
 
@@ -98,7 +98,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		
 		final int caseSize = DerivationByAnalysis.caseAnalysisSize(caseMap);
 		if (caseSize == 0) {
-			ErrorHandler.report("The target of inversion is actually not possible.  Suggest using 'by contradiction on' instead of inversion.", this);
+			ErrorHandler.error(Errors.INVERSION_EMPTY, this);
 		}
 		if (caseSize > 1) {
 			DerivationByAnalysis.generateMissingCaseError(ctx, targetElement, targetTerm, Errors.TOO_MANY_CASES, this, caseMap);
@@ -113,8 +113,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		
 		if (resolution != null && resolution != only) {
 			Rule otherRule = (Rule)only;			
-			ErrorHandler.report(Errors.WRONG_RULE, 
-					"Wrong rule named; should be "+otherRule.getName(), this, 
+			ErrorHandler.error(Errors.WRONG_RULE, otherRule.getName(), this, 
 					"by rule " + ruleName + "\nby rule " + otherRule.getName());
 		}
 
@@ -171,7 +170,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 					// If clauses.size() == 0, we are "use inversion" which can
 					// ignore all results.
 					if (clauses.size() > 0) { 
-						ErrorHandler.report("inversion yields " + pieces.size() + " but only accepting " + clauses.size(), this);
+						ErrorHandler.error(Errors.INVERSION_RESULT_SIZE,pieces.size() + " != " + clauses.size(), this);
 					}
 				}
 				if (rule.isAssumption()) {
@@ -208,7 +207,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 					if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
 						String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
 						String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
-						ErrorHandler.report(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
+						ErrorHandler.error(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
 					}
 					// avoid mapping user-written variables
 					Substitution changed = ctx.avoidIfPossible(mt.getFreeVariables());
@@ -225,7 +224,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 			} else {
 				// backward compatibility: just look for result in the pieces
 				if (!pieces.contains(result)) {
-					ErrorHandler.report(Errors.INVERSION_NOT_FOUND, this,
+					ErrorHandler.error(Errors.INVERSION_NOT_FOUND, this,
 							"\t SASyLF did not find " + result + " in " + pieces);
 				}
 				if (targetClause.isRootedInVar()) {

@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.util.ErrorHandler;
-
 /**
  * A syntax assumption with a context, and maybe bindings
  * e.g.  t[x] assumes Gamma, x:T
@@ -27,15 +25,16 @@ public class BindingAssumption extends NonTerminalAssumption {
 	public void typecheck(Context ctx) {
 		binding.typecheck(ctx);
 		super.typecheck(ctx);
+		/*
 		if (ctx == null) { // XXX: Not sure if this should always happen.  Originally only if being added to map.
 			for (Element e : binding.getElements()) {
 				if (!(e instanceof Variable)) {
 					if (e != null) throw new IllegalStateException("I don't know what is happening");
-					ErrorHandler.report("cannot match a substituted term", this);
+					ErrorHandler.error("cannot match a substituted term", this);
 				}
 			}
 		}
-		super.typecheck(ctx);
+		super.typecheck(ctx);*/
 	}
 
 	private Binding binding;

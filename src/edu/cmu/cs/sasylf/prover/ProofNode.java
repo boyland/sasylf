@@ -4,6 +4,8 @@
 
 package edu.cmu.cs.sasylf.prover;
 
+import java.io.PrintWriter;
+
 import edu.cmu.cs.sasylf.term.Substitution;
 
 public interface ProofNode {
@@ -13,7 +15,7 @@ public interface ProofNode {
 	/** return string with i tabs before it */
 	String toString(int i);
 
-	void prettyPrint(Substitution sub);
+	void prettyPrint(Substitution sub, PrintWriter out);
 
 	int getId();
 }

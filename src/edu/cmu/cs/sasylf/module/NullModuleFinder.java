@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.module;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class NullModuleFinder implements ModuleFinder {
@@ -24,7 +25,7 @@ public class NullModuleFinder implements ModuleFinder {
 
 	@Override
 	public Module findModule(ModuleId id, Span location) {
-		ErrorHandler.report("no root directory or SASyLF project,  cannot find module " + id,location);
+		ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), location);
 		return null;
 	}
 

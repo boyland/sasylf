@@ -67,9 +67,9 @@ public class SyntaxCase extends Case {
 		if (!(ctx.currentCaseAnalysisElement instanceof NonTerminal) &&
 				!(ctx.currentCaseAnalysisElement instanceof AssumptionElement)) {
 			if (ctx.currentCaseAnalysisElement instanceof OrClauseUse) {
-				ErrorHandler.report(Errors.SYNTAX_CASE_FOR_DISJUNCTION, this);
+				ErrorHandler.error(Errors.SYNTAX_CASE_FOR_DISJUNCTION, this);
 			}
-			ErrorHandler.report(SYNTAX_CASE_FOR_DERIVATION, this);
+			ErrorHandler.error(SYNTAX_CASE_FOR_DERIVATION, this);
 		}
 		NonTerminal caseNT;
 		if (ctx.currentCaseAnalysisElement instanceof AssumptionElement) {
@@ -97,23 +97,23 @@ public class SyntaxCase extends Case {
 				}
 			}
 			if (concDef == null) {
-				ErrorHandler.report(Errors.INTERNAL_ERROR,"no variable clause for nonterminal: " + 
+				ErrorHandler.error(Errors.INTERNAL_ERROR,"no variable clause for nonterminal: " + 
 						ctx.currentCaseAnalysisElement,this);
 			}
 		} else if (concElem instanceof NonTerminal) {
-			ErrorHandler.report(NONTERMINAL_CASE, "Case " + conclusion + " is a nonterminal; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
+			ErrorHandler.error(NONTERMINAL_CASE, "Case " + conclusion + " is a nonterminal; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
 		} else if (concElem instanceof Binding) {
-			ErrorHandler.report(NONTERMINAL_CASE, "Case " + conclusion + " is a binding; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
+			ErrorHandler.error(NONTERMINAL_CASE, "Case " + conclusion + " is a binding; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
 		} else if (concElem instanceof ClauseUse) {
 			ClauseUse concUse = (ClauseUse) concElem;
 			concUse.checkBindings(ctx.bindingTypes, this);
 			concDef = concUse.getConstructor();
 			if (concUse.getConstructor().getType() != caseNT.getType()) {
-				ErrorHandler.report(INVALID_CASE, "case given is not actually a case of " + caseNT, this);
+				ErrorHandler.error(INVALID_CASE, "case given is not actually a case of " + caseNT, this);
 			}
 		} else {
 			// not clear when this error happens
-			ErrorHandler.report(Errors.INTERNAL_ERROR, "unknownCase "+ concElem, this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR, "unknownCase "+ concElem, this);
 		}		  
 
 		if (assumes != null) {
@@ -128,14 +128,14 @@ public class SyntaxCase extends Case {
 		int diff = concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 		// this check is redundant:
 		if (diff < 0) {
-			ErrorHandler.report(Errors.INVALID_CASE, "A case must use the whole context of the subject", this);
+			ErrorHandler.error(Errors.INVALID_CASE, "A case must use the whole context of the subject", this);
 			return;
 		}
 		
 		if (diff > 0) {
 			Util.debug("concDef = ",concDef);
 			if (!concDef.isVarOnlyClause()) {
-				ErrorHandler.report("The context may increase only with variable cases", assumes);
+				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, assumes);
 			}
 		}
 
@@ -143,7 +143,7 @@ public class SyntaxCase extends Case {
 		for (FreeVar fv : getCaseFreeVars(ctx,concTerm)) {
 			if (ctx.isLocallyKnown(fv.toString())) {
 				Util.debug("ctx.inputsVars = ",ctx.inputVars);
-				ErrorHandler.report(Errors.INVALID_CASE, "A case must use new variables, cannot reuse " + fv, this);
+				ErrorHandler.error(Errors.INVALID_CASE, "A case must use new variables, cannot reuse " + fv, this);
 			}
 		}
 
@@ -200,7 +200,7 @@ public class SyntaxCase extends Case {
 		}
 
 		if (computedCaseTerm == null) {
-			ErrorHandler.report(EXTRA_CASE, this);
+			ErrorHandler.error(EXTRA_CASE, this);
 		}
 
 		Term adaptedCaseAnalysis = ctx.currentCaseAnalysis;
@@ -208,19 +208,19 @@ public class SyntaxCase extends Case {
 		int lambdaDifference =  computedCaseTerm.countLambdas() - adaptedCaseAnalysis.countLambdas();
 		if (lambdaDifference > 0) {
 			if (lambdaDifference > 2) {
-				ErrorHandler.report(Errors.INTERNAL_ERROR,"New assumption can only add one variable",this);
+				ErrorHandler.error(Errors.INTERNAL_ERROR,"New assumption can only add one variable",this);
 			}
 			// JTB: The code here is tricky because syntax adds just one variable,
 			// but adaptation info must use both variables.
 			verify(concElem instanceof AssumptionElement,"not an assumption element? " + concElem);
 			AssumptionElement ae = (AssumptionElement)concElem;
 			if (!(ae.getBase() instanceof Variable)) {
-				ErrorHandler.report("new assumption can only be used with variable", this);
+				ErrorHandler.error(Errors.CASE_ASSUMPTION_NOT_VAR, this);
 			}
 			verify(ae.getAssumes() instanceof ClauseUse, "not a clause use? " + assumes);
 			NonTerminal newRoot = concElem.getRoot();
 			if (ctx.isLocallyKnown(newRoot.getSymbol())) {
-				ErrorHandler.report(REUSED_CONTEXT,"May not re-use context name " +newRoot, this);
+				ErrorHandler.error(REUSED_CONTEXT, newRoot.toString(), this);
 			}
 
 			// If currentCaseAnalysis is an abstraction, bind it to a fresh variable,
@@ -261,11 +261,11 @@ public class SyntaxCase extends Case {
 			NonTerminal newRoot = concElem.getRoot();
 			Util.debug("checking ",newRoot," against ",ctx.currentCaseAnalysisElement.getRoot());
 			if (!ctx.isKnownContext(newRoot)) {
-				ErrorHandler.report(Errors.UNKNOWN_CONTEXT, newRoot.toString(), this);
+				ErrorHandler.error(Errors.UNKNOWN_CONTEXT, newRoot.toString(), this);
 			}
 			if (newRoot != null) {
 				if (!newRoot.equals(ctx.currentCaseAnalysisElement.getRoot())) {
-					ErrorHandler.report("Must use same context in case", this);
+					ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 				}
 			}
 		}
@@ -278,7 +278,7 @@ public class SyntaxCase extends Case {
 			unifyingSub = concTerm.unify(adaptedCaseAnalysis);
 		} catch (UnificationFailed uf) {
 			uf.printStackTrace();
-			ErrorHandler.report(Errors.INTERNAL_ERROR,": Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis,this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,": Should not have unification error here!\n concTerm = " + concTerm + ", case analysis = "+ adaptedCaseAnalysis,this);
 		}
 
 		unifyingSub.avoid(concTerm.getFreeVariables());
@@ -330,7 +330,7 @@ public class SyntaxCase extends Case {
 			Set<FreeVar> bound = sub.selectUnavoidable(ctx.inputVars);
 			Util.debug("unavoidable: ",bound);
 			if (!bound.isEmpty()) {
-				ErrorHandler.report(Errors.INVALID_CASE, "The case is too specialized, the context in the case binds " + bound.iterator().next(), this);
+				ErrorHandler.error(Errors.INVALID_CASE, "The case is too specialized, the context in the case binds " + bound.iterator().next(), this);
 			}
 		} catch (UnificationFailed e) {
 			// problems will be caught later

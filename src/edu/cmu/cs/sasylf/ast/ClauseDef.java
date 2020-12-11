@@ -46,7 +46,7 @@ public class ClauseDef extends Clause {
 		}
 		for (Element e : getElements()) {
 			if (e instanceof Clause) {
-				ErrorHandler.report("judgment/syntax must not include parenthesized expressions",copy);
+				ErrorHandler.error(Errors.CLAUSE_DEF_PAREN,copy);
 			}
 		}
 	}
@@ -109,7 +109,7 @@ public class ClauseDef extends Clause {
 					for (Element boundVarElem : defB.getElements()) {
 						int varIndex = getIndexOf((Variable)boundVarElem);
 						if (varIndex == -1)
-							ErrorHandler.report("could not find " + boundVarElem + " in clause " + this, this);
+							ErrorHandler.error(Errors.UNBOUND_VAR_USE,"Could not find " + boundVarElem + " in clause " + this, this);
 						Variable localVar = (Variable) getElements().get(varIndex);
 						varTypes.add(localVar.getType().typeTerm());
 					}
@@ -143,7 +143,7 @@ public class ClauseDef extends Clause {
 			if (e instanceof Variable) {
 				if (result == -1) result = index;
 				else {
-					ErrorHandler.warning("An assumption clause must not have more than one variable", this);
+					Util.verify(false, "context clause with more than one variable?");
 				}
 			}
 			++index;
@@ -186,7 +186,7 @@ public class ClauseDef extends Clause {
 					if (boundE instanceof Variable)
 						boundVars.add((Variable) boundE);
 					else
-						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, boundE);
+						ErrorHandler.error(Errors.BAD_SYNTAX_BINDING, boundE);
 				}
 			}
 		}
@@ -194,7 +194,7 @@ public class ClauseDef extends Clause {
 			if (!topVars.containsAll(boundVars)) {
 				// a variable in a binding was not bound outside
 				boundVars.removeAll(topVars);
-				ErrorHandler.report("Variable(s) " + boundVars + " were used in a binding but never declared", this);
+				ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable(s) " + boundVars + " were used in a binding but never declared", this);
 			} else {
 				// a variable declared at the top was not used in a binding
 				topVars.removeAll(boundVars);
@@ -204,7 +204,7 @@ public class ClauseDef extends Clause {
 						varType.setContext(this);
 					}
 				} else {
-					ErrorHandler.report(Errors.UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
+					ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
 
 				}
 			}
@@ -295,7 +295,7 @@ public class ClauseDef extends Clause {
 			Util.debug("error = ",ex.getMessage());
 			Util.debug("term = ",term,": ",term.getType());
 			Util.debug("subj = ",targetTerm,": ",targetTerm.getType());
-			ErrorHandler.report(Errors.INTERNAL_ERROR, ": Unification should not fail: " + term + " ? " + targetTerm,this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR, ": Unification should not fail: " + term + " ? " + targetTerm,this);
 			return null; // NOTREACHED
 		}
 		Util.debug("checking checkSub = ",checkSub);

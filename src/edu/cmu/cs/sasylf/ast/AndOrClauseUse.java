@@ -6,6 +6,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.ContextJudgment.NoCommonPrefixException;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
@@ -38,7 +39,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		for (ClauseUse p : parts) {
 			ClauseType type = p.getType();
 			if (!(type instanceof Judgment)) {
-				ErrorHandler.report("can only '"+sep+"' clauses together, not syntax: " + p, sp);
+				ErrorHandler.error(Errors.ANDOR_NOSYNTAX, ": " + p, sp);
 			}
 			final Judgment judg = (Judgment)type;
 			types.add(judg);
@@ -47,7 +48,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			if (assumption == null) assumption = localAssume;
 			else if (!assumption.equals(localAssume)) {
 				if (p.getRoot() == null) continue; // OK -- not involved with prefix
-				ErrorHandler.report("cannot '"+sep+"' a clause with a different assumption than earlier ones: " + p, sp);
+				ErrorHandler.error(Errors.ANDOR_CONTEXT,assumption + " != " + localAssume, sp);
 			}
 			Element e = p.getAssumes();
 			Util.verify(e != null, "How can it be null if the judgment has an assumption?");
@@ -55,7 +56,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			else try {
 				prefix = ContextJudgment.getCommonPrefix(prefix, e);
 			} catch (NoCommonPrefixException e1) {
-				ErrorHandler.report("all '"+sep+"'ed clauses must share a common prefix context: not so " + p, sp);								
+				ErrorHandler.error(Errors.ANDOR_PREFIX,": " + p + " doesn't share " + prefix, sp);								
 			}
 		}
 		List<ClauseUse> clauses = new ArrayList<>(parts); // so we can mutate

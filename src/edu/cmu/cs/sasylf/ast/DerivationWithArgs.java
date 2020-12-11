@@ -121,15 +121,15 @@ public abstract class DerivationWithArgs extends Derivation {
 					}
 				}
 				if (e instanceof Variable) {
-					ErrorHandler.report(Errors.UNBOUND_VAR_USE, "Variable found outside of a binding context.", c);
+					ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable found outside of a binding context.", c);
 				}
 				if (!(e.getType() instanceof Syntax)) {
-					ErrorHandler.report(Errors.SYNTAX_EXPECTED, c);
+					ErrorHandler.error(Errors.SYNTAX_EXPECTED, c);
 				}
 				f = e.asFact(ctx, ctx.assumedContext);
 			}
 			if (!ctx.isKnownContext(f.getElement().getRoot())) {
-				ErrorHandler.report(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
+				ErrorHandler.error(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
 			}
 			c.checkBindings(ctx.bindingTypes, c);
 			args.add(f);
@@ -158,7 +158,7 @@ public abstract class DerivationWithArgs extends Derivation {
 					String s = e.toString();
 					f = ctx.derivationMap.get(s);
 					if (f == null && !ctx.isKnown(s)) {
-						ErrorHandler.report(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
+						ErrorHandler.error(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
 					}
 				} else if (e instanceof Clause) {
 					f = parseAsDerivation(ctx,(Clause)e);

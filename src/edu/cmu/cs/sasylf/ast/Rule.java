@@ -87,14 +87,14 @@ public class Rule extends RuleLike implements CanBeCase {
 		conclusion.typecheck(ctx);
 		Element computed = conclusion.computeClause(ctx, false);
 		if (!(computed instanceof ClauseUse)) {
-			ErrorHandler.report(JUDGMENT_EXPECTED, "Rule conclusion must be a judgment form, not just syntax", computed);				
+			ErrorHandler.error(JUDGMENT_EXPECTED, computed);				
 		}
 		ClauseUse myConc = (ClauseUse) computed;
 		if (!(myConc.getConstructor().getType() instanceof Judgment))
-			ErrorHandler.report(JUDGMENT_EXPECTED, "Rule conclusion must be a judgment form, not just syntax", myConc);
+			ErrorHandler.error(JUDGMENT_EXPECTED, myConc);
 
 		if (!(myConc.getConstructor().getType() == judge))
-			ErrorHandler.report(WRONG_JUDGMENT, "Rule conclusion was expected to be a " + judge.getName() + " judgment but instead had the form of the " + ((Judgment)myConc.getConstructor().getType()).getName() + " judgment", myConc);
+			ErrorHandler.error(WRONG_JUDGMENT, "Rule conclusion was expected to be a " + judge.getName() + " judgment but instead had the form of the " + ((Judgment)myConc.getConstructor().getType()).getName() + " judgment", myConc);
 
 		myConc.checkBindings(bindingTypes, this);
 		conclusion = myConc;
@@ -118,11 +118,11 @@ public class Rule extends RuleLike implements CanBeCase {
 			c.typecheck(ctx);
 			computed = c.computeClause(ctx, false);
 			if (!(computed instanceof ClauseUse)) {
-				ErrorHandler.report(JUDGMENT_EXPECTED, "Rule premise must be a judgment form, not just syntax", computed);				
+				ErrorHandler.error(JUDGMENT_EXPECTED, computed);				
 			}
 			ClauseUse premiseClause = (ClauseUse) computed;
 			if (!(premiseClause.getConstructor().getType() instanceof Judgment)) {
-				ErrorHandler.report(JUDGMENT_EXPECTED, "Rule premise must be a judgment form, not just syntax", premiseClause);
+				ErrorHandler.error(JUDGMENT_EXPECTED, premiseClause);
 			}
 			premiseClause.checkBindings(bindingTypes, this);
 			premises.set(i, premiseClause);
@@ -139,16 +139,15 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (judge.getAssume() != null && !isAssumption()) { // bad15
 			NonTerminal nt = myConc.getRoot();
 			if (nt == null) {
-				ErrorHandler.report(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
+				ErrorHandler.error(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
 			} else if (myConc.hasVariables()) {
-				ErrorHandler.report(Errors.VAR_CONCLUSION_CONTEXT, conclusion);
+				ErrorHandler.error(Errors.VAR_CONCLUSION_CONTEXT, conclusion);
 			}
 		}
 
 		Set<NonTerminal> neverRigid = getNeverRigid();
 		if (!neverRigid.isEmpty()) {
-			ErrorHandler.warning("The following meta-variables never occur outside of a binding: " + neverRigid + 
-					"\nThis is likely to lead to incomplete unification later on.", this);
+			ErrorHandler.warning(Errors.NEVER_RIGID, neverRigid.toString(), this);
 		}
 		ruleIsOk = true;
 	}
@@ -190,7 +189,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			Element e = conclusion.getElements().get(i);
 			if (e instanceof Variable) {
 				if (varFound != null && !varFound.equals(e)) { // XXX: extension point
-					ErrorHandler.report("Can't handle more than one variable in assumption rule", this);
+					ErrorHandler.error(Errors.ASSUMES_MULTI_VAR, this);
 				}
 				appVarIndex = countNTs;
 				varFound = (Variable)e;
@@ -205,7 +204,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		if (assumeClauseDef.assumptionRule != null &&
 				assumeClauseDef.assumptionRule != this) // idempotency
 			// note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
-			ErrorHandler.report("Multiple uses of the same assumption not supported", this);
+			ErrorHandler.error(Errors.ASSUMES_MULTI_USE,assumeClauseDef.toString(), this);
 		assumeClauseDef.assumptionRule = this;
 
 		// now check that assume clause does not bind two NTs together,
@@ -216,16 +215,16 @@ public class Rule extends RuleLike implements CanBeCase {
 			Element d = assumeClauseDef.getElements().get(i);
 			if (d.getType() == gammaType) continue;
 			if (defined.contains(u)) {
-				ErrorHandler.report("Found duplicate instance of " + u, assumeClauseUse);
+				ErrorHandler.error(Errors.ASSUMES_DUPLICATE,u.toString(), assumeClauseUse);
 			}
 			if (d instanceof Variable) {
 				if (!(u instanceof Variable)) {
-					ErrorHandler.report("Expected variable in assumption rule, found " + u, assumeClauseUse);
+					ErrorHandler.error(Errors.ASSUMES_MISMATCH, d.toString(), assumeClauseUse);
 				}
 				defined.add(u);
 			} else if (d instanceof NonTerminal) {
 				if (!(u instanceof NonTerminal)) {
-					ErrorHandler.report("Expected name in assumption rule, found " + u, assumeClauseUse);
+					ErrorHandler.error(Errors.ASSUMES_MISMATCH, d.toString(), assumeClauseUse);
 				}
 				defined.add(u);
 			}
@@ -244,7 +243,7 @@ public class Rule extends RuleLike implements CanBeCase {
 					e instanceof Variable) used.add(e);
 			if (e instanceof Variable) {
 				if (conclusion.getElements().indexOf(e) < 0) {
-					ErrorHandler.report("Variable in assumption rule must be at top-level.",this);
+					ErrorHandler.error(Errors.ASSUMES_VARIABLE_MISPLACED,this);
 				}
 			}
 			if (e instanceof Clause) {
@@ -260,7 +259,7 @@ public class Rule extends RuleLike implements CanBeCase {
 		// If something is used but not defined, it means the translation to LF
 		// doesn't know what to use for the nonterminal when forming the internal derivation
 		if (!used.isEmpty()) {
-			ErrorHandler.report("assumption rule gives no way to bind " + used, concClauseUse);
+			ErrorHandler.error(Errors.ASSUMES_UNDEFINED, used.toString(), concClauseUse);
 		}
 
 		// If a nonterminal is defined but not used, it means that we don't know what to choose
@@ -275,7 +274,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			// The following exception cannot be permitted:
 			// case analysis will crash with an internal error (see later in this file)
 			// if (e instanceof Variable) continue;
-			ErrorHandler.report("assumption rule doesn't use " + e, concClauseUse);
+			ErrorHandler.error(Errors.ASSUMES_UNUSED, e.toString(), concClauseUse);
 		}
 	}
 
@@ -453,7 +452,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
 		} catch (UnificationIncomplete e) {
 			Util.debug("unification incomplete on ", pattern, " and ", subject);
-			ErrorHandler.recoverableError("Unification incomplete for case " + getName(), source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
+			ErrorHandler.recoverableError(Errors.UNIFICATION_INCOMPLETE, source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
 		} catch (UnificationFailed e) {
 			Util.debug("failure: " + e.getMessage());
 			Util.debug("unification failed on ", pattern, " and ", subject);

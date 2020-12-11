@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.util;
 /**
  * Report of something of note in a proof.
  */
-public class Report {
+public abstract class Report {
 
 	private final String message;
 	private final Span loc;
@@ -42,7 +42,15 @@ public class Report {
 		return message;
 	}
 
-
+	/**
+	 * Return whether this report has extra information
+	 * (printed under control of {@link Util#EXTRA_ERROR_INFO}).
+	 * @return extra information (or null)
+	 */
+	public String getExtraInformation() {
+		return null;
+	}
+	
 	/**
 	 * Return the location of this report in the proof being checked.
 	 * @return location (start and end), may be null
@@ -58,4 +66,11 @@ public class Report {
 	public boolean isError() {
 		return false;
 	}
+	
+	/**
+	 * Return true if the user option enabling this kind of report
+	 * to be printed is set.
+	 * @return true if this report should be printed.
+	 */
+	public abstract boolean shouldPrint();
 }

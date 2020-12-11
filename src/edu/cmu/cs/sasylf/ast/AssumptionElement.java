@@ -106,7 +106,7 @@ public class AssumptionElement extends Element {
 			sa.setContext(context);
 			return sa;
 		} else {
-			ErrorHandler.report(Errors.ASSUMES_FOR_SYNTAX, this);
+			ErrorHandler.error(Errors.ASSUMES_FOR_SYNTAX, this);
 		}
 		return null;
 	}

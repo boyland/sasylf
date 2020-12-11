@@ -4,6 +4,7 @@
 
 package edu.cmu.cs.sasylf.prover;
 
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Stack;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 
 public class ProofImpl implements Proof {
 
@@ -22,6 +24,15 @@ public class ProofImpl implements Proof {
 	private Stack<Substitution> undoSubs;
 	private Stack<ProvedNode> undoStates;
 
+	/**
+	 * Constructs a new empty proof.
+	 * @param jType the type of thing to be proved
+	 * @param t the term to prove.
+	 */
+	public ProofImpl(edu.cmu.cs.sasylf.ast.Judgment jType, Term t) {
+		this(new Judgment(t,jType));
+	}
+	
 	/** Constructs a new empty Proof.
 	 * @param j The Judgment to be proved.
 	 */
@@ -155,7 +166,7 @@ public class ProofImpl implements Proof {
 	 * pretty prints this proof.
 	 */
 	@Override
-	public void prettyPrint() {
-		root.prettyPrint(substitution);
+	public void prettyPrint(PrintWriter out) {
+		root.prettyPrint(substitution, out);
 	}
 }

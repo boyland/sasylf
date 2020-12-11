@@ -81,7 +81,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	 */
 	public void addAlternate(NonTerminal nt) {
 		if (!alternates.add(Util.stripId(nt.getSymbol()))) {
-			ErrorHandler.recoverableError("", nt);
+			ErrorHandler.recoverableError(Errors.SYNTAX_DUPLICATE, nt);
 		}
 	}
 	
@@ -163,7 +163,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void typecheck(Context ctx) {
 		for (String alt: alternates) {
 			if (ctx.isTerminalString(alt)) {
-				ErrorHandler.report(Errors.SYNTAX_TERMINAL, this, this.getNonTerminal().getSymbol());				
+				ErrorHandler.error(Errors.SYNTAX_TERMINAL, this, this.getNonTerminal().getSymbol());				
 			}
 		}
 		
@@ -235,7 +235,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
 		}
 		if (variable != null && context == null) {
-			ErrorHandler.report(Errors.VARIABLE_HAS_NO_CONTEXT, this);
+			ErrorHandler.error(Errors.VARIABLE_HAS_NO_CONTEXT, this);
 		}
 	}
 	
@@ -247,7 +247,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void setContext(ClauseDef cd) {
 		if (context == null) context = cd;
 		else if (context != cd) {
-			ErrorHandler.report(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
+			ErrorHandler.error(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
 		}
 	}
 
@@ -496,7 +496,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void analyze(Context ctx, Element target, Node source, 
 			Map<CanBeCase, Set<Pair<Term, Substitution>>> result) {
 		if (isAbstract()) {
-			ErrorHandler.report("Cannot case analyze an abstract syntax: " + getName(),source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, ": " + getName(),source);
 		}
 
 		Term targetTerm = ctx.toTerm(target);
@@ -549,7 +549,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			Abstraction abs = context.get(i);
 			if (FreeVar.canAppearIn(abs.varType.baseTypeFamily(),termType) &&
 					!bare.hasBoundVar(context.size()-i)) {
-				ErrorHandler.recoverableError("Variable " + abs.varName + " is not used, so remove it from the assumed context",target);
+				ErrorHandler.recoverableError(Errors.CASE_SUBJECT_VAR_UNUSED, ": " + abs.varName, target);
 			}
 		}
 

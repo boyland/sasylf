@@ -55,13 +55,13 @@ public class RootModuleProvider extends AbstractModuleProvider {
 		try {
 			return Main.parseAndCheck(mf, f.toString(), id, new InputStreamReader(new FileInputStream(f),"UTF-8"));
 		} catch (UnsupportedEncodingException e) {
-			ErrorHandler.report(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		} catch (FileNotFoundException e) {
-			ErrorHandler.report("Module not found: " + id, loc);
+			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), loc);
 		} catch (SASyLFError ex) {
 			// already reported
 		} catch (RuntimeException e) {
-			ErrorHandler.report(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		}
 		return null;
 	}

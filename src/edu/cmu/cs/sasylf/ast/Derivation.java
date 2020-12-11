@@ -84,9 +84,7 @@ public abstract class Derivation extends Fact {
 			String[] names = super.getName().split(",");
 			if (names.length == 1) return;
 			List<ClauseUse> clauses = ((AndClauseUse)clause).getClauses();
-			if (clauses.size() != names.length) {
-				ErrorHandler.recoverableError("unequal number of conjuncts", this);
-			}
+			Util.verify(clauses.size() == names.length, "unequal number of conjuncts");
 			Pair<Fact,Integer> derivationInfo = ctx.subderivations.get(this);
 			for (int i=0; i < names.length; ++i) {
 				if (i == clauses.size()) break;
@@ -107,9 +105,9 @@ public abstract class Derivation extends Fact {
 
 		Element newClause = clause.computeClause(ctx, false);
 		if (!(newClause instanceof Clause))
-			ErrorHandler.report(Errors.DERIVATION_SYNTAX, this);
+			ErrorHandler.error(Errors.DERIVATION_SYNTAX, this);
 		else if (!(newClause.getType() instanceof Judgment))
-			ErrorHandler.report(Errors.DERIVATION_SYNTAX,this);
+			ErrorHandler.error(Errors.DERIVATION_SYNTAX,this);
 		clause = (Clause) newClause;
 		clause.checkBindings(ctx.bindingTypes, this);
 		clause.checkVariables(Collections.<String>emptySet(), false);
@@ -129,7 +127,7 @@ public abstract class Derivation extends Fact {
 	public static void typecheck(Node node, Context ctx, List<Derivation> derivations) {
 		int n = derivations.size();
 		if (n == 0) {
-			ErrorHandler.report(Errors.NO_DERIVATION, node);
+			ErrorHandler.error(Errors.NO_DERIVATION, node);
 		}
 
 		boolean finalOK = false;
@@ -147,7 +145,7 @@ public abstract class Derivation extends Fact {
 
 		Derivation last = derivations.get(derivations.size()-1);
 		if (last instanceof PartialCaseAnalysis) {
-			ErrorHandler.report(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
+			ErrorHandler.error(Errors.PARTIAL_CASE_ANALYSIS, last, "do\nproof by");
 		}
 		Derivation.checkMatchWithImplicitCoercions(last, ctx, ctx.currentGoalClause, last.getElement(), Errors.WRONG_RESULT.getText());	  
 	}
@@ -193,18 +191,18 @@ public abstract class Derivation extends Fact {
 				if (result == true) return true;
 			}
 			if (errorMsg == null) return false;
-			ErrorHandler.report(errorMsg + "\nNone of the possibilities matched.", node);
+			ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg + "\nNone of the possibilities matched.", node);
 		}
 		if (match instanceof AndClauseUse) {
 			if (!(supplied instanceof AndClauseUse)) {
 				if (errorMsg == null) return false;
-				ErrorHandler.report(errorMsg + "\nExpected multiple clauses.", node);
+				ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg + "\nExpected multiple clauses.", node);
 			}
 			List<ClauseUse> matchList = ((AndClauseUse)match).getClauses();
 			List<ClauseUse> suppliedList = ((AndClauseUse)supplied).getClauses();
 			if (matchList.size() != suppliedList.size()) {
 				if (errorMsg == null) return false;
-				ErrorHandler.report(errorMsg + "\nMismatch because expected " + matchList.size() + " conjuncts but got " + suppliedList.size(), node);
+				ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg + "\nMismatch because expected " + matchList.size() + " conjuncts but got " + suppliedList.size(), node);
 			}
 			for (int i=0; i < matchList.size(); ++i) {
 				String newMsg = errorMsg;
@@ -216,7 +214,7 @@ public abstract class Derivation extends Fact {
 			return true;
 		} else if (supplied instanceof AndClauseUse) {
 			if (errorMsg == null) return false;
-			ErrorHandler.report(errorMsg + "\nUnexpected multiple clauses.", node);
+			ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg + "\nUnexpected multiple clauses.", node);
 		}
 		
 		if (checkRelax(ctx,match,supplied)) return true;
@@ -305,7 +303,7 @@ public abstract class Derivation extends Fact {
 		for (Object o : extraInfo) {
 			sb.append(o == null ? "<null>" : o.toString());
 		}
-		ErrorHandler.report(errorMsg, node, sb.toString());
+		ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg, node, sb.length() == 0 ? null : sb.toString());
 		return false;
 	}
 	
@@ -321,14 +319,14 @@ public abstract class Derivation extends Fact {
 		if (srcClause.getRoot() == null) {
 			if (trgClause.getRoot() != null) {
 				if (errorPoint == null) return false;
-				ErrorHandler.report(kind+" cannot be used to weaken to variable context", errorPoint);
+				ErrorHandler.error(Errors.DERIVATION_MISMATCH,kind+" cannot be used to weaken to variable context", errorPoint);
 			}
 		} else if (trgClause.getRoot() == null) {
 			if (errorPoint == null) return false;
-			ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
+			ErrorHandler.error(Errors.CONTEXT_DISCARDED, errorPoint);
 		} else if (!srcClause.getRoot().equals(trgClause.getRoot())) {
 			if (errorPoint == null) return false;
-			ErrorHandler.report(kind+" cannot be used to change variable context",errorPoint);
+			ErrorHandler.error(Errors.DERIVATION_MISMATCH,kind+" cannot be used to change variable context",errorPoint);
 		}
 		return true;
 	}
@@ -347,7 +345,7 @@ public abstract class Derivation extends Fact {
 	    ClauseUse dst = (ClauseUse) dest;*/
 		if (source.getRoot() != null && dest.getRoot() == null) {
 			if (errorPoint == null) return false;
-			ErrorHandler.report(Errors.CONTEXT_DISCARDED, errorPoint);
+			ErrorHandler.error(Errors.CONTEXT_DISCARDED, errorPoint);
 		}
 		//}
 		return true;

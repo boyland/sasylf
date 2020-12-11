@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
@@ -32,7 +33,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 				sourceClauses.add((ClauseUse)f.getElement());
 				continue;
 			}
-			ErrorHandler.report("can only conjoin derivations, not syntax: " + f.getName(),this);
+			ErrorHandler.error(Errors.ANDOR_NOSYNTAX,": " + f.getName(),this);
 		}
 		Util.verify(sourceClauses.size() > 0, "should have at least one");
 		ClauseUse source = sourceClauses.get(0);

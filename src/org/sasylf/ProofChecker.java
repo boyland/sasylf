@@ -253,6 +253,8 @@ public class ProofChecker  {
 					e.printStackTrace();
 				}
 			}
+			Util.PRINT_ERRORS = false; // not needed for IDE
+			Util.PRINT_SOLVE = false;
 			Util.COMP_WHERE = Preferences.isWhereCompulsory();
 			Util.X_CONTEXT_IS_SYNTAX = Preferences.experimentalfeature("ContextIsSyntax");
 			result = Main.parseAndCheck(mf, res.getName(), id, contents);

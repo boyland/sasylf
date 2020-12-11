@@ -92,18 +92,18 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		final Element targetElement = targetDerivation.getElement();
 		ClauseType caseType = (ClauseType)targetElement.getType();
 		final Term targetTerm = ctx.toTerm(targetElement);
-
+		
 		if (caseType.isAbstract()) {
 			if (caseType instanceof NotJudgment) {
-				ErrorHandler.report("Cannot perform case analysis on 'not' judgments",this);
+				ErrorHandler.error(Errors.CASE_SUBJECT_NOT,this);
 			} else {
-				ErrorHandler.report("Cannot perform case analysis on unspecified type " + caseType, this);
+				ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT,caseType.toString(), this);
 			}
 		}
 
 		if (caseType instanceof Judgment) {
 			if (targetDerivation instanceof ClauseAssumption) {
-				ErrorHandler.report("Cannot perform case analysis on a constructed judgment", targetDerivation);
+				ErrorHandler.error(Errors.CASE_SUBJECT_CONSTRUCTED, targetDerivation);
 			}
 		} else {
 			checkSyntaxAnalysis(ctx, targetName, targetTerm, this);
@@ -171,18 +171,18 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				Set<Term> args = new HashSet<Term>();
 				for (Term t : app.getArguments()) {
 					if (!(t instanceof BoundVar) || !args.add(t)) {
-						ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis is only permitted on pure binders, with unique variable arguments", source);
+						ErrorHandler.error(VAR_STRUCTURE_KNOWN, "Case analysis is only permitted on pure binders, with unique variable arguments", source);
 					}
 				}
 			}
 		}
 		if (fv == null) {
-			ErrorHandler.report(VAR_STRUCTURE_KNOWN, "The structure of " + targetName+" is already known",source,
+			ErrorHandler.error(VAR_STRUCTURE_KNOWN, "The structure of " + targetName+" is already known",source,
 					"SASyLF computed it as " + targetTerm);
 		} else if (ctx.isRelaxationVar(fv)) {
-			ErrorHandler.report(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", source);
+			ErrorHandler.error(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", source);
 		} else if (!ctx.inputVars.contains(fv)) {
-			ErrorHandler.report("Undeclared syntax: " + targetName +(ctx.inputVars.isEmpty() ? "":", perhaps you meant one of " + ctx.inputVars), source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_UNKNOWN, ctx.inputVars.toString(), source);
 		}
 	}
 	
@@ -230,7 +230,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 							newSet = e.getKey().caseAnalyze(ctx, targetTerm, targetElement, source);
 							continue;
 						}
-						ErrorHandler.report(Errors.UNIFICATION_INCOMPLETE, e.getKey().getName(), source, "SASyLF tried to unify " + ex.term1 + " and " + ex.term2);
+						ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, e.getKey().getName(), source, "SASyLF tried to unify " + ex.term1 + " and " + ex.term2);
 						continue;
 					} catch (UnificationFailed ex) {
 						Util.debug("case no longer feasible.");
@@ -346,7 +346,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 					} catch (RuntimeException ex) {
 						System.err.println("Couldn't print term: " + missingCase);
 						ex.printStackTrace();
-						ErrorHandler.report(errorClass, missingMessage,errorClause);
+						ErrorHandler.error(errorClass, missingMessage,errorClause);
 					}
 					// System.out.println("missing: " + missing);
 					if (missingCaseText != null) {
@@ -372,7 +372,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				missingMessages.insert(0, '\n');
 			}
 			// Util.debug("adaptationSub = ",ctx.adaptationSub);
-			ErrorHandler.report(errorClass, missingMessages.toString(), errorClause, missingCaseTexts.toString());
+			ErrorHandler.error(errorClass, missingMessages.toString(), errorClause, missingCaseTexts.toString());
 		}
 	}
 

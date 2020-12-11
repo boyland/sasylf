@@ -9,6 +9,7 @@ import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.PermutationIterator;
 
 /**
@@ -61,7 +62,7 @@ public class Unordered extends InductionSchema {
 	public boolean matches(InductionSchema s, Node errorPoint, boolean equality) {
 		if (!(s instanceof Unordered)) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Expected a single induction: " + s, errorPoint);
+				ErrorHandler.recoverableError(Errors.INDUCTION_MISMATCH, ": " + s, errorPoint);
 			}
 			return false;
 		}
@@ -69,7 +70,7 @@ public class Unordered extends InductionSchema {
 		Unordered model = (Unordered)s;
 		if (model.size() != size()) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("Expected " + model.size() + " inductions", errorPoint);
+				ErrorHandler.recoverableError(Errors.INDUCTION_MISMATCH, ": " + model, errorPoint);
 			}
 			return false;
 		}
@@ -122,7 +123,8 @@ public class Unordered extends InductionSchema {
 			result = Reduction.EQUAL;
 		}
 		if (result == Reduction.NONE && errorPoint != null) {
-			ErrorHandler.recoverableError("Could find no permutation that reduced", errorPoint);
+			// TODO: find out which elements don't match anything
+			ErrorHandler.recoverableError(Errors.INDUCTION_PERMUTATION, errorPoint);
 		}
 		return result;
 	}

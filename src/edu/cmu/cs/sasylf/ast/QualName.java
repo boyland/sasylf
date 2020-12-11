@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -110,7 +111,7 @@ public class QualName extends Node {
 				} else if (src instanceof Module) {
 					resolution = ((Module)src).getDeclaration(ctx, name);
 					if (resolution == null) {
-						ErrorHandler.recoverableError("Cannot find anything named " + name + " in module", this);
+						ErrorHandler.recoverableError(Errors.QUAL_NOT_FOUND, this);
 					}
 				} else if (src instanceof String[]) {
 					String[] pack = (String[])src;
@@ -125,7 +126,7 @@ public class QualName extends Node {
 						newPack[pack.length] = name;
 					}
 				} else if (src != null) {
-					ErrorHandler.report("Cannot look inside of " + name, this);
+					ErrorHandler.error(Errors.QUAL_NOT_AVAILABLE, name, this);
 				}
 			}
 		}

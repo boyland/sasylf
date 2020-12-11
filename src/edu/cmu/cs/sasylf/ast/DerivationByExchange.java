@@ -25,14 +25,14 @@ public class DerivationByExchange extends DerivationWithArgs {
 		super.typecheck(ctx);
 
 		if (this.getArgs().size() != 1) {
-			ErrorHandler.report(Errors.WRONG_EXCHANGE_ARGUMENTS, this);
+			ErrorHandler.error(Errors.WRONG_EXCHANGE_ARGUMENTS, this);
 			return;
 		}
 
 		Fact arg = getArgs().get(0);
 		Element e = arg.getElement();
-		if (!(e instanceof ClauseUse)) {
-			ErrorHandler.report("exchange argument should be a judgment, not syntax", this);
+		if (!(e.getType() instanceof Judgment)) {
+			ErrorHandler.error(Errors.EXCHANGE_SYNTAX, this);
 		}
 		checkRootMatch("exchange", (ClauseUse)e, (ClauseUse)getClause(), this);
 
@@ -42,7 +42,7 @@ public class DerivationByExchange extends DerivationWithArgs {
 		//System.out.println("Exchange result: " + result);
 
 		if (!checkExchange(result,adapted)) {
-			ErrorHandler.report(Errors.BAD_EXCHANGE, this);
+			ErrorHandler.error(Errors.BAD_EXCHANGE, this);
 		}
 		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 

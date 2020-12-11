@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -60,10 +61,8 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		if (resolution != null) {
 			if (resolution instanceof SyntaxDeclaration) {
 				original = (SyntaxDeclaration)resolution;
-			} else if (resolution instanceof String[]) {
-				ErrorHandler.report("Cannot find syntax associated with " + source, this);
 			} else {
-				ErrorHandler.report("Renaming of non-syntax!",this, "SASyLF resolved " + this + " to " + resolution);
+				ErrorHandler.error(Errors.RENAME_SYNTAX, QualName.classify(resolution) + " " + source, this);
 			}
 		}
 		super.updateContext(ctx); // typeTerm() needs to work!
@@ -82,7 +81,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 			List<Clause> originalClauses = original.getClauses();
 			List<Clause> myClauses = getClauses();
 			if (originalClauses.size() != myClauses.size()) {
-				ErrorHandler.report("Expected " + originalClauses.size() + " clauses not " + myClauses.size(), this);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + originalClauses + ".length != " + myClauses.size(), this);
 			}
 			int n = myClauses.size();
 			for (int i = 0; i < n; ++i) {
@@ -92,11 +91,11 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 				c.typecheck(ctx);
 				if (c.isVarOnlyClause()) {
 					if (!o.isVarOnlyClause()) {
-						ErrorHandler.report("Did not expect variable-only clause at this point", c);
+						ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + o, c);
 					}
 				} else {
 					if (o.isVarOnlyClause()) {
-						ErrorHandler.report("Expected variable-only clause at this point", c);
+						ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + o, c);
 					}
 					ClauseDef cd;
 					if (c instanceof ClauseDef) cd = (ClauseDef) c;

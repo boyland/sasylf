@@ -26,14 +26,14 @@ public class DerivationByTheorem extends DerivationByIHRule {
 			if (resolution == null || resolution instanceof String[]) {
 				resolution = theorem = ctx.recursiveTheorems.get(theoremName.toString());
 				if (theorem == null)
-					ErrorHandler.report(Errors.THEOREM_NOT_FOUND, theoremName.toString(), this);
+					ErrorHandler.error(Errors.THEOREM_NOT_FOUND, theoremName.toString(), this);
 			}
 			if (!(resolution instanceof RuleLike)) {
-				ErrorHandler.report(theoremName + " does not appear to name a theorem or rule", this, "SASyLF computed that it is a " + resolution.getClass().getSimpleName());
+				ErrorHandler.error(Errors.THEOREM_EXPECTED, QualName.classify(resolution) + " " + theoremName, this);
 			}
 			theorem = (RuleLike)resolution;
 			if (!theorem.isInterfaceOK()) {
-				ErrorHandler.report(Errors.RULE_BAD, theoremName.toString(), this);
+				ErrorHandler.error(Errors.RULE_BAD, theoremName.toString(), this);
 			}
 			if (!(theorem instanceof Theorem)) {
 				if (theoremKind == null || theoremKind.length() == 0) {

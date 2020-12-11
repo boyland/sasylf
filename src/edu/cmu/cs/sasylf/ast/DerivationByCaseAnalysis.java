@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -20,7 +21,7 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		if (getArgStrings().size() != 1) {
-			ErrorHandler.report("case analysis can take only one argument", this);
+			ErrorHandler.error(Errors.CASE_SUBJECT_MULTIPLE, this);
 		}
 	}
 

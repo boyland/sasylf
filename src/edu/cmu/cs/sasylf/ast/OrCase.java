@@ -53,12 +53,12 @@ public class OrCase extends Case {
 		premise.getClause().checkBindings(ctx.bindingTypes, this);
 
 		if (!(ctx.currentCaseAnalysisElement instanceof OrClauseUse)) {
-			ErrorHandler.report(Errors.OR_CASE_NOT_APPLICABLE, this);
+			ErrorHandler.error(Errors.OR_CASE_NOT_APPLICABLE, this);
 		}
 
 		Clause cl = premise.getClause();
 		if (!(cl instanceof ClauseUse) || !(cl.getType() instanceof Judgment)) {
-			ErrorHandler.report(Errors.OR_SYNTAX, this);
+			ErrorHandler.error(Errors.OR_SYNTAX, this);
 		}
 
 		Term t = cl.asTerm();
@@ -86,7 +86,7 @@ public class OrCase extends Case {
 		}
 
 		if (!found) {
-			ErrorHandler.report(Errors.INVALID_CASE, "Found no match for derivation in disjunction", this);
+			ErrorHandler.error(Errors.INVALID_CASE, "Found no match for derivation in disjunction", this);
 		}
 
 		super.typecheck(ctx, isSubderivation);

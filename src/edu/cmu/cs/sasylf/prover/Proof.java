@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.prover;
 
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +52,7 @@ public interface Proof {
 
 	void undoApplyRule();
 
-	void prettyPrint();
+	void prettyPrint(PrintWriter out);
 
 	/*Judgment getGoal();
 	Rule getRule();

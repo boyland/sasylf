@@ -41,6 +41,20 @@ public class ErrorReport extends Report {
 		return isError;
 	}
 
+	public Errors getErrorType() {
+		return errorType;
+	}
+	
+	@Override
+	public String getExtraInformation() {
+		return debugInfo;
+	}
+
+	@Override
+	public boolean shouldPrint() {
+		return Util.PRINT_ERRORS;
+	}
+
 	public final Errors errorType;
 	public final String debugInfo;
 	private final boolean isError;

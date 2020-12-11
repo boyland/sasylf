@@ -4,6 +4,7 @@
 
 package edu.cmu.cs.sasylf.prover;
 
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -152,9 +153,9 @@ public class ProvedNodeImpl implements ProvedNode {
 	 * pretty prints this node and its children
 	 */
 	@Override
-	public void prettyPrint(Substitution sub) {
+	public void prettyPrint(Substitution sub, PrintWriter out) {
 		for(ProofNode pn: premises) {
-			pn.prettyPrint(sub);
+			pn.prettyPrint(sub, out);
 		}
 
 		String s = "d" + getId() + ": " + judgment.prettyPrint(sub) + " by rule " + rule.prettyPrint();
@@ -165,7 +166,7 @@ public class ProvedNodeImpl implements ProvedNode {
 			}
 			s = s.substring(0, s.length()-1);
 		}
-		System.out.println(s);
+		out.println(s);
 	}
 
 	/**

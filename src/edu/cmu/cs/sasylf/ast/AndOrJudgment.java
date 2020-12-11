@@ -8,6 +8,7 @@ import java.util.List;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.IdentityArrayMap;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
@@ -69,7 +70,7 @@ public abstract class AndOrJudgment extends Judgment {
 						context = (NonTerminal)e;
 					} else {
 						if (!context.equals(e)) {
-							ErrorHandler.report("All contexts in an '"+op+"' judgment must be the same", l);
+							ErrorHandler.error(Errors.ANDOR_CONTEXT, context + " != " + e, l);
 						}
 					}
 				}
@@ -86,7 +87,7 @@ public abstract class AndOrJudgment extends Judgment {
 			if (a != null) {
 				if (result == null) result = a;
 				else if (!result.equals(a)) {
-					ErrorHandler.report("cannot conjoin judgments with different assumptions", loc);
+					ErrorHandler.error(Errors.ANDOR_CONTEXT,result + " != " + a, loc);
 				}
 			}
 		}
@@ -192,5 +193,6 @@ public abstract class AndOrJudgment extends Judgment {
 		// System.out.println("Computed typeTerm for " + getName() + " to be " + result);
 		return result;
 	}
+
 	
 }

@@ -18,8 +18,8 @@ assumes G
    ----------- var
    x in (G, x)
 
-lemma no-context: //! assumption irrelevant
-  assumes G
+lemma no-context:
+  assumes G //! assumption irrelevant
   exists 0 = 0.
   proof by rule nat-eq
 end lemma

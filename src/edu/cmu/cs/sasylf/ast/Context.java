@@ -433,7 +433,7 @@ public class Context implements Cloneable {
 			}
 		}
 		if (problem) {
-			ErrorHandler.report("Internal error: inconsistent context: ",here,currentSub.toString());
+			ErrorHandler.error(Errors.INTERNAL_ERROR,": inconsistent context: ",here,currentSub.toString());
 		} 
 		removeUnreachableVariables();
 	}
@@ -575,7 +575,7 @@ public class Context implements Cloneable {
 		for (FreeVar f : vars) {
 			SyntaxDeclaration syn = getSyntax(f.getType());
 			if (syn == null) {
-				ErrorHandler.report(Errors.INTERNAL_ERROR, "no syntactic type for "+f, l);
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "no syntactic type for "+f, l);
 			}
 			varFreeNTmap.put(f.toString(),new NonTerminal(f.toString(),l,syn));
 		}

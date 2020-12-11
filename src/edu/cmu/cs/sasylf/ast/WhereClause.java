@@ -85,9 +85,7 @@ public class WhereClause extends Node {
 			}
 			// make sure the LHS isn't a judgment (probably would have failed the pattern match already)
 			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
-				ErrorHandler.recoverableError(
-					"The left-hand side of this where clause is not the correct form: " +
-						lhsElement, userWC.first);
+				ErrorHandler.recoverableError(Errors.WHERE_LEFT_BAD, userWC.first);
 				continue nextUserClause;
 			}
 			NonTerminal lhsNT;
@@ -114,8 +112,7 @@ public class WhereClause extends Node {
 					else {
 						// non-variable bindings on the LHS are not allowed
 						ErrorHandler.recoverableError(
-							"Non-variable bound on the left-hand side of the clause: " + e,
-							userWC.first
+								Errors.WHERE_ARGUMENT_NOTVAR, userWC.first
 						);
 						continue nextUserClause;
 					}
@@ -136,7 +133,7 @@ public class WhereClause extends Node {
 			
 			FreeVar lhsVar = (FreeVar) lhsNT.asTerm();
 			if (result.getSubstituted(lhsVar) != null) {
-				ErrorHandler.recoverableError("Where clause for " + lhsVar + " already written.", userWC.first);
+				ErrorHandler.recoverableError(Errors.WHERE_DUPLICATE, userWC.first);
 			}
 			
 			if (lhsVar.equals(rhsTerm)) { // NOP substitution
@@ -144,7 +141,7 @@ public class WhereClause extends Node {
 			}
 			
 			if (rhsTerm.getFreeVariables().contains(lhsVar)) {
-				ErrorHandler.recoverableError("Where clause for " + lhsVar + " includes this same variable", userWC.second);
+				ErrorHandler.recoverableError(Errors.WHERE_OCCUR, userWC.second);
 			}
 			
 			result.add(lhsVar, rhsTerm);
@@ -197,9 +194,7 @@ public class WhereClause extends Node {
 			}
 			catch (UnificationFailed ex) {
 				if (!userWhereClauses.isEmpty() || COMP_WHERE) {
-					ErrorHandler.warning(
-						"SASyLF cannot (yet) produce or verify where clauses for this case",
-						errorSpan);
+					ErrorHandler.warning(Errors.WHERE_ASSUMPTION, errorSpan);
 				}
 				return;
 			}
@@ -239,7 +234,7 @@ public class WhereClause extends Node {
 		// check if no clauses are needed, but the user wrote some
 		if (clausesNeeded == 0 && !userWhereClauses.isEmpty()) {
 			ErrorHandler.recoverableError(
-				"No where clauses are needed here.", userWhereClauses.get(0).first
+				Errors.WHERE_NONE_NEEDED, userWhereClauses.get(0).first
 			);
 			return;
 		}
@@ -253,9 +248,7 @@ public class WhereClause extends Node {
 			
 			// make sure the LHS isn't a judgment (probably would have failed already)
 			if (!(lhsElement instanceof NonTerminal) && !(lhsElement instanceof Binding)) {
-				ErrorHandler.recoverableError(
-					"The left-hand side of this where clause is not the correct form: " +
-						lhsElement, userWC.first);
+				ErrorHandler.recoverableError(Errors.WHERE_LEFT_BAD, userWC.first);
 				continue nextUserClause;
 			}
 
@@ -271,9 +264,8 @@ public class WhereClause extends Node {
 				if (fv.getName().equals(lhsVarName))
 					matchingVar = fv;
 			if (matchingVar == null) {
-				ErrorHandler.recoverableError(
-					"Where clause not needed for (not a member of the case analysis subject): " +
-						lhsVarName, userWC.first
+				ErrorHandler.recoverableError(Errors.WHERE_NOT_NEEDED,
+					": " + lhsVarName, userWC.first
 				);
 				continue nextUserClause;
 			}
@@ -281,22 +273,22 @@ public class WhereClause extends Node {
 			// make sure this LHS is mapped by s_u
 			Term rhsCorrect = su.getSubstituted(matchingVar);
 			if (rhsCorrect == null) {
-				ErrorHandler.recoverableError(
-					"Where clause not needed for: " + matchingVar, userWC.first
+				ErrorHandler.recoverableError(Errors.WHERE_NOT_NEEDED,
+					": " + matchingVar, userWC.first
 				);
 				continue nextUserClause;
 			}
 			rhsCorrect = rhsCorrect.substitute(ctx.currentSub); // working on bad68.slf
 			if (matchingVar.equals(rhsCorrect.getEtaEquivFreeVar())) {
-				ErrorHandler.recoverableError(
-						"Where clause not needed for: " + matchingVar, userWC.first
+				ErrorHandler.recoverableError(Errors.WHERE_NOT_NEEDED,
+						": " + matchingVar, userWC.first
 					);
 					continue nextUserClause;
 			}
 			// make sure this isn't a duplicate clause (will check the RHS anyway, tentatively)
 			if (checked.get(matchingVar)) {
-				ErrorHandler.recoverableError(
-					"Where clause for " + lhsVarName + " already written.", userWC.first
+				ErrorHandler.recoverableError(Errors.WHERE_DUPLICATE,
+					": " + lhsVarName, userWC.first
 				);
 			}
 			checked.put(matchingVar, true);
@@ -308,26 +300,13 @@ public class WhereClause extends Node {
 			int userLambdas = rhsUser.countLambdas();
 			int correctLambdas = rhsCorrect.countLambdas();
 			if (userLambdas != correctLambdas) {
-				// generate helpful error message:
-				String error;
 				if (correctLambdas == 0) {
-					error = "Arguments not needed for first-order where clause. " +
-							"Left-hand side should be " + matchingVar;
-						
+					ErrorHandler.recoverableError(Errors.WHERE_ARGUMENTS_WRONG, matchingVar.toString(), userWC.first);
 				} else if (userLambdas == 0) {
-					error = "Arguments needed for variable with 'holes'. " +
-							"Left-hand side should be " + makeLhsString(matchingVar,rhsCorrect);
+					ErrorHandler.recoverableError(Errors.WHERE_ARGUMENTS_NEEDED, makeLhsString(matchingVar,rhsCorrect), userWC.first);
 				} else {
-					error = " arguments bound on the left-hand side of the clause. " +
-							"Should have " + correctLambdas + " binding" + (correctLambdas > 1 ? "s" : "") +
-									", not " + userLambdas;
-					if (correctLambdas < userLambdas) {
-						error = "Too many" + error;
-					} else {
-						error = "Not enough" + error;
-					}
+					ErrorHandler.recoverableError(Errors.WHERE_ARGUMENTS_WRONG, makeLhsString(matchingVar,rhsCorrect), userWC.first);
 				}
-				ErrorHandler.recoverableError(error, userWC.first);
 				continue nextUserClause;
 			}
 
@@ -342,12 +321,12 @@ public class WhereClause extends Node {
 				Set<FreeVar> correctVars = rhsCorrect.getFreeVariables();
 				Util.debug("  correctVars are ", correctVars);
 				if (needSpecifics.size() > 0) {
-					ErrorHandler.recoverableError("replacement too general, perhaps these variables should be replaced with something specific: " + needSpecifics, userWC.second);
+					ErrorHandler.recoverableError(Errors.WHERE_TOO_GENERAL, needSpecifics.toString(), userWC.second);
 					continue nextUserClause;
 				}
 				for (Map.Entry<FreeVar, Term> e : unifyingSub.getMap().entrySet()) {
 					if (!e.getKey().isGenerated()) {
-						ErrorHandler.recoverableError("replacement too specific, imposes constraint on free variable " + e.getKey(), userWC.second);
+						ErrorHandler.recoverableError(Errors.WHERE_TOO_SPECIFIC_RESTRICTS, e.getKey().toString(), userWC.second);
 						continue nextUserClause;
 					}
 					if (!correctVars.contains(e.getKey())) {
@@ -362,11 +341,11 @@ public class WhereClause extends Node {
 							body = ((Application)body).getFunction();
 						}
 						String vals = TermPrinter.toString(ctx, null, userWC.second.getLocation(), body, false);
-						ErrorHandler.recoverableError("Replacement too specific, probably needs a fresh variable instead of " + vals, userWC.second);
+						ErrorHandler.recoverableError(Errors.WHERE_NEED_FRESH, vals, userWC.second);
 						continue nextUserClause;
 					}
 					if (!newVars.add(fv)) {
-						ErrorHandler.recoverableError("New variable " + fv + " should only be used once.", userWC.second);
+						ErrorHandler.recoverableError(Errors.WHERE_NEW_OVERUSED, fv.toString(), userWC.second);
 						continue nextUserClause;
 					}
 				}
@@ -389,7 +368,8 @@ public class WhereClause extends Node {
 					String varName = pair.first;
 					if (seenVars.get(varName) != null) {
 						ErrorHandler.recoverableError(
-							"Variable bound more than once in where clause: " + varName,
+							Errors.WHERE_REBOUND,
+							": " + varName,
 							new DefaultSpan(userWC.first.getLocation(), 
 								userWC.second.getEndLocation())
 						);
@@ -414,10 +394,8 @@ public class WhereClause extends Node {
 				int i = suggestion.indexOf("assumes"); // don't print "assumes ..."
 				if (i != -1)
 					suggestion = suggestion.substring(0, i - 1);
-
-				ErrorHandler.recoverableError(
-					"Right-hand side of where clause for " + matchingVar + " is incorrect. " +
-					"Should be: " + suggestion, userWC.second
+				ErrorHandler.recoverableError(Errors.WHERE_WRONG,
+					": " + userWC.first + " should be " + suggestion, userWC.second
 				);
 			}
 		}
@@ -432,10 +410,8 @@ public class WhereClause extends Node {
 			}
 			if (!missing.isEmpty()) {
 				String list = missing.toString();
-				ErrorHandler.warning( // don't print brackets on list
-					"Missing where clause" +
-					(missing.size() > 1 ? "s" : "") +
-					" for: " + list.substring(1, list.length() - 1), errorSpan
+				ErrorHandler.warning(Errors.WHERE_MISSING, // don't print brackets on list
+					": " + list.substring(1, list.length() - 1), errorSpan
 				);
 			}
 		}

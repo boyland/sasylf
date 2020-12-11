@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -91,7 +92,7 @@ public class NotJudgment extends Judgment {
 
 	private static NonTerminal findAssume(Location loc, Judgment j) {
 		if (j.getAssume() != null) {
-			ErrorHandler.report("negated judgment cannot have context", loc);
+			ErrorHandler.error(Errors.NOT_ASSUMPTION, loc);
 		}
 		return null;
 	}

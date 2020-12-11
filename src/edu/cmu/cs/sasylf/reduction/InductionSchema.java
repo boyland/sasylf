@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.Terminal;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 
 /**
  * A reduction schema; how to permit "recursion" in theorems.
@@ -102,7 +103,7 @@ public abstract class InductionSchema {
 			return parse(thm,cl.getElements(), errorPoint);
 		}
 		if (errorPoint != null) {
-			ErrorHandler.recoverableError("Cannot parse induction schema: " + arg, errorPoint);
+			ErrorHandler.recoverableError(Errors.INDUCTION_PARSE, ": " + arg, errorPoint);
 		}
 		return null;    
 	}
@@ -123,7 +124,7 @@ public abstract class InductionSchema {
 	private static InductionSchema parse(Theorem thm, List<Element> parts, Node errorPoint) {
 		if (parts.isEmpty()) {
 			if (errorPoint != null) {
-				ErrorHandler.recoverableError("empty induction description",errorPoint);
+				ErrorHandler.recoverableError(Errors.INDUCTION_EMPTY, errorPoint);
 			}
 			return null;
 		}
@@ -135,7 +136,7 @@ public abstract class InductionSchema {
 			if (Terminal.matches(e, ",") || Terminal.matches(e, ">")) {
 				if (++i >= parts.size()) {
 					if (errorPoint != null) {
-						ErrorHandler.recoverableError("induction description too short", errorPoint);
+						ErrorHandler.recoverableError(Errors.INDUCTION_SHORT, errorPoint);
 					}
 					return null;
 				}

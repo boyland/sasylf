@@ -120,6 +120,18 @@ public class CompUnit extends Node implements Module {
 		for (Part part : params) {
 			try {
 				part.typecheck(ctx);
+				if (part instanceof JudgmentPart) {
+					List<Node> pieces = new ArrayList<>();
+					part.collectTopLevel(pieces);
+					for (Node n : pieces) {
+						if (n instanceof Judgment) {
+							Judgment j = (Judgment)n;
+							if (!j.isAbstract() && j.getRules().isEmpty()) {
+								ErrorHandler.recoverableError(Errors.ABSTRACT_REQUIRED, j);
+							}
+						}
+					}
+				}
 			} catch (SASyLFError ex) {
 				// already reported
 			}
@@ -138,7 +150,7 @@ public class CompUnit extends Node implements Module {
 
 		if (moduleName != null) {
 			if (!ParseUtil.isLegalIdentifier(id.moduleName)) {
-				ErrorHandler.report(Errors.BAD_FILE_NAME,this);
+				ErrorHandler.error(Errors.BAD_FILE_NAME,this);
 			}
 			if (!moduleName.equals(id.moduleName)) {
 				ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+id.moduleName);

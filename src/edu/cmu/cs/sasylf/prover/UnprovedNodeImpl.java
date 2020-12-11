@@ -6,6 +6,7 @@ package edu.cmu.cs.sasylf.prover;
 
 import static edu.cmu.cs.sasylf.term.Facade.App;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class UnprovedNodeImpl implements UnprovedNode {
 	}
 
 	@Override
-	public void prettyPrint(Substitution sub) {
+	public void prettyPrint(Substitution sub, PrintWriter out) {
 		return;
 	}
 

@@ -175,7 +175,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 						key = Util.stripId(nt.getSymbol());
 						v = new Variable(key, nt.getLocation());
 					} else {
-						ErrorHandler.report(Errors.BAD_SYNTAX_BINDING, e2);
+						ErrorHandler.error(Errors.BAD_SYNTAX_BINDING, e2);
 						throw new RuntimeException("should not get here");
 					}
 					if (!map.containsKey(key)) {
@@ -258,27 +258,27 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
 		if (type1 != type2) {
-			ErrorHandler.report("Renaming has wrong type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl,
+			ErrorHandler.error(Errors.RENAME_MISMATCH, " type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl,
 					"SASyLF computed the LF types as " + type1 + " and " + type2);
 		}
 		if (orig instanceof NonTerminal) {
 			if (!(repl instanceof NonTerminal)) {
-				ErrorHandler.report("Expected " + orig, repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, repl);
 			}
 		} else if (orig instanceof Variable) {
 			if (!(repl instanceof Variable)) {
-				ErrorHandler.report("Expected bound variable",repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig,repl);
 			}
 		} else if (orig instanceof Binding) {
 			if (!(repl instanceof Binding)) {
-				ErrorHandler.report("Expected binding here " + orig, repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, repl);
 			}
 			Binding ob = (Binding)orig;
 			Binding rb = (Binding)repl;
 			List<Element> oes = ob.getElements();
 			List<Element> res = rb.getElements();
 			if (oes.size() != res.size()) {
-				ErrorHandler.report("Incorrect number of parameters (expected " + oes.size() + ")", rb);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, rb);
 			}
 			int n = oes.size();
 			for (int i=0; i < n; ++i) {
@@ -296,7 +296,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
 		if (cf.size() != of.size()) {
-			ErrorHandler.report("Has a different content than corresponding clause: " + o, this);
+			ErrorHandler.error(Errors.RENAME_MISMATCH,": " + o, this);
 		}
 		int m = cf.size();
 		for (int j = 0; j < m; ++j) {
@@ -387,20 +387,17 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				case "and": hasAnd = true; break;
 				case "or": hasOr = true; break;
 				default:
-					ErrorHandler.report(Errors.INTERNAL_ERROR, "Unknown operator: " + elem, elem);
-				}
-				if (hasNot) {
-					ErrorHandler.report("ambiguous use of 'not'",this);
+					ErrorHandler.error(Errors.INTERNAL_ERROR, "Unknown operator: " + elem, elem);
 				}
 			} else if (elem instanceof NotJudgment.NotTerminal) {
 				hasNot = true;
 			}
 		}
 		if (hasOr && hasAnd) {
-			ErrorHandler.report("Ambiguous use of 'and' and 'or'.  Use parentheses.", this);
+			ErrorHandler.error(Errors.ANDOR_AMBIGUOUS, this);
 		}
 		if (hasNot) {
-			ErrorHandler.report("'not' judgments not supported",this);
+			ErrorHandler.error(Errors.NOT_UNSUPPORTED,this);
 		}
 		if (hasAnd || hasOr) {
 			// System.out.println("Found 'and'/'or'" + symList);
@@ -451,7 +448,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (e instanceof ClauseUse) {
 					clauses.add((ClauseUse)e);
 				} else {
-					ErrorHandler.report("can only "+sepList.get(0)+" clauses together, not nonterminals", this);
+					ErrorHandler.error(Errors.ANDOR_NOSYNTAX, ": " + e, this);
 				}
 			}
 			return AndOrClauseUse.create(hasAnd, getLocation(), ctx, clauses);
@@ -473,7 +470,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				debug_parse(r.toString());
 			}
 			debug_parse(g.getStart().toString());*/
-			ErrorHandler.report("Cannot parse any syntactic case or judgment for expression "+ this /*+ " with  " + symList/*+" with elements " + elemTypes*/, this);
+			ErrorHandler.error(Errors.CLAUSE_PARSE," "+ this, this);
 			throw new RuntimeException("should be unreachable");
 		} catch (AmbiguousSentenceException e) {
 			final Set<RuleNode> trees = e.getParseTrees();
@@ -524,8 +521,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 			}
 						
 			List<String> possibilities = getAmbiguousParses(trees);
-			ErrorHandler.report("Ambiguous expression "+ this + " has differing interpretations " +
-				possibilities, this, "The underlying parse trees are " + trees);
+			ErrorHandler.error(Errors.CLAUSE_AMBIGUOUS," " +possibilities, this, "The underlying parse trees are " + trees);
 			throw new RuntimeException("should be unreachable");
 		}
 	}
@@ -608,7 +604,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 					return e;
 				}
 			}*/
-			ErrorHandler.report("internal error: not sure what to do with null ClauseUse on " + newElements, this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR, ": not sure what to do with null ClauseUse on " + newElements, this);
 		}
 		Location loc = getLocation();
 		if (!newElements.isEmpty()) loc = newElements.get(0).getLocation();

@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -277,8 +278,7 @@ public class Relaxation {
 						}
 					} else if (!(t instanceof Application) || !(((Application)t).getFunction() instanceof FreeVar)) {
 						verify(subject != null, "didn't anticipate pattern error");
-						ErrorHandler.report("Rule " + theRule.getName() + " cannot apply since "+ 
-								subject.getElements().get(i) + " cannot be a variable.", theNode);
+						ErrorHandler.error(Errors.CASE_ASSUMPTION_IMPOSSIBLE, subject.getElements().get(i).toString(), theNode);
 					} else {
 						// Why create a new variable?  We need to because the old one had parameters, the new one not.
 						Application app = (Application)t;
@@ -314,7 +314,7 @@ public class Relaxation {
 					if (patternRoot == null || e.getKey().equals(patternRoot)) {
 						relax = r;
 					} else {
-						ErrorHandler.warning("Perhaps context " + e.getKey() + " should have been used instead of " + patternRoot, theNode);
+						ErrorHandler.warning(Errors.CASE_CONTEXT_MAYBE_KNOWN, ": " + e.getKey(), theNode);
 					}
 					break;
 				}
@@ -323,7 +323,7 @@ public class Relaxation {
 		
 		if (relax == null) {
 			if (patternRoot != null && ctx.isKnownContext(patternRoot)) {
-				ErrorHandler.report("Context already in use: " + patternRoot, theNode);
+				ErrorHandler.error(Errors.REUSED_CONTEXT, patternRoot.toString(), theNode);
 			}
 			List<Abstraction> newWrappers = new ArrayList<Abstraction>();
 			Term.getWrappingAbstractions(patternTerm, newWrappers, diff);

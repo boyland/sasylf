@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Grammar;
@@ -38,6 +37,7 @@ public class ClauseUse extends Clause {
 			super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
 		}
 	}
+	/*
 	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
 		super(copy.getLocation());
 		setEndLocation(copy.getEndLocation());
@@ -53,8 +53,10 @@ public class ClauseUse extends Clause {
 
 				// must be an ElemType because can't be a judgment here
 				ClauseType ct = cu.getConstructor().getType();
-				if (ct instanceof Judgment)
-					ErrorHandler.report("A judgment cannot appear inside a clause", copy);
+				if (ct instanceof Judgment) {
+					Util.verify(false,"A judgment cannot appear inside a clause");
+					// ErrorHandler.error("A judgment cannot appear inside a clause", copy);
+				}
 				ElemType et = (ElemType) ct;
 				elemTypes.add(et);
 			} else {
@@ -64,10 +66,11 @@ public class ClauseUse extends Clause {
 
 		ClauseDef cd = parseMap.get(elemTypes);
 		if (cd == null)
-			ErrorHandler.report("Cannot find a syntax constructor or judgment for expression "+ copy +" with elements " + elemTypes, copy);
+			ErrorHandler.error("Cannot find a syntax constructor or judgment for expression "+ copy +" with elements " + elemTypes, copy);
 		cons = cd;
 		root = computeRoot();
 	}
+	*/
 
 	@Override 
 	public boolean equals(Object x) {
@@ -197,7 +200,7 @@ public class ClauseUse extends Clause {
 			}
 			return null;
 		}
-		ErrorHandler.report("Internal Error: no root in clause", e);
+		ErrorHandler.error(Errors.INTERNAL_ERROR, "Internal Error: no root in clause", e);
 		throw new RuntimeException("Internal Error");
 	}
 
@@ -255,7 +258,7 @@ public class ClauseUse extends Clause {
 									"\n    context is ", this);
 						Element varElement = getElements().get(varIndex);
 						if (!(varElement instanceof Variable))
-							ErrorHandler.report(EXPECTED_VARIABLE, "Expected variable matching " + boundVarElem + " but found the non-variable " + varElement, varElement);
+							ErrorHandler.error(EXPECTED_VARIABLE, "Expected variable matching " + boundVarElem + " but found the non-variable " + varElement, varElement);
 						Variable localVar = (Variable) varElement;
 						String localVarName = localVar.getSymbol();
 						vars.add(localVar);
@@ -362,16 +365,17 @@ public class ClauseUse extends Clause {
 	@Override
 	NonTerminal readAssumptions(List<Pair<String, Term>> varBindings, boolean includeAssumptionTerm) {
 		// should have zero to one recursive ClauseUse of the same type - call recursively
+		// XXX: If we add context append, will need to change this code.
 		boolean foundClause = false;
 		for (Element e : getElements()) {
 			if (e instanceof ClauseUse && ((ClauseUse)e).getConstructor().getType().equals(cons.getType())) {
 				if (foundClause)
-					ErrorHandler.report("An assumption case must not have more than one nested list of assumptions", cons);
+					ErrorHandler.error(Errors.ASSUMES_BRANCH, cons);
 				foundClause = true;
 				root = e.readAssumptions(varBindings, includeAssumptionTerm);
 			} else if (e instanceof NonTerminal && ((NonTerminal)e).getType().equals(cons.getType())) {
 				if (foundClause)
-					ErrorHandler.report("An assumption case must not have more than one nested list of assumptions", cons);
+					ErrorHandler.error(Errors.ASSUMES_BRANCH, cons);
 				foundClause = true;
 				root = (NonTerminal) e;
 			}
@@ -389,7 +393,7 @@ public class ClauseUse extends Clause {
 		if (varIndex >= 0) {
 			Element e = getElements().get(varIndex);
 			if (!(e instanceof Variable)) {
-				ErrorHandler.report(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
+				ErrorHandler.error(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
 			} else {
 				Variable v = (Variable) e;
 
@@ -401,7 +405,7 @@ public class ClauseUse extends Clause {
 				 */
 				String derivSym = "INTERNAL_DERIV_" + v.getSymbol();
 				if (cons.assumptionRule == null) {
-					ErrorHandler.report(MISSING_ASSUMPTION_RULE, "There's no rule for using an assumption of the form " + cons, cons);
+					ErrorHandler.error(MISSING_ASSUMPTION_RULE, "There's no rule for using an assumption of the form " + cons, cons);
 				}
 				ClauseUse varRuleConc = (ClauseUse) cons.assumptionRule.getConclusion();
 				Term derivTerm = includeAssumptionTerm ? varRuleConc.getBaseTerm() : null;

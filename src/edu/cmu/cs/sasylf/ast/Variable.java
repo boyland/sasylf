@@ -52,9 +52,9 @@ public class Variable extends Element {
 	public void setType(SyntaxDeclaration t) {
 		if (type != null && type == t) return; // idempotency
 		if (type != null)
-			ErrorHandler.report(Errors.SYNTAX_VARIABLE_TWICE, this);
+			ErrorHandler.error(Errors.SYNTAX_VARIABLE_TWICE, this);
 		if (t == null)
-			ErrorHandler.report(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
+			ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
 		type = t;
 	}
 
@@ -66,7 +66,7 @@ public class Variable extends Element {
 			if (var != null) {
 				setType(var.getType());
 			} else {
-				ErrorHandler.report(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
+				ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
 			}
 		}
 		return this;
@@ -77,11 +77,11 @@ public class Variable extends Element {
 		// System.out.println("Checking " + getSymbol() + " as defining? " + defining);
 		if (defining) {
 			if (!bound.add(getSymbol())) {
-				ErrorHandler.report(Errors.VAR_REBOUND, getSymbol(),this);
+				ErrorHandler.error(Errors.VAR_REBOUND, getSymbol(),this);
 			}
 		} else {
 			if (!bound.contains(getSymbol())) {
-				ErrorHandler.report(Errors.VAR_UNBOUND, getSymbol(),this);
+				ErrorHandler.error(Errors.VAR_UNBOUND, getSymbol(),this);
 			}
 		}
 	}
@@ -142,7 +142,7 @@ public class Variable extends Element {
 		}
 
 		if (index == -1) {
-			ErrorHandler.recoverableError("Variable " + symbol + " is not bound", this);
+			ErrorHandler.recoverableError(Errors.UNBOUND_VAR_USE, "variable " + symbol + " is not bound", this);
 		}
 
 		return new BoundVar(varBindings.size()-index);

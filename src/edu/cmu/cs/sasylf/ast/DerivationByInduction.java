@@ -24,22 +24,24 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	@Override
 	public void typecheck(Context ctx) {
 		if (!ctx.currentTheorem.getDerivations().contains(this)) {
-			ErrorHandler.report("Induction can only be declared at top level of a proof.\nSuggest 'use induction on " + getArgStrings().get(0) + "'", this);
+			ErrorHandler.error(Errors.INDUCTION_NESTED, this);
 		}
 		InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), this);
 
 		if (is != null && !ctx.currentTheorem.getInductionSchema().equals(is)) {
-			ErrorHandler.report(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");	    
+			ErrorHandler.error(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");	    
 		}
 
 		// special case: handle "use induction by"
-		if (getClause() instanceof AndClauseUse && ((AndClauseUse)getClause()).getClauses().isEmpty()) {
+		if (getCases().isEmpty() &&
+				getClause() instanceof AndClauseUse && 
+				((AndClauseUse)getClause()).getClauses().isEmpty()) {
 			Util.debug("use induction detected: " + is);
 			return;
 		}
 
 		if (is != null && !(is instanceof StructuralInduction)) {
-			ErrorHandler.report("'induction' combined with a case analysis can accept only one structural induction argument.", this);
+			ErrorHandler.error(Errors.CASE_SUBJECT_MULTIPLE, this);
 		}
 		super.typecheck(ctx);
 	}

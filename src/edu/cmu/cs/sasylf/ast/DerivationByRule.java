@@ -19,14 +19,14 @@ public class DerivationByRule extends DerivationByIHRule {
 		if (rule == null) {
 			Object resolution = ruleName.resolve(ctx);
 			if (resolution == null || resolution instanceof String[]) {
-				ErrorHandler.report(Errors.RULE_NOT_FOUND, ruleName.toString(), this);
+				ErrorHandler.error(Errors.RULE_NOT_FOUND, ruleName.toString(), this);
 			}
 			if (!(resolution instanceof RuleLike)) {
-				ErrorHandler.report(ruleName + " does not appear to be a rule", this, "SASyLF computed that it is a " + resolution.getClass().getSimpleName());
+				ErrorHandler.error(Errors.RULE_EXPECTED, QualName.classify(resolution) + " " + ruleName, this);
 			}
 			rule = (RuleLike)resolution;
 			if (!rule.isInterfaceOK()) {
-				ErrorHandler.report(Errors.RULE_BAD, ruleName.toString(), this);
+				ErrorHandler.error(Errors.RULE_BAD, ruleName.toString(), this);
 			}
 			if (!(rule instanceof Rule)) {
 				Theorem th = (Theorem)rule;

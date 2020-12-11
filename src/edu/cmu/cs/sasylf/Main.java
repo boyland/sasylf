@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TokenSpan;
@@ -134,7 +135,7 @@ public class Main {
 					} catch (RuntimeException e) {
 						// System.err.println("Internal SASyLF error analyzing " + filename + " !");
 						e.printStackTrace(); // unexpected exception
-						ErrorHandler.recoverableError("Internal error: " + e.toString(), null); // "recoverable" = "don't throw"
+						ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(), null); // "recoverable" = "don't throw"
 					} 
 				}
 			} finally {
@@ -178,9 +179,9 @@ public class Main {
 		try {
 			cu = DSLToolkitParser.read(filename,r);
 		} catch (ParseException e) {
-			ErrorHandler.report(null, e.getMessage(), new TokenSpan(e.currentToken.next), null, true, true);
+			ErrorHandler.error(Errors.PARSE_ERROR, e.getMessage(), new TokenSpan(e.currentToken.next));
 		} catch (TokenMgrError e) {
-			ErrorHandler.report(null, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()), null, true, true);
+			ErrorHandler.error(Errors.LEXICAL_ERROR, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
 		}
 		check(mf, id, cu);
 		return cu;

@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -22,7 +23,7 @@ public class RenameJudgment extends Judgment {
 			NonTerminal a) {
 		super(loc, n, l, c, a);
 		if (!l.isEmpty()) {
-			ErrorHandler.recoverableError("Renaming a judgment should not include renaming of rules", this);
+			ErrorHandler.recoverableError(Errors.RENAME_NO_RULES, this);
 		}
 		source = qn;
 	}
@@ -40,7 +41,7 @@ public class RenameJudgment extends Judgment {
 			if (resolution instanceof Judgment) {
 				original = (Judgment)resolution;
 			} else {
-				ErrorHandler.report("Cannot rename " + QualName.classify(resolution) + " as a judgment",this);
+				ErrorHandler.error(Errors.RENAME_JUDGMENT, QualName.classify(resolution) + " " + source, this);
 			}
 			getForm().typecheck(ctx);
 			ClauseDef cd;
@@ -60,16 +61,16 @@ public class RenameJudgment extends Judgment {
 				// TODO: get local version of this syntax declaration
 				// to use in following statements
 				if (super.getAssume() == null) {
-					ErrorHandler.recoverableError("Renaming should not have an assumption", this);
+					ErrorHandler.recoverableError(Errors.RENAME_ASSUME_MISMATCH, this);
 				} else {
 					super.getAssume().typecheck(ctx);
 					SyntaxDeclaration r = super.getAssume().getType();
-					if (r != o) {
-						ErrorHandler.recoverableError("Renaming uses wrong assumpion name, should use " + oa, this);
+					if (!r.equals(o)) {
+						ErrorHandler.recoverableError(Errors.RENAME_ASSUME_MISMATCH, this);
 					}
 				}
 			} else if (super.getAssume() != null) {
-				ErrorHandler.recoverableError("Renaming should not have an assumption", this);
+				ErrorHandler.recoverableError(Errors.RENAME_ASSUME_MISMATCH, this);
 			}
 			getForm().checkClauseMatch(original.getForm());
 		}
