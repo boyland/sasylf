@@ -128,6 +128,8 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		case INDUCTION_REPEAT: return true;
 		case WRONG_MODULE_NAME:
 		case WRONG_PACKAGE: return true;
+		case CASE_REDUNDANT:
+		case CASE_UNNECESSARY:
 		case EXTRA_CASE: return true;
 		case PARTIAL_CASE_ANALYSIS: return true;
 		case OTHER_JUSTIFIED: return true;
@@ -352,6 +354,8 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						null, "insert '" + fixInfo + "'", null, null));
 				break;
 			case EXTRA_CASE:
+			case CASE_REDUNDANT:
+			case CASE_UNNECESSARY:
 				if (proofEditor != null && lineInfo != null) {
 					ProjectionAnnotationModel annotationModel = proofEditor.getProjectionAnnotationModel();
 					Iterator<?> annos = annotationModel.getAnnotationIterator();

@@ -191,28 +191,43 @@ public class RuleCase extends Case {
 			unifyingSub = adaptedSubjectTerm.unify(patternConc);
 			unifyingSub.selectUnavoidable(RCCvars);
 		} catch (EOCUnificationFailed uf) {
-			ErrorHandler.error(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement
-					+ "\n    Did you re-use a variable (perhaps " + uf.eocTerm + ") which was already in scope?  If so, try using some other variable name in this case.", this);     
+			ErrorHandler.error(Errors.CASE_OCCUR, uf.eocTerm.toString(), this);     
 		} catch (UnificationIncomplete uf) {
-			ErrorHandler.error(INVALID_CASE, "Case too complex for SASyLF to check; consider sending this example to the maintainers", this,
+			Term app = uf.term1;
+			// try to find a FV[...]
+			if (app instanceof Application && !(((Application)app).getFunction() instanceof FreeVar)) {
+				app = uf.term2;
+			}
+			TermPrinter tp = new TermPrinter(ctx, subjectRoot, getLocation(), false);
+			String problem = tp.toString(app, false);
+			ErrorHandler.error(Errors.CASE_INCOMPLETE, problem, this,
 					"SASyLF was trying to unify " + uf.term1 + " and " + uf.term2);
 		} catch (UnificationFailed uf) {
-			//uf.printStackTrace();
-			debug(this.getLocation(), ": was unifying ",patternConc, " and ", adaptedSubjectTerm);
-			ErrorHandler.error(INVALID_CASE, "Case " + conclusion.getElement() + " is not actually a case of " + ctx.currentCaseAnalysisElement, this, "SASyLF computed the LF term " + adaptedSubjectTerm + " for the conclusion");
+			TermPrinter tp = new TermPrinter(ctx,subjectRoot,getLocation(),false);
+			Element e1, e2;
+			try {
+				e1 = tp.asElement(uf.term1);
+				e2 = tp.asElement(uf.term2);
+			} catch (RuntimeException ex) {
+				e1 = ctx.currentCaseAnalysisElement;
+				e2 = conclusion.getElement();
+			}
+			Util.debug(this.getLocation(), ": was unifying ",patternConc, " and ", adaptedSubjectTerm, " with error ", uf);
+			ErrorHandler.error(Errors.CASE_MISMATCH, e1 + " =?= " + e2, conclusion, "SASyLF computed the LF term " + adaptedSubjectTerm + " for the conclusion");
 		}
 		if (adaptedSubjectTerm != subjectTerm) {
 			Util.debug("pattern = ",patternConc," adaptedSubject = ",adaptedSubjectTerm);
 		}
-		//Util.debug("  unifyingSub = ",unifyingSub);
+		Util.debug("  unifyingSub = ",unifyingSub);
 
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(rule);
-		if (caseResult == null)
-			ErrorHandler.error(Errors.EXTRA_CASE, ": rule " + ruleName + " cannot be used to derive " + ctx.currentCaseAnalysisElement, this, "suggestion: remove it");
-		if (caseResult.isEmpty())
-			ErrorHandler.error(Errors.EXTRA_CASE, this,"suggestion: remove it");
-
+		if (caseResult == null) {
+			ErrorHandler.error(Errors.CASE_UNNECESSARY, this, "suggestion: remove it");
+		} else if (caseResult.isEmpty()) {
+			ErrorHandler.error(Errors.CASE_REDUNDANT, this, "suggestion: remove it");
+		}
+		
 		//Util.debug("caseResult = ",caseResult);
 
 		// find the computed case that matches the given rule
@@ -325,9 +340,7 @@ public class RuleCase extends Case {
 
 				break;
 			} catch (UnificationIncomplete e) {
-				// TODO: Change to use TermPrinter
-				String extraInfo = e.term1 + " =?= " + e.term2;
-				ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, extraInfo, this,
+				ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, this,
 						"(was checking " + candidate + " instance of " + caseTerm + ",\n got exception " + e);      
 				return; // tell Java we're gone.
 

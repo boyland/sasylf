@@ -183,7 +183,7 @@ public class Judgment extends Node implements ClauseType, Named {
 			if (rule.isInterfaceOK()) {
 				caseResult = rule.caseAnalyze(ctx, t, cl, source);
 			}
-			if (caseResult == null) caseResult = Collections.emptySet(); 
+			if (caseResult == null || caseResult.isEmpty()) continue; // caseResult = Collections.emptySet(); 
 			result.put(rule, caseResult);
 		}
 	}
