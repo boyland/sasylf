@@ -142,6 +142,7 @@ public class WhereClause extends Node {
 			
 			if (rhsTerm.getFreeVariables().contains(lhsVar)) {
 				ErrorHandler.recoverableError(Errors.WHERE_OCCUR, userWC.second);
+				continue nextUserClause;
 			}
 			
 			result.add(lhsVar, rhsTerm);
