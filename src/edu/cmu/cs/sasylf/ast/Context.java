@@ -312,6 +312,12 @@ public class Context implements Cloneable {
 				relaxationMap != null && relaxationMap.containsKey(new NonTerminal(s,null)) ||
 				isTerminalString(s); // terminals are pervasive
 	}
+	
+	public boolean isKnownVar(FreeVar fv) {
+		return inputVars.contains(fv) || 
+				outputVars.contains(fv) ||
+				currentSub.getMap().containsKey(fv);
+	}
 
 	/**
 	 * Return true if the given string is a declared terminal string

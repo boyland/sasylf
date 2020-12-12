@@ -191,6 +191,11 @@ public class Substitution {
 		varMap.keySet().removeAll(col);
 	}
 	
+	public void retainAll(Collection<FreeVar> col) {
+		assert wellFormed() : "Invariant broken in retainAll";
+		varMap.keySet().retainAll(col);
+	}
+	
 	/**
 	 * Return the domain as an unmodifiable set.
 	 * @return set of variables mapped y this substitution

@@ -6,7 +6,6 @@ import static edu.cmu.cs.sasylf.util.Util.verify;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -254,69 +253,62 @@ public class RuleCase extends Case {
 				// tdebug("computedSub = " + computedSub);
 				Set<FreeVar> problems = computedSub.selectUnavoidable(candidateFree);
 				if (!problems.isEmpty()) {
+					final TermPrinter tp = new TermPrinter(ctx, subjectRoot, getLocation(),false);
 					Util.debug("Candidate = ", candidate);
 					Util.debug("caseTerm = ", caseTerm);
 					Util.debug("cleaned caseTerm = ", cleanedCaseTerm);
 					Util.debug("computedSub = ", computedSub);
 					Util.debug("problems = ", problems);
 					Util.debug("fishy = " + fishy);
+					Errors errorClass = null;
 					String explanation = null;
+					Set<FreeVar> userFree = cleanedCaseTerm.getFreeVariables();
+					computedSub.avoid(userFree);
 					for (FreeVar v : problems) {
-						Term subbed = computedSub.getSubstituted(v);
-						Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
-						Util.debug("  binding ",v," to ",subbed);
-						if (explanation == null && !(v.isGenerated())) {
-							if (subbed == baseSubbed) {
-								explanation = "Perhaps it constrains " + v + " to be a specific form.";
-								// explanation = "Perhaps it uses " + baseSubbed + " where it should use another variable.";
-							} else {
-								explanation = "Perhaps " + baseSubbed + " should be replaced with something that could depend on the variable(s) in the context.";
-							}
+						if (!v.isGenerated()) {
+							errorClass = Errors.CASE_STRICT_RESTRICTS;
+							explanation = v.toString();
+							break;
 						}
 					}
-					if (explanation == null) {
+					if (errorClass == null) {
 						// tdebug("problems: " + problems + " in " + computedSub + " after " + pairSub);
 						FreeVar first = problems.iterator().next();
 						Term subbed = computedSub.getSubstituted(first);
 						Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
 						if (subbed == baseSubbed) {
-							explanation = "Perhaps " + TermPrinter.toString(ctx, subjectRoot, getLocation(), subbed, false) + " should be replaced with a new variable.";
-						} else if (!fishy.isEmpty()) {
-							explanation = "Perhaps " + fishy.iterator().next() + " should be replaced with something that could depend on the variable(s) in the context.";
+							errorClass = Errors.CASE_STRICT_NEED_VAR;
+							explanation = tp.toString(subbed,false);
 						} else {
-							explanation = "Perhaps " + baseSubbed + " should be replaced with something that could depend on the variable(s) in the context.";
+							Element elem = tp.asElement(subbed);
+							if (elem instanceof AssumptionElement) elem = ((AssumptionElement)elem).getBase();
+							errorClass = Errors.CASE_STRICT_NEED_DEPEND;
+							explanation = elem.toString();
 						}
 					}
-					// if we ever decide to have mutually compatible patterns
-					// without a MGU, we will need to change this error into something
-					// more sophisticated
-					ErrorHandler.recoverableError(INVALID_CASE, "Case is overly strict. " + explanation, this.getSpan(),
-							"SASyLF computes that " + problems.iterator().next() + " needs to be " + computedSub.getSubstituted(problems.iterator().next()));
+					Substitution restricted = new Substitution(computedSub);
+					restricted.retainAll(problems);
+					ErrorHandler.recoverableError(errorClass, explanation, this.getSpan(),
+							"SASyLF computes that " + problems + " should not be substituted in " + restricted);
 					generatedError = true;
 				} else {
 					// now check that all fresh variables are actually new
 					// See: bad36, bad54
-					String errorString = null;
 					for (Atom v : computedSub.getMap().keySet()) {
 						if (ctx.inputVars.contains(v)) {
-							errorString = "Case reuses " + v + " when it should use a new variable";
+							ErrorHandler.recoverableError(Errors.CASE_STRICT_NEED_VAR, v.toString(), this.getSpan());
+							generatedError = true;
 							break;
 						}
 						if (ctx.derivationMap.containsKey(v.toString())) {
 							ErrorHandler.warning(Errors.DERIVATION_NAME_REUSED, ": " + v, this.getSpan());
 						}
 					}
-					if (errorString != null) {
-						ErrorHandler.recoverableError(INVALID_CASE,  errorString, this.getSpan());
-						generatedError = true;
-					}
 				}
 				
 				// If no errors so far, see what warnings should be generated:
 				if (!generatedError) {
 					Set<FreeVar> genVars = computedSub.selectUnavoidable(caseFree);
-					Set<FreeVar> subVars = new HashSet<FreeVar>(caseFree);
-					subVars.retainAll(ctx.currentSub.getMap().keySet());
 					if (!fishy.isEmpty()) {
 						FreeVar first = fishy.iterator().next();
 						Term result = pairSub.getSubstituted(first);
@@ -325,8 +317,6 @@ public class RuleCase extends Case {
 					} else if (!genVars.isEmpty()) {
 						ErrorHandler.warning(Errors.RULE_CASE_TOO_GENERAL, genVars.toString(), this.getSpan(),
 								"SASyLF computes the first restriction as " + computedSub.getSubstituted(genVars.iterator().next()));
-					} else if (!subVars.isEmpty()) {
-						ErrorHandler.warning(Errors.RULE_CASE_USES_OLD, ": " + subVars, this.getSpan());
 					}
 				}
 				
@@ -351,14 +341,14 @@ public class RuleCase extends Case {
 			}*/
 
 		if (computedCaseTerm == null) {
-			// there must have been a candidate, but it didn't unify or wasn't an instance
+			// There must have been a candidate, but it didn't unify or wasn't an instance
 			String errorDescription = rule.getErrorDescription(candidate, ctx);
 			Util.debug("Expected case:\n", errorDescription);
 			Util.debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
 			Util.debug("SASyLF generated the LF term: ", candidate);
 			Util.debug("You proposed the LF term: ", caseTerm);
+			// TODO: find a case that causes this problem and come up with a better error
 			ErrorHandler.error(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
-			// TODO: explain WHY!!!
 		}
 
 		//Util.debug("unifyingSub: ", unifyingSub);

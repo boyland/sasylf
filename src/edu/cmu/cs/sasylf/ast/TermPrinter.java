@@ -133,7 +133,7 @@ public class TermPrinter {
 			}
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			String base = syn.getName();
-			if (((FreeVar)x).getStamp() == 0 && ctx.inputVars.contains(x)) 
+			if (((FreeVar)x).getStamp() == 0 && ctx.isKnownVar((FreeVar) x)) 
 				return new NonTerminal(x.toString(),location, syn);
 			if (rename) { // MDA: only rename free variables if the option is enabled
 				for (int i=0; true; ++i) {
@@ -170,8 +170,8 @@ public class TermPrinter {
 			}
 		} else if (x instanceof Abstraction) {
 			Abstraction abs = (Abstraction)x;
-			FreeVar etaFV = abs.getEtaEquivFreeVar();
-			if (etaFV != null) return asElement(etaFV,vars);
+			//FreeVar etaFV = abs.getEtaEquivFreeVar();
+			//if (etaFV != null) return asElement(etaFV,vars);
 			Term ty = abs.varType;
 			SyntaxDeclaration syn = ctx.getSyntax(ty);
 			boolean createName = rename;
