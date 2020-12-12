@@ -61,6 +61,7 @@ public class RootModuleProvider extends AbstractModuleProvider {
 		} catch (SASyLFError ex) {
 			// already reported
 		} catch (RuntimeException e) {
+			e.printStackTrace();
 			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		}
 		return null;
