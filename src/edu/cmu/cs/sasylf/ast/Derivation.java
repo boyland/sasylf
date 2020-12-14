@@ -180,6 +180,7 @@ public abstract class Derivation extends Fact {
 		}
 		if (supplied instanceof OrClauseUse) {
 			for (ClauseUse provided : ((OrClauseUse)supplied).getClauses()) {
+				provided = ContextJudgment.unwrap(provided);
 				boolean result = checkMatchWithImplicitCoercions(node,ctx,match,provided,errorMsg);
 				if (result == false) return false;
 			}
@@ -187,6 +188,7 @@ public abstract class Derivation extends Fact {
 		}
 		if (match instanceof OrClauseUse) {
 			for (ClauseUse required : ((OrClauseUse)match).getClauses()) {
+				required = ContextJudgment.unwrap(required);
 				boolean result = checkMatchWithImplicitCoercions(node,ctx,required,supplied,null);
 				if (result == true) return true;
 			}

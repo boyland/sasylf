@@ -6,6 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Atom;
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SingletonList;
@@ -246,5 +252,31 @@ public class ContextJudgment extends Judgment {
 			judg = newJudg;
 		}
 		return result;
+	}
+	
+	/**
+	 * Invert a use of any context judgments used to create this term.
+	 * @param input any term (must not be null)
+	 * @return inverted term not formed with a context judgment
+	 */
+	public static Term invertContextJudgments(Context ctx, Term input) {
+		List<Abstraction> wrappers = new ArrayList<>();
+		Term bare = Term.getWrappingAbstractions(input, wrappers);
+		if (!(bare instanceof Application)) return input; 
+		Application app = (Application) bare;
+		Atom func = app.getFunction();
+		if (!(func instanceof Constant)) return input;
+		Judgment j = ctx.getJudgment(func);
+		if (!(j instanceof ContextJudgment)) return input;
+		Util.verify(j.getRules().size() == 1, "context judgment can only have one rule");
+		Rule rule = j.getRules().get(0);
+		Application freshApp = rule.getFreshAdaptedRuleTerm(wrappers, null);
+		Util.verify(freshApp.getArguments().size() == 2, "context rule should have exactly one premise");
+		Term wrappedPrem = Term.wrapWithLambdas(wrappers, freshApp.getArguments().get(0));
+		Term wrappedConc = Term.wrapWithLambdas(wrappers, freshApp.getArguments().get(1));
+		Substitution invertSub = input.unify(wrappedConc);
+		Term output = wrappedPrem.substitute(invertSub);
+		// System.out.println("Inverted " + input + " as " + output);
+		return invertContextJudgments(ctx,output);
 	}
 }

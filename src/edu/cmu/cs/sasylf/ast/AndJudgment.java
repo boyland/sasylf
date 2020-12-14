@@ -29,9 +29,15 @@ public class AndJudgment extends AndOrJudgment {
 	}
 
 	@Override
-	protected void setRules(Location l, String name, List<Clause> premises,
+	protected AndClauseUse makeClauseUse(Location loc, List<Element> elems,
+			ClauseDef cd, List<ClauseUse> clauses) {
+		return new AndClauseUse(loc,elems,cd,clauses);
+	}
+
+	@Override
+	protected void setRules(Location l, String name, List<ClauseUse> premises,
 			Clause result) {
-		super.getRules().add(new Rule(l,name,premises,result));
+		super.getRules().add(new Rule(l,name,new ArrayList<>(premises),result));
 	}
 
 	private static Map<List<Judgment>,AndJudgment> cache = new HashMap<List<Judgment>,AndJudgment>();

@@ -27,12 +27,18 @@ public class OrJudgment extends AndOrJudgment {
 	private OrJudgment(Location l, List<Judgment> parts, List<ClauseUse> uses) {
 		super("or",l,parts,uses);
 	}
+
+	@Override
+	protected OrClauseUse makeClauseUse(Location loc, List<Element> elems,
+			ClauseDef cd, List<ClauseUse> clauses) {
+		return new OrClauseUse(loc,elems,cd,clauses);
+	}
 	
 	@Override
-	protected void setRules(Location l, String name, List<Clause> premises,
+	protected void setRules(Location l, String name, List<ClauseUse> premises,
 			Clause result) {
 		int i=1;
-		for (Clause premise : premises) {
+		for (ClauseUse premise : premises) {
 			ArrayList<Clause> premiseList = new ArrayList<Clause>(1);
 			premiseList.add(premise);
 			Rule rule = new Rule(l,name+"#"+i,premiseList,result);

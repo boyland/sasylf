@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.ContextJudgment.NoCommonPrefixException;
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -30,9 +35,34 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		}
 	}
 	
+	@Override
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
+		Util.verify(varBindings.size() == 0, "should only be at top level");
+		// XXX: Code duplicated with ClauseUse (getBaseTerm and computeTerm) 
+		int assumeIndex = getConstructor().getAssumeIndex();
+		if (assumeIndex >= 0) {
+			getElements().get(assumeIndex).readAssumptions(varBindings, true);
+		}
+		List<Term> pieces = new ArrayList<>();
+		for (ClauseUse cl : clauses) {
+			Term p = cl.asTerm();
+			List<Abstraction> wrappers = new ArrayList<>();
+			Term b = Term.getWrappingAbstractions(p, wrappers);
+			if (wrappers.size() != 0) {
+				Util.verify(wrappers.size() == varBindings.size(),"mismatch in context for " + this);
+			}
+			pieces.addAll(((Application)b).getArguments());
+		}
+		Term t = Facade.App(getConstructor().asTerm(), pieces);
+		if (assumeIndex != -1) {
+			t = newWrap(t,varBindings,0);
+		}
+		Util.debug("computed term for ", this, " as ", t);
+		return t;
+	}
+
 	public AndOrClauseUse create(Span sp, Context ctx, List<ClauseUse> parts) {
 		AndOrJudgment rcvr = (AndOrJudgment)getType();
-		Terminal sep = rcvr.makeSeparator(sp);
 		Element prefix = null;
 		NonTerminal assumption = null;
 		List<Judgment> types = new ArrayList<>();

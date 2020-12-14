@@ -46,3 +46,49 @@ lemma simple-poly:
     proof by t1, t2, t3
 end lemma
 
+lemma use-poly:
+    exists *, x:A |- t[x] : A
+    d1: *, x:A |- t[x] : A and 
+    d2: *, x:A->A |- t[x] : A->A and 
+    d3: * |- t' : A -> A by lemma simple-poly
+    proof by d1
+end lemma
+
+lemma choice:
+    assumes Gamma
+    forall d: Gamma, x:T |- t[x] : T'
+    exists Gamma, x:A |- t[x] : T' or Gamma, x:T1 -> T2 |- t[x] : T'
+    proof by case analysis on T:
+        case A is
+            _: Gamma, x:A |- t[x] : T' by d // should accept!
+        end case
+
+        case T1 -> T2 is
+            proof by d // should accept!
+        end case
+    end case analysis
+end lemma
+
+lemma use-choice:
+    exists *, x:A |- x:A
+    v: x:A in (*, x:A) by rule var
+    d: *, x:A |- x:A by rule T-Var on v // yes, I know, this is our goal.  Ignore.
+    ch: *, x:A |- x:A or *, x:T1 -> T2 |- x : A by lemma choice on d
+    proof by case analysis on ch:
+        case or d': *, x:A |- x:A is
+            proof by d'
+        end case
+        case or d'': *, x:T1 -> T2 |- x:A is
+            proof by case analysis on d'':
+                case rule
+                    v': x : A in (*, x : (T1 -> T2))
+                    -------------------------------- T-Var
+                    _: *, x : (T1 -> T2) |- x : A
+                is
+                    proof by contradiction on v'
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+    

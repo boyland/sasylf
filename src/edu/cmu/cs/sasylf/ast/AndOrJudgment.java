@@ -110,13 +110,23 @@ public abstract class AndOrJudgment extends Judgment {
 	public abstract Terminal makeSeparator(Span l);
 
 	/**
+	 * Create a clause use (used in rule creation) for this judgment.
+	 * @param loc location to use
+	 * @param elems individual elements (including separators)
+	 * @param cd the clause def to use
+	 * @param clauses list of clauses being joined
+	 * @return clause use of the correct type.
+	 */
+	protected abstract AndOrClauseUse makeClauseUse(Location loc, List<Element> elems, ClauseDef cd, List<ClauseUse> clauses);
+	
+	/**
 	 * Set the rules for this And/Or Judgment
 	 * @param l location to use for the rules
 	 * @param name name of the judgment
 	 * @param premises premises for the rule(s)
 	 * @param result conclusion of the rule(s)
 	 */
-	protected abstract void setRules(Location l, String name, List<Clause> premises,
+	protected abstract void setRules(Location l, String name, List<ClauseUse> premises,
 			Clause result);
 
 	/**
@@ -128,7 +138,7 @@ public abstract class AndOrJudgment extends Judgment {
 	protected void complete(Location l, List<Judgment> parts, List<ClauseUse> uses) {
 		String name = super.getName();
 		this.parts = parts;
-		List<Clause> premises = new ArrayList<Clause>();
+		List<ClauseUse> premises = new ArrayList<>();
 		List<Element> concElems = new ArrayList<Element>();
 		ElementGenerator gen = new ElementGenerator();
 		Iterator<ClauseUse> usesIt = uses.iterator();
@@ -151,7 +161,7 @@ public abstract class AndOrJudgment extends Judgment {
 		}
 		ClauseDef cd = new ClauseDef(super.getForm(), this, typeTerm().getName());
 		super.setForm(cd);
-		Clause result = new ClauseUse(l,concElems,cd);
+		Clause result = makeClauseUse(l,concElems,cd,premises);
 		setRules(l, name, premises, result);
 	}
 
