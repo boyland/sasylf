@@ -1,11 +1,15 @@
 package edu.cmu.cs.sasylf;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -28,9 +32,11 @@ public class ErrorCoverage {
 		Util.PRINT_ERRORS = false;
 		Util.PRINT_SOLVE = false;
 		
-		Set<Errors> encountered = new HashSet<>();
+		Map<Errors,List<String>> index = new HashMap<>();
+		Set<Errors> encountered = index.keySet();
 		for (String s : args) {
-			try (Reader r = new FileReader(s)) {
+			File f = new File(s);
+			try (Reader r = new FileReader(f)) {
 				Main.parseAndCheck(mf, s, null, r);
 			} catch (FileNotFoundException e) {
 				System.err.println("Unable to open '" + s + "': " + e.getLocalizedMessage());
@@ -43,6 +49,7 @@ public class ErrorCoverage {
 				e.printStackTrace();
 			}
 			Collection<Report> reports = ErrorHandler.getReports();
+			String shortName = f.getName();
 			for (Report r : reports) {
 				if (r instanceof ErrorReport) {
 					ErrorReport er = (ErrorReport)r;
@@ -53,17 +60,34 @@ public class ErrorCoverage {
 							System.err.println("  " + er.getExtraInformation());
 						}
 					}
-					encountered.add(type);
+					List<String> located = index.get(type);
+					if (located == null) {
+						located = new ArrayList<>();
+						index.put(type, located);
+					}
+					located.add(shortName);
 				}
 				r.getMessage();
 			}
 		}
-		System.out.println("Error types generated: " + encountered.size());
-		System.out.println("The following errors were never generated:");
 		for (Errors error : Errors.values()) {
-			if (!encountered.contains(error)) {
-				System.out.println(error.name());
+			System.out.print(error);
+			List<String> located = index.get(error);
+			if (located == null || located.isEmpty()) {
+				System.out.println(" [no examples]");
+			} else {
+				int i = 0;
+				for (String s : located) {
+					if (++i > 5) {
+						System.out.print(" ...");
+						break;
+					}
+					System.out.print(" " + s);
+				}
+				System.out.println();
 			}
 		}
+		System.out.println("Error types generated: " + encountered.size());
+		System.out.println("Error types never generated: " + (Errors.values().length - encountered.size()));
 	}
 }
