@@ -1,0 +1,751 @@
+// collection of lots of errors
+
+package regression;
+
+terminals value λ A unit Unit
+
+syntax
+
+t ::= λ x:T • t[x]
+   | x
+   | t t
+   | unit
+
+T ::= T → T
+   | Unit
+
+Γ ::= *
+   | Γ, x : T
+
+
+judgment termequality: t == t
+
+------ term-eq
+t == t
+
+
+judgment typeequality: T == T
+
+------ type-eq
+T == T
+
+
+judgment isavalue: t value
+
+
+-------------------- val-λ
+λ x:T • t[x] value
+
+----------- val-unit
+unit value
+
+
+judgment value2: Γ ⊢ t value
+assumes Γ
+
+  ---------------------- val2-λ
+  Γ ⊢ λ x:T • t[x] value
+  
+  ---------------- val2-unir
+  Γ ⊢ unit value
+  
+judgment eval: t → t
+
+t1 → t1'
+--------------- E-App1
+t1 t2 → t1' t2
+
+t1 value
+t2 → t2'
+--------------- E-App2
+t1 t2 → t1 t2'
+
+t2 value
+------------------------------ E-AppAbs
+(λ x:T • t1[x]) t2 → t1[t2]
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+--------------- T-Var
+Γ, x:T ⊢ x : T
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+----------------- T-Unit
+Γ ⊢ unit : Unit
+
+lemma canonical-forms-Arrow:
+    forall d: * ⊢ t : T1 → T2
+    forall v: t value
+    exists t == λ x:T1 • t2[x]
+    proof by case analysis on v:
+        case rule
+            ----------------- val-unit //! should restrict t
+            _: t value
+        is
+            proof by unproved //! expected
+        end case
+
+        case rule
+            -------------------------- val-λ
+            _: (λ x : T0 • t2[x]) value
+            where t := λ x : T0 • t2[x]
+        is
+            proof by case analysis on d:
+                case rule
+                    _: *, x : T1 ⊢ t2[x] : T2
+                    ------------------------------------------- T-Abs
+                    _: * ⊢ (λ x : T1 • t2[x]) : T1 → T2
+                    where T0 := T1
+                is
+                    proof by rule term-eq
+                end case
+
+            end case analysis
+        end case
+    end case analysis
+end lemma  
+
+ 
+theorem progress :
+    forall d: * ⊢ t : T
+    exists t value or t → t'.
+    use induction on d
+    proof by case analysis on d:
+        case rule
+            ----------------------- T-Unit
+            _: * ⊢ unit : Unit
+            where unit := t //! bad left
+        is
+            _: t value by rule val-unit
+        end case
+
+        case rule
+            d1: Γ, x:T1 ⊢ t1[x] : T2 //! added Γ from nowhere
+            ------------------------------------ T-Abs
+            _ : Γ ⊢ λ x:T1 • t1[x] : T1 → T2
+            where t := λ x:T1 • t1[x]
+             and  T := T1 → T2
+        is
+            v : λ x:T1 • t1[x] value by rule val-λ
+        end case
+    
+        case rule
+            d1: * ⊢ t1 : T2 → T
+            d2: * ⊢ t2 : T2 
+            ---------------------- T-App
+            _: * ⊢ t1 t2 : T
+            where t := t1 t2
+        is
+            ns1: t1 value or t1 → t1' by induction hypothesis on d1
+            ns2: t2 value or t2 → t2' by induction hypothesis on d2
+            _: t1 t2 → t' by case analysis on ns1:
+                case or v: unit is //! bad or case
+                    proof by contradiction on e
+                end case
+                case or e1: t1 → t1' is
+                    e: t1 t2 → t1' t2 by rule E-App1 on e1
+                end case
+                case or v1: t1 value is
+                    do case analysis on ns2:
+                        case or e2: t2 → t2' is
+                            e: t1 t2 → t1 t2' by rule E-App2 on v1,e2
+                        end case
+                    end case analysis
+                    proof by case analysis on ns2:
+                        case or e2: t2 → t2' is //! case redundant
+                            e: t1 t2 → t1 t2' by rule E-App2 on v1, e2
+                        end case
+                        case or du: * ⊢ t1 : Unit is //! case unnecessary
+                            proof by unproved
+                        end case
+                        case or v1: t1 value is //! case wrong
+                            proof by unproved
+                        end case
+                        case or v2: t2 value is
+                            c: t1 == λ x : T2 • t11[x] by lemma canonical-forms-Arrow on d1, v1
+                            use inversion of rule term-eq on c
+                            where t1 := λ x : T2 • t11[x]
+                            e: t1 t2 → t11[t2] by rule E-AppAbs on v2
+                        end case
+                        case or v2: t2 value is //! case redundant
+                            proof by unproved
+                        end case
+                        end case analysis
+                end case
+            end case analysis
+        end case
+    
+     end case analysis
+end theorem
+
+
+theorem preservation :
+    forall d: * ⊢ t : T
+    forall e: t → t'
+    exists * ⊢ t' : T 
+    use induction on d
+    proof by case analysis on e:
+        case or v: t value is //! Not a disjunction
+            proof by contradiction on e
+        end case
+        
+        case rule //! unification incomplete
+            e1: t1 → t1'
+            --------------------- E-App1
+            _: t0[t1] → t0[t1']
+            where t := t1 t2 and t' := t1' t2
+        is
+            d1: * ⊢ t1: T' → T and
+            d2: * ⊢ t2: T' by inversion of rule T-App on d
+            d1': * ⊢ t1': T' → T by induction hypothesis on d1, e1
+            proof by rule T-App on d1', d2
+        end case
+
+        case rule
+            v1: t1 value //! whole case is too strict because of t2' on next line
+            e2: t2' → t2'
+            --------------------- E-App2
+            _: (t1 t2) → (t1 t2')
+            where t := t1 t2 and t' := t1 t2'
+        is
+            d1: * ⊢ t1: T' → T and
+            d2: * ⊢ t2: T' by inversion of rule T-App on d
+            d2': * ⊢ t2': T' by induction hypothesis on d2, e2 //! wrong type
+            proof by rule T-App on d1, d2'
+        end case
+
+        case rule
+            v2: t2 value //! t11 should depend in x
+            ------------------------------------ E-AppAbs
+            _: ((λ x : T' • t11) t2) → t11
+            where t := (λ x : T' • t11) t2 and t' := t11
+        is
+            d1: * ⊢ λ x : T' • t11 : T'' → T and
+            d2: * ⊢ t2 : T'' by inversion of rule T-App on d
+            d11: *, x:T' ⊢ t11 : T by inversion of rule T-Abs on d1
+            where T'' := T'
+            proof by substitution on d11, d2
+        end case
+
+    end case analysis
+end theorem
+
+theorem preservation2 :
+    forall d: * ⊢ t : T
+    forall e: t → t'
+    exists * ⊢ t' : T 
+    use induction on d
+    do case analysis on d:
+        case rule
+            ----------------------- T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit and T := Unit
+        is
+            proof by contradiction on e
+        end case
+        end case analysis
+    proof by case analysis on d:
+        case rule //! case redundant
+            ----------------------- T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit and T := Unit
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            _: *, x : T1 ⊢ unit : T2 //! unit where t'[x] required
+            ------------------------------------------- T-Abs
+            _: * ⊢ (λ x : T1 • unit) : (T1 → T2)
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            _: * ⊢ t1 : Unit → T //! too strict: Unit
+            _: * ⊢ t2 : Unit
+            ----------------------------- T-App
+            _: * ⊢ t1 t2 : T
+        is
+            proof by unproved //! expected
+        end case
+
+    end case analysis
+end theorem
+
+theorem preservation3 :
+    forall d: * ⊢ t : T
+    forall e: t → t'
+    exists * ⊢ t' : T 
+    use induction on d
+    proof by case analysis on d:
+        case rule
+            ----------------------- T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit and T := Unit
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            _: *, x : T1 ⊢ t' : T2 //! too strict dependencies
+            ------------------------------------------- T-Abs
+            _: * ⊢ (λ x : T1 • t') : T1 → T2
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            _: * ⊢ t1 : T' → Unit //! too strict: A
+            _: * ⊢ t2 : T'
+            ----------------------------- T-App
+            _: * ⊢ t1 t2 : Unit
+        is
+            proof by unproved //! expected
+        end case
+        
+        case rule //! case redundant
+            ----------------------- T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit and T := Unit
+        is
+            proof by contradiction on e
+        end case
+    
+    end case analysis
+end theorem
+
+theorem preservation4 :
+    forall d: * ⊢ t : T
+    forall e: t → t'
+    exists * ⊢ t' : T 
+    use induction on d
+    proof by case analysis on e:
+        case rule //! occur error
+            e1: t1 → t1'
+            --------------------- E-App1
+            _: t1 t → t1' t
+            where t := t1 t and t' := t1' t //! where clause occur
+        is
+            d1: * ⊢ t1: T' → T and
+            d2: * ⊢ t2: T' by inversion of rule T-App on d
+            d1': * ⊢ t1': T' → T by induction hypothesis on d1, e1
+            proof by rule T-App on d1', d2
+        end case
+
+        case rule
+            v1: t1 value 
+            e2: t2 → t2'
+            --------------------- E-App2
+            _: (t1 t2) → (t1 t2')
+            where t := t1 t2 and t' := t1 t2'
+        is
+            d1: * ⊢ t1: T' → T and
+            d2: * ⊢ t2: T' by inversion of rule T-App on d
+            d2': * ⊢ t2': T' by induction hypothesis on d2, e2
+            proof by rule T-App on d1, d2'
+        end case
+
+        case rule
+            v2: t2 value
+            ------------------------------------ E-AppAbs
+            _: ((λ x : T' • t11[x]) t2) → t11[t2]
+            where t := (λ x : T' • t11[x]) t2
+            and t11[t2] := t' //! bad left
+        is
+            d1: * ⊢ λ x : T' • t11[x] : T'' → T and
+            d2: * ⊢ t2 : T'' by inversion of rule T-App on d
+            d11: *, x:T' ⊢ t11[x] : T by inversion of rule T-Abs on d1
+            where T'' := T'
+            proof by substitution on d11, d2
+        end case
+
+    end case analysis
+end theorem
+
+lemma silly:
+    forall dt: *, x:T ⊢ t[x] : Unit → Unit
+    exists unit value
+    proof by case analysis on dt:
+        case rule //! case unnecessary
+            ----------------------- T-Unit
+            _: *, x:T ⊢ unit : T
+            where t[x] := unit
+        is
+            proof by val-unit
+        end case
+
+        case rule
+            --------------------- T-Var //! T' should be Unit->Unit
+            _: (*, x : T') ⊢ x : T'
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            _: ((*, x : T), x' : Unit) ⊢ t0[x'] : Unit //! overly strict
+            ------------------------------------------- T-Abs
+            _: (*, x : T) ⊢ (λ x' : Unit • t0[x']) : (Unit → Unit)
+        is
+            proof by rule val-unit
+        end case
+
+        case rule //! unification incomplete at start
+            _: (*, x : T) ⊢ t0[x] : (T0 → (Unit → Unit))
+            _: (*, x : T) ⊢ t1[x] : T0
+            ----------------------------- T-App
+            _: (*, x : T) ⊢ (t0[x] t1[x]) : T'[T]
+        is
+            proof by val-unit
+        end case
+
+    end case analysis
+end lemma
+
+lemma silly2:
+    forall dt: *, x:T ⊢ t[x] : Unit → Unit
+    exists unit value
+    proof by case analysis on dt:
+        case rule
+            --------------------- T-Var
+            _: (*, x : Unit) ⊢ x : Unit //! RCC doesn't match, although rule checks and rule is possible
+        is
+            proof by rule val-unit
+        end case
+
+        case rule //! context added to
+            _: *, x0 : Unit, x : T, x' : Unit ⊢ t0[x][x'] : Unit
+            ------------------------------------------- T-Abs
+            _: *, x0 : Unit, x : T ⊢ (λ x' : Unit • t0[x][x']) : (Unit → Unit)
+        is
+            proof by unproved
+        end case
+
+        case rule //! inconsistent contexts
+            _: *, x : T ⊢ t0[x] : (T0 → (Unit → Unit))
+            _: *, x : T' ⊢ t1[x] : T0
+            ----------------------------- T-App
+            _: (*, x : T) ⊢ (t0[x] t1[x]) : (Unit → Unit)
+        is
+            proof by rule val-unit
+        end case
+
+    end case analysis
+end lemma
+
+lemma gen-or: // no errors!
+    assumes Γ
+    forall dt: Γ ⊢ t : T
+    exists Γ ⊢ t : Unit or Γ ⊢ t : T1 → T2
+    proof by case analysis on T:
+        case T1 → T2 is
+            proof by dt
+        end case
+
+        case Unit is
+            proof by dt
+        end case
+    end case analysis
+end lemma
+
+lemma dangerous:
+    assumes Γ
+    forall dt: Γ ⊢ t : T
+    exists t value or t == t1 t2
+    ch: Γ ⊢ t : Unit or Γ ⊢ t : T1 → T2 by lemma gen-or on dt
+    proof by case analysis on ch:
+        case or du: * ⊢ t : Unit is //! dropped context
+            proof by case analysis on t:
+                case λ x : T0 • t0[x] is
+                    _: t value by rule val-λ
+                end case
+
+                case t1 t2 is
+                    _: t == t1 t2 by rule term-eq
+                end case
+
+                case unit is
+                    _: t value by rule val-unit
+                end case
+            end case analysis
+        end case
+
+        case or _: * ⊢ t : (T1 → T2) is //! dropped context
+            proof by case analysis on t:
+                case λ x : T0 • t0[x] is
+                    _: t value by rule val-λ
+                end case
+
+                case t1 t2 is
+                    _: t == t1 t2 by rule term-eq
+                end case
+
+                case unit is
+                    _: t value by rule val-unit
+                end case
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma silly3:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    exists unit value
+    proof by case analysis on d:
+        case rule
+            --------------------- T-Var
+            dv: Γ', x : T ⊢ x : T //! unsound to use (if T could depend on Γ)
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            dt: Γ, x : T0 ⊢ t0[x] : T1
+            ------------------------------------------- T-Abs
+            _: Γ ⊢ (λ x : T0 • t0[x]) : (T0 → T1)
+        is
+            do case analysis on dt:
+                case rule
+                    ------------------------ T-Var
+                    _: Γ, t':T0 ⊢ t': T0 //! only variables can be bound, not syntax
+                is
+                    proof by rule val-unit
+                end case
+            end case analysis
+            proof by case analysis on (t0[unit]): //! can't do case analysis on a binding
+            end case analysis
+            proof by case analysis on d, dt: //! only one argument
+                case rule
+                    _: (Γ, x : T0) ⊢ t0[x] : T1
+                    ------------------------------------------- T-Abs
+                    _: Γ ⊢ (λ x : T0 • t0[x]) : (T0 → T1)
+                is
+                    proof by rule val-unit
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d0: Γ ⊢ t0 : (T0 → T)
+            d1: Γ ⊢ t1 : T0
+            ----------------------------- T-App
+            _: Γ ⊢ (t0 t1) : T
+        is
+            do case analysis on T: // not an error
+                case T1 → T2 is
+                    proof by rule val-unit
+                end case
+            end case analysis
+            proof by case analysis on d0:
+                case rule //! too many variables
+                    ------------------------------------- T-Var
+                    _: Γ', x': T, x : (T0 → T) ⊢ x : (T0 → T)
+                is
+                    proof by rule val-unit
+                end case
+
+                case rule
+                    d2: Γ, x : T0 ⊢ t2[x] : T
+                    ------------------------------------------- T-Abs
+                    _: Γ ⊢ (λ x : T0 • t2[x]) : (T0 → T)
+                is
+                    proof by case analysis on T:
+                        case T1 → T2 is //! case is redundant
+                            proof by rule val-unit
+                        end case
+                        case Unit is
+                            proof by rule val-unit
+                        end case
+                    end case analysis
+                end case
+
+                case rule
+                    _: Γ ⊢ t2 : (T1 → (T0 → T)) //! inconsistent contexts
+                    _: Γ, x': T' ⊢ t3 : T1
+                    ----------------------------- T-App
+                    _: Γ ⊢ (t2 t3) : (T0 → T)
+                is
+                    proof by rule val-unit
+                end case
+
+            end case analysis
+        end case
+
+        case rule //! changing context
+            ----------------------- T-Unit
+            _: Γ' ⊢ unit : Unit
+        is
+            proof by rule val-unit
+        end case
+
+    end case analysis
+end lemma
+
+lemma parallel:
+    assumes Γ
+    forall d1: Γ ⊢ t : T
+    forall d2: Γ ⊢ t value
+    forall d3: Γ ⊢ t : T'
+    exists unit value
+    proof by case analysis on d1:
+        case unit is //! need a rule case
+            proof by rule val-unit
+        end case
+        case rule
+            --------------------- T-Var
+            _: (Γ', x : T) ⊢ x : T
+        is
+            do case analysis on d3:
+                case rule //! should have reused Γ'
+                    ---------------------- T-Var
+                    _: Γ'', x' : T' ⊢ x' : T'
+                is
+                    proof by rule val-unit
+                end case
+            end case analysis
+            proof by case analysis on t: //! known to be a variable
+              case Γ', x assumes Γ', x:T is
+                  proof by rule val-unit
+              end case
+            end case analysis
+        end case
+
+        case rule
+            _: (Γ, x : T0) ⊢ t0[x] : T1
+            ------------------------------------------- T-Abs
+            _: Γ ⊢ (λ x : T0 • t0[x]) : (T0 → T1)
+        is
+            do case analysis on d3: //! partial case analysis
+                case rule //! should not have reused Γ
+                    ---------------------- T-Var
+                    _: Γ, x : T' ⊢ x : T'
+                is
+                    proof by rule val-unit
+                end case
+            end case analysis
+        end case
+
+        case rule
+            _: Γ ⊢ t0 : (T0 → T)
+            _: Γ ⊢ t1 : T0
+            ----------------------------- T-App
+            _: Γ ⊢ (t0 t1) : T
+        is
+            proof by rule val-unit
+        end case
+
+        case rule //! changing context
+            ----------------------- T-Unit
+            _: Γ0 ⊢ unit : Unit
+        is
+            proof by rule val-unit
+        end case
+
+    end case analysis
+end lemma
+
+lemma syntaxcase:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    exists unit value
+    do case analysis on T:
+        case x assumes Γ', x:T is //! wrong syntax (variable)
+            proof by rule val-unit
+        end case
+        case T' → T' is //! T' occurs twice
+            proof by rule val-unit
+        end case
+    end case analysis
+    proof by case analysis on t:
+        case rule //! need syntax case, not rule case
+            ---------------- T-Var
+            _: Γ', x:T ⊢ x:T
+        is
+            proof by rule val-unit
+        end case
+        case t' is //! case is NT
+            proof by unproved
+        end case
+        case t'[unit] is //! case is binding
+            proof by unproved
+        end case
+        case x' assumes Γ', x1:T1, x':T' is //! too many vars
+            proof by unproved
+        end case
+        case unit unit is //! case multi-level
+            proof by rule val-unit
+        end case
+        case λ x:T' • t' is //! t' should depend on variables
+            proof by rule val-unit
+        end case
+        case x assumes Γ, x:T' is //! reused Γ
+            proof by rule val-unit
+        end case
+    end case analysis
+end lemma
+
+lemma varcases:
+    assumes Γ
+    forall d: Γ, x1:T1, x2:T2 ⊢ t[x1][x2] : T
+    exists unit value
+    proof by case analysis on d:
+        case rule
+            --------------------- T-Var
+            _: Γ, x1 : T1, x2 : T2 ⊢ x1 : T1
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            --------------------- T-Var
+            _: Γ, x1 : T1, x2 : T2 ⊢ x2 : T2
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            --------------------- T-Var
+            _: Γ', x0 : T0, x1 : T1, x2 : T2 ⊢ x0 : T0
+            where T := T0
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            _: (((Γ, x : T1), x' : T2), x'' : T0) ⊢ t0[x][x'][x''] : T3
+            ------------------------------------------- T-Abs
+            _: ((Γ, x : T1), x' : T2) ⊢ (λ x'' : T0 • t0[x][x'][x'']) : (T0 → T3)
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            _: ((Γ, x : T1), x' : T2) ⊢ t0[x][x'] : (T0 → T)
+            _: ((Γ, x : T1), x' : T2) ⊢ t1[x][x'] : T0
+            ----------------------------- T-App
+            _: ((Γ, x : T1), x' : T2) ⊢ (t0[x][x'] t1[x][x']) : T
+        is
+            proof by rule val-unit
+        end case
+
+        case rule
+            ----------------------- T-Unit
+            _: Γ, x : T1, x' : T2 ⊢ unit : Unit
+            where t[x][x] := unit //! "x" more than once
+        is
+            proof by rule val-unit
+        end case
+
+    end case analysis
+end lemma

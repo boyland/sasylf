@@ -18,7 +18,6 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
-import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -105,6 +104,11 @@ public class WhereClause extends Node {
 						// save for later, for parsing RHS
 						String name = v.getSymbol();
 						Constant type = v.getType().typeTerm();
+						if (lhsArgNames.contains(name)) {
+							ErrorHandler.recoverableError(Errors.WHERE_REBOUND, 
+									": " + name,
+									userWC.first);
+						}
 						lhsBindings.add(new Pair<String, Term>(name, type));
 					    lhsArgTypes.add(type);
 					    lhsArgNames.add(name);
@@ -194,7 +198,7 @@ public class WhereClause extends Node {
 				su = cas.unify(rcc);
 			}
 			catch (UnificationFailed ex) {
-				if (!userWhereClauses.isEmpty() || COMP_WHERE) {
+				if (!userWhereClauses.isEmpty() || COMP_WHERE) { // XXX: unable so far to generate this error
 					ErrorHandler.warning(Errors.WHERE_ASSUMPTION, errorSpan);
 				}
 				return;
@@ -362,22 +366,6 @@ public class WhereClause extends Node {
 				
 				// collect bound variables from wrapped version of user RHS
 				List<Pair<String, Term>> userBindings = rhsUser.getBoundVariables();
-				
-				// check for reused bound variable name among user bindings
-				Map<String, Boolean> seenVars = new HashMap<String, Boolean>();
-				for (Pair<String, Term> pair : userBindings) {
-					String varName = pair.first;
-					if (seenVars.get(varName) != null) {
-						ErrorHandler.recoverableError(
-							Errors.WHERE_REBOUND,
-							": " + varName,
-							new DefaultSpan(userWC.first.getLocation(), 
-								userWC.second.getEndLocation())
-						);
-						continue nextUserClause;
-					}
-					seenVars.put(varName, true);
-				}
 				
 				// remake correct RHS in terms of user's bindings (for better suggestion)
 				rhsCorrect = rhsCorrect.remakeWithBoundVars(userBindings);

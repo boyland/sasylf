@@ -303,7 +303,7 @@ public class Theorem extends RuleLike {
 
 	public void setAssumes(NonTerminal c) { 
 		if (assumes != null && !assumes.equals(c))
-			ErrorHandler.error(Errors.INCONSISTENT_CONTEXTS,"Theorem has inconsistent contexts " + assumes + " and " + c, this);
+			ErrorHandler.error(Errors.THEOREM_INCONSISTENT_CONTEXTS,": " + assumes + " != " + c, this);
 		assumes = c; 
 	}
 	@Override

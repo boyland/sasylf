@@ -146,21 +146,24 @@ public class RuleCase extends Case {
 		// Check context changes.  The root and number of "lambdas".
 		if (subjectRoot == null) {
 			if (thisRoot != null) {
-				ErrorHandler.error(Errors.CASE_CONTEXT_ADDED, thisRoot.toString(), this);
+				ErrorHandler.recoverableError(Errors.CASE_CONTEXT_ADDED, thisRoot.toString(), this.getSpan());
 			}
 			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
 				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 			}
 		} else if (subjectRoot.equals(thisRoot)) {
-			if (subjectTerm.countLambdas() != patternConc.countLambdas()) {
+			int diff = patternConc.countLambdas() - subjectTerm.countLambdas();
+			if (diff != 0) {
+				if (rule.isAssumption()) {
+					ErrorHandler.error(Errors.REUSED_CONTEXT, this);
+				}
 				Util.debug("caseTerm = ", ctx.currentCaseAnalysis, ", applied = ", appliedTerm);
 				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 			}
-		} else {
-			if (thisRoot == null) {
-				ErrorHandler.error(Errors.CONTEXT_DISCARDED,this);
-			}
+		} else if (thisRoot == null) {
+			ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED,this.getSpan());			
+		} else { // neither null, but not equal
 			if (!rule.isAssumption()) {
 				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + thisRoot, this);
 			}

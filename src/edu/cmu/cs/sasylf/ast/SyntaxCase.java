@@ -1,9 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Errors.EXTRA_CASE;
-import static edu.cmu.cs.sasylf.util.Errors.INVALID_CASE;
-import static edu.cmu.cs.sasylf.util.Errors.NONTERMINAL_CASE;
-import static edu.cmu.cs.sasylf.util.Errors.REUSED_CONTEXT;
 import static edu.cmu.cs.sasylf.util.Errors.SYNTAX_CASE_FOR_DERIVATION;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
@@ -89,6 +85,10 @@ public class SyntaxCase extends Case {
 				assumes = ((Clause)assumes).computeClause(ctx,false);
 			}
 		}
+		
+		if (concElem.getType() != caseNT.getType()) {
+			ErrorHandler.error(Errors.CASE_WRONG_TYPE, concElem.getType().getName(), conclusion);
+		}
 
 		if (concElem instanceof Variable) {
 			for (Clause c :  caseNT.getType().getClauses()) {
@@ -101,15 +101,15 @@ public class SyntaxCase extends Case {
 						ctx.currentCaseAnalysisElement,this);
 			}
 		} else if (concElem instanceof NonTerminal) {
-			ErrorHandler.error(NONTERMINAL_CASE, "Case " + conclusion + " is a nonterminal; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
+			ErrorHandler.error(Errors.CASE_NONTERM, this);     
 		} else if (concElem instanceof Binding) {
-			ErrorHandler.error(NONTERMINAL_CASE, "Case " + conclusion + " is a binding; it must be a decomposition of " + ctx.currentCaseAnalysisElement, this);     
+			ErrorHandler.error(Errors.CASE_NONTERM, this);     
 		} else if (concElem instanceof ClauseUse) {
 			ClauseUse concUse = (ClauseUse) concElem;
 			concUse.checkBindings(ctx.bindingTypes, this);
 			concDef = concUse.getConstructor();
 			if (concUse.getConstructor().getType() != caseNT.getType()) {
-				ErrorHandler.error(INVALID_CASE, "case given is not actually a case of " + caseNT, this);
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "case given is not actually a case of " + caseNT, this);
 			}
 		} else {
 			// not clear when this error happens
@@ -128,7 +128,7 @@ public class SyntaxCase extends Case {
 		int diff = concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 		// this check is redundant:
 		if (diff < 0) {
-			ErrorHandler.error(Errors.INVALID_CASE, "A case must use the whole context of the subject", this);
+			ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, conclusion);
 			return;
 		}
 		
@@ -136,6 +136,8 @@ public class SyntaxCase extends Case {
 			Util.debug("concDef = ",concDef);
 			if (!concDef.isVarOnlyClause()) {
 				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, assumes);
+			} else if (diff > 2) { //XXX Extension!
+				ErrorHandler.error(Errors.CASE_SINGLE, assumes);
 			}
 		}
 
@@ -143,7 +145,7 @@ public class SyntaxCase extends Case {
 		for (FreeVar fv : getCaseFreeVars(ctx,concTerm)) {
 			if (ctx.isLocallyKnown(fv.toString())) {
 				Util.debug("ctx.inputsVars = ",ctx.inputVars);
-				ErrorHandler.error(Errors.INVALID_CASE, "A case must use new variables, cannot reuse " + fv, this);
+				ErrorHandler.error(Errors.CASE_STRICT_NEED_VAR, fv.toString(), this);
 			}
 		}
 
@@ -154,7 +156,7 @@ public class SyntaxCase extends Case {
 		// look up case analysis for this rule
 		Set<Pair<Term,Substitution>> caseResult = ctx.caseTermMap.get(concDef);
 		
-		if (concElem instanceof ClauseUse) {
+		if (concElem instanceof ClauseUse) { // only variables can have more than one case
 			verify(caseResult.size() <= 1, "internal invariant violated");
 		}
 
@@ -178,6 +180,7 @@ public class SyntaxCase extends Case {
 			Util.debug("freevars of pair.first = ",free);
 			free = computedSub.selectUnavoidable(free);
 			if (!free.isEmpty()) {
+				TermPrinter tp = new TermPrinter(ctx,ctx.assumedContext,conclusion.getLocation(),false);
 				FreeVar fv = free.iterator().next();
 				computedSub.avoid(concTerm.getFreeVariables());
 				Term t = computedSub.getSubstituted(fv);
@@ -187,20 +190,19 @@ public class SyntaxCase extends Case {
 				int args = base instanceof Application ? ((Application)base).getArguments().size() : 0;
 				Atom atom = base instanceof Application ? ((Application)base).getFunction() : (Atom)base;
 				if (atom instanceof Constant) {
-					ErrorHandler.recoverableError(INVALID_CASE, "The case is too specialized, it has nested syntax",this,"The following LF term was expected to be a variable: "+t);
+					String inside = tp.toString(t, false);
+					ErrorHandler.recoverableError(Errors.CASE_STRICT_NEED_VAR, inside, this, "The following LF term was expected to be a variable: "+t);
 				} else if (args < nWraps) {
-					ErrorHandler.recoverableError(INVALID_CASE, "The case is too specialized, perhaps because "+
-							atom+" should depend on "+(args == 0 ? "":"additional")+" variables", this);
+					ErrorHandler.recoverableError(Errors.CASE_STRICT_NEED_DEPEND, atom.toString(), this);
 				} else {
-					ErrorHandler.recoverableError(INVALID_CASE, "The case is too specialized, perhaps because " + 
-							atom+" appears multiple times in the case.", this);
+					ErrorHandler.recoverableError(Errors.CASE_STRICT_DUP_VAR, ": "+atom, this);
 				}
 			}
 			break;
 		}
 
 		if (computedCaseTerm == null) {
-			ErrorHandler.error(EXTRA_CASE, this);
+			ErrorHandler.error(Errors.CASE_REDUNDANT, this, "Suggestion: remove it");
 		}
 
 		Term adaptedCaseAnalysis = ctx.currentCaseAnalysis;
@@ -214,13 +216,11 @@ public class SyntaxCase extends Case {
 			// but adaptation info must use both variables.
 			verify(concElem instanceof AssumptionElement,"not an assumption element? " + concElem);
 			AssumptionElement ae = (AssumptionElement)concElem;
-			if (!(ae.getBase() instanceof Variable)) {
-				ErrorHandler.error(Errors.CASE_ASSUMPTION_NOT_VAR, this);
-			}
+			verify(ae.getBase() instanceof Variable, "not a variable? " + ae.getBase());
 			verify(ae.getAssumes() instanceof ClauseUse, "not a clause use? " + assumes);
 			NonTerminal newRoot = concElem.getRoot();
-			if (ctx.isLocallyKnown(newRoot.getSymbol())) {
-				ErrorHandler.error(REUSED_CONTEXT, newRoot.toString(), this);
+			if (ctx.isKnownContext(newRoot)) {
+				ErrorHandler.error(Errors.CASE_ASSUMPTION_OLD, this);
 			}
 
 			// If currentCaseAnalysis is an abstraction, bind it to a fresh variable,
