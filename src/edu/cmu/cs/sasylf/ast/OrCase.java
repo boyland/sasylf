@@ -77,14 +77,14 @@ public class OrCase extends Case {
 		NonTerminal patternRoot = cl.getRoot();
 		if (subjectRoot == null) {
 			if (patternRoot != null) {
-				ErrorHandler.error(Errors.CASE_CONTEXT_ADDED, patternRoot.toString(), this);
+				ErrorHandler.recoverableError(Errors.CASE_CONTEXT_ADDED, patternRoot.toString(), premise);
 			}
 		} else if (patternRoot == null) {
 			if (((Judgment)cl.getType()).getAssume() != null) {
-				ErrorHandler.error(Errors.CONTEXT_DISCARDED, ": " + subjectRoot, this);
+				ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED, ": " + subjectRoot, premise);
 			}
 		} else if (!subjectRoot.equals(patternRoot)) {
-			ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + patternRoot, this);
+			ErrorHandler.recoverableError(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + patternRoot, premise);
 		}
 
 		for (Map.Entry<CanBeCase,Set<Pair<Term,Substitution>>> e : ctx.caseTermMap.entrySet()) {
