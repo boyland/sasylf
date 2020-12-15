@@ -64,6 +64,10 @@ t2 value
 ------------------------------ E-AppAbs
 (λ x:T • t1[x]) t2 → t1[t2]
 
+unit //! syntax in premise
+------------ E-Unit
+unit → unit
+
 judgment type: Γ ⊢ t : T
 assumes Γ
 
@@ -156,6 +160,9 @@ theorem progress :
                 end case
                 case or v1: t1 value is
                     do case analysis on ns2:
+                        case unit is //! syntax case used in disjunction
+                            proof by unproved
+                        end case
                         case or e2: t2 → t2' is
                             e: t1 t2 → t1 t2' by rule E-App2 on v1,e2
                         end case
@@ -250,7 +257,7 @@ theorem preservation2 :
             _: * ⊢ unit : Unit
             where t := unit and T := Unit
         is
-            proof by contradiction on e
+            proof by inversion of rule E-Unit on e //! bad rule for inversion
         end case
         end case analysis
     proof by case analysis on d:
@@ -293,7 +300,7 @@ theorem preservation3 :
             _: * ⊢ unit : Unit
             where t := unit and T := Unit
         is
-            proof by contradiction on e
+            proof by inversion on e
         end case
 
         case rule
@@ -748,4 +755,94 @@ lemma varcases:
         end case
 
     end case analysis
+end lemma
+
+lemma inversiontest0:
+    forall d: * ⊢ t : Unit
+    exists unit value
+    do case analysis on d:
+        case rule
+            ------------------ T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit 
+        is
+            proof by rule val-unit
+        end case
+    end case analysis
+    d1: * ⊢ t1 : T → Unit and //! too many results
+    d2: * ⊢ t2 : T and
+    eq: t1 == t2 by inversion on d
+    where t := t1 t2
+    proof by rule val-unit
+end lemma
+
+lemma inversiontest1:
+    forall d: * ⊢ t : Unit
+    exists unit value
+    do case analysis on t:
+        case unit is
+            proof by rule val-unit
+        end case
+        case t1 t2 is
+            proof by rule val-unit
+        end case
+    end case analysis
+    _: t == λ x:T • t1[x] by inversion on t //! can't prove anything with syntax inversion
+    proof by rule val-unit
+end lemma
+
+lemma inversiontest2:
+    forall d: * ⊢ t : Unit
+    exists unit value
+    do case analysis on t:
+        case unit is
+            proof by rule val-unit
+        end case
+        case t1 t2 is
+            proof by rule val-unit
+        end case
+    end case analysis
+    use inversion of abs on t  //! no names for inversion on syntax
+    proof by rule val-unit
+end lemma
+
+lemma inversiontest3:
+    forall d: * ⊢ t : Unit
+    exists unit value
+    do case analysis on t:
+        case t1 t2 is
+            d1: * ⊢ t1 : Unit by inversion on d //! not in the premises
+            proof by rule val-unit
+        end case
+    end case analysis
+    do case analysis on d:
+        case rule
+            ------------------ T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit 
+        is
+            proof by rule val-unit
+        end case
+    end case analysis
+    use inversion on t //! missing case
+    where t := unit
+    proof by rule val-unit
+end lemma
+
+lemma inversiontest4:
+    forall d: * ⊢ t : Unit
+    exists unit value
+    do case analysis on d:
+        case rule
+            ------------------ T-Unit
+            _: * ⊢ unit : Unit
+            where t := unit 
+        is
+            proof by rule val-unit
+        end case
+    end case analysis
+    d1: * ⊢ t1 : T → Unit and //! wrong rule name
+    d2: * ⊢ t2 : T by inversion of rule T-Abs on d
+    where t := t1 t2
+    proof by rule val-unit
 end lemma
