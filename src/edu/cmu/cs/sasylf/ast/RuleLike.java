@@ -342,10 +342,10 @@ public abstract class RuleLike extends Node implements Named {
 							}
 							result.add(i, b);
 						}
-						// invariant i and j both point ton abstraction with the name b.varName
+						// invariant i and j both point to an abstraction with the name b.varName
 						if (!result.get(i).varType.equals(b.varType)) {
 							// see bad50.slf
-							ErrorHandler.error(Errors.RULE_CONTEXT_INCONSISTENT, ": " + b.varName, errorPoint, "(" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")");
+							ErrorHandler.error(Errors.RULE_CONTEXT_INCONSISTENT, " (" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")", errorPoint);
 						}
 						++i; ++j;
 						seen.add(b.varName);
@@ -365,7 +365,7 @@ public abstract class RuleLike extends Node implements Named {
 
 	protected String assumeTypeToString(Context ctx, List<Abstraction> context, int i) {
 		Term t = Term.wrapWithLambdas(context, context.get(i).varType.incrFreeDeBruijn(1), 0, i+1);
-		TermPrinter tp = new TermPrinter(ctx,ctx.assumedContext,this.getLocation());
+		TermPrinter tp = new TermPrinter(ctx,ctx.assumedContext,this.getLocation(),false);
 		ClauseUse e = tp.asClause(t);
 		int a = e.getConstructor().getAssumeIndex();
 		return tp.toString(e.getElements().get(a));
