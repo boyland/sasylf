@@ -191,7 +191,7 @@ lemma variable-swap-preserves-eval:
         case x' assumes Γ, x bound, x' bound is
 	    proof by contradiction on e
 	end case
-        case x'' assumes Γ, x'' bound, x bound, x' bound is
+        case x'' assumes Γ', x'' bound, x bound, x' bound is
 	    proof by contradiction on e
 	end case
 	case (λ x'' • t11[x][x'][x'']) assumes Γ, x bound, x' bound is
