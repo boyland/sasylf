@@ -16,8 +16,8 @@ public enum Errors {
 	EXTENDS_UNIMPLEMENTED ("module 'extends' not implemented yet"),
 	PROVIDES_IN_MODULE ("'provides' legal only for explicit modules"),
 	PROVIDES_NOT_IN_MODULE ("'provides' expected for explicit modules"),
-	MODULE_NOT_FOUND ("Module not found: "),
-	MODULE_ILLFORMED ("Module has errors: "),
+	MODULE_NOT_FOUND ("module not found: "),
+	MODULE_ILLFORMED ("module has errors: "),
 	MODULE_CYCLE("Cyclic module reference: "),
 	MODULE_PARAMETERS ("module parameters not yet supported"),
 	MODULE_ABSTRACT ("modules with parameters cannot yet be used"),
@@ -47,6 +47,7 @@ public enum Errors {
 	SYNTAX_UNPRODUCTIVE ("this syntax is unproductive.  You need a production that can actually generate a string."),
 	SYNTAX_VARIABLE_MISSING ("no syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
 	SYNTAX_VARIABLE_TWICE ("the same variable may not appear in multiple syntax definitions"),
+	SYNTAX_SUBORDINATION_ERROR ("there is no way to use this variable in the syntax: "),
 	DERIVATION_UNPROVED		("derivation unproved"),
 	DERIVATION_SYNTAX ("cannot prove syntax, only judgments"),
 	RULE_NOT_FOUND			("cannot find a rule named "),
@@ -207,10 +208,12 @@ public enum Errors {
 	SUGAR_UNKNOWN ("SASyLF cannot figure out what syntax is being defined"),
 	SUGAR_JUDGMENT ("sugar can only be used for syntax, not judgments"),
 	SUGAR_MULTIPLE_USES ("a nonterminal occurs more than once"),
+	SUGAR_MULTIPLE_VARS ("a variable occurs more than once"),
+	SUGAR_BINDING_ARG ("an argument in [...] in syntax must be a variable"),
 	SUGAR_NO_USES ("nonterminal doesn't occur in the syntax"),
 	SUGAR_UNUSED ("no indication what to do with nonterminal"),
-	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"),
-	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"),
+	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"), // infeasible
+	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasable
 	NEVER_RIGID ("Using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
 	UNIFICATION_INCOMPLETE("Unification incomplete for case "),
 	SOLVE_FAILED ("Unable to find proof"),

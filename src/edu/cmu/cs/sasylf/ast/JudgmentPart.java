@@ -62,14 +62,11 @@ public class JudgmentPart implements Part {
 
 	void computeSubordinationJudgment() {
 		for (Judgment j : judgments) {
-			Term jType = j.typeTerm();
-			for (Element e : j.getForm().getElements()) {
-				if (e instanceof NonTerminal) {
-					Term nType = ((NonTerminal)e).getTypeTerm();
-					Util.debug("subordination: ", nType, " < ", jType);
-					FreeVar.setAppearsIn(nType, jType);
-				}
+			Clause form = j.getForm();
+			if (form instanceof ClauseDef) {
+				((ClauseDef)form).computeSubordination(true);
 			}
+			Term jType = j.typeTerm();
 			for (Rule r : j.getRules()) {
 				if (r.isAssumption()) {
 					Util.debug("subordination: ", jType, " < ", jType, " forced");
@@ -87,6 +84,9 @@ public class JudgmentPart implements Part {
 					Util.debug("subordination: ", pType, " < ", jType);
 					FreeVar.setAppearsIn(pType, jType);
 				}
+			}
+			if (form instanceof ClauseDef) {
+				((ClauseDef)form).checkSubordination();
 			}
 		}
 	}

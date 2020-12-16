@@ -13,7 +13,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 
 public class SugarClauseDef extends ClauseDef {
 
-	private final Clause definition;
+	private final Element definition;
 	
 	/**
 	 * Create a sugar clause definition.
@@ -21,7 +21,7 @@ public class SugarClauseDef extends ClauseDef {
 	 * @param type its syntactic type (Syntax or Judgment)
 	 * @param defn the replacement clause
 	 */
-	public SugarClauseDef(Clause sugar, ClauseType type, Clause defn) {
+	public SugarClauseDef(Clause sugar, ClauseType type, Element defn) {
 		super(sugar, type);
 		definition = defn;
 	}

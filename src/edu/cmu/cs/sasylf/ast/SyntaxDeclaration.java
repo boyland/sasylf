@@ -472,22 +472,21 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		Term synType = typeTerm();
 		for (Clause clause : getClauses()) {
 			if (clause.isVarOnlyClause()) {
+				// we have to force this or else variable tests will fail
 				FreeVar.setAppearsIn(synType,synType);
 			}
 			if (clause instanceof ClauseDef) {
 				ClauseDef clauseDef = (ClauseDef) clause;
-				Constant constant = (Constant)clauseDef.asTerm();
-				Term typeTerm = constant.getType();
-				while (typeTerm instanceof Abstraction) {
-					Abstraction abs = (Abstraction)typeTerm;
-					Util.debug(abs.varType.baseTypeFamily(), " < ", synType);
-					FreeVar.setAppearsIn(abs.varType.baseTypeFamily(), synType);
-					for (Term t = abs.varType; t instanceof Abstraction; t = ((Abstraction)t).getBody()){
-						Util.debug(((Abstraction)t).varType.baseTypeFamily(), " < ", t.baseTypeFamily());
-						FreeVar.setAppearsIn(((Abstraction)t).varType.baseTypeFamily(), t.baseTypeFamily());
-					}
-					typeTerm = abs.getBody();
-				}
+				clauseDef.computeSubordination(true);
+			}
+		}
+	}
+	
+	@Override
+	public void checkSubordination() {
+		for (Clause clause : getClauses()) {
+			if (clause instanceof ClauseDef) {
+				((ClauseDef)clause).checkSubordination();
 			}
 		}
 	}

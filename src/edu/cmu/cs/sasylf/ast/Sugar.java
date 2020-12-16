@@ -2,8 +2,8 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,14 +20,19 @@ import edu.cmu.cs.sasylf.util.Errors;
  * Syntactic sugar productions: syntax that 
  * is "short" for other syntax.  These declarations affect parsing,
  * but are replaced with their definitions when they are used.
- * For now: only single terminal sugar is supported 
  */
 public class Sugar extends Syntax {
 	private Clause sugar;
 	private NonTerminal typeName;
 	private SyntaxDeclaration type;
-	private Clause replacement;
+	private Element replacement;
+	private boolean typeChecked;
 	
+	/**
+	 * Create a sugar production where the lhs is replaced with the right.
+	 * @param lhs new form to define, must not be null
+	 * @param rhs define it as this, must not be null
+	 */
 	public Sugar(Element lhs, Clause rhs) {
 		super(lhs.getLocation());
 		if (lhs instanceof Clause) {
@@ -38,16 +43,6 @@ public class Sugar extends Syntax {
 		}
 		replacement = rhs;
 		if (rhs != null) this.setEndLocation(rhs.getEndLocation());
-	}
-	
-	public Sugar(Element lhs, SyntaxDeclaration syn) {
-		this(lhs,syn.getNonTerminal());
-		type = syn;
-	}
-	
-	public Sugar(Element lhs, NonTerminal nt) {
-		this(lhs,(Clause)null);
-		typeName = nt;
 	}
 	
 	@Override
@@ -65,31 +60,61 @@ public class Sugar extends Syntax {
 
 	@Override
 	public void typecheck(Context ctx) {
-		sugar.typecheck(ctx);
+		typeChecked = false;
+		sugar = sugar.typecheck(ctx);
 		for (Element e: sugar.getElements()) {
 			if (e instanceof Clause) {
 				ErrorHandler.error(Errors.CLAUSE_DEF_PAREN, e);
 			}
 		}
-		Set<String> lhsVars = new HashSet<String>();
+		Map<String, List<ElemType>> bindings = new LinkedHashMap<>();
 		for (Element e: sugar.getElements()) {
 			if (e instanceof NonTerminal) {
-				if (!lhsVars.add(((NonTerminal)e).getSymbol())) {
+				NonTerminal nt = (NonTerminal)e;
+				if (bindings.containsKey(nt.getSymbol())) {
 					ErrorHandler.error(Errors.SUGAR_MULTIPLE_USES, ": " + e, sugar);
 				}
-			}
-		}
-		if (replacement != null) {
-			replacement.typecheck(ctx);
-			for (NonTerminal nt : replacement.getFree(true)) {
-				if (!lhsVars.remove(nt.getSymbol())) {
-					ErrorHandler.error(Errors.SUGAR_NO_USES, " :" + nt, this);
+			} else if (e instanceof Binding) {
+				final Binding b = (Binding)e;
+				if (bindings.containsKey(b.getNonTerminal().getSymbol())) {
+					ErrorHandler.error(Errors.SUGAR_MULTIPLE_USES, ": " + e, sugar);
+				}	
+				Set<Variable> args = new HashSet<>();
+				for (Element sub : b.getElements()) {
+					if (sub instanceof Variable) {
+						if (!args.add((Variable)sub)) {
+							ErrorHandler.error(Errors.SUGAR_MULTIPLE_VARS, e);
+						}
+					} else {
+						ErrorHandler.error(Errors.SUGAR_BINDING_ARG, sub);
+					}
 				}
 			}
-			if (!lhsVars.isEmpty()) {
-				ErrorHandler.error(Errors.SUGAR_UNUSED, ": " + lhsVars, this);			
+			e.checkBindings(bindings, sugar);
+		}
+		int numLHS = bindings.size();
+		Set<String> boundVars = new HashSet<>();
+		sugar.checkVariables(boundVars, false);
+		if (replacement != null) {
+			replacement = replacement.typecheck(ctx);
+			Set<NonTerminal> rhsVars = replacement.getFree(false);
+			replacement.checkBindings(bindings, sugar);
+			boundVars.clear();
+			replacement.checkVariables(boundVars, false);
+			if (bindings.size() > numLHS) {
+				List<String> allVars = new ArrayList<>(bindings.keySet());
+				String newName = allVars.get(numLHS);
+				ErrorHandler.error(Errors.SUGAR_NO_USES, ": " + newName, this);
+			} else if (bindings.size() > rhsVars.size()) {
+				for (NonTerminal nt : rhsVars) {
+					bindings.remove(nt.getSymbol());
+				}
+				ErrorHandler.error(Errors.SUGAR_UNUSED, ": " + bindings.keySet(), this);
 			}
 		} else {
+			// NB: replace == null means sugar is abstract
+			// Not clear that this feature is needed.
+			// The parser never causes replacement to be null
 			if (type == null) {
 				type = ctx.getSyntax(typeName.getSymbol());
 				if (type == null) {
@@ -100,23 +125,25 @@ public class Sugar extends Syntax {
 				ErrorHandler.error(Errors.SUGAR_ABSTRACT,this);
 			}
 		}
+		typeChecked = true;
 	}
 
 	@Override
 	public void postcheck(Context ctx) {
+		if (!typeChecked) return; // don't bother
 		// here we convert the replacement using the updated grammar,
 		// and then update the grammar ourself:
 		// sugar definitions cannot be used before they are defined.
 		if (replacement != null) {
-			Element newClause = replacement.computeClause(ctx, false);
-			if (!(newClause instanceof Clause))
+			if (replacement instanceof Clause) {
+				replacement = ((Clause)replacement).computeClause(ctx, false);
+			}
+			if (replacement instanceof Variable) {
 				ErrorHandler.error(Errors.SUGAR_UNKNOWN, this);
-			else if (!(newClause.getType() instanceof SyntaxDeclaration))
+			}
+			if (!(replacement.getType() instanceof SyntaxDeclaration))
 				ErrorHandler.error(Errors.SUGAR_JUDGMENT,this);
-			replacement = (Clause) newClause;
-			Map<String,List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
-			replacement.checkBindings(bindingTypes, this);
-			type = (SyntaxDeclaration)replacement.getElemType();
+			type = (SyntaxDeclaration)replacement.getType();
 			typeName = type.getNonTerminal();
 		}
 		
@@ -125,6 +152,8 @@ public class Sugar extends Syntax {
 		else if (replacement != null) cd = new SugarClauseDef(sugar, type, replacement);
 		else cd = new ClauseDef(sugar, type);
 		sugar = cd;
+		
+		cd.checkVarUse(false);
 		
 		// SyntaxDeclaration adds things to parseMap (unused?) and prodMap (needed only for the constant)
 		
@@ -141,8 +170,15 @@ public class Sugar extends Syntax {
 
 	}
 	
-	// the following is also copied from SyntaxDeclaration:
+	@Override
+	public void checkSubordination() {
+		if (sugar instanceof ClauseDef) { // else, maybe a problem earlier
+			((ClauseDef)sugar).checkSubordination();			
+		}
+	}
 	
+	// the following is also copied from SyntaxDeclaration:
+
 	private GrmNonTerminal gnt;
 	public edu.cmu.cs.sasylf.grammar.NonTerminal getSymbol() {
 		if (gnt == null)

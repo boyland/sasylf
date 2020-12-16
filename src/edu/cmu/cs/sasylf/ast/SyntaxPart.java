@@ -63,7 +63,11 @@ public class SyntaxPart implements Part {
 	
 		// checks after syntax all defined
 		for (Syntax syn : syntax) {
-			syn.postcheck(ctx);
+			try {
+				syn.postcheck(ctx);
+			} catch (SASyLFError ex) {
+				// already reported
+			}
 		}
 	
 		computeSubordination(ctx);	
@@ -72,6 +76,9 @@ public class SyntaxPart implements Part {
 	protected void computeSubordination(Context ctx) {
 		for (Syntax s : syntax) {
 			s.computeSubordination();
+		}
+		for (Syntax s : syntax) {
+			s.checkSubordination();
 		}
 	}
 	

@@ -10,6 +10,8 @@ syntax
   T ::= A
      | T -> T
   
+  U ::= <>
+     | {x} T[x] //! subordination error
 
   Gamma ::= *
          | Gamma, x : T
@@ -17,7 +19,41 @@ syntax
   (+ T) := A -> T
   (- T) := (+ T) -> A
   
+  (2 T) := T -> T // should be allowed
+ 
   (* T) := (* T) -> A //! circular sugar not allowed
+  
+  (/ t[x]) := t[fn x => x] //! x unbound
+  
+  (^ T[A]) := T[A] //! A is not legal as an argument
+  
+  (% x in t[x]) := A //! t is unused
+  
+  (# x in t[x]) := t[fn x => x] // OK
+  
+  (???) := x //! x is not doing anything
+  
+  (?!?) := T //! T out of nowhere
+  
+  (! x in t[x]) := t //! inconsistent bindings
+  
+  (!! t) := fn x => t[x] //! inconsistent binding
+  
+  (t1 *in* x:t2[x]) := t2[t1] // OK
+  
+  (! x, x' in t[x][x']) := t[fn x => x] //! inconsistent # of bindings
+  
+  (& x in T[x]) := T[fn x => x] //! T does not depend on x
+  
+  (--x) := A->A //! x unbound in LHS
+  
+  (***) := -> //! "->" doesn't mean anything
+  
+  (? x, x' in t[x][x']) := fn x => fn x' => t[x][x']
+  
+  (%% x in t[x][x]) := fn x => t[x][x] //! var occurs twice
+  
+  (t % t) := t t //! NT occurs twice in LHS
   
 judgment isvar : t:T in Gamma
 assumes Gamma

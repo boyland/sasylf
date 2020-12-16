@@ -12,6 +12,7 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
@@ -209,6 +210,56 @@ public class ClauseDef extends Clause {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Set subordination to take into account the
+	 * parts of this clause: every nonterminal in the clause
+	 * can be part of the result.
+	 * @param includeVars if true, variables are assumed also
+	 * (NB: includeVars == true is needed to follow Twelf.)
+	 */
+	public void computeSubordination(boolean includeVars) {
+		Constant c1 = type.typeTerm();
+		for (Element e : elements) {
+			NonTerminal nt = null;
+			if (e instanceof NonTerminal) nt = (NonTerminal)e;
+			else if (e instanceof Binding) nt = ((Binding)e).getNonTerminal();
+			else if (includeVars && e instanceof Variable) nt = ((Variable)e).getType().getNonTerminal();
+			if (nt == null) continue;
+			Constant c2 = nt.getType().typeTerm();
+			if (!FreeVar.canAppearIn(c2, c1)) {
+				Util.debug("sub: ",c2," < ",c1);
+			}
+			FreeVar.setAppearsIn(c2, c1);
+		}
+	}
+	
+	/**
+	 * Ensure that this clause doesn't include bindings
+	 * that are infeasible.  For example if we have t[X]
+	 * as a binding, then X must be a variable that can occur in
+	 * terms of type t.  Errors are generated but not thrown.
+	 * We return after the first error is found, if one is found.
+	 * @return true if no errors found
+	 * (it is not expected that clients will use the return value).
+	 */
+	public boolean checkSubordination() {
+		for (Element e : elements) {
+			if (!(e instanceof Binding)) continue;
+			Binding b = (Binding)e;
+			SyntaxDeclaration sd = b.getNonTerminal().getType();
+			Constant c1 = sd.typeTerm();
+			for (Element sub : b.getElements()) {
+				ElementType et = sub.getType();
+				if (!(et instanceof SyntaxDeclaration)) continue;
+				Constant c2 = (Constant) et.typeTerm();
+				if (FreeVar.canAppearIn(c2, c1)) continue;
+				ErrorHandler.recoverableError(Errors.SYNTAX_SUBORDINATION_ERROR, b.getNonTerminal().toString(), sub);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

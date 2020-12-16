@@ -66,4 +66,10 @@ public abstract class Syntax extends Node {
 	 * Compute Subordination relations using this syntax.
 	 */
 	public void computeSubordination() {}
+	
+	/**
+	 * Check subordination among bindings in syntax
+	 * definitions.
+	 */
+	public void checkSubordination() {}
 }
