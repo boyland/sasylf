@@ -177,7 +177,7 @@ public class Binding extends Element {
 
 	@Override
 	void getFree(Set<NonTerminal> freeSet, boolean rigidOnly) {
-		super.getFree(freeSet, rigidOnly);
+		nonTerminal.getFree(freeSet, rigidOnly);
 		if (!rigidOnly) {
 			for (Element e:elements) {
 				e.getFree(freeSet, rigidOnly);
