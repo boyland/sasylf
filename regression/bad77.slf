@@ -1,0 +1,50 @@
+// testing parse errors and error recovery
+package regression;
+
+requires //! only in named modules
+
+terminals S
+
+syntax n ::= 0 
+          | S n
+
+abstract syntax t
+
+extends Unknown //! only in named modules
+
+provides //! only in named modules
+ 
+terminals fn value
+
+syntax
+  t ::= x
+     | t t
+     | fn x => t[x]
+
+  G ::= *
+     | G, x
+     
+abstract syntax h //! not allowed in "provides" part
+
+abstract judgment val: t value  //! now allowed in "provides" part
+
+   ------------------- //! abstract judgment cannot have rule
+   fn x => t[x] value //! missing rule name
+   
+judgment eval: t -> t
+
+  t1 -> t1'
+  --------------- E-App1
+  t1 t2 -> t1' t2
+  
+  t1 value
+  t2 -> t2'
+  -------------- E-App2
+  t1 t2 -> t1 t2'
+  
+  t2 value
+  -------------------------- E-AppAbs
+  (fn x => t[x]) t2 -> t[t2]
+  
+// theorem ...
+
