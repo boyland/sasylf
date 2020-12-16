@@ -113,6 +113,8 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == EQUAL
 			|| getToken(1).kind == SEMICOLON
 			|| getToken(1).kind == MINUS
+			|| getToken(1).kind == PLUS
+			|| getToken(1).kind == TIMES
 			|| getToken(1).kind == COMMA
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
@@ -166,6 +168,8 @@ public class DSLToolkitParser {
     boolean isRuleNamePiece(Token t) {
 		return
 		  (t.kind == MINUS ||
+		   t.kind == PLUS ||
+		   t.kind == TIMES ||
 		   t.kind == IDENTIFIER || 
 		   t.kind == INTEGER_LITERAL ||
 		   t.kind == OPERATOR ||
@@ -1034,6 +1038,8 @@ TOKEN :
 | < RBRACK: "]" >
 | < SEMICOLON: ";" >
 | < MINUS: "-" >
+| < PLUS: "+" >
+| < TIMES: "*" >
 | < COMMA: "," >
 | < COLON: ":" >
 | < DOT: "." >
@@ -1483,7 +1489,7 @@ CompUnit CompilationUnit() :
     p=Part(false) {  cu.addChunk(p); }
   | (
     	t=<MODULE> s=<IDENTIFIER> "=" usedModule=QualName() { args.clear(); loc=usedModule.getEndLocation(); }
-    	[ args=ModuleParameters()
+    	[ 
     	 "[" [ qn=QualName() { args.add(qn); }
                ( "," qn=QualName() { args.add(qn); } )* ]
          tp="]" {  loc = new Location(tp); }
@@ -1536,18 +1542,6 @@ List<Theorem> Theorems(boolean abstractOK) :
      return theorems;
   }
 }
-
-List<QualName> ModuleParameters() :
-{
-  QualName qn;
-  List<QualName> result = new ArrayList<QualName>();
-}
-{
-  [ "[" [ qn=QualName() { result.add(qn); }
-          ( "," qn=QualName() {  result.add(qn); } )* ]
-    "]"  ]
-  { return result; }    
-}
   
 Token Operator() :
 { Token t; }
@@ -1558,6 +1552,8 @@ Token Operator() :
 		| t=<COLON_EQ>
 		| t=<SEMICOLON>
 		| t=<MINUS>
+		| t=<PLUS>
+		| t=<TIMES>
 		| t=<COMMA>
 		| t=<PIPE>
 		| t=<EQUAL>
@@ -1602,7 +1598,8 @@ StringSpan RuleName() :
   (t1=<IDENTIFIER> | t1= Keyword() | t1=<IS> | t1=<NOT> | t1=<AND> | t1=<OR>) { s = new StringSpan(t1); }
   ( LOOKAHEAD({ isRulePart() }) (
       t=<MINUS>
-    | t=<OPERATOR>
+    | t=<PLUS>
+    | t=<TIMES>
     | t=<IDENTIFIER>
     | t=<INTEGER_LITERAL> 
     | t=<NOT>
