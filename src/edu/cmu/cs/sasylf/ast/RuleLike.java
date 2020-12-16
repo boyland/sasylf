@@ -59,15 +59,20 @@ public abstract class RuleLike extends Node implements Named {
 	 */
 	protected void createRuleAppConstant() {
 		Term typeTerm = getRuleAppBase();
-		List<Term> argTypes = new ArrayList<Term>();
 
-		for (int i = 0; i < getPremises().size(); ++i) {
-			argTypes.add(getPremises().get(i).getTypeTerm());
+		if (isInterfaceOK()) {
+			List<Term> argTypes = new ArrayList<Term>();
+			
+			for (int i = 0; i < getPremises().size(); ++i) {
+				argTypes.add(getPremises().get(i).getTypeTerm());
+			}
+			argTypes.add(((ClauseUse)getConclusion()).getConstructor().asTerm());
+
+			typeTerm = Term.wrapWithLambdas(typeTerm, argTypes);
+		} else {
+			typeTerm = Constant.UNKNOWN_TYPE;
 		}
-
-		argTypes.add(((ClauseUse)getConclusion()).getConstructor().asTerm());
-
-		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes);
+		
 		ruleAppConstant = Const(name + "TERM", typeTerm);
 		Util.debug(ruleAppConstant,": ",typeTerm);
 	}
