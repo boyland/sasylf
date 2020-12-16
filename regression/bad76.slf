@@ -1,5 +1,4 @@
-// collection of lots of errors
-
+// collection of errors, especially related to case analysis
 package regression;
 
 terminals value λ A unit Unit
@@ -149,7 +148,7 @@ theorem progress :
             _: * ⊢ t1 t2 : T
             where t := t1 t2
         is
-            ns1: t1 value or t1 → t1' by induction hypothesis on d1
+            ns1: t1 value or t1 → t1' by induction hypothesis //! on what?
             ns2: t2 value or t2 → t2' by induction hypothesis on d2
             _: t1 t2 → t' by case analysis on ns1:
                 case or v: unit is //! bad or case
@@ -163,6 +162,7 @@ theorem progress :
                         case unit is //! syntax case used in disjunction
                             proof by unproved
                         end case
+                        lost: t2 value by unproved //! should be case
                         case or e2: t2 → t2' is
                             e: t1 t2 → t1 t2' by rule E-App2 on v1,e2
                         end case
@@ -300,7 +300,7 @@ theorem preservation3 :
             _: * ⊢ unit : Unit
             where t := unit and T := Unit
         is
-            proof by inversion on e
+            proof by inversion on e //! actually a contradiction
         end case
 
         case rule
@@ -354,10 +354,11 @@ theorem preservation4 :
             e2: t2 → t2'
             --------------------- E-App2
             _: (t1 t2) → (t1 t2')
-            where t := t1 t2 and t' := t1 t2'
+            where t : t1 t2 //! expected := instead of :
+            and t' = t1 t2' //! expected "= instead of =
         is
             d1: * ⊢ t1: T' → T and
-            d2: * ⊢ t2: T' by inversion of rule T-App on d
+            d2: * ⊢ t2: T' by inversion oof rule T-App on d //! "oof"
             d2': * ⊢ t2': T' by induction hypothesis on d2, e2
             proof by rule T-App on d1, d2'
         end case
@@ -371,12 +372,12 @@ theorem preservation4 :
         is
             d1: * ⊢ λ x : T' • t11[x] : T'' → T and
             d2: * ⊢ t2 : T'' by inversion of rule T-App on d
-            d11: *, x:T' ⊢ t11[x] : T by inversion of rule T-Abs on d1
+            d11: *, x:T' ⊢ t11[x] : T by inversion of rule T-Abs //! inversion on what
             where T'' := T'
-            proof by substitution on d11, d2
+            proof by substitution on d11, d2 //! cascade
         end case
 
-    end case analysis
+    end induction //! wrong end
 end theorem
 
 lemma silly:
@@ -795,8 +796,7 @@ lemma inversiontest2:
     forall d: * ⊢ t : Unit
     exists unit value
     do case analysis on t:
-        case unit is
-            proof by rule val-unit
+        case unit is //! missing body
         end case
         case t1 t2 is
             proof by rule val-unit
