@@ -129,7 +129,7 @@ public abstract class DerivationWithArgs extends Derivation {
 				f = e.asFact(ctx, ctx.assumedContext);
 			}
 			if (!ctx.isKnownContext(f.getElement().getRoot())) {
-				ErrorHandler.error(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),this);
+				ErrorHandler.error(Errors.UNKNOWN_CONTEXT,f.getElement().getRoot().toString(),c);
 			}
 			c.checkBindings(ctx.bindingTypes, c);
 			args.add(f);
