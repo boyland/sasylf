@@ -317,6 +317,7 @@ public abstract class RuleLike extends Node implements Named {
 	}
 
 	protected List<Abstraction> unionContexts(Context ctx, List<List<Abstraction>> contexts, Node errorPoint) {
+		// XXX: consider requiring them all to be the same, except for syntax
 		List<Abstraction> result = Collections.<Abstraction>emptyList();
 		Set<String> argNames = new HashSet<String>();
 		boolean copied = false;
@@ -338,6 +339,7 @@ public abstract class RuleLike extends Node implements Named {
 						}
 						if (!argNames.add(b.varName)) {
 							while (!result.get(i).varName.equals(b.varName)) {
+								seen.add(result.get(i).varName);
 								++i;
 							}
 						} else {
@@ -347,7 +349,7 @@ public abstract class RuleLike extends Node implements Named {
 							}
 							result.add(i, b);
 						}
-						// invariant i and j both point to an abstraction with the name b.varName
+						// invariant: i and j both point to an abstraction with the name b.varName
 						if (!result.get(i).varType.equals(b.varType)) {
 							// see bad50.slf
 							ErrorHandler.error(Errors.RULE_CONTEXT_INCONSISTENT, " (" + assumeTypeToString(ctx,con,j) + ") != (" + assumeTypeToString(ctx,result,i) + ")", errorPoint);
