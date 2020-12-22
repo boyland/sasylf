@@ -181,6 +181,10 @@ public class RuleCase extends Case {
 			Util.debug("In case of assumption rule case at ",getLocation()," relaxation = ",relax);
 			Util.debug("subject = ", subjectTerm);
 			Util.debug("adapted is ", adaptedSubjectTerm);
+			// NB: We just created an adaptedSubjectTerm,
+			// which was also done in caseAnalyze.
+			// Two ways of doing the same thing in *very* different ways
+			// is probably a bad idea.
 
 			conclusionIsUnsound = true; // not always, but safer this way
 		}
@@ -290,7 +294,7 @@ public class RuleCase extends Case {
 						}
 					}
 					if (errorClass == null) {
-						// tdebug("problems: " + problems + " in " + computedSub + " after " + pairSub);
+						Util.debug("problems: ", problems, " in ", computedSub, " after ", pairSub);
 						FreeVar first = problems.iterator().next();
 						Term subbed = computedSub.getSubstituted(first);
 						Term baseSubbed = Term.getWrappingAbstractions(subbed, null);
@@ -314,6 +318,7 @@ public class RuleCase extends Case {
 					// See: bad36, bad54
 					for (Atom v : computedSub.getMap().keySet()) {
 						if (ctx.inputVars.contains(v)) {
+							Util.debug("pair.fst = ", pair.first, ",pairSub = ", pairSub, ", cleanedCaseTerm = ", cleanedCaseTerm, ", computedSub = ",computedSub);
 							ErrorHandler.recoverableError(Errors.CASE_STRICT_NEED_VAR, v.toString(), this.getSpan());
 							generatedError = true;
 							break;
