@@ -159,6 +159,7 @@ public enum Errors {
 	CASE_SUBJECT_NOT("case analysis is not allowed on a 'not' judgment"),
 	CASE_SUBJECT_CONSTRUCTED("case analysis is not allowed on something just put together"),
 	CASE_SUBJECT_VAR_UNUSED ("variable in assumption context is unused, please remove"),
+	CASE_SUBJECT_ROOT_INTERNAL ("the assumption context of subject must be rooted in the theorem context "),
 	CASE_ASSUMPTION_IMPOSSIBLE("assumption rule cannot apply since variables cannot occur in "),
 	CASE_ASSUMPTION_OLD ("case matching an assumption in the context needs a new context name"),
 	CASE_ASSUMPTION_NOT_VAR ("a new assumption can only be used with variable cases"),
@@ -172,7 +173,7 @@ public enum Errors {
 	CASE_CONTEXT_INCONSISTENT ("all derivations in the rule cases must use the same bindings and context"),
 	CASE_CONTEXT_MAYBE_KNOWN ("Perhaps should have used existing context"), // Warning
 	CONTEXT_DISCARDED ("context discarded"),
-	CONTEXT_DISCARDED_APPL ("passing argument implicitly discards its context"),
+	CONTEXT_DISCARDED_APPL ("passing argument implicitly discards its context "),
 	WRONG_SUBSTITUTION_ARGUMENTS ("expected 2 arguments to a substitution justification: the judgment being substituted, and the judgment being substituted into"),
 	SUBSTITUTION_UNCHECKED ("substitution is unchecked"),
 	SUBSTITUTION_ARGUMENT ("argument of substitution must be a judgment instance "),

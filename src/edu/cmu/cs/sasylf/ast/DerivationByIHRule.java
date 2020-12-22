@@ -124,7 +124,8 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				ctx.assumedContext != null && // only if we have a context currently, and
 				(ruleLike.getAssumes() == null ||       // either the rule has no context, or
 				ctx.assumedContext.getType() != 
-				ruleLike.getAssumes().getType());      // or the type differs
+				ruleLike.getAssumes().getType() ||      // or the type differs
+				getClause().getRoot() == null); // or the result has an empty context
 
 		Set<FreeVar> mustAvoid = new HashSet<FreeVar>(ctx.inputVars);
 		if (ruleLike instanceof Theorem) {        

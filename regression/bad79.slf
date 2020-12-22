@@ -1,0 +1,937 @@
+// testing relaxation with many things, some legal, some illegal
+package regression;
+
+terminals λ unit Unit Top
+
+syntax
+  t ::= λ x:T • t[x]
+     | t t
+     | x
+     | λ X <: T • t[X]
+     | t T
+     | unit
+
+  T ::= X
+     | T → T
+     | ∀ X<:T • T[X]
+     | Unit
+     | Top
+
+  Γ ::= *
+     | Γ, x:T
+     | Γ, X<:T
+     
+judgment closed: T ◊
+
+   ----- nonvar
+    T ◊
+    
+judgment type-equality: Γ ⊢ T == T
+assumes Γ
+
+  ---------- type-eq
+  Γ ⊢ T == T
+  
+judgment typevar: T<:T ∈ Γ
+assumes Γ
+
+  ----------------------- typevar
+  X <: T ∈ (Γ, X <: T)
+  
+judgment subtype: Γ ⊢ T <: T
+assumes Γ
+
+  T1 <: T2 ∈ Γ
+  ------------------- S-Assume
+  Γ ⊢ T1 <: T2
+  
+  ---------- S-Refl
+  Γ ⊢ T <: T
+  
+  Γ ⊢ T1 <: T2
+  Γ ⊢ T2 <: T3
+  ------------- S-Trans
+  Γ ⊢ T1 <: T3
+
+  ------------ S-Top
+  Γ ⊢ T <: Top
+  
+  Γ ⊢ T21 <: T11
+  Γ ⊢ T12 <: T22
+  ------------------------------ S-Arrow
+  Γ ⊢ (T11 → T12) <: (T21 → T22)
+
+  Γ ⊢ T21 <: T11
+  Γ, X<:T21 ⊢ T12[X] <: T22[X]
+  -------------------------------------- S-All
+  Γ ⊢ ∀ X<:T11•T12[X] <: ∀ X<:T21•T22[X]
+  
+judgment typing : Γ ⊢ t : T
+assumes Γ
+
+  ------------ T-Var
+  Γ, x:T ⊢ x:T
+  
+  --------------- T-Unit
+  Γ ⊢ unit : Unit
+  
+  Γ, x:T ⊢ t[x] : T'
+  ------------------------- T-Abs
+  Γ ⊢ λ x:T • t[x] : T → T'
+
+  Γ ⊢ t1 : T → T'
+  Γ ⊢ t2 : T
+  ----------------- T-App
+  Γ ⊢ t1 t2 : T'
+  
+  Γ, X<:T ⊢ t[X] : T'[X]
+  ---------------------------------- T-TAbs
+  Γ ⊢ λ X<:T • t[X] : ∀ X<:T • T'[X]
+  
+  Γ ⊢ t : ∀ X<:T • T1[X]
+  Γ ⊢ T2 <: T
+  ------------------------ T-TApp
+  Γ ⊢ t (T) : T1[T2]
+  
+// the first few lemmas are all legal, and show the (limited) power of relaxation
+
+lemma super-var-implies-var:
+    assumes Γ
+    forall s1: Γ ⊢ T1 <: T2
+    forall a2: T2 <: T2' ∈ Γ
+    exists T1 <: T1' ∈ Γ
+    proof by induction on s1:
+        case rule
+            a: T1 <: T2 ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ T1 <: T2
+        is
+            proof by a
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ T2 <: T2
+            where T1 := T2
+        is
+            proof by a2
+        end case
+
+        case rule
+            s1': Γ ⊢ T1 <: T0
+            s0: Γ ⊢ T0 <: T2
+            ------------------- S-Trans
+            _: Γ ⊢ T1 <: T2
+        is
+            a0: T0 <: T0' ∈ Γ by induction hypothesis on s0, a2
+            proof by induction hypothesis on s1', a0
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ T1 <: Top
+            where T2:= Top
+        is
+            proof by contradiction on a2
+        end case
+
+        case rule
+            _: Γ ⊢ T21 <: T11
+            _: Γ ⊢ T12 <: T22
+            ------------------------------------ S-Arrow
+            _: Γ ⊢ (T11 → T12) <: (T21 → T22)
+            where T1 := T11 → T12 and T2 := T21 → T22
+        is
+            proof by contradiction on a2
+        end case
+
+        case rule
+            _: Γ ⊢ T21 <: T11
+            _: Γ, X' <: T21 ⊢ T12[X'] <: T22[X']
+            --------------------------------------------------------------- S-All
+            _: Γ ⊢ (∀ X' <: T11 • T12[X']) <: (∀ X' <: T21 • T22[X'])
+            where T1 := ∀ X'<:T11 • T12[X'] and T2 := ∀ X'<:T21 • T22[X']
+        is
+            proof by contradiction on a2
+        end case
+
+    end induction
+end lemma
+
+lemma circular-bound:
+    assumes Γ
+    forall d: Γ, X <: T ⊢ T' <: X
+    exists contradiction
+    use induction on d
+    a: X <: T ∈ (Γ, X <: T) by rule typevar
+    a1: T' <: T''[X] ∈ (Γ, X <: T) by lemma super-var-implies-var on d, a
+    proof by case analysis on a1:
+        case rule
+            --------------- typevar
+            _: X' <: T0 ∈ (Γ', X' <: T0, X <: T1[X'])
+            where T''[X] := T0
+        is
+            proof by case analysis on d:
+                case rule
+                    a': T' <: X ∈ (Γ, X <: T)
+                    ------------------------- S-Assume
+                    _: Γ, X <: T ⊢ T' <: X
+                is
+                    proof by contradiction on a'
+                end case
+
+                case rule
+                    s1: Γ, X <: T ⊢ T' <: T2[X]
+                    s2: Γ, X <: T ⊢ T2[X] <: X
+                    ------------------- S-Trans
+                    _: (Γ, X <: T) ⊢ T' <: X
+                is
+                    a2: T2[X] <: T2'[X] ∈ (Γ, X <: T) by lemma super-var-implies-var on s2, a
+                    proof by case analysis on a2:
+                        case rule
+                            ---------------------------------------- typevar
+                            _: X0 <: T3 ∈ (Γ0, X0 <: T3, X <: T4[X0])
+                            where T2'[X] := T3
+                        is
+                            proof by induction hypothesis on s2
+                        end case
+
+                        case rule
+                            --------------- typevar
+                            _: X <: T ∈ (Γ, X <: T)
+                            where T2[X] := X and T2'[X] := T
+                        is
+                            proof by induction hypothesis on s1
+                        end case
+                    end case analysis
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma var-bound-is-lowest:
+    assumes Γ
+    forall a: T1 <: T2 ∈ Γ
+    forall s: Γ ⊢ T1 <: T3
+    exists Γ ⊢ T1 == T3 or Γ ⊢ T2 <: T3
+    use induction on s
+    proof by case analysis on a:
+        case rule
+            --------------- typevar
+            _: X1 <: T2 ∈ (Γ', X1 <: T2)
+        is
+            proof by case analysis on s:
+                case rule
+                    a1: T1 <: T3 ∈ Γ
+                    ------------------------- S-Assume
+                    _: Γ ⊢ T1 <: T3
+                is
+                    proof by case analysis on a1:
+                        case rule
+                            --------------- typevar
+                            _: X <: T3 ∈ (Γ', X <: T3)
+                            where T2 := T3
+                        is
+                            _: Γ ⊢ T2 <: T3 by rule S-Refl
+                        end case
+
+                    end case analysis
+                end case
+
+                case rule
+                    ---------------- S-Refl
+                    _: Γ ⊢ T3 <: T3
+                    where T1 := T3
+                is
+                    _: Γ ⊢ T1 == T3 by rule type-eq
+                end case
+
+                case rule
+                    s1: Γ ⊢ T1 <: T0
+                    s2: Γ ⊢ T0 <: T3
+                    ------------------- S-Trans
+                    _: Γ ⊢ T1 <: T3
+                is
+                    ch1: Γ ⊢ T1 == T0 or Γ ⊢ T2 <: T0 by induction hypothesis on a, s1
+                    proof by case analysis on ch1:
+                        case or eq: Γ ⊢ T1 == T0 is
+                            use inversion on eq where T0 := T1
+                            proof by induction hypothesis on a, s2
+                        end case
+
+                        case or s20: Γ ⊢ T2 <: T0 is
+                            _: Γ ⊢ T2 <: T3 by rule S-Trans on s20, s2
+                        end case
+                    end case analysis
+                end case
+
+                case rule
+                    ------------------ S-Top
+                    _: Γ ⊢ T1 <: Top
+                    where T3 := Top
+                is
+                    _: Γ ⊢ T2 <: Top by rule S-Top
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma top-leq-top:
+    assumes Γ
+    forall s: Γ ⊢ Top <: T
+    exists Γ ⊢ T == Top
+    proof by induction on s:
+        case rule
+            v: Top <: T ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ Top <: T
+        is
+            proof by contradiction on v
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ Top <: Top
+            where T := Top
+        is
+            proof by rule type-eq
+        end case
+
+        case rule
+            s1: Γ ⊢ Top <: T1
+            s2: Γ ⊢ T1 <: T
+            ------------------- S-Trans
+            _: Γ ⊢ Top <: T
+        is
+            e1: Γ ⊢ T1 == Top by induction hypothesis on s1
+            use inversion on e1 where T1 := Top
+            proof by induction hypothesis on s2
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ Top <: Top
+            where T := Top
+        is
+            proof by rule type-eq
+        end case
+
+    end induction
+end lemma
+
+lemma arrow-leq-inversion:
+    assumes Γ
+    forall s: Γ ⊢ T1 → T2 <: T'
+    exists Γ ⊢ T' == Top or (Γ ⊢ T' == T1' → T2' and Γ ⊢ T1' <: T1 and Γ ⊢ T2 <: T2')
+    proof by induction on s:
+        case rule
+            a: (T1 → T2) <: T' ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ (T1 → T2) <: T'
+        is
+            proof by contradiction on a
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ (T1 → T2) <: (T1 → T2)
+            where T' := T1 → T2
+        is
+            eq: Γ ⊢ T' == T1 → T2 by rule type-eq
+            s1: Γ ⊢ T1 <: T1 by rule S-Refl
+            s2: Γ ⊢ T2 <: T2 by rule S-Refl
+            proof by eq, s1, s2
+        end case
+
+        case rule
+            s1: Γ ⊢ (T1 → T2) <: T0
+            s2: Γ ⊢ T0 <: T'
+            ------------------- S-Trans
+            _: Γ ⊢ (T1 → T2) <: T'
+        is
+            ch1: Γ ⊢ T0 == Top or (Γ ⊢ T0 == T01→T02 and Γ ⊢ T01 <: T1 and Γ ⊢ T2 <: T02)
+            by induction hypothesis on s1
+            proof by case analysis on ch1:
+                case or eq0: Γ ⊢ T0 == Top is
+                    use inversion on eq0 where T0 := Top
+                    _: Γ ⊢ T' == Top by lemma top-leq-top on s2
+                end case
+
+                case or eq0: Γ ⊢ T0 == (T01 → T02) 
+                    and s01: Γ ⊢ T01 <: T1
+                    and s02: Γ ⊢ T2 <: T02 
+                is
+                    use inversion on eq0 where T0 := T01 → T02
+                    ch2: Γ ⊢ T' == Top or (Γ ⊢ T' == T1' → T2' and Γ ⊢ T1' <: T01 and Γ ⊢ T02 <: T2')
+                    by induction hypothesis on s2
+                    proof by case analysis on ch2:
+                        case or eq: Γ ⊢ T' == Top is
+                            _: Γ ⊢ T' == Top by eq
+                        end case
+
+                        case or eq: Γ ⊢ T' == (T1' → T2') 
+                            and s01': Γ ⊢ T1' <: T01 
+                            and s02': Γ ⊢ T02 <: T2' 
+                        is
+                            s1': Γ ⊢ T1' <: T1 by rule S-Trans on s01', s01
+                            s2': Γ ⊢ T2 <: T2' by rule S-Trans on s02, s02'
+                            proof by eq, s1', s2'
+                        end case
+
+                    end case analysis
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ (T1 → T2) <: Top
+            where T' := Top
+        is
+            _: Γ ⊢ T' == Top by rule type-eq
+        end case
+
+        case rule
+            s1': Γ ⊢ T1' <: T1
+            s2': Γ ⊢ T2 <: T2'
+            ------------------------------------ S-Arrow
+            _: Γ ⊢ (T1 → T2) <: (T1' → T2')
+            where T' := T1' → T2'
+        is
+            eq: Γ ⊢ T' == T1' → T2' by rule type-eq
+            proof by eq, s1', s2'
+        end case
+
+    end induction
+end lemma
+
+// a simpler version of the previous:
+lemma all-leq-invesion:
+    assumes Γ
+    forall s: Γ ⊢ ∀ X <: T1 • T2[X] <: T'
+    exists Γ ⊢ T' == Top or Γ ⊢ T' == ∀ X <: T1' • T2'[X]
+    proof by induction on s:
+        case rule
+            a: (∀ X <: T1 • T2[X]) <: T' ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ (∀ X <: T1 • T2[X]) <: T'
+        is
+            proof by contradiction on a
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ (∀ X <: T1 • T2[X]) <: (∀ X <: T1 • T2[X])
+            where T' := ∀ X <: T1 • T2[X]
+        is
+            _: Γ ⊢ T' == ∀ X <: T1 • T2[X] by rule type-eq
+        end case
+
+        case rule
+            s1: Γ ⊢ (∀ X <: T1 • T2[X]) <: T3
+            s2: Γ ⊢ T3 <: T'
+            ------------------- S-Trans
+            _: Γ ⊢ (∀ X <: T1 • T2[X]) <: T'
+        is
+            ch1: Γ ⊢ T3 == Top or Γ ⊢ T3 == ∀ X<:T1'' • T2''[X] by induction hypothesis on s1
+            proof by case analysis on ch1:
+                case or eq3: Γ ⊢ T3 == Top is
+                    use inversion on eq3 where T3 := Top
+                    _: Γ ⊢ T' == Top by lemma top-leq-top on s2
+                end case
+
+                case or eq3: Γ ⊢ T3 == (∀ X <: T1'' • T2''[X]) is
+                    use inversion on eq3 where T3 := ∀ X <: T1'' • T2''[X]
+                    proof by induction hypothesis on s2
+                end case
+            end case analysis
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ (∀ X <: T1 • T2[X]) <: Top
+            where T' := Top
+        is
+            _: Γ ⊢ T' == Top by rule type-eq
+        end case
+
+        case rule
+            _: Γ ⊢ T1' <: T1
+            _: (Γ, X <: T1') ⊢ T2[X] <: T2'[X]
+            -------------------------------------------- S-All
+            _: Γ ⊢ (∀ X <: T1 • T2[X]) <: (∀ X <: T1' • T2'[X])
+            where T' := ∀ X <: T1' • T2'[X]
+        is
+            _: Γ ⊢ T' == ∀ X <: T1' • T2'[X] by rule type-eq
+        end case
+
+    end induction
+end lemma
+         
+lemma bound-unique:
+    assumes Γ
+    forall a1: T <: T1 ∈ Γ
+    forall a2: T <: T2 ∈ Γ
+    exists Γ ⊢ T1 == T2
+    proof by case analysis on a1:
+        case rule
+            --------------- typevar
+            _: X <: T1 ∈ (Γ', X <: T1)
+        is
+            use inversion on a2 where T1 := T2
+            proof by rule type-eq
+        end case
+    end case analysis
+end lemma
+
+// The rest of the lemmas are suspect/difficult/wrong, or are just helpers
+
+lemma circular-typevar:
+    assumes Γ
+    forall a12: T1 <: T2 ∈ Γ
+    forall a21: T2 <: T1 ∈ Γ
+    exists contradiction
+    proof by case analysis on a12:
+        case rule
+            --------------- typevar
+            _: X1 <: T2 ∈ (Γ', X1 <: T2)
+        is
+            proof by case analysis on (T2 assumes Γ'): //! cannot be allowed (unless much smarter)
+                case X2 assumes Γ'', X2 <: T'' is
+                    a2'': X2 <: T'' ∈ (Γ'', X2 <: T'') by rule typevar
+                    a21a: T2 <: T'' ∈ Γ' by a2''
+                    a21b: T2 <: T'' ∈ Γ by a21a
+                    eq: Γ ⊢ T'' == T1 by lemma bound-unique on a21b, a21
+                    a21': T1 <: T2 ∈ Γ'' by case analysis on (T'' assumes Γ''): //! ditto
+                        case X'' assumes Γ''', X'' <: T3 is
+                            use inversion on eq where T'' := T1
+                            a'': X'' <: T3 ∈ (Γ''', X'' <: T3) by rule typevar
+                            a1': T1 <: T3 ∈ Γ'' by a''
+                            a2': T1 <: T3 ∈ Γ' by a1'
+                            a3': T1 <: T3 ∈ Γ by a2'
+                            eq3: Γ ⊢ T3 == T2 by lemma bound-unique on a3', a12
+                            use inversion on eq3 where T3 := T2
+                            a32: T1 <: T2 ∈ Γ'' by a1'
+                        end case
+
+                        case T1'' → T2'' is
+                            proof by contradiction on eq
+                        end case
+
+                        case ∀ X <: T1'' • T2''[X] is
+                            proof by contradiction on eq
+                        end case
+
+                        case Unit is
+                            proof by contradiction on eq
+                        end case
+
+                        case Top is
+                            proof by contradiction on eq
+                        end case
+
+                    end case analysis
+                    proof by contradiction on a21'
+                end case
+
+                case T21 → T22 is
+                    proof by contradiction on a21
+                end case
+
+                case ∀ X <: T21 • T22[X] is
+                    proof by contradiction on a21
+                end case
+
+                case Unit is
+                    proof by contradiction on a21
+                end case
+
+                case Top is
+                    proof by contradiction on a21
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma exploit:
+    assumes Γ
+    forall a: T1 <: T2 ∈ (Γ, X <: T0)
+    forall eq: Γ ⊢ T0 == T1
+    exists contradiction
+    proof by case analysis on a:
+        case rule
+            --------------- typevar
+            _: X1 <: T2 ∈ (Γ', X1 <: T2, X <: T3[X1])
+        is
+            a3: X <: T3[X1] ∈ (Γ', X1 <: T2, X <: T3[X1]) by rule typevar
+            a3': X <: T0 ∈ (Γ', X1 <: T2, X <: T0) by a3 //! T0 is not T3[X]
+            proof by unproved //! expected
+        end case
+
+    end case analysis
+end lemma
+
+lemma make-equality:
+    assumes Γ
+    forall T assumes Γ
+    exists Γ ⊢ T == T'
+    proof by rule type-eq
+end lemma
+
+lemma exploit2:
+    assumes Γ
+    forall a1: T1 <: T2 ∈ Γ
+    forall a2: T2 <: T3 ∈ Γ
+    exists contradiction
+    eq: Γ ⊢ T2 == T2' by lemma make-equality on T2
+    proof by case analysis on a2:
+        case rule
+            ---------------------------- typevar
+            _: X2 <: T3 ∈ (Γ', X2 <: T3)
+        is
+            proof by case analysis on (T2' assumes Γ'): //! T2' is in scope in Γ
+                case X2 assumes Γ'', X2 <: T3' is
+                    a2a: X2 <: T3' ∈ (Γ'', X2 <: T3') by rule typevar
+                    a2b: T2' <: T3' ∈ Γ' by a2a
+                    use inversion on eq where T2' := T2
+                    a2c: T2 <: T3' ∈ Γ' by a2b
+                    proof by contradiction on a2c
+                end case
+
+                case T0 → T4 is
+                    proof by contradiction on eq
+                end case
+
+                case ∀ X <: T0 • T4[X] is
+                    proof by contradiction on eq
+                end case
+
+                case Unit is
+                    proof by contradiction on eq
+                end case
+
+                case Top is
+                    proof by contradiction on eq
+                end case
+
+            end case analysis
+        end case
+
+    end case analysis
+end lemma
+
+lemma legal-accomplice: // no problems
+    forall d: *, X<:T ⊢ X <: T
+    exists T ◊
+    proof by rule nonvar
+end lemma
+
+lemma exploit3:
+    assumes Γ
+    forall s: Γ ⊢ T1 <: T2
+    exists T1 ◊
+    a: X <: T1 ∈ (*, X <: T1) by rule typevar //! discards context on T1
+    s': *, X <: T1 ⊢ X <: T1 by rule S-Assume on a
+    proof by lemma legal-accomplice on s'
+end lemma
+    
+lemma circular2:
+    assumes Γ
+    forall a12: T1 <: T2 ∈ Γ
+    forall s21: Γ ⊢ T2 <: T1
+    exists contradiction
+    proof by induction on s21:
+        case rule
+            a21: T2 <: T1 ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ T2 <: T1
+        is
+            proof by lemma circular-typevar on a12, a21
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ T1 <: T1
+            where T2 := T1
+        is
+            proof by contradiction on a12
+        end case
+
+        case rule
+            s20: Γ ⊢ T2 <: T0
+            s01: Γ ⊢ T0 <: T1
+            ------------------- S-Trans
+            _: Γ ⊢ T2 <: T1
+        is
+            proof by unproved //! expected
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ T2 <: Top
+            where T1 := Top
+        is
+            proof by contradiction on a12
+        end case
+
+        case rule
+            _: Γ ⊢ T11 <: T21
+            _: Γ ⊢ T22 <: T12
+            ------------------------------------ S-Arrow
+            _: Γ ⊢ (T21 → T22) <: (T11 → T12)
+            where T2 := T21 → T22 and T1 := T11 → T12
+        is
+            proof by contradiction on a12
+        end case
+
+        case rule
+            _: Γ ⊢ T11 <: T21
+            _: Γ, X <: T11 ⊢ T22[X] <: T12[X]
+            -------------------------------------------- S-All
+            _: Γ ⊢ (∀ X <: T21 • T22[X]) <: (∀ X <: T11 • T12[X])
+            where T2 := ∀ X <: T21 • T22[X] and T1 := ∀ X <: T11 • T12[X]
+        is
+            proof by contradiction on a12
+        end case
+
+    end induction
+end lemma
+
+lemma equiv-implies-eq:
+    assumes Γ
+    forall s12: Γ ⊢ T1 <: T2
+    forall s21: Γ ⊢ T2 <: T1
+    exists Γ ⊢ T1 == T2
+    use induction on s12
+    result: Γ ⊢ T1 == T1 by rule type-eq
+    do case analysis on s12:
+        case rule
+            s10: Γ ⊢ T1 <: T0
+            s02: Γ ⊢ T0 <: T2
+            ------------------- S-Trans
+            _: Γ ⊢ T1 <: T2
+        is
+            s01: Γ ⊢ T0 <: T1 by rule S-Trans on s02, s21
+            eq10: Γ ⊢ T1 == T0 by induction hypothesis on s10, s01
+            use inversion on eq10 where T0 := T1
+            proof by induction hypothesis on s02, s21
+        end case      
+    end case analysis
+    do case analysis on s21:
+        case rule
+            a21: T2 <: T1 ∈ Γ
+            ------------------ S-Assume
+            _: Γ ⊢ T2 <: T1
+        is
+            use inversion on a21
+            proof by case analysis on s12:
+                case rule
+                    a12: T1 <: T2 ∈ Γ
+                    --------------------- S-Assume
+                    _: Γ ⊢ T1 <: T2
+                is
+                    _: contradiction by lemma circular-typevar on a12, a21
+                end case
+
+                case rule
+                    ---------------- S-Refl
+                    _: Γ ⊢ T2 <: T2
+                    where T1 := T2
+                is
+                    proof by result
+                end case
+            
+            end case analysis
+        end case
+    end case analysis
+    proof by case analysis on s12:
+        case rule
+            a12: T1 <: T2 ∈ Γ
+            ------------------------- S-Assume
+            _: Γ ⊢ T1 <: T2
+        is
+            _: contradiction by lemma circular2 on a12, s21
+        end case
+        
+        case rule
+            ---------------- S-Refl
+            _: Γ ⊢ T2 <: T2
+            where T1 := T2
+        is
+            proof by rule type-eq
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: Γ ⊢ T1 <: Top
+            where T2 := Top
+        is
+            proof by lemma top-leq-top on s21
+        end case
+
+        case rule
+            s12a: Γ ⊢ T21 <: T11
+            s12b: Γ ⊢ T12 <: T22
+            ------------------------------------ S-Arrow
+            _: Γ ⊢ (T11 → T12) <: (T21 → T22)
+            where T1 := T11 → T12 and T2 := T21 → T22
+        is
+            proof by unproved //! difficult, have to handle contravariance
+        end case
+
+        case rule
+            _: Γ ⊢ T21 <: T11
+            _: Γ, X <: T21 ⊢ T12[X] <: T22[X]
+            -------------------------------------------- S-All
+            _: Γ ⊢ (∀ X <: T11 • T12[X]) <: (∀ X <: T21 • T22[X])
+            where T1 := ∀ X <: T11 • T12[X] and T2 := ∀ X <: T21 • T22[X]
+        is
+            proof by unproved //! difficult, have to handle contravariance
+        end case
+
+    end case analysis
+end lemma
+                    
+theorem test:
+    assumes Γ
+    forall d: Γ, X <: T0 ⊢ T1 <: T2
+    forall v0: T0 <: T1 ∈ Γ
+    forall v1: T1 <: T2 ∈ Γ
+    forall v2: T2 <: T3 ∈ Γ
+    exists contradiction
+    proof by case analysis on d:
+        case rule
+            a: T1 <: T2 ∈ (Γ, X <: T0)
+            ------------------------- S-Assume
+            _: Γ, X <: T0 ⊢ T1 <: T2
+        is
+            proof by case analysis on a:
+                case rule
+                    ------------------------------------------ typevar
+                    _: X' <: T2 ∈ (Γ', X' <: T2, X <: T0'[X'])
+                is
+                    // NB: At this point we have the dangerous situation
+                    // where X is bound by T0'[X'] 
+                    // where T0'[X'] is T0 and T1 := X'
+                    // but we know T0 <: T1 is an assumption in the context
+                    // and because T0'[X'] is T0, it must be in Γ',
+                    // but that would have X' out of scope.  Contradiction
+                    // But we can't get to that contradiction since 
+                    // we have no way to connect the T0'[X] and T0.
+                    // To be safe, relaxation does not allow us to
+                    // assume anything about T0 being T0'[X]
+                    proof by case analysis on (T0'[X'] assumes Γ', X' <: T2): //! cannot be allowed
+                        case X' assumes Γ', X' <: T2 is
+                            proof by unproved ///! expected
+                        end case
+
+                        case X assumes (Γ'', X <: T00), X' <: T2 is
+                            proof by unproved //! expected
+                        end case
+
+                        case T00[X] → T01[X] assumes Γ', X <: T2 is
+                            proof by contradiction on v0 //! was accepted when T0' == T0
+                        end case
+
+                        case ∀ X' <: T00[X] • T01[X][X'] assumes Γ', X <: T2 is
+                            proof by contradiction on v0 //! ditto
+                        end case
+
+                        case Unit assumes Γ', X <: T2 is
+                            proof by contradiction on v0 //! ditto
+                        end case
+
+                        case Top assumes Γ', X <: T2 is
+                            proof by contradiction on v0 //! ditto
+                        end case
+
+                    end case analysis
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ---------------- S-Refl
+            _: (Γ, X <: T0) ⊢ T1 <: T1
+            where T2 := T1
+        is
+            proof by contradiction on v1
+        end case
+
+        case rule
+            s1a: Γ, X <: T0 ⊢ T1 <: T12[X]
+            s1b: Γ, X <: T0 ⊢ T12[X] <: T2
+            ------------------- S-Trans
+            _: Γ, X <: T0 ⊢ T1 <: T2
+        is
+            v2': T2 <: T3 ∈ (Γ, X <: T0) by weakening on v2
+            a31: T12[X] <: T12'[X] ∈ (Γ, X <: T0) by lemma super-var-implies-var on s1b, v2'
+            proof by case analysis on a31:
+                case rule
+                    --------------- typevar
+                    _: X' <: T4 ∈ (Γ', X' <: T4, X <: T5[X'])
+                    where T12'[X] := T4
+                is
+                    a': X' <: T4 ∈ (Γ', X' <: T4) by rule typevar
+                    a3: T12[Unit] <: T4 ∈ Γ by a' 
+                    s1c: Γ, X <: T0 ⊢ T1 <: T12[Unit] by s1a
+                    s1d: Γ, X <: T0 ⊢ T12[Unit] <: T2 by s1b
+                    proof by unproved //! not sure how to exploit
+                end case
+
+                case rule
+                    --------------- typevar
+                    _: X <: T0 ∈ (Γ, X <: T0)
+                    where T12[X] := X and T12'[X] := T0
+                is
+                    a0: X <: T0 ∈ (Γ, X <: T0) by rule typevar
+                    s1c: Γ, X <: T0 ⊢ T1 <: X by s1a // rewritten for clarity
+                    proof by lemma circular-bound on s1c
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ------------------ S-Top
+            _: (Γ, X <: T0) ⊢ T1 <: Top
+            where T2 := Top
+        is
+            proof by contradiction on v2
+        end case
+
+        case rule
+            _: Γ, X <: T0 ⊢ T21 <: T11
+            _: Γ, X <: T0 ⊢ T12 <: T22
+            ------------------------------------ S-Arrow
+            _: Γ, X <: T0 ⊢ (T11 → T12) <: (T21 → T22)
+            where T1 := T11 → T12 and T2 := T21 → T22
+        is
+            proof by contradiction on v1
+        end case
+
+        case rule
+            _: Γ, X <: T0 ⊢ T21 <: T11
+            _: Γ, X <: T0, X' <: T21 ⊢ T12[X'] <: T22[X']
+            --------------------------------------------------------------- S-All
+            _: Γ, X <: T0 ⊢ (∀ X' <: T11 • T12[X']) <: (∀ X' <: T21 • T22[X'])
+            where T1 := ∀ X'<:T11 • T12[X'] and T2 := ∀ X'<:T21 • T22[X']
+        is
+            proof by contradiction on v1
+        end case
+
+    end case analysis
+end theorem
+
+

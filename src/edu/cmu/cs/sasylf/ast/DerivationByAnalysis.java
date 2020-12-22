@@ -106,6 +106,17 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				ErrorHandler.error(Errors.CASE_SUBJECT_CONSTRUCTED, targetDerivation);
 			}
 		} else {
+			// see bad79.slf: exploit2
+			if (targetElement instanceof AssumptionElement) {
+				NonTerminal contextRoot = ctx.assumedContext;
+				NonTerminal root = targetElement.getRoot();
+				if (contextRoot != null && !contextRoot.equals(root)) {
+					Util.debug("targetTerm = ", targetTerm, ", var free = ", ctx.varFreeNTmap);
+					if (!ctx.isVarFree(targetElement)) {
+						ErrorHandler.recoverableError(Errors.CASE_SUBJECT_ROOT_INTERNAL, contextRoot.toString(), targetElement);
+					}
+				}
+			}
 			checkSyntaxAnalysis(ctx, targetName, targetTerm, this);
 		}
 
