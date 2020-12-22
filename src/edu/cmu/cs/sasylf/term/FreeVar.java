@@ -204,11 +204,12 @@ public class FreeVar extends Atom {
 	}
 
 	public static boolean canAppearIn(Term term1, Term term2) {
-		debug("testing if ", term1, " can appear in ", term2);
+		Util.debug("testing if ", term1, " can appear in ", term2);
 		return getAppearsIn().contains(term1, term2);
 	}
 
 	public static void setAppearsIn(Term term1, Term term2) {
+		Util.debug("setting ", term1, " can appear in ", term2);
 		getAppearsIn().put(term1, term2);
 	}
 

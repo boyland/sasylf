@@ -548,6 +548,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			Abstraction abs = context.get(i);
 			if (FreeVar.canAppearIn(abs.varType.baseTypeFamily(),termType) &&
 					!bare.hasBoundVar(context.size()-i)) {
+				Util.debug("termType = ",termType, ", bare = ", bare, ", varType = ", abs.varType);
 				ErrorHandler.recoverableError(Errors.CASE_SUBJECT_VAR_UNUSED, ": " + abs.varName, target);
 			}
 		}
