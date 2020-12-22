@@ -128,6 +128,16 @@ public class Relaxation {
 	public Term adapt(Term t) {
 		int n = types.size();
 		List<Term> tempTypes = new ArrayList<Term>(types);
+		List<Abstraction> abs = new ArrayList<>();
+		Term.getWrappingAbstractions(t, abs);
+		if (!abs.isEmpty()) {
+			Substitution adaptSub = new Substitution();
+			for (Abstraction a : abs) {
+				a.getArgType().bindInFreeVars(tempTypes, adaptSub);
+			}
+			t = t.substitute(adaptSub);
+			Util.debug("adapting wrappers in relaxation ", t);
+		}
 		for (int i=n-1; i >= 0; --i) {
 			Term ty = tempTypes.get(i);
 			FreeVar val = values.get(i);

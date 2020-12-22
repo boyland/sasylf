@@ -122,14 +122,22 @@ public class Judgment extends Node implements ClauseType, Named {
 			}
 		}
 
-		if ((getAssume() == null) && contextSyntax != null && !Util.X_CONTEXT_IS_SYNTAX)
+		if (assume != null) {
+			SyntaxDeclaration assumeSyntax = assume.getType();
+			String fixInfo = "assumes " + assume + "\n" +
+					(contextSyntax == null ? "" : "assumes " + contextSyntax.getName());
+			if (assumeSyntax == null) {
+				// no error needed (already errored)
+			} else if (!assumeSyntax.equals(contextSyntax)) {
+				Errors error = assumeSyntax.isInContextForm() ? Errors.EXTRANEOUS_ASSUMES : Errors.ILLEGAL_ASSUMES;
+				ErrorHandler.recoverableError(error, ": " + assume, assume, fixInfo);
+			}
+			if (contextSyntax == null) assume = null;
+			else assume = contextSyntax.getNonTerminal(); // fix for now
+		} else if (contextSyntax != null && !Util.X_CONTEXT_IS_SYNTAX) {
 			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
-		else if ((getAssume() != null) && getAssume().getType() == null)
-			ErrorHandler.error(Errors.ILLEGAL_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume() + "\n" +
-					(contextSyntax == null ? "" : "assumes " + contextSyntax));
-		else if ((getAssume() != null) && !getAssume().getType().equals(contextSyntax))
-			ErrorHandler.recoverableError(Errors.EXTRANEOUS_ASSUMES, ": " + getAssume(), getAssume(), "assumes " + getAssume());
-
+		}
+		
 		for (Rule r : getRules()) {
 			try {
 				r.typecheck(ctx, this);

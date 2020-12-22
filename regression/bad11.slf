@@ -24,18 +24,18 @@ assumes Gamma //! extraneous assumes
 
 t1 -> t1'
 ----------------- E-App1
-t1 t2 -> t1' t2 //!! cascade error
+t1 t2 -> t1' t2 
 
 
 t1 value
 t2 -> t2'
 ----------------- E-App2
-t1 t2 -> t1 t2' //! cascade error
+t1 t2 -> t1 t2'
 
 
 t2 value
 ------------------------------- E-AppAbs
-(fn x => t12[x]) t2 -> t12[x] //! cascade error
+(fn x => t12[x]) t2 -> t12[x] //! variable error
 
 
 judgment isvar: t : T in Gamma

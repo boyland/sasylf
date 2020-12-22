@@ -1,4 +1,5 @@
 // assumption rule should not be for wrong type.
+// SASyLF has been extended to accept this file.
 package regression;
 
 terminals fn Unit unit
@@ -15,7 +16,7 @@ syntax
 judgment has-type: Gamma |- t : T
 assumes Gamma
 
-    -------------------- T-Var //! assumption rule cannot have variable on different type
+    -------------------- T-Var // assumption rule can now have variable on different type
     Gamma, x:T |- x : T
 
     -------------------- T-Unit

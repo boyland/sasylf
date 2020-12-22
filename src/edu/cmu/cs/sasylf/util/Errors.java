@@ -106,15 +106,16 @@ public enum Errors {
 	ILLEGAL_ASSUMES_CLAUSE ("assumed clause is not a context"),
 	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"),
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
-	CANNOT_USE_ASSUMPTION	("did you give a rule for using the assumption?\n\t(didn't check to see if assumption use rule was in another judgment this judgment depends on)"),
 	ASSUMES_BRANCH("An assumption case must not have more than one nested list of assumptions"),
-	ASSUMES_MULTI_USE("Multiple uses of the context form not supported"),
+	ASSUMES_MULTI_USE("Multiple uses of the context form not supported "),
+	ASSUMES_MISSING_VAR ("assumptions without variables not supported"), // can't generate
 	ASSUMES_MULTI_VAR("Can't handle more than one variable in assumption rule"),
+	ASSUMES_CONTEXT_RESTRICT ("Assumption rule must use context form unchanged"),
 	ASSUMES_DUPLICATE("Assumption rule has duplicate use "),
-	ASSUMES_MISMATCH("Assumption rule doesn't match "),
-	ASSUMES_VARIABLE_MISPLACED("Variable in assumption rule must be at top-level"),
+	ASSUMES_MISMATCH("Assumption rule doesn't match "), // UNUSED
+	ASSUMES_VARIABLE_MISPLACED("Variable in assumption rule must be at top-level"), // Unused
 	ASSUMES_UNDEFINED("Assumption rule doesn't give a way to determine "),
-	ASSUMES_UNUSED("Assumption rule ignores element from context "),
+	ASSUMES_UNUSED("Assumption rule ignores element from context "), // Unused
 	SYNTAX_CASE_FOR_DERIVATION ("when case-analyzing a derivation, must use rule cases, not syntax cases"),
 	SYNTAX_CASE_FOR_DISJUNCTION ("when case-analyzing a disjunction, must use 'or' cases, not syntax cases"),
 	UNBOUND_VAR_CASE,

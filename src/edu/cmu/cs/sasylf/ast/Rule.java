@@ -5,10 +5,7 @@ import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +14,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
+import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -59,7 +57,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	private List<Clause> premises;
 	private Clause conclusion;
 	private int isAssumpt = 0; // 0 = not an assumption, > 0 number of abstractions represented
-	private int appVarIndex = -1; // where is variable in the judgment term
 
 	@Override
 	public void prettyPrint(PrintWriter out) {
@@ -98,7 +95,6 @@ public class Rule extends RuleLike implements CanBeCase {
 
 		myConc.checkBindings(bindingTypes, this);
 		conclusion = myConc;
-		//conclusion = new ClauseUse(conclusion, ctx.parseMap);
 
 		if (ctx.ruleMap.containsKey(getName())) {
 			if (ctx.ruleMap.get(getName()) != this) {
@@ -106,11 +102,12 @@ public class Rule extends RuleLike implements CanBeCase {
 			}
 		} else ctx.ruleMap.put(getName(), this);
 
+		boolean assumptionCheckError = false;
 		try {
 			computeAssumption(ctx);
 			myConc.checkVariables(new HashSet<String>(), false);
 		} catch (SASyLFError ex) {
-			// continue
+			assumptionCheckError = true; // so we don't complain about context errors
 		}
 
 		for (int i = 0; i < premises.size(); ++i) {
@@ -136,7 +133,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			}
 		}
 
-		if (judge.getAssume() != null && !isAssumption()) { // bad15
+		if (judge.getAssume() != null && !isAssumption() && !assumptionCheckError) { // bad15
 			NonTerminal nt = myConc.getRoot();
 			if (nt == null) {
 				ErrorHandler.error(Errors.EMPTY_CONCLUSION_CONTEXT, conclusion);
@@ -173,109 +170,86 @@ public class Rule extends RuleLike implements CanBeCase {
 		ClauseUse assumeClauseUse = (ClauseUse) assumeElement;
 		ClauseDef assumeClauseDef = assumeClauseUse.getConstructor();
 		SyntaxDeclaration gammaType = (SyntaxDeclaration) assumeClauseDef.getType();
+		// XXX: in extension, ignore append case too:
 		if (assumeClauseDef == gammaType.getTerminalCase()) return; // error given elsewhere
-		int n = assumeClauseDef.getElements().size();
 
-		// isAssumpt = 2; // XXX: Long-term we should generalize
-		
 		// We consider this rule to be an attempt of an assumption
 		// and will generate errors for problems noticed.
 
-		Variable varFound = null;
-		int countNTs = 0;
-		int concSize = conclusion.getElements().size();
-		for (int i=0; i < concSize; ++i) {
-			if (i == assumeIndex) continue;
-			Element e = conclusion.getElements().get(i);
-			if (e instanceof Variable) {
-				if (varFound != null && !varFound.equals(e)) { // XXX: extension point
-					ErrorHandler.error(Errors.ASSUMES_MULTI_VAR, this);
+		// First we check that we use exactly one clause of the context
+		// verbatim without forcing terms together
+		int assumeSize = assumeClauseUse.getElements().size();
+		Set<String> names = new HashSet<>();
+		Set<NonTerminal> defined = new HashSet<>();
+		int countVars = 0;
+		for (int i=0; i < assumeSize; ++i) {
+			Element use = assumeClauseUse.getElements().get(i);
+			Element def = assumeClauseDef.getElements().get(i);
+			if (use.getClass() != def.getClass()) {
+				ErrorHandler.error(Errors.ASSUMES_CONTEXT_RESTRICT, ": " + assumeClauseDef, use);
+			}
+			if (use instanceof NonTerminal || use instanceof Variable) {
+				if (def.getType().equals(gammaType)) continue; // skip this one
+				if (!names.add(use.toString())) {
+					ErrorHandler.error(Errors.ASSUMES_DUPLICATE, use.toString(), use);
 				}
-				appVarIndex = countNTs;
-				varFound = (Variable)e;
-				++countNTs;
-			} else if (e instanceof NonTerminal || e instanceof Binding) {
-				++countNTs;
+				if (use instanceof Variable) ++countVars;
+				else defined.add((NonTerminal)use);
+			} else if (use instanceof Binding) {
+				Binding b = (Binding)use;
+				if (!names.add(b.getNonTerminal().getSymbol())) {
+					ErrorHandler.error(Errors.ASSUMES_DUPLICATE, b.getNonTerminal().getSymbol(), use);
+				}
+				defined.add(b.getNonTerminal());
+				Set<String> seen = new HashSet<>();
+				for (Element e : b.getElements()) {
+					if (!(e instanceof Variable)) {
+						ErrorHandler.error(Errors.ASSUMES_CONTEXT_RESTRICT, ": " + assumeClauseDef, use);
+					}
+					if (!seen.add(e.toString())) {
+						ErrorHandler.error(Errors.ASSUMES_DUPLICATE, e.toString(), e);
+					}
+				}
 			}
 		}
-
-		isAssumpt = 1 + (varFound == null ? 0 : 1);
-
+		
 		if (assumeClauseDef.assumptionRule != null &&
 				assumeClauseDef.assumptionRule != this) // idempotency
-			// note: caseAnalyze makes this same assumption, incrementing de Bruijn by 2
 			ErrorHandler.error(Errors.ASSUMES_MULTI_USE,assumeClauseDef.toString(), this);
+
+		if (countVars != 1) { // XXX: Extension point
+			if (countVars == 0) {
+				ErrorHandler.error(Errors.ASSUMES_MISSING_VAR, this);
+			} else {
+				ErrorHandler.error(Errors.ASSUMES_MULTI_VAR,this);
+			}
+		}
+		isAssumpt = 1 + countVars;
 		assumeClauseDef.assumptionRule = this;
 
-		// now check that assume clause does not bind two NTs together,
-		// or use a clause for a NT.
-		Set<Element> defined = new HashSet<Element>();
-		for (int i=0; i < n; ++i) {
-			Element u = assumeClauseUse.getElements().get(i);
-			Element d = assumeClauseDef.getElements().get(i);
-			if (d.getType() == gammaType) continue;
-			if (defined.contains(u)) {
-				ErrorHandler.error(Errors.ASSUMES_DUPLICATE,u.toString(), assumeClauseUse);
-			}
-			if (d instanceof Variable) {
-				if (!(u instanceof Variable)) {
-					ErrorHandler.error(Errors.ASSUMES_MISMATCH, d.toString(), assumeClauseUse);
-				}
-				defined.add(u);
-			} else if (d instanceof NonTerminal) {
-				if (!(u instanceof NonTerminal)) {
-					ErrorHandler.error(Errors.ASSUMES_MISMATCH, d.toString(), assumeClauseUse);
-				}
-				defined.add(u);
-			}
-		}
-
-		// now check that every NT or Var in the rest of the clause is represented in "unique" Set.
-		Set<Element> used = new HashSet<Element>();
-		// perhaps we need a "getFreeVars" method
-		Deque<Element> worklist = new ArrayDeque<Element>();
+		Set<NonTerminal> used = new HashSet<>();
 		for (Element e : concClauseUse.getElements()) {
-			if (e != assumeClauseUse) worklist.add(e);
+			if (e == assumeClauseUse) continue; // skip this part
+			e.getFree(used,false);
 		}
-		while (!worklist.isEmpty()) {
-			Element e = worklist.remove();
-			if (e instanceof NonTerminal || 
-					e instanceof Variable) used.add(e);
-			if (e instanceof Variable) {
-				if (conclusion.getElements().indexOf(e) < 0) {
-					ErrorHandler.error(Errors.ASSUMES_VARIABLE_MISPLACED,this);
-				}
-			}
-			if (e instanceof Clause) {
-				worklist.addAll(((Clause) e).getElements());
-			}
-		}
-
-		Set<Element> intersection = new HashSet<Element>(defined);
-		intersection.retainAll(used);
-		defined.removeAll(intersection);
-		used.removeAll(intersection);
-
+		used.removeAll(defined);
+	
 		// If something is used but not defined, it means the translation to LF
 		// doesn't know what to use for the nonterminal when forming the internal derivation
 		if (!used.isEmpty()) {
 			ErrorHandler.error(Errors.ASSUMES_UNDEFINED, used.toString(), concClauseUse);
 		}
 
-		// If a nonterminal is defined but not used, it means that we don't know what to choose
-		// for the nonterminal when converting back to LF.  It also means the nonterminal
-		// in the surface syntax is arbitrary which is confusing.
-		// A variable can be unused because the LF has that in the main parameter; 
-		// it isn't needed in the internal derivation, but this violates assumptions made
-		// internally, and it wouldn't make sense to have a variable AND a derivation
-		// that doesn't use it.  Might as well have two separate things, once this
-		// is supported.
+		// NB: previously, we also require that everything in the assumption
+		// needed to be present in the judgment using it, including
+		// the variable and any non-terminals.
+		// But it doesn't seem that anywhere in the system (any more)
+		// requires that this be the case.
+		/* // after removing "used" from defined.
 		for (Element e : defined) {
-			// The following exception cannot be permitted:
-			// case analysis will crash with an internal error (see later in this file)
-			// if (e instanceof Variable) continue;
 			ErrorHandler.error(Errors.ASSUMES_UNUSED, e.toString(), concClauseUse);
 		}
+		*/
 	}
 
 	public boolean isAssumption() {
@@ -283,16 +257,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 	public int isAssumptionSize() {
 		return isAssumpt;
-	}
-
-	/**
-	 * Return the index of the variable in the application arguments of the judgment
-	 * term constant if this is an assumption rule with a variable.
-	 * Otherwise return -1.
-	 * @return index of the variable in the judgment term application arguments
-	 */
-	public int getAppVarIndex() {
-		return appVarIndex;
 	}
 
 	/**
@@ -327,21 +291,6 @@ public class Rule extends RuleLike implements CanBeCase {
 	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, Element target, Node source) {
 		Util.verify(target instanceof ClauseUse, "Case analyzing for a rule must be a clause: " + target);
 		ClauseUse clause = (ClauseUse)target;
-		// Special case: if the variable is known to be var-free, we can't match this rule
-		// XXX: This will need to change if we permit variable free assumptions!
-		// Rewrite to not use a special case here, but rather where we try to put variables
-		// into a varFree NTS.
-		if (isAssumption()) {
-			int n=conclusion.getElements().size();
-			for (int i=0; i < n; ++i) {
-				if (conclusion.getElements().get(i) instanceof Variable &&
-						clause.getElements().get(i) instanceof NonTerminal &&
-						ctx.isVarFree((NonTerminal)clause.getElements().get(i))) {
-					Util.debug("no vars in ", clause);
-					return Collections.emptySet();
-				}
-			}
-		}
 
 		Set<Pair<Term,Substitution>> pairs = new HashSet<Pair<Term,Substitution>>();
 
@@ -352,76 +301,101 @@ public class Rule extends RuleLike implements CanBeCase {
 
 		if (isAssumption()) {
 			Util.debug("** On line (for assumption) ", source.getLocation().getLine());
-			// assumption rules, unlike all other rules,
-			// have abstractions in the goal:
-			List<Abstraction> newAbs = new ArrayList<Abstraction>();
-			Term bareGoal = Term.getWrappingAbstractions(goalTerm, newAbs);
+			// assumption rules, unlike all other rules, have abstractions in the goal: 
+			// newAbs gets the ones from the rule, currently this always has the form 
+			//   lambda x:SynType . lambda _: (judgment using x) . (judgment using x)
+			// the (two) abstractions can fit anywhere within the abstractions "abs" 
+			// *or* outside all of them.
+			List<Abstraction> goalAbs = new ArrayList<Abstraction>();
+			Term bareGoal = Term.getWrappingAbstractions(goalTerm, goalAbs);
 			Term subject = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bare));
-			if (clause.getRoot() != null) {
+			if (clause.getRoot() != null) { // context has unknown size beyond abs
+				// We need to consider matching into the context.
+				// Problem: The appTerm and everything from it (goalTerm/bareGoal/newAbs)
+				// were adapted assuming the "abs" were *outside* the abstractions in the goal,
+				// but the opposite is true.  So we make a new goalTerm
+				Term newGoalTerm = this.conclusion.asTerm();
+				Substitution freshSub = newGoalTerm.freshSubstitution(new Substitution());
+				newGoalTerm = newGoalTerm.substitute(freshSub);
+				List<Abstraction> newAbs = new ArrayList<>();
+				Term newBareGoal = Term.getWrappingAbstractions(newGoalTerm, newAbs);
+				List<Abstraction> oldAbs = newAbs; // change if needed to handle a relaxVar
 				List<Term> newTypes = new ArrayList<Term>();
 				for (Abstraction a : newAbs) {
 					newTypes.add(a.getArgType());
 				}
-				List<Term> oldTypes = newTypes;
-				if (appVarIndex >= 0) { // if no variables (error, or extension), don't try
-					Util.debug("** bare = ", bare, ", appVarIndex = ", appVarIndex,", relaxVars = ", ctx.relaxationVars);
-					Term wouldBeVar = ((Application)bare).getArguments().get(appVarIndex);
-					if (ctx.relaxationVars != null && ctx.relaxationVars.contains(wouldBeVar)) {
-						Util.debug("\t !! would be var: ",wouldBeVar," is already identified as a relax var.");
-						if (ctx.isRelaxationInScope(clause.getRoot(), (FreeVar)wouldBeVar)) {
-							Util.debug("cannot match newly because variable is already matched: ",wouldBeVar);
-							oldTypes = null; // i.e. not possible, skip this possibility
-						} else { 
-							oldTypes = ctx.getRelaxationTypes((FreeVar)wouldBeVar);
-							Util.debug("newTypes = ",newTypes);
-							Util.debug("oldTypes = ",oldTypes);
-						}
+				Substitution newAdaptSub = new Substitution();
+				term.bindInFreeVars(newTypes, newAdaptSub);
+				// Before we do the adaptation, we consider 
+				// (A) variable-less meta-variables cannot be adapted
+				// (B) meta-variables known to be variables outside of the context should not be adapted.
+				// Then we look at the bare goal itself, whose meta-variables
+				// will have values from the outermost context's variable, and
+				// (C) so should not be adapted unless the term in the outer context is 
+				// (D) And if this is the variable in question, and we have a current
+				//     relaxation variable, then the relaxation types should be used
+				//     rather than the generated types.
+				NonTerminal root = clause.getRoot();
+				for (FreeVar v : term.getFreeVariables()) {
+					if (ctx.isVarFree(v)) { // A
+						Util.debug("  removing adaptation for ", v);
+						newAdaptSub.remove(v);
+					} else if (ctx.isRelaxationInScope(root, v)) { // B
+						Util.debug("  removing adaptation for relaxVar ", v);
+						newAdaptSub.remove(v);
 					}
 				}
-				if (oldTypes != null && oldTypes.get(0).equals(newTypes.get(0))) {
-					Substitution adaptSub = new Substitution();
-					term.bindInFreeVars(newTypes, adaptSub);
-					Util.debug("bare = ",bare,", bareGoal = ",bareGoal);
-					int n = ((Application)bare).getArguments().size();
-					for (int i=0; i < n; ++i) {
-						final Term argi = ((Application)bareGoal).getArguments().get(i);
-						Util.debug("argi = ",argi,", isClosed? ", argi.isClosed());
-						if (argi.isClosed()) {
-							// any variables in the corresponding place should not be adapted.
-							Set<FreeVar> free = ((Application)bare).getArguments().get(i).getFreeVariables();
-							for (FreeVar fv : free) {
-								Util.debug("  removing adaptation for ",fv);
-								adaptSub.remove(fv);
+
+				int n = ((Application)newBareGoal).getArguments().size();
+				for (int i=0; i < n; ++i) {
+					final Term argi = ((Application)newBareGoal).getArguments().get(i);
+					Util.debug("argi = ",argi,", isClosed? ", argi.isClosed());
+					if (argi.isClosed()) {
+						// any variables in the corresponding place should not be adapted.
+						Set<FreeVar> free = ((Application)bare).getArguments().get(i).getFreeVariables();
+						for (FreeVar fv : free) {
+							Util.debug("  removing adaptation for ",fv);
+							newAdaptSub.remove(fv);
+						}
+					} else if (argi instanceof BoundVar) { // this is the variable
+						// check to see the subject is a relaxation variable
+						// that could be hidden in the root (not "in scope")
+						Term subi = ((Application)bare).getArguments().get(i);
+						if (subi instanceof FreeVar && ctx.isRelaxationVar((FreeVar)subi)) {
+							Util.debug("Found relax var ", subi);
+							FreeVar fv = (FreeVar)subi;
+							if (!ctx.isRelaxationInScope(clause.getRoot(), fv)) {
+								Util.debug("  need to handle relaxation ", fv);
+								List<Term> oldTypes = ctx.getRelaxationTypes(fv);
+								oldAbs = new ArrayList<>();
+								for (Term t : oldTypes) {
+									oldAbs.add((Abstraction) Abstraction.make("", t, new BoundVar(1)));
+								}
 							}
 						}
 					}
-					Term adaptedSubject = Term.wrapWithLambdas(newAbs, subject.substitute(adaptSub));
-					// pattern = \assumpt . \context . goal(^size(context))
-					Term newGoal = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bareGoal.incrFreeDeBruijn(abs.size())));
-					Term pattern = Term.wrapWithLambdas(newGoal.substitute(adaptSub),oldTypes);
-					Util.debug("adaptSub = ", adaptSub);
-					Util.debug("  pairs = ", pairs);
-					Util.debug("  adaptedSubject = ", adaptedSubject);
-					Util.debug("  pattern = ", pattern);
-					checkCaseApplication(ctx,pairs, adaptedSubject,pattern, adaptedSubject, adaptSub, source);
 				}
+				Term newSubject = Term.wrapWithLambdas(newAbs, subject.substitute(newAdaptSub));
+				Term barePattern = Facade.App(getRuleAppConstant(),newBareGoal.incrFreeDeBruijn(abs.size()));
+				Term newPattern = Term.wrapWithLambdas(oldAbs, Term.wrapWithLambdas(abs, barePattern).substitute(newAdaptSub));
+				checkCaseApplication(ctx,pairs, newSubject, newPattern, newSubject, null, source);
 			} else {
 				Util.debug("no root, so no special assumption rule");
 			}
 			/* now we try to find the assumption goals inside the existing context */
-			tryInsert: for (int i = abs.size() - newAbs.size(); i >=0; --i) {
+			tryInsert: for (int i = abs.size() - goalAbs.size(); i >=0; --i) {
 				// make sure types match:
-				for (int k=0; k < newAbs.size(); ++k) {
+				for (int k=0; k < goalAbs.size(); ++k) {
 					Constant oldFam = abs.get(k+i).getArgType().baseTypeFamily();
-					Constant newFam = newAbs.get(k).getArgType().baseTypeFamily();
+					Constant newFam = goalAbs.get(k).getArgType().baseTypeFamily();
 					if (!newFam.equals(oldFam)) {
 						// incompatible: don't even try (can get type error during unification)
 						continue tryInsert;
 					}
 				}
-				int j = i + newAbs.size();
+				int j = i + goalAbs.size();
 				Term shiftedGoal = Facade.App(getRuleAppConstant(),bareGoal.incrFreeDeBruijn(abs.size()-j));
-				Term pattern = Term.wrapWithLambdas(abs,Term.wrapWithLambdas(newAbs, Term.wrapWithLambdas(abs, shiftedGoal,j,abs.size())),0,i);
+				Term pattern = Term.wrapWithLambdas(abs,Term.wrapWithLambdas(goalAbs, Term.wrapWithLambdas(abs, shiftedGoal,j,abs.size())),0,i);
 				checkCaseApplication(ctx,pairs, subject,pattern, subject, null, source);
 			}		  
 		} else { // not assumption

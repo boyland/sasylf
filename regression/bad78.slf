@@ -1,0 +1,88 @@
+// testing assumptions, contexts, weakening, exchange and substitution
+package regression;
+
+terminals unit Unit All lambda fold unfold Rec in let
+
+syntax
+  t ::= lambda x:T . t[x]
+     | t t
+     | fold T t
+     | unfold T t
+     | x
+     | unit
+     | let f < z < f in t[z] 
+     
+  T ::= Unit
+     | T -> T
+     | Rec X . T[X]
+     | X
+     
+   f ::= z
+      | f / 2
+      | 1
+      | f * f
+      
+  Gamma ::= * | Gamma, x:T | Gamma, f < z < f
+  
+  Sigma ::= * | Sigma, X
+     
+
+judgment bad1: 1 Gamma |- t : T
+assumes T //! T is not in context
+
+judgment bad2: 2 Gamma |- t : T //! assumes missing
+
+judgment bad3: 3 Gamma |- t : T
+assumes Sigma //! wrong context NT
+
+judgment bad4: 4 Gamma |- t : T
+assumes Gama //! undeclared
+
+judgment isvar: t:T in Gamma
+assumes Gamma
+
+  ------------------- varV
+  x:X in (Gamma, x:X) //! context changed
+  
+  ---------------------------- var2
+  x':T' in (Gamma, x':T', x:T) //! two levels of syntax
+
+  -------------------------- var3
+  x':T1 in (Gamma, x:T1->T2) //! context changed
+  
+  -------------------- var4
+  t:T in (Gamma, x:T) //! t is undefined
+  
+  ------------------- var //! duplicate (var4 grabbed the assumption)
+  x:T in (Gamma, x:T)
+  
+judgment typing: Gamma |- t : T
+assumes Gamma
+
+  ------------------ T-Var //! Multiple uses
+  Gamma, x:T |- x:T
+  
+judgment frac1: Gamma |- f < f
+assumes Gamma
+
+  ------------------------- fracvar
+  Gamma, f < z < f |- z < f //! duplicate f
+   
+judgment well-formed: Sigma |- T
+assumes Sigma
+
+   ------------- W-Unit
+   Sigma |- Unit
+
+   Sigma |- T1
+   Sigma |- T2
+   ---------------- W-Arrow
+   Sigma |- T1 -> T2
+   
+   
+lemma test-unassumed:
+    forall d: Sigma, X |- T[X] //! Sigma,X has no rule
+    exists Sigma, X |- T[X] -> Unit
+    du: Sigma |- Unit by rule W-Unit
+    proof by rule W-Arrow on d, du
+end lemma
