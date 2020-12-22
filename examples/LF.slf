@@ -832,27 +832,14 @@ theorem subst-unique:
             _: Γ ⊢ ({M0/x0} α0 (Π x : A0[x0] • K0[x0][x])) = (Π x : A1 • K'[x])
             where σ := {M0/x0} α0 (Π x : A0[x0] • K0[x0][x]) and E' := Π x : A1 • K'[x]
         is
-            // NB: SASyLF cannot handle this because of and'ed contexts being different
-            /*
             s21: Γ ⊢ ({M0/x} α0 A0[x]) = A2 and
-            s22: (Γ, x : A2) ⊢ ({M0/x'} α0 K0[x'][x]) = K''[x] by inversion on s2
+            s22: Γ, x : A2 ⊢ ({M0/x'} α0 K0[x'][x]) = K''[x] by inversion on s2
             where E'' := Π x : A2 • K''[x]
-            */
-            proof by case analysis on s2:
-                case rule
-                    s21: Γ ⊢ ({M0/x} α0 A0[x]) = A2
-                    s22: (Γ, x : A2) ⊢ ({M0/x'} α0 K0[x'][x]) = K''[x]
-                    ---------------------------------------------------------- Subst-K-Pi
-                    _: Γ ⊢ ({M0/x} α0 (Π x' : A0[x] • K0[x][x'])) = (Π x : A2 • K''[x])
-                    where E'' := Π x : A2 • K''[x]
-                is
-                    eqA: Γ ⊢ A1 == A2 by induction hypothesis on s11, s21
-                    use inversion on eqA where A2 := A1
-                    eqK: Γ, x:A1 ⊢ K'[x] == K''[x] by induction hypothesis on s12, s22
-                    use inversion on eqK where K''[x] := K'[x]
-                    proof by rule term-eq
-                end case
-            end case analysis
+            eqA: Γ ⊢ A1 == A2 by induction hypothesis on s11, s21
+            use inversion on eqA where A2 := A1
+            eqK: Γ, x:A1 ⊢ K'[x] == K''[x] by induction hypothesis on s12, s22
+            use inversion on eqK where K''[x] := K'[x]
+            proof by rule term-eq
         end case
         
         case rule
@@ -872,25 +859,14 @@ theorem subst-unique:
             _: Γ ⊢ ({M0/x0} α0 (Π x : A1[x0] • A2[x0][x])) = (Π x : A1' • A2'[x])
             where σ := {M0/x0} α0 (Π x : A1[x0] • A2[x0][x]) and E' := Π x : A1' • A2'[x]
         is
-            /* cannot handle because of context difference
-            s21: Γ ⊢ ({M0/x0} α A1[x0]) = A1'' and
-            s22: Γ, x : A1'' ⊢ ({M0/x0} α A2[x0][x]) = A2''[x] by inversion on s2
-            */
-            proof by case analysis on s2:
-                case rule
-                    s21: Γ ⊢ ({M0/x0} α0 A1[x0]) = A1''
-                    s22: Γ, x : A1'' ⊢ ({M0/x0} α0 A2[x0][x]) = A2''[x]
-                    --------------------------------------------------------------- Subst-A-Pi
-                    _: Γ ⊢ ({M0/x0} α0 (Π x : A1[x0] • A2[x0][x])) = (Π x : A1'' • A2''[x])
-                    where E'' := Π x : A1'' • A2''[x]
-                is
-                    eqA: Γ ⊢ A1' == A1'' by induction hypothesis on s11, s21
-                    use inversion on eqA where A1'' := A1'
-                    eqB: Γ, x : A1' ⊢ A2'[x] == A2''[x] by induction hypothesis on s12, s22
-                    use inversion on eqB where A2''[x] := A2'[x]
-                    proof by rule term-eq
-                end case
-            end case analysis
+            s21: Γ ⊢ {M0/x0} α0 A1[x0] = A1'' and
+            s22: Γ, x : A1'' ⊢ {M0/x0} α0 A2[x0][x] = A2''[x] by inversion on s2
+            where E'' := Π x : A1'' • A2''[x]
+            eqA: Γ ⊢ A1' == A1'' by induction hypothesis on s11, s21
+            use inversion on eqA where A1'' := A1'
+            eqB: Γ, x : A1' ⊢ A2'[x] == A2''[x] by induction hypothesis on s12, s22
+            use inversion on eqB where A2''[x] := A2'[x]
+            proof by rule term-eq
         end case
         
         case rule
