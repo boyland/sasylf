@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.parser.CommentListener;
 import edu.cmu.cs.sasylf.parser.Token;
 
 /**
@@ -39,6 +40,8 @@ public class TaskReport extends Report {
 			taskTagMap.put(TASK_TAGS[i], TASK_PRIORITIES[i]);
 		}
 	}
+	
+	public static CommentListener commentListener = (t,f) -> checkForTaskTag(t);
 	
 	public static void checkForTaskTag(Token s) {
 		// System.out.println(DSLToolkitParser.currentFile + ":" + s.beginLine + ":" + s.beginColumn + ": Looking at " + s.image + ", while map size = " + taskTagMap.size());

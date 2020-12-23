@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.TaskReport;
 import edu.cmu.cs.sasylf.util.TokenSpan;
 
 public class Main {
@@ -63,6 +64,7 @@ public class Main {
 			}
 			if (args[i].equals("--task")) {
 				edu.cmu.cs.sasylf.util.Util.SHOW_TASK_COMMENTS = true;
+				DSLToolkitParser.addListener(TaskReport.commentListener);
 				continue;
 			}
 			if (args[i].equals("--verbose")) {

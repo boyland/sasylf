@@ -48,6 +48,70 @@ import java.util.*;
 @SuppressWarnings({"unused","serial"})
 public class DSLToolkitParser {
     public static String currentFile = "NONE";
+
+	// thread invariant: the volatile field points to an immutable array
+	// the volatile field is only changed while holding the DSLToolkitParser lock
+    private static volatile CommentListener[] listeners = new CommentListener[0];
+
+    /**
+     * Add a comment listener to the listeners for all parsers.
+     * @param l listener, must not be null 
+     */
+    public static void addListener(CommentListener l) {
+        if (l == null) throw new NullPointerException("listener is null");
+        boolean inProgress = true;
+        do { 
+            CommentListener[] previous = listeners;
+            CommentListener[] proposed = new CommentListener[previous.length+1];
+            for (int i=0; i < previous.length; ++i) {
+                proposed[i] = previous[i];
+            }
+            proposed[previous.length] = l;
+            synchronized (DSLToolkitParser.class) {
+                if (listeners == previous) {
+                    listeners = proposed;
+                    inProgress = false;
+                }
+            }
+        } while (inProgress);
+    }
+
+    /**
+     * Remove a comment listener for all parsers.
+     * If the listeners include this listener, it is removed
+     * and we return true.  Otherwise, return false.
+     * If it is present multiple times, only the first instance is removed.
+     * @param listener to remove
+     * @return whether the listener was present (and removed).
+     */
+    public static boolean remListener(CommentListener l) {
+        boolean inProgress = true;
+        do { 
+            CommentListener[] previous = listeners;
+            CommentListener[] proposed = new CommentListener[previous.length-1];
+			boolean found = false;
+            for (int i=0; i < previous.length; ++i) {
+                if (found) proposed[i-1] = previous[i];
+                else if (previous[i] == l) found = true;
+                else if (i == proposed.length-1) return false;
+                else proposed[i] = previous[i];
+            }
+            synchronized (DSLToolkitParser.class) {
+                if (listeners == previous) {
+                    listeners = proposed;
+                    inProgress = false;
+                }
+            }
+        } while (inProgress);
+        return true;
+    }
+
+    protected static void commentRead(Token t) {
+        for (CommentListener l : listeners) {
+            l.commentRead(t,currentFile);
+        }
+    }
+    
     public Token firstToken = null;
 
     public static CompUnit read(File f) throws FileNotFoundException, IOException, ParseException {
@@ -249,7 +313,7 @@ SPECIAL_TOKEN :
 SPECIAL_TOKEN : {
     < SINGLE_LINE_COMMENT: "//"(~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
     {
-      TaskReport.checkForTaskTag(matchedToken);
+      DSLToolkitParser.commentRead(matchedToken);
     }
 } 
    
@@ -267,7 +331,7 @@ SPECIAL_TOKEN :
 {
   <FORMAL_COMMENT: "*/" > 
     {
-      TaskReport.checkForTaskTag(matchedToken);
+      DSLToolkitParser.commentRead(matchedToken);
     }
     : DEFAULT
 }
@@ -277,7 +341,7 @@ SPECIAL_TOKEN :
 {
   <MULTI_LINE_COMMENT: "*/" >
     {
-      TaskReport.checkForTaskTag(matchedToken);
+      DSLToolkitParser.commentRead(matchedToken);
     }
     : DEFAULT
 }

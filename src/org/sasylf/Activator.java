@@ -5,6 +5,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
+import edu.cmu.cs.sasylf.util.TaskReport;
+
 /**
  * The activator class controls the plug-in life cycle
  */
@@ -22,6 +25,10 @@ public class Activator extends AbstractUIPlugin {
 	public Activator() {
 	}
 
+	protected void performInitializations() {
+		DSLToolkitParser.addListener(TaskReport.commentListener);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
@@ -31,6 +38,7 @@ public class Activator extends AbstractUIPlugin {
 		super.start(context);
 		System.out.println("SASyLF plugin activated.");
 		plugin = this;
+		performInitializations();
 	}
 
 	/*
@@ -39,6 +47,7 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		DSLToolkitParser.remListener(TaskReport.commentListener);
 		plugin = null;
 		super.stop(context);
 	}
@@ -50,7 +59,12 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static Activator getDefault() {
 		if (plugin == null) {
+			// Eclipse documentation claims that that "start" method
+			// will be called before any code in the plugin, but this
+			// is evidently not true.
+			System.out.println("SASyLF Plugin activated manually.");
 			plugin = new Activator();
+			plugin.performInitializations();
 		}
 		return plugin;
 	}
