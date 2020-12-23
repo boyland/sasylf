@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -32,6 +34,9 @@ public class ErrorCoverage {
 		Util.PRINT_ERRORS = false;
 		Util.PRINT_SOLVE = false;
 		
+		BitSet markedLines = new BitSet();
+		DSLToolkitParser.addListener((t,f) -> { if (t.image.startsWith("//!")) markedLines.set(t.beginLine); } ); 
+		
 		Map<Errors,List<String>> index = new HashMap<>();
 		Set<Errors> encountered = index.keySet();
 		for (String s : args) {
@@ -49,12 +54,17 @@ public class ErrorCoverage {
 				e.printStackTrace();
 			}
 			Collection<Report> reports = ErrorHandler.getReports();
+			BitSet errorLines = new BitSet();
 			String shortName = f.getName();
 			for (Report r : reports) {
+				int line = r.getSpan().getLocation().getLine();
 				if (r instanceof ErrorReport) {
+					errorLines.set(line);
 					ErrorReport er = (ErrorReport)r;
 					final Errors type = er.getErrorType();
-					if (type == Errors.INTERNAL_ERROR) {
+					if (type == Errors.INTERNAL_ERROR || 
+							(type != Errors.WHERE_MISSING && type != Errors.DERIVATION_UNPROVED &&
+								!markedLines.get(line))) {
 						System.err.println(r.formatMessage());
 						if (er.getExtraInformation() != null) {
 							System.err.println("  " + er.getExtraInformation());
@@ -69,6 +79,12 @@ public class ErrorCoverage {
 				}
 				r.getMessage();
 			}
+			markedLines.andNot(errorLines);
+			// marked and not error -> missing errors
+			for (int i = markedLines.nextSetBit(0); i >= 0; i = markedLines.nextSetBit(i+1)) {
+			     System.out.println("Missing expected report for " + s + ":" + i);
+			}
+			markedLines.clear();
 		}
 		for (Errors error : Errors.values()) {
 			System.out.print(error);
