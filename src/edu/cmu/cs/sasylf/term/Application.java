@@ -81,7 +81,7 @@ public class Application extends Term {
 	}
 
 	@Override
-	Term incrFreeDeBruijn(int nested, int amount) {
+	public Term incrFreeDeBruijn(int nested, int amount) {
 		// note: functions are constants or FreeVars and so can't be affected
 
 		List<Term> newArgs = new ArrayList<Term>();

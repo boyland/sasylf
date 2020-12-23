@@ -38,7 +38,7 @@ public class BoundVar extends Atom {
 	}
 
 	@Override
-	Term incrFreeDeBruijn(int nested, int amount) {
+	public Term incrFreeDeBruijn(int nested, int amount) {
 		if (index <= nested && index > 0)
 			return this;
 		else

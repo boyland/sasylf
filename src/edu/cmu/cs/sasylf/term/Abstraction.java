@@ -165,7 +165,7 @@ public class Abstraction extends Term {
 	}
 
 	@Override
-	Term incrFreeDeBruijn(int nested, int amount) {
+	public Term incrFreeDeBruijn(int nested, int amount) {
 		Term newBody = body.incrFreeDeBruijn(nested+1, amount);
 		Term newType = varType.incrFreeDeBruijn(nested, amount);
 		if (newBody == body && newType == varType)

@@ -124,3 +124,40 @@ lemma test-weaken-relax:
     end case analysis
     proof by rule nonvar
 end lemma
+
+lemma test-xchange:
+    exists Unit ◊
+    d1: *, x:Unit ⊢ x:Unit by rule T-Var
+    d2: *, x:Unit, x':Top ⊢ x:Unit by weakening on d1
+    d3: *, x':Top, x:Unit ⊢ x:Unit by exchange on d2, (Top) //! too many args
+    d4: *, x':Top, x:Unit ⊢ x:Unit by exchange on Top //! on syntax
+    d5: *, x':Top, x:Unit ⊢ x:Unit by exchange on d2 // Good
+    d6: *, x':Unit, x:Top ⊢ x':Unit by exchange on d2 //! alpha conversion, not exchange
+    d7: *, x:Unit ⊢ x:Unit by exchange on d2 //! strengthening
+    d8: *, x:Unit, x':Top, x'':Unit→Unit ⊢ x:Unit by exchange on d2 //! weakening
+    e1: *, X <: Top, x:X, X' <: Top, x':X' ⊢ x':X' by rule T-Var
+    e2: *, X <: Top, x:X, x':X', X' <: Top ⊢ x':X' by exchange on e1 //! bad exchange
+    e3: *, X <: Top, x:X, x':X , X' <: Top ⊢ x':X' by exchange on e1 //! bad exchange
+    e4: *, X <: Top, X' <: Top, x':X', x:X ⊢ x':X' by exchange on e1 // should be OK
+    proof by rule nonvar
+end lemma
+
+lemma test-xchange2:
+    assumes Γ
+    forall d: Γ, X <: Top ⊢ t : T[X]
+    exists Unit ◊
+    do case analysis on d:
+        case rule
+            ---------------------------- T-Var
+            _: Γ', x:T', X <: Top ⊢ x:T'
+            where T[X] := T'
+        is
+            v1: Γ', x:T' ⊢ x:T' by rule T-Var
+            v2: Γ', x:T', X <: Top ⊢ x:T' by weakening on v1
+            w1: Γ, X <: Top, x:T' ⊢ x:T' by exchange on v2 //! switched context
+            v3: Γ', X <: Top, x:T[X] ⊢ x:T[X] by exchange on v2
+            proof by rule nonvar
+        end case
+    end case analysis
+    proof by rule nonvar
+end lemma

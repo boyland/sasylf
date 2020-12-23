@@ -39,12 +39,11 @@ public class DerivationByExchange extends DerivationWithArgs {
 		Term adapted = ctx.toTerm(e);
 		//System.out.println("Exchange arg, adapted = " + adapted);
 		Term result = ctx.toTerm(getClause());
-		//System.out.println("Exchange result: " + result);
+		// System.out.println("***** " + getLocation().getLine() + ": Exchange result: " + result + " on line " + getLocation().getLine());
 
 		if (!checkExchange(result,adapted)) {
 			ErrorHandler.error(Errors.BAD_EXCHANGE, this);
 		}
-		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
 
 		if (ctx.subderivations.containsKey(arg))
 			ctx.subderivations.put(this,ctx.subderivations.get(arg));
@@ -67,22 +66,43 @@ public class DerivationByExchange extends DerivationWithArgs {
 		} else return t1.equals(t2);
 	}
 
+	/**
+	 * Remove a matching abstraction from a function type.
+	 * All uses of the bound variable should be directed to a bound var
+	 * |rem| before this.
+	 * Return the new abstraction.
+	 * @param t term to look for abstraction
+	 * @param rem terms between the new location of the bound variable and here
+	 * @param name name of the formal to remove
+	 * @param type type of the formal to remove
+	 * @return null if formal not found, or if its type was wrong
+	 * Otherwise a term in which an abstraction for this formal is removed
+	 * and all references to the variable are redirected to a |rem| outer formal.
+	 * NB: Any bindings beyond |rem| need to be bumped to give space for the new variable.
+	 */
 	private static Term removeMatching(Term t, List<Term> rem, String name, Term type) {
+		// System.out.println("removeMatching(" + t + "," + rem + "," + name + "," + type + ")");
 		if (t instanceof Abstraction) {
 			Abstraction ab = (Abstraction)t;
 			if (ab.varName.equals(name)) {
 				if (ab.varType.equals(type)) {
 					rem.add(new BoundVar(rem.size()+1));
-					return ab.getBody().apply(rem, rem.size());
+					Term result = ab.getBody().apply(rem, rem.size());
+					// System.out.println("  => " + result);
+					return result;
 				}
-				// System.out.println("Wrong type");
+				// System.out.println("  => null // wrong type");
 				return null;
 			} else {
 				rem.add(0, new BoundVar(rem.size()+1));
 				Term result = removeMatching(ab.getBody(),rem,name,type.incrFreeDeBruijn(1));
 				if (result == null) return null;
-				return Abstraction.make(ab.varName,ab.varType,result);
+				result = Abstraction.make(ab.varName,ab.varType.incrFreeDeBruijn(rem.size()-1, 1),result);
+				// System.out.println("  => " + result);
+				return result;
 			}
-		} else return null;
+		}
+		// System.out.println("  => null // hit end");
+		return null;
 	}
 }

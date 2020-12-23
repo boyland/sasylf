@@ -500,7 +500,7 @@ public abstract class Term {
 	 * as you go inside abstractions. 
 	 * 
 	 * Term implements the default case, returning the identical term, used for FreeVar or Constant */
-	Term incrFreeDeBruijn(int nested, int amount) { return this; }
+	public Term incrFreeDeBruijn(int nested, int amount) { return this; }
 
 	/**
 	 * Increments free DeBruijn variables by amount.
