@@ -138,6 +138,7 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 					return null; //NOTREACHED
 				}
 				Set<FreeVar> unavoided = sub.selectUnavoidable(ctx.inputVars);
+				Util.debug(" sub = ",sub);
 				if (!unavoided.isEmpty()) {
 					ErrorHandler.error(Errors.SUBSTITUTION_CONSTRAIN, unavoided.toString(), this);
 				}

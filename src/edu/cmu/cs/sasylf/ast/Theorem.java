@@ -238,7 +238,7 @@ public class Theorem extends RuleLike {
 					ErrorHandler.warning(Errors.EXTRANEOUS_ASSUMES, ": " + assumes, assumes);
 				}
 			}
-			if (ctx.knownContexts != null) {
+			if (ctx.knownContexts != null && !ctx.knownContexts.isEmpty()) {
 				if (ctx.knownContexts.size() > 1) {
 					ErrorHandler.recoverableError(Errors.THEOREM_MULTIPLE_CONTEXT, this);
 				} else if (ctx.knownContexts.size() == 1) {
@@ -246,6 +246,10 @@ public class Theorem extends RuleLike {
 					if (assumes == null) {
 						ErrorHandler.warning(Errors.ASSUMED_ASSUMES, this, "assumes " + root);
 					}
+				}
+				if (assumes == null) { // Avoid further errors XXX: EXTENION POINT
+					assumes = ctx.knownContexts.iterator().next();
+					ctx.assumedContext = assumes;
 				}
 			}
 

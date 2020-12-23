@@ -93,6 +93,11 @@ assumes Γ
   ------------------------ T-TApp
   Γ ⊢ t (T) : T1[T2]
 
+  Γ ⊢ t : T
+  Γ ⊢ T <: T'
+  ------------ T-Sub
+  Γ ⊢ t : T'
+  
 lemma test-weaken:
     exists Unit ◊
     d1: *, x:Unit ⊢ x:Unit by rule T-Var
@@ -159,5 +164,45 @@ lemma test-xchange2:
             proof by rule nonvar
         end case
     end case analysis
+    proof by rule nonvar
+end lemma
+
+lemma test-subst:
+    assumes Γ
+    forall d: Γ, X <: Top, x:X ⊢ t[x][X] : T[X]
+    forall u: Unit <: Top ∈ Γ // not actually possible
+    exists Unit ◊
+    d0: *, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d, u //! dropped context
+    d1: Γ, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d //! too few
+    d2: Γ, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d, Unit //! wrong type
+    d3: Γ, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d, u, Unit //! too many
+    d4: Γ, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d, u // OK: just right
+    up: Γ ⊢ Unit <: Top by rule S-Top
+    d5: Γ, x:Unit ⊢ t[x][Unit] : T[Unit] by substitution on d, up //! wrong input
+    u1: Γ ⊢ unit : Unit by rule T-Unit
+    u2: Γ ⊢ unit : Top by rule T-Sub on u1, up
+    d6: Γ, X <: Top ⊢ t[unit][X] : T[X] by substitution on d, u2 //! wrong context
+    u3: Γ, X <: Top ⊢ unit : Top by weakening on u2
+    d7: Γ, X <: Top ⊢ t[unit][X] : T[X] by substitution on d, u3 //! cannot prove unit : X 
+    proof by rule nonvar
+end lemma
+
+lemma test-subst2:
+    assumes Γ
+    forall d: Γ, X <: Top, x:X→Unit ⊢ t[x] : T[X]
+    exists Unit ◊
+    up: Γ ⊢ Unit <: Top by rule S-Top
+    in: X <: Top ∈ (Γ, X <: Top) by rule typevar
+    sx: Γ, X<:Top ⊢ X <: Top by rule S-Assume on in
+    su: Γ, X<:Top ⊢ Unit <: Unit by rule S-Refl
+    sa: Γ, X<:Top ⊢ Top→Unit <: X→Unit by rule S-Arrow on sx, su
+    tu: Γ, X<:Top, x:X ⊢ unit : Unit by rule T-Unit
+    ta: Γ, X<:Top ⊢ λ x:X•unit : X → Unit by rule T-Abs on tu 
+    d0: Γ, X<:Top ⊢ t[λ x:X•unit] : T[X] by substitution on d, ta
+    tv: Γ, X<:Unit, x:X ⊢ unit : Unit by rule T-Unit
+    tb: Γ, X<:Unit ⊢ λ x:X•unit : X → Unit by rule T-Abs on tv
+    d1: Γ, X<:Unit ⊢ t[λ x:X•unit] : T[X] by substitution on d, tb //! bad prefix
+    d2: Γ, X<:Top  ⊢ t[λ x:X•unit] : T[X] by substitution on d, tb //! bad prefix
+    d3: Γ, X<:Unit ⊢ t[λ x:X•unit] : T[X] by substitution on d, ta //! wrong result
     proof by rule nonvar
 end lemma

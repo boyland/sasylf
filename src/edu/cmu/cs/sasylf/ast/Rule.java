@@ -310,6 +310,9 @@ public class Rule extends RuleLike implements CanBeCase {
 			Term bareGoal = Term.getWrappingAbstractions(goalTerm, goalAbs);
 			Term subject = Term.wrapWithLambdas(abs, Facade.App(getRuleAppConstant(), bare));
 			if (clause.getRoot() != null) { // context has unknown size beyond abs
+				if (ctx.assumedContext == null) {
+					ErrorHandler.error(Errors.UNKNOWN_CONTEXT, clause.getRoot().toString(), source);
+				}
 				// We need to consider matching into the context.
 				// Problem: The appTerm and everything from it (goalTerm/bareGoal/newAbs)
 				// were adapted assuming the "abs" were *outside* the abstractions in the goal,

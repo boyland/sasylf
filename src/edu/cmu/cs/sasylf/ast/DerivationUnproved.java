@@ -26,6 +26,7 @@ public class DerivationUnproved extends DerivationWithArgs {
 				TermPrinter termPrinter = new TermPrinter(ctx,((ClauseUse)cl).getRoot(),getLocation());
 				form = ": " + termPrinter.toString(termPrinter.asClause(t));
 			} catch (RuntimeException ex) {
+				System.out.println("At " + this.getLocation());
 				ex.printStackTrace();
 				form = ": (internal) " + t;
 				// ErrorHandler.report(Errors.INTERNAL_ERROR, ": Couldn't print " + t, this);

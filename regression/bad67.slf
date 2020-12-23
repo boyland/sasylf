@@ -65,7 +65,7 @@ assumes G
 lemma old-loses-context: //! missing assumes
   forall t assumes G
   exists t = t
-  proof by rule eq // wrong if we don't use "assumes" in theorems 
+  proof by rule eq //! wrong if we don't use "assumes" in theorems 
 end lemma
 
 theorem loses-context:
