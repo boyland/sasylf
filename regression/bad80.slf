@@ -1,0 +1,126 @@
+// testing weakening, exchange and substitution
+package regression;
+
+terminals λ unit Unit Top
+
+syntax
+  t ::= λ x:T • t[x]
+     | t t
+     | x
+     | λ X <: T • t[X]
+     | t T
+     | unit
+
+  T ::= X
+     | T → T
+     | ∀ X<:T • T[X]
+     | Unit
+     | Top
+
+  Γ ::= *
+     | Γ, x:T
+     | Γ, X<:T
+     
+judgment closed: T ◊
+
+   ----- nonvar
+    T ◊
+    
+judgment type-equality: Γ ⊢ T == T
+assumes Γ
+
+  ---------- type-eq
+  Γ ⊢ T == T
+  
+judgment typevar: T<:T ∈ Γ
+assumes Γ
+
+  ----------------------- typevar
+  X <: T ∈ (Γ, X <: T)
+  
+judgment subtype: Γ ⊢ T <: T
+assumes Γ
+
+  T1 <: T2 ∈ Γ
+  ------------------- S-Assume
+  Γ ⊢ T1 <: T2
+  
+  ---------- S-Refl
+  Γ ⊢ T <: T
+  
+  Γ ⊢ T1 <: T2
+  Γ ⊢ T2 <: T3
+  ------------- S-Trans
+  Γ ⊢ T1 <: T3
+
+  ------------ S-Top
+  Γ ⊢ T <: Top
+  
+  Γ ⊢ T21 <: T11
+  Γ ⊢ T12 <: T22
+  ------------------------------ S-Arrow
+  Γ ⊢ (T11 → T12) <: (T21 → T22)
+
+  Γ ⊢ T21 <: T11
+  Γ, X<:T21 ⊢ T12[X] <: T22[X]
+  -------------------------------------- S-All
+  Γ ⊢ ∀ X<:T11•T12[X] <: ∀ X<:T21•T22[X]
+  
+judgment typing : Γ ⊢ t : T
+assumes Γ
+
+  ------------ T-Var
+  Γ, x:T ⊢ x:T
+  
+  --------------- T-Unit
+  Γ ⊢ unit : Unit
+  
+  Γ, x:T ⊢ t[x] : T'
+  ------------------------- T-Abs
+  Γ ⊢ λ x:T • t[x] : T → T'
+
+  Γ ⊢ t1 : T → T'
+  Γ ⊢ t2 : T
+  ----------------- T-App
+  Γ ⊢ t1 t2 : T'
+  
+  Γ, X<:T ⊢ t[X] : T'[X]
+  ---------------------------------- T-TAbs
+  Γ ⊢ λ X<:T • t[X] : ∀ X<:T • T'[X]
+  
+  Γ ⊢ t : ∀ X<:T • T1[X]
+  Γ ⊢ T2 <: T
+  ------------------------ T-TApp
+  Γ ⊢ t (T) : T1[T2]
+
+lemma test-weaken:
+    exists Unit ◊
+    d1: *, x:Unit ⊢ x:Unit by rule T-Var
+    d2: *, x:Unit, x':Top ⊢ x : Unit by weakening on d1, (Top) //! too many args
+    d3: *, x:Unit, x':Top ⊢ x : Unit by weakening on Top //! syntax
+    d4: *, x:Unit, x':Top ⊢ x':Top by weakening on d1 //! can't do it
+    d5: *, x:Unit ⊢ x:Unit by weakening on d1 //! no weakening necessary
+    d6: Γ, x:Unit ⊢ x:Unit by weakening on d1 //! unknown context
+    proof by rule nonvar
+end lemma
+
+lemma test-weaken-relax:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    exists Unit ◊
+    do case analysis on d:
+        case rule
+            ---------------- T-Var
+            _: Γ', x:T ⊢ x:T
+        is
+            v: Γ', x:T ⊢ x:T by rule T-Var
+            w: Γ' ⊢ unit : Unit by rule T-Unit
+            u: Γ', X <: Top  ⊢ unit : Unit by rule T-Unit
+            d1: *, x:T ⊢ x:T by weakening on v //! no relax known
+            d2: Γ ⊢ unit : Unit by weakening on w //! can't relax -- no parms
+            d3: Γ ⊢ unit : Unit by weakening on u //! can't relax -- wrong type
+            proof by rule nonvar
+        end case
+    end case analysis
+    proof by rule nonvar
+end lemma

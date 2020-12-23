@@ -2096,14 +2096,14 @@ Derivation Justification(Token startT, Clause c) :
       return d; }
   | <EXCHANGE> <ON> t=<IDENTIFIER>
     { d = new DerivationByExchange(startT.image, new Location(startT), c);
-      d.addArgString(clauseFor(t));
-      d.setEndLocation(Location.endOf(t)); 
-      return d; }
+      d.addArgString(clauseFor(t)); }
+    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+    { return d; }
   | <WEAKENING> <ON> t=<IDENTIFIER>
     { d = new DerivationByWeakening(startT.image, new Location(startT), c);
-      d.addArgString(clauseFor(t));
-      d.setEndLocation(Location.endOf(t)); 
-      return d; }
+      d.addArgString(clauseFor(t)); }
+    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+    { return d; }
   | LOOKAHEAD({isRulePart2()}) qn = QualName() 
      { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
      (<ON> cl=SimpleExpr() { d.addArgString(cl); }

@@ -846,3 +846,15 @@ lemma inversiontest4:
     where t := t1 t2
     proof by rule val-unit
 end lemma
+
+lemma syntaxtest2:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    exists unit value
+    do case analysis on t:
+        case x assumes Γ', x':T' is //! should say x is out of scope!
+            proof by val-unit
+        end case
+    end case analysis
+    proof by rule val-unit
+end lemma

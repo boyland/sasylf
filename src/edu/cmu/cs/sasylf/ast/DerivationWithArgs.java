@@ -95,6 +95,11 @@ public abstract class DerivationWithArgs extends Derivation {
 	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
+		
+		final NonTerminal root = getClause().getRoot();
+		if (!ctx.isKnownContext(root)) {
+			ErrorHandler.error(Errors.UNKNOWN_CONTEXT, root.toString(), root);
+		}
 
 		args.clear(); // needed for idempotency
 		for (int i = 0; i < argStrings.size(); ++i) {

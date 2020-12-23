@@ -1,4 +1,4 @@
-// testing assumptions, contexts, weakening, exchange and substitution
+// testing assumptions
 package regression;
 
 terminals unit Unit All lambda fold unfold Rec in let

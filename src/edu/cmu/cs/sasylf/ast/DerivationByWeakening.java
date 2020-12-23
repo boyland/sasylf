@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.util.Objects;
+
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -28,7 +30,6 @@ public class DerivationByWeakening extends DerivationWithArgs {
 		}
 
 		Fact arg = getArgs().get(0);
-		// System.out.println("Weakening arg = " + arg);
 		Element e = arg.getElement();
 
 		if (!(e.getType() instanceof Judgment)) {
@@ -40,6 +41,10 @@ public class DerivationByWeakening extends DerivationWithArgs {
 		Term source = ctx.toTerm(e);
 		Term result = ctx.toTerm(getClause());
 
+		if (source.equals(result) && Objects.equals(srcRoot, trgRoot)) {
+			ErrorHandler.error(Errors.WEAKENING_NOP, this);
+		}
+		
 		// perform relaxation first
 		while (srcRoot != null && !srcRoot.equals(trgRoot)) {
 			Relaxation r;
