@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
@@ -41,8 +42,9 @@ public class ErrorCoverage {
 		Set<Errors> encountered = index.keySet();
 		for (String s : args) {
 			File f = new File(s);
+			CompUnit cu = null;
 			try (Reader r = new FileReader(f)) {
-				Main.parseAndCheck(mf, s, null, r);
+				cu = Main.parseAndCheck(mf, s, null, r);
 			} catch (FileNotFoundException e) {
 				System.err.println("Unable to open '" + s + "': " + e.getLocalizedMessage());
 			} catch (IOException e) {
@@ -54,14 +56,26 @@ public class ErrorCoverage {
 				e.printStackTrace();
 			}
 			Collection<Report> reports = ErrorHandler.getReports();
+			int parseReports = (cu == null) ? reports.size() : cu.getParseReports();
 			BitSet errorLines = new BitSet();
 			String shortName = f.getName();
+			int reportIndex = 0;
+			// System.out.println("Reports " + parseReports + " " + shortName);
 			for (Report r : reports) {
+				++reportIndex;
 				int line = r.getSpan().getLocation().getLine();
 				if (r instanceof ErrorReport) {
 					errorLines.set(line);
 					ErrorReport er = (ErrorReport)r;
 					final Errors type = er.getErrorType();
+					if ((type.ordinal() <= Errors.PARSE_ERROR.ordinal()) != 
+							(reportIndex <= parseReports)) {
+						if (reportIndex <= parseReports) {
+							System.err.println("Non parse-type error generated during parsing: " + r);
+						} else {
+							System.err.println("Parse-type error generated after parsing: " + r);
+						}
+					}
 					if (type == Errors.INTERNAL_ERROR || 
 							(type != Errors.WHERE_MISSING && type != Errors.DERIVATION_UNPROVED &&
 								!markedLines.get(line))) {

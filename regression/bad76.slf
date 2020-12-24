@@ -375,10 +375,10 @@ theorem preservation4 :
             d11: *, x:T' ⊢ t11[x] : T by inversion of rule T-Abs //! inversion on what
             where T'' := T'
             proof by substitution on d11, d2 //! cascade
-        end case
+        end case 
 
     end induction //! wrong end
-end theorem
+end lemma //! wrong kind
 
 lemma silly:
     forall dt: *, x:T ⊢ t[x] : Unit → Unit

@@ -111,8 +111,8 @@ public class Judgment extends Node implements ClauseType, Named {
 			assume.typecheck(ctx);
 		}
 
-		if (isAbstract && !rules.isEmpty()) {
-			ErrorHandler.recoverableError(Errors.JUDGMENT_ABSTRACT, this); // NB: parser currently handles this
+		if (isAbstract) {
+			Util.verify(rules.isEmpty(), "not caught by parser?");
 		}
 
 		for (Element f : form.getElements()) {

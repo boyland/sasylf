@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.util;
 
 public enum Errors {
-	PARSE_ERROR ("Parse error: "),
+	// The following errors are exclusively generated during parsing
 	PARSE_EXPECTED_LBRACE ("expected '{', not "),
 	PARSE_EXPECTED_RBRACE ("expected '}', not "),
 	PARSE_EXPECTED_COLONEQ ("expected ':=', not "),
@@ -16,6 +16,13 @@ public enum Errors {
 	EXTENDS_UNIMPLEMENTED ("module 'extends' not implemented yet"),
 	PROVIDES_IN_MODULE ("'provides' legal only for explicit modules"),
 	PROVIDES_NOT_IN_MODULE ("'provides' expected for explicit modules"),
+	ABSTRACT_NOT_PERMITTED_HERE ("'abstract' not allowed in main part of proof file"),
+	SYNTAX_DUPLICATE ("syntax nonterminal duplicate"),
+	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
+	RULE_NAME_EXPECTED ("Missing a rule name (must be on the same line as the ---)"),
+	WRONG_END ("expected "),
+	PARSE_ERROR ("Parse error: "), // Place last for parser errors
+	// The following errors are generated *after* parsing
 	MODULE_NOT_FOUND ("module not found: "),
 	MODULE_ILLFORMED ("module has errors: "),
 	MODULE_CYCLE("Cyclic module reference: "),
@@ -36,14 +43,11 @@ public enum Errors {
 	RENAME_NO_RULES ("Renaming a judgment should not include renaming of rules"),
 	RENAME_ASSUME_MISMATCH ("Renamed judgment must have the same 'assumes' if any"),
 	ABSTRACT_REQUIRED("A required judgment without rules should be declared abstract"),
-	ABSTRACT_NOT_PERMITTED_HERE ("'abstract' not allowed in main part of proof file"),
 	BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
 	BAD_FILE_NAME("Proof file for module must be a legal identifier"),
 	WRONG_PACKAGE ("wrong package"),
 	WRONG_MODULE_NAME ("wrong module name"),
-	WRONG_END,
 	SYNTAX_TERMINAL("a syntax nonterminal should not also be declared as a terminal"),
-	SYNTAX_DUPLICATE ("syntax nonterminal duplicate"),
 	SYNTAX_REDECLARED ("nonterminal already declared"),
 	SYNTAX_UNPRODUCTIVE ("this syntax is unproductive.  You need a production that can actually generate a string."),
 	SYNTAX_VARIABLE_MISSING ("no syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
@@ -62,9 +66,7 @@ public enum Errors {
 	THEOREM_MULTIPLE_CONTEXT ("SASyLF cannot handle theorem/lemma with multiple contexts"),
 	FORALL_NOT_SYNTAX ("Could not find syntax nonterminal "),
 	DUPLICATE_JUDGMENT("declaration uses name name as previous judgment"),
-	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
 	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
-	RULE_NAME_EXPECTED ("Missing a rule name (must be on the same line as the ---)"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
 	RULE_PREMISE_NUMBER		("wrong number of premises for "),
 	BAD_RULE_APPLICATION,
@@ -113,8 +115,6 @@ public enum Errors {
 	ASSUMES_MULTI_VAR("Can't handle more than one variable in assumption rule"),
 	ASSUMES_CONTEXT_RESTRICT ("Assumption rule must use context form unchanged"),
 	ASSUMES_DUPLICATE("Assumption rule has duplicate use "),
-	ASSUMES_MISMATCH("Assumption rule doesn't match "), // UNUSED
-	ASSUMES_VARIABLE_MISPLACED("Variable in assumption rule must be at top-level"), // Unused
 	ASSUMES_UNDEFINED("Assumption rule doesn't give a way to determine "),
 	ASSUMES_UNUSED("Assumption rule ignores element from context "), // Unused
 	SYNTAX_CASE_FOR_DERIVATION ("when case-analyzing a derivation, must use rule cases, not syntax cases"),
@@ -147,7 +147,7 @@ public enum Errors {
 	JUDGMENT_EXPECTED ("rule premises and conclusions must be in judgment form, not just syntax"),
 	SYNTAX_EXPECTED ("cannot create judgment by syntax"),
 	WRONG_JUDGMENT,
-	WRONG_RULE ("wrong rule named in inversion, should be "), // rename INVERSION_WRONG_RULE
+	INVERSION_WRONG_RULE ("wrong rule named in inversion, should be "),
 	EMPTY_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have an empty context"), 
 	VAR_CONCLUSION_CONTEXT ("conclusion of judgment that assumes a context cannot have a context with variables"),
 	PREMISE_CONTEXT_MISMATCH ("premise cannot use a context variable not present in conclusion"),
@@ -195,7 +195,6 @@ public enum Errors {
 	INVERSION_BAD_RULE ("rule cannot be used for inversion until it is fixed"),
 	INVERSION_EMPTY ("The subject of inversion is actually not possible.  Suggest using 'by contradiction on' instead of inversion."),
 	INVERSION_RESULT_SIZE ("inversion results in a different number of premises: "),
-	INVERSION_REQUIRES_CLAUSE("inversion cannot be applied to syntax, only judgments"), //UNUSED
 	INVERSION_NOT_FOUND("did not find claimed judgment in inversion of rule"),
 	WEIRD_ADAPT_ERROR("internal error in adapt"),
 	EXISTS_SYNTAX("'exists' of theorem must be a judgment, not syntax"),

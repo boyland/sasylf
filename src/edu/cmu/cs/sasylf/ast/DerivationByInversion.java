@@ -113,7 +113,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 		
 		if (resolution != null && resolution != only) {
 			Rule otherRule = (Rule)only;			
-			ErrorHandler.error(Errors.WRONG_RULE, otherRule.getName(), this, 
+			ErrorHandler.error(Errors.INVERSION_WRONG_RULE, otherRule.getName(), this, 
 					"by rule " + ruleName + "\nby rule " + otherRule.getName());
 		}
 

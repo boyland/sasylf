@@ -1999,12 +1999,12 @@ Theorem TheoremDeclaration(boolean abstractOK) :
   <END> (tp=<THEOREM> | tp=<LEMMA> | sp=RuleName() { tp = null; } )
   { 
     if (tp == null) {
-        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + sp.toString() + "'",
+        ErrorHandler.recoverableError(Errors.WRONG_END,"'end " + t0.image + "'",
         	sp, sp.toString() + "\n" + t0.image);
         thm.setEndLocation(sp.getEndLocation());
     } else if (!tp.image.equals(t0.image)) {
-        ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end " + t0.image + "' not 'end " + tp.image + "'", 
-        	new Location(tp),tp.image + "\n" + t0.image); 
+        ErrorHandler.recoverableError(Errors.WRONG_END,"'end " + t0.image + "'", 
+        	new TokenSpan(tp),tp.image + "\n" + t0.image); 
     }
     thm.setKind(t0.image);
     if (tp != null) thm.setEndLocation(Location.endOf(tp));
@@ -2051,7 +2051,7 @@ Derivation Derivation() :
     of=<END> 
    ( LOOKAHEAD(2) <CASE> t=<ANALYSIS> |
      (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
-     { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
+     { ErrorHandler.recoverableError(Errors.WRONG_END,"'end case analysis'",new TokenSpan(t),t.image+"\ncase analysis"); } )
     { d.setEndLocation(Location.endOf(t)); return d; }
     
 }
@@ -2081,7 +2081,7 @@ Derivation Justification(Token startT, Clause c) :
      (LOOKAHEAD(2) <CASE> t=<ANALYSIS> | t=<CASE> | t=<LEMMA> | t=<THEOREM>)
      { String wrong = t.image;
        if (wrong.equals("analysis")) wrong = "case analysis";
-       ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end induction'",new Location(t),wrong+"\ninduction"); } )
+       ErrorHandler.recoverableError(Errors.WRONG_END,"'end induction'",new TokenSpan(t),wrong+"\ninduction"); } )
     { di.setEndLocation(Location.endOf(t)); return di; }
   | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> cl=SimpleExpr()
     { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, cl); }
@@ -2091,7 +2091,7 @@ Derivation Justification(Token startT, Clause c) :
     of=<END> 
     ( LOOKAHEAD(2) <CASE> t=<ANALYSIS> |
      (t=<CASE> | t=<INDUCTION> | t=<LEMMA> | t=<THEOREM> )
-     { ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case analysis'",new Location(t),t.image+"\ncase analysis"); } )
+     { ErrorHandler.recoverableError(Errors.WRONG_END,"'end case analysis'",new TokenSpan(t),t.image+"\ncase analysis"); } )
     { dca.setEndLocation(Location.endOf(t)); return dca; }
   | LOOKAHEAD(2) <CONTRADICTION> <ON> t=<IDENTIFIER>
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
@@ -2246,7 +2246,7 @@ Case Case() :
      (<CASE> u=<ANALYSIS> | u=<INDUCTION> | u=<LEMMA> | u=<THEOREM>)
      { String bad = u.image;
        if (bad.equals("analysis")) bad = "case analysis";
-       ErrorHandler.recoverableError(Errors.WRONG_END,"expected 'end case'",new Location(t),bad+"\ncase"); } )
+       ErrorHandler.recoverableError(Errors.WRONG_END,"'end case'",new TokenSpan(u),bad+"\ncase"); } )
     { ca.setEndLocation(Location.endOf(u));
       return ca; }
 }

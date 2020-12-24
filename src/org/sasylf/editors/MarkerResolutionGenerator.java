@@ -102,12 +102,16 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		if (marker == null || !marker.exists()) return false;
 		Errors markerType = null;
 		String fixInfo;
+		String type = null;
 		try {
-			String type = (String) marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
+			type = (String) marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
 			if (type != null) markerType = Errors.valueOf(type);
 			fixInfo = (String) marker.getAttribute(Marker.SASYLF_ERROR_INFO);
 		} catch (CoreException e) {
 			e.printStackTrace();
+			return false;
+		} catch (IllegalArgumentException ex) { // old type
+			System.err.println("Errors." + type + " no longer defined, skipping.");
 			return false;
 		}
 		if (markerType == null || fixInfo == null) return false;

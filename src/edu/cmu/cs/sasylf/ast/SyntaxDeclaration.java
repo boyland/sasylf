@@ -77,6 +77,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	/**
 	 * Add an alternate form for a syntax.
 	 * An error is generated if it's not unique.
+	 * This method should be called during parsing.
 	 * @param nt alternate form for syntax, must not be null
 	 */
 	public void addAlternate(NonTerminal nt) {
