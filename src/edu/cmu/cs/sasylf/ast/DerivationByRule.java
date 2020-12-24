@@ -30,7 +30,7 @@ public class DerivationByRule extends DerivationByIHRule {
 			}
 			if (!(rule instanceof Rule)) {
 				Theorem th = (Theorem)rule;
-				ErrorHandler.recoverableError(Errors.THEOREM_NOT_RULE, ruleName.toString(), this, "rule\n" + th.getKind());
+				ErrorHandler.recoverableError(Errors.THEOREM_NOT_RULE, ruleName.toString(), ruleName, "rule\n" + th.getKind());
 			}
 		}
 		return rule;

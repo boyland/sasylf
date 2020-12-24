@@ -1,3 +1,4 @@
+// Many syntax errors
 package regression;
 
 terminals fn A in
@@ -97,3 +98,6 @@ syntax
    ee ::= 0 //! x never assigned
        | x 
        | ee * ee
+       
+judgment funny: ? T[ee] //! needs to be a variable
+

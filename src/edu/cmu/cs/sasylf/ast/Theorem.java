@@ -239,7 +239,7 @@ public class Theorem extends RuleLike {
 				}
 			}
 			if (ctx.knownContexts != null && !ctx.knownContexts.isEmpty()) {
-				if (ctx.knownContexts.size() > 1) {
+				if (ctx.knownContexts.size() > 1 || ctx.assumedContext != null) {
 					ErrorHandler.recoverableError(Errors.THEOREM_MULTIPLE_CONTEXT, this);
 				} else if (ctx.knownContexts.size() == 1) {
 					NonTerminal root = ctx.knownContexts.iterator().next();

@@ -59,7 +59,7 @@ public enum Errors {
 	THEOREM_KIND_WRONG ("not a "),
 	THEOREM_KIND_MISSING ("missing keyword "),
 	THEOREM_ABSTRACT ("abstract theorem/lemma should not include proof"),
-	THEOREM_MULTIPLE_CONTEXT ("SASyLF cannot (yet) handle theorem/lemma with multiple contexts"),
+	THEOREM_MULTIPLE_CONTEXT ("SASyLF cannot handle theorem/lemma with multiple contexts"),
 	FORALL_NOT_SYNTAX ("Could not find syntax nonterminal "),
 	DUPLICATE_JUDGMENT("declaration uses name name as previous judgment"),
 	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
@@ -69,7 +69,7 @@ public enum Errors {
 	RULE_PREMISE_NUMBER		("wrong number of premises for "),
 	BAD_RULE_APPLICATION,
 	RULE_CASE_TOO_GENERAL ("The given pattern is overly general, should restrict "),
-	RULE_CASE_USES_OLD ("The given pattern uses variables already substituted"),
+	RULE_CASE_USES_OLD ("The given pattern uses variables already substituted"), // unused
 	BAD_SYNTAX_BINDING("Only variables are permitted inside '[]' in a syntax or judgment definition"),
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	VARIABLE_HAS_NO_CONTEXT ("the variable for this nonterminal is never bound in a context"),

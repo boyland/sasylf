@@ -508,7 +508,7 @@ lemma circular-typevar:
                     a2'': X2 <: T'' ∈ (Γ'', X2 <: T'') by rule typevar
                     a21a: T2 <: T'' ∈ Γ' by a2''
                     a21b: T2 <: T'' ∈ Γ by a21a
-                    eq: Γ ⊢ T'' == T1 by lemma bound-unique on a21b, a21
+                    eq: Γ ⊢ T'' == T1 by theorem bound-unique on a21b, a21 //! actually "lemma"
                     a21': T1 <: T2 ∈ Γ'' by case analysis on (T'' assumes Γ''): //! ditto
                         case X'' assumes Γ''', X'' <: T3 is
                             use inversion on eq where T'' := T1
@@ -516,7 +516,7 @@ lemma circular-typevar:
                             a1': T1 <: T3 ∈ Γ'' by a''
                             a2': T1 <: T3 ∈ Γ' by a1'
                             a3': T1 <: T3 ∈ Γ by a2'
-                            eq3: Γ ⊢ T3 == T2 by lemma bound-unique on a3', a12
+                            eq3: Γ ⊢ T3 == T2 by bound-unique on a3', a12 //! missing "lemma"
                             use inversion on eq3 where T3 := T2
                             a32: T1 <: T2 ∈ Γ'' by a1'
                         end case
@@ -760,7 +760,7 @@ lemma equiv-implies-eq:
             ------------------------- S-Assume
             _: Γ ⊢ T1 <: T2
         is
-            _: contradiction by lemma circular2 on a12, s21
+            _: contradiction by rule circular2 on a12, s21 //! should be "lemma"
         end case
         
         case rule
@@ -768,7 +768,7 @@ lemma equiv-implies-eq:
             _: Γ ⊢ T2 <: T2
             where T1 := T2
         is
-            proof by rule type-eq
+            proof by lemma type-eq //! should be "rule"
         end case
 
         case rule
@@ -848,11 +848,11 @@ theorem test:
                         end case
 
                         case Unit assumes Γ', X <: T2 is
-                            proof by contradiction on v0 //! ditto
+                            proof by theorem type-equality on v0 //! not a theorem
                         end case
 
                         case Top assumes Γ', X <: T2 is
-                            proof by contradiction on v0 //! ditto
+                            proof by theorem miracle on v0 //! not found
                         end case
 
                     end case analysis

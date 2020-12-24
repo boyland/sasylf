@@ -252,7 +252,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void setContext(ClauseDef cd) {
 		if (context == null) context = cd;
 		else if (context != cd) {
-			ErrorHandler.recoverableError(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
+			ErrorHandler.recoverableError(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,cd);
 		}
 	}
 

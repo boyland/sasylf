@@ -24,7 +24,9 @@ syntax
       
   Gamma ::= * | Gamma, x:T | Gamma, f < z < f
   
-  Sigma ::= * | Sigma, X
+  Sigma ::= * 
+         | Sigma, X 
+         | Sigma, z = f //! bound again
      
 
 judgment bad1: 1 Gamma |- t : T
@@ -62,6 +64,9 @@ assumes Gamma
   ------------------ T-Var //! Multiple uses
   Gamma, x:T |- x:T
   
+  ------------------ T-Unit
+  Gamma |- unit:Unit
+  
 judgment frac1: Gamma |- f < f
 assumes Gamma
 
@@ -79,6 +84,10 @@ assumes Sigma
    ---------------- W-Arrow
    Sigma |- T1 -> T2
    
+judgment frac1: f => f //! already declared
+
+  ------ frac-const
+  1 => 1
    
 lemma test-unassumed:
     forall d: Sigma, X |- T[X] //! Sigma,X has no rule
@@ -86,3 +95,53 @@ lemma test-unassumed:
     du: Sigma |- Unit by rule W-Unit
     proof by rule W-Arrow on d, du
 end lemma
+
+lemma test-two-assume: //! two contexts
+    assumes Gamma
+    forall s1: Sigma |- T
+    forall s2: Gamma |- f < f
+    exists Sigma |- T
+    proof by s1
+end lemma
+
+lemma test-terminal:
+    assumes Sigma
+    forall unit //! a terminal
+    exists Sigma |- Unit
+    proof by rule W-Unit
+end lemma
+
+lemma testorcontext:
+    assumes Gamma
+    forall d1: Gamma |- f < 1 or Sigma |- T //! different contexts
+    exists Sigma |- Unit
+    proof by rule W-Unit
+end lemma
+
+lemma test-andorparse:
+    assumes Gamma
+    forall d1: Gamma |- f < 1
+    exists Gamma |- f < 1 and Gamma |- t : Unit or Gamma |- t : Unit -> Unit //! ambiguous
+    proof by unproved
+end lemma
+
+lemma test-ornot:
+    assumes Gamma
+    forall d1: Gamma |- f < 1
+    exists Gamma |- f < 1 or not f => 1 //! "not" not supported
+    proof by unproved
+end lemma
+
+lemma orsyntax:
+    forall d: Gamma |- f < 1 or f/2 //! or syntax
+    exists  Sigma |- Unit
+    proof by rule W-Unit
+end lemma
+
+lemma andprefix:
+    forall d: Gamma |- t : T
+    exists Gamma |- t : T and * |- unit : Unit //! no prefix
+    u: * |- unit : Unit by rule T-Unit
+    proof by d,u
+end lemma
+    
