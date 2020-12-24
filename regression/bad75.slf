@@ -10,7 +10,7 @@ syntax
   T ::= A
      | T -> T
   
-  U ::= <>
+  U, U ::= <> //! duplicate
      | {x} T[x] //! subordination error
 
   Gamma ::= *
@@ -79,3 +79,21 @@ assumes Gamma
 
 syntax
   (Gamma ⊢ t : T) := Gamma |- t : T //! not allowed (yet?)
+  
+  A ::= 0 | 1 //! A is already a terminal
+  
+  T ::= t //! redeclaration of T
+  
+  e ::= y  //! too many variables, and not bound in context
+     | z 
+     | e + e 
+     | ∀ y • e[y] 
+     | ∃ z • e[z]
+     
+  s ::= t = e 
+     | skip //! nonterminal
+     | ? xx = e in s[xx] //! xx never bound 
+     
+   ee ::= 0 //! x never assigned
+       | x 
+       | ee * ee

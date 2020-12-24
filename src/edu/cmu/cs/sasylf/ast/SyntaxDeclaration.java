@@ -108,7 +108,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	}
 	
 	/**
-	 * Print out extra information before the clasues.
+	 * Print out extra information before the clauses.
 	 * @param out
 	 */
 	protected void printExtra(PrintWriter out) {}
@@ -138,9 +138,14 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	@Override
 	public void updateContext(Context ctx) {
 		for (String alt : alternates) {
-			ctx.setSyntax(alt, this);
+			if (ctx.getSyntax(alt) != null && ctx.getSyntax(alt) != this) {
+				ErrorHandler.recoverableError(Errors.SYNTAX_REDECLARED,":" + ctx.getSyntax(alt).getLocation().getLine() + ": " + alt, this);
+			} else {
+				ctx.setSyntax(alt, this);
+			}
 		}
-		ctx.setSyntax(getNonTerminal().getSymbol(), this); // redundant sometimes (NT not stripped)
+		String n = getNonTerminal().getSymbol();
+		ctx.setSyntax(n, this); // redundant sometimes (NT not stripped)
 		for (Clause c : getClauses()) {
 			c.getVariables(ctx.varMap);
 		}
@@ -234,8 +239,8 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		if (!isProductive()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
 		}
-		if (variable != null && context == null) {
-			ErrorHandler.error(Errors.VARIABLE_HAS_NO_CONTEXT, this);
+		if (variable != null && context == null && variable.getType() == this) {
+			ErrorHandler.recoverableError(Errors.VARIABLE_HAS_NO_CONTEXT, this);
 		}
 	}
 	
@@ -247,7 +252,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void setContext(ClauseDef cd) {
 		if (context == null) context = cd;
 		else if (context != cd) {
-			ErrorHandler.error(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
+			ErrorHandler.recoverableError(Errors.VARIABLE_HAS_MULTIPLE_CONTEXTS,this);
 		}
 	}
 
@@ -295,10 +300,9 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		for (Clause elem : elements) {
 			boolean productive = true;
 			for (Element e : elem.getElements()) {
-				if (e instanceof NonTerminal && !((NonTerminal)e).getType().isProductive()) {
-					productive = false;
-					break;
-				} else if (e instanceof Binding && !((Binding)e).getType().isProductive()) {
+				ElementType type = e.getType();
+				if ((e instanceof NonTerminal || e instanceof Binding) &&
+						type instanceof SyntaxDeclaration && !((SyntaxDeclaration)type).isProductive()) {
 					productive = false;
 					break;
 				}

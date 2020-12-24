@@ -51,10 +51,12 @@ public class Variable extends Element {
 
 	public void setType(SyntaxDeclaration t) {
 		if (type != null && type == t) return; // idempotency
-		if (type != null)
-			ErrorHandler.error(Errors.SYNTAX_VARIABLE_TWICE, this);
+		if (type != null) {
+			ErrorHandler.recoverableError(Errors.SYNTAX_VARIABLE_TWICE, ": " + symbol, t);
+			return;
+		}
 		if (t == null)
-			ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
+			ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, this);
 		type = t;
 	}
 
@@ -66,7 +68,7 @@ public class Variable extends Element {
 			if (var != null) {
 				setType(var.getType());
 			} else {
-				ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, symbol, this);
+				ErrorHandler.error(Errors.SYNTAX_VARIABLE_MISSING, this);
 			}
 		}
 		return this;

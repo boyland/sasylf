@@ -17,7 +17,7 @@ provides //! only in named modules
 terminals fn value
 
 syntax
-  t ::= x
+  t ::= x //! redeclared
      | t t
      | fn x => t[x]
 

@@ -44,6 +44,7 @@ public enum Errors {
 	WRONG_END,
 	SYNTAX_TERMINAL("a syntax nonterminal should not also be declared as a terminal"),
 	SYNTAX_DUPLICATE ("syntax nonterminal duplicate"),
+	SYNTAX_REDECLARED ("nonterminal already declared"),
 	SYNTAX_UNPRODUCTIVE ("this syntax is unproductive.  You need a production that can actually generate a string."),
 	SYNTAX_VARIABLE_MISSING ("no syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
 	SYNTAX_VARIABLE_TWICE ("the same variable may not appear in multiple syntax definitions"),
