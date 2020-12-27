@@ -69,7 +69,11 @@ public enum Errors {
 	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
 	RULE_PREMISE_NUMBER		("wrong number of premises for "),
-	BAD_RULE_APPLICATION,
+	RULE_APP_UNIFICATION_INCOMPLETE ("unification incomplete for application"),
+	RULE_APP_UNIFICATION_FAILED ("unable apply theorem/rule to incompatible arguments"),
+	RULE_APP_CONCLUSION_OTHER ("claimed fact is not a consequence of applying rule/theorem to arguments.  SASyLF computes that the result should be "),
+	RULE_APP_PREMATURE_OUTPUT ("claimed fact is not justified by applying rule/theorem to arguments; was an output perhaps set prematurely?"),
+	RULE_APP_RESTRICT ("claimed fact is not justified by applying rule/theorem to arguments; it restricts "),
 	RULE_CASE_TOO_GENERAL ("The given pattern is overly general, should restrict "),
 	RULE_CASE_USES_OLD ("The given pattern uses variables already substituted"), // unused
 	BAD_SYNTAX_BINDING("Only variables are permitted inside '[]' in a syntax or judgment definition"),
@@ -181,6 +185,7 @@ public enum Errors {
 	SUBSTITUTION_NO_HOLE ("target of substitution does not have more assumptions than argument"),
 	SUBSTITUTION_CONSTRAIN ("substitution would constrain variables, including "),
 	SUBSTITUTION_FAILED ("context cannot be filled with given clause"),
+	SUBSTITUTION_OTHER ("claimed fact is not a consequence of applying substitution to arguments.  SASyLF computes that the result should be "),
 	WRONG_WEAKENING_ARGUMENTS ("expected 1 argument as a weakening justification: the stronger judgment being weakened"),
 	WEAKENING_SYNTAX ("do not weaken syntax using 'weakening'\nWeakening is implicit for syntax"),
 	BAD_WEAKENING("result cannot be produced by adding unused variable bindings"),
@@ -216,7 +221,7 @@ public enum Errors {
 	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"), // infeasible
 	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasable
 	NEVER_RIGID ("Using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
-	UNIFICATION_INCOMPLETE("Unification incomplete for case "),
+	CASE_UNIFICATION_INCOMPLETE("Unification incomplete for case "),
 	SOLVE_FAILED ("Unable to find proof"),
 	SOLVE_UNRELIABLE ("proof by solve is not reliable"), // Warning
 	DERIVATION_NAME_REUSED ("reusing derivation identifier"), // Warning

@@ -64,11 +64,13 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		try {
 			callSub = subject.unify(pattern);
 		} catch (UnificationIncomplete e) {
-			String extraInfo = "\n\tcouldn't unify " + e.term1 + " and " + e.term2;
-			ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "SASyLF ran into incompleteness of unification while checking this rule" + extraInfo, this,
+			TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation(),false);
+			String extraInfo = ": " + tp.toString(e.term1,false) + " =?= " + tp.toString(e.term2,false);
+			ErrorHandler.error(Errors.RULE_APP_UNIFICATION_INCOMPLETE, extraInfo, this,
 					"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
 			return; // tell Java we're gone.
 		} catch (UnificationFailed e1) {
+			TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation(),false);
 			Util.debug("failure checking ",subject," instanceof ",pattern,": ",e1);
 			// try to be more helpful
 			FreeVar concVar = FreeVar.fresh("conclusion", Term.wrapWithLambdas(addedContext,Constant.UNKNOWN_TYPE));
@@ -85,35 +87,23 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			List<Term> newArgs = new ArrayList<Term>(((Application)subject).getArguments());
 			newArgs.set(n, applied);
 			Term newSubject = Facade.App(((Application)subject).getFunction(),newArgs);
-			Term explanationTerm = null;
+			Errors errorType = Errors.RULE_APP_UNIFICATION_FAILED;
 			String explanationString = null;
+			String infoString = "SASyLF was unifying " + subject + " and " + pattern;
 			try {
 				Util.debug(newSubject,".unify(",pattern,")");
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
-				explanationTerm = learnAboutErrors.getSubstituted(concVar);
-				TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation());
+				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
 				explanationString = tp.toString(tp.asClause(explanationTerm));
+				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
-				// do nothing; can't give good error message
-			} catch (RuntimeException ex) {
-				System.err.println("Couldn't print term: " + explanationTerm);
-				ex.printStackTrace();
+				if (e2.term2 != null && e2.term2 != null) {
+					explanationString = ": " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
+				}
 			}
-			if (explanationTerm == null)
-				ErrorHandler.error(Errors.BAD_RULE_APPLICATION, getRuleName() + " cannot legally be applied to the arguments", this,
-						"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e1);
-			else if (explanationString == null) 
-				ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments", this,
-						"SASyLF computed that the result LF term should be " + explanationTerm);
-			else if (suspectOutputVarError == null)
-				ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments" +
-						"\nSASyLF computed that the result should be " + explanationString, this);
-			else 
-				ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "Claimed fact " + getElement() + " is not a consequence of applying " + getRuleName() + " to the arguments" +
-						"\nSASyLF computed that the result should be " + explanationString + 
-						"\nPerhaps these output variables were set prematurely: " + suspectOutputVarError, this);
-			return;
+			ErrorHandler.error(errorType, explanationString, this, infoString);
+			return; // for Java
 		}
 		// System.out.println("subject = " + subject + ", pattern = " + pattern + ", callSub = " + callSub + ", concFreeVars = " + conclusionFreeVars);
 
@@ -138,8 +128,14 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			Util.debug("\tctx.inputVars = ", ctx.inputVars);
 			Util.debug("\tctx.currentSub = ", ctx.currentSub);
 			Set<FreeVar> unavoided = callSub.selectUnavoidable(mustAvoid);
-			ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying rule " + getRuleName() + " to the argument (the rule restricts " + unavoided + ")", 
-					this, "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")");
+			Set<FreeVar> unavoidedOutput = new HashSet<>(unavoided);
+			unavoidedOutput.retainAll(ctx.outputVars);
+			final String extraInfo = "\t(could not remove variables "+unavoided+ " from sub " + callSub + ")";
+			if (!unavoidedOutput.isEmpty()) {
+				FreeVar out = unavoidedOutput.iterator().next();
+				ErrorHandler.error(Errors.RULE_APP_PREMATURE_OUTPUT, " " + out, this, extraInfo);
+			}
+			ErrorHandler.error(Errors.RULE_APP_RESTRICT, unavoided.toString(), this, extraInfo);
 		}  
 
 		if (contextCheckNeeded) {

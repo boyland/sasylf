@@ -241,7 +241,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 							newSet = e.getKey().caseAnalyze(ctx, targetTerm, targetElement, source);
 							continue;
 						}
-						ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, e.getKey().getName(), source, "SASyLF tried to unify " + ex.term1 + " and " + ex.term2);
+						ErrorHandler.error(Errors.CASE_UNIFICATION_INCOMPLETE, e.getKey().getName(), source, "SASyLF tried to unify " + ex.term1 + " and " + ex.term2);
 						continue;
 					} catch (UnificationFailed ex) {
 						Util.debug("case no longer feasible.");

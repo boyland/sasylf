@@ -69,8 +69,8 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		Util.debug("claimed = ", claimedResult);
 
 		if (!result.equals(claimedResult)) {
-			ErrorHandler.error(Errors.BAD_RULE_APPLICATION, "The claimed fact is not justified by applying substitution",this,
-					"  (got " + result + " instead)");
+			TermPrinter tp = new TermPrinter(ctx, arg0.getRoot(), getLocation(),false);
+			ErrorHandler.error(Errors.SUBSTITUTION_OTHER,tp.toString(result,true),this);
 		} 
 
 		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);

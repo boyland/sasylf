@@ -348,7 +348,7 @@ public class RuleCase extends Case {
 
 				break;
 			} catch (UnificationIncomplete e) {
-				ErrorHandler.error(Errors.UNIFICATION_INCOMPLETE, this,
+				ErrorHandler.error(Errors.CASE_UNIFICATION_INCOMPLETE, this,
 						"(was checking " + candidate + " instance of " + caseTerm + ",\n got exception " + e);      
 				return; // tell Java we're gone.
 

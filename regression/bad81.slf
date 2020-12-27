@@ -1,0 +1,106 @@
+// testing rule/theorem application errors
+package regression;
+
+terminals λ Bool value true if then else false
+
+syntax
+  t ::= x
+     | λ x:T . t[x]
+     | t t
+     | true
+     | false
+     | if t then t else t
+     
+  T ::= Bool
+     | T → T
+     
+  Γ ::= *
+     | Γ, x:T
+
+judgment value: t value
+
+  ------------------ val-fn
+  λ x:T . t[x] value
+  
+  ---------- val-true
+  true value
+  
+  ----------- val-false
+  false value
+  
+judgment evaluation: t → t
+
+   t1 → t1'
+   -------------- E-App1
+   t1 t2 → t1' t2
+   
+   t1 value
+   t2 → t2'
+   -------------- E-App2
+   t1 t2 → t1 t2'
+   
+   t2 value
+   ------------------------- E-AppAbs
+   (λ x:T . t[x]) t2 → t[t2]
+   
+   t0 → t0'
+   ---------------------------------------------- E-If
+   if t0 then t1 else t2 → if t0' then t1 else t2
+   
+   ---------------------------- E-IfTrue
+   if true then t1 else t2 → t1
+   
+   ----------------------------- E-IfFalse
+   if false then t1 else t2 → t2 
+   
+   
+judgment typing: Γ ⊢ t:T
+assumes Γ
+    
+    -------------- T-Var
+    Γ, x:T ⊢ x : T
+    
+    Γ, x:T ⊢ t[x] : T'
+    -------------------------- T-Abs
+    Γ ⊢ λ x:T . t[x] : T → T'
+    
+    Γ ⊢ t1 : T → T'
+    Γ ⊢ t2 : T
+    ---------------- T-App
+    Γ ⊢ t1 t2 : T'
+    
+    --------------- T-True
+    Γ ⊢ true : Bool
+    
+    ---------------- T-False
+    Γ ⊢ false : Bool
+    
+    Γ ⊢ t0 : Bool
+    Γ ⊢ t1 : T
+    Γ ⊢ t2 : T
+    ----------------------------- T-If
+    Γ ⊢ if t0 then t1 else t2 : T
+    
+lemma sometyped:
+    exists * ⊢ t : T
+    proof by rule T-True
+end lemma
+
+lemma testrule:
+    exists t value
+    _: true value by rule T-False //! wrong result type
+    _: * ⊢ true : Bool by rule T-False //! wrong result instance
+    _: * ⊢ true : Bool by rule T-Var //! cannot apply assumption rule
+    d0: *, x:Bool ⊢ x:Bool by rule T-Var
+    _: * ⊢ true : Bool by rule T-Abs on d0 //! wrong result
+    f0: *, x:Bool ⊢ true:Bool by rule T-True
+    _: * ⊢ true : Bool by rule T-Abs on f0 //! argument wrong too
+    d1: * ⊢ λ x:Bool . x : Bool → Bool by rule T-Abs on d0
+    _: * ⊢ true : Bool by rule T-If on d1 //! rule applied with too few arguments
+    _: * ⊢ true : Bool by rule T-App on d1, d1 //! arguments inconsistent
+    f1: * ⊢ false : Bool by rule T-False
+    _: * ⊢ true : Bool by rule T-App on d1, f1 //! conclusion cannot match
+    _: * ⊢ λ x:Bool . true : Bool → Bool by rule T-Abs on f1 //! wrong context too
+    _: * ⊢ t : T by lemma sometyped
+    proof by rule val-true //! t already set
+end lemma

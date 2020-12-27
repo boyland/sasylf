@@ -429,7 +429,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			Util.debug("found sub ", sub, " for case analyzing ", term, " with rule ", getName());
 		} catch (UnificationIncomplete e) {
 			Util.debug("unification incomplete on ", pattern, " and ", subject);
-			ErrorHandler.recoverableError(Errors.UNIFICATION_INCOMPLETE, source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
+			ErrorHandler.recoverableError(Errors.CASE_UNIFICATION_INCOMPLETE, source, "SASyLF tried to unify " + e.term1 + " and " + e.term2);
 		} catch (UnificationFailed e) {
 			Util.debug("failure: " + e.getMessage());
 			Util.debug("unification failed on ", pattern, " and ", subject);
