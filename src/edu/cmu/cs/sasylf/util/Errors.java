@@ -1,5 +1,17 @@
 package edu.cmu.cs.sasylf.util;
 
+/**
+ * This enumeration lists different kinds of errors and warnings that can be generated. 
+ * Each gives its locale-dependent message, which for consistency should not start with a 
+ * capitalized word, unless it is a proper name (e.g. "SASyLF").
+ * The error reporting system will add the string "warning:" for warnings;
+ * the message text should not include it.
+ * Errors without text should not be used.
+ * The first few errors are reserved for use by the parser;
+ * separating error messages helps idempotence and incrementality.
+ * Every error should normally have at least one "bad" test case that generates it.
+ * Exceptions to this rule should be documented.
+ */
 public enum Errors {
 	// The following errors are exclusively generated during parsing
 	PARSE_EXPECTED_LBRACE ("expected '{', not "),
@@ -19,9 +31,9 @@ public enum Errors {
 	ABSTRACT_NOT_PERMITTED_HERE ("'abstract' not allowed in main part of proof file"),
 	SYNTAX_DUPLICATE ("syntax nonterminal duplicate"),
 	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
-	RULE_NAME_EXPECTED ("Missing a rule name (must be on the same line as the ---)"),
+	RULE_NAME_EXPECTED ("missing a rule name (must be on the same line as the ---)"),
 	WRONG_END ("expected "),
-	PARSE_ERROR ("Parse error: "), // Place last for parser errors
+	PARSE_ERROR ("parse error: "), // Place last for parser errors
 	// The following errors are generated *after* parsing
 	MODULE_NOT_FOUND ("module not found: "),
 	MODULE_ILLFORMED ("module has errors: "),
@@ -30,21 +42,21 @@ public enum Errors {
 	MODULE_ABSTRACT ("modules with parameters cannot yet be used"),
 	QUAL_NOT_FOUND ("cannot find something with this name exported from the module"),
 	QUAL_NOT_AVAILABLE ("SASyLF does not know how to use qualification to access "),
-	ANDOR_AMBIGUOUS("Ambiguous use of 'and' and 'or'.  Use parentheses."),
-	ANDOR_CONTEXT("Cannot join judgments with different assumes: "),
-	ANDOR_NOSYNTAX("Cannot join syntax with and/or, only judgments"),
-	ANDOR_PREFIX("All joined clauses must share the same prefix in their assumptions"),
+	ANDOR_AMBIGUOUS("ambiguous use of 'and' and 'or'.  Use parentheses."),
+	ANDOR_CONTEXT("cannot join judgments with different assumes: "),
+	ANDOR_NOSYNTAX("cannot join syntax with and/or, only judgments"),
+	ANDOR_PREFIX("all joined clauses must share the same prefix in their assumptions"),
 	NOT_UNSUPPORTED("'not' judgments are not supported"),
-	NOT_ASSUMPTION("A 'not' judgment cannot have an assumption"),
-	CLAUSE_PARSE("Cannot parse any syntactic case or judgment"),
-	CLAUSE_AMBIGUOUS("Multiple syntactic case(s) or judgment(s)"),
+	NOT_ASSUMPTION("a 'not' judgment cannot have an assumption"),
+	CLAUSE_PARSE("cannot parse any syntactic case or judgment"),
+	CLAUSE_AMBIGUOUS("multiple syntactic case(s) or judgment(s)"),
 	CLAUSE_DEF_PAREN("judgment/syntax must not include parenthesized expressions"),
-	RENAME_MISMATCH("Renamed clause has different contents"),
-	RENAME_NO_RULES ("Renaming a judgment should not include renaming of rules"),
-	RENAME_ASSUME_MISMATCH ("Renamed judgment must have the same 'assumes' if any"),
-	ABSTRACT_REQUIRED("A required judgment without rules should be declared abstract"),
-	BAD_FILE_NAME_SUFFIX ("Proof file name must end in '.slf'"),
-	BAD_FILE_NAME("Proof file for module must be a legal identifier"),
+	RENAME_MISMATCH("renamed clause has different contents"),
+	RENAME_NO_RULES ("renaming a judgment should not include renaming of rules"),
+	RENAME_ASSUME_MISMATCH ("renamed judgment must have the same 'assumes' if any"),
+	ABSTRACT_REQUIRED("a required judgment without rules should be declared abstract"),
+	BAD_FILE_NAME_SUFFIX ("proof file name must end in '.slf'"),
+	BAD_FILE_NAME("proof file for module must be a legal identifier"),
 	WRONG_PACKAGE ("wrong package"),
 	WRONG_MODULE_NAME ("wrong module name"),
 	SYNTAX_TERMINAL("a syntax nonterminal should not also be declared as a terminal"),
@@ -64,7 +76,7 @@ public enum Errors {
 	THEOREM_KIND_MISSING ("missing keyword "),
 	THEOREM_ABSTRACT ("abstract theorem/lemma should not include proof"),
 	THEOREM_MULTIPLE_CONTEXT ("SASyLF cannot handle theorem/lemma with multiple contexts"),
-	FORALL_NOT_SYNTAX ("Could not find syntax nonterminal "),
+	FORALL_NOT_SYNTAX ("could not find syntax nonterminal "),
 	DUPLICATE_JUDGMENT("declaration uses name name as previous judgment"),
 	RULE_LIKE_REDECLARED ("declaration uses same name as previous rule/theorem"),
 	RULE_BAD  ("rule/theorem has a bad interface: "),
@@ -74,9 +86,9 @@ public enum Errors {
 	RULE_APP_CONCLUSION_OTHER ("claimed fact is not a consequence of applying rule/theorem to arguments.  SASyLF computes that the result should be "),
 	RULE_APP_PREMATURE_OUTPUT ("claimed fact is not justified by applying rule/theorem to arguments; was an output perhaps set prematurely?"),
 	RULE_APP_RESTRICT ("claimed fact is not justified by applying rule/theorem to arguments; it restricts "),
-	RULE_CASE_TOO_GENERAL ("The given pattern is overly general, should restrict "),
-	RULE_CASE_USES_OLD ("The given pattern uses variables already substituted"), // unused
-	BAD_SYNTAX_BINDING("Only variables are permitted inside '[]' in a syntax or judgment definition"),
+	RULE_CASE_TOO_GENERAL ("the given pattern is overly general, should restrict "),
+	RULE_CASE_USES_OLD ("the given pattern uses variables already substituted"), // unused
+	BAD_SYNTAX_BINDING("only variables are permitted inside '[]' in a syntax or judgment definition"),
 	TOO_MANY_VARIABLES ("only one variable per nonterminal is permitted"),
 	VARIABLE_HAS_NO_CONTEXT ("the variable for this nonterminal is never bound in a context"),
 	VARIABLE_HAS_MULTIPLE_CONTEXTS ("the variable for this nonterminal is illegaly bound in multiple contexts"),
@@ -85,7 +97,7 @@ public enum Errors {
 	INDUCTION_IMPLICIT ("implicit induction deprecated; please use explicit induction"), // warning
 	INDUCTION_MISSING ("'induction hypothesis' requires explicit proof by induction"),
 	INDUCTION_REPEAT ("can't nest induction analysis inside existing induction"),
-	INDUCTION_NESTED ("Induction can only be declared at top level of a proof."),
+	INDUCTION_NESTED ("induction can only be declared at top level of a proof."),
 	INDUCTION_PARSE ("SASyLF cannot understand this induction scheme"),
 	INDUCTION_EMPTY ("empty induction scheme encountered"),
 	INDUCTION_SHORT ("induction scheme cut short"),
@@ -95,8 +107,8 @@ public enum Errors {
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
 	DERIVATION_MISMATCH,
 	OTHER_CONTEXT_NEEDED ("requires a different context (perhaps using weakening or exchange): "),
-	OTHER_CONTEXT_JUSTIFIED ("Claimed result has the wrong context, expected "),
-	OTHER_JUSTIFIED   ("Claimed fact is not the one justified"),
+	OTHER_CONTEXT_JUSTIFIED ("claimed result has the wrong context, expected "),
+	OTHER_JUSTIFIED   ("claimed fact is not the one justified"),
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	RULE_PREMISE_MISMATCH ("rule/theorem expects type of premise #"),
 	RULE_CONCLUSION_MISMATCH ("rule/theorem can't produce any instance of the claimed judgment: "),
@@ -113,14 +125,14 @@ public enum Errors {
 	ILLEGAL_ASSUMES_CLAUSE ("assumed clause is not a context"),
 	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"),
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
-	ASSUMES_BRANCH("An assumption case must not have more than one nested list of assumptions"),
-	ASSUMES_MULTI_USE("Multiple uses of the context form not supported "),
+	ASSUMES_BRANCH("an assumption case must not have more than one nested list of assumptions"),
+	ASSUMES_MULTI_USE("multiple uses of the context form not supported "),
 	ASSUMES_MISSING_VAR ("assumptions without variables not supported"), // can't generate
-	ASSUMES_MULTI_VAR("Can't handle more than one variable in assumption rule"),
-	ASSUMES_CONTEXT_RESTRICT ("Assumption rule must use context form unchanged"),
-	ASSUMES_DUPLICATE("Assumption rule has duplicate use "),
-	ASSUMES_UNDEFINED("Assumption rule doesn't give a way to determine "),
-	ASSUMES_UNUSED("Assumption rule ignores element from context "), // Unused
+	ASSUMES_MULTI_VAR("can't handle more than one variable in assumption rule"),
+	ASSUMES_CONTEXT_RESTRICT ("assumption rule must use context form unchanged"),
+	ASSUMES_DUPLICATE("assumption rule has duplicate use "),
+	ASSUMES_UNDEFINED("assumption rule doesn't give a way to determine "),
+	ASSUMES_UNUSED("assumption rule ignores element from context "), // Unused
 	SYNTAX_CASE_FOR_DERIVATION ("when case-analyzing a derivation, must use rule cases, not syntax cases"),
 	SYNTAX_CASE_FOR_DISJUNCTION ("when case-analyzing a disjunction, must use 'or' cases, not syntax cases"),
 	UNBOUND_VAR_CASE,
@@ -198,7 +210,7 @@ public enum Errors {
 	INVERSION_SYNTAX_NO_RULE("inversion on syntax doesn't use rules; just write 'inversion on'"),
 	INVERSION_SYNTAX_NO_RESULTS("cannot prove anything with inversion on syntax; just write 'use inversion on'"),
 	INVERSION_BAD_RULE ("rule cannot be used for inversion until it is fixed"),
-	INVERSION_EMPTY ("The subject of inversion is actually not possible.  Suggest using 'by contradiction on' instead of inversion."),
+	INVERSION_EMPTY ("the subject of inversion is actually not possible.  Suggest using 'by contradiction on' instead of inversion."),
 	INVERSION_RESULT_SIZE ("inversion results in a different number of premises: "),
 	INVERSION_NOT_FOUND("did not find claimed judgment in inversion of rule"),
 	WEIRD_ADAPT_ERROR("internal error in adapt"),
@@ -209,8 +221,8 @@ public enum Errors {
 	ASSUMED_ASSUMES("an 'assumes' clause should have been given for this theorem/lemma"),
 	OR_SYNTAX("can only 'or' with judgments, not syntax"),
 	OR_CASE_NOT_APPLICABLE("derivation under consideration is not a disjunction"),
-	RENAME_JUDGMENT ("Cannot rename as a judgment "),
-	RENAME_SYNTAX ("Cannot rename as syntax "),
+	RENAME_JUDGMENT ("cannot rename as a judgment "),
+	RENAME_SYNTAX ("cannot rename as syntax "),
 	SUGAR_UNKNOWN ("SASyLF cannot figure out what syntax is being defined"),
 	SUGAR_JUDGMENT ("sugar can only be used for syntax, not judgments"),
 	SUGAR_MULTIPLE_USES ("a nonterminal occurs more than once"),
@@ -220,9 +232,9 @@ public enum Errors {
 	SUGAR_UNUSED ("no indication what to do with nonterminal"),
 	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"), // infeasible
 	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasable
-	NEVER_RIGID ("Using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
+	NEVER_RIGID ("using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
 	CASE_UNIFICATION_INCOMPLETE("Unification incomplete for case "),
-	SOLVE_FAILED ("Unable to find proof"),
+	SOLVE_FAILED ("unable to find proof"),
 	SOLVE_UNRELIABLE ("proof by solve is not reliable"), // Warning
 	DERIVATION_NAME_REUSED ("reusing derivation identifier"), // Warning
 	WHERE_ASSUMPTION ("SASyLF cannot (yet) produce or verify where clauses for this case"),
@@ -242,7 +254,8 @@ public enum Errors {
 	WHERE_NEW_OVERUSED ("new variable should only be used once: "),
 	WHERE_REBOUND ("variable bound more than once in where clause"),
 	WHERE_OCCUR ("replacement for meta-variable should not include itself"),
-	INTERNAL_ERROR("SASyLF Internal Error")
+	INTERNAL_ERROR("SASyLF Internal Error"), // no known instances
+	UNSPECIFIED, // do not use
 	;
 
 	Errors() {

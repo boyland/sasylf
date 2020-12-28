@@ -7,11 +7,26 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 
 
 public class ErrorHandler {
+	/**
+	 * Report an error or warning.
+	 * <p>
+	 * In the description of the parameters, "default" means the value to be used
+	 * if "null" is passed for the parameter.
+	 * @param errorType error type, defaults to UNSPECIFIED
+	 * @param msg extra information associated with error, defaults to "".
+	 * This text should be language independent to aid (future) internationalization.
+	 * Usually it is redundant to include text from within the span covered by this report.
+	 * @param loc location of the error, defaults to the last span.
+	 * The default should be avoided, since very few places in the code base update the last span.
+	 * @param debugInfo extra information used for --LF flag, also used for quick fixes, optionally null.
+	 * This information need not be language independent.
+	 * @param isError whether an error (or just a warning)
+	 * @param throwable whether this method should throw a SASyLF error after reporting the error
+	 */
 	public static void report(Errors errorType, String msg, Span loc, String debugInfo, boolean isError, boolean throwable) {
-		if (msg == null)
-			msg = "";
-		if (loc == null)
-			loc = lastSpan.get();
+		if (errorType == null) errorType = Errors.UNSPECIFIED;
+		if (msg == null) msg = "";
+		if (loc == null) loc = lastSpan.get();
 		ErrorReport rep = new ErrorReport(errorType, msg, loc, debugInfo, isError);
 		report(rep);
 		if (throwable) {
