@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: SASyLF Editor
 Bundle-SymbolicName: org.sasylf;singleton:=true
-Bundle-Version: 1.5.0
+Bundle-Version: 1.5.1
 Bundle-Activator: org.sasylf.Activator
 Bundle-Vendor: sasylf.org
 Main-Class: edu.cmu.cs.sasylf.Main
@@ -109,3 +109,4 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.swt
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: org.sasylf
