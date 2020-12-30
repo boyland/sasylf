@@ -67,17 +67,17 @@ public class UnitTests extends SimpleTestSuite {
 		testEquals(l7,l9,true);  testMatch(l7,l9,true);
 		testEquals(l8,l9,false); testMatch(l8,l9,true);
 		
-		InductionSchema u0 = Unordered.create(s0);
-		InductionSchema u1 = Unordered.create(s1);
+		InductionSchema u0 = Unordered.create(null, s0);
+		InductionSchema u1 = Unordered.create(null, s1);
 		testEquals(s0,u0,true);  testMatch(s0,u0,true);
 		testEquals(u0,u1,false); testMatch(u0,u1,true);
 		testEquals(u1,s1,true);  testMatch(u1,s1,true);
 		
-		InductionSchema u2 = Unordered.create(s0,s1);
-		InductionSchema u3 = Unordered.create(s1,s2);
-		InductionSchema u4 = Unordered.create(s1,s1);
-		InductionSchema u5 = Unordered.create(s2,s1);
-		InductionSchema u6 = Unordered.create(s0,s1);
+		InductionSchema u2 = Unordered.create(null,s0, s1);
+		InductionSchema u3 = Unordered.create(null,s1, s2);
+		InductionSchema u4 = Unordered.create(null,s1, s1);
+		InductionSchema u5 = Unordered.create(null,s2, s1);
+		InductionSchema u6 = Unordered.create(null,s0, s1);
 		
 		testEquals(l2,u2,false); testMatch(l2,u2,false);
 		testEquals(l3,u3,false); testMatch(l3,u3,false);
@@ -101,12 +101,12 @@ public class UnitTests extends SimpleTestSuite {
 		testEquals(u5,u5,true);  testMatch(u5,u5,true);
 		testEquals(u5,u6,false); testMatch(u5,u6,true);
 
-		InductionSchema u7 = Unordered.create(s0,s1,s2);
-		InductionSchema u8 = Unordered.create(s1,s1,s1);
+		InductionSchema u7 = Unordered.create(null,s0,s1, s2);
+		InductionSchema u8 = Unordered.create(null,s1,s1, s1);
 		InductionSchema u9 = Unordered.create(
+				null,
 				new StructuralInduction(2),
-				new StructuralInduction(1),
-				new StructuralInduction(0));
+				new StructuralInduction(1), new StructuralInduction(0));
 		
 		testEquals(u7,u2,false); testMatch(u7,u2,false);
 		testEquals(u3,u7,false); testMatch(u3,u7,false);

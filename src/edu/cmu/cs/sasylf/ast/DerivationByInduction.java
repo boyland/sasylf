@@ -26,7 +26,7 @@ public class DerivationByInduction extends DerivationByAnalysis {
 		if (!ctx.currentTheorem.getDerivations().contains(this)) {
 			ErrorHandler.error(Errors.INDUCTION_NESTED, this);
 		}
-		InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), this);
+		InductionSchema is = InductionSchema.create(ctx.currentTheorem, getArgStrings(), true);
 
 		if (is != null && !ctx.currentTheorem.getInductionSchema().equals(is)) {
 			ErrorHandler.error(Errors.INDUCTION_REPEAT,this,"induction\ncase analysis");	    

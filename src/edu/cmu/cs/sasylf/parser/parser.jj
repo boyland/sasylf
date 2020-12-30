@@ -180,6 +180,8 @@ public class DSLToolkitParser {
 			|| getToken(1).kind == PLUS
 			|| getToken(1).kind == TIMES
 			|| getToken(1).kind == COMMA
+			|| getToken(1).kind == LBRACE
+			|| getToken(1).kind == RBRACE
 			|| getToken(1).kind == CASE
 			|| getToken(1).kind == END
 			|| getToken(1).kind == CONTRADICTION
@@ -285,7 +287,7 @@ public class DSLToolkitParser {
 		return getTerminal(t, t.image);
     }
     Terminal getTerminal(Token t, String s) {
-		Terminal tm = new Terminal(s, new Location(t));
+		Terminal tm = new Terminal(s, makeSpan(t));
 		return tm;
     }
     
@@ -1100,6 +1102,8 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACK: "[" >
 | < RBRACK: "]" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
 | < SEMICOLON: ";" >
 | < MINUS: "-" >
 | < PLUS: "+" >
@@ -1131,8 +1135,6 @@ TOKEN :
          "*",
          "+",
          "=",
-         "{",
-         "}",
          "|",
          "<",
          ">",
@@ -1622,6 +1624,8 @@ Token Operator() :
 		| t=<PIPE>
 		| t=<EQUAL>
 		| t=<DOT>
+		| t=<LBRACE>
+		| t=<RBRACE>
 	) { return t; }
 }
 
@@ -1778,9 +1782,9 @@ Element Term() :
   LOOKAHEAD(2) e=Binding() { return e; }
   | t=<IDENTIFIER> { return getNonTerminal(t); }
   | t=<STRING_LITERAL> { Terminal tm = getTerminal(t, t.image.substring(1, t.image.length()-1)); tm.setMustQuote(); return tm; }
-  | t=Operator() { return getTerminal(t, t.image); }
-  | t=Keyword() { return getTerminal(t, t.image); }
-  | t=<INTEGER_LITERAL> { return getTerminal(t, t.image); }
+  | t=Operator() { return getTerminal(t); }
+  | t=Keyword() { return getTerminal(t); }
+  | t=<INTEGER_LITERAL> { return getTerminal(t); }
 }
 
 Binding Binding() :
@@ -1887,7 +1891,7 @@ Clause Expr() :
 }
 
 Clause SimpleExpr() :
-{ Element e; Clause c = null, a; Token t, t2; }
+{ Element e; Clause c = null, a, c2; Token t, t2; }
 {
   (
     LOOKAHEAD(<IDENTIFIER>) e=Term()
@@ -1905,24 +1909,25 @@ Clause SimpleExpr() :
 	}
 	| t=<INTEGER_LITERAL>
 	{  
-		e = getTerminal(t, t.image);
+		e = getTerminal(t);
 		c = new Clause(e);
 		c.add(e); 
 	}
-	/* Deprecated unordered induction schema syntax */
-	| t=<OPERATOR>
-	  {
-	    if (!t.image.equals("{")) {
-	    	ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_LBRACE, "'" + t.image + "'", new Location(t));
-	    }
-	    c = new Clause(new Location(t)); }
-	  (LOOKAHEAD(<IDENTIFIER> | <COMMA> | <LPAREN>) 
-	   e=Term() { if (!Terminal.matches(e,",")) c.add(e); } ) * 
-	  t2=<OPERATOR>
+	| t=<LBRACE>
+	  { c = new Clause(new Location(t)); }
+	  (	    t=<IDENTIFIER> { c.add(getNonTerminal(t)); }
+	  | t=<COMMA> { } // not added (unordered)
+	  | t=<LPAREN> { c2 = new Clause(new Location(t)); }
+	    (
+	  	  LOOKAHEAD(<IDENTIFIER>|<LBRACE>)
+	  	  a=SimpleExpr() {  c2.add(a); }
+	    | t2=<COMMA> { c2.add(getTerminal(t2)); } // added (ordered)	  	| t2=<OPERATOR> { c2.add(getTerminal(t2)); } // needed for ">"
+	    )*
+	    t=<RPAREN> { c2.setEndLocation(new Location(t).add(1));
+	                 c.add(c2); }
+	  )*
+	  t2=<RBRACE>
 	{
-	  if (!t2.image.equals("}")) {
-	    	ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_RBRACE, "'" + t2.image + "'", new Location(t2));
-	  }
 	  c.setEndLocation(new Location(t2).add(1));
 	}
   )

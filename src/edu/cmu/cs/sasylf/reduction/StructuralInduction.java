@@ -5,6 +5,7 @@ import java.util.List;
 import edu.cmu.cs.sasylf.ast.Context;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.SyntaxAssumption;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.term.Term;
@@ -26,7 +27,8 @@ public class StructuralInduction extends InductionSchema {
 		argNum = a;
 	}
 
-	public static StructuralInduction create(Theorem thm, String name, Node errorPoint) {    
+	public static StructuralInduction create(Theorem thm, NonTerminal nt, boolean reportError) {   
+		String name = nt.getSymbol();
 		List<Fact> foralls = thm.getForalls();
 		for (int i=0; i < foralls.size(); ++i) {
 			Fact f = foralls.get(i);
@@ -34,8 +36,8 @@ public class StructuralInduction extends InductionSchema {
 				return new StructuralInduction(i);
 			}
 		}
-		if (errorPoint != null) {
-			ErrorHandler.recoverableError(Errors.INDUCTION_NOT_INPUT, "Induction item should be a theorem input",errorPoint);
+		if (reportError) {
+			ErrorHandler.recoverableError(Errors.INDUCTION_NOT_INPUT,nt);
 		}
 		return null;
 	}

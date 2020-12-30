@@ -81,29 +81,29 @@ public abstract class InductionSchema {
 	 * @param errorPoint point to report errors for, if not null
 	 * @return induction schema, or null
 	 */
-	public static InductionSchema create(Theorem thm, List<Clause> args, Node errorPoint) {
+	public static InductionSchema create(Theorem thm, List<Clause> args, boolean reportError) {
 		InductionSchema result = nullInduction;
 		for (Clause cl : args) {
-			InductionSchema is = create(thm,cl,errorPoint);
+			InductionSchema is = create(thm,cl,reportError);
 			if (is == null) return null;
 			result = LexicographicOrder.create(result,is);
 		}
 		return result;
 	}
 
-	public static InductionSchema create(Theorem thm, Element arg, Node errorPoint) {
+	public static InductionSchema create(Theorem thm, Element arg, boolean reportError) {
 		if (arg instanceof NonTerminal) {
-			return StructuralInduction.create(thm, ((NonTerminal)arg).getSymbol(), errorPoint);
+			return StructuralInduction.create(thm, (NonTerminal)arg, reportError);
 		} else if (arg instanceof AssumptionElement) {
-			return create(thm, ((AssumptionElement)arg).getBase(), errorPoint);
+			return create(thm, ((AssumptionElement)arg).getBase(), reportError);
 		} else if (arg instanceof Binding) {
-			return StructuralInduction.create(thm, ((Binding)arg).getNonTerminal().getSymbol(), errorPoint);
+			return StructuralInduction.create(thm, ((Binding)arg).getNonTerminal(), reportError);
 		} else if (arg instanceof Clause) {
 			Clause cl = (Clause)arg;
-			return parse(thm,cl.getElements(), errorPoint);
+			return parse(thm,cl, reportError);
 		}
-		if (errorPoint != null) {
-			ErrorHandler.recoverableError(Errors.INDUCTION_PARSE, ": " + arg, errorPoint);
+		if (reportError) {
+			ErrorHandler.recoverableError(Errors.INDUCTION_PARSE, arg);
 		}
 		return null;    
 	}
@@ -118,38 +118,39 @@ public abstract class InductionSchema {
 	 * </pre> 
 	 * @param thm context information, must not be null
 	 * @param parts elements of the clause
-	 * @param errorPoint place to note errors
+	 * @param reportError whether to report errors found (or just return null)
 	 * @return induction schema or null (if an error was reported)
 	 */
-	private static InductionSchema parse(Theorem thm, List<Element> parts, Node errorPoint) {
+	private static InductionSchema parse(Theorem thm, Clause clause, boolean reportError) {
+		List<Element> parts = clause.getElements();
 		if (parts.isEmpty()) {
-			if (errorPoint != null) {
-				ErrorHandler.recoverableError(Errors.INDUCTION_EMPTY, errorPoint);
+			if (reportError) {
+				ErrorHandler.recoverableError(Errors.INDUCTION_EMPTY, clause);
 			}
 			return null;
 		}
 		InductionSchema result = null;
-		InductionSchema factor = create(thm,parts.get(0),errorPoint);
+		InductionSchema factor = create(thm,parts.get(0),reportError);
 		int i = 1;
 		while (i < parts.size()) {
 			Element e = parts.get(i);
 			if (Terminal.matches(e, ",") || Terminal.matches(e, ">")) {
 				if (++i >= parts.size()) {
-					if (errorPoint != null) {
-						ErrorHandler.recoverableError(Errors.INDUCTION_SHORT, errorPoint);
+					if (reportError) {
+						ErrorHandler.recoverableError(Errors.INDUCTION_SHORT, clause);
 					}
 					return null;
 				}
-				factor = LexicographicOrder.create(factor,create(thm,parts.get(i),errorPoint));
+				factor = LexicographicOrder.create(factor,create(thm,parts.get(i),reportError));
 			} else {
 				if (result == null) result = factor;
-				else result = Unordered.create(result,factor);
-				factor = create(thm,e,errorPoint);
+				else result = Unordered.create(clause,result, factor);
+				factor = create(thm,e,reportError);
 			}
 			++i;
 		}
 		if (result == null) result = factor;
-		else result = Unordered.create(result,factor);
+		else result = Unordered.create(clause,result, factor);
 		return result;
 	}
 }

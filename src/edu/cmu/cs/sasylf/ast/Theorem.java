@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
-import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -135,18 +134,20 @@ public class Theorem extends RuleLike {
 			for (Derivation d : derivations) {
 				if (d instanceof DerivationByInduction) {
 					DerivationByInduction dbi = (DerivationByInduction)d;
-					InductionSchema is = InductionSchema.create(this, dbi.getArgStrings(), this);
+					InductionSchema is = InductionSchema.create(this, dbi.getArgStrings(), true);
 					if (is != null) {
 						inductionScheme = is;
 						// Inconsistency found later
 						break;
+					} else if (inductionScheme == null) {
+						inductionScheme = InductionSchema.nullInduction; // prevent cascade error
 					}
 				}
 			}
 			if (inductionScheme == null) {
 				if (this != firstInGroup || this.andTheorem != null) {
-					ErrorHandler.warning(Errors.MUTUAL_INDUCTION_NO_INDUCTION, this);
-					inductionScheme = StructuralInduction.create(this, foralls.get(0).getName(), this);
+					ErrorHandler.warning(Errors.INDUCTION_MUTUAL_MISSING, this);
+					inductionScheme = InductionSchema.create(this, foralls.get(0).getElement(), true);
 				} else { 
 					inductionScheme = InductionSchema.nullInduction;
 				}

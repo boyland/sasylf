@@ -39,18 +39,27 @@ public class Unordered extends InductionSchema {
 	/**
 	 * Return a new unordered induction of the parts.
 	 * If there is only part, it is returned rather than create an unordered list of one.
+	 * All parts must match each other.
+	 * @param errorPoint place to report non-self match
 	 * @param parts induction schemas to be used together.
 	 * @return induction schema that uses them together.
 	 */
-	public static InductionSchema create(InductionSchema... parts) {
+	public static InductionSchema create(Node errorPoint, InductionSchema... parts) {
 		if (parts.length == 1) return parts[0];
 		List<InductionSchema> schemas = new ArrayList<InductionSchema>();
 		for (InductionSchema is : parts) {
+			if (is == null) continue;
 			if (is instanceof Unordered) {
 				for (InductionSchema is2 : ((Unordered)is).schemas) {
+					for (InductionSchema s : schemas) {
+						if (!is2.matches(s, errorPoint, false)) return null;
+					}
 					schemas.add(is2);
 				}
 			} else {
+				for (InductionSchema s : schemas) {
+					if (!is.matches(s, errorPoint, false)) return null;
+				}
 				schemas.add(is);
 			}
 		}

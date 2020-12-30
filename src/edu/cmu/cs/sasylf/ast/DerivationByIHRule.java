@@ -7,7 +7,6 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.Reduction;
-import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -172,10 +171,13 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		InductionSchema mySchema = self.getInductionSchema();
 		InductionSchema yourSchema = other.getInductionSchema();
 		if (self == other && mySchema == InductionSchema.nullInduction) {
+			if (this instanceof DerivationByInductionHypothesis || self.getForalls().isEmpty()) 
+				ErrorHandler.error(Errors.INDUCTION_MISSING, this);
 			ErrorHandler.warning(Errors.INDUCTION_IMPLICIT, this);
-			mySchema = yourSchema = StructuralInduction.create(self, self.getForalls().get(0).getName(), this);
+			mySchema = yourSchema = InductionSchema.create(self, self.getForalls().get(0).getElement(), false);
+			Util.verify(mySchema != null, "first argument cannot be induction?");
 		}
-		if (mySchema.matches(yourSchema, this, false)) {
+		if (mySchema.matches(yourSchema, this, false)) { // XXX: why give error (again?)
 			Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
 			switch (r) {
 			case NONE: break; // error already printed
@@ -183,7 +185,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			case EQUAL: // maybe problem
 				if (self.getGroupIndex() <= other.getGroupIndex()) {
 					if (self != other) {
-						ErrorHandler.error(Errors.MUTUAL_NOT_EARLIER, this);
+						ErrorHandler.error(Errors.INDUCTION_NOT_EARLIER, this);
 					} else {
 						ErrorHandler.error(Errors.NOT_SUBDERIVATION, " " + mySchema + " is unchanged", this);
 					}

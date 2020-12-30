@@ -1,0 +1,252 @@
+// induction errors
+package regression;
+
+terminals S
+
+syntax
+  n ::= 0 | S n
+  
+judgment equality: n = n
+
+  ----- nat-eq
+  n = n
+  
+judgment plus: n + n = n
+
+  --------- plus-z
+  0 + n = n
+  
+  n1 + n2 = n3
+  ---------------- plus-s
+  S n1 + n2 = S n3
+  
+judgment even: n%2 = 0
+
+  --------- Even-Zero
+  0 % 2 = 0
+  
+  n % 2 = 1
+  ------------- Even-More
+  (S n) % 2 = 0
+  
+judgment odd: n%2 = 1
+
+  n % 2 = 0
+  ------------- Odd
+  (S n) % 2 = 1
+  
+
+lemma either-even-or-odd:
+    forall n
+    exists n % 2 = 0 or n % 2 = 1
+    proof by case analysis on n:
+        case 0 is
+            _: 0 % 2 = 0 by rule Even-Zero
+        end case
+        case S n' is
+            ch: n' % 2 = 0 or n' % 2 = 1 by lemma either-even-or-odd on n' //! should be explicit
+            proof by case analysis on ch:
+                case or e': n' % 2 = 0 is
+                    _: n % 2 = 1 by rule Odd on e'
+                end case
+
+                case or o': n' % 2 = 1 is
+                    _: n % 2 = 0 by rule Even-More on o'
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+lemma plus-succ-right:
+    forall d: n1 + n2 = n3
+    exists n1 + S n2 = S n3
+    proof by case analysis on d:
+        case rule
+            --------------- plus-z
+            _: 0 + n3 = n3
+            where n1 := 0 and n2 := n3
+        is
+            proof by rule plus-z
+        end case
+
+        case rule
+            d': n1' + n2 = n3'
+            ---------------------- plus-s
+            _: (S n1') + n2 = (S n3')
+            where n1 := S n1' and n3 := S n3'
+        is
+            d1: n1' + S n2 = S n3' by induction hypothesis on d' //! need explicit
+            proof by rule plus-s on d1
+        end case
+
+    end case analysis
+end lemma
+
+lemma plus-succ-right2:
+    forall n1
+    forall d: n1 + n2 = n3
+    exists n1 + S n2 = S n3
+    proof by case analysis on d:
+        case rule
+            --------------- plus-z
+            _: 0 + n3 = n3
+            where n1 := 0 and n2 := n3
+        is
+            proof by rule plus-z
+        end case
+
+        case rule
+            d': n1' + n2 = n3'
+            ---------------------- plus-s
+            _: (S n1') + n2 = (S n3')
+            where n1 := S n1' and n3 := S n3'
+        is
+            d': n1 + S n2 = S n3 by induction hypothesis on n1, d // internal error happens if induction accepted
+        end case
+
+    end case analysis
+    use induction on {(d,n1), n1} //! bad unordered induction
+end lemma
+
+lemma plus-succ-right3:
+    forall n1
+    forall d: n1 + n2 = n3
+    exists n1 + S n2 = S n3
+    use induction on {n1, d}
+    proof by case analysis on d:
+        case rule
+            --------------- plus-z
+            _: 0 + n3 = n3
+            where n1 := 0 and n2 := n3
+        is
+            proof by rule plus-z
+        end case
+
+        case rule
+            d': n1' + n2 = n3'
+            ---------------------- plus-s
+            _: (S n1') + n2 = (S n3')
+            where n1 := S n1' and n3 := S n3'
+        is
+            d'': 0 + n2 = n2 by rule plus-z
+            s2: 0 + S n2 = S n2 by induction hypothesis on (0), d'' //! can't permute
+            d1: n1' + S n2 = S n3' by induction hypothesis on n1', d'
+            proof by rule plus-s on d1
+        end case
+
+    end case analysis
+end lemma
+
+lemma nonsense:
+    forall n
+    exists n + n = n
+    use induction on (+) //! can't parse
+    proof by unproved
+end lemma
+
+lemma nonsense2:
+    forall n
+    exists n + n = n
+    use induction on {,} //! empty
+    proof by unproved
+end lemma
+
+lemma nonsense3:
+    forall n
+    exists n + n = n
+    use induction on {n, (n>)} //! cut short
+    proof by unproved
+end lemma
+
+lemma noargs:
+    exists n + S 0 = 0
+    proof by induction hypothesis //! on what?
+end lemma
+
+lemma even-implies-double:
+    forall d: n % 2 = 0
+    exists n' + n' = n
+    use induction on d, n //! n is not a lemma argument
+    proof by unproved
+end lemma
+and
+lemma odd-implies-double-plus: //! doesn't match (cascade error)
+    forall d: n % 2 = 1
+    exists n' + n' = n1 and n = S n1
+    use induction on d
+    proof by unproved
+end lemma
+
+lemma even-implies-double2:
+    forall n
+    forall d: n % 2 = 0
+    exists n' + n' = n
+    use induction on d, n
+    proof by induction on d: //! duplicate induction
+        case rule
+            --------------- Even-Zero
+            _: 0 % 2 = 0
+            where n := 0
+        is
+            proof by rule plus-z
+        end case
+   end induction
+end lemma
+and
+lemma odd-implies-double-plus2: //! doesn't match
+    forall d: n % 2 = 1
+    exists n' + n' = n1 and n = S n1
+    use induction on d
+    proof by unproved
+end lemma
+
+lemma even-implies-double3:
+    forall n
+    forall d: n % 2 = 0
+    exists n' + n' = n
+    use induction on { d, n }
+    proof by case analysis on d:
+        case rule
+            --------------- Even-Zero
+            _: 0 % 2 = 0
+            where n := 0
+        is
+            proof by rule plus-z
+        end case
+
+        case rule
+            o: n0 % 2 = 1
+            ------------------- Even-More
+            _: (S n0) % 2 = 0
+            where n := S n0
+        is
+            p1: n1 + n1 = n0' and //! cascade error: bad interface
+            eq1: n0 = S n0' by lemma odd-implies-double-plus3 on n0, o
+            use inversion of rule nat-eq on eq1
+            where n0 := S n0'
+            p2: S n1 + n1 = n0 by rule plus-s on p1
+            proof by lemma plus-succ-right on p2
+        end case
+    end case analysis
+end lemma
+and
+lemma odd-implies-double-plus3: //! doesn't match
+    forall n
+    forall d: n % 2 = 1
+    exists n' + n' = n1 and n = S n1
+    use induction on d, n
+    proof by case analysis on d:
+        case rule
+            e: n0 % 2 = 0
+            ------------------- Odd
+            _: (S n0) % 2 = 1
+            where n := S n0
+        is
+            p: n' + n' = n0 by lemma even-implies-double3 on n0, e
+            eq: n = S n0 by rule nat-eq
+            proof by p, eq
+        end case
+
+    end case analysis
+end lemma
