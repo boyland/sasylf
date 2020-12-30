@@ -27,6 +27,13 @@ public class SugarClauseDef extends ClauseDef {
 	}
 
 	@Override
+	public void checkVarUse(boolean isContext) {
+		super.checkVarUse(isContext);
+		// for side-effect
+		asTerm();
+	}
+
+	@Override
 	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		Term body = definition.computeTerm(varBindings);
 		Constant cnst = (Constant)super.computeTerm(varBindings);
@@ -40,7 +47,7 @@ public class SugarClauseDef extends ClauseDef {
 			sub.add(new FreeVar(a.varName,a.varType), new BoundVar(n-i));
 		}
 		Term result = Term.wrapWithLambdas(wrappers, body.substitute(sub));
-		// System.out.println("term for sugar = " + result);
+		// System.out.println("term for sugar " + definition + " is " + result);
 		/* Already handled in Sugar
 		Set<FreeVar> unbound = result.getFreeVariables();
 		if (!unbound.isEmpty()) {

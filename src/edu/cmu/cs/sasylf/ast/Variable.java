@@ -7,6 +7,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -134,7 +135,7 @@ public class Variable extends Element {
 	}
 
 	@Override
-	public BoundVar computeTerm(List<Pair<String, Term>> varBindings) {
+	public Term computeTerm(List<Pair<String, Term>> varBindings) {
 		int index = -1;
 		for (int i = varBindings.size()-1; i >= 0; --i) {
 			if (varBindings.get(i).first.equals(symbol)) {
@@ -145,6 +146,7 @@ public class Variable extends Element {
 
 		if (index == -1) {
 			ErrorHandler.recoverableError(Errors.UNBOUND_VAR_USE, "variable " + symbol + " is not bound", this);
+			return new FreeVar("_"+symbol,type.typeTerm()).freshify();
 		}
 
 		return new BoundVar(varBindings.size()-index);

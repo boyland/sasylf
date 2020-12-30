@@ -56,6 +56,10 @@ syntax
   
   (t % t) := t t //! NT occurs twice in LHS
   
+  (@@@) := fn x => (x x') //! x' unbound
+  
+  (===) := fn x => (x x') //! x' unbound (but sugar unused)
+  
 judgment isvar : t:T in Gamma
 assumes Gamma
 
@@ -101,3 +105,7 @@ syntax
        
 judgment funny: ? T[ee] //! needs to be a variable
 
+lemma tickle :
+    exists *, x':A |- @@@ : A
+    proof by unproved //! expected (but internal error in some versions)
+end lemma
