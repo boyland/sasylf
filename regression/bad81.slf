@@ -1,5 +1,5 @@
 // testing rule/theorem application errors
-package regression;
+package wrong; // not marked with ! because regression tests system doesn't check
 
 terminals λ Bool value true if then else false
 
@@ -103,4 +103,41 @@ lemma testrule:
     _: * ⊢ λ x:Bool . true : Bool → Bool by rule T-Abs on f1 //! wrong context too
     _: * ⊢ t : T by lemma sometyped
     proof by rule val-true //! t already set
+end lemma
+
+lemma cant:
+    forall v: t value
+    forall d: * ⊢ t : Bool → Bool
+    exists t t → t t
+    vho: (λ x:Bool . (x x)) value by rule val-fn
+    e: (λ x:Bool . (x x)) (λ x:Bool . (x x)) → (λ x:Bool . (x x)) (λ x:Bool . (x x)) by rule E-AppAbs on vho
+    proof by case analysis on v:
+        case rule
+            ------------------------ val-fn
+            _: (λ x : T . t1[x]) value
+            where t := λ x:T . t1[x]
+        is
+            et: t t → t1[t] by rule E-AppAbs on v
+            eu: t t → t2 t3 by et //! incomplete
+            proof by rule E-AppAbs on v //! incomplete
+            proof by et //! doesn't match
+        end case
+
+        case rule
+            ---------------- val-true
+            _: true value
+            where t := true
+        is
+            proof by contradiction on d
+        end case
+
+        case rule
+            ----------------- val-false
+            _: false value
+            where t := false
+        is
+            proof by contradiction on d
+        end case
+
+    end case analysis
 end lemma

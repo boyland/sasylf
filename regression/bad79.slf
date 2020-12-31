@@ -886,8 +886,7 @@ theorem test:
                     a': X' <: T4 ∈ (Γ', X' <: T4) by rule typevar
                     a3: T12[Unit] <: T4 ∈ Γ by a' 
                     s1c: Γ, X <: T0 ⊢ T1 <: T12[Unit] by s1a
-                    s1d: Γ, X <: T0 ⊢ T12[Unit] <: T2 by s1b
-                    proof by unproved //! not sure how to exploit
+                    s1d: Γ, X <: T0 ⊢ T12[Unit] <: T2 by s1b //! ended too early
                 end case
 
                 case rule

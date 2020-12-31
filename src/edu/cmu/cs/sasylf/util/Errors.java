@@ -55,10 +55,10 @@ public enum Errors {
 	RENAME_NO_RULES ("renaming a judgment should not include renaming of rules"),
 	RENAME_ASSUME_MISMATCH ("renamed judgment must have the same 'assumes' if any"),
 	ABSTRACT_REQUIRED("a required judgment without rules should be declared abstract"),
-	BAD_FILE_NAME_SUFFIX ("proof file name must end in '.slf'"),
-	BAD_FILE_NAME("proof file for module must be a legal identifier"),
-	WRONG_PACKAGE ("wrong package"),
-	WRONG_MODULE_NAME ("wrong module name"),
+	BAD_FILE_NAME_SUFFIX ("proof file name must end in '.slf'"), // error not generated (message used in exception)
+	BAD_FILE_NAME("proof file for module must be a legal identifier"), // error not generated in test harness
+	WRONG_PACKAGE ("wrong package"), // error not generated in test harness
+	WRONG_MODULE_NAME ("wrong module name"), // error not generated in test harness
 	SYNTAX_TERMINAL("a syntax nonterminal should not also be declared as a terminal"),
 	SYNTAX_REDECLARED ("nonterminal already declared"),
 	SYNTAX_UNPRODUCTIVE ("this syntax is unproductive.  You need a production that can actually generate a string."),
@@ -107,7 +107,14 @@ public enum Errors {
 	INDUCTION_NOT_EARLIER ("if inductive argument is unchanged, the mutual induction must be to an earlier theorem"),
 	INDUCTION_NOT_INPUT ("induction item should be a theorem input"),
 	NOT_SUBDERIVATION		("argument to induction hypothesis must be a subderivation of theorem input"),
-	DERIVATION_MISMATCH,
+	DERIVATION_MISMATCH ("provided derivation doesn't match: "),
+	DERIVATION_MISMATCH_INCOMPLETE ("cannot verify provided derivation because of incomplete unification"),
+	DERIVATION_RESTRICTS ("provided derivation cannot justify result without restricting "),
+	DERIVATION_RESTRICTS_OUTPUT ("provided derivation cannot justify result without restricting variable which was fixed already "),
+	DERIVATION_OR ("provided derivation satisfies none of the options for the 'or' "),
+	DERIVATION_AND ("need to provide multiple derivations to satisfy 'and' "),
+	DERIVATION_AND_NEQ ("wrong number of derivations to satisfy 'and'"),
+	DERIVATION_NOT_AND ("provided multiple derivations, but claimed result is not an 'and' "),
 	OTHER_CONTEXT_NEEDED ("requires a different context (perhaps using weakening or exchange): "),
 	OTHER_CONTEXT_JUSTIFIED ("claimed result has the wrong context, expected "),
 	OTHER_JUSTIFIED   ("claimed fact is not the one justified"),
@@ -193,6 +200,8 @@ public enum Errors {
 	CASE_CONTEXT_MAYBE_KNOWN ("Perhaps should have used existing context"), // Warning
 	CONTEXT_DISCARDED ("context discarded"),
 	CONTEXT_DISCARDED_APPL ("passing argument implicitly discards its context "),
+	CONTEXT_INTRODUCED ("new root context should not be introduced by "),
+	CONTEXT_CHANGED ("root context should not be changed by "),
 	WRONG_SUBSTITUTION_ARGUMENTS ("expected 2 arguments to a substitution justification: the judgment being substituted, and the judgment being substituted into"),
 	SUBSTITUTION_ARGUMENT ("argument of substitution must be a judgment instance "),
 	SUBSTITUTION_NO_PREFIX ("context of first argument to substitution must have as prefix that of second"),

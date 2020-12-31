@@ -184,6 +184,11 @@ lemma test-subst:
     d6: Γ, X <: Top ⊢ t[unit][X] : T[X] by substitution on d, u2 //! wrong context
     u3: Γ, X <: Top ⊢ unit : Top by weakening on u2
     d7: Γ, X <: Top ⊢ t[unit][X] : T[X] by substitution on d, u3 //! cannot prove unit : X 
+    u4: * ⊢ unit : Unit by rule T-Unit
+    u5: *, x:Unit ⊢ x : Unit by rule T-Var
+    up2:*, x:Unit ⊢ Unit <: Top by rule S-Top
+    u6: *, x:Unit ⊢ x : Top by rule T-Sub on u5, up2
+    d8: Γ ⊢ unit : Top by substitution on u6, u4 //! introducing Γ
     proof by rule nonvar
 end lemma
 

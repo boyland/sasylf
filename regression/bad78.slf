@@ -1,4 +1,4 @@
-// testing assumptions
+// testing assumptions and and/or
 package regression;
 
 terminals unit Unit All lambda fold unfold Rec in let
@@ -144,4 +144,35 @@ lemma andprefix:
     u: * |- unit : Unit by rule T-Unit
     proof by d,u
 end lemma
+
+lemma orresult:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists t:T in Gamma or unit:Unit in Gamma
+    u: * |- unit : Unit by rule T-Unit
+    proof by u //! none match
+end lemma
     
+lemma useor:
+    assumes Gamma
+    forall d:Gamma |- t : T
+    exists t:T in Gamma
+    ch: t:T in Gamma or unit:Unit in Gamma by lemma orresult on d
+    proof by ch //! squeeze one out
+end lemma
+
+lemma andresult:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists t:T in Gamma and Gamma |- t t : T
+    proof by d //! too feq
+    proof by d,d,d //! too many
+end lemma
+
+lemma normalresult:
+    assumes Gamma
+    forall d: Gamma |- t : T
+    exists Gamma |- t t : T -> T
+    u: Gamma |- unit : Unit by rule T-Unit
+    proof by d, u //! unexpected multiple clauses
+end lemma

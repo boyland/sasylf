@@ -73,8 +73,6 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 			ErrorHandler.error(Errors.SUBSTITUTION_OTHER,tp.toString(result,true),this);
 		} 
 
-		checkRootMatch(ctx,getArgs().get(0).getElement(),this.getElement(),this);
-
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(getArgs().get(0))) {
 			// Must require that substitution does not include course type!

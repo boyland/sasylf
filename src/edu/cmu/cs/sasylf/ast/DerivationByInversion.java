@@ -204,7 +204,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 					Term piece = pieces.get(i).substitute(ctx.currentSub);
 					// ctx sub changes as a result of each checkMatch,
 					// in the wrong way since we are applying it in the "opposite" way
-					if (!Derivation.checkMatch(cu, ctx, mt, piece, null)) {
+					if (!Derivation.checkMatch(null, ctx, mt, piece, null)) {
 						String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
 						String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
 						ErrorHandler.error(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);

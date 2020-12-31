@@ -250,3 +250,22 @@ lemma odd-implies-double-plus3: //! doesn't match
 
     end case analysis
 end lemma
+
+lemma plus-total:
+    forall n1
+    forall n2
+    exists n1 + n2 = n3
+    proof by induction on n1:
+        case 0 is
+            proof by rule plus-z
+        end case
+
+        case S n1' is
+            proof by unproved //! expected warning
+            p1: n1' + n2 = n3' by induction hypothesis on n1', n2
+            p2: n1 + n2 = S n3' by rule plus-s on p1 // premature setting of n3
+            proof by p2 //! n3 cannot be set again
+        end case
+
+    end induction
+end lemma
