@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +22,7 @@ import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Report;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
@@ -35,12 +38,32 @@ public class ErrorCoverage {
 		Util.PRINT_ERRORS = false;
 		Util.PRINT_SOLVE = false;
 		
+		boolean showSource = false; // option
+		Set<Errors> interestingErrors = new HashSet<>();
+		// hese should not be happening
+		interestingErrors.add(Errors.INTERNAL_ERROR);
+		interestingErrors.add(Errors.UNSPECIFIED);
+		// command line can set other interesting errors
+	
 		BitSet markedLines = new BitSet();
 		DSLToolkitParser.addListener((t,f) -> { if (t.image.startsWith("//!")) markedLines.set(t.beginLine); } ); 
 		
 		Map<Errors,List<String>> index = new HashMap<>();
 		Set<Errors> encountered = index.keySet();
 		for (String s : args) {
+			if (s.startsWith("--")) {
+				if (s.equals("--showSource")) showSource = true;
+				else usage();
+				continue;
+			} else if (!s.endsWith(".slf")) {
+				try {
+					Errors e = Errors.valueOf(s);
+					interestingErrors.add(e);
+				} catch (IllegalArgumentException ex) {
+					usage();
+				}
+				continue;
+			}
 			File f = new File(s);
 			CompUnit cu = null;
 			try (Reader r = new FileReader(f)) {
@@ -59,6 +82,7 @@ public class ErrorCoverage {
 			int parseReports = (cu == null) ? reports.size() : cu.getParseReports();
 			BitSet errorLines = new BitSet();
 			String shortName = f.getName();
+			boolean printedName = false;
 			int reportIndex = 0;
 			// System.out.println("Reports " + parseReports + " " + shortName);
 			for (Report r : reports) {
@@ -76,12 +100,26 @@ public class ErrorCoverage {
 							System.err.println("Parse-type error generated after parsing: " + r);
 						}
 					}
-					if (type == Errors.INTERNAL_ERROR || 
+					if (interestingErrors.contains(type) || 
 							(type != Errors.WHERE_MISSING && type != Errors.DERIVATION_UNPROVED &&
 								!markedLines.get(line))) {
-						System.err.println(r.formatMessage());
-						if (er.getExtraInformation() != null) {
-							System.err.println("  " + er.getExtraInformation());
+						if (showSource) {
+							if (!printedName) {
+								System.out.println("In " + s);
+								printedName = true;
+							}
+							Location loc = r.getSpan().getLocation();
+							System.out.format("%6d: %s\n", loc.getLine(),getLine(f,loc.getLine()));
+							int col = loc.getColumn()+8-1; // 6 digits plus colon plus space, minus caret
+							for (int i=0; i < col; ++i) {
+								System.out.print("-");
+							}
+							System.out.println("^- " + er.getMessage());
+						} else {
+							System.err.println(r.formatMessage());
+							if (er.getExtraInformation() != null) {
+								System.err.println("  " + er.getExtraInformation());
+							}
 						}
 					}
 					List<String> located = index.get(type);
@@ -119,5 +157,23 @@ public class ErrorCoverage {
 		}
 		System.out.println("Error types generated: " + encountered.size());
 		System.out.println("Error types never generated: " + (Errors.values().length - encountered.size()));
+	}
+	
+	private static void usage() {
+		System.out.println("usage: java " + ErrorCoverage.class.getName() + " [--showSource] ERRORNAME... filename.slf...");
+		System.exit(1);
+	}
+	
+	private static String getLine(File f, int line) {
+		// inefficient, but maybe not an issue
+		try (BufferedReader r = new BufferedReader(new FileReader(f))) {
+			while (line > 1) {
+				r.readLine();
+				--line;
+			}
+			return r.readLine();
+		} catch (IOException e) {
+			return "[" + f + ":" + line + "]";
+		}
 	}
 }
