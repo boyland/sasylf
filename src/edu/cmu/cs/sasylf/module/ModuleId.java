@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import edu.cmu.cs.sasylf.util.Errors;
+
 public final class ModuleId {
 	public final String[] packageName;
 	public final String moduleName;
@@ -40,7 +42,7 @@ public final class ModuleId {
 	 */
 	private static String checkFileExtension(String filename) {
 		if (!filename.endsWith(".slf")) {
-			throw new IllegalArgumentException("SASyLF files must end in '.slf'");
+			throw new IllegalArgumentException(Errors.BAD_FILE_NAME_SUFFIX.getText());
 		}
 		return filename.substring(0,filename.length()-4);
 	}
