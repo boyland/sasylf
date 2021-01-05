@@ -810,6 +810,29 @@ theorem plus-right-cancels:
   proof by theorem plus-left-cancels on d1', d2'
 end theorem
 
+lemma plus-right-identity:
+  forall d: n1 + n2 = n1
+  exists n2 = 0.
+  d': n1 + 0 = n1 by lemma plus-right-zero on n1
+  proof by theorem plus-left-cancels on d, d'
+end lemma
+
+lemma plus-right-zero-inversion:
+  forall p: n1 + 0 = n3
+  exists n1 = n3
+  pc: 0 + n1 = n3 by theorem plus-commutative on p
+  use inversion of rule plus-z on pc where n1 := n3
+  proof by rule eq
+end lemma
+  
+lemma plus-right-succ-inversion:
+  forall p: n1 + S n2 = S n3
+  exists n1 + n2 = n3.
+  pc: S n2 + n1 = S n3 by theorem plus-commutative on p
+  p': n2 + n1 = n3 by inversion on pc
+  proof by theorem plus-commutative on p'
+end lemma
+  
 theorem plus-assoc-commutative:
   forall p12: n1 + n2 = n3
   forall p34: n3 + n4 = n7
