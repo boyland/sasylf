@@ -110,7 +110,7 @@ public class ClauseDef extends Clause {
 					for (Element boundVarElem : defB.getElements()) {
 						int varIndex = getIndexOf((Variable)boundVarElem);
 						if (varIndex == -1)
-							ErrorHandler.error(Errors.UNBOUND_VAR_USE,"Could not find " + boundVarElem + " in clause " + this, this);
+							ErrorHandler.error(Errors.VAR_UNBOUND_USED,boundVarElem.toString(), this);
 						Variable localVar = (Variable) getElements().get(varIndex);
 						varTypes.add(localVar.getType().typeTerm());
 					}
@@ -195,7 +195,10 @@ public class ClauseDef extends Clause {
 			if (!topVars.containsAll(boundVars)) {
 				// a variable in a binding was not bound outside
 				boundVars.removeAll(topVars);
-				ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable(s) " + boundVars + " were used in a binding but never declared", this);
+				for (Variable v : boundVars) {
+					ErrorHandler.recoverableError(Errors.VAR_UNBOUND, v.toString(), v);
+				}
+				return;
 			} else {
 				// a variable declared at the top was not used in a binding
 				topVars.removeAll(boundVars);
@@ -205,8 +208,7 @@ public class ClauseDef extends Clause {
 						varType.setContext(this);
 					}
 				} else {
-					ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable(s) " + topVars + " were used at the top level of this syntax or judgment form.  SASyLF assumes you are declaring this variable, but the variable is not bound in any expression.", this);
-
+					ErrorHandler.error(Errors.VAR_UNBOUND_UNUSED, topVars + "", this);
 				}
 			}
 		}

@@ -126,7 +126,7 @@ public abstract class DerivationWithArgs extends Derivation {
 					}
 				}
 				if (e instanceof Variable) {
-					ErrorHandler.error(Errors.UNBOUND_VAR_USE, "Variable found outside of a binding context.", c);
+					ErrorHandler.error(Errors.VAR_UNBOUND, e.toString(), e);
 				}
 				if (!(e.getType() instanceof Syntax)) {
 					ErrorHandler.error(Errors.SYNTAX_EXPECTED, c);

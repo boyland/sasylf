@@ -145,7 +145,7 @@ public class Variable extends Element {
 		}
 
 		if (index == -1) {
-			ErrorHandler.recoverableError(Errors.UNBOUND_VAR_USE, "variable " + symbol + " is not bound", this);
+			ErrorHandler.recoverableError(Errors.VAR_UNBOUND, symbol, this);
 			return new FreeVar("_"+symbol,type.typeTerm()).freshify();
 		}
 
