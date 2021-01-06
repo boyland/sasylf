@@ -163,7 +163,7 @@ public abstract class DerivationWithArgs extends Derivation {
 					String s = e.toString();
 					f = ctx.derivationMap.get(s);
 					if (f == null && !ctx.isKnown(s)) {
-						ErrorHandler.error(Errors.DERIVATION_NOT_FOUND, "No derivation found for " + s, this);
+						ErrorHandler.error(Errors.DERIVATION_NOT_FOUND, s, this);
 					}
 				} else if (e instanceof Clause) {
 					f = parseAsDerivation(ctx,(Clause)e);

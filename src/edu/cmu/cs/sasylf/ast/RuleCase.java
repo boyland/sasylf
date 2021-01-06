@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import static edu.cmu.cs.sasylf.util.Errors.INVALID_CASE;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 import static edu.cmu.cs.sasylf.util.Util.verify;
 
@@ -363,13 +362,8 @@ public class RuleCase extends Case {
 
 		if (computedCaseTerm == null) {
 			// There must have been a candidate, but it didn't unify or wasn't an instance
-			String errorDescription = rule.getErrorDescription(candidate, ctx);
-			Util.debug("Expected case:\n", errorDescription);
-			Util.debug("Your case roundtripped:\n", rule.getErrorDescription(caseTerm, ctx));
-			Util.debug("SASyLF generated the LF term: ", candidate);
-			Util.debug("You proposed the LF term: ", caseTerm);
-			// TODO: find a case that causes this problem and come up with a better error
-			ErrorHandler.error(INVALID_CASE, "The rule case given is invalid; it is most likely too specific in some way and should be generalized", this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
+			// It is redundant because it matches the subject, but no case is needed for it.
+			ErrorHandler.error(Errors.CASE_REDUNDANT, this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 		}
 
 		//Util.debug("unifyingSub: ", unifyingSub);

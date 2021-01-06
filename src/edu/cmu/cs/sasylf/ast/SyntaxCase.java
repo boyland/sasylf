@@ -330,7 +330,8 @@ public class SyntaxCase extends Case {
 			Set<FreeVar> bound = sub.selectUnavoidable(ctx.inputVars);
 			Util.debug("unavoidable: ",bound);
 			if (!bound.isEmpty()) {
-				ErrorHandler.error(Errors.INVALID_CASE, "The case is too specialized, the context in the case binds " + bound.iterator().next(), this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_RESTRICTS, bound.toString(), this);
+				// ErrorHandler.error(Errors.INVALID_CASE, "The case is too specialized, the context in the case binds " + bound.iterator().next(), this);
 			}
 		} catch (UnificationFailed e) {
 			// problems will be caught later

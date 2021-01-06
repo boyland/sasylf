@@ -405,7 +405,7 @@ public class ClauseUse extends Clause {
 				 */
 				String derivSym = "INTERNAL_DERIV_" + v.getSymbol();
 				if (cons.assumptionRule == null) {
-					ErrorHandler.error(MISSING_ASSUMPTION_RULE, "There's no rule for using an assumption of the form " + cons, this);
+					ErrorHandler.error(MISSING_ASSUMPTION_RULE, "" + cons, this);
 				}
 				ClauseUse varRuleConc = (ClauseUse) cons.assumptionRule.getConclusion();
 				Term derivTerm = includeAssumptionTerm ? varRuleConc.getBaseTerm() : null;
