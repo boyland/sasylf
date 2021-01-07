@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 import static edu.cmu.cs.sasylf.util.Errors.JUDGMENT_EXPECTED;
-import static edu.cmu.cs.sasylf.util.Errors.WRONG_JUDGMENT;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -87,11 +86,12 @@ public class Rule extends RuleLike implements CanBeCase {
 			ErrorHandler.error(JUDGMENT_EXPECTED, computed);				
 		}
 		ClauseUse myConc = (ClauseUse) computed;
-		if (!(myConc.getConstructor().getType() instanceof Judgment))
+		final ClauseType myType = myConc.getConstructor().getType();
+		if (!(myType instanceof Judgment))
 			ErrorHandler.error(JUDGMENT_EXPECTED, myConc);
 
-		if (!(myConc.getConstructor().getType() == judge))
-			ErrorHandler.error(WRONG_JUDGMENT, "Rule conclusion was expected to be a " + judge.getName() + " judgment but instead had the form of the " + ((Judgment)myConc.getConstructor().getType()).getName() + " judgment", myConc);
+		if (!(myType == judge))
+			ErrorHandler.error(Errors.JUDGMENT_WRONG, ((Judgment)myType).getName(), myConc);
 
 		myConc.checkBindings(bindingTypes, this);
 		conclusion = myConc;

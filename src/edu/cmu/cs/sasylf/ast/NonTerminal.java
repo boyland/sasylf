@@ -150,7 +150,7 @@ public class NonTerminal extends Element {
 				e = new NotJudgment.NotTerminal(this);
 			} else {
 				e = new Terminal(nt.getSymbol(),nt.getLocation());
-				ErrorHandler.recoverableError(Errors.UNDECLARED_NONTERMINAL, "no nonterminal match for " + nt.getSymbol() + "; did you forget to declare " + nt.getSymbol() + " as a terminal?", nt);
+				ErrorHandler.recoverableError(Errors.SYNTAX_UNDECLARED, nt);
 			}
 		}
 		return e;

@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 
-import static edu.cmu.cs.sasylf.util.Errors.VAR_STRUCTURE_KNOWN;
 import static edu.cmu.cs.sasylf.util.Util.debug;
 
 import java.io.PrintWriter;
@@ -182,16 +181,15 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 				Set<Term> args = new HashSet<Term>();
 				for (Term t : app.getArguments()) {
 					if (!(t instanceof BoundVar) || !args.add(t)) {
-						ErrorHandler.error(VAR_STRUCTURE_KNOWN, "Case analysis is only permitted on pure binders, with unique variable arguments", source);
+						ErrorHandler.error(Errors.CASE_SUBJECT_BINDING_IMPURE, source);
 					}
 				}
 			}
 		}
 		if (fv == null) {
-			ErrorHandler.error(VAR_STRUCTURE_KNOWN, "The structure of " + targetName+" is already known",source,
-					"SASyLF computed it as " + targetTerm);
+			ErrorHandler.error(Errors.CASE_SUBJECT_KNOWN, source, "SASyLF computed it as " + targetTerm);
 		} else if (ctx.isRelaxationVar(fv)) {
-			ErrorHandler.error(VAR_STRUCTURE_KNOWN, "Case analysis cannot be done on this variable which is already known to be a bound variable", source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_RELAX, source);
 		} else if (!ctx.inputVars.contains(fv)) {
 			ErrorHandler.error(Errors.CASE_SUBJECT_UNKNOWN, ctx.inputVars.toString(), source);
 		}

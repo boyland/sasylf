@@ -67,6 +67,9 @@ unit //! syntax in premise
 ------------ E-Unit
 unit → unit
 
+--------------- E-Unit2
+Γ ⊢ unit : Unit //! wrong judgment
+
 judgment type: Γ ⊢ t : T
 assumes Γ
 
@@ -863,6 +866,10 @@ lemma syntaxtest2:
     do case analysis on t:
         case x assumes Γ', x':T' is //! should say x is out of scope!
             proof by val-unit
+        end case
+        case t1 t2 is
+            proof by case analysis on t: //! structure known
+            end case analysis
         end case
     end case analysis
     proof by rule val-unit
