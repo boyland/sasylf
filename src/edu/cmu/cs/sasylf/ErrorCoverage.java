@@ -39,6 +39,7 @@ public class ErrorCoverage {
 		Util.PRINT_SOLVE = false;
 		
 		boolean showSource = false; // option
+		boolean verbose = false; // option
 		Set<Errors> interestingErrors = new HashSet<>();
 		// hese should not be happening
 		interestingErrors.add(Errors.INTERNAL_ERROR);
@@ -53,6 +54,7 @@ public class ErrorCoverage {
 		for (String s : args) {
 			if (s.startsWith("--")) {
 				if (s.equals("--showSource")) showSource = true;
+				else if (s.equals("--verbose")) verbose = true;
 				else usage();
 				continue;
 			} else if (!s.endsWith(".slf")) {
@@ -73,6 +75,10 @@ public class ErrorCoverage {
 			} catch (IOException e) {
 				System.err.println("Error reading '" + s + "': " + e.getLocalizedMessage());
 			} catch (SASyLFError e) {
+				if (verbose) {
+					System.out.println("While checking " + s);
+					e.printStackTrace();
+				}
 				// already handled
 			} catch (RuntimeException e) {
 				System.out.println("While checking " + s);
@@ -84,7 +90,10 @@ public class ErrorCoverage {
 			String shortName = f.getName();
 			boolean printedName = false;
 			int reportIndex = 0;
-			// System.out.println("Reports " + parseReports + " " + shortName);
+			if (verbose) {
+				System.out.println(cu);
+				System.out.println("Reports for " + shortName + " : " + reports.size() + " of which " + parseReports + " are parse errors.");
+			}
 			for (Report r : reports) {
 				++reportIndex;
 				int line = r.getSpan().getLocation().getLine();
@@ -100,7 +109,7 @@ public class ErrorCoverage {
 							System.err.println("Parse-type error generated after parsing: " + r);
 						}
 					}
-					if (interestingErrors.contains(type) || 
+					if (verbose || interestingErrors.contains(type) || 
 							(type != Errors.WHERE_MISSING && type != Errors.DERIVATION_UNPROVED &&
 								!markedLines.get(line))) {
 						if (showSource) {
@@ -129,7 +138,7 @@ public class ErrorCoverage {
 					}
 					located.add(shortName);
 				}
-				r.getMessage();
+				r.getMessage(); // XXX: Why call this for side-effect only?
 			}
 			markedLines.andNot(errorLines);
 			// marked and not error -> missing errors
@@ -160,7 +169,7 @@ public class ErrorCoverage {
 	}
 	
 	private static void usage() {
-		System.out.println("usage: java " + ErrorCoverage.class.getName() + " [--showSource] ERRORNAME... filename.slf...");
+		System.out.println("usage: java " + ErrorCoverage.class.getName() + " [--showSource|--verbose] ERRORNAME... filename.slf...");
 		System.exit(1);
 	}
 	
