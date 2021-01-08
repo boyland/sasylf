@@ -30,6 +30,7 @@ public class TerminalsPart implements Part {
 		for (String t : declaredTerminals) {
 			out.print(t);
 		}
+		out.println();
 	}
 
 	@Override

@@ -45,7 +45,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 	@Override
 	protected void printExtra(PrintWriter out) {
-		out.append(':');
+		out.append('=');
 		source.prettyPrint(out);
 	}
 
