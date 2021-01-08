@@ -133,8 +133,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		case WRONG_MODULE_NAME:
 		case WRONG_PACKAGE: return true;
 		case CASE_REDUNDANT:
-		case CASE_UNNECESSARY:
-		case EXTRA_CASE: return true;
+		case CASE_UNNECESSARY: return true;
 		case PARTIAL_CASE_ANALYSIS: return true;
 		case OTHER_JUSTIFIED: return true;
 		}
@@ -357,7 +356,6 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 				proposals.add(new MyCompletionProposal(res,newText+doc.getLineDelimiter(line), doc.getLineOffset(line), 0, newText.length(), 
 						null, "insert '" + fixInfo + "'", null, null));
 				break;
-			case EXTRA_CASE:
 			case CASE_REDUNDANT:
 			case CASE_UNNECESSARY:
 				if (proofEditor != null && lineInfo != null) {
