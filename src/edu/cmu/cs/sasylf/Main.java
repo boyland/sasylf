@@ -168,9 +168,9 @@ public class Main {
 	/**
 	 * Analyze the SASyLF code in the reader and return a compilation unit
 	 * if no (unrecoverable) errors are found. 
-	 * @param mf may be4 null
+	 * @param mf may be null
 	 * @param filename must not be null
-	 * @param id may be null only if mf is null
+	 * @param id may be null if not interested in checking package/module-name errors
 	 * @param r contexts: must not be null
 	 * @throws SASyLFError is an error is found.
 	 */
