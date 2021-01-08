@@ -115,27 +115,27 @@ end theorem
 
 theorem n_plus_3_equals_s_s_s_n_autosolve : forall n exists (s (s (s (z)))) + n = (s (s (s n))).
 
-dsolve: (s (s (s (z)))) + n = (s (s (s n)))	by solve	// demonstrates use of the automatic solver
+dsolve: (s (s (s (z)))) + n = (s (s (s n)))	by solve	//! demonstrates use of the automatic solver
 														// WARNING: the automatic solver is VERY buggy right now
 end theorem
 
 theorem z_less_s_z_autosolve : exists z < s z.
 
-dsolve: z < s z	by solve
+dsolve: z < s z	by solve //! using solve
 
 end theorem
 
 
 theorem z_less_s_s_z_autosolve : exists z < s s z.
 
-dsolve: z < s s z	by solve
+dsolve: z < s s z	by solve //! using solve
 
 end theorem
 
 
 theorem n_less_s_s_n_autosolve : forall n exists n < s s n.
 
-dsolve: n < s s n	by solve
+dsolve: n < s s n	by solve //! using solve
 
 end theorem
 

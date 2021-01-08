@@ -181,9 +181,17 @@ public class Main {
 		try {
 			cu = DSLToolkitParser.read(filename,r);
 		} catch (ParseException e) {
-			ErrorHandler.error(Errors.PARSE_ERROR, e.getMessage(), new TokenSpan(e.currentToken.next));
+			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
+			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {
+				String expected = e.tokenImage[e.expectedTokenSequences[0][0]];
+				ErrorHandler.error(Errors.PARSE_EXPECTED, expected, errorSpan);
+			} 
+			// do not use "e.getMessage()": not localized
+			ErrorHandler.error(Errors.PARSE_ERROR, errorSpan);
+			// NOTREACHED
 		} catch (TokenMgrError e) {
-			ErrorHandler.error(Errors.LEXICAL_ERROR, e.getMessage(), ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
+			ErrorHandler.error(Errors.LEXICAL_ERROR, ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
+			// NOTREACHED
 		}
 		check(mf, id, cu);
 		return cu;

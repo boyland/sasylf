@@ -1,0 +1,16 @@
+// continue testing work of bad77 but this time with an explicit module name
+package regression;
+
+module bad83
+
+extends //! no extends
+  bad77 //! no provides
+
+terminals bad
+
+syntax
+  t ::= 0
+  
+  lemma := theorem //! nonsense
+
+

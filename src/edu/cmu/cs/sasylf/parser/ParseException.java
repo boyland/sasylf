@@ -45,22 +45,26 @@ public class ParseException extends Exception {
 	 * "expectedTokenSequences", and "tokenImage" do not contain
 	 * relevant information.  The JavaCC generated code does not use
 	 * these constructors.
+	 * <p>
+	 * JTB: On the contrary: the parameterless constructor is used
+	 * in many places in the generated parser.
 	 */
 
 	public ParseException() {
 		super();
 	}
 
-	/** Constructor with message. */
+	/** Constructor with message. Not used.
+	 * Commented out to prevent accidental use.
 	public ParseException(String message) {
 		super(message);
 	}
-
+	*/
 
 	/**
 	 * This is the last token that has been consumed successfully.  If
 	 * this object has been created due to a parse error, the token
-	 * followng this token will (therefore) be the first error token.
+	 * following this token will (therefore) be the first error token.
 	 */
 	public Token currentToken;
 

@@ -14,8 +14,6 @@ package edu.cmu.cs.sasylf.util;
  */
 public enum Errors {
 	// The following errors are exclusively generated during parsing
-	PARSE_EXPECTED_LBRACE ("expected '{', not "),
-	PARSE_EXPECTED_RBRACE ("expected '}', not "),
 	PARSE_EXPECTED_COLONEQ ("expected ':=', not "),
 	PARSE_EXPECTED_INVERSION_OF ("expected 'inversion of' not "),
 	PARSE_EXPECTED_INVERSION_ON ("inversion on what?"),
@@ -33,7 +31,8 @@ public enum Errors {
 	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
 	RULE_NAME_EXPECTED ("missing a rule name (must be on the same line as the ---)"),
 	WRONG_END ("expected "),
-	PARSE_ERROR ("parse error: "), // Place last for parser errors
+	PARSE_EXPECTED ("parse error: expected "),
+	PARSE_ERROR ("parse error"), // Place last for parser errors
 	// The following errors are generated *after* parsing
 	MODULE_NOT_FOUND ("module not found: "),
 	MODULE_ILLFORMED ("module has errors: "),

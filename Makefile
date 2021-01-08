@@ -62,7 +62,7 @@ regression-test:
 	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
 	  java -ea -cp ${SUBJECT} edu.cmu.cs.sasylf.Main $$f 2>&1 | sed "s#Internal SASyLF error.*#$$f:0:Internal error#" | grep '.*:[0-9]*:' | sed 's/: .*/:/' | sort -u -t ':' -n -k 2 > test.out; \
-	  grep -n '//!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
+	  grep -n '/[*/]!' /dev/null $$f | sed 's/:\([0-9]*\):.*/:\1:/' | diff - test.out; \
 	done
 	@echo "  Done."
 	@rm test.out

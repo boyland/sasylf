@@ -17,7 +17,7 @@ provides //! only in named modules
 terminals fn value
 
 syntax
-  t ::= x //! redeclared
+  t ::= x // redeclared
      | t t
      | fn x => t[x]
 
@@ -28,8 +28,9 @@ abstract syntax h //! not allowed in "provides" part
 
 abstract judgment val: t value  //! now allowed in "provides" part
 
-   ------------------- //! abstract judgment cannot have rule
-   fn x => t[x] value //! missing rule name
+   ------------------- V-Fn //! abstract
+   fn x => t[x] value
+   
    
 judgment eval: t -> t
 
@@ -39,12 +40,12 @@ judgment eval: t -> t
   
   t1 value
   t2 -> t2'
-  -------------- E-App2
+  /*! missing rule name */ --------------
   t1 t2 -> t1 t2'
   
   t2 value
   -------------------------- E-AppAbs
   (fn x => t[x]) t2 -> t[t2]
   
-// theorem ...
+theorem parse error //! unrecoverable parse error
 

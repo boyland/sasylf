@@ -204,6 +204,12 @@ public class DSLToolkitParser {
 		return tok == null || tok.kind != NL && tok.kind != SINGLE_LINE_COMMENT && notNL(tok.specialToken);
 	}
 
+	void afterBAR() {
+	  if (!notNL(getToken(1))) {
+	    ErrorHandler.recoverableError(Errors.RULE_NAME_EXPECTED,new Location(token));
+	  }
+	}
+
     boolean isTermNoBARNL() {
         boolean result = isTermNoBAR();
         return result && notNL(getToken(1).specialToken);
@@ -1548,7 +1554,7 @@ CompUnit CompilationUnit() :
    
   (t=<PROVIDES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError(Errors.PROVIDES_IN_MODULE,new Location(t)); }
-  | { if (moduleName != null) ErrorHandler.recoverableError(Errors.PROVIDES_NOT_IN_MODULE, new Location(t)); }
+  | { if (moduleName != null) ErrorHandler.recoverableError(Errors.PROVIDES_NOT_IN_MODULE, new Location(token)); }
   )
 
   (
@@ -1678,10 +1684,7 @@ StringSpan RuleName() :
     | t=<THEOREM>
     | t=Keyword()) { s.add(t.image); }
   )*
-  { if (!(notNL(t1.specialToken))) {
-  		ErrorHandler.recoverableError(Errors.RULE_NAME_EXPECTED, new Location(t1));
-  	}
-  	return s; }
+  { return s; }
 }
 
 List<Syntax> Syntax(boolean abstractOK) :
@@ -1824,7 +1827,9 @@ Rule RuleDeclaration() :
 { Token t; StringSpan n; Clause c; List<Clause> premises = new ArrayList<Clause>(); }
 {
   ( [<PREMISE>] c=ExprToNL() { premises.add(c); } )*
-  t=<BAR> n=RuleName() 
+  t=<BAR>
+  {  afterBAR(); }
+  n=RuleName() 
   c=ExprToNL() { return new Rule(new Location(t), n.toString(), premises, c); }
 }
 
@@ -2223,7 +2228,9 @@ Case Case() :
         premises.add(new DerivationByAssumption(t3.image, new Location(t3), ce));
       }
     )*
-    u=<BAR> q=QualName()
+    u=<BAR>
+    {  afterBAR(); }
+    q=QualName()
     t3=<IDENTIFIER> <COLON> ce=Expr()
     {
       endLoc = ce.getEndLocation();
