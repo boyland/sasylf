@@ -1,3 +1,21 @@
+module bad64wrong
+
+requires
+
+judgment trivial: !
+
+   ----- triv
+     !
+
+judgment absurd: ? //! should be abstract or have rules
+
+abstract theorem trivial-is-possible: //! should not include proof
+  exists !
+  proof by rule triv
+end theorem
+
+provides
+
 abstract theorem impossible : exists contradiction. //! only in a "requires" section
 end theorem
 
