@@ -57,12 +57,12 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 	@Override
 	public void updateContext(Context ctx) {
-		Object resolution = source.resolve(ctx);
+		Object resolution = source.resolveNotPackage(ctx);
 		if (resolution != null) {
 			if (resolution instanceof SyntaxDeclaration) {
 				original = (SyntaxDeclaration)resolution;
 			} else {
-				ErrorHandler.error(Errors.RENAME_SYNTAX, QualName.classify(resolution) + " " + source, this);
+				ErrorHandler.recoverableError(Errors.RENAME_SYNTAX, QualName.classify(resolution) + " " + source, this);
 			}
 		}
 		super.updateContext(ctx); // typeTerm() needs to work!

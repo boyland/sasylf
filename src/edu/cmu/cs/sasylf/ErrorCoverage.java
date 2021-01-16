@@ -18,6 +18,7 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -43,8 +44,7 @@ public class ErrorCoverage {
 		interestingErrors.add(Errors.UNSPECIFIED);
 		// command line can set other interesting errors
 	
-		BitSet markedLines = new BitSet();
-		DSLToolkitParser.addListener((t,f) -> { if (t.image.startsWith("//!")) markedLines.set(t.beginLine); } ); 
+		DSLToolkitParser.addListener((t,f) -> { if (t.image.startsWith("//!")) ErrorHandler.report(new ExpectedError(t.beginLine)); } ); 
 		
 		Map<Errors,List<String>> index = new HashMap<>();
 		Set<Errors> encountered = index.keySet();
@@ -77,6 +77,7 @@ public class ErrorCoverage {
 			}
 			Collection<Report> reports = results.getReports();
 			int parseReports = results.getParseReports().size();
+			BitSet markedLines = new BitSet();
 			BitSet errorLines = new BitSet();
 			String shortName = f.getName();
 			boolean printedName = false;
@@ -84,6 +85,11 @@ public class ErrorCoverage {
 			if (verbose) {
 				System.out.println(results.getCompilationUnit());
 				System.out.println("Reports for " + shortName + " : " + reports.size() + " of which " + parseReports + " are parse errors.");
+			}
+			for (Report r : reports) {
+				if (r instanceof ExpectedError) {
+					markedLines.set(r.getSpan().getLocation().getLine());
+				}
 			}
 			for (Report r : reports) {
 				++reportIndex;
@@ -174,6 +180,17 @@ public class ErrorCoverage {
 			return r.readLine();
 		} catch (IOException e) {
 			return "[" + f + ":" + line + "]";
+		}
+	}
+	
+	private static class ExpectedError extends Report {
+		ExpectedError(int line) {
+			super (new Location("",line,0),null);
+		}
+
+		@Override
+		public boolean shouldPrint() {
+			return false;
 		}
 	}
 }

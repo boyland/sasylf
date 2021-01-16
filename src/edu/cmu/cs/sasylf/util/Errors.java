@@ -35,12 +35,13 @@ public enum Errors {
 	PARSE_ERROR ("parse error"), // Place last for parser errors
 	// The following errors are generated *after* parsing
 	MODULE_NOT_FOUND ("module not found: "),
-	MODULE_ILLFORMED ("module has errors: "),
+	MODULE_ILLFORMED ("module has parse errors and is unusable"),
 	MODULE_CYCLE("Cyclic module reference: "),
 	MODULE_PARAMETERS ("module parameters not yet supported"),
 	MODULE_ABSTRACT ("modules with parameters cannot yet be used"),
 	QUAL_NOT_FOUND ("cannot find something with this name exported from the module"),
 	QUAL_NOT_AVAILABLE ("SASyLF does not know how to use qualification to access "),
+	QUAL_NOT_PACKAGE ("cannot find any declaration with this name"),
 	ANDOR_AMBIGUOUS("ambiguous use of 'and' and 'or'.  Use parentheses."),
 	ANDOR_CONTEXT("cannot join judgments with different assumes: "),
 	ANDOR_NOSYNTAX("cannot join syntax with and/or, only judgments"),

@@ -68,6 +68,7 @@ public class PathModuleFinder extends AbstractModuleFinder implements ModuleFind
 		addProvider(new ResourceModuleProvider());
 		String[] pieces = path.split(File.pathSeparator);
 		for (String piece : pieces) {
+			if (piece.equals("")) piece = System.getProperty("user.dir");
 			ModuleProvider p = new RootModuleProvider(new File(piece));
 			addProvider(p);
 		}
@@ -101,9 +102,7 @@ public class PathModuleFinder extends AbstractModuleFinder implements ModuleFind
 		}
 		if (cache.containsKey(id)) {
 			Proof previous = cache.get(id);
-			if (previous == null) {
-				ErrorHandler.error(Errors.MODULE_ILLFORMED, id.toString(), location);
-			}
+			// if null, the error should have been reported already
 			return previous;
 		}
 		if (inProcess.contains(id)) {

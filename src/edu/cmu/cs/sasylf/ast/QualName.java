@@ -118,7 +118,12 @@ public class QualName extends Node {
 					ModuleId id = new ModuleId(pack,name);
 					// System.out.println("Looking for module " + id + " in " + ctx.moduleFinder);
 					if (ctx.moduleFinder.hasCandidate(id)) {
+						// System.out.println("  had candidate!");
 						resolution = ctx.moduleFinder.findModule(id, this);
+						if (resolution == null) {
+							// System.out.println("  but oops, nothing found");
+							ErrorHandler.recoverableError(Errors.MODULE_ILLFORMED, this);
+						}
 					} else {
 						String[] newPack = new String[pack.length+1];
 						resolution = newPack;
@@ -126,11 +131,28 @@ public class QualName extends Node {
 						newPack[pack.length] = name;
 					}
 				} else if (src != null) {
-					ErrorHandler.error(Errors.QUAL_NOT_AVAILABLE, name, this);
+					ErrorHandler.recoverableError(Errors.QUAL_NOT_AVAILABLE, name, this);
 				}
 			}
 		}
 		return resolution;
+	}
+	
+	/**
+	 * Resolve this qualified name except that the result
+	 * should not be a package.  This method avoids using
+	 * a package as a default if something is not found.
+	 * If null is returned, an error has already been generated.
+	 * @param ctx context to use, or null if just use what is present
+	 * @return module or declaration or null
+	 */
+	public Object resolveNotPackage(Context ctx) {
+		Object result = resolve(ctx);
+		if (result instanceof String[]) {
+			ErrorHandler.recoverableError(Errors.QUAL_NOT_PACKAGE, this);
+			resolution = result = null;
+		}
+		return result;
 	}
 	
 	/**
