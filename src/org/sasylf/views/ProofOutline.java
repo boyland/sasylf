@@ -32,7 +32,7 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 import org.sasylf.Activator;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 import org.sasylf.ProofChecker;
 import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.IProjectStorage;
@@ -269,7 +269,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 
 					IProjectStorage st = IProjectStorage.Adapter.adapt(newInput);
 					if(st != null) {
-						newCompUnit(document, st.getName(), Proof.getCompUnit(st));
+						newCompUnit(document, st.getName(), IDEProof.getCompUnit(st));
 					}
 				}
 			}
@@ -500,12 +500,12 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		fInput= input;
 		IProjectStorage f = IProjectStorage.Adapter.adapt(input);
 		if (f != null) {
-			updateViewer(Proof.getProof(f), f.getName());
+			updateViewer(IDEProof.getProof(f), f.getName());
 		}
 	}
 
 	@Override
-	public void proofChecked(final IFile file, final Proof pf, int errors) {
+	public void proofChecked(final IFile file, final IDEProof pf, int errors) {
 		if (file == null || fInput == null) return;
 		if (!file.equals(fInput.getAdapter(IFile.class))) return;
 		final String proofName = file.getName();
@@ -517,7 +517,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 	 * @param pf proof to outline
 	 * @param proofName name of file in which the proof is located.
 	 */
-	protected void updateViewer(final Proof pf, final String proofName) {
+	protected void updateViewer(final IDEProof pf, final String proofName) {
 		if (pf == null || pf.getCompilation() == null) return;
 		final TreeViewer viewer= getTreeViewer();
 		if (viewer != null) {

@@ -6,8 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import edu.cmu.cs.sasylf.Main;
-import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -44,16 +43,13 @@ public class RootModuleProvider extends AbstractModuleProvider {
 	}
 
 	@Override
-	public CompUnit get(PathModuleFinder mf, ModuleId id, Span location) {
-		CompUnit result;
-		File f = getFile(id);
-		result = parseAndCheck(mf,f,id, location);
-		return result;
+	public Proof get(PathModuleFinder mf, ModuleId id, Span location) {
+		return parseAndCheck(mf,getFile(id),id, location);
 	}
 
-	protected CompUnit parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
+	protected Proof parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
 		try {
-			return Main.parseAndCheck(mf, f.toString(), id, new InputStreamReader(new FileInputStream(f),"UTF-8"));
+			return Proof.parseAndCheck(mf, f.toString(), id, new InputStreamReader(new FileInputStream(f),"UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		} catch (FileNotFoundException e) {

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Span;
@@ -14,12 +14,11 @@ import edu.cmu.cs.sasylf.util.Span;
 /**
  * Module finder that uses a path of module providers.
  */
-public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
+public class PathModuleFinder extends AbstractModuleFinder implements ModuleFinder, ModuleEventListener {
 
-	private String[] currentPackage = EMPTY_PACKAGE;
 	private final List<ModuleId> inProcess = new ArrayList<ModuleId>();
 	private final Map<ModuleId,ModuleProvider> presentCache = new HashMap<ModuleId,ModuleProvider>();
-	private final Map<ModuleId,CompUnit> cache = new HashMap<ModuleId,CompUnit>();
+	private final Map<ModuleId,Proof> cache = new HashMap<>();
 	private final List<ModuleProvider> providers = new ArrayList<ModuleProvider>();
 	
 	/**
@@ -73,11 +72,6 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 			addProvider(p);
 		}
 	}
-	
-	@Override
-	public void setCurrentPackage(String[] pName) {
-		currentPackage = pName;
-	}
 
 	@Override
 	public boolean hasCandidate(ModuleId id) {
@@ -101,12 +95,12 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 	}
 
 	@Override
-	public Module findModule(ModuleId id, Span location) {
+	public Proof findProof(ModuleId id, Span location) {
 		if (!hasCandidate(id)) {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), location);
 		}
 		if (cache.containsKey(id)) {
-			Module previous = cache.get(id);
+			Proof previous = cache.get(id);
 			if (previous == null) {
 				ErrorHandler.error(Errors.MODULE_ILLFORMED, id.toString(), location);
 			}
@@ -125,11 +119,9 @@ public class PathModuleFinder implements ModuleFinder, ModuleEventListener {
 		ModuleProvider provider = presentCache.get(id);
 		String[] savedPackage = currentPackage;
 		inProcess.add(id);
-		CompUnit result = null;
+		Proof result = null;
 		try {
-			CompUnit result1;
-			result1 = provider.get(this, id, location);
-			result = result1;
+			result = provider.get(this, id, location);
 			return result;
 		} finally {
 			currentPackage = savedPackage;

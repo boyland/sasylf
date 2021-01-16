@@ -1,5 +1,6 @@
 package org.sasylf;
 
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,12 +22,15 @@ import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.IProjectStorage;
 import org.sasylf.util.TrackDirtyRegions;
 
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Named;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.RuleLike;
 import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -34,12 +38,11 @@ import edu.cmu.cs.sasylf.util.Span;
  * Information about a SASyLF Proof:
  * the compilation unit and edits since the last check.
  */
-public class Proof {
+public class IDEProof extends Proof {
 
 	private IProjectStorage resource;
 	private IDocument document;
 	private TrackDirtyRegions tracker;
-	private CompUnit compilation;
 	private List<Node> declarations;
 	private SortedMap<String,RuleLike> ruleLikeCache = new TreeMap<String,RuleLike>();
 
@@ -47,12 +50,14 @@ public class Proof {
 	 * Create a proof object with compilation not set yet.
 	 * If the document is provided, we will track changes until
 	 * otherwise specified.  This information is not registered.
-	 * @see #setCompilation(CompUnit)
-	 * @see #changeProof(Proof, Proof)
+	 * @param name name to associated with this proof (must not be null)
+	 * @param id module id of the resource being read, may be null
 	 * @param res resource/project storage for this proof, must not be null
 	 * @param doc document for the proof source, may be null (no tracking desired)
+	 * @see #changeProof(IDEProof, IDEProof)
 	 */
-	public Proof(IAdaptable res, IDocument doc) {
+	public IDEProof(String name, ModuleId id, IAdaptable res, IDocument doc) {
+		super(name,id);
 		resource = IProjectStorage.Adapter.adapt(res);
 		if (resource == null) {
 			throw new NullPointerException("No project storage for " + res);
@@ -62,32 +67,24 @@ public class Proof {
 			tracker = new TrackDirtyRegions();
 			doc.addDocumentListener(tracker);
 		}
-		compilation = null;
 	}
 
 	@Override
 	public String toString() {
-		return "Proof(" + resource + "," + (compilation == null ? "<no contents>" : "<contents>") + ")";
+		return "Proof(" + resource + "," + (getCompilationUnit() == null ? "<no contents>" : "<contents>") + ")";
 	}
 	
-	/**
-	 * Set the compilation unit for this proof.  This may be done only
-	 * once (setting to a non-null compilation).
-	 * @param cu compilation unit null for this proof.
-	 * If null, it only checks that the compilation has not yet been set.  
-	 * @throws IllegalStateException if compilation already set.
-	 */
-	public void setCompilation(CompUnit cu) {
-		if (cu == null) return; // or throw?
-		if (compilation != null) {
-			throw new IllegalStateException("can only set compilation once");
-		}
-		compilation = cu;
+	@Override
+	public void parseAndCheck(ModuleFinder mf, Reader r) {
+		super.parseAndCheck(mf, r);
 		declarations = new ArrayList<Node>();
-		updateCache();
+		if (super.getCompilationUnit() != null) {
+			updateCache();
+		}
 	}
 
 	private void updateCache() {
+		CompUnit compilation = getCompilationUnit();
 		compilation.collectTopLevel(declarations);
 		compilation.collectRuleLike(ruleLikeCache);
 		for (Node n : declarations) {
@@ -107,17 +104,6 @@ public class Proof {
 	}
 	
 	/**
-	 * Get the resource associated with this proof (or null).
-	 * @return resource connected with this proof (if any)
-	 * @deprecated not all proofs are associated with a resource.
-	 * Use {@link #getStorage()} instead.
-	 */
-	@Deprecated
-	public IResource getResource() {
-		return resource.getAdapter(IResource.class);
-	}
-
-	/**
 	 * Get the storage associated with this proof.
 	 * @return storage that was parsed for this proof.
 	 */
@@ -131,7 +117,7 @@ public class Proof {
 	}
 
 	public CompUnit getCompilation() {
-		return compilation;
+		return super.getCompilationUnit();
 	}
 
 	/**
@@ -205,7 +191,7 @@ public class Proof {
 	 * We also stop incrementality when we revert.
 	 */
 	public void stopTracking() {
-		Proof oldProof = this;
+		IDEProof oldProof = this;
 		if (oldProof.tracker != null) {
 			oldProof.document.removeDocumentListener(oldProof.tracker);
 			oldProof.tracker = null;
@@ -220,23 +206,22 @@ public class Proof {
 		stopTracking();
 		proofs.remove(resource, this); // just in case
 		resource = null;
-		compilation = null;
 	}
 
-	private static ConcurrentMap<IProjectStorage,Proof> proofs = new ConcurrentHashMap<IProjectStorage,Proof>();
+	private static ConcurrentMap<IProjectStorage,IDEProof> proofs = new ConcurrentHashMap<IProjectStorage,IDEProof>();
 
 	/**
 	 * Return the proof object for this resource, if there is one.
 	 * @param res
 	 * @return proof object or null
 	 */
-	public static Proof getProof(IAdaptable res) {
+	public static IDEProof getProof(IAdaptable res) {
 		return proofs.get(IProjectStorage.Adapter.adapt(res));
 	}
 
 	public static CompUnit getCompUnit(IAdaptable res) {
-		Proof p = getProof(res);
-		if (p != null) return p.compilation;
+		IDEProof p = getProof(res);
+		if (p != null) return p.getCompilation();
 		return null;
 	}
 
@@ -253,7 +238,7 @@ public class Proof {
 			System.err.println("Warning: Cannot find proof file for " + res);
 			return false;
 		}
-		Proof oldProof = proofs.remove(ps);
+		IDEProof oldProof = proofs.remove(ps);
 		if (oldProof != null) {
 			oldProof.stopTracking();
 		}
@@ -270,7 +255,7 @@ public class Proof {
 	 * @param newProof proof to replace with, must not be null
 	 * @return whether proof was replaced.
 	 */
-	public static boolean changeProof(Proof oldProof, Proof newProof) {
+	public static boolean changeProof(IDEProof oldProof, IDEProof newProof) {
 		if (oldProof == null) {
 			if (proofs.putIfAbsent(newProof.resource, newProof) == null) {
 				return true;
@@ -285,7 +270,7 @@ public class Proof {
 	
 	public static void listProofs() {
 		System.out.println("Proofs maintained:");
-		for (Proof p : proofs.values()) {
+		for (IDEProof p : proofs.values()) {
 			System.out.println(p);
 		}
 	}

@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.sasylf.Activator;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Rule;
@@ -67,14 +67,14 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 		return NO_CONTEXTS;
 	}
 
-	private Proof getProof() {
+	private IDEProof getProof() {
 		IResource res = ResourceUtil.getResource(editor.getEditorInput());
 		if (res == null) return null;
-		return Proof.getProof(res);
+		return IDEProof.getProof(res);
 	}
 
 	private List<Map.Entry<String,RuleLike>> findMatches(String type, String pattern) {
-		Proof p = getProof();
+		IDEProof p = getProof();
 		if (p == null || p.getCompilation() == null) {
 			return Collections.emptyList();
 		}
@@ -93,7 +93,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 
 	private String findPremiseHelp(String type, String name, int numArg) {
 		System.out.println("content assist called for "+type + " " + name);
-		Proof p = getProof();
+		IDEProof p = getProof();
 		if (p == null || p.getCompilation() == null) {
 			failureReason = "Proof is not checked or has syntax errors";
 			return null;

@@ -35,7 +35,7 @@ import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 import org.sasylf.project.ProjectModuleFinder;
 import org.sasylf.project.ProofBuilder;
 
@@ -147,7 +147,7 @@ public class MoveProofFile extends MoveParticipant {
 	protected void createPackageReplaceChange(IDocument doc, TextFileChange change, RefactoringStatus status, String oldPackage) 
 			throws CoreException, BadLocationException {
 		// first see if we can get a CompUnit:
-		CompUnit cu = Proof.getCompUnit(proofFile);
+		CompUnit cu = IDEProof.getCompUnit(proofFile);
 		if (cu == null) {
 			status.addWarning("proof file is not syntactically legal; package declaration may be mislocated");
 		}
@@ -235,7 +235,7 @@ public class MoveProofFile extends MoveParticipant {
 	private void createPackageReplaceChangeModule(IFile file, IDocument doc, 
 			RefactoringStatus status, String oldPackage, IPath oldPath) throws BadLocationException {
 		// first see if we can get a CompUnit:
-		CompUnit cu = Proof.getCompUnit(file);
+		CompUnit cu = IDEProof.getCompUnit(file);
 		if (cu == null) {
 			status.addWarning("proof file is not syntactically legal; package declaration may be mislocated");
 		}	

@@ -4,11 +4,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import edu.cmu.cs.sasylf.Main;
-import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
 /**
@@ -38,20 +36,24 @@ public class ResourceModuleProvider extends AbstractModuleProvider {
 	}
 
 	@Override
-	public CompUnit get(PathModuleFinder mf, ModuleId id, Span loc) {
+	public Proof get(PathModuleFinder mf, ModuleId id, Span loc) {
+		Proof results = null;
 		try {
-			InputStream is = getClass().getResourceAsStream(asResourceString(id));
-			return Main.parseAndCheck(mf, id.toString(), id, new InputStreamReader(is,"UTF-8"));
+			final String resourceName = asResourceString(id);
+			InputStream is = getClass().getResourceAsStream(resourceName);
+			results = makeResults(resourceName, id);
+			results.parseAndCheck(mf, new InputStreamReader(is,"UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		} catch (NullPointerException e) {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), loc);
-		} catch (SASyLFError ex) {
-			// already reported
 		} catch (RuntimeException e) {
 			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		}
-		return null;
+		return results;
 	}
 
+	protected Proof makeResults(String resourceName, ModuleId id) {
+		return new Proof(resourceName, id);
+	}
 }

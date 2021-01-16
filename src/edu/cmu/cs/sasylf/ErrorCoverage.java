@@ -15,16 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Report;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class ErrorCoverage {
@@ -67,31 +64,25 @@ public class ErrorCoverage {
 				continue;
 			}
 			File f = new File(s);
-			CompUnit cu = null;
+			Proof results  = null;
 			try (Reader r = new FileReader(f)) {
-				cu = Main.parseAndCheck(mf, s, null, r);
+				results = Proof.parseAndCheck(mf, s, null, r);
 			} catch (FileNotFoundException e) {
 				System.err.println("Unable to open '" + s + "': " + e.getLocalizedMessage());
 			} catch (IOException e) {
 				System.err.println("Error reading '" + s + "': " + e.getLocalizedMessage());
-			} catch (SASyLFError e) {
-				if (verbose) {
-					System.out.println("While checking " + s);
-					e.printStackTrace();
-				}
-				// already handled
 			} catch (RuntimeException e) {
 				System.out.println("While checking " + s);
 				e.printStackTrace();
 			}
-			Collection<Report> reports = ErrorHandler.getReports();
-			int parseReports = (cu == null) ? reports.size() : cu.getParseReports();
+			Collection<Report> reports = results.getReports();
+			int parseReports = results.getParseReports().size();
 			BitSet errorLines = new BitSet();
 			String shortName = f.getName();
 			boolean printedName = false;
 			int reportIndex = 0;
 			if (verbose) {
-				System.out.println(cu);
+				System.out.println(results.getCompilationUnit());
 				System.out.println("Reports for " + shortName + " : " + reports.size() + " of which " + parseReports + " are parse errors.");
 			}
 			for (Report r : reports) {

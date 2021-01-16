@@ -1,29 +1,21 @@
 package org.sasylf.project;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
-import org.sasylf.Proof;
-import org.sasylf.ProofChecker;
+import org.sasylf.IDEProof;
 import org.sasylf.util.ResourceDocumentProvider;
 import org.sasylf.util.ResourceStorage;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.module.ResourceModuleProvider;
@@ -68,7 +60,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	}
 
 	@Override
-	public Module findModule(ModuleId id, Span location) {
+	public Proof findProof(ModuleId id, Span location) {
 		ModuleId last = super.lastModuleId();
 		if (last != null) {
 			Set<ModuleId> deps = dependencies.get(id);
@@ -83,27 +75,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 			System.out.println("Unknown dependency on " + id);
 		}
 		
-		return super.findModule(id, location);
-	}
-
-	protected CompUnit parseAndCheck(File f, ModuleId id, Span loc) {
-		
-		// The problem here is that we want to read the current state of the
-		// editor buffer instead of the resource on disk, if it is available.
-		// This requires us to convert back to a resource and then call the
-		// analyzeSlf method that will try to find an editor.
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IPath path = Path.fromOSString(f.getAbsolutePath());
-		IResource res = workspace.getRoot().getFileForLocation(path);
-		CompUnit result = ProofChecker.analyzeSlf(this, id, res);
-		if (result == null) {
-			// We should not generate any errors NOW since 
-			// this error will not be handled properly (using markers etc).
-			// And this will commonly happen if there is a syntactic error.
-			// A print to console might be useful for debugging:
-			System.out.println("proof checker failed to return a valid AST.");
-		}
-		return result;
+		return super.findProof(id, location);
 	}
 
 	private final Set<ModuleId> toRecheck = new HashSet<ModuleId>();
@@ -159,26 +131,31 @@ public class ProjectModuleFinder extends PathModuleFinder {
 	protected class ResourceProvider extends ResourceModuleProvider {
 
 		@Override
-		public CompUnit get(PathModuleFinder mf, ModuleId id, Span loc) {
+		public Proof get(PathModuleFinder mf, ModuleId id, Span loc) {
 			final String resourceName = super.asResourceString(id);
 			ResourceStorage st = new ResourceStorage(resourceName,project);
-			Proof oldProof = Proof.getProof(st);
+			IDEProof oldProof = IDEProof.getProof(st);
 			
-			final CompUnit compUnit = super.get(mf, id, loc);
-			if (compUnit == null) return null;
+			final IDEProof newProof = (IDEProof)super.get(mf, id, loc);
+			if (newProof == null) return null;
 			
+			if (IDEProof.changeProof(oldProof, newProof)) {
+				return newProof;
+			}
+			return IDEProof.getProof(st);
+		}
+
+		@Override
+		protected Proof makeResults(String resourceName, ModuleId id) {
+			ResourceStorage st = new ResourceStorage(resourceName,project);
 			final ResourceDocumentProvider provider = ResourceDocumentProvider.getInstance(st.asEditorInput());
 			try {
 				provider.connect(st.asEditorInput());
 			} catch (CoreException e) {
 				System.out.println("Cannot load resource");
 			}
-			Proof newProof = new Proof(st, provider.getDocument(st.asEditorInput()));;
-			newProof.setCompilation(compUnit);
-			if (Proof.changeProof(oldProof, newProof)) {
-				return compUnit;
-			}
-			return Proof.getCompUnit(st);
+			// TODO Auto-generated method stub
+			return new IDEProof(resourceName, id, st, provider.getDocument(st.asEditorInput()));
 		}
 		
 	}

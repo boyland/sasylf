@@ -9,11 +9,15 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.sasylf.IDEProof;
+import org.sasylf.ProofChecker;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.Proof;
 import edu.cmu.cs.sasylf.module.ModuleChangedEvent;
 import edu.cmu.cs.sasylf.module.ModuleChangedEvent.EventType;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -43,8 +47,12 @@ public class ProjectModuleProvider extends RootModuleProvider implements IResour
 	}
 
 	@Override
-	protected CompUnit parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
-		return ((ProjectModuleFinder)mf).parseAndCheck(f, id, loc);
+	protected Proof parseAndCheck(ModuleFinder mf, File f, ModuleId id, Span loc) {
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IPath path = Path.fromOSString(f.getAbsolutePath());
+		IResource res = workspace.getRoot().getFileForLocation(path);
+		ProofChecker.analyzeSlf(mf, id, res);
+		return IDEProof.getProof(getFileFromModuleId(id));
 	}
 
 	@Override

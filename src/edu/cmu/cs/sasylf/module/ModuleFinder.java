@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.module;
 
+import edu.cmu.cs.sasylf.Proof;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
 
 /**
@@ -21,7 +23,7 @@ public interface ModuleFinder {
 	
 	/**
 	 * Find a module given just a name.
-	 * The implementation make look in the current package,
+	 * The implementation may look in the current package,
 	 * as well as in any generally imported package.
 	 * @param name must not be null
 	 * @param location where to report errors
@@ -39,6 +41,15 @@ public interface ModuleFinder {
 	 */
 	public abstract Module findModule(ModuleId id, Span location);
 
+	/**
+	 * Find a module in a given package and return the results
+	 * of reading it (errors etc).
+	 * @param id must not be null
+	 * @param location where to report errors in finding the module
+	 * @return Proof object for the module
+	 */
+	public abstract Proof findProof(ModuleId id, Span location);
+	
 	/**
 	 * Set the current package for use in later {@link #findModule(String, Span)} calls.
 	 * @param pName must not be null

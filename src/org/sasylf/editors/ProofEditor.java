@@ -42,7 +42,7 @@ import org.eclipse.ui.texteditor.MarkerAnnotation;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.sasylf.Activator;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 import org.sasylf.ProofChecker;
 import org.sasylf.handlers.QuickFixHandler;
 import org.sasylf.preferences.PreferenceConstants;
@@ -80,7 +80,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 			if (f != null) {
 				IProject p = f.getProject();
 				if (ProofBuilder.getProofBuilder(p) != null) return;
-				Proof.removeProof(f);
+				IDEProof.removeProof(f);
 				// no proof builder to automatically parse the file, so we do it ourselves:
 				ProofChecker.analyzeSlf(f, this);
 			}
@@ -101,7 +101,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 		if (iei instanceof IFileEditorInput) {
 			IFile f = ((IFileEditorInput)iei).getFile();
 			if (f != null) {
-				Proof.removeProof(f);
+				IDEProof.removeProof(f);
 				super.doRevertToSaved();
 				IProject p = f.getProject();
 				ProofBuilder pb = ProofBuilder.getProofBuilder(p);
@@ -368,7 +368,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 	}
 
 	@Override
-	public void proofChecked(IFile file, Proof pf, int errors) {
+	public void proofChecked(IFile file, IDEProof pf, int errors) {
 		if (file == null || pf == null || pf.getCompilation() == null) return;
 		if (file.equals(getEditorInput().getAdapter(IFile.class))) {
 			IDocument doc = getDocument();

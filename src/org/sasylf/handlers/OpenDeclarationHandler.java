@@ -18,7 +18,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 import org.sasylf.editors.ProofEditor;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.IProjectStorage;
@@ -48,9 +48,9 @@ public class OpenDeclarationHandler extends AbstractHandler {
 		ProofEditor proofEditor = (ProofEditor)editor;
 		IProjectStorage st = IProjectStorage.Adapter.adapt(editor.getEditorInput());
 		if (st == null) return null;
-		Proof pf = Proof.getProof(proofEditor.getEditorInput());
+		IDEProof pf = IDEProof.getProof(proofEditor.getEditorInput());
 		if (pf == null) return null;
-		Pair<Proof,Node> resolution = resolve(st.getProject(),pf,name);
+		Pair<IDEProof,Node> resolution = resolve(st.getProject(),pf,name);
 		if (resolution == null || (resolution.first == pf && resolution.second == null)) {
 			MessageDialog.openError(HandlerUtil.getActiveShell(event), "Open Declaration", "Could not find declaration for '"+ name +"'");
 			return null;
@@ -123,13 +123,13 @@ public class OpenDeclarationHandler extends AbstractHandler {
 	 * The first part of the pair will never be null, but the second part is null if
 	 * the resolution refers to the whole proof.
 	 */
-	protected Pair<Proof,Node> resolve(IProject proj, Proof pf, String name) {
+	protected Pair<IDEProof,Node> resolve(IProject proj, IDEProof pf, String name) {
 		ProofBuilder pb = ProofBuilder.getProofBuilder(proj);
 		boolean hasDot = name.contains(".");
 		Node resolved = null;
 		if (hasDot) {
 			int last = name.lastIndexOf('.');
-			Proof next = resolveModule(pb, pf, name.substring(0,last));
+			IDEProof next = resolveModule(pb, pf, name.substring(0,last));
 			final String lastPart = name.substring(last+1);
 			if (next != null) {
 				resolved = (Node)next.findDeclarationByName(lastPart);
@@ -143,7 +143,7 @@ public class OpenDeclarationHandler extends AbstractHandler {
 				ModuleId id = new ModuleId(name.split("[.]"));
 				IProjectStorage st = pb.getStorage(id);
 				if (st == null) return null;
-				pf = Proof.getProof(st);
+				pf = IDEProof.getProof(st);
 				if (pf == null) return null;
 			}
 		} else {
@@ -161,15 +161,15 @@ public class OpenDeclarationHandler extends AbstractHandler {
 	 * @param name name of module.  It may have dots (module id) or not (module renaming)
 	 * @return proof for the module
 	 */
-	protected Proof resolveModule(ProofBuilder pb, Proof pf, String name) {
+	protected IDEProof resolveModule(ProofBuilder pb, IDEProof pf, String name) {
 		if (name.contains(".")) {
 			ModuleId id = new ModuleId(name.split("[.]"));
 			IProjectStorage st = pb.getStorage(id);
-			if (st != null) return Proof.getProof(st);
+			if (st != null) return IDEProof.getProof(st);
 			// We don't want to permit x.y.z to be as interpreted as global y.z
 			// And so we lookup z in x.y, not y.z in x
 			String initial = name.substring(0, name.lastIndexOf('.'));
-			Proof next = resolveModule(pb, pf, initial);
+			IDEProof next = resolveModule(pb, pf, initial);
 			if (next == null) return null; // give up
 			return resolveModule(pb,next,name.substring(name.lastIndexOf('.')+1));
 		} else {

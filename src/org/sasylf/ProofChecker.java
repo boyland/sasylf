@@ -32,16 +32,12 @@ import org.sasylf.util.EclipseUtil;
 import org.sasylf.util.ResourceDocument;
 import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
-import edu.cmu.cs.sasylf.Main;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
-import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
-import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Report;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -57,7 +53,7 @@ public class ProofChecker  {
 		 * @param proof proof structure, will not be null
 		 * @param errors number of errors found.
 		 */
-		public void proofChecked(IFile file, Proof proof, int errors);
+		public void proofChecked(IFile file, IDEProof proof, int errors);
 	}
 
 	/**
@@ -94,7 +90,7 @@ public class ProofChecker  {
 		}
 	}
 
-	protected void informListeners(IFile source, Proof proof, int errors) {
+	protected void informListeners(IFile source, IDEProof proof, int errors) {
 		for (Listener l : listeners) {
 			l.proofChecked(source, proof, errors);
 		}
@@ -219,79 +215,73 @@ public class ProofChecker  {
 	}
 
 	private static CompUnit analyzeSlf(ModuleFinder mf, ModuleId id, IResource res, IDocument doc, Reader contents) {
-		CompUnit result = null;
-		Proof oldProof = Proof.getProof(res);
-		Proof newProof = new Proof(res,doc);
-		int errors = 0;
-
-		System.out.println("Reparsing...");
-
+		IDEProof oldProof = IDEProof.getProof(res);
+		
+		// try to correct some nulls.
+		
 		if (mf == null) {
 			ProofBuilder pb = ProofBuilder.getProofBuilder(res.getProject());
 			if (pb != null) {
 				mf = pb.getModuleFinder();
+			} else {
+				// OK: This means that the file is outside of a proof folder
+				// and we won't do module/package checks.
+			}
+		}
+		if (doc == null) {
+			try {
+				doc = new ResourceDocument(res);
+			} catch (CoreException ex) {
+				// not good, but we'll muddle along after logging our problem
+				Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
+				if (myBundle != null) {
+					Platform.getLog(myBundle).log(new Status(IStatus.ERROR,Activator.PLUGIN_ID,"Internal error",ex));
+				}
+				ex.printStackTrace();
 			}
 		}
 		if (id == null) {
 			id = ProofBuilder.getId(res);
 		}
+		
+		IDEProof newProof = new IDEProof(res.toString(), id, res, doc);
 
-		try {
-			if (doc == null) {
-				doc = new ResourceDocument(res);
-				newProof = new Proof(res,doc);
-			}
-			// TODO: eventually we want to do incremental checking.
-			List<IDirtyRegion> dirtyRegions = oldProof == null ? null : oldProof.getChanges(doc);
-			if (dirtyRegions != null) {
-				try {
-					for (IDirtyRegion dr : dirtyRegions) {
-						String newText = doc.get(dr.getOffset(), dr.getLength());
-						System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
-					}
-				} catch (BadLocationException e) {
-					e.printStackTrace();
+		System.out.println("Reparsing...");
+
+		// TODO: eventually we want to do incremental checking.
+		List<IDirtyRegion> dirtyRegions = oldProof == null ? null : oldProof.getChanges(doc);
+		if (dirtyRegions != null) {
+			try {
+				for (IDirtyRegion dr : dirtyRegions) {
+					String newText = doc.get(dr.getOffset(), dr.getLength());
+					System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
 				}
+			} catch (BadLocationException e) {
+				e.printStackTrace();
 			}
-			Util.PRINT_ERRORS = false; // not needed for IDE
-			Util.PRINT_SOLVE = false;
-			Util.COMP_WHERE = Preferences.isWhereCompulsory();
-			Util.X_CONTEXT_IS_SYNTAX = Preferences.experimentalfeature("ContextIsSyntax");
-			result = Main.parseAndCheck(mf, res.getName(), id, contents);
-			newProof.setCompilation(result);
-		} catch (SASyLFError e) {
-			// ignore the error; it has already been reported
-		} catch (RuntimeException e) {
-			Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
-			if (myBundle != null) {
-				Platform.getLog(myBundle).log(new Status(IStatus.ERROR,Activator.PLUGIN_ID,"Internal error",e));
-			}
-			ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, null);
-			e.printStackTrace();
-			// unexpected exception
-		} catch (CoreException e) {
-			Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
-			if (myBundle != null) {
-				Platform.getLog(myBundle).log(new Status(IStatus.ERROR,Activator.PLUGIN_ID,"Internal error",e));
-			}
-			e.printStackTrace();
-		} finally {
-			deleteAuditMarkers(res);
-			for (Report r : ErrorHandler.getReports()) {
-				report(r, doc, res);
-				if (r instanceof ErrorReport) ++errors;
-			}
-			ErrorHandler.clearAll();
 		}
-
-		if (!Proof.changeProof(oldProof, newProof)) {
+		
+		Util.PRINT_ERRORS = false; // not needed for IDE
+		Util.PRINT_SOLVE = false;
+		Util.COMP_WHERE = Preferences.isWhereCompulsory();
+		Util.X_CONTEXT_IS_SYNTAX = Preferences.experimentalfeature("ContextIsSyntax");
+		newProof.parseAndCheck(mf, contents);
+		
+		int errors = 0;
+		deleteAuditMarkers(res);
+		for (Report r : newProof.getReports()) {
+			report(r, doc, res);
+			if (r instanceof ErrorReport) ++errors;
+		}
+		
+		if (!IDEProof.changeProof(oldProof, newProof)) {
 			System.out.println("Concurrent compile got there ahead of us for " + res);
 		} else {
 			if (res instanceof IFile) getInstance().informListeners((IFile)res, newProof, errors);
 			else System.out.println("Can't inform listeners since not IFile: " + res);
 		}
 
-		return result;
+		return newProof.getCompilation();
 	}
 
 	/**

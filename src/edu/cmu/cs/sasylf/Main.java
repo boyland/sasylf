@@ -108,59 +108,63 @@ public class Main {
 			String filename = args[i];
 			File file;
 			ModuleId id = null;
-			try {
-				if (mf != null) {
-					try {
-						id = new ModuleId(filename);
-					} catch (RuntimeException ex) {
-						System.err.println(ex.getMessage());
-						exitCode = -1;
-						continue;
-					}
-					mf.findModule(id, new Location("<commandline>",0,0));
-				} else {
-					file = new File(filename);
-					if (!file.canRead()) {
-						System.err.println("Could not open file " + filename);
-						exitCode = -1;
-						continue;
-					}
-					try (Reader r = new InputStreamReader(new FileInputStream(file),"UTF-8")) {
-						parseAndCheck(defaultMF, filename, null, r);
-					} catch(FileNotFoundException ex) {
-						System.err.println("Could not open file " + filename);
-						exitCode = -1;
-						continue;
-					} catch (SASyLFError e) {
-						// ignore the error; it has already been reported
-						//e.printStackTrace();
-					} catch (RuntimeException e) {
-						// System.err.println("Internal SASyLF error analyzing " + filename + " !");
-						e.printStackTrace(); // unexpected exception
-						ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(), null); // "recoverable" = "don't throw"
-					} 
+			Proof pf = null;
+
+			if (mf != null) {
+				try {
+					id = new ModuleId(filename);
+				} catch (RuntimeException ex) {
+					System.err.println(ex.getMessage());
+					exitCode = -1;
+					continue;
 				}
-			} finally {
-				int newErrorCount = ErrorHandler.getErrorCount();
-				int newWarnings = ErrorHandler.getWarningCount();
-				@SuppressWarnings("resource")
-				PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
-				if (newErrorCount == 0)
-					ps.print(filename + ": No errors");
-				else if (newErrorCount == 1)
-					ps.print(filename + ": 1 error");
-				else
-					ps.print(filename + ": "+ newErrorCount +" errors");
-				if (newWarnings > 0) {
-					if (newWarnings > 1) {
-						ps.print(" and " + newWarnings + " warnings");
-					} else {
-						ps.print(" and 1 warning");
-					}
+				try {
+					pf = mf.findProof(id, new Location("<commandline>",0,0));
+				} catch (SASyLFError e) {
+					// already handled
 				}
-				ps.println(" reported.");
-				if (newErrorCount > 0) exitCode = -1;
+			} else {
+				file = new File(filename);
+				if (!file.canRead()) {
+					System.err.println("Could not open file " + filename);
+					exitCode = -1;
+					continue;
+				}
+				try (Reader r = new InputStreamReader(new FileInputStream(file),"UTF-8")) {
+					pf = Proof.parseAndCheck(defaultMF, filename, null, r);
+				} catch(FileNotFoundException ex) {
+					System.err.println("Could not open file " + filename);
+					exitCode = -1;
+					continue;
+				} catch (RuntimeException e) {
+					// System.err.println("Internal SASyLF error analyzing " + filename + " !");
+					e.printStackTrace(); // unexpected exception
+					ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(), null); // "recoverable" = "don't throw"
+				} 
 			}
+
+			if (pf == null) continue;
+
+			int newErrorCount = pf.getErrorCount();
+			int newWarnings = pf.getWarningCount();
+			@SuppressWarnings("resource")
+			PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
+			if (newErrorCount == 0)
+				ps.print(filename + ": No errors");
+			else if (newErrorCount == 1)
+				ps.print(filename + ": 1 error");
+			else
+				ps.print(filename + ": "+ newErrorCount +" errors");
+			if (newWarnings > 0) {
+				if (newWarnings > 1) {
+					ps.print(" and " + newWarnings + " warnings");
+				} else {
+					ps.print(" and 1 warning");
+				}
+			}
+			ps.println(" reported.");
+			if (newErrorCount > 0) exitCode = -1;
+
 		}
 		System.exit(exitCode);
 	}

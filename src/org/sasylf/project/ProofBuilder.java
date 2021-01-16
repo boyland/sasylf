@@ -25,7 +25,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.sasylf.Activator;
 import org.sasylf.Marker;
-import org.sasylf.Proof;
+import org.sasylf.IDEProof;
 import org.sasylf.util.IProjectStorage;
 import org.sasylf.util.ResourceStorage;
 
@@ -163,7 +163,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 					break;
 				case IResourceDelta.REMOVED:
 					// handle removed resource
-					Proof.removeProof(resource);
+					IDEProof.removeProof(resource);
 					break;
 				}
 			}

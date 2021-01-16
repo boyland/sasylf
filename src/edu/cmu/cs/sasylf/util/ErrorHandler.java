@@ -105,13 +105,39 @@ public class ErrorHandler {
 	}
 	
 	public static List<Report> getReports() { return reports.get(); }
+	
+	/**
+	 * Run the given action with a new set of error reports.
+	 * The current reports are preserved unchanged.
+	 * @param r action to perform, must not be null
+	 * @return reports that occurred before a successful end.
+	 */
+	public static List<Report> withFreshReports(Runnable r) {
+		List<Report> saved = reports.get();
+		reports.remove();
+		List<Report> result = reports.get();
+		try {
+			r.run();
+		} finally {
+			reports.set(saved);
+		}
+		return result;
+	}
+	
 	/**
 	 * Start a new check session.
+	 * This starts the reports on a fresh list and clears the
+	 * free variables. Mixing two functions like this is a bad idea.
+	 * It also doesn't give a way to protect existing problems
+	 * @deprecated use {@link #withFreshReports(Runnable)} and 
+	 * call {@link FreeVar.reinit} directly.
 	 */
+	@Deprecated
 	public static void clearAll() {
 		reports.remove();
 		FreeVar.reinit();
 	}
+	
 	public static int getErrorCount() {
 		int errorCount = 0;
 		for (Report r : reports.get()) {
