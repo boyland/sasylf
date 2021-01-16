@@ -81,7 +81,16 @@ assumes Gamma
   Gamma |- t2 : T
   ------------------------- T-App
   Gamma |- t1 t2 : T'
+  
+  t1 -> t1'
+  --------------- E-App
+  t1 t2 -> t1' t2 //! wrong judgment
 
+judgment eval: t -> t
+
+   ---------------------------- E-AppAbs
+   (fn x => t1[x]) t2 -> t1[t2]
+   
 syntax
   (Gamma ⊢ t : T) := Gamma |- t : T //! not allowed (yet?)
   
@@ -104,6 +113,11 @@ syntax
        | ee * ee
        
 judgment funny: ? T[ee] //! needs to be a variable
+
+lemma double:
+    exists *, x:A, x:A |- x : A //! already declared
+    proof by rule T-Var
+end lemma
 
 lemma tickle :
     exists *, x':A |- @@@ : A
