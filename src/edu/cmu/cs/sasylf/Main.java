@@ -15,13 +15,11 @@ import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
-import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
-import edu.cmu.cs.sasylf.util.TokenSpan;
 
 public class Main {
 
@@ -177,41 +175,16 @@ public class Main {
 	 * @param id may be null if not interested in checking package/module-name errors
 	 * @param r contexts: must not be null
 	 * @throws SASyLFError is an error is found.
+	 * @deprecated this method gives no way to access the errors that resulted.
+	 * Use <code>Proof p = new Proof(filename,id); p.parseAndCheck(mf,r);</code>
+	 * and then use p to access the AST and the errors separately.
 	 */
+	@Deprecated
 	public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
 			ModuleId id, Reader r) {
-		ErrorHandler.clearAll();
-		CompUnit cu = null;
-		try {
-			cu = DSLToolkitParser.read(filename,r);
-		} catch (ParseException e) {
-			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
-			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {
-				String expected = e.tokenImage[e.expectedTokenSequences[0][0]];
-				ErrorHandler.error(Errors.PARSE_EXPECTED, expected, errorSpan);
-			} 
-			// do not use "e.getMessage()": not localized
-			ErrorHandler.error(Errors.PARSE_ERROR, errorSpan);
-			// NOTREACHED
-		} catch (TokenMgrError e) {
-			ErrorHandler.error(Errors.LEXICAL_ERROR, ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
-			// NOTREACHED
-		}
-		check(mf, id, cu);
-		return cu;
-	}
-
-	/**
-	 * @param mf
-	 * @param id
-	 * @param cu
-	 */
-	private static void check(ModuleFinder mf, ModuleId id, CompUnit cu) {
-		if (mf == null) cu.typecheck();
-		else {
-			mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE : id.packageName);
-			cu.typecheck(mf,id);
-		}
+		Proof p = new Proof(filename,id);
+		p.parseAndCheck(mf, r);
+		return p.getCompilationUnit();
 	}
 
 }
