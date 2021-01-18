@@ -7,6 +7,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.Reduction;
+import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -174,10 +175,12 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			if (this instanceof DerivationByInductionHypothesis || self.getForalls().isEmpty()) 
 				ErrorHandler.error(Errors.INDUCTION_MISSING, this);
 			ErrorHandler.warning(Errors.INDUCTION_IMPLICIT, this);
-			mySchema = yourSchema = InductionSchema.create(self, self.getForalls().get(0).getElement(), false);
-			Util.verify(mySchema != null, "first argument cannot be induction?");
+			mySchema = yourSchema = new StructuralInduction(0);
 		}
-		if (mySchema.matches(yourSchema, this, false)) { // XXX: why give error (again?)
+		// we need to check matching, even though this is already done for
+		// the mutual inductive theorems when they were declared,
+		// because otherwise "reduces" can crash
+		if (mySchema.matches(yourSchema, this, false)) { // "false" means don't print error
 			Reduction r = mySchema.reduces(ctx, yourSchema, getArgs(), this);
 			switch (r) {
 			case NONE: break; // error already printed
