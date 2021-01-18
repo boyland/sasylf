@@ -41,5 +41,24 @@ judgment badrename = Nat.notequal : n /=/ n //! don't rename rules
   ------- not-equal
   n /=/ n
 
+judgment noteq = Nat.notequal : n !=! n
+
+lemma innocuous:
+    forall d: n1 !=! n2
+    exists n2 !=! n1
+    do case analysis on d:
+        case rule
+            d1: n1' !=! n2'
+            --------------- Nat.ne-rec //! no qual needed
+            _: (S n1') !=! (S n2')
+            where n1 := S n1' and n2 := S n2'
+        is
+            d1': n2' !=! n1' by lemma innocuous on d1 //! implicit induction
+            proof by lemma Nat.ne-rec on d1' //! wrong kind
+        end case
+
+    end case analysis
+    proof by theorem Nat.ne-symmetric on d
+end lemma
 // theorem ...
 

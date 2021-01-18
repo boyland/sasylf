@@ -671,6 +671,9 @@ lemma syntaxcase:
     forall d: Γ ⊢ t : T
     exists unit value
     do case analysis on T:
+        case Γ ⊢ t:T assumes Γ, x':T' is //! wrong type
+            proof by rule val-unit
+        end case
         case x assumes Γ', x:T is //! wrong syntax (variable)
             proof by rule val-unit
         end case
@@ -782,6 +785,7 @@ lemma inversiontest0:
             proof by rule val-unit
         end case
     end case analysis
+    use inversion of rule val-λ on d //! rule is wrong judgment 
     d1: * ⊢ t1 : T → Unit and //! too many results
     d2: * ⊢ t2 : T and
     eq: t1 == t2 by inversion on d
@@ -835,6 +839,12 @@ lemma inversiontest3:
         is
             proof by rule val-unit
         end case
+        case rule //! no such rule
+            -------------- val-unit
+            _: unit value
+        is
+            proof by rule val-unit
+        end case
     end case analysis
     use inversion on t //! missing case
     where t := unit
@@ -863,6 +873,7 @@ lemma syntaxtest2:
     assumes Γ
     forall d: Γ ⊢ t : T
     exists unit value
+    use induction on d
     do case analysis on t:
         case x assumes Γ', x':T' is //! should say x is out of scope!
             proof by val-unit
@@ -872,5 +883,20 @@ lemma syntaxtest2:
             end case analysis
         end case
     end case analysis
+    do case analysis on d:
+        case rule
+            d1: Γ ⊢ t0 : (T0 → T)
+            _: Γ ⊢ t1 : T0
+            ----------------------------- T-App
+            _: Γ ⊢ (t0 t1) : T
+        is
+            proof by induction hypothesis on (Γ ⊢ t0 : T0 → T assumes Γ) //! can't create
+        end case
+    end case analysis
     proof by rule val-unit
+end lemma
+
+lemma clausetest:
+    exists unit unit unit value //! ambiguous
+    proof by unproved // skipped
 end lemma

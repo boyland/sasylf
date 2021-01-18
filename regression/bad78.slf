@@ -176,3 +176,9 @@ lemma normalresult:
     u: Gamma |- unit : Unit by rule T-Unit
     proof by d, u //! unexpected multiple clauses
 end lemma
+
+lemma assumesyntax:
+    forall t assumes unit //! "unit" is not a context
+    exists 1 => 1
+    proof by rule frac-const
+end lemma

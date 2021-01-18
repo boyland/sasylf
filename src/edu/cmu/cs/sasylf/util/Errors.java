@@ -30,6 +30,7 @@ public enum Errors {
 	SYNTAX_DUPLICATE ("syntax nonterminal duplicate"),
 	JUDGMENT_ABSTRACT ("abstract judgment cannot have rules"),
 	RULE_NAME_EXPECTED ("missing a rule name (must be on the same line as the ---)"),
+	RENAME_NO_RULES ("renaming a judgment should not include renaming of rules"),
 	WRONG_END ("expected "),
 	PARSE_EXPECTED ("parse error: expected "),
 	PARSE_ERROR ("parse error"), // Place last for parser errors
@@ -52,7 +53,6 @@ public enum Errors {
 	CLAUSE_AMBIGUOUS("multiple syntactic case(s) or judgment(s)"),
 	CLAUSE_DEF_PAREN("judgment/syntax must not include parenthesized expressions"),
 	RENAME_MISMATCH("renamed clause has different contents"),
-	RENAME_NO_RULES ("renaming a judgment should not include renaming of rules"),
 	RENAME_ASSUME_MISMATCH ("renamed judgment must have the same 'assumes' if any"),
 	ABSTRACT_REQUIRED("a required judgment without rules should be declared abstract"),
 	BAD_FILE_NAME_SUFFIX ("proof file name must end in '.slf'"), // error not generated (message used in exception)
@@ -131,7 +131,7 @@ public enum Errors {
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
 	ILLEGAL_ASSUMES    ("assumed entity is not a context nonterminal"),
 	ILLEGAL_ASSUMES_CLAUSE ("assumed clause is not a context"),
-	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"),
+	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"), // infeasible
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	ASSUMES_BRANCH("an assumption case must not have more than one nested list of assumptions"),
 	ASSUMES_MULTI_USE("multiple uses of the context form not supported "),
@@ -179,7 +179,6 @@ public enum Errors {
 	CASE_SUBJECT_UNKNOWN ("subject not known, perhaps you intended one of "),
 	CASE_SUBJECT_ABSTRACT ("subject is abstract; no case analysis permitted"),
 	CASE_SUBJECT_NOT("case analysis is not allowed on a 'not' judgment"),
-	CASE_SUBJECT_CONSTRUCTED("case analysis is not allowed on something just put together"),
 	CASE_SUBJECT_VAR_UNUSED ("variable in assumption context is unused, please remove"),
 	CASE_SUBJECT_ROOT_INTERNAL ("the assumption context of subject must be rooted in the theorem context "),
 	CASE_ASSUMPTION_IMPOSSIBLE("assumption rule cannot apply since variables cannot occur in "),
