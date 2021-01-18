@@ -1,0 +1,45 @@
+// test uses of modules
+package regression;
+
+terminals S true
+
+module Bool = org.sasylf.util.Bool //! wrong name
+
+module Nat = org.sasylf.util.Natural
+
+syntax
+  n = Nat.n ::= 0 | S n
+  
+  u = U.Unit ::= 1 //! No such module
+  
+  v = Nat.notequal ::= <> //! a judgment, not a syntax
+  
+  w = n.b ::= * //! "n" is not a module
+  
+  t = regression.bad83.t ::= 8 3 //! bad83 has parse errors, cannot be used
+
+  e ::= x | n | e + e
+  
+  s ::= true | ∀ x . s[x]
+  
+  Γ ::= * | Γ, x
+  
+judgment not-equal = Nat.ne : n <> n //! wrong name in Nat
+
+  
+judgment notequal = Natural.notequal : n != n //! package not imported
+
+judgment noteq = Nat.n : n /= n //! not a judgment
+
+judgment badmatch = Nat.notequal : n + n = n //! doesn't match
+
+judgment badassume = Nat.notequal : n =/= n //! assumes wrong
+assumes Γ
+
+judgment badrename = Nat.notequal : n /=/ n //! don't rename rules
+
+  ------- not-equal
+  n /=/ n
+
+// theorem ...
+

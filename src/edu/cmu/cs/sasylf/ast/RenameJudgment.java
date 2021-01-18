@@ -36,12 +36,13 @@ public class RenameJudgment extends Judgment {
 	
 	@Override
 	public void defineConstructor(Context ctx) {
-		Object resolution = source.resolve(ctx);
+		Object resolution = source.resolveNotPackage(ctx);
 		if (resolution != null) {
 			if (resolution instanceof Judgment) {
 				original = (Judgment)resolution;
 			} else {
-				ErrorHandler.error(Errors.RENAME_JUDGMENT, QualName.classify(resolution) + " " + source, this);
+				ErrorHandler.recoverableError(Errors.RENAME_JUDGMENT, QualName.classify(resolution) + " " + source, this);
+				return;
 			}
 			getForm().typecheck(ctx);
 			ClauseDef cd;
