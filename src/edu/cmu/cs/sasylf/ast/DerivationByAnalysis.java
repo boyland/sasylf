@@ -101,9 +101,8 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		}
 
 		if (caseType instanceof Judgment) {
-			if (targetDerivation instanceof ClauseAssumption) {
-				ErrorHandler.error(Errors.CASE_SUBJECT_CONSTRUCTED, targetDerivation);
-			}
+			Util.verify(!(targetDerivation instanceof ClauseAssumption), 
+					"DerivationWithArgs is supposed to stop this sort of thing!");
 		} else {
 			// see bad79.slf: exploit2
 			if (targetElement instanceof AssumptionElement) {
