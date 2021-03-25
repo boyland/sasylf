@@ -39,6 +39,7 @@ judgment odd: n%2 = 1
 lemma either-even-or-odd:
     forall n
     exists n % 2 = 0 or n % 2 = 1
+    _: 0 % 2 = 1 by solve //! not possible
     proof by case analysis on n:
         case 0 is
             _: 0 % 2 = 0 by rule Even-Zero
