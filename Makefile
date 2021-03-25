@@ -57,7 +57,7 @@ unit-test:
 	java -cp ${SUBJECT} edu/cmu/cs/sasylf/util/UnitTests
 	java -cp ${SUBJECT} edu/cmu/cs/sasylf/reduction/UnitTests
 
-regression-test:
+regression-test: ${TESTLIB}
 	@echo "Regression Tests: " `echo regression/*.slf ${ADDTESTS} | wc -w`
 	@-for f in regression/*.slf ${ADDTESTS}; do \
 	  printf "."; \
