@@ -238,7 +238,6 @@ public enum Errors {
 	SOLVE_FAILED ("unable to find proof"),
 	SOLVE_UNRELIABLE ("proof by solve is not reliable"), // Warning
 	DERIVATION_NAME_REUSED ("reusing derivation identifier"), // Warning
-	WHERE_ASSUMPTION ("SASyLF cannot (yet) produce or verify where clauses for this case"),
 	WHERE_MISSING ("missing 'where' clause(s)"),
 	WHERE_MISSING_EXT ("variable(s) implicitly bound"),
 	WHERE_WRONG ("right-hand side of 'where' clause wrong"),

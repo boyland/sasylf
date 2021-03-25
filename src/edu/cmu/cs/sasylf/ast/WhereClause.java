@@ -170,7 +170,7 @@ public class WhereClause extends Node {
 	 * Missing clauses are listed by LHS; second-order missing vars show arguments.
 	 * @param userWhereClauses clauses to check, as parsed from the source
 	 * @param ctx global and local context, used for parsing
-	 * @param cas case analysis subject term
+	 * @param cas case analysis subject term, adapted to current context
 	 * @param rcc rule case conclusion term; this is null for inversions
 	 * @param su substitution representing restrictions imposed on free variables; when
 	 *   these are variables in the CAS, they need where clauses; this is null for rule cases
@@ -185,22 +185,16 @@ public class WhereClause extends Node {
 		
 		Substitution userSub = typecheck(ctx);
 		
-		/*
-		 * Unification fails here if the context changes from CAS to RCC,
-		 * because the CAS doesn't include adaptation.
-		 * For now, skip the whole case, because other where clauses will fail
-		 * to verify correctly also.
-		 * For inversions, su comes in precomputed.
-		 * Only give this error if the user has written where clauses.
-		 */
-		if (su == null) {
+		if (su == null) { // for inversions, su is pre-computed
+			/* Unification shouldn't fail here because
+			 * (1) The CAS should be adapted correctly, and
+			 * (2) We don't check "where" clauses for cases that 
+			 *     error out.
+			 */
 			try {
 				su = cas.unify(rcc);
-			}
-			catch (UnificationFailed ex) {
-				if (!userWhereClauses.isEmpty() || COMP_WHERE) { // XXX: unable so far to generate this error
-					ErrorHandler.warning(Errors.WHERE_ASSUMPTION, errorSpan);
-				}
+			} catch (UnificationFailed ex) {
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "unification failed in 'where' check", errorSpan);
 				return;
 			}
 		}
