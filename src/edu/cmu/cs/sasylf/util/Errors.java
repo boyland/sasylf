@@ -232,7 +232,7 @@ public enum Errors {
 	SUGAR_NO_USES ("nonterminal doesn't occur in the syntax"),
 	SUGAR_UNUSED ("no indication what to do with nonterminal"),
 	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"), // infeasible
-	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasable
+	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasible
 	NEVER_RIGID ("using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
 	CASE_UNIFICATION_INCOMPLETE("Unification incomplete for case "),
 	SOLVE_FAILED ("unable to find proof"),
