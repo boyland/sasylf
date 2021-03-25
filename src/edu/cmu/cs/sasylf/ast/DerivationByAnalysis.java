@@ -96,7 +96,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 			if (caseType instanceof NotJudgment) {
 				ErrorHandler.error(Errors.CASE_SUBJECT_NOT,this);
 			} else {
-				ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT,caseType.toString(), this);
+				ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT,": " + caseType.getName(), this);
 			}
 		}
 

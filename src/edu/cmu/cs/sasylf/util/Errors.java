@@ -183,7 +183,6 @@ public enum Errors {
 	CASE_SUBJECT_ROOT_INTERNAL ("the assumption context of subject must be rooted in the theorem context "),
 	CASE_ASSUMPTION_IMPOSSIBLE("assumption rule cannot apply since variables cannot occur in "),
 	CASE_ASSUMPTION_OLD ("case matching an assumption in the context needs a new context name"),
-	CASE_ASSUMPTION_NOT_VAR ("a new assumption can only be used with variable cases"),
 	UNKNOWN_CONTEXT ("unknown context name "),
 	REUSED_CONTEXT ("may not reuse context name "),
 	CASE_CONTEXT_ADDED ("case subject is rooted in the empty context, should not assume "),

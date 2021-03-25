@@ -9,6 +9,8 @@ judgment trivial: !
 
 judgment absurd: ? //! should be abstract or have rules
 
+abstract judgment ab: *
+
 abstract theorem trivial-is-possible: //! should not include proof
   exists !
   proof by rule triv
@@ -19,6 +21,7 @@ provides
 abstract theorem impossible : exists contradiction. //! only in a "requires" section
 end theorem
 
-theorem really : exists contradiction
-proof by theorem impossible
+theorem really : forall a: * exists contradiction
+proof by case analysis on a:
+end case analysis
 end theorem
