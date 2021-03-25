@@ -306,9 +306,15 @@ public class Theorem extends RuleLike {
 		return interfaceOK;
 	}
 
+	/**
+	 * Set the assumption (context) for a theorem.
+	 * An internal error is thrown if this method is called
+	 * twice with different values.
+	 * @param c context to use
+	 */
 	public void setAssumes(NonTerminal c) { 
 		if (assumes != null && !assumes.equals(c))
-			ErrorHandler.error(Errors.THEOREM_INCONSISTENT_CONTEXTS,": " + assumes + " != " + c, this);
+			ErrorHandler.error(Errors.INTERNAL_ERROR,"setAssumes: " + assumes + " != " + c, this);
 		assumes = c; 
 	}
 	@Override

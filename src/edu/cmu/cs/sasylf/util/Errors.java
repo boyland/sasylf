@@ -186,7 +186,6 @@ public enum Errors {
 	CASE_ASSUMPTION_NOT_VAR ("a new assumption can only be used with variable cases"),
 	UNKNOWN_CONTEXT ("unknown context name "),
 	REUSED_CONTEXT ("may not reuse context name "),
-	THEOREM_INCONSISTENT_CONTEXTS ("theorem/lemma has inconsistent contexts"),
 	CASE_CONTEXT_ADDED ("case subject is rooted in the empty context, should not assume "),
 	CASE_CONTEXT_CHANGED ("cannot change context in case analysis"),
 	CASE_ASSUMPTION_SINGLE ("the assumption rule only handles one level of context"),
