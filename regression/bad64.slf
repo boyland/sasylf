@@ -22,6 +22,6 @@ abstract theorem impossible : exists contradiction. //! only in a "requires" sec
 end theorem
 
 theorem really : forall a: * exists contradiction
-proof by case analysis on a:
+proof by case analysis on a: //! case analysis on abstract not allowed
 end case analysis
 end theorem
