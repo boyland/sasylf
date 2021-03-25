@@ -337,7 +337,7 @@ public class Relaxation {
 			}
 			List<Abstraction> newWrappers = new ArrayList<Abstraction>();
 			Term.getWrappingAbstractions(patternTerm, newWrappers, diff);
-			Util.debug("Introducing ",patternRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
+			// Util.debug("Introducing ",patternRoot,"+",Term.wrappingAbstractionsToString(newWrappers));
 			relax = new Relaxation(newWrappers,relaxVars,subjectRoot);
 			// System.out.println("Relaxation is " + relax);
 		}
