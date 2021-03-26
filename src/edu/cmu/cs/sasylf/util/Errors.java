@@ -135,12 +135,10 @@ public enum Errors {
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	ASSUMES_BRANCH("an assumption case must not have more than one nested list of assumptions"),
 	ASSUMES_MULTI_USE("multiple uses of the context form not supported "),
-	ASSUMES_MISSING_VAR ("assumptions without variables not supported"), // can't generate
-	ASSUMES_MULTI_VAR("can't handle more than one variable in assumption rule"),
 	ASSUMES_CONTEXT_RESTRICT ("assumption rule must use context form unchanged"),
 	ASSUMES_DUPLICATE("assumption rule has duplicate use "),
 	ASSUMES_UNDEFINED("assumption rule doesn't give a way to determine "),
-	ASSUMES_UNUSED("assumption rule ignores element from context "), // Unused
+	ASSUMES_UNUSED("assumption rule ignores element from context "), // Extension: this error no longer generated
 	SYNTAX_CASE_FOR_DERIVATION ("when case-analyzing a derivation, must use rule cases, not syntax cases"),
 	SYNTAX_CASE_FOR_DISJUNCTION ("when case-analyzing a disjunction, must use 'or' cases, not syntax cases"),
 	VAR_REBOUND ("this variable already has been declared here: "),
@@ -178,7 +176,7 @@ public enum Errors {
 	CASE_SUBJECT_MULTIPLE ("case analysis can take only one argument"),
 	CASE_SUBJECT_UNKNOWN ("subject not known, perhaps you intended one of "),
 	CASE_SUBJECT_ABSTRACT ("subject is abstract; no case analysis permitted"),
-	CASE_SUBJECT_NOT("case analysis is not allowed on a 'not' judgment"),
+	CASE_SUBJECT_NOT("case analysis is not allowed on a 'not' judgment"), //! not relevant (yet)
 	CASE_SUBJECT_VAR_UNUSED ("variable in assumption context is unused, please remove"),
 	CASE_SUBJECT_ROOT_INTERNAL ("the assumption context of subject must be rooted in the theorem context "),
 	CASE_ASSUMPTION_IMPOSSIBLE("assumption rule cannot apply since variables cannot occur in "),

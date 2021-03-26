@@ -218,11 +218,9 @@ public class Rule extends RuleLike implements CanBeCase {
 			ErrorHandler.error(Errors.ASSUMES_MULTI_USE,assumeClauseDef.toString(), this);
 
 		if (countVars != 1) { // XXX: Extension point
-			if (countVars == 0) {
-				ErrorHandler.error(Errors.ASSUMES_MISSING_VAR, this);
-			} else {
-				ErrorHandler.error(Errors.ASSUMES_MULTI_VAR,this);
-			}
+			ErrorHandler.error(Errors.INTERNAL_ERROR, "Not expecting countVars == " + countVars, this);
+			// For extension: there are a very large number of
+			// implicit dependencies on "isAssumpt" being exactly 2.
 		}
 		isAssumpt = 1 + countVars;
 		assumeClauseDef.assumptionRule = this;
