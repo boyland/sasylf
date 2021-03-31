@@ -369,13 +369,11 @@ public class ClauseUse extends Clause {
 		boolean foundClause = false;
 		for (Element e : getElements()) {
 			if (e instanceof ClauseUse && ((ClauseUse)e).getConstructor().getType().equals(cons.getType())) {
-				if (foundClause)
-					ErrorHandler.error(Errors.ASSUMES_BRANCH, cons);
+				Util.verify(!foundClause, "branching in assumption");
 				foundClause = true;
 				root = e.readAssumptions(varBindings, includeAssumptionTerm);
 			} else if (e instanceof NonTerminal && ((NonTerminal)e).getType().equals(cons.getType())) {
-				if (foundClause)
-					ErrorHandler.error(Errors.ASSUMES_BRANCH, cons);
+				Util.verify(!foundClause, "branching in assumption");
 				foundClause = true;
 				root = (NonTerminal) e;
 			}

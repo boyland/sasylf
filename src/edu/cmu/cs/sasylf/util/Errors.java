@@ -135,7 +135,6 @@ public enum Errors {
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	DUPLICATE_ASSUMES ("found multiple context nonterminals in judgment: "),
 	WRONG_ASSUMES ("'assumes' name isn't the context nonterminal in judgment"),
-	ASSUMES_BRANCH("an assumption case must not have more than one nested list of assumptions"),
 	ASSUMES_MULTI_USE("multiple uses of the context form not supported "),
 	ASSUMES_CONTEXT_RESTRICT ("assumption rule must use context form unchanged"),
 	ASSUMES_DUPLICATE("assumption rule has duplicate use "),
