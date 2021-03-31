@@ -40,6 +40,12 @@ assumes Sigma //! wrong context NT
 judgment bad4: 4 Gamma |- t : T
 assumes Gama //! undeclared
 
+judgment bad5: 5 Gamma' |- t : T
+assumes Gamma //! not present in form
+
+judgment bad6: Gamma'; Gamma |- t : T //! two context nonterminals
+assumes Gamma
+
 judgment isvar: t:T in Gamma
 assumes Gamma
 
@@ -102,6 +108,13 @@ lemma test-two-assume: //! two contexts
     forall s2: Gamma |- f < f
     exists Sigma |- T
     proof by s1
+end lemma
+
+lemma test-two-contexts:
+    assumes Gamma2
+    forall s: Gamma1, x1: T1; Gamma2, x2: T2 |- t[x1][x2] : T //! x1 unbound
+    exists    Gamma2, x2: T2; Gamma1, x1: T1 |- t[x1][x2] : T.
+    proof by s
 end lemma
 
 lemma test-terminal:

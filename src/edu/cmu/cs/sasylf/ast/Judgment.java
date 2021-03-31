@@ -105,7 +105,7 @@ public class Judgment extends Node implements ClauseType, Named {
 
 	public void typecheck(Context ctx) {
 
-		SyntaxDeclaration contextSyntax = null;
+		NonTerminal contextNT = null;
 
 		if (assume != null) {
 			assume.typecheck(ctx);
@@ -118,24 +118,33 @@ public class Judgment extends Node implements ClauseType, Named {
 		for (Element f : form.getElements()) {
 			if (f instanceof NonTerminal) {
 				SyntaxDeclaration s = ((NonTerminal)f).getType();
-				if (s.isInContextForm()) contextSyntax = s;
+				if (s.isInContextForm()) {
+					// we permit and/or clauses to have multiple contexts,
+					// but the system ensures they are always the same
+					if (!(this instanceof AndOrJudgment) && contextNT != null) {
+						ErrorHandler.recoverableError(Errors.DUPLICATE_ASSUMES, contextNT.toString(), f);
+					}
+					contextNT = (NonTerminal)f;
+				}
 			}
 		}
 
 		if (assume != null) {
 			SyntaxDeclaration assumeSyntax = assume.getType();
 			String fixInfo = "assumes " + assume + "\n" +
-					(contextSyntax == null ? "" : "assumes " + contextSyntax.getName());
+					(contextNT == null ? "" : "assumes " + contextNT.toString());
 			if (assumeSyntax == null) {
 				// no error needed (already errored)
-			} else if (!assumeSyntax.equals(contextSyntax)) {
+			} else if (contextNT == null || !assumeSyntax.equals(contextNT.getType())) {
 				Errors error = assumeSyntax.isInContextForm() ? Errors.EXTRANEOUS_ASSUMES : Errors.ILLEGAL_ASSUMES;
 				ErrorHandler.recoverableError(error, ": " + assume, assume, fixInfo);
+			} else if (!contextNT.equals(assume)) {
+				ErrorHandler.recoverableError(Errors.WRONG_ASSUMES, assume, fixInfo);
 			}
-			if (contextSyntax == null) assume = null;
-			else assume = contextSyntax.getNonTerminal(); // fix for now
-		} else if (contextSyntax != null && !Util.X_CONTEXT_IS_SYNTAX) {
-			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextSyntax + "\"", this, "assumes " + contextSyntax);
+			if (contextNT == null) assume = null;
+			else assume = contextNT; // fix for now
+		} else if (contextNT != null && !Util.X_CONTEXT_IS_SYNTAX) {
+			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextNT + "\"", this, "assumes " + contextNT);
 		}
 		
 		for (Rule r : getRules()) {
