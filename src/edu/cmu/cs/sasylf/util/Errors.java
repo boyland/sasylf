@@ -131,7 +131,7 @@ public enum Errors {
 	MISSING_ASSUMES			("found a use of a context nonterminal but no assumes clause"),
 	ILLEGAL_ASSUMES    ("assumed entity is not a context nonterminal"),
 	ILLEGAL_ASSUMES_CLAUSE ("assumed clause is not a context"),
-	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"), // infeasible
+	ASSUMES_FOR_SYNTAX ("'assumes' can only be used with syntax"),
 	EXTRANEOUS_ASSUMES ("found no use of the context nonterminal "),
 	DUPLICATE_ASSUMES ("found multiple context nonterminals in judgment: "),
 	WRONG_ASSUMES ("'assumes' name isn't the context nonterminal in judgment"),

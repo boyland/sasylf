@@ -72,6 +72,9 @@ public class AssumptionElement extends Element {
 		if (base instanceof Clause) {
 			base = ((Clause)base).computeClause(ctx,false);
 		}
+		if (!(base.getType() instanceof SyntaxDeclaration)) {
+			ErrorHandler.error(Errors.ASSUMES_FOR_SYNTAX, this);
+		}
 		return this;
 	}
 	
@@ -99,16 +102,12 @@ public class AssumptionElement extends Element {
 
 	@Override
 	public Fact asFact(Context ctx, Element assumes) {
-		Fact f = base.asFact(ctx, null);
-		if (context == null) return f;
-		if (f instanceof SyntaxAssumption) {
-			SyntaxAssumption sa = (SyntaxAssumption)f;
-			sa.setContext(context);
-			return sa;
-		} else {
-			ErrorHandler.error(Errors.ASSUMES_FOR_SYNTAX, this);
+		// we assume type checked:
+		SyntaxAssumption f = (SyntaxAssumption)base.asFact(ctx, null);
+		if (context != null) {
+			f.setContext(context);
 		}
-		return null;
+		return f;
 	}
 
 	@Override
