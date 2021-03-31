@@ -900,3 +900,17 @@ lemma clausetest:
     exists unit unit unit value //! ambiguous
     proof by unproved // skipped
 end lemma
+
+lemma contexttest:
+    assumes Γ
+    forall d1: Γ, x1:T1 ⊢ t1[x1] : T → T'
+    forall d2: Γ, x2:T2 ⊢ t2[x2] : T
+    exists Γ, x1:T1, x2:T2 ⊢ t1[x1] t2[x2] : T'
+    proof by rule T-App on d1, d2 //! inconsistent
+    d2': Γ, x1:T1 ⊢ t2[x1] : T by unproved //! expected
+    proof by rule T-App on d1, d2' //! result implies parts need to be weakened
+    d1w: Γ, x1:T1, x2:T2 ⊢ t1[x1] : T → T' by weakening on d1
+    d2w':Γ, x1:T1, x2:T2 ⊢ t2[x1] : T by weakening on d2'
+    _: Γ, x1:T1 ⊢ t1[x1] t2[x1] : T' by rule T-App on d1w, d2w' //! wrong result
+    proof by rule T-App on d1w, d2w'  //! wrong binding for t2
+end lemma 
