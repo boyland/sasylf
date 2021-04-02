@@ -60,5 +60,13 @@ lemma innocuous:
     end case analysis
     proof by theorem Nat.ne-symmetric on d
 end lemma
+
+judgment taut: !
+
+      --------- taut
+         !
+         
+module Parm = regression.bad64[taut] //! parameters not supported yet
+
 // theorem ...
 

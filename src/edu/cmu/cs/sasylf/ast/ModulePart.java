@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class ModulePart extends Node implements Part, Named {
 		super(l,endl);
 		this.name = name;
 		this.module = module;
-		this.arguments = arguments;
+		this.arguments = new ArrayList<>(arguments);
 	}
 	
 	@Override
