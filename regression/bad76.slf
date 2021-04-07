@@ -869,6 +869,22 @@ lemma inversiontest4:
     proof by rule val-unit
 end lemma
 
+lemma inversiontest5:
+    forall e1: T == T1 → T2
+    forall ch: T1 == T2 or T2 == T1
+    exists T == T1 → T1
+    do case analysis on ch:
+        case or eq: T1 == T2 is
+            use inversion on eq where T1 := T2
+            proof by e1
+        end case
+    end case analysis
+    ok: T2 == T1 by inversion on ch
+    use inversion on e1 where T := T1 → T2
+    bad: T == T1 by inversion on ch //! bad binding (internal error in 1.5.0)
+    proof by bad //! expected
+end lemma
+
 lemma syntaxtest2:
     assumes Γ
     forall d: Γ ⊢ t : T

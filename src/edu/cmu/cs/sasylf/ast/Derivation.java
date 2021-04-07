@@ -20,7 +20,6 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
-
 public abstract class Derivation extends Fact {
 
 	protected Clause clause;
@@ -292,6 +291,15 @@ public abstract class Derivation extends Fact {
 						FreeVar sample = output.iterator().next();
 						ErrorHandler.error(Errors.DERIVATION_RESTRICTS_OUTPUT, sample.toString(), errorPoint, "  restricts " + unavoidable);
 					}
+				}
+				return false;
+			}
+			debug("Checking adding to ctx: ", instanceSub);
+			// NB: ctx.canCompose can't check this (see comment)
+			if (!ctx.currentSub.canCompose(instanceSub)) {
+				if (errorPoint != null) {
+					ErrorHandler.error(Errors.DERIVATION_MISMATCH, info, errorPoint,
+							"\twas trying to add " + instanceSub + " to context " + ctx.currentSub);
 				}
 				return false;
 			}
