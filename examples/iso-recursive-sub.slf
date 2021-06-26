@@ -633,7 +633,7 @@ unfold (T) t -> unfold (T) t'
 /// Type System
 
 // Now the presentation of the type system
-// (Here I used a declarative system with T-Sub, but an algorithmic system would be essentiall the same)       
+// (Here I used a declarative system with T-Sub, but an algorithmic system would be essentially the same)       
         
 judgment type: Gamma |- t : T
 assumes Gamma
@@ -690,7 +690,7 @@ Gamma |- t : T
 
 // The canonical forms lemmas are complicated because of the lack of MGUs in higher-order unification.
 // For each, we define a helper version which "hides" the identity of the type
-// of the value until after we have removed the posisbilty of unfolding.
+// of the value until after we have removed the possibility of unfolding.
 
 lemma canonical-forms-ArrowH:
     forall d: * |- t : T
@@ -974,7 +974,7 @@ theorem progress :
     forall d: * |- t : T
     exists t value or t -> t' .
     proof by induction on d:
-        // SASyLF knows that T-Vae cannot apply since the contex is empty
+        // SASyLF knows that T-Var cannot apply since the context is empty
         case rule
             d': * |- t : S
             _: * |- S <: T
