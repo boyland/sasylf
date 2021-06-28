@@ -181,6 +181,7 @@ public class Proof {
 		if (reports != null) {
 			throw new IllegalStateException("Results already determined");
 		}
+		// System.out.println(id + ".parseAndCheck()");
 		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf,r));
 		cacheErrorCount();
 	}

@@ -2116,7 +2116,7 @@ end theorem
 
 // This needs a way to speak of term inequality.
 // I don't think SASyLF can do it (in 1.5.0) 
-// and it's extrameley difficult even in Twelf.
+// and it's extremely difficult even in Twelf.
 
 
 /// Lemma 2.6 Weakening of signature and context 

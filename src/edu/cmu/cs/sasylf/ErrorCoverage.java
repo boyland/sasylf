@@ -2,10 +2,8 @@ package edu.cmu.cs.sasylf;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
@@ -16,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -65,16 +64,7 @@ public class ErrorCoverage {
 			}
 			File f = new File(s);
 			Proof results  = null;
-			try (Reader r = new FileReader(f)) {
-				results = Proof.parseAndCheck(mf, s, null, r);
-			} catch (FileNotFoundException e) {
-				System.err.println("Unable to open '" + s + "': " + e.getLocalizedMessage());
-			} catch (IOException e) {
-				System.err.println("Error reading '" + s + "': " + e.getLocalizedMessage());
-			} catch (RuntimeException e) {
-				System.out.println("While checking " + s);
-				e.printStackTrace();
-			}
+			results = mf.findProof(new ModuleId(f), new Location("<command line",0,0));
 			Collection<Report> reports = results.getReports();
 			int parseReports = results.getParseReports().size();
 			BitSet markedLines = new BitSet();
