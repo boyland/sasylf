@@ -68,8 +68,9 @@ public class PathModuleFinder extends AbstractModuleFinder implements ModuleFind
 		addProvider(new ResourceModuleProvider());
 		String[] pieces = path.split(File.pathSeparator);
 		for (String piece : pieces) {
-			if (piece.equals("")) piece = System.getProperty("user.dir");
-			ModuleProvider p = new RootModuleProvider(new File(piece));
+			ModuleProvider p;
+			if (piece.equals("")) p = new RootModuleProvider();
+			else p = new RootModuleProvider(new File(piece));
 			addProvider(p);
 		}
 	}

@@ -19,6 +19,13 @@ public class RootModuleProvider extends AbstractModuleProvider {
 	protected final File rootDirectory;
 
 	/**
+	 * Create a root module provider looking at the current working directory.
+	 */
+	public RootModuleProvider() {
+		rootDirectory = null; // new File(System.getProperty("user.dir"));
+	}
+	
+	/**
 	 * Create a root module provider looking at this directory.
 	 * @param dir directory to use, must not be null
 	 */

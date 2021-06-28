@@ -68,5 +68,6 @@ judgment taut: !
          
 module Parm = regression.bad64[taut] //! parameters not supported yet
 
+module Self = regression.bad84 //! cyclic module reference
 // theorem ...
 
