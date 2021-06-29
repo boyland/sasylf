@@ -3537,22 +3537,12 @@ theorem subst-r-composeI:
                     _: x' : A' ∈ (Γ', x' : A', x : A1[x'])
                     where A2[x] := A'
                 is
-                    // inversion didn't work to set R[x] := R'  (make goodXX.slf)
-                    proof by case analysis on s2:
-                        case rule
-                            vx: R' : A3[x] ∈ (Γ, x : A0)
-                            ------------------------- Subst-R-Var
-                            _: (Γ, x : A0) ⊢ ({M2[x]/x'} r α2 R') = R'
-                            where R[x] := R'
-                        is
-                            v': x' : A' ∈ (Γ', x':A') by rule var
-                            v2: R0 : A' ∈ Γ by v'
-                            s4: Γ ⊢ {M0/x0} r α0 R' = R' by rule Subst-R-Var on v2
-                            s5: Γ ⊢ {M2'/x} r α2 R' = R' by rule Subst-R-Var on v2
-                            proof by s4, s5
-                        end case
-
-                    end case analysis
+                    use inversion on s2 where R[x] := R'
+                    v': x' : A' ∈ (Γ', x':A') by rule var
+                    v2: R0 : A' ∈ Γ by v'
+                    s4: Γ ⊢ {M0/x0} r α0 R' = R' by rule Subst-R-Var on v2
+                    s5: Γ ⊢ {M2'/x} r α2 R' = R' by rule Subst-R-Var on v2
+                    proof by s4, s5
                 end case
 
             end case analysis

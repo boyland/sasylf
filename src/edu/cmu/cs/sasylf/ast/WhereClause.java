@@ -260,7 +260,7 @@ public class WhereClause extends Node {
 			// find the matching variable in the CAS
 			FreeVar matchingVar = null;
 			for (FreeVar fv : fvCAS)
-				if (fv.getName().equals(lhsVarName))
+				if (fv.getName().equals(lhsVarName) && fv.getStamp() == 0)
 					matchingVar = fv;
 			if (matchingVar == null) {
 				ErrorHandler.recoverableError(Errors.WHERE_NOT_NEEDED,
