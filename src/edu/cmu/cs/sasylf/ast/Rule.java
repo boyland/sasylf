@@ -230,24 +230,31 @@ public class Rule extends RuleLike implements CanBeCase {
 			if (e == assumeClauseUse) continue; // skip this part
 			e.getFree(used,false);
 		}
-		used.removeAll(defined);
+		Set<NonTerminal> notDefined = new HashSet<>(used);
+		notDefined.removeAll(defined);
 	
 		// If something is used but not defined, it means the translation to LF
 		// doesn't know what to use for the nonterminal when forming the internal derivation
-		if (!used.isEmpty()) {
+		if (!notDefined.isEmpty()) {
 			ErrorHandler.error(Errors.ASSUMES_UNDEFINED, used.toString(), concClauseUse);
 		}
 
-		// NB: previously, we also require that everything in the assumption
-		// needed to be present in the judgment using it, including
-		// the variable and any non-terminals.
-		// But it doesn't seem that anywhere in the system (any more)
-		// requires that this be the case.
-		/* // after removing "used" from defined.
-		for (Element e : defined) {
+		Set<NonTerminal> notUsed = new HashSet<>(defined);
+		notUsed.removeAll(used);
+		
+		// If something is defined but not used, it means that the surface syntax
+		// (elements) of environments mentions things that are not in the LF.
+		// At the very least, this is confusing.  It means these parts of
+		// the context can be substituted with anything else with no effect at all.
+		// I expect it could also lead to problems later when looking at
+		// meta-variables used versus free.
+		for (Element e : notUsed) {
 			ErrorHandler.error(Errors.ASSUMES_UNUSED, e.toString(), concClauseUse);
 		}
-		*/
+		
+		// NB: previously, we also require that all variables in the assumption
+		// also occur in the judgment, but the variables can be ignored without
+		// causing problems in the theory.
 	}
 
 	public boolean isAssumption() {

@@ -1,0 +1,177 @@
+// some problem with relaxation
+package regression;
+
+terminals fn in Top tautology let in
+
+syntax
+  t ::= fn x:T => t[x]
+     | t t
+     | x
+     | fn X <: T => t[X]
+     | t T
+     | let z < f in t[z]
+     
+  T ::= Top
+     | T -> T
+     | X
+
+   f ::= z
+      | 1
+      | f / 2
+      | f f
+      
+  Gamma ::= * 
+         | Gamma, z < f
+         | Gamma, x:T
+         | Gamma, X <: T
+         
+         
+judgment tautology: tautology
+
+  --------- taut
+  tautology
+  
+
+// Originally, we had a judgment that didn't include T,
+// but this is still an error.
+judgment bound: Gamma |- t : T
+assumes Gamma
+
+  ---------------- B-Var
+  Gamma, x:T |- x:T
+  
+  ----------- B-Any
+  Gamma |- t:T
+  
+judgment type-variable: T <: T in Gamma
+assumes Gamma
+
+  --------------------------- type-var
+  X <: T in (Gamma, X <: T)
+
+// example of a (pointless) assumption rule which doesn't use the variable:
+judgment frac: Gamma |- f
+assumes Gamma
+
+  ----------------- frac-bound
+  Gamma, z < f |- f
+  
+judgment subtyping: Gamma |- T <: T
+assumes Gamma
+
+  T1 <: T2 in Gamma
+  -------------------- S-Assume
+  Gamma |- T1 <: T2
+  
+  ------------------ S-Refl
+  Gamma |- T <: T
+  
+  Gamma |- T1 <: T2
+  Gamma |- T2 <: T3
+  ----------------- S-Trans
+  Gamma |- T1 <: T3
+  
+  ----------------- S-Top
+  Gamma |- T <: Top
+  
+  Gamma |- T21 <: T11
+  Gamma |- T12 <: T22
+  ------------------------------------- S-Arrow
+  Gamma |- (T11 -> T12) <: (T21 -> T22)
+  
+  
+lemma innocent1:
+    assumes Gamma
+    forall d: Gamma, X <: T0 |- T1 <: T2
+    forall a: T1 <: T2 in Gamma
+    exists tautology.
+    proof by case analysis on d:
+        case rule
+            a1: T1 <: T2 in (Gamma, X <: T0)
+            ------------------------------- S-Assume
+            _: (Gamma, X <: T0) |- T1 <: T2
+        is
+            proof by case analysis on a1:
+                // The problem here was fixed in 1.3.3 and reintroduced in 1.5.0a4
+                case rule
+                    --------------------------------- type-var // objects to T2
+                    _: X1 <: T2 in (Gamma', X1 <: T2, X <: T4[X1])
+                is
+                    proof by rule taut
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            ------------------------ S-Refl
+            _: (Gamma, X <: T0) |- T1 <: T1
+        is
+            proof by rule taut
+        end case
+
+        case rule
+            _: (Gamma, X <: T0) |- T1 <: T3[X]
+            _: (Gamma, X <: T0) |- T3[X] <: T2
+            ----------------------- S-Trans
+            _: (Gamma, X <: T0) |- T1 <: T2
+        is
+            proof by rule taut
+        end case
+
+        case rule
+            ----------------------- S-Top
+            _: (Gamma, X <: T0) |- T1 <: Top
+        is
+            proof by rule taut
+        end case
+
+        case rule
+            _: (Gamma, X <: T0) |- T3 <: T4
+            _: (Gamma, X <: T0) |- T5 <: T6
+            ------------------------------------------- S-Arrow
+            _: (Gamma, X <: T0) |- (T4 -> T5) <: (T3 -> T6)
+        is
+            proof by rule taut
+        end case
+
+    end case analysis
+end lemma
+
+lemma innocent2a:
+    forall T
+    exists *, x:T |- x:T
+    proof by rule B-Var
+end lemma
+
+lemma innocent2b:
+    forall T
+    exists *, x:T |- x:T
+    proof by rule B-Any
+end lemma
+
+lemma innocent3:
+    assumes Gamma
+    forall d: Gamma |- t2 : T
+    exists Gamma |- t1 : T
+    proof by case analysis on d:
+        case rule
+            ---------------------- B-Var
+            _: Gamma', x : T |- x:T
+        is
+            proof by rule B-Any
+        end case
+
+        case rule
+            ----------------- B-Any
+            _: Gamma |- t2 : T
+        is
+            proof by rule B-Any
+        end case
+    end case analysis
+end lemma
+
+lemma innocent4:
+    exists *, z < 1 |- 1
+    proof by rule frac-bound 
+end lemma

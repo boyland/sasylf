@@ -11,6 +11,7 @@ syntax
      | x
      | unit
      | let f < z < f in t[z] 
+     | let y :: T in t[y]
      
   T ::= Unit
      | T -> T
@@ -22,7 +23,10 @@ syntax
       | 1
       | f * f
       
-  Gamma ::= * | Gamma, x:T | Gamma, f < z < f
+   Y ::= y
+      | 2
+
+  Gamma ::= * | Gamma, x:T | Gamma, f < z < f | Gamma, y :: T
   
   Sigma ::= * 
          | Sigma, X 
@@ -95,6 +99,12 @@ judgment frac1: f => f //! already declared
   ------ frac-const
   1 => 1
    
+judgment why : Gamma |- Y
+assumes Gamma
+
+  ---------------- why-var
+  Gamma, y::T |- y //! T unused
+
 lemma test-unassumed:
     forall d: Sigma, X |- T[X] //! Sigma,X has no rule
     exists Sigma, X |- T[X] -> Unit
