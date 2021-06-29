@@ -357,6 +357,7 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 						ErrorHandler.error(errorClass, missingMessage,errorClause);
 					}
 					// System.out.println("missing: " + missing);
+					// System.out.println("   case: " + missingCase);
 					if (missingCaseText != null) {
 						// System.out.println("Missing Case:");
 						// System.out.println(missingCaseText);

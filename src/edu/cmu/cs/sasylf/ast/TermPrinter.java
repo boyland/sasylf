@@ -358,9 +358,11 @@ public class TermPrinter {
 							Element element = vtMap.get(elem.toString());
 							if (element != null)
 								bes.set(i,element); 
+							else if (elem instanceof Variable)
+								bes.set(i, vars.get(vars.size()-1));
 							else {
 								if (i != bu.getConstructor().getAssumeIndex()) {
-									// throw new RuntimeException("didn't find " + elem + " in " + vtMap);
+									// System.out.println("didn't find " + elem + " in " + vtMap);
 									continue;
 								}
 								bes.set(i,getContext((NonTerminal)elem));
