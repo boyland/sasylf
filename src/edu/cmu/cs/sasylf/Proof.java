@@ -8,6 +8,7 @@ import java.util.List;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
@@ -209,7 +210,7 @@ public class Proof {
 		duringParse = ErrorHandler.getReports().size();
 		if (syntaxTree != null) {
 			try {
-				if (mf == null) syntaxTree.typecheck();
+				if (mf == null) syntaxTree.typecheck(new ResourceModuleFinder(), null);
 				else {
 					mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE : id.packageName);
 					syntaxTree.typecheck(mf,id);
