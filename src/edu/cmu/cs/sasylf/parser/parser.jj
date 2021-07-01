@@ -224,9 +224,9 @@ public class DSLToolkitParser {
     	return getToken(1).kind == LPAREN && notNL(getToken(1).specialToken);
     }
 
-    boolean isLogicNoNL() {
+    boolean isLogicNoNL() { // vestigial for partial "not" support
       Token t = getToken(1);
-      return (t.kind == OR || t.kind == NOT) && notNL(t.specialToken);
+      return (t.kind == NOT) && notNL(t.specialToken);
     }
 
     boolean isVarBindingArg() {
@@ -1847,6 +1847,11 @@ Clause ExprToNL() :
 		c = new Clause(e);
 		c.add(e);
 	}
+    | t=<NOT>
+    {
+        c = new Clause(new Location(t));
+		c.add(getNonTerminal(t)); // strange, but NonTerminal knows how to handle these keywords
+	}
   )
   (
     LOOKAHEAD({ isTermNoNL() }) e=Term()
@@ -1860,9 +1865,9 @@ Clause ExprToNL() :
 		c.setEndLocation(new Location(t2).add(1));
 	}
     |  LOOKAHEAD( {  isLogicNoNL() })
-    (t=<OR>|t=<NOT>) 
+    (t=<NOT>) 
 	{ 
-		c.add(getNonTerminal(t)); // strange, but NonTerminal knows how to handle these keywords
+		c.add(getNonTerminal(t));
 	}
   )*
   { return c; }
@@ -2003,7 +2008,9 @@ Theorem TheoremDeclaration(boolean abstractOK) :
   | <FORALL> t=<IDENTIFIER> [ <ASSUMES> a=Expr() ]
     { thm.getForalls().add(new NonTerminalAssumption(t.image, new Location(t), true, a)); a = null; }
   )*
-  <EXISTS> c=ExprToNL() (t=<AND> a=ExprToNL() { AndJudgment.addAnd(c,new Location(t),a); a = null; } )*
+  <EXISTS> c=ExprToNL()
+  	(t=<AND> a=ExprToNL() { AndJudgment.addAnd(c,new Location(t),a); a = null; }
+    |t=<OR> a=ExprToNL() {  OrJudgment.addOr(c,new Location(t),a); a = null; }  )*
     { thm.setExists(c); }
   ( d=Derivation() { thm.getDerivations().add(d); } )*
   <END> (tp=<THEOREM> | tp=<LEMMA> | sp=RuleName() { tp = null; } )

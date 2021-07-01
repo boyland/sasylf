@@ -26,9 +26,69 @@ judgment gt: n > n
   --------- gt-s
   S n1 > n2
 
-theorem test:
+theorem test1:
     forall n
     exists (n = S n' and n > 0) or n = 0.
+    proof by induction on n:
+        case 0 is
+            _: 0 = 0 by rule eq
+        end case
+
+        case S n' is
+            eq: n = S n' by rule eq
+            o: (n' = S n'' and n' > 0) or n' = 0 by induction hypothesis on n'
+            g: n > 0 by case analysis on o:
+                case or eq': (n' = (S n'')) and g': (n' > 0) is
+                    _: S n' > 0 by rule gt-s on g' 
+                end case
+
+                case or eq': n' = 0 is
+                    use inversion of eq on eq'
+                    proof by rule gt-1
+                end case
+
+            end case analysis
+            proof by eq, g
+            _: n = S n' and _: n > 0 by eq,g
+        end case
+
+    end induction
+end theorem
+
+theorem test2: // same as test1 except for newlines in exists
+    forall n
+    exists (n = S n' and n > 0) or 
+            n = 0.
+    proof by induction on n:
+        case 0 is
+            _: 0 = 0 by rule eq
+        end case
+
+        case S n' is
+            eq: n = S n' by rule eq
+            o: (n' = S n'' and n' > 0) or n' = 0 by induction hypothesis on n'
+            g: n > 0 by case analysis on o:
+                case or eq': (n' = (S n'')) and g': (n' > 0) is
+                    _: S n' > 0 by rule gt-s on g' 
+                end case
+
+                case or eq': n' = 0 is
+                    use inversion of eq on eq'
+                    proof by rule gt-1
+                end case
+
+            end case analysis
+            proof by eq, g
+            _: n = S n' and _: n > 0 by eq,g
+        end case
+
+    end induction
+end theorem
+
+theorem test3: // same as test1,test2 except for newlines in exists
+    forall n
+    exists (n = S n' and n > 0) 
+       or  n = 0.
     proof by induction on n:
         case 0 is
             _: 0 = 0 by rule eq
@@ -69,7 +129,7 @@ theorem positive-gt-zero:
     end induction
 end theorem
 
-theorem test2:
+theorem test4:
     forall n1
     forall n2
     exists ((n1 = S n1' and n1 > 0) or n1 = 0) and
