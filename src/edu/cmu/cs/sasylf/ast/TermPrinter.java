@@ -685,6 +685,7 @@ public class TermPrinter {
 		if (thisTerminal.equals(",") || thisTerminal.equals(";")) return false; // special case
 		if (lastTerminal == null) return true;
 		if (thisTerminal.isEmpty()) return false;
+		if (thisTerminal.startsWith("'")) return true; // 'and' and 'or'
 		if (Character.isUnicodeIdentifierPart(thisTerminal.charAt(0))) return true;
 		return false;
 	}
