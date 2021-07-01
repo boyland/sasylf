@@ -51,7 +51,7 @@ public class CheckProofsHandler extends AbstractHandler {
 							System.out.println("couldn't find proof handler!");
 							ProofChecker.analyzeSlf(res, ResourceUtil.findEditor(page, f));
 						} else {
-							System.out.println("use proof builder");
+							// System.out.println("use proof builder");
 							pb.forceBuild(f);
 						}
 					}
@@ -69,7 +69,7 @@ public class CheckProofsHandler extends AbstractHandler {
 				System.out.println("couldn't find proof handler!");
 				ProofChecker.analyzeSlf(res, activeEditor);
 			} else {
-				System.out.println("use proof builder");
+				// System.out.println("use proof builder");
 				pb.forceBuild(res);
 			}			
 		}  else {

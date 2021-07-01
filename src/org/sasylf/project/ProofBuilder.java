@@ -24,8 +24,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.sasylf.Activator;
-import org.sasylf.Marker;
 import org.sasylf.IDEProof;
+import org.sasylf.Marker;
 import org.sasylf.util.IProjectStorage;
 import org.sasylf.util.ResourceStorage;
 
@@ -48,7 +48,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		super.startupOnInitialize();
 		ProofBuilder old = builders.put(this.getProject(), this);
 		if (old instanceof ProofBuilderProxy) {
-			System.out.println("Replaced proxy for " + this.getProject());
+			// System.out.println("Replaced proxy for " + this.getProject());
 		} else {
 			forceInitialBuild(getProject());
 		}
@@ -74,7 +74,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 		// The use of proxy obviates "doWait"
 		// The old implementation was liable to deadlock.
 		if (builders.putIfAbsent(project, new ProofBuilderProxy(project)) == null) {
-			System.out.println("Using a proxy for " + project);
+			// System.out.println("Using a proxy for " + project);
 			forceInitialBuild(project);
 		} else {
 			// Race because we just checked and a builder wasn't

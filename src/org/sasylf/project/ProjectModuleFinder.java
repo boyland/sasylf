@@ -72,7 +72,7 @@ public class ProjectModuleFinder extends PathModuleFinder {
 			// dependencies.put(id, deps); // redundant?!			
 			// System.out.println("adding dependency from " + last + " on " + id);
 		} else {
-			System.out.println("Unknown dependency on " + id);
+			// System.out.println("Unknown dependency on " + id);
 		}
 		
 		return super.findProof(id, location);

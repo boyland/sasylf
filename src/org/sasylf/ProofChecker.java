@@ -246,15 +246,17 @@ public class ProofChecker  {
 		
 		IDEProof newProof = new IDEProof(res.toString(), id, res, doc);
 
-		System.out.println("Reparsing...");
+		// System.out.println("Reparsing...");
 
 		// TODO: eventually we want to do incremental checking.
 		List<IDirtyRegion> dirtyRegions = oldProof == null ? null : oldProof.getChanges(doc);
 		if (dirtyRegions != null) {
 			try {
-				for (IDirtyRegion dr : dirtyRegions) {
-					String newText = doc.get(dr.getOffset(), dr.getLength());
-					System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
+				if (Util.DEBUG) { // or perhaps a debug flag specifically for incrementality
+					for (IDirtyRegion dr : dirtyRegions) {
+						String newText = doc.get(dr.getOffset(), dr.getLength());
+						System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
+					}
 				}
 			} catch (BadLocationException e) {
 				e.printStackTrace();

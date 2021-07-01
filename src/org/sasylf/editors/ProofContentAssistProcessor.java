@@ -92,7 +92,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 	}
 
 	private String findPremiseHelp(String type, String name, int numArg) {
-		System.out.println("content assist called for "+type + " " + name);
+		// System.out.println("content assist called for "+type + " " + name);
 		IDEProof p = getProof();
 		if (p == null || p.getCompilation() == null) {
 			failureReason = "Proof is not checked or has syntax errors";
