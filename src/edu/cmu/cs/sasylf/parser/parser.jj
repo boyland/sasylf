@@ -2023,7 +2023,7 @@ Theorem TheoremDeclaration(boolean abstractOK) :
 }
 
 Derivation Derivation() :
-{ Token t; Token t2; Token a; StringSpan s; QualName q = null; Case ca; Clause c; Clause c2; Derivation d; Token of = null;}
+{ Token t; Token t2; Token a; StringSpan s; QualName q = null; Case ca; Clause c; Clause c2 = null; Derivation d; Token of = null;}
 {
    (
      t=<IDENTIFIER> <COLON> c=Expr()
@@ -2035,11 +2035,15 @@ Derivation Derivation() :
    <BY> d=Justification(t, c)
   { return d; }
 | LOOKAHEAD(<USE> <INVERSION>)
-  (    t=<USE> <INVERSION> [of=<IDENTIFIER> [<RULE>] q=QualName()] <ON> c2=SimpleExpr()
+  (    t=<USE> t2=<INVERSION> (of=<IDENTIFIER> [<RULE>] q=QualName() [<ON> c2=SimpleExpr()]
+                        |<ON> c2=SimpleExpr())
     {
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
-      if (of != null && !of.image.equals("of")) {
+      if (c2 == null) {
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_ON,new TokenSpan(t2));
+          c2 = new Clause(q.getLocation());
+      } else if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF,"'inversion " + of.image + "'", new Location(of));
       }
     }
@@ -2131,7 +2135,7 @@ Derivation Justification(Token startT, Clause c) :
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;
       if (cl == null) {
-          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_ON,new Location(t2));
+          ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_ON,new TokenSpan(t2));
           cl = new Clause(q.getLocation());
       } else if (of != null && !of.image.equals("of")) {
           ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INVERSION_OF, "'inversion " + of.image + "'", new Location(of));
