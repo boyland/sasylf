@@ -16,6 +16,11 @@ import org.eclipse.jface.text.source.IAnnotationModelExtension2;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
 
+/**
+ * Class to handle quick fixes in the project.
+ * This class doesn't include the logic for the quick fixes, rather that
+ * is done in {@link MarkerResolutionGenerator}.
+ */
 public class ProofQuickFixProcessor implements IQuickAssistProcessor {
 
 	public ProofQuickFixProcessor(IDocument doc) {
