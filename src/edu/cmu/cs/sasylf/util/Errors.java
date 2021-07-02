@@ -121,6 +121,7 @@ public enum Errors {
 	WRONG_RESULT			("the last derivation in a sequence does not match the statement to be proven"),
 	RULE_PREMISE_MISMATCH ("rule/theorem expects type of premise #"),
 	RULE_CONCLUSION_MISMATCH ("rule/theorem can't produce any instance of the claimed judgment: "),
+	RULE_CONCLUSION_CONTRADICTION ("rule/theorem produces contradiction not claimed judgment: "),
 	RULE_CONTEXT_INCONSISTENT ("contexts used in application of rule/theorem are inconsistent"),
 	MISSING_CASE			("must provide a case for "),
 	TOO_MANY_CASES	        ("Inversion cannot be used since one must provide a case for "),

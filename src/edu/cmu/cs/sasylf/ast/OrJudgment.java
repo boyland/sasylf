@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -78,4 +79,13 @@ public class OrJudgment extends AndOrJudgment {
 		return result;
 	}
 		
+	/**
+	 * Get the special term "or[]" to represent the empty or clause,
+	 * and thus "false" in the logic.
+	 * @return constant for or[]
+	 */
+	public static Constant getContradictionConstant() {
+		Judgment contra = makeEmptyOrJudgment(new Location("",0,0));
+		return (Constant)contra.getForm().asTerm();
+	}
 }

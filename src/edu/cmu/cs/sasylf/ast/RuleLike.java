@@ -218,8 +218,13 @@ public abstract class RuleLike extends Node implements Named {
 		}
 		Element concElem = output.getElement();
 		if (concElem.getType().typeTerm() != getConclusion().getType().typeTerm()) {
-			ErrorHandler.error(Errors.RULE_CONCLUSION_MISMATCH, getConclusion().getType().getName() + " != " + concElem.getType().getName(), 
-					isPattern ? output : errorPoint);
+			if (!isPattern && getConclusion().asTerm() == OrJudgment.getContradictionConstant()) {
+				ErrorHandler.error(Errors.RULE_CONCLUSION_CONTRADICTION, concElem.getType().getName(), 
+							errorPoint,"_: contradiction");
+			} else {
+				ErrorHandler.error(Errors.RULE_CONCLUSION_MISMATCH, getConclusion().getType().getName() + " != " + concElem.getType().getName(), 
+						isPattern ? output : errorPoint);
+			}
 		}
 
 		List<Term> allArgs = new ArrayList<Term>();
