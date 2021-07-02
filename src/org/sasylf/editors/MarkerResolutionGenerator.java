@@ -41,6 +41,24 @@ import edu.cmu.cs.sasylf.util.Errors;
 /**
  * Resolution of SASyLF problems.
  * This class handles both resolution or markers and quick fix for annotations.
+ * <p>
+ * If you wish to add new quick fixes, you need
+ * <ul>
+ * <li> An enumerated error in {@link edu.cmu.cs.sasylf.util.Errors}
+ * <li> Some code that generates that error/warning in the engine.
+ *     It must also generate a non-null "debugInfo" as part of that error.
+ *     The first line of that info conventionally has a string to be replaced,
+ *     but even if it isn't, things should work, you just don't get help finding 
+ *     the "old text". 
+ * </ul>
+ * Then you need to update this class:
+ * <ul>
+ * <li> {@link #hasProposals(IMarker)} needs to have 
+ *     its big switch statement updated to include the new error and return true.
+ * <li> {@link #getProposals(IDocument, IMarker)} needs
+ *     to have its big switch updated to generate the proposal.  This is the meat
+ *     of the quick fix: look at other quick fixes to get an idea how to proceed.
+ * </ul>
  */
 public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 
@@ -136,6 +154,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		case CASE_UNNECESSARY: return true;
 		case PARTIAL_CASE_ANALYSIS: return true;
 		case OTHER_JUSTIFIED: return true;
+		case RULE_CONCLUSION_CONTRADICTION: return true;
 		}
 		// NO_DERIVATION
 		return false;
@@ -399,6 +418,16 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 					String oldText = lineText.substring(oldStart, findEnd);
 					proposals.add(new MyCompletionProposal(res, newText, lineInfo.getOffset() + oldStart, oldText.length(), 0, null,
 							"replace '" + oldText + "' with '" + newText + "'", null, null));
+				}
+				break;
+			case RULE_CONCLUSION_CONTRADICTION:
+				if (lineInfo != null) {
+					int findBy = lineText.indexOf(" by ");
+					if (findBy >= lineIndent.length()) {
+						String oldText = lineText.substring(lineIndent.length(), findBy);
+						proposals.add(new MyCompletionProposal(res, "_: contradiction", lineInfo.getOffset() + lineIndent.length(), oldText.length(), 0, null,
+								"replace '" + oldText + "' with '_: contradiction'", null, null));
+					}
 				}
 				break;
 			}
