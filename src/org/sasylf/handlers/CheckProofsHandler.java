@@ -62,7 +62,19 @@ public class CheckProofsHandler extends AbstractHandler {
 		}
 		IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
 		IResource res = activeEditor.getEditorInput().getAdapter(IResource.class);
-		if (res != null) {
+		if (res == null) {
+			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+			MessageDialog.openInformation(
+					window.getShell(),
+					"SASyLF Check Proofs ",
+					"Cannot find resource for " + activeEditor);
+		} else if (!res.getName().endsWith(".slf")) {
+			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+			MessageDialog.openInformation(
+					window.getShell(),
+					"SASyLF Check Proofs",
+					"Cannot check proofs in non SASyLF file: " + res.getFullPath());
+		} else {
 			IProject p = res.getProject();
 			ProofBuilder pb = ProofBuilder.getProofBuilder(p);
 			if (pb == null) {
@@ -72,12 +84,6 @@ public class CheckProofsHandler extends AbstractHandler {
 				// System.out.println("use proof builder");
 				pb.forceBuild(res);
 			}			
-		}  else {
-			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
-			MessageDialog.openInformation(
-					window.getShell(),
-					"SASyLF Check Proofs ",
-					"Cannot find resource for " + activeEditor);
 		}
 		return null;
 	}
