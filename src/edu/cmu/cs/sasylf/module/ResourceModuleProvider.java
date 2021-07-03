@@ -48,6 +48,7 @@ public class ResourceModuleProvider extends AbstractModuleProvider {
 		} catch (NullPointerException e) {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, id.toString(), loc);
 		} catch (RuntimeException e) {
+			e.printStackTrace();
 			ErrorHandler.error(Errors.INTERNAL_ERROR,  e.getMessage(), loc);
 		}
 		return results;

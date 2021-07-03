@@ -218,6 +218,7 @@ public class Proof {
 			} catch (SASyLFError ex) {
 				// muffle: handled already
 			} catch (RuntimeException ex) {
+				ex.printStackTrace();
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
 			}
 		}
