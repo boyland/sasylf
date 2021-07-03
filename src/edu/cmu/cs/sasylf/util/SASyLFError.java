@@ -8,7 +8,7 @@ public class SASyLFError extends RuntimeException {
 
 	private Report report;
 
-	SASyLFError(Report report) {  // package-private constructor - can only be called from ErrorHandler
+	public SASyLFError(Report report) { 
 		super(report.formatMessage());
 		this.report = report;
 	}
