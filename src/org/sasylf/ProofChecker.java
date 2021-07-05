@@ -126,7 +126,7 @@ public class ProofChecker  {
 				if (er.errorType != null) {
 					marker.setAttribute(Marker.SASYLF_ERROR_TYPE, er.errorType.toString());
 				}
-				marker.setAttribute(Marker.SASYLF_ERROR_INFO, er.debugInfo);
+				marker.setAttribute(Marker.SASYLF_ERROR_INFO, er.getExtraInformation());
 				if (MarkerResolutionGenerator.hasProposals(marker)) {
 					marker.setAttribute(Marker.HAS_QUICK_FIX, true);
 				}

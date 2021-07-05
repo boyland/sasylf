@@ -4,12 +4,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 public abstract class DerivationWithArgs extends Derivation {
@@ -142,6 +146,14 @@ public abstract class DerivationWithArgs extends Derivation {
 	}
 
 	/**
+	 * If an argument is undeclared, can we handle a placeholder?
+	 * @return
+	 */
+	protected boolean acceptPlaceholder() {
+		return false;
+	}
+	
+	/**
 	 * Try to parse a clause as a conjunction of derivations.
 	 * @param ctx
 	 * @param cl clause to examine must not be null
@@ -161,9 +173,22 @@ public abstract class DerivationWithArgs extends Derivation {
 				Fact f = null;
 				if (e instanceof NonTerminal) {
 					String s = e.toString();
+					if (s.equals("_")) { // treat "_" specially
+						do {
+							FreeVar v = FreeVar.fresh("", Constant.UNKNOWN_TYPE);
+							s = v.toString();
+						} while (ctx.derivationMap.containsKey(s));
+					}
 					f = ctx.derivationMap.get(s);
 					if (f == null && !ctx.isKnown(s)) {
-						ErrorHandler.error(Errors.DERIVATION_NOT_FOUND, s, this);
+						UpdatableErrorReport report = new UpdatableErrorReport(Errors.DERIVATION_NOT_FOUND, e.toString(), e);
+						ErrorHandler.report(report);
+						if (acceptPlaceholder()) {
+							f = new DerivationPlaceholder(s, report);
+							((Derivation)f).typecheckAndAssume(ctx);
+						} else {
+							throw new SASyLFError(report);
+						}
 					}
 				} else if (e instanceof Clause) {
 					f = parseAsDerivation(ctx,(Clause)e);
@@ -178,6 +203,10 @@ public abstract class DerivationWithArgs extends Derivation {
 		List<ClauseUse> clauses = new ArrayList<>();
 		StringBuilder sb = new StringBuilder();
 		for (Fact f : pieces) {
+			if (f instanceof DerivationPlaceholder) {
+				DerivationPlaceholder ph = (DerivationPlaceholder)f;
+				throw new SASyLFError(ph.getReport());
+			}
 			if (!clauses.isEmpty()) sb.append(",");
 			sb.append(f.getName());
 			final Element element = f.getElement();

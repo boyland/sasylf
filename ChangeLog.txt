@@ -15,6 +15,10 @@ RELEASE HISTORY
 
 1.5.1	Bug fixes
 	Better error handling in syntactic sugar
+	Bug fix: "_" could be used, which was confusing.
+	Permit variable to be ignored in assumption rule.
+	Better error messages and quick fixes, especially for undeclared derivations
+	Resolved #102
 	
 1.5.0	Modules without parameters
     Added the ability to refer to syntax/judgments/theorems in other named modules

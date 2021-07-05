@@ -211,6 +211,7 @@ public abstract class RuleLike extends Node implements Named {
 		for (int i=0; i < n; ++i) {
 			Element formal = getPremises().get(i);
 			Fact input = inputs.get(i);
+			if (input instanceof DerivationPlaceholder) continue; // don't check
 			Element actual = input.getElement();
 			if (formal.getType().typeTerm() != actual.getType().typeTerm()) {
 				ErrorHandler.error(Errors.RULE_PREMISE_MISMATCH, (i+1) + ": " + formal.getType().getName(), isPattern ? input : errorPoint);
@@ -236,6 +237,14 @@ public abstract class RuleLike extends Node implements Named {
 		for (int i=0; i < n; ++i) {
 			Element formal = getPremises().get(i);
 			Fact input = inputs.get(i);
+			if (input instanceof DerivationPlaceholder) {
+				DerivationPlaceholder ph = (DerivationPlaceholder)input;
+				if (ph.getTerm() instanceof FreeVar) {
+					allContexts.add(Collections.emptyList());
+					allArgs.add(ph.getTerm());
+					continue; // don't check
+				}
+			}
 			Element actual = input.getElement();
 			String name = "argument #"+ (i+1);
 			if (isPattern) { // flow complex

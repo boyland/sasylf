@@ -43,6 +43,11 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	}
 
 	@Override
+	protected boolean acceptPlaceholder() {
+		return true;
+	}
+
+	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		Util.debug("line: ", this.getLocation().getLine());
@@ -152,11 +157,21 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		Set<FreeVar> poorVars = callSub.selectUnavoidable(subject.getFreeVariables());
 		poorVars.removeAll(ctx.outputVars); // output variables are often not-free
 		if (!poorVars.isEmpty()) {
-			StringBuilder sb = new StringBuilder();
-			for (FreeVar v : poorVars) {
-				sb.append(v + "->" + callSub.getMap().get(v));
+			for (Fact f : this.getArgs()) {
+				if (f instanceof DerivationPlaceholder) {
+					DerivationPlaceholder ph = (DerivationPlaceholder)f;
+					if (poorVars.remove(ph.getTerm())) {
+						ph.setPlaceholder(ctx, callSub, this);
+					}
+				}
 			}
-			ErrorHandler.warning(Errors.WHERE_MISSING_EXT, ": " + poorVars, this, sb.toString());
+			if (!poorVars.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				for (FreeVar v : poorVars) {
+					sb.append(v + "->" + callSub.getMap().get(v));
+				}
+				ErrorHandler.warning(Errors.WHERE_MISSING_EXT, ": " + poorVars, this, sb.toString());
+			}
 		}
 		
 		ctx.composeSub(callSub);

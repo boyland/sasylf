@@ -19,7 +19,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
@@ -67,24 +66,46 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 	private static class MyCompletionProposal extends CompletionProposal {
 
 		private final IResource resource;
+		private final ICompletionProposal prereq;
 
+		/**
+		 * Generate a quick fix.  The arguments are the same as standard
+		 * except that "pre" can be a completion proposal that must be run 
+		 * before this one.  (It should apply later in the document, 
+		 * to avoid offset changes.)
+		 * @param res
+		 * @param replacementString
+		 * @param replacementOffset
+		 * @param replacementLength
+		 * @param cursorPosition
+		 * @param pre
+		 * @param displayString
+		 * @param contextInformation
+		 * @param additionalProposalInfo
+		 */
 		public MyCompletionProposal(IResource res, String replacementString,
 				int replacementOffset, int replacementLength, int cursorPosition,
-				Image image, String displayString,
+				ICompletionProposal pre, String displayString,
 				IContextInformation contextInformation, String additionalProposalInfo) {
 			super(replacementString, replacementOffset, replacementLength, cursorPosition,
-					image, displayString, contextInformation, additionalProposalInfo);
+					null, displayString, contextInformation, additionalProposalInfo);
 			// System.out.println("replacementString = " + replacementString + ", replacementOffset = " + replacementOffset);
 			resource = res;
+			prereq = pre;
 		}
 
 		@Override
 		public void apply(IDocument document) {
+			if (prereq != null) {
+				// System.out.println("Applying pre req");
+				prereq.apply(document);
+			}
 			super.apply(document);
 			ProofChecker.analyzeSlf(resource, document);
 		}
 
 	}
+	
 	public MarkerResolutionGenerator() {
 	}
 
@@ -133,7 +154,6 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 			return false;
 		}
 		if (markerType == null || fixInfo == null) return false;
-
 		switch (markerType) {
 		default: break;
 		case ABSTRACT_NOT_PERMITTED_HERE: return true;
@@ -155,6 +175,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 		case PARTIAL_CASE_ANALYSIS: return true;
 		case OTHER_JUSTIFIED: return true;
 		case RULE_CONCLUSION_CONTRADICTION: return true;
+		case DERIVATION_NOT_FOUND: return true; // only if debug info is set!
 		}
 		// NO_DERIVATION
 		return false;
@@ -428,6 +449,52 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						proposals.add(new MyCompletionProposal(res, "_: contradiction", lineInfo.getOffset() + lineIndent.length(), oldText.length(), 0, null,
 								"replace '" + oldText + "' with '_: contradiction'", null, null));
 					}
+				}
+				break;
+			case DERIVATION_NOT_FOUND:
+				if (lineInfo != null) {
+					int colon = split[0].indexOf(':');
+					int useStart = marker.getAttribute(IMarker.CHAR_START, -1);
+					int useEnd = marker.getAttribute(IMarker.CHAR_END, -1);
+					String useName = doc.get(useStart,useEnd-useStart);
+					String defName;
+					if (colon >= 0) {
+						defName = split[0].substring(0,colon);
+					} else {
+						defName = split[0];
+						proposals.add(new MyCompletionProposal(res, defName, useStart, useName.length(), 0, null,
+								"replace '" + useName + " with '" + defName + "'", null, null));
+						break; // skip rest of this case
+					}
+					
+					IRegion prevLineInfo = lineInfo;
+					int diff = 0;
+					try {
+						if (split.length > 1) diff = Integer.parseInt(split[1]);
+					} catch (RuntimeException ex) {
+						// muffle array or number format
+					}
+					if (diff > 0) prevLineInfo = doc.getLineInformation(line-1-diff);
+					String prevLine = doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength());
+					int prevStart;
+					for (prevStart=0; prevStart < prevLine.length(); ++prevStart) {
+						int ch = lineText.charAt(prevStart);
+						if (ch == ' ' || ch == '\t') continue;
+						break;
+					}
+					String prevIndent = lineText.substring(0,prevStart);
+					newText = prevIndent + split[0] + " by unproved" + nl;
+					
+					CompletionProposal pre = null;
+					String extra = "";
+					if (!defName.equals(useName)) {
+						if (useName.equals("_")) {
+							pre = new CompletionProposal(defName, useStart, 1, 0);
+							extra = ", and replace '_' with '" + defName + "'";
+						}
+					}
+					proposals.add(new MyCompletionProposal(res, newText, prevLineInfo.getOffset(), 0, 0, pre,
+							"insert '" + split[0] + " by unproved' before this line"+extra, null, null));
 				}
 				break;
 			}

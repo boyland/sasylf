@@ -706,6 +706,14 @@ public class TermPrinter {
 	}
 
 	/**
+	 * Return a copy of the map used to give names to internal variables.
+	 * @return the map.
+	 */
+	public Map<FreeVar,NonTerminal> getVarMap() {
+		return Collections.unmodifiableMap(varMap);
+	}
+	
+	/**
 	 * Does the string parse as a terminal?
 	 * @param s string to examine, must not be null
 	 * @return whether the string is a terminal.

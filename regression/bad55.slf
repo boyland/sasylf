@@ -24,3 +24,9 @@ lemma silly:
     end case
   end case analysis
 end lemma   
+
+lemma use_underscore:
+  exists 0 = 0 .
+  _: 0 = 0 by rule eq
+  result: 0 = 0 by _ //! should not use underscore
+end lemma
