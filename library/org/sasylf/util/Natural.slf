@@ -48,6 +48,18 @@ lemma succ-preserves-eq:
   proof by rule eq
 end lemma
 
+theorem succ-preserves-ne:
+  forall d: n1 ≠ n2
+  exists S n1 ≠ S n2
+  proof by rule ne-rec on d
+end theorem
+
+theorem succ-cancels-ne:
+  forall d: S n1 ≠ S n2
+  exists n1 ≠ n2
+  proof by inversion on d
+end theorem
+
 theorem ne-anti-reflexive:
   forall d: n ≠ n
   exists contradiction.
@@ -515,6 +527,13 @@ theorem gt-implies-ne:
   end case analysis
 end theorem
       
+theorem lt-implies-ne:
+  forall d1: n2 > n1
+  exists n1 ≠ n2
+  n: n2 ≠ n1 by theorem gt-implies-ne on d1
+  proof by theorem ne-symmetric on n
+end theorem
+
 theorem cmp-total:
   forall n1
   forall n2
@@ -810,11 +829,25 @@ theorem plus-right-cancels:
   proof by theorem plus-left-cancels on d1', d2'
 end theorem
 
+lemma plus-left-identity:
+  forall d: n1 + n2 = n2
+  exists n1 = 0.
+  d': 0 + n2 = n2 by rule plus-z
+  proof by theorem plus-right-cancels on d, d'
+end lemma
+   
 lemma plus-right-identity:
   forall d: n1 + n2 = n1
   exists n2 = 0.
   d': n1 + 0 = n1 by lemma plus-right-zero on n1
   proof by theorem plus-left-cancels on d, d'
+end lemma
+
+lemma plus-left-zero-inversion:
+  forall p: 0 + n1 = n2
+  exists n1 = n2
+  use inversion on p where n1 := n2
+  proof by rule eq
 end lemma
 
 lemma plus-right-zero-inversion:
@@ -825,6 +858,12 @@ lemma plus-right-zero-inversion:
   proof by rule eq
 end lemma
   
+lemma plus-left-succ-inversion:
+  forall p: S n1 + n2 = S n3
+  exists n1 + n2 = n3
+  proof by inversion on p
+end lemma
+
 lemma plus-right-succ-inversion:
   forall p: n1 + S n2 = S n3
   exists n1 + n2 = n3.
@@ -833,6 +872,26 @@ lemma plus-right-succ-inversion:
   proof by theorem plus-commutative on p'
 end lemma
   
+lemma plus-swap-succ:
+  forall p: S n1 + n2 = n3
+  exists n1 + S n2 = n3
+  p1: n1 + n2 = n3' by inversion on p where n3 := S n3'
+  proof by lemma plus-right-succ on p1
+end lemma
+
+lemma plus-swap-succ-converse:
+  forall p: n1 + S n2 = n3
+  exists S n1 + n2 = n3
+  do case analysis on n3:
+    case 0 is
+      proof by contradiction on p
+    end case
+  end case analysis
+  use inversion on n3 where n3 := S n3'
+  p1: n1 + n2 = n3' by lemma plus-right-succ-inversion on p
+  proof by rule plus-s on p1
+end lemma
+
 theorem plus-assoc-commutative:
   forall p12: n1 + n2 = n3
   forall p34: n3 + n4 = n7
@@ -1187,6 +1246,37 @@ theorem plus-left-preserves-ne:
   proof by theorem plus-right-preserves-ne on g1, p1s, p2s
 end theorem
 
+theorem plus-right-cancels-ne:
+  forall p1: n1 + n2 = n3
+  forall p2: n1' + n2 = n3'
+  forall ne: n3 ≠ n3'
+  exists n1 ≠ n1'
+  ch: n1 = n1' or n1 ≠ n1' by theorem eq-or-ne on n1, n1'
+  proof by case analysis on ch:
+    
+    case or eq: n1 = n1' is
+      use inversion on eq where n1 := n1'
+      eq3: n3 = n3' by theorem plus-unique on p1, p2
+      use inversion on eq3 where n3 := n3'
+      _: contradiction by theorem ne-anti-reflexive on ne
+    end case
+
+    case or ne1: n1 ≠ n1' is
+      proof by ne1
+    end case
+
+  end case analysis
+end theorem
+
+theorem plus-left-cancels-ne:
+  forall p1: n1 + n2 = n3
+  forall p2: n1 + n2' = n3'
+  forall ne: n3 ≠ n3'
+  exists n2 ≠ n2'
+  p1c: n2 + n1 = n3 by theorem plus-commutative on p1
+  p2c: n2' + n1 = n3' by theorem plus-commutative on p2
+  proof by theorem plus-right-cancels-ne on p1c, p2c, ne
+end theorem
 
 
 /// Multiplication

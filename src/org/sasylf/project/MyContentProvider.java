@@ -258,7 +258,7 @@ public class MyContentProvider implements ITreeContentProvider, IPipelinedTreeCo
 			if (obj instanceof IFolder && !ProofBuilder.isProofFolder(obj)) {
 				IFolder f = (IFolder)obj;
 				IContainer pf = ProofBuilder.getProofFolder(f.getProject());
-				if (pf.getProjectRelativePath().isPrefixOf(f.getProjectRelativePath())) {
+				if (pf != null && pf.getProjectRelativePath().isPrefixOf(f.getProjectRelativePath())) {
 					// System.out.println("Converting refresh " + f);
 					it.remove();
 					newElements.add(new FolderPackageFragment(f));
