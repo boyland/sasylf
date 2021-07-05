@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.io.PrintWriter;
+
 import edu.cmu.cs.sasylf.prover.Proof;
 import edu.cmu.cs.sasylf.prover.ProofImpl;
 import edu.cmu.cs.sasylf.prover.Prover;
@@ -9,15 +11,17 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
-public class DerivationBySolve extends DerivationWithArgs {
+public class DerivationBySolve extends Derivation {
 	public DerivationBySolve(String n, Location l, Clause c) {
 		super(n,l,c);
 	}
 
 	@Override
-	public String prettyPrintByClause() {
-		return " by solve";
+	public void prettyPrint(PrintWriter pw) {
+		super.prettyPrint(pw);
+		pw.print(" by solve");
 	}
+
 
 	@Override
 	public void typecheck(Context ctx) {

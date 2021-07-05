@@ -1,18 +1,21 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.io.PrintWriter;
+
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
-public class DerivationUnproved extends DerivationWithArgs {
+public class DerivationUnproved extends Derivation {
 	public DerivationUnproved(String n, Location l, Clause c) {
 		super(n,l,c);
 	}
 
 	@Override
-	public String prettyPrintByClause() {
-		return " by unproved";
+	public void prettyPrint(PrintWriter pw) {
+		super.prettyPrint(pw);
+		pw.print(" by unproved");
 	}
 
 	@Override

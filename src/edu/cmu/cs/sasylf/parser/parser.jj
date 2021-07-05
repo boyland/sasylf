@@ -2078,23 +2078,23 @@ Derivation Derivation() :
 }
 
 Derivation Justification(Token startT, Clause c) :
-{ Token t=null; Token t2; DerivationWithArgs d; DerivationByInduction di; Case ca;
+{ Token t=null; Token t2; Derivation d; DerivationWithArgs da; DerivationByInduction di; Case ca;
   DerivationByCaseAnalysis dca; StringSpan s; QualName q = null; Element e; Clause cl = null; Token of = null; QualName qn;
 }
 { // args should include expressions
-  <RULE> qn=QualName() { d=new DerivationByRule(startT.image, new Location(startT), c, qn); }
-    [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+  <RULE> qn=QualName() { da=new DerivationByRule(startT.image, new Location(startT), c, qn); }
+    [ <ON> cl=SimpleExpr() { da.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
     ]
-    { return d; }
-  | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, new StringSpan(t)); }
-    [ <ON> cl=SimpleExpr() { d.addArgString(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+    { return da; }
+  | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { da=new DerivationByTheorem(startT.image, new Location(startT), c, qn, new StringSpan(t)); }
+    [ <ON> cl=SimpleExpr() { da.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
     ]
-    { return d; }
+    { return da; }
   | LOOKAHEAD(2) <INDUCTION> <ON> cl=SimpleExpr()
-    { d = di = new DerivationByInduction(startT.image, new Location(startT), c, cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+    { di = new DerivationByInduction(startT.image, new Location(startT), c, cl); }
+      ( <COMMA> cl=SimpleExpr() { di.addArgString(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) di.getCases().add(ca); })*
     of=<END> 
@@ -2105,8 +2105,8 @@ Derivation Justification(Token startT, Clause c) :
        ErrorHandler.recoverableError(Errors.WRONG_END,"'end induction'",new TokenSpan(t),wrong+"\ninduction"); } )
     { di.setEndLocation(Location.endOf(t)); return di; }
   | LOOKAHEAD(2) <CASE> <ANALYSIS> <ON> cl=SimpleExpr()
-    { d = dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+    { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, cl); }
+      ( <COMMA> cl=SimpleExpr() { dca.addArgString(cl); } )* 
     <COLON>
     ( ca=Case() { if (ca != null) dca.getCases().add(ca); })*
     of=<END> 
@@ -2155,22 +2155,22 @@ Derivation Justification(Token startT, Clause c) :
 	}
   )
   | <INDUCTION> t=<HYPOTHESIS> (<ON> cl=SimpleExpr() | {cl = null; })
-    { d = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
+    { da = new DerivationByInductionHypothesis(startT.image, new Location(startT), c);
       if (cl != null) {
-          d.addArgString(cl);
+          da.addArgString(cl);
       } else {
           ErrorHandler.recoverableError(Errors.PARSE_EXPECTED_INDUCTION_HYPO_ON, new Location(t));
       }
     }
-    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
-    { return d; }
+    ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )*
+    { return da; }
   | <SUBSTITUTION> <ON> t=<IDENTIFIER>
     { 
-      d = new DerivationBySubstitution(startT.image, new Location(startT), c);
-      d.addArgString(clauseFor(t));
+      da = new DerivationBySubstitution(startT.image, new Location(startT), c);
+      da.addArgString(clauseFor(t));
     }
-    ( <COMMA> t=<IDENTIFIER> { d.addArgString(clauseFor(t)); } )* 
-    { return d; }
+    ( <COMMA> t=<IDENTIFIER> { da.addArgString(clauseFor(t)); } )* 
+    { return da; }
   | t=<UNPROVED>
     { d = new DerivationUnproved(startT.image, new Location(startT), c);
       d.setEndLocation(Location.endOf(t)); 
@@ -2180,35 +2180,35 @@ Derivation Justification(Token startT, Clause c) :
       d.setEndLocation(Location.endOf(t)); 
       return d; }
   | <EXCHANGE> <ON> t=<IDENTIFIER>
-    { d = new DerivationByExchange(startT.image, new Location(startT), c);
-      d.addArgString(clauseFor(t)); }
-    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
-    { return d; }
+    { da = new DerivationByExchange(startT.image, new Location(startT), c);
+      da.addArgString(clauseFor(t)); }
+    ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
+    { return da; }
   | <WEAKENING> <ON> t=<IDENTIFIER>
-    { d = new DerivationByWeakening(startT.image, new Location(startT), c);
-      d.addArgString(clauseFor(t)); }
-    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
-    { return d; }
+    { da = new DerivationByWeakening(startT.image, new Location(startT), c);
+      da.addArgString(clauseFor(t)); }
+    ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
+    { return da; }
   | LOOKAHEAD({isRulePart2()}) qn = QualName() 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
-     (<ON> cl=SimpleExpr() { d.addArgString(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* | {} )
+     { da=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
+     (<ON> cl=SimpleExpr() { da.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* | {} )
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(startT));
-       return d;
+       return da;
      }
   | LOOKAHEAD(2) t=<IDENTIFIER> {qn = new QualName(new Location(t), t.image);} 
-     { d=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
-     <ON> cl=SimpleExpr() { d.addArgString(cl); }
-      ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )* 
+     { da=new DerivationByTheorem(startT.image, new Location(startT), c, qn, null); }
+     <ON> cl=SimpleExpr() { da.addArgString(cl); }
+      ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
      { // handled later: ErrorHandler.recoverableError("Missing keyword 'rule' or 'theorem'/'lemma' before name", new Location(t));
-       return d;
+       return da;
      }
   | cl=SimpleExpr()
-    { d = new DerivationByPrevious(startT.image, new Location(startT), c);
-      d.addArgString(cl);
+    { da = new DerivationByPrevious(startT.image, new Location(startT), c);
+      da.addArgString(cl);
     }
-    ( <COMMA> cl=SimpleExpr() { d.addArgString(cl); } )*
-	{ return d; }
+    ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )*
+	{ return da; }
 }
 
 Case Case() :
