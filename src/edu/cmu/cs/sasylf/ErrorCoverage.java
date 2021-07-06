@@ -38,7 +38,7 @@ public class ErrorCoverage {
 		boolean showSource = false; // option
 		boolean verbose = false; // option
 		Set<Errors> interestingErrors = new HashSet<>();
-		// hese should not be happening
+		// These should not be happening
 		interestingErrors.add(Errors.INTERNAL_ERROR);
 		interestingErrors.add(Errors.UNSPECIFIED);
 		// command line can set other interesting errors
