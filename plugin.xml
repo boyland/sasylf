@@ -169,6 +169,32 @@
    			</and>
 			</visibleWhen>
 		</command>
+       <menu
+             label="Refactor">
+          <command
+                commandId="org.sasylf.commands.renameTheorem"
+                label="Rename Theorem"
+                style="push"
+                tooltip="Rename a lemma or theorem">
+             <visibleWhen
+                   checkEnabled="false">
+                <and>
+                   <with
+                         variable="activeEditorInput">
+                      <reference
+                            definitionId="org.sasylf.isProofFile">
+                      </reference>
+                   </with>
+                   <with
+                         variable="selection">
+                      <adapt
+                            type="org.eclipse.jface.text.ITextSelection">
+                      </adapt>
+                   </with>
+                </and>
+             </visibleWhen>
+          </command>
+       </menu>
 	  </menuContribution>
       <menuContribution 
       	allPopups="false"
@@ -426,6 +452,12 @@
             description="Turn off/on SASyLF Nature on selected project"
             id="org.sasylf.commands.togglenature"
             name="Toggle SASyLF Nature">
+      </command>
+      <command
+            defaultHandler="org.sasylf.refactor.RenameTheoremHandler"
+            description="Rename a lemma or theorem"
+            id="org.sasylf.commands.renameTheorem"
+            name="Rename Theorem">
       </command>
    </extension>
    <extension
