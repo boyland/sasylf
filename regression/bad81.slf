@@ -86,6 +86,11 @@ lemma sometyped:
     proof by rule T-True
 end lemma
 
+lemma hole:
+    exists contradiction
+    proof by unproved //! expected warning
+end lemma
+
 lemma testrule:
     exists t value
     _: true value by rule T-False //! wrong result type
@@ -102,6 +107,7 @@ lemma testrule:
     _: * ⊢ true : Bool by rule T-App on d1, f1 //! conclusion cannot match
     _: * ⊢ λ x:Bool . true : Bool → Bool by rule T-Abs on f1 //! wrong context too
     _: * ⊢ t : T by lemma sometyped
+    proof by lemma hole //! lemma returns a contradiction, not "t value"
     proof by rule val-true //! t already set
 end lemma
 
