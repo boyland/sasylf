@@ -144,7 +144,7 @@ public class Judgment extends Node implements ClauseType, Named {
 			if (contextNT == null) assume = null;
 			else assume = contextNT; // fix for now
 		} else if (contextNT != null && !Util.X_CONTEXT_IS_SYNTAX) {
-			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, ". Try adding \"assumes " + contextNT + "\"", this, "assumes " + contextNT);
+			ErrorHandler.recoverableError(Errors.MISSING_ASSUMES, "'assumes " + contextNT + "'", this, "assumes " + contextNT);
 		}
 		
 		for (Rule r : getRules()) {

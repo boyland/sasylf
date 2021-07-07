@@ -25,7 +25,6 @@ public abstract class Derivation extends Fact {
 	protected Clause clause;
 	protected final boolean wasProof; // this derivation was originally "proof by ..."
 	private boolean clauseChecked = false;
-	protected String suspectOutputVarError = null; // an output variable was set.
 
 	private static final int PROOF_SIZE = 5; // size of string "proof"
 	
@@ -112,15 +111,6 @@ public abstract class Derivation extends Fact {
 		clause.checkBindings(ctx.bindingTypes, this);
 		clause.checkVariables(Collections.<String>emptySet(), false);
 
-		if (!ctx.outputVars.isEmpty()){
-			Set<FreeVar> vs = new HashSet<FreeVar>(ctx.outputVars);
-			vs.retainAll(ctx.inputVars);
-			if (!vs.isEmpty()) {
-				suspectOutputVarError = vs.toString();
-				// System.out.println(this.getLocation().getLine() + ": suspect prematurely bound " + suspectOutputVarError);
-			}
-		}
-		
 		clauseChecked = true;
 	}
 
@@ -320,27 +310,6 @@ public abstract class Derivation extends Fact {
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Report an error for this node (if given a non-null error message)
-	 * @param errorMsg error message, or null to just return false
-	 * @param node node to report error on, must not be null
-	 * @param extraInfo extra LF info to put into error report
-	 * @return false always
-	 */
-	protected static boolean report(String errorMsg, String addendum, Node node, Object... extraInfo) {
-		if (errorMsg == null) return false;
-		if (addendum != null) errorMsg += addendum;
-		if (node instanceof Derivation && ((Derivation)node).suspectOutputVarError != null) {
-			errorMsg += "\nPerhaps these output variables were set prematurely: " + ((Derivation)node).suspectOutputVarError;
-		}
-		StringBuilder sb = new StringBuilder();
-		for (Object o : extraInfo) {
-			sb.append(o == null ? "<null>" : o.toString());
-		}
-		ErrorHandler.error(Errors.DERIVATION_MISMATCH,errorMsg, node, sb.length() == 0 ? null : sb.toString());
-		return false;
 	}
 	
 	/**

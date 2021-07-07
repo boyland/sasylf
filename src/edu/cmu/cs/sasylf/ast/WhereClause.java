@@ -378,7 +378,7 @@ public class WhereClause extends Node {
 				if (i != -1)
 					suggestion = suggestion.substring(0, i - 1);
 				ErrorHandler.recoverableError(Errors.WHERE_WRONG,
-					": " + userWC.first + " should be " + suggestion, userWC.second
+					suggestion, userWC.second
 				);
 			}
 		}

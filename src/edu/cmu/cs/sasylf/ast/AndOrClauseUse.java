@@ -86,7 +86,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			else try {
 				prefix = ContextJudgment.getCommonPrefix(prefix, e);
 			} catch (NoCommonPrefixException e1) {
-				ErrorHandler.error(Errors.ANDOR_PREFIX,": " + p + " doesn't share " + prefix, sp);								
+				ErrorHandler.error(Errors.ANDOR_PREFIX,": " + p + " >/= " + prefix, sp);								
 			}
 		}
 		List<ClauseUse> clauses = new ArrayList<>(parts); // so we can mutate

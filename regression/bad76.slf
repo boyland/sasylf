@@ -540,7 +540,7 @@ lemma silly3:
                 case rule
                     _: (Γ, x : T0) ⊢ t0[x] : T1
                     ------------------------------------------- T-Abs
-                    _: Γ ⊢ (λ x : T0 • t0[x]) : (T0 → T1)
+                    _: Γ ⊢ (λ t : T0 • t0[t]) : (T0 → T1) //! only variables can be bound, not syntax
                 is
                     proof by rule val-unit
                 end case

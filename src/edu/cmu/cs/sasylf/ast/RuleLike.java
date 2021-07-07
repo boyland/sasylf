@@ -250,13 +250,17 @@ public abstract class RuleLike extends Node implements Named {
 			if (isPattern) { // flow complex
 				if (formal.getRoot() != null && concElem.getRoot() != null) {
 					if (!concElem.getRoot().equals(actual.getRoot())) {
-						ErrorHandler.error(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),input);
+						ErrorHandler.error(Errors.CONTEXT_DISCARDED,": " + concElem.getRoot(), input);
 					}
 				} else if (concElem.getRoot() == null && actual.getRoot() != null) {
 					ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, input);
 				}
 			} else if (!Derivation.checkRootMatch(ctx,actual,formal,null)) {
-				ErrorHandler.error(Errors.CONTEXT_DISCARDED," for " + name + " to "+getName(),errorPoint);
+				Node source = errorPoint;
+				if (errorPoint instanceof DerivationWithArgs) {
+					source = ((DerivationWithArgs)errorPoint).getArgStrings().get(i);
+				}
+				ErrorHandler.error(Errors.CONTEXT_DISCARDED,": " + actual.getRoot(),source);
 			}
 			getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint);
 		}

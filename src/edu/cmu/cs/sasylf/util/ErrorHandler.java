@@ -14,7 +14,8 @@ public class ErrorHandler {
 	 * if "null" is passed for the parameter.
 	 * @param errorType error type, defaults to UNSPECIFIED
 	 * @param msg extra information associated with error, defaults to "".
-	 * This text should be language independent to aid (future) internationalization.
+	 * This text should be language independent to aid (future) internationalization,
+	 * unless this is an {@link Errors#INTERNAL_ERROR}.
 	 * Usually it is redundant to include text from within the span covered by this report.
 	 * @param loc location of the error, defaults to the last span.
 	 * The default should be avoided, since very few places in the code base update the last span.

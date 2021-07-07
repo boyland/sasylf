@@ -74,7 +74,7 @@ public class RuleCase extends Case {
 				if (ctx.currentCaseAnalysisElement.getType() instanceof SyntaxDeclaration) {
 					ErrorHandler.error(Errors.RULE_CASE_SYNTAX, this, "SASyLF computes the case analysis is on " + ctx.currentCaseAnalysis);
 				} else {
-					ErrorHandler.error(Errors.INTERNAL_ERROR, ": Got an instance of a secrete judgment? " + ctx.currentCaseAnalysisElement, this);
+					ErrorHandler.error(Errors.INTERNAL_ERROR, ": Got an instance of a secret judgment? " + ctx.currentCaseAnalysisElement, this);
 				}
 			}
 			String stringName = ruleName.toString();

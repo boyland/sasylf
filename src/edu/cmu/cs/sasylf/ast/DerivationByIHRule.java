@@ -205,7 +205,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					if (self != other) {
 						ErrorHandler.error(Errors.INDUCTION_NOT_EARLIER, this);
 					} else {
-						ErrorHandler.error(Errors.NOT_SUBDERIVATION, " " + mySchema + " is unchanged", this);
+						ErrorHandler.error(Errors.NOT_SUBDERIVATION_EQ, this);
 					}
 				}        
 			}

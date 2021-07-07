@@ -19,10 +19,10 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
 
 	@Override
 	public void typecheck(Context ctx) {
-		super.typecheck(ctx);
 		if (getArgStrings().size() != 1) {
-			ErrorHandler.error(Errors.CASE_SUBJECT_MULTIPLE, this);
+			ErrorHandler.recoverableError(Errors.CASE_SUBJECT_MULTIPLE, this);
 		}
+		super.typecheck(ctx);
 	}
 
 

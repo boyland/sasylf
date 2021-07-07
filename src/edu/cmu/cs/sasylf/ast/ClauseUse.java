@@ -258,7 +258,7 @@ public class ClauseUse extends Clause {
 									"\n    context is ", this);
 						Element varElement = getElements().get(varIndex);
 						if (!(varElement instanceof Variable))
-							ErrorHandler.error(EXPECTED_VARIABLE, "Expected variable matching " + boundVarElem + " but found the non-variable " + varElement, varElement);
+							ErrorHandler.error(EXPECTED_VARIABLE, varElement);
 						Variable localVar = (Variable) varElement;
 						String localVarName = localVar.getSymbol();
 						vars.add(localVar);
@@ -391,7 +391,7 @@ public class ClauseUse extends Clause {
 		if (varIndex >= 0) {
 			Element e = getElements().get(varIndex);
 			if (!(e instanceof Variable)) {
-				ErrorHandler.error(Errors.EXPECTED_VARIABLE,this," (found " + e + ")");
+				ErrorHandler.error(Errors.EXPECTED_VARIABLE,e);
 			} else {
 				Variable v = (Variable) e;
 
