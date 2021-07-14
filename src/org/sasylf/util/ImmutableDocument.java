@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import org.eclipse.core.resources.IEncodedStorage;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.AbstractDocument;
 import org.eclipse.jface.text.BadLocationException;
@@ -27,6 +28,14 @@ public class ImmutableDocument extends AbstractDocument {
 		super.setLineTracker(tracker);
 		tracker.set(contents);
 		super.completeInitialization();
+	}
+	
+	/**
+	 * Create a temporary document for a resource.
+	 * @param res source of data, must not be null. Should be a file or related.
+	 */
+	public ImmutableDocument(IResource res) {
+		this(IProjectStorage.Adapter.adapt(res));
 	}
 
 	@Override

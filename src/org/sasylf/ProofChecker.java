@@ -29,7 +29,7 @@ import org.sasylf.project.MyNature;
 import org.sasylf.project.ProofBuilder;
 import org.sasylf.util.DocumentUtil;
 import org.sasylf.util.EclipseUtil;
-import org.sasylf.util.ResourceDocument;
+import org.sasylf.util.ImmutableDocument;
 import org.sasylf.util.TrackDirtyRegions.IDirtyRegion;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -230,8 +230,8 @@ public class ProofChecker  {
 		}
 		if (doc == null) {
 			try {
-				doc = new ResourceDocument(res);
-			} catch (CoreException ex) {
+				doc = new ImmutableDocument(res);
+			} catch (RuntimeException ex) {
 				// not good, but we'll muddle along after logging our problem
 				Bundle myBundle = Platform.getBundle(Activator.PLUGIN_ID);
 				if (myBundle != null) {

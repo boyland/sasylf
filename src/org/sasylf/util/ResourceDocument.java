@@ -27,7 +27,9 @@ import org.sasylf.Activator;
 
 /**
  * A temporary (immutable) document for a resource.
+ * @deprecated use {@link ImmutableDocument} instead
  */
+@Deprecated
 public class ResourceDocument implements IDocument {
 
 	private static final int DEFAULT_BUFFER_SIZE = 1024;
@@ -38,7 +40,7 @@ public class ResourceDocument implements IDocument {
 
 	public ResourceDocument(IResource res) throws CoreException {
 		resource = res;
-		IFile f = (IFile)resource.getAdapter(IFile.class);
+		IFile f = resource.getAdapter(IFile.class);
 		Reader r;
 		try {
 			r = new InputStreamReader(f.getContents(),f.getCharset());
