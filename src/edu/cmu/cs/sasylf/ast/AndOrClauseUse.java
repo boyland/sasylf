@@ -69,7 +69,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		for (ClauseUse p : parts) {
 			ClauseType type = p.getType();
 			if (!(type instanceof Judgment)) {
-				ErrorHandler.error(Errors.ANDOR_NOSYNTAX, ": " + p, sp);
+				ErrorHandler.error(Errors.ANDOR_NOSYNTAX, ""+p, sp);
 			}
 			final Judgment judg = (Judgment)type;
 			types.add(judg);
@@ -86,7 +86,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			else try {
 				prefix = ContextJudgment.getCommonPrefix(prefix, e);
 			} catch (NoCommonPrefixException e1) {
-				ErrorHandler.error(Errors.ANDOR_PREFIX,": " + p + " >/= " + prefix, sp);								
+				ErrorHandler.error(Errors.ANDOR_PREFIX,p + " >/= " + prefix, sp);								
 			}
 		}
 		List<ClauseUse> clauses = new ArrayList<>(parts); // so we can mutate

@@ -81,7 +81,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 			List<Clause> originalClauses = original.getClauses();
 			List<Clause> myClauses = getClauses();
 			if (originalClauses.size() != myClauses.size()) {
-				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + originalClauses + ".length != " + myClauses.size(), this);
+				ErrorHandler.error(Errors.RENAME_LENGTH_MISMATCH, originalClauses.size() + " != " + myClauses.size(), this);
 			}
 			int n = myClauses.size();
 			for (int i = 0; i < n; ++i) {
@@ -91,11 +91,11 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 				c.typecheck(ctx);
 				if (c.isVarOnlyClause()) {
 					if (!o.isVarOnlyClause()) {
-						ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + o, c);
+						ErrorHandler.error(Errors.RENAME_MISMATCH, "" + o, c);
 					}
 				} else {
 					if (o.isVarOnlyClause()) {
-						ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + o, c);
+						ErrorHandler.error(Errors.RENAME_MISMATCH, "" + o, c);
 					}
 					ClauseDef cd;
 					if (c instanceof ClauseDef) cd = (ClauseDef) c;

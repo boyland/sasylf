@@ -500,7 +500,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void analyze(Context ctx, Element target, Node source, 
 			Map<CanBeCase, Set<Pair<Term, Substitution>>> result) {
 		if (isAbstract()) {
-			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, ": " + getName(),source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, getName(), source);
 		}
 
 		Term targetTerm = ctx.toTerm(target);

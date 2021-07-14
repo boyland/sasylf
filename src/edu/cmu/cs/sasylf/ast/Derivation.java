@@ -201,7 +201,7 @@ public abstract class Derivation extends Fact {
 			List<ClauseUse> suppliedList = ((AndClauseUse)supplied).getClauses();
 			if (matchList.size() != suppliedList.size()) {
 				if (errorPoint == null) return false;
-				ErrorHandler.error(Errors.DERIVATION_AND_NEQ, ": " + matchList.size() + " != " + suppliedList.size() + " " + info, errorPoint);
+				ErrorHandler.error(Errors.DERIVATION_AND_NEQ, matchList.size() + " != " + suppliedList.size() + " " + info, errorPoint);
 			}
 			for (int i=0; i < matchList.size(); ++i) {
 				String newMsg = "#" + (i+1) + " " + info;
@@ -325,14 +325,14 @@ public abstract class Derivation extends Fact {
 		if (srcClause.getRoot() == null) {
 			if (trgClause.getRoot() != null) {
 				if (errorPoint == null) return false;
-				ErrorHandler.error(Errors.CONTEXT_INTRODUCED,kind, errorPoint);
+				ErrorHandler.error(Errors.CONTEXT_INTRODUCED, kind, errorPoint);
 			}
 		} else if (trgClause.getRoot() == null) {
 			if (errorPoint == null) return false;
-			ErrorHandler.error(Errors.CONTEXT_DISCARDED, errorPoint);
+			ErrorHandler.error(Errors.CONTEXT_DISCARDED, srcClause.getRoot().toString(), errorPoint);
 		} else if (!srcClause.getRoot().equals(trgClause.getRoot())) {
 			if (errorPoint == null) return false;
-			ErrorHandler.error(Errors.CONTEXT_CHANGED,kind,errorPoint);
+			ErrorHandler.error(Errors.CONTEXT_CHANGED, kind, errorPoint);
 		}
 		return true;
 	}
@@ -349,7 +349,7 @@ public abstract class Derivation extends Fact {
 	public static boolean checkRootMatch(Context ctx, Element source, Element dest, Node errorPoint) {
 		if (source.getRoot() != null && dest.getRoot() == null) {
 			if (errorPoint == null) return false;
-			ErrorHandler.error(Errors.CONTEXT_DISCARDED, errorPoint);
+			ErrorHandler.error(Errors.CONTEXT_DISCARDED, source.getRoot().toString(), errorPoint);
 		}
 		// can't check any more because of relaxation
 		return true;

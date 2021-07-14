@@ -264,8 +264,9 @@ public class SyntaxCase extends Case {
 				ErrorHandler.error(Errors.UNKNOWN_CONTEXT, newRoot.toString(), this);
 			}
 			if (newRoot != null) {
-				if (!newRoot.equals(ctx.currentCaseAnalysisElement.getRoot())) {
-					ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
+				NonTerminal subjectRoot = ctx.currentCaseAnalysisElement.getRoot();
+				if (!newRoot.equals(subjectRoot)) {
+					ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED_EX, subjectRoot.toString(), this);
 				}
 			}
 		}

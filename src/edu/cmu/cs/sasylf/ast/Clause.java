@@ -258,27 +258,27 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
 		if (type1 != type2) {
-			ErrorHandler.error(Errors.RENAME_MISMATCH, " type: " + repl.getElemType().getName() + ", not " + orig.getElemType().getName(), repl,
+			ErrorHandler.error(Errors.RENAME_TYPE_MISMATCH, repl.getElemType().getName() + " != " + orig.getElemType().getName(), repl,
 					"SASyLF computed the LF types as " + type1 + " and " + type2);
 		}
 		if (orig instanceof NonTerminal) {
 			if (!(repl instanceof NonTerminal)) {
-				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, "" + orig, repl);
 			}
 		} else if (orig instanceof Variable) {
 			if (!(repl instanceof Variable)) {
-				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig,repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, "" + orig,repl);
 			}
 		} else if (orig instanceof Binding) {
 			if (!(repl instanceof Binding)) {
-				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, repl);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, "" + orig, repl);
 			}
 			Binding ob = (Binding)orig;
 			Binding rb = (Binding)repl;
 			List<Element> oes = ob.getElements();
 			List<Element> res = rb.getElements();
 			if (oes.size() != res.size()) {
-				ErrorHandler.error(Errors.RENAME_MISMATCH, ": " + orig, rb);
+				ErrorHandler.error(Errors.RENAME_MISMATCH, "" + orig, rb);
 			}
 			int n = oes.size();
 			for (int i=0; i < n; ++i) {
@@ -296,7 +296,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
 		if (cf.size() != of.size()) {
-			ErrorHandler.error(Errors.RENAME_MISMATCH,": " + o, this);
+			ErrorHandler.error(Errors.RENAME_MISMATCH,"" + o, this);
 		}
 		int m = cf.size();
 		for (int j = 0; j < m; ++j) {
@@ -448,7 +448,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 				if (e instanceof ClauseUse) {
 					clauses.add((ClauseUse)e);
 				} else {
-					ErrorHandler.error(Errors.ANDOR_NOSYNTAX, ": " + e, this);
+					ErrorHandler.error(Errors.ANDOR_NOSYNTAX, "" + e, this);
 				}
 			}
 			return AndOrClauseUse.create(hasAnd, getLocation(), ctx, clauses);

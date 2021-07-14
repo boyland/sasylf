@@ -161,10 +161,10 @@ public class RuleCase extends Case {
 				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, this);
 			}
 		} else if (thisRoot == null) {
-			ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED,this.getSpan());			
+			ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED, subjectRoot.toString(), this.getSpan());			
 		} else { // neither null, but not equal
 			if (!rule.isAssumption()) {
-				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + thisRoot, this);
+				ErrorHandler.error(Errors.CASE_CONTEXT_CHANGED_EX, subjectRoot.toString(), this);
 			}
 			int diff = patternConc.countLambdas() - subjectTerm.countLambdas();
 			if (diff != rule.isAssumptionSize()) {

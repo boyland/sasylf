@@ -33,7 +33,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 				sourceClauses.add((ClauseUse)f.getElement());
 				continue;
 			}
-			ErrorHandler.error(Errors.ANDOR_NOSYNTAX,": " + f.getName(),this);
+			ErrorHandler.error(Errors.ANDOR_NOSYNTAX,"" + f.getName(),this);
 		}
 		Util.verify(sourceClauses.size() > 0, "should have at least one");
 		ClauseUse source = sourceClauses.get(0);

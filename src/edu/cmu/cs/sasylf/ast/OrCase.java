@@ -81,10 +81,10 @@ public class OrCase extends Case {
 			}
 		} else if (patternRoot == null) {
 			if (((Judgment)cl.getType()).getAssume() != null) {
-				ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED, ": " + subjectRoot, premise);
+				ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED, "" + subjectRoot, premise);
 			}
 		} else if (!subjectRoot.equals(patternRoot)) {
-			ErrorHandler.recoverableError(Errors.CASE_CONTEXT_CHANGED, ": " + subjectRoot + " -> " + patternRoot, premise);
+			ErrorHandler.recoverableError(Errors.CASE_CONTEXT_CHANGED_EX, subjectRoot.toString(), premise);
 		}
 
 		for (Map.Entry<CanBeCase,Set<Pair<Term,Substitution>>> e : ctx.caseTermMap.entrySet()) {

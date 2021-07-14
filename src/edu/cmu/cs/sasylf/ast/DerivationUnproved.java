@@ -23,16 +23,16 @@ public class DerivationUnproved extends Derivation {
 		super.typecheck(ctx);
 		Clause cl = getClause();
 		Term t = ctx.toTerm(cl);
-		String form = "";
+		String form = "???";
 		if (cl instanceof ClauseUse) {
 			try {
 				TermPrinter termPrinter = new TermPrinter(ctx,((ClauseUse)cl).getRoot(),getLocation());
-				form = ": " + termPrinter.toString(termPrinter.asClause(t));
+				form = termPrinter.toString(termPrinter.asClause(t));
 			} catch (RuntimeException ex) {
 				System.out.println("At " + this.getLocation());
 				ex.printStackTrace();
-				form = ": (internal) " + t;
-				// ErrorHandler.report(Errors.INTERNAL_ERROR, ": Couldn't print " + t, this);
+				form = "" + t;
+				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ": Couldn't print " + t, this);
 			}
 		}
 		ErrorHandler.warning(Errors.DERIVATION_UNPROVED, form, this, t.toString());

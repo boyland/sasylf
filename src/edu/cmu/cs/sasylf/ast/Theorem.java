@@ -236,7 +236,7 @@ public class Theorem extends RuleLike {
 				}
 				if (assumes.equals(exists.getRoot())) foundAssumption = true;
 				if (!foundAssumption) {
-					ErrorHandler.warning(Errors.EXTRANEOUS_ASSUMES, ": " + assumes, assumes);
+					ErrorHandler.warning(Errors.EXTRANEOUS_ASSUMES, assumes);
 				}
 			}
 			if (ctx.knownContexts != null && !ctx.knownContexts.isEmpty()) {

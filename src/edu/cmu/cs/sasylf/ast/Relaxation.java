@@ -324,7 +324,7 @@ public class Relaxation {
 					if (patternRoot == null || e.getKey().equals(patternRoot)) {
 						relax = r;
 					} else {
-						ErrorHandler.warning(Errors.CASE_CONTEXT_MAYBE_KNOWN, ": " + e.getKey(), theNode);
+						ErrorHandler.warning(Errors.CASE_CONTEXT_MAYBE_KNOWN, "" + e.getKey(), theNode);
 					}
 					break;
 				}

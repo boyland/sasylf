@@ -70,7 +70,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			callSub = subject.unify(pattern);
 		} catch (UnificationIncomplete e) {
 			TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation(),false);
-			String extraInfo = ": " + tp.toString(e.term1,false) + " =?= " + tp.toString(e.term2,false);
+			String extraInfo = tp.toString(e.term1,false) + " =?= " + tp.toString(e.term2,false);
 			ErrorHandler.error(Errors.RULE_APP_UNIFICATION_INCOMPLETE, extraInfo, this,
 					"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
 			return; // tell Java we're gone.
@@ -103,8 +103,8 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				explanationString = tp.toString(tp.asClause(explanationTerm));
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
-				if (e2.term2 != null && e2.term2 != null) {
-					explanationString = ": " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
+				if (e2.term1 != null && e2.term2 != null) {
+					infoString += ", but failed because " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
 				}
 			}
 			ErrorHandler.error(errorType, explanationString, this, infoString);
@@ -170,7 +170,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				for (FreeVar v : poorVars) {
 					sb.append(v + "->" + callSub.getMap().get(v));
 				}
-				ErrorHandler.warning(Errors.WHERE_MISSING_EXT, ": " + poorVars, this, sb.toString());
+				ErrorHandler.warning(Errors.WHERE_MISSING_EXT, "" + poorVars, this, sb.toString());
 			}
 		}
 		

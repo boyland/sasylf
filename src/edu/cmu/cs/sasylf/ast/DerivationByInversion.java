@@ -207,7 +207,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 					if (!Derivation.checkMatch(null, ctx, mt, piece, null)) {
 						String replaceContext = names.get(i) + ":... " + (i +1 < clauses.size() ? "and" : "by"); 
 						String justified = TermPrinter.toString(ctx,targetClause.getAssumes(), cu.getLocation(),piece,true);
-						ErrorHandler.error(Errors.OTHER_JUSTIFIED,": " + justified, cu, replaceContext + "\n" + justified);
+						ErrorHandler.error(Errors.OTHER_JUSTIFIED,"" + justified, cu, replaceContext + "\n" + justified);
 					}
 					// avoid mapping user-written variables
 					Substitution changed = ctx.avoidIfPossible(mt.getFreeVariables());

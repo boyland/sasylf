@@ -137,7 +137,7 @@ public class Judgment extends Node implements ClauseType, Named {
 				// no error needed (already errored)
 			} else if (contextNT == null || !assumeSyntax.equals(contextNT.getType())) {
 				Errors error = assumeSyntax.isInContextForm() ? Errors.EXTRANEOUS_ASSUMES : Errors.ILLEGAL_ASSUMES;
-				ErrorHandler.recoverableError(error, ": " + assume, assume, fixInfo);
+				ErrorHandler.recoverableError(error, assume, fixInfo);
 			} else if (!contextNT.equals(assume)) {
 				ErrorHandler.recoverableError(Errors.WRONG_ASSUMES, assume, fixInfo);
 			}
@@ -190,7 +190,7 @@ public class Judgment extends Node implements ClauseType, Named {
 	public void analyze(Context ctx, Element target, Node source, 
 			Map<CanBeCase, Set<Pair<Term, Substitution>>>  result) {
 		if (isAbstract()) {
-			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, ": " + getName(), source);
+			ErrorHandler.error(Errors.CASE_SUBJECT_ABSTRACT, getName(), source);
 		}
 		Util.verify(target instanceof ClauseUse, "Judgment#analyze called with bad element: " + target);
 		ClauseUse cl = (ClauseUse)target;
