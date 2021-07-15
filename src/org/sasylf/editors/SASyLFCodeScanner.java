@@ -6,6 +6,7 @@ import java.util.List;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.EndOfLineRule;
 import org.eclipse.jface.text.rules.ICharacterScanner;
+import org.eclipse.jface.text.rules.IPredicateRule;
 import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWhitespaceDetector;
@@ -18,24 +19,9 @@ import org.eclipse.jface.text.rules.WordRule;
 import org.eclipse.swt.SWT;
 import org.sasylf.editors.SASyLFColorProvider.TokenColorClass;
 
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
+
 public class SASyLFCodeScanner extends RuleBasedScanner{
-
-	private static String[] _keywords = {
-		"package", "terminals", "syntax", "judgment",
-		"theorem", "forall", "exists", "by", "rule", "on",
-		"end", "induction", "analysis", "case", "of",
-		"is", "unproved", "lemma", "assumes", "inversion",
-		"hypothesis", "substitution", "premise",
-		"weakening", "exchange", "contraction", "solve", 
-		"proof", "and", "use", "contradiction",
-		"module", "extends", "provides", "requires", "or", "not", "do",
-		"abstract", "where"
-	};
-
-	private static String[] _templates = {
-		"NAME", "JUDGMENT", "JUSTIFICATION", "PREMISE",
-		"RULENAME", "CONCLUSION", "SYNTAX", "DERIVATION"
-	};
 
 	public SASyLFCodeScanner(SASyLFColorProvider provider)	{
 		IToken keyword = provider.createToken(new TextAttribute(null,null,SWT.BOLD), TokenColorClass.Keyword); // new Token (new TextAttribute (provider.getColor(SASyLFColorProvider.Fragments.Keyword), null,SWT.BOLD));
@@ -47,7 +33,6 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		List<IRule> rules = new ArrayList<IRule> ();
 		rules.add (new EndOfLineRule ("//", comment));
 		rules.add (new MultiLineRule ("/*", "*/", multiLineComment));
-		//rules.add (new EndOfLineRule ("---", rule));
 		rules.add (new LineRule ('-', rule));
 		rules.add (new LineRule ('\u2014', rule));
 		rules.add (new LineRule ('\u2015', rule));
@@ -100,12 +85,8 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 
 		};
 
-		for (int i=0; i<_keywords.length; i++) {
-			wordRule.addWord (_keywords [i], keyword);
-		}
-
-		for (int j=0; j<_templates.length; j++){
-			wordRule.addWord(_templates[j], comment);
+		for (String key : DSLToolkitParser.allKeywords()) {
+			wordRule.addWord(key, keyword);
 		}
 
 		rules.add(wordRule);
@@ -115,7 +96,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 
 	}
 
-	private class SASyLFWordDetector implements IWordDetector {
+	public static class SASyLFWordDetector implements IWordDetector {
 		@Override
 		public boolean isWordPart (char ch) {
 			return Character.isLetter(ch) ||
@@ -130,7 +111,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 		}
 	}
 	
-	public static class LineRule implements IRule {
+	public static class LineRule implements IPredicateRule {
 		protected IToken token;
 		private char comp;
 		
@@ -171,6 +152,16 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 
 			scanner.unread();
 			return token;
+		}
+
+		@Override
+		public IToken getSuccessToken() {
+			return token;
+		}
+
+		@Override
+		public IToken evaluate(ICharacterScanner scanner, boolean resume) {
+			return evaluate(scanner);
 		}
 	}
 

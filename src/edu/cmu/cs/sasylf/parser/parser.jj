@@ -142,7 +142,20 @@ public class DSLToolkitParser {
       currentFile = filename;
       return parser.CompilationUnit();   
     }
-      
+
+    // If new keywords are added: these must be updated:
+    private static final int FIRST_KEYWORD = DSLToolkitParserConstants.PACKAGE;
+    private static final int LAST_KEYWORD = DSLToolkitParserConstants.WHERE;
+    
+    public static String[] allKeywords() {
+      String[] result = new String[LAST_KEYWORD-FIRST_KEYWORD+1];
+      for (int i= FIRST_KEYWORD; i <= LAST_KEYWORD; ++i) {
+        String quotedKeyword = DSLToolkitParserConstants.tokenImage[i];
+        int n = quotedKeyword.length();
+        result[i-FIRST_KEYWORD] = quotedKeyword.substring(1,n-1);
+      }
+      return result;
+    }
 
 	/** True if the next thing is another top-level declaration
 	*/
