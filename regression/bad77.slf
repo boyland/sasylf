@@ -47,5 +47,5 @@ judgment eval: t -> t
   -------------------------- E-AppAbs
   (fn x => t[x]) t2 -> t[t2]
   
-theorem parse error //! unrecoverable parse error
+/*! unreceoverable parse error*/ theorem parse error
 

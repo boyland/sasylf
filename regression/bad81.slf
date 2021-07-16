@@ -1,5 +1,5 @@
 // testing rule/theorem application errors
-package wrong; // not marked with ! because regression tests system doesn't check
+package wrong; //? not marked with ! because regression tests system doesn't check
 
 terminals λ Bool value true if then else false
 

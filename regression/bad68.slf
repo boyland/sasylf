@@ -889,7 +889,7 @@ is
        case rule
            ----------- SA-Refl
            _: * |- T <: T
-           where T1 := T //? replaced back with old variable
+           where T1 := T // maybeOK? replaced back with old variable
             and T2 := T //! redundant replacement
         is
             proof by unproved //! ignore

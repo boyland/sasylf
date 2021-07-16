@@ -45,6 +45,14 @@ public class ErrorReport extends Report {
 		return errorType;
 	}
 	
+	/**
+	 * Return the portion of the message without the error type.
+	 * @return specific message from this report, ignoring the error type.
+	 */
+	public String getErrorMessage() {
+		return super.getMessage();
+	}
+	
 	@Override
 	public String getExtraInformation() {
 		return debugInfo;

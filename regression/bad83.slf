@@ -11,6 +11,6 @@ terminals bad
 syntax
   t ::= 0
   
-  lemma := theorem //! nonsense
+/*! nonsense*/  lemma := theorem
 
 

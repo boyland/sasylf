@@ -1,4 +1,4 @@
-module bad64wrong
+module bad64wrong //? wrong package/module (not caught by normal regression tests)
 
 requires
 

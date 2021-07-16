@@ -37,13 +37,18 @@ public class ErrorCoverage {
 		
 		boolean showSource = false; // option
 		boolean verbose = false; // option
+		boolean showCoverage = true; // option
 		Set<Errors> interestingErrors = new HashSet<>();
 		// These should not be happening
 		interestingErrors.add(Errors.INTERNAL_ERROR);
 		interestingErrors.add(Errors.UNSPECIFIED);
 		// command line can set other interesting errors
 	
-		DSLToolkitParser.addListener((t,f) -> { if (t.image.startsWith("//!")) ErrorHandler.report(new ExpectedError(t.beginLine)); } ); 
+		DSLToolkitParser.addListener((t,f) -> {
+			if (t.image.startsWith("//!") || t.image.startsWith("/*!") || t.image.startsWith("//?")) {
+				ErrorHandler.report(new ExpectedError(t.beginLine,t.image.substring(3))); 
+			}
+		} ); 
 		
 		Map<Errors,List<String>> index = new HashMap<>();
 		Set<Errors> encountered = index.keySet();
@@ -51,6 +56,7 @@ public class ErrorCoverage {
 			if (s.startsWith("--")) {
 				if (s.equals("--showSource")) showSource = true;
 				else if (s.equals("--verbose")) verbose = true;
+				else if (s.equals("--noCoverage")) showCoverage = false;
 				else usage();
 				continue;
 			} else if (!s.endsWith(".slf")) {
@@ -69,6 +75,7 @@ public class ErrorCoverage {
 			int parseReports = results.getParseReports().size();
 			BitSet markedLines = new BitSet();
 			BitSet errorLines = new BitSet();
+			Map<Integer,String> expectedMessages = new HashMap<>();
 			String shortName = f.getName();
 			boolean printedName = false;
 			int reportIndex = 0;
@@ -78,7 +85,10 @@ public class ErrorCoverage {
 			}
 			for (Report r : reports) {
 				if (r instanceof ExpectedError) {
-					markedLines.set(r.getSpan().getLocation().getLine());
+					final int line = r.getSpan().getLocation().getLine();
+					markedLines.set(line);
+					String m = r.getMessage();
+					if (m.startsWith("=")) expectedMessages.put(line, m.substring(1));
 				}
 			}
 			for (Report r : reports) {
@@ -124,6 +134,15 @@ public class ErrorCoverage {
 						index.put(type, located);
 					}
 					located.add(shortName);
+					String expected = expectedMessages.get(line);
+					if (expected != null) {
+						expected = expected.trim();
+						String actual = er.getErrorMessage();
+						if (!actual.equals(expected)) {
+							System.err.println("Expected '" + expected + "',\n" + 
+						                       " but got '" + actual + "'");
+						}
+					}
 				}
 				r.getMessage(); // XXX: Why call this for side-effect only?
 			}
@@ -134,6 +153,7 @@ public class ErrorCoverage {
 			}
 			markedLines.clear();
 		}
+		if (!showCoverage) return;
 		for (Errors error : Errors.values()) {
 			System.out.print(error);
 			List<String> located = index.get(error);
@@ -176,6 +196,10 @@ public class ErrorCoverage {
 	private static class ExpectedError extends Report {
 		ExpectedError(int line) {
 			super (new Location("",line,0),null);
+		}
+		
+		ExpectedError(int line, String message) {
+			super (new Location("", line, 0), message.startsWith("=") ? message : null);
 		}
 
 		@Override

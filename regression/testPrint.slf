@@ -1,0 +1,1177 @@
+package regression;
+/*
+ * Testing printing of compound predicates
+ */
+
+terminals value λ
+
+
+syntax
+
+s,t,u ::= λ x:T • t[x]
+   | x
+   | t t
+   | λ X • t[X]
+   | t T
+
+S,T,U ::= T → T
+   | ∀ X • T[X]
+   | X
+
+Γ ::= *
+   | Γ, x : T
+   | Γ, X
+
+
+judgment termequality: Γ ⊢ t == t
+assumes Γ
+
+------ term-eq
+Γ ⊢ t == t
+
+
+judgment typeequality: Γ ⊢ T == T
+assumes Γ
+
+----------- type-eq
+Γ ⊢ T == T
+
+
+judgment isavalue: t value
+
+
+-------------------- val-λ
+λ x:T • t[x] value
+
+------------------ val-type-λ
+λ X • t[X] value
+
+
+judgment eval: t → t
+
+t1 → t1'
+--------------- E-App1
+t1 t2 → t1' t2
+
+t1 value
+t2 → t2'
+--------------- E-App2
+t1 t2 → t1 t2'
+
+t2 value
+------------------------------ E-AppAbs
+(λ x:T • t1[x]) t2 → t1[t2]
+
+t → t'
+------------- E-TApp
+t(T) → t'(T)
+
+------------------------- E-TAppTAbs
+(λ X • t[X])(T) → t[T]
+
+
+judgment istypevar: Γ ⊢ T
+assumes Γ
+
+---------- B-Var
+Γ, X ⊢ X
+
+------ B-Any
+Γ ⊢ T
+
+
+judgment isvar: t:T ∈ Γ
+assumes Γ
+
+-------------- var
+x:T ∈ (Γ, x:T)
+
+
+judgment type: Γ ⊢ t : T
+assumes Γ
+
+t:T ∈ Γ
+--------- T-Var
+Γ ⊢ t : T
+
+Γ, x : T1 ⊢ t[x] : T2
+------------------------------------- T-Abs
+Γ ⊢ (λ x:T1 • t[x]) : T1 → T2
+
+Γ ⊢ t1 : T2 → T1
+Γ ⊢ t2 : T2
+----------------------- T-App
+Γ ⊢ t1 t2 : T1
+
+Γ, X ⊢ t[X] : T[X]
+--------------------------------------- T-TAbs
+Γ ⊢ (λ X • t[X]) : ∀ X • T[X]
+
+Γ ⊢ t1 : ∀ X • T1[X]
+---------------------------- T-TApp
+Γ ⊢ t1(T2) : T1[T2]
+
+terminals Bot
+    
+syntax
+   Bot := ∀ X • X
+   
+judgment erase: Γ ⊢ |t| = t
+assumes Γ
+
+  t:T ∈ Γ
+  ------------ E-Var
+  Γ ⊢ |t| = t
+  
+  Γ ⊢ |t1| = t1'
+  Γ ⊢ |t2| = t2'
+  --------------------- E-App
+  Γ ⊢ |t1 t2| = t1' t2'
+  
+  Γ, x:Bot ⊢ |t[x]| = t'[x]
+  ------------------------------------- E-Abs
+  Γ ⊢ |λ x:T • t[x]| = λ x:Bot • t'[x]
+  
+  Γ ⊢ |t1| = t1'
+  ------------------ E-Tapp
+  Γ ⊢ |t1(T)| = t1'
+  
+  Γ, X ⊢ |t[X]| = t'
+  --------------------- E-Tabs
+  Γ ⊢ |λ X • t[X]| = t'
+  
+/*
+ * Can't do this.
+ * 
+syntax
+  u ::= λ y . u[y]
+     | y
+     | u u
+   
+  E ::= *
+     | E, x:T, y // combine two levels of Γ
+     
+judgment erase: E ⊢ |t| = u
+assumes E
+
+  ------------------- E-Var
+  E, x:T, y ⊢ |x| = y
+  
+*/
+  
+
+judgment exposed: Γ ⊢ t 1
+assumes Γ
+
+   t:T ∈ Γ
+   ---------- L1-Var
+   Γ ⊢ t 1
+   
+   ------------ L1-App
+   Γ ⊢ t1 t2 1
+   
+   ------------------ L1-Abs
+   Γ ⊢ λ x:T • t[x] 1
+   
+judgment exposedapp: Γ ⊢ t 2
+assumes Γ
+
+  Γ ⊢ t 1
+  -------- L2-One
+  Γ ⊢ t 2
+  
+  Γ ⊢ t 2
+  ---------- L2-Tapp
+  Γ ⊢ t(T) 2
+  
+judgment exposedappabs: Γ ⊢ t 3
+assumes Γ
+
+  Γ ⊢ t 2
+  -------- L3-Two
+  Γ ⊢ t 3
+  
+  Γ, X ⊢ t[X] 3
+  --------------- L3-Tabs
+  Γ ⊢ λ X • t[X] 3
+  
+lemma erase-unique:
+    assumes Γ
+    forall e1: Γ ⊢ |t| = u
+    forall e2: Γ ⊢ |t| = u'
+    exists Γ ⊢ u == u'
+    do case analysis on e2:
+        case rule
+            v: t : T ∈ Γ
+            --------------- E-Var
+            _: Γ ⊢ |t| = t
+            where u' := t
+        is
+            use inversion on v
+            proof by case analysis on e1:
+                case rule
+                    _: t : T' ∈ Γ
+                    --------------- E-Var
+                    _: Γ ⊢ |t| = t
+                    where u := t
+                is
+                    proof by rule term-eq
+                end case
+            end case analysis
+        end case
+    end case analysis        
+    proof by induction on e1:
+        case rule
+            v: t : T ∈ Γ
+            --------------- E-Var
+            _: Γ ⊢ |t| = t
+            where u := t
+        is
+            use inversion on v
+            proof by contradiction on e2
+        end case
+
+        case rule
+            d11: Γ ⊢ |t1| = u1
+            d12: Γ ⊢ |t2| = u2
+            --------------- E-App
+            _: Γ ⊢ |t1 t2| = (u1 u2)
+            where t := t1 t2 and u := u1 u2
+        is
+            d11': Γ ⊢ |t1| = u1' and
+            d12': Γ ⊢ |t2| = u2' by inversion of rule E-App on e2
+            where u' := u1' u2'
+            eq1: Γ ⊢ u1 == u1' by induction hypothesis on d11, d11'
+            eq2: Γ ⊢ u2 == u2' by induction hypothesis on d12, d12'
+            use inversion on eq1 where u1' := u1
+            use inversion on eq2 where u2' := u2
+            proof by rule term-eq
+        end case
+
+        case rule
+            d11: Γ, x : Bot ⊢ |t1[x]| = u1[x]
+            ----------------------------------------------- E-Abs
+            _: Γ ⊢ |(λ x : T1 • t1[x])| = (λ x:Bot • u1[x])
+            where t := λ x : T1 • t1[x] and u := λ x:Bot • u1[x]
+        is
+            d11': Γ, x:Bot ⊢ |t1[x]| = u1'[x] by inversion of rule E-Abs on e2
+            where u' := λ x:Bot • u1'[x]
+            eq1: Γ, x:Bot ⊢ u1[x] == u1'[x] by induction hypothesis on d11, d11'
+            use inversion on eq1 where u1'[x] := u1[x]
+            proof by rule term-eq
+        end case
+
+        case rule
+            d11: Γ ⊢ |t1| = u
+            ------------------ E-Tapp
+            _: Γ ⊢ |t1 T1| = u
+            where t := t1 T1
+        is
+            d11': Γ ⊢ |t1| = u' by inversion on e2
+            proof by induction hypothesis on d11, d11'
+        end case
+
+        case rule
+            e11: Γ, X ⊢ |t1[X]| = u
+            -------------------------- E-Tabs
+            _: Γ ⊢| (λ X • t1[X]) |= u
+            where t := λ X • t1[X]
+        is
+            e11': Γ, X ⊢ |t1[X]| = u' by inversion on e2
+            eq: Γ, X ⊢ u == u' by induction hypothesis on e11, e11'
+            use inversion on eq where u' := u
+            proof by rule term-eq
+        end case
+
+    end induction
+end lemma
+
+lemma type-subst:
+    assumes Γ
+    forall d: Γ, X ⊢ t[X] : T1[X]
+    forall T2 assumes Γ
+    exists Γ ⊢ t[T2] : T1[T2].
+    b: Γ ⊢ T2 by rule B-Any
+    proof by substitution on d, b
+end lemma
+
+// Lemma 23.6.3 (2)
+lemma can-expose:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall e: Γ ⊢ |t| = u
+    exists Γ ⊢ s : T and Γ ⊢ s 3 and Γ ⊢ |s| = u
+    do case analysis on e:
+        case rule
+            v: t : T' ∈ Γ
+            --------------- E-Var
+            _: Γ ⊢ |t| = t
+            where u := t
+        is
+            c1: Γ ⊢ t 1 by rule L1-Var on v
+            c2: Γ ⊢ t 2 by rule L2-One on c1
+            c3: Γ ⊢ t 3 by rule L3-Two on c2
+            proof by d, c3, e
+        end case
+    end case analysis
+    proof by induction on d:
+        case rule
+            v: t : T ∈ Γ
+            --------------- T-Var
+            _: Γ ⊢ t : T
+        is
+            c1: Γ ⊢ t 1 by rule L1-Var on v
+            c2: Γ ⊢ t 2 by rule L2-One on c1
+            c3: Γ ⊢ t 3 by rule L3-Two on c2
+            proof by d, c3, e
+        end case
+
+        case rule
+            _: Γ, x : T1 ⊢ t1[x] : T2
+            ------------------------------------ T-Abs
+            _: Γ ⊢ (λ x : T1 • t1[x]) : (T1 → T2)
+            where t := λ x : T1 • t1[x] and T := T1 → T2
+        is
+            c1: Γ ⊢ t 1 by rule L1-Abs
+            c2: Γ ⊢ t 2 by rule L2-One on c1
+            c3: Γ ⊢ t 3 by rule L3-Two on c2
+            proof by d, c3, e
+        end case
+
+        case rule
+            _: Γ ⊢ t1 : (T1 → T)
+            _: Γ ⊢ t2 : T1
+            --------------- T-App
+            _: Γ ⊢ (t1 t2) : T
+            where t := t1 t2
+        is
+            c1: Γ ⊢ t 1 by rule L1-App
+            c2: Γ ⊢ t 2 by rule L2-One on c1
+            c3: Γ ⊢ t 3 by rule L3-Two on c2
+            proof by d, c3, e
+        end case
+
+        case rule
+            d1: Γ, X ⊢ t1[X] : T1[X]
+            ---------------------------------- T-TAbs
+            _: Γ ⊢ (λ X • t1[X]) : (∀ X • T1[X])
+            where t := λ X • t1[X] and T := ∀ X • T1[X]
+        is
+            e1: Γ, X ⊢ |t1[X]| = u by inversion of rule E-Tabs on e
+            d1': Γ, X ⊢ s1[X] : T1[X] and 
+            c3': Γ, X ⊢ s1[X] 3 and 
+            e1': Γ, X ⊢ |s1[X]| = u by induction hypothesis on d1, e1
+            d': Γ ⊢ λ X • s1[X] : ∀ X • T1[X] by rule T-TAbs on d1'
+            e': Γ ⊢ |λ X • s1[X]| = u by rule E-Tabs on e1'
+            c3: Γ ⊢ (λ X • s1[X]) 3 by rule L3-Tabs on c3'
+            proof by d', c3, e'
+        end case
+
+        case rule
+            d1: Γ ⊢ t1 : (∀ X • T2[X])
+            -------------------------- T-TApp
+            _: Γ ⊢ t1(T1) : T2[T1]
+            where t := t1 (T1) and T := T2[T1]
+        is
+            e1: Γ ⊢ |t1| = u by inversion of rule E-Tapp on e
+            d1': Γ ⊢ s1 : (∀ X • T2[X]) and
+            c3': Γ ⊢ s1 3 and
+            e1': Γ ⊢ |s1| = u by induction hypothesis on d1, e1
+            proof by case analysis on c3':
+                case rule
+                    c2': Γ ⊢ s1 2
+                    -------------- L3-Two
+                    _: Γ ⊢ s1 3
+                is
+                    c2: Γ ⊢ s1(T1) 2 by rule L2-Tapp on c2'
+                    c3: Γ ⊢ s1(T1) 3 by rule L3-Two on c2
+                    d': Γ ⊢ s1(T1) : T2[T1] by rule T-TApp on d1'
+                    e': Γ ⊢ |s1(T1)| = u by rule E-Tapp on e1'
+                    proof by d', c3, e'
+                end case
+
+                case rule
+                    c11: Γ, X ⊢ s11[X] 3
+                    --------------------- L3-Tabs
+                    _: Γ ⊢ (λ X • s11[X]) 3
+                    where s1 := λ X • s11[X]  
+                is
+                    do case analysis on d1':
+                        case rule
+                            v: s1:(∀ X • T2[X]) ∈ Γ
+                            --------------------- T-Var
+                            _: Γ ⊢ s1:(∀ X • T2[X])
+                        is
+                            proof by contradiction on v
+                        end case
+                    end case analysis
+                    do case analysis on e1':
+                        case rule
+                            v: (s1):T' ∈ Γ
+                            --------------------- E-Var
+                            _: Γ ⊢ |s1| = s1
+                            where u := s1
+                        is
+                            proof by contradiction on v
+                        end case
+                    end case analysis
+                    e11': Γ, X ⊢ |s11[X]| = u by inversion of E-Tabs on e1'
+                    d11: Γ, X ⊢ s11[X] : T2[X] by inversion of T-TAbs on d1'
+                    b1: Γ ⊢ T1 by rule B-Any
+                    d': Γ ⊢ s11[T1] : T2[T1] by lemma type-subst on d11, (T1)
+                    c': Γ ⊢ s11[T1] 3 by substitution on c11, b1
+                    e': Γ ⊢ |s11[T1]| = u by substitution on e11', b1
+                    proof by d', c', e'
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
+
+// Lemma 23.6.3 (3)
+lemma exposed-app:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall c1: Γ ⊢ t 1
+    forall e: Γ ⊢ |t| = u1 u2
+    exists Γ ⊢ t == t1 t2 and Γ ⊢ |t1| = u1 and Γ ⊢ |t2| = u2 
+    and Γ ⊢ t1 : U → T and Γ ⊢ t2 : U
+    do case analysis on e:
+        case rule
+            v: (u1 u2):T' ∈ Γ
+            ---------------------- E-Var
+            _: Γ ⊢ |u1 u2| = u1 u2
+            where t := u1 u2 
+        is
+            proof by contradiction on v
+        end case
+    end case analysis
+    do case analysis on c1:
+        case rule
+            v: t:T' ∈ Γ
+            ------------ L1-Var
+            _: Γ ⊢ t 1
+        is
+            use inversion on v
+            proof by contradiction on e
+        end case
+        case rule
+            --------------------- L1-Abs
+            _: Γ ⊢ (λ x:T' • t'[x]) 1
+            where t := λ x:T' • t'[x]
+        is
+            proof by contradiction on e
+        end case
+    end case analysis
+    use inversion on c1 where t := t1 t2
+    do case analysis on d:
+        case rule
+            v: (t1 t2): T ∈ Γ
+            ---------------------- T-Var
+            _: Γ ⊢ t1 t2 : T
+        is
+            proof by contradiction on v
+        end case
+    end case analysis
+    e1: Γ ⊢ |t1| = u1 and
+    e2: Γ ⊢ |t2| = u2 by inversion on e
+    d1: Γ ⊢ t1 : U → T and
+    d2: Γ ⊢ t2 : U by inversion of rule T-App on d
+    eq: Γ ⊢ t == t by rule term-eq
+    proof by eq, e1, e2, d1, d2
+end lemma
+
+// Lemma 23.6.3 (4)
+lemma self-app-lemma1:
+    assumes Γ
+    forall v: t:T ∈ Γ
+    forall d: Γ ⊢ s : S
+    forall c: Γ ⊢ s 1
+    forall e: Γ ⊢ |s| = t t
+    exists Γ ⊢ s1 : U' → U and Γ ⊢ s2 : U' 
+    and Γ ⊢ s1 2 and Γ ⊢ s2 3 
+    and Γ ⊢ |s1| = t and Γ ⊢ |s2| = t
+    equ: Γ ⊢ s == u1 u2 and 
+    eu1: Γ ⊢ |u1| = t and 
+    eu2: Γ ⊢ |u2| = t and 
+    du1: Γ ⊢ u1 : U' → S and 
+    du2: Γ ⊢ u2 : U' by lemma exposed-app on d, c, e
+    ds1: Γ ⊢ s1 : U' → S and
+    c13: Γ ⊢ s1 3 and
+    es1: Γ ⊢ |s1| = t by lemma can-expose on du1, eu1
+    ds2: Γ ⊢ s2 : U' and
+    c23: Γ ⊢ s2 3 and
+    es2: Γ ⊢ |s2| = t by lemma can-expose on du2, eu2
+    do case analysis on c13:
+        case rule
+            _: Γ, X ⊢ s11 [X] 3
+            -------------------- L3-Tabs
+            _: Γ ⊢ λ X • s11[X] 3
+            where s1 := λ X • s11[X]
+        is
+            proof by case analysis on ds1:
+                case rule
+                    v11: (λ X • s11[X]) : (U' → U) ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (λ X • s11[X]) : (U' → U)
+                    where S := U
+                is
+                    proof by contradiction on v11
+                end case
+            end case analysis
+        end case
+    end case analysis
+    c12: Γ ⊢ s1 2 by inversion of rule L3-Two on c13
+    proof by ds1, ds2, c12, c23, es1, es2
+end lemma
+
+lemma self-app-lemma2:
+    assumes Γ
+    forall v: t:T ∈ Γ
+    forall d: Γ ⊢ s : S
+    forall c: Γ ⊢ s 2
+    forall e: Γ ⊢ |s| = t t
+    exists Γ ⊢ s1 : U' → U and Γ ⊢ s2 : U' 
+    and Γ ⊢ s1 2 and Γ ⊢ s2 3 
+    and Γ ⊢ |s1| = t and Γ ⊢ |s2| = t
+    use induction on d
+    proof by case analysis on c:
+        case rule
+            c1: Γ ⊢ s 1
+            -------------- L2-One
+            _: Γ ⊢ s 2
+        is
+            proof by lemma self-app-lemma1 on v, d, c1, e
+        end case
+
+        case rule
+            c2: Γ ⊢ s' 2
+            ---------------- L2-Tapp
+            _: Γ ⊢ (s' S') 2
+            where s := s' S'
+        is
+            do case analysis on d:
+                case rule
+                    vs: (s' S') : S ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (s' S') : S
+                is
+                    proof by contradiction on vs
+                end case
+            end case analysis
+            d1: Γ ⊢ s' : (∀ X • S1[X]) by inversion on d
+            where S := S1[S']
+            e1: Γ ⊢ |s'| = t t by inversion of rule E-Tapp on e
+            proof by induction hypothesis on v, d1, c2, e1
+        end case
+    end case analysis
+end lemma
+
+lemma self-app-lemma3:
+    assumes Γ
+    forall v: t:T ∈ Γ
+    forall d: Γ ⊢ s : S
+    forall c: Γ ⊢ s 3
+    forall e: Γ ⊢ |s| = t t
+    exists Γ ⊢ s1 : U' → U and Γ ⊢ s2 : U' 
+    and Γ ⊢ s1 2 and Γ ⊢ s2 3 
+    and Γ ⊢ |s1| = t and Γ ⊢ |s2| = t
+    use induction on d
+    proof by case analysis on c:
+        case rule
+            c2: Γ ⊢ s 2
+            -------------- L3-Two
+            _: Γ ⊢ s 3
+        is
+            proof by lemma self-app-lemma2 on v, d, c2, e
+        end case
+
+        case rule
+            c3: Γ, X ⊢ s'[X] 3
+            --------------------- L3-Tabs
+            _: Γ ⊢ (λ X • s'[X]) 3
+            where s := λ X • s'[X]
+        is
+            do case analysis on d:
+                case rule
+                    vs': (λ X • s'[X]) : S ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (λ X • s'[X]) : S
+                is
+                    proof by contradiction on vs'
+                end case
+            end case analysis
+            d1: Γ, X ⊢ s'[X] : S1[X] by inversion of rule T-TAbs on d
+            where S := ∀ X • S1[X]
+            e1: Γ, X ⊢ |s'[X]| = t t by inversion on e
+            v': t:T ∈ (Γ, X) by weakening on v
+            ds1': Γ, X ⊢ s1'[X] : U1'[X] → U1[X] and 
+            ds2': Γ, X ⊢ s2'[X] : U1'[X] and
+            cs1': Γ, X ⊢ s1'[X] 2 and 
+            cs2': Γ, X ⊢ s2'[X] 3 and 
+            es1': Γ, X ⊢ |s1'[X]| = t and 
+            es2': Γ, X ⊢ |s2'[X]| = t by induction hypothesis on v', d1, c3, e1
+            bb: Γ ⊢ Bot by rule B-Any
+            ds1: Γ ⊢ s1'[Bot] : U1'[Bot] → U1[Bot] by substitution on ds1', bb
+            ds2: Γ ⊢ s2'[Bot] : U1'[Bot] by substitution on ds2', bb
+            cs1: Γ ⊢ s1'[Bot] 2 by substitution on cs1', bb
+            cs2: Γ ⊢ s2'[Bot] 3 by substitution on cs2', bb
+            es1: Γ ⊢ |s1'[Bot]| = t by substitution on es1', bb
+            es2: Γ ⊢ |s2'[Bot]| = t by substitution on es2', bb
+            proof by ds1, ds2, cs1, cs2, es1, es2
+        end case
+
+    end case analysis
+end lemma
+
+lemma self-app-lemma:
+    assumes Γ
+    forall v: t:T ∈ Γ
+    forall d: Γ ⊢ u : S
+    forall e: Γ ⊢ |u| = t t
+    exists Γ ⊢ s1 : U' → U and Γ ⊢ s2 : U' 
+    and Γ ⊢ s1 2 and Γ ⊢ s2 3 
+    and Γ ⊢ |s1| = t and Γ ⊢ |s2| = t
+    ds: Γ ⊢ s : S and
+    cs: Γ ⊢ s 3 and
+    es: Γ ⊢ |s| = t t by lemma can-expose on d, e
+    proof by lemma self-app-lemma3 on v, ds, cs, es
+end lemma
+
+lemma expose-ignores-binding-types:
+    assumes Γ
+    forall e: Γ, x:T ⊢ |t[x]| = u[x]
+    forall T' assumes Γ
+    exists Γ, x:T' ⊢ |t[x]| = u[x]
+    proof by induction on e:
+        case rule
+            v: t[x] : U ∈ (Γ, x : T)
+            ------------------ E-Var
+            _: (Γ, x : T) ⊢ |t[x]| = t[x]
+            where u[x] := t[x]
+        is
+            proof by case analysis on v:
+                case rule
+                    -------------------- var
+                    _: x' : U ∈ (Γ', x' : U, x : T)
+                is
+                    e': x':U ∈ (Γ', x':U) by rule var
+                    e1: t1:U ∈ Γ by e'
+                    e1': t[x] : U ∈ (Γ, x:T') by weakening on e1
+                    proof by rule E-Var on e1'
+                end case
+
+                case rule
+                    -------------------- var
+                    _: x : T ∈ (Γ, x : T)
+                    where U := T and t[x] := x
+                is
+                    v': x:T' ∈ (Γ, x:T') by rule var
+                    proof by rule E-Var on v'
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+            _: (Γ, x : T) ⊢| u0[x] |= u1[x]
+            _: (Γ, x : T) ⊢| u2[x] |= u3[x]
+            --------------------------- E-App
+            _: (Γ, x : T) ⊢| (u0[x] u2[x]) |= (u1[x] u3[x])
+        is
+            proof by unproved //!= (Γ, x : T') ⊢| (u0[x] u2[x]) |= (u1[x] u3[x])
+        end case
+
+        case rule
+            _: ((Γ, x : T), x' : (∀ X0 • X0)) ⊢| u0[x][x'] |= u1[x][x']
+            ------------------------------------------- E-Abs
+            _: (Γ, x : T) ⊢| (λ x' : U0 • u0[x][x']) |= (λ x1 : (∀ X • X) • u1[x][x1])
+        is
+            proof by unproved //! expected
+        end case
+
+        case rule
+            _: (Γ, x : T) ⊢| u0[x] |= u[x]
+            ------------------------ E-Tapp
+            _: (Γ, x : T) ⊢| (u0[x] U0) |= u[x]
+        is
+            proof by unproved //! expected
+        end case
+
+        case rule
+            _: ((Γ, x : T), X) ⊢| u0[x][X] |= u[x]
+            --------------------------- E-Tabs
+            _: (Γ, x : T) ⊢| (λ X • u0[x][X]) |= u[x]
+        is
+            proof by unproved //! expected
+        end case
+
+    end induction
+end lemma
+
+lemma self-app:
+    assumes Γ
+    forall d: Γ, x:U ⊢ t[x] : T
+    forall e: Γ, x:Bot ⊢ |t[x]| = x x
+    exists Γ, x:U ⊢ s1[x] : S2 → S and Γ, x:U ⊢ s2[x] : S2 
+    and Γ, x:U ⊢ s1[x] 2 and Γ, x:U ⊢ s2[x] 3 
+    and Γ, x:Bot ⊢ |s1[x]| = x and Γ, x:Bot ⊢ |s2[x]| = x
+    e': Γ, x:U ⊢ |t[x]| = x x by lemma expose-ignores-binding-types on e, (U)
+    ds: Γ, x:U ⊢ s[x] : T and
+    cs: Γ, x:U ⊢ s[x] 3 and
+    es: Γ, x:U ⊢ |s[x]| = x x by lemma can-expose on d, e'
+    p1: Γ, x:U ⊢ s1[x] : S2 → S by unproved //!= (Γ, x : U) ⊢ s1[x] : (S2 → S)
+    p2: Γ, x:U ⊢ s2[x] : S2 by unproved //!= (Γ, x : U) ⊢ s2[x] : S2
+    p6: Γ, x:Bot ⊢ |s2[x]| = x by unproved //!= (Γ, x : (∀ X0 • X0)) ⊢| s2[x] |= x
+    p11: Γ, x:U ⊢ s1[x] : S2 → S and p12: Γ, x:U ⊢ s2[x] : S2 by unproved //!= (Γ, x : U) ⊢ s1[x] : (S2 → S) and _: (Γ, x : U) ⊢ s2[x] : S2
+    p21: Γ, x:U ⊢ s1[x] : S2 → S and p26: Γ, x:Bot ⊢ |s2[x]| = x by unproved //!= (Γ, x : U) ⊢ s1[x] : (S2 → S) and _: (Γ, x : (∀ X0 • X0)) ⊢| s2[x] |= x
+    proof by unproved
+end lemma
+
+// Lemma 23.6.3 (5)
+
+judgment is-poly-arrow: Γ ⊢ S 4
+assumes Γ
+
+  ------------- L4-Arr
+  Γ ⊢ S1 → S2 4
+  
+  Γ, X ⊢ S[X] 4
+  --------------- L4-All
+  Γ ⊢ ∀X • S[X] 4
+  
+lemma func-type-is-poly-arrow:
+    assumes Γ
+    forall d: Γ ⊢ s : S
+    forall e: Γ ⊢ |s| = λ x:Bot • u[x]
+    exists Γ ⊢ S 4
+    use induction on d
+    do case analysis on d:
+        case rule
+            v: s : S ∈ Γ
+            --------------- T-Var
+            _: Γ ⊢ s : S
+        is
+            use inversion on v
+            proof by contradiction on e
+        end case
+    end case analysis
+    proof by case analysis on e:
+        case rule
+            v: (λ x : Bot • u[x]) : S' ∈ Γ
+            ------------------ E-Var
+            _: Γ ⊢ |(λ x : Bot • u[x])| = (λ x : Bot • u[x])
+            where s := λ x : Bot • u[x]
+        is
+            proof by contradiction on v
+        end case
+
+        case rule
+            _: Γ, x : Bot ⊢ |s1[x]| = u[x]
+            ------------------------------------------- E-Abs
+            _: Γ ⊢ |λ x : S1 • s1[x]| = (λ x : Bot • u[x])
+            where s := λ x : S1 • s1[x]
+        is
+            use inversion of rule T-Abs on d where S := S1 → S2
+            c4: Γ ⊢ S 4 by rule L4-Arr
+        end case
+
+        case rule
+            e1: Γ ⊢ |s1| = (λ x : Bot • u[x])
+            ------------------------ E-Tapp
+            _: Γ ⊢| (s1 S') |= (λ x : Bot • u[x])
+            where s := s1 S'
+        is
+            d1: Γ ⊢ s1 : ∀ X • S''[X] by inversion of rule T-TApp on d 
+            where S := S''[S']
+            c4': Γ ⊢ ∀ X • S''[X] 4 by induction hypothesis on d1, e1
+            c4'': Γ, X ⊢ S''[X] 4 by inversion on c4' 
+            bs': Γ ⊢ S' by rule B-Any
+            _: Γ ⊢ S''[S'] 4 by substitution on c4'', bs'
+        end case
+
+        case rule
+            e1: Γ, X ⊢ |s1[X]| = (λ x : Bot • u[x])
+            --------------------------- E-Tabs
+            _: Γ ⊢ |λ X • s1[X]| = (λ x : Bot • u[x])
+            where s := λ X • s1[X]
+        is
+            d1: Γ, X ⊢ s1[X] : S'[X] by inversion on d
+            where S := ∀ X • S'[X]
+            c4': Γ, X ⊢ S'[X] 4 by induction hypothesis on d1, e1
+            proof by rule L4-All on c4'
+        end case
+    end case analysis
+end lemma
+
+// more helper lemmas
+lemma exposed-abs-is-abs:
+    assumes Γ
+    forall s: Γ ⊢ t 1
+    forall e: Γ ⊢ |t| = λ x:Bot • u1[x]
+    exists Γ ⊢ t == λ x:T • t1[x] and Γ, x:Bot ⊢ |t1[x]| = u1[x]
+    proof by case analysis on s:
+        case rule
+            v: t : U ∈ Γ
+            ---------------- L1-Var
+            _: Γ ⊢ t 1
+        is
+            use inversion on v
+            proof by contradiction on e
+        end case
+
+        case rule
+            ------------------ L1-App
+            _: Γ ⊢ (t2 t3) 1
+            where t := t2 t3
+        is
+            proof by contradiction on e
+        end case
+
+        case rule
+            ------------------------ L1-Abs
+            _: Γ ⊢ (λ x : T1 • t1[x]) 1
+            where t := λ x : T1 • t1[x]
+        is
+            proof by case analysis on e:
+                case rule
+                    v: (λ x : Bot • u1[x]) : U ∈ Γ
+                    ------------------ E-Var
+                    _: Γ ⊢ |λ x : Bot • u1[x]| = (λ x : Bot • u1[x])
+                    where T1 := Bot and t1[x] := u1[x]
+                is
+                    proof by contradiction on v
+                end case
+
+                case rule
+                    e1: Γ, x : Bot ⊢ |t1[x]| = u1[x]
+                    ------------------------------------------- E-Abs
+                    _: Γ ⊢ |λ x : T1 • t1[x]| = (λ x:Bot • u1[x])
+                is
+                    eq: Γ ⊢ t == t by rule term-eq
+                    proof by eq, e1
+                end case
+            end case analysis
+        end case
+    end case analysis
+end lemma
+
+// theorem 23.6.3
+
+terminals ho
+
+syntax
+     ho := λ x:Bot • (x x)
+      
+judgment exposedabs : Γ ⊢ t 3-2
+assumes Γ
+
+     Γ ⊢ t 1
+     ------------ L3-2-One
+     Γ ⊢ t 3-2
+     
+     Γ, X ⊢ t[X] 3-2
+     ---------------------- L3-2-Tabs
+     Γ ⊢ λ X • t[X] 3-2
+
+
+lemma func2-implies-exposed:  
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall s: Γ ⊢ t 2
+    forall e: Γ ⊢ |t| = λ x:Bot • u1[x]
+    exists Γ ⊢ t 1
+    proof by induction on s:
+        case rule
+            s1: Γ ⊢ t 1
+            -------------- L2-One
+            _: Γ ⊢ t 2
+        is
+            proof by s1
+        end case
+
+        case rule
+            s': Γ ⊢ t1 2
+            ---------------- L2-Tapp
+            _: Γ ⊢ (t1 T1) 2
+            where t := t1 T1
+        is
+            proof by case analysis on d:
+                case rule
+                    v: (t1 T1) : T ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (t1 T1) : T
+                is
+                    proof by contradiction on v
+                end case
+
+                case rule
+                    d': Γ ⊢ t1 : (∀ X • U[X])
+                    ---------------------------------- T-TApp
+                    _: Γ ⊢ (t1 T1) : U[T1]
+                    where T := U[T1]
+                is
+                    e': Γ ⊢ |t1| = λ x:Bot • u1[x] by inversion on e
+                    s1: Γ ⊢ t1 1 by induction hypothesis on d', s', e'
+                    eq1: Γ ⊢ t1 == λ x:T1' • t11[x] and 
+                    _: Γ, x:Bot ⊢ |t11[x]| = u1[x] by lemma exposed-abs-is-abs on s1, e'
+                    use inversion on eq1 where t1 := λ x:T1' • t11[x] 
+                    proof by case analysis on d':
+                        case rule
+                            v: (λ x : T1' • t11[x]) : (∀ X • U[X]) ∈ Γ
+                            --------------- T-Var
+                            _: Γ ⊢ (λ x : T1' • t11[x]) : (∀ X • U[X])
+                        is
+                            proof by contradiction on v
+                        end case
+                    end case analysis
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+
+lemma functype3-implies-exposed:  
+    assumes Γ
+    forall d: Γ ⊢ t : T → T'
+    forall s: Γ ⊢ t 3
+    forall e: Γ ⊢ |t| = λ x:Bot • u1[x]
+    exists Γ ⊢ t 1
+    proof by induction on s:
+        case rule
+            s2: Γ ⊢ t 2
+            -------------- L3-Two
+            _: Γ ⊢ t 3
+        is
+            proof by lemma func2-implies-exposed on d, s2, e
+        end case
+
+        case rule
+            s': Γ, X ⊢ t1[X] 3
+            --------------------- L3-Tabs
+            _: Γ ⊢ (λ X • t1[X]) 3
+            where t := λ X • t1[X]
+        is
+            e': Γ, X ⊢ |t1[X]| = λ x:Bot • u1[x] by inversion on e
+            proof by case analysis on d:
+                case rule
+                    v: (λ X • t1[X]) : (T → T') ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (λ X • t1[X]) : (T → T')
+                is
+                    proof by contradiction on v
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
+
+lemma func3-implies-exposedabs:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall s: Γ ⊢ t 3
+    forall e: Γ ⊢ |t| = λ x:Bot • u1[x]
+    exists Γ ⊢ t 3-2
+    proof by induction on s:
+        case rule
+            s2: Γ ⊢ t 2
+            -------------- L3-Two
+            _: Γ ⊢ t 3
+        is
+            s1: Γ ⊢ t 1 by lemma func2-implies-exposed on d, s2, e
+            proof by rule L3-2-One on s1
+        end case
+
+        case rule
+            s': Γ, X ⊢ t1[X] 3
+            --------------------- L3-Tabs
+            _: Γ ⊢ (λ X • t1[X]) 3
+            where t := λ X • t1[X]
+        is
+            e': Γ, X ⊢ |t1[X]| = λ x:Bot • u1[x] by inversion on e
+            proof by case analysis on d:
+                case rule
+                    v: (λ X • t1[X]) : T ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (λ X • t1[X]) : T
+                is
+                    proof by contradiction on v
+                end case
+
+                case rule
+                    d': Γ, X ⊢ t1[X] : T1[X]
+                    --------------------------------------------- T-TAbs
+                    _: Γ ⊢ (λ X • t1[X]) : (∀ X • T1[X])
+                    where T := ∀ X • T1[X]
+                is
+                    s32: Γ, X ⊢ t1[X] 3-2 by induction hypothesis on d', s', e'
+                    proof by rule L3-2-Tabs on s32
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+
+lemma omega-bad1:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall s: Γ ⊢ t 1
+    forall e: Γ ⊢ |t| = (ho ho)
+    exists contradiction
+    eqt: Γ ⊢ t == t1 t2 and 
+    e1: Γ ⊢ |t1| = ho and 
+    e2: Γ ⊢ |t2| = ho and
+    d1: Γ ⊢ t1 : U → T and 
+    d2: Γ ⊢ t2 : U by lemma exposed-app on d, s, e
+    s42: Γ ⊢ U 4 by lemma func-type-is-poly-arrow on d2, e2
+    ds1: Γ ⊢ s1 : U → T and
+    s13: Γ ⊢ s1 3 and
+    es1: Γ ⊢ |s1| = ho by lemma can-expose on d1, e1
+    ds2: Γ ⊢ s2 : U and
+    s23: Γ ⊢ s2 3 and
+    es2: Γ ⊢ |s2| = ho by lemma can-expose on d2, e2
+    ex1: Γ ⊢ s1 1 by lemma functype3-implies-exposed on ds1, s13, es1
+    qs1: Γ ⊢ s1 == λ x:S1 • s11[x] and 
+    e11: Γ, x:Bot ⊢ |s11[x]| = x x by lemma exposed-abs-is-abs on ex1, es1
+    use inversion on qs1 where s1 := λ x:S1 • s11[x]
+    s223: Γ ⊢ s2 3-2 by lemma func3-implies-exposedabs on ds2, s23, es2
+    
+    qS1: Γ ⊢ S1 == U and 
+    d11: Γ, x:U ⊢ s11[x] : T by case analysis on ds1:
+        case rule
+            v: (λ x : S1 • s11[x]) : (U → T) ∈ Γ
+            --------------- T-Var
+            _: Γ ⊢ (λ x : S1 • s11[x]) : (U → T)
+        is
+            proof by contradiction on v
+        end case
+
+        case rule
+            d11: Γ, x : U ⊢ s11[x] : T
+            ------------------------------------------- T-Abs
+            _: Γ ⊢ (λ x : U • s11[x]) : (U → T)
+            where S1 := U
+        is
+            qS1 : Γ ⊢ S1 == U by rule type-eq
+            proof by qS1, d11
+        end case
+    end case analysis
+    use inversion on qS1 where S1 := U
+    vx: x:U ∈ (Γ, x:U) by rule var
+    d111: Γ, x : U ⊢ s111[x] : S12 → S11 and
+    d112: Γ, x : U ⊢ s112[x] : S12 and 
+    f111: Γ, x : U ⊢ s111[x] 2 and 
+    f112: Γ, x : U ⊢ s112[x] 3 and
+    e111: Γ, x : Bot ⊢ |s111[x]| = x and 
+    e112: Γ, x : Bot ⊢ |s112[x]| = x by lemma self-app on d11, e11
+    
+    
+    proof by unproved //!=contradiction
+end lemma
+
+lemma omega-bad2:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall s2: Γ ⊢ t 2
+    forall e: Γ ⊢ |t| = (ho ho)
+    exists contradiction
+    proof by induction on s2:
+        case rule
+            s1: Γ ⊢ t 1
+            -------------- L2-One
+            _: Γ ⊢ t 2
+        is
+            proof by lemma omega-bad1 on d, s1, e
+        end case
+
+        case rule
+            s2': Γ ⊢ t' 2
+            ---------------- L2-Tapp
+            _: Γ ⊢ (t' T') 2
+            where t := t' T'
+        is
+            e': Γ ⊢ |t'| = (ho ho) by inversion on e
+            proof by case analysis on d:
+                case rule
+                    v: (t' T') : T ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (t' T') : T
+                is
+                    proof by contradiction on v
+                end case
+
+                case rule
+                    d': Γ ⊢ t' : (∀ X • U[X])
+                    ---------------------------------- T-TApp
+                    _: Γ ⊢ (t' T') : U[T']
+                    where T := U[T']
+                is
+                    proof by induction hypothesis on d', s2', e'
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+
+lemma omega-bad3:
+    assumes Γ
+    forall d: Γ ⊢ t : T
+    forall s3: Γ ⊢ t 3
+    forall e: Γ ⊢ |t| = (ho ho)
+    exists contradiction
+    proof by induction on s3:
+        case rule
+            s2: Γ ⊢ t 2
+            --------------- L3-Two
+            _: Γ ⊢ t 3
+        is
+            proof by lemma omega-bad2 on d, s2, e
+        end case
+
+        case rule
+            s3': Γ, X ⊢ t'[X] 3
+            --------------- L3-Tabs
+            _: Γ ⊢ (λ X • t'[X]) 3
+            where t := λ X • t'[X]
+        is
+            e' : Γ, X ⊢ |t'[X]| = (ho ho) by inversion on e
+            proof by case analysis on d:
+                case rule
+                    v: (λ X • t'[X]) : T ∈ Γ
+                    --------------- T-Var
+                    _: Γ ⊢ (λ X • t'[X]) : T
+                is
+                    proof by contradiction on v
+                end case
+
+                case rule
+                    d': (Γ, X) ⊢ t'[X] : T'[X]
+                    --------------- T-TAbs
+                    _: Γ ⊢ (λ X • t'[X]) : (∀ X • T'[X])
+                    where T := ∀ X • T'[X]
+                is
+                    proof by induction hypothesis on d', s3', e'
+                end case
+
+            end case analysis
+        end case
+
+    end induction
+end lemma
+
+theorem omega-untypable:
+    forall d: * ⊢ t : T
+    forall e: * ⊢ |t| = (ho ho)
+    exists contradiction
+    d': * ⊢ t' : T and
+    s3: * ⊢ t' 3 and
+    e': * ⊢ |t'| = (ho ho) by lemma can-expose on d, e
+    proof by lemma omega-bad3 on d', s3, e'
+end theorem
+

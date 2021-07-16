@@ -110,7 +110,7 @@ theorem typing-unique :
 				 end case
 			    end case analysis // */
 			    use inversion of rule var on v1
-			    where T2 := T1 //? not needed
+			    where T2 := T1 // OK
                             proof by rule type-eq // works
                         end case
                     end case analysis
@@ -137,10 +137,10 @@ theorem typing-unique :
             end case analysis
 	    // try third time
 	    use inversion of rule var on v2
-	    v1: t : T1 in Gamma by inversion of rule T-Var on d1 //? need other rules
+	    v1: t : T1 in Gamma by inversion of rule T-Var on d1 // need other rules
 	    use inversion of rule var on v1
-	    where T2 := T1 //? not needed
-	    proof by rule type-eq //? restricts T2
+	    where T2 := T1
+	    proof by rule type-eq
         end case
     end case analysis
     // now, do case analysis on d1, knowing d2 will never be T-Var
