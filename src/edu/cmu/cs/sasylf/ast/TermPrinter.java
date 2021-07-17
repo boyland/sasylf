@@ -274,9 +274,9 @@ public class TermPrinter {
 				ClauseUse bindingClause = assumeTypeAsClause(abs2.varType, vars);
 				vars.add(new Variable("<internal>",location));
 				ClauseUse body = asClause(abs2.getBody(),vars);
-				Util.debug("Trying to replace ",bindingClause," in body: ",body);
-				int ai = body.getConstructor().getAssumeIndex();
-				if (ai >= 0) {
+				Util.debug("Trying to replace ",bindingClause," in body: ",body," with constructor = ",body.getConstructor());
+				List<Integer> indices = body.getConstructor().getAssumeIndices();
+				for (int ai : indices) {
 					body.getElements().set(ai, replaceAssume(bindingClause,body.getElements().get(ai)));
 				}
 				vars.remove(vars.size()-1);
@@ -438,6 +438,7 @@ public class TermPrinter {
 					args2.add(it.next());
 					tt2 = ((Abstraction)tt2).getBody();
 				}
+				// System.out.println("con2 = " + con2 + ", args2 = " + args2 + ", vars = " + vars);
 				contents.addAll(appAsClause(con2,args2, vars).getElements());
 			}
 		} else {
@@ -490,7 +491,7 @@ public class TermPrinter {
 								}
 							}
 							if (newVar == null) throw new RuntimeException("Couldn't find newvar in " + cu);
-							// System.out.println("Replacing " + oldVar + " with " + newVar);
+							// System.out.println("Replacing " + oldVar + " (mapped to " + varMap.get(oldVar) + ") with " + newVar + " in " + contents);
 							contents.set(contents.indexOf(varMap.get(oldVar)), newVar);
 							if (j > 0) {
 								cu = (ClauseUse)cu.getElements().get(cu.getConstructor().getAssumeIndex());

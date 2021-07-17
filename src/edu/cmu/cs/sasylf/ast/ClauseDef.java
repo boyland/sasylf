@@ -55,18 +55,45 @@ public class ClauseDef extends Clause {
 	public String getConstructorName() { return consName; }
 	@Override
 	public ClauseType getType() { return type; }
+	
+	/**
+	 * Return the index of a context NT in this form, or -1 if there is
+	 * no use of the context nonterminal (or no context nonterminal).
+	 * Normally there is only one, but if (for example for and/or judgments)
+	 * there are multiple indices, use {@link ClauseDef#getAssumeIndices()}.
+	 * @return index of the context NT in this form.
+	 */
 	public int getAssumeIndex() {
 		if (cachedAssumeIndex > -2) return cachedAssumeIndex;
+		List<Integer> assumeIndices = getAssumeIndices();
+		if (assumeIndices.isEmpty()) return cachedAssumeIndex=-1;
+		return cachedAssumeIndex=assumeIndices.get(0);
+	}
+	
+	private List<Integer> allAssumeIndices = null;
+	/**
+	 * Return a list of all indices where the context NT (if any) appears in the form.
+	 * @return (unmodifiable) list of indices
+	 */
+	public List<Integer> getAssumeIndices() {
+		if (allAssumeIndices != null) return allAssumeIndices;
+		NonTerminal assumeNT = null;
 		if (type instanceof Judgment) {
-			NonTerminal assumeNT = ((Judgment)type).getAssume();
-			return cachedAssumeIndex=getElements().indexOf(assumeNT);
+			assumeNT = ((Judgment)type).getAssume();
 		} else if (type instanceof SyntaxDeclaration) {
 			SyntaxDeclaration s = (SyntaxDeclaration)type;
 			if (s.isInContextForm()) {
-				return cachedAssumeIndex=getElements().indexOf(s.getNonTerminal());
+				assumeNT = s.getNonTerminal();
 			}
 		}
-		return cachedAssumeIndex=-1;
+		if (assumeNT == null) return allAssumeIndices = Collections.emptyList();
+		List<Integer> result = new ArrayList<>();
+		List<Element> elements = getElements();
+		for (int i=0; i < elements.size(); ++i) {
+			if (assumeNT.equals(elements.get(i))) result.add(i);
+		}
+		if (result.isEmpty()) return allAssumeIndices = Collections.emptyList();
+		return allAssumeIndices = Collections.unmodifiableList(result);
 	}
 
 	@Override

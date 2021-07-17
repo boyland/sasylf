@@ -725,7 +725,7 @@ lemma self-app:
     p6: Γ, x:Bot ⊢ |s2[x]| = x by unproved //!= (Γ, x : (∀ X0 • X0)) ⊢| s2[x] |= x
     p11: Γ, x:U ⊢ s1[x] : S2 → S and p12: Γ, x:U ⊢ s2[x] : S2 by unproved //!= (Γ, x : U) ⊢ s1[x] : (S2 → S) and _: (Γ, x : U) ⊢ s2[x] : S2
     p21: Γ, x:U ⊢ s1[x] : S2 → S and p26: Γ, x:Bot ⊢ |s2[x]| = x by unproved //!= (Γ, x : U) ⊢ s1[x] : (S2 → S) and _: (Γ, x : (∀ X0 • X0)) ⊢| s2[x] |= x
-    proof by unproved
+    proof by unproved //! expected
 end lemma
 
 // Lemma 23.6.3 (5)
