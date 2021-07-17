@@ -122,7 +122,7 @@ public class Theorem extends RuleLike {
 				}
 			}
 
-			exists.typecheck(ctx);
+			exists = exists.typecheck(ctx);
 			Element computed = exists.computeClause(ctx, false);
 			if (computed instanceof ClauseUse && computed.getType() instanceof Judgment) {
 				exists = (Clause) computed;

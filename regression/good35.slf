@@ -167,6 +167,64 @@ theorem test4:
     end case analysis
 end theorem
 
-	    
-		 
+theorem succ-preserves-gt:
+    forall g: n1 > n2
+    exists S n1 > S n2.
+    proof by induction on g:
+        case rule
+            ------------ gt-1
+            _: S n2 > n2
+        is
+            proof by rule gt-1
+        end case
+        case rule
+             g': n1' > n2
+             --------------- gt-s
+             _: S n1' > n2
+        is
+             g'': S n1' > S n2 by induction hypothesis on g'
+             proof by rule gt-s on g''
+        end case
+    end induction
+end theorem
+
+lemma test5: // parens around or didn't work
+    forall n1
+    forall n2
+    exists n1 > n2 or n2 > n1 or n1 = n2.
+    _: (n1 > n2 or n2 > n1 or n1 = n2) by induction on n1:
+        case 0 is
+            proof by case analysis on n2:
+                case 0 is
+                    _: 0 = 0 by rule eq
+                end case
+                case S n2' is
+                    _: S n2' > 0 by theorem positive-gt-zero on n2'
+                end case
+            end case analysis
+        end case
+        case S n1' is
+            proof by case analysis on n2:
+                case 0 is
+                    _: S n1' > 0 by theorem positive-gt-zero on n1'
+                end case
+                case S n2' is
+                    o: (n1' > n2' or n2' > n1' or n1' = n2') by induction hypothesis on n1', n2'
+                    proof by case analysis on o:
+                        case or g': n1' > n2' is
+                            _: n1 > n2 by theorem succ-preserves-gt on g'
+                        end case
+                        case or g': n2' > n1' is
+                            _: n2 > n1 by theorem succ-preserves-gt on g'
+                        end case
+                        case or eq': n1' = n2' is
+                            use inversion on eq' where n1' := n2'
+                            _: n1 = n2 by rule eq
+                        end case 
+                    end case analysis
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
 

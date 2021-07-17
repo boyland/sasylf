@@ -80,7 +80,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	public void typecheck(Context ctx, Judgment judge) {
 		judgment = judge;
 		Map<String, List<ElemType>> bindingTypes = new HashMap<String, List<ElemType>>();
-		conclusion.typecheck(ctx);
+		conclusion = conclusion.typecheck(ctx);
 		Element computed = conclusion.computeClause(ctx, false);
 		if (!(computed instanceof ClauseUse)) {
 			ErrorHandler.error(JUDGMENT_EXPECTED, computed);				

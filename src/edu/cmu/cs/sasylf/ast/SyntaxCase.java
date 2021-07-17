@@ -57,7 +57,7 @@ public class SyntaxCase extends Case {
 	public void typecheck(Context parent, Pair<Fact,Integer> isSubderivation) {
 		Context ctx = parent.clone();
 		debug("    ******* case line ", getLocation().getLine());
-		conclusion.typecheck(ctx);
+		conclusion = conclusion.typecheck(ctx);
 
 		// make sure we were case-analyzing a nonterminal
 		if (!(ctx.currentCaseAnalysisElement instanceof NonTerminal) &&

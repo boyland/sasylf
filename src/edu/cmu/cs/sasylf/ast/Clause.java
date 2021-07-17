@@ -215,14 +215,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		for (int i = 0; i < elements.size(); ++i) {
 			Element e = elements.get(i);
 			elements.set(i, e.typecheck(ctx));
-			/*if (e instanceof NonTerminal) {
-		NonTerminal nt = (NonTerminal) e;
-		elements.set(i, nt.typecheck(synMap, varMap));
-	    } else if (e instanceof Binding) {
-		((Binding)e).typecheck(synMap, varMap);
-	    }*/
 		}
-
+		if (elements.size() == 1 && elements.get(0) instanceof Clause) {
+			return (Clause)elements.get(0);
+		}
 		return this;
 	}
 

@@ -88,7 +88,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 				Clause c = myClauses.get(i);
 				Clause o = originalClauses.get(i);
 				// must have same nonterminals in the same order.
-				c.typecheck(ctx);
+				c = c.typecheck(ctx);
 				if (c.isVarOnlyClause()) {
 					if (!o.isVarOnlyClause()) {
 						ErrorHandler.error(Errors.RENAME_MISMATCH, "" + o, c);

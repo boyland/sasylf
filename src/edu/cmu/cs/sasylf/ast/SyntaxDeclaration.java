@@ -176,7 +176,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		int countVarOnly = 0;
 		for (int i = 0; i < elements.size(); ++i) {
 			Clause c = elements.get(i);
-			c.typecheck(ctx);
+			c = c.typecheck(ctx);
 			if (c.isVarOnlyClause()) {
 				if (countVarOnly == 0) variable = (Variable)c.getElements().get(0);
 				++countVarOnly;

@@ -100,7 +100,7 @@ public abstract class Derivation extends Fact {
 	public void typecheck(Context ctx) {
 		ErrorHandler.recordLastSpan(this);
 		ctx.checkConsistent(this);
-		clause.typecheck(ctx);
+		clause = clause.typecheck(ctx);
 
 		Element newClause = clause.computeClause(ctx, false);
 		if (!(newClause instanceof Clause))
