@@ -45,45 +45,7 @@ public class SASyLFCodeScanner extends RuleBasedScanner{
 			}
 		}));
 
-		WordRule wordRule = new WordRule (new SASyLFWordDetector(), other) {
-			private StringBuffer _buffer = new StringBuffer ();
-
-			@Override
-			public IToken evaluate (ICharacterScanner scanner) {
-				int c = scanner.read ();
-				if (fDetector.isWordStart((char) c)) {
-					if(fColumn==UNDEFINED || (fColumn == scanner.getColumn() - 1)) {
-						_buffer.setLength(0);
-						do {
-							_buffer.append((char) c);
-							c = scanner.read();
-						}
-						while (c != ICharacterScanner.EOF && fDetector.isWordPart((char) c));
-						scanner.unread();
-
-						IToken token = fWords.get(_buffer.toString()/*.toLowerCase()*/);
-						if(token != null) {
-							return token;
-						}
-
-						if (fDefaultToken.isUndefined())
-							unreadBuffer (scanner);
-						return fDefaultToken;
-					}
-				}
-
-				scanner.unread();
-				return Token.UNDEFINED;
-			}
-
-			@Override
-			protected void unreadBuffer (ICharacterScanner scanner) {
-				for (int i = _buffer.length()-1; i>=0; i--){
-					scanner.unread();
-				}
-			}
-
-		};
+		WordRule wordRule = new WordRule (new SASyLFWordDetector(), other);
 
 		for (String key : DSLToolkitParser.allKeywords()) {
 			wordRule.addWord(key, keyword);
