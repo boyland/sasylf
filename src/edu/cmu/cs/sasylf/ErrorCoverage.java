@@ -139,8 +139,8 @@ public class ErrorCoverage {
 						expected = expected.trim();
 						String actual = er.getErrorMessage();
 						if (!actual.equals(expected)) {
-							System.err.println("Expected '" + expected + "',\n" + 
-						                       " but got '" + actual + "'");
+							System.err.println(line + ": Expected '" + expected + "',\n" + 
+						                       line + ":  but got '" + actual + "'");
 						}
 					}
 				}

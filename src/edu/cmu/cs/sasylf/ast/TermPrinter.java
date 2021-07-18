@@ -27,8 +27,34 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
- * A class to convert terms back into elements
- * @author boyland
+ * A class to convert terms back into elements.
+ * The conversion is non-trivial for a number of reasons:
+ * <ul>
+ * <li> Fresh (internal) variables need to be converted into user-visible unused meta-variables.
+ * This is currently accomplished by keeping a dictionary mapping fresh variables to nonterminals,
+ * and adding to it on demand.
+ * <li> We need to convert the deBruijn indices into variables that are unique for their context, 
+ * but don't need to be unique for the whole generated element (scoping is relevant).
+ * This mapping is handled by a "vars" list that is passed around.  New variables are added at the end.
+ * <li> Named contexts are omitted in the internal form, and must be generated or else 
+ * the empty context terminal must be used.  The "assumed" context is provided as a constructor
+ * parameter to the term printer.
+ * <li> Variable contexts (e.g., "x:T") are expressed as LF abstractions.
+ * higher-order functions are <em>also</em> represented by abstractions.  
+ * So, we treat converting a term to a "clause" (judgments) different that converting
+ * a term into an "element" (syntax).  Currently all variable contexts are represented
+ * by <em>two</em> abstractions: the first for the variables and the second for the
+ * judgment that has the assumption rule for this variable.  Recall that each variable
+ * may be bound in exactly one context and each binding form must be used in 
+ * exactly one assumption rule.  Once we get the binding form, we need to copy
+ * it into the correct place in the judgment instance. (ClauseUse).  To complicate matters, 
+ * "and" and "or" judgments may have multiple places where a context is used.
+ * <li> Context judgments do <em>not</em> represent the context in this way, but rather
+ * accept a higher-order function as a parameter.  It seems to work now.
+ * <li> If a nonterminal is imported twice with different nonterminals,
+ * internally there is no difference, and sometimes the incorrect non-terminal is chosen.
+ * Fixing this would require looking at the context to see which local nonterminal should be used.
+ * </ul>
  */
 public class TermPrinter {
 	/**
@@ -54,7 +80,6 @@ public class TermPrinter {
 	private final Location location;
 	private final Map<FreeVar,NonTerminal> varMap = new HashMap<FreeVar,NonTerminal>();
 	private final Set<FreeVar> used = new HashSet<FreeVar>();
-	private final Set<String> variableNames = new HashSet<String>();
 	
 	/** whether this TermPrinter creates names for free and bound variables;
 	 *  otherwise grabs the name from the FreeVar or the binding Abstraction **/
@@ -119,7 +144,6 @@ public class TermPrinter {
 	}
 
 	public ClauseUse asClause(Term x) {
-		variableNames.clear(); // every clause can reuse variables
 		return asClause(x, new ArrayList<Variable>());
 	}
 
@@ -293,22 +317,18 @@ public class TermPrinter {
 	}
 
 	private String createVarName(SyntaxDeclaration s, List<Variable> vars) {
-		int count = 0;
-		for (Variable p : vars) {
-			if (p != null && p.getType() != null && p.getType().equals(s)) ++count;
-		}
 		StringBuilder sb = new StringBuilder(s.getVariable().toString());
-		int len = sb.length();
-		while (count > 0) {
+		for (;;) {
+			boolean found = false;
+			String temp = sb.toString();
+			for (Variable v : vars) {
+				if (v.getType() == s && temp.equals(v.getSymbol())) found = true;
+			}
+			if (found == false) return temp;
 			sb.append("'");
-			--count;
 		}
-		if (variableNames.add(sb.toString())) return sb.toString();
-		for (int i=0; true; ++i) {
-			sb.setLength(len);
-			sb.append(i);
-			if (variableNames.add(sb.toString())) return sb.toString();
-		}
+		// previously, we would keep track of which variables were used,
+		// but this doesn't take into account the fact that variables are scoped.
 	}
 
 	/**
@@ -502,6 +522,7 @@ public class TermPrinter {
 						System.out.println("What do I do with " + old + " getting " + actual + " ?");
 						contents.set(i, actual);
 					}
+					// System.out.println("all = " + contents.get(i));
 				} else if (old instanceof Variable) {
 					System.out.println("What do I do with variable " + old);
 				}
