@@ -1,15 +1,21 @@
 package org.sasylf.refactor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
@@ -26,7 +32,7 @@ import org.eclipse.ui.PlatformUI;
 import org.sasylf.IDEProof;
 import org.sasylf.project.ProjectModuleFinder;
 import org.sasylf.project.ProofBuilder;
-import org.sasylf.util.EclipseUtil;
+import org.sasylf.util.DocumentUtil;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Node;
@@ -79,34 +85,39 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 		IRegion moduleLoc = null;
 		String newName = page.getTheoremName();
 
-		Map<String, ? super RuleLike> map = new HashMap<>();
+		Map<String, RuleLike> map = new HashMap<>();
 		context.getCompUnit().collectRuleLike(map);
-		Theorem theorem = (Theorem)map.get(context.getOldName());
+		
+		Object ruleLike = map.get(context.getOldName());
+		
+		// If object is not a Theorem, return without doing anything
+		if (!(ruleLike instanceof Theorem)) {
+			return;
+		}
+		
+		Theorem theorem = (Theorem)ruleLike;
 
 		moduleLoc = getModuleLocation(doc, theorem);
 
 		int offset = moduleLoc.getOffset();
 		int length = moduleLoc.getLength();
-
-		if (doc.get(offset, length).equals(newName)) {
-			// no change needed
-			return;
-		}
+		
 		System.out.println("Replacing " + doc.get(offset, length) + " with " + newName);
 		edit.addChild(new ReplaceEdit(offset, length, newName));
 
 		List<QualName> qualNames = new ArrayList<>();
 		Consumer<QualName> consumer = name -> {			
 			if (name.getLastSegment().equals(context.getOldName())) {
-				QualName source = name.getSource();
-				if (source == null) {
+				if (name.resolve(null) instanceof Theorem) {
 					qualNames.add(name);
 				}
 			}
+			
 		};
 
 		context.collectQualNames(consumer);
 
+		// work backwards
 		for (int i = qualNames.size() - 1; i >= 0; --i) {
 			QualName name = qualNames.get(i);
 
@@ -114,11 +125,7 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 
 			offset = moduleLoc.getOffset();
 			length = moduleLoc.getLength();
-
-			if (doc.get(offset, length).equals(newName)) {
-				// no change needed
-				continue;
-			}
+			
 			System.out.println("Replacing " + doc.get(offset, length) + " with " + newName);
 			edit.addChild(new ReplaceEdit(offset, length, newName));
 		}
@@ -132,6 +139,9 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 		MultiTextEdit edit = new MultiTextEdit();
 		IRegion moduleLoc = null;
 		String newName = page.getTheoremName();
+		IContainer proofFolder = file.getParent();
+		IPath proofPath = ProofBuilder.getProofFolderRelativePath(proofFolder);
+		String[] proofPackage = proofPath.segments();
 		List<QualName> qualNames = new ArrayList<>();
 		Consumer<QualName> consumer = name -> {
 			if (name.getLastSegment().equals(context.getOldName())) {
@@ -140,6 +150,8 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 					Object o = source.resolve(null);
 					if (o instanceof CompUnit && ((CompUnit)o).equals(context.getCompUnit())) {
 						qualNames.add(name);
+					} else if (o instanceof String[] && Arrays.equals(proofPackage, (String[]) o)) {
+						qualNames.add(name);
 					}
 				}
 			}
@@ -147,7 +159,8 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 
 		cu.collectQualNames(consumer);
 
-		for (int i = qualNames.size() - 1; i >= 0; --i) {
+		// work backwards
+		for (int i = qualNames.size() - 1; i >= 0; --i) {  
 			QualName name = qualNames.get(i);
 
 			moduleLoc = getModuleLocation(doc, name);
@@ -159,6 +172,7 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 				// no change needed
 				continue;
 			}
+			
 			System.out.println("Replacing " + doc.get(offset, length) + " with " + newName + " in file " + file.getName());
 			edit.addChild(new ReplaceEdit(offset, length, newName));
 		}
@@ -177,9 +191,24 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 
 		for (ModuleId dependency : dependencies) {
 			IFile file = pb.getResource(dependency);
-			System.out.println("file: " + file);
-			IDocument document = EclipseUtil.getDocumentFromResource(file);
-			getFileChange(file, document);
+			IPath fullPath = file.getFullPath();
+			ITextFileBufferManager manager = null;
+			boolean connected = false;
+			try {
+				manager = FileBuffers.getTextFileBufferManager();
+				manager.connect(fullPath, LocationKind.IFILE, null);
+				connected = true;
+				IDocument document = manager.getTextFileBuffer(fullPath, LocationKind.IFILE).getDocument();
+				getFileChange(file, document);
+				document.getLineInformation(1);
+			} catch (BadLocationException e) {
+				e.printStackTrace();
+			} finally {
+				if (connected) {
+					manager.disconnect(fullPath, LocationKind.IFILE, null);
+				}
+			}
+			
 		}
 	}
 
@@ -208,16 +237,12 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 	}
 
 	private IRegion getModuleLocation(IDocument doc, Node node) throws BadLocationException {
-		System.out.println("document: " + doc);
 		if ((node instanceof QualName)) {
 			QualName qn = (QualName) node;
-			Location loc = node.getLocation();
-			IRegion line = doc.getLineInformation(loc.getLine()-1);
-			loc = qn.getEndLocation();
-			line = doc.getLineInformation(loc.getLine()-1);
+			Location loc = qn.getEndLocation();
 
 			int length = qn.getLastSegment().length();
-			int offset = line.getOffset() + loc.getColumn() - length - 1;
+			int offset = DocumentUtil.getOffset(loc, doc) - length;
 
 			return new Region(offset, length);
 		} else {

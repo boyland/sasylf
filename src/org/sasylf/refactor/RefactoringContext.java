@@ -1,5 +1,7 @@
 package org.sasylf.refactor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.eclipse.core.resources.IFile;
@@ -59,9 +61,16 @@ public class RefactoringContext {
 				declaration != null;
 	}
 	
+	/**
+	 * Check whether the theorem name is located in the proof.
+	 * @param name theorem name to check for
+	 * @return whether the name already exists or not
+	 */
 	public boolean containsTheorem(String name) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		compUnit.collectRuleLike(map);
 		
-		return false;
+		return map.containsKey(name);
 	}
 	
 	public void collectQualNames(Consumer<QualName> consumer) {
