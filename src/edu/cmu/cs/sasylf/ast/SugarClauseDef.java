@@ -27,6 +27,11 @@ public class SugarClauseDef extends ClauseDef {
 	}
 
 	@Override
+	public ClauseDef getBaseClauseDef() {
+		return ((ClauseUse)definition).getConstructor().getBaseClauseDef();
+	}
+	
+	@Override
 	public void checkVarUse(boolean isContext) {
 		super.checkVarUse(isContext);
 		// for side-effect

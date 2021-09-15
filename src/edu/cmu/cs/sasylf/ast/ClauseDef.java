@@ -57,6 +57,14 @@ public class ClauseDef extends Clause {
 	public ClauseType getType() { return type; }
 	
 	/**
+	 * Return the clause def that this clause def builds terms for.
+	 * Normally, the same as this, but for sugar, the base is the "real"
+	 * clause def.
+	 * @return clause def that this def builds ters for
+	 */
+	public ClauseDef getBaseClauseDef() { return this; }
+	
+	/**
 	 * Return the index of a context NT in this form, or -1 if there is
 	 * no use of the context nonterminal (or no context nonterminal).
 	 * Normally there is only one, but if (for example for and/or judgments)

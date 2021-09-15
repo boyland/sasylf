@@ -1,0 +1,29 @@
+package regression;
+
+terminals S Z
+
+syntax
+   n ::= Z 
+      | S n
+
+   0 := Z
+   1 := S Z
+
+judgment equality: n = n
+
+    -------- eq
+     n = n
+
+theorem overly-complex:
+   forall n
+   exists n = n
+   proof by induction on n:
+     case 0 is // NPE
+       proof by rule eq
+     end case
+     case S n' is
+       e': n' = n' by induction hypothesis on n'
+       proof by rule eq
+     end case
+  end induction
+end theorem

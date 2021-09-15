@@ -123,7 +123,11 @@ public class SyntaxCase extends Case {
 		}
 		
 		Term concTerm = concElem.asTerm();
+		if (!concDef.isVarOnlyClause()) {
+			concDef = ((ClauseDef)concDef).getBaseClauseDef();
+		}
 		Util.debug("concTerm = ", concTerm);
+		Util.debug("concDef = ", concDef,", of class ", concDef.getClass());
 
 		int diff = concTerm.countLambdas() - ctx.currentCaseAnalysis.countLambdas();
 		// this check is redundant:
