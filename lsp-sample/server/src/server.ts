@@ -50,7 +50,8 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities : {
       textDocumentSync : TextDocumentSyncKind.Incremental,
       // Tell the client that this server supports code completion.
-      completionProvider : {resolveProvider : true}
+      codeActionProvider : {resolveProvider : true},
+      completionProvider : {resolveProvider : true},
     }
   };
   if (hasWorkspaceFolderCapability) {
@@ -199,6 +200,34 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     item.documentation = 'JavaScript documentation';
   }
   return item;
+});
+
+// Register a code action provider
+connection.onCodeAction((params) => {
+  console.log(params);
+  const document = documents.get(params.textDocument.uri);
+
+  if (document == null)
+    return;
+
+  const range = params.range;
+  const codeActions = [];
+
+  // For each diagnostic, try to find a quick fix
+  for (const diagnostic of params.context.diagnostics) {
+    console.log(diagnostic);
+    const error = diagnostic.message;
+    codeActions.push({
+      title : 'Example code action',
+      kind : 'quickfix',
+      diagnostics : [ diagnostic ],
+      edit : {
+        changes : {[document.uri] : [ {range : range, newText : 'new text'} ]}
+      }
+    });
+  }
+
+  return codeActions;
 });
 
 // Make the text document manager listen on the connection
