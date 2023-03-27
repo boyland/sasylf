@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.cmu.cs.sasylf.util.Errors;
 import org.sasylf.Preferences;
 
-class myClass {
+public class Quickfix {
   public String makeQuickfix(String jsonData) {
     Errors markerType = null;
     String fixInfo;
