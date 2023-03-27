@@ -46,6 +46,8 @@ public class Main {
           "   --LF          extra info about LF terms in certain error messages");
       System.err.println("   --stdin       pass in slf file via stdin");
       System.err.println(
+          "   --lsp         lsp interface for completions, quick fixes, etc");
+      System.err.println(
           "   --path=dir... use the given directories for package/module checking.");
       return;
     }
@@ -57,6 +59,10 @@ public class Main {
     PathModuleFinder mf = null;
     PathModuleFinder defaultMF = new PathModuleFinder("");
     for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("--lsp")) {
+        // TODO: lsp mode
+        continue;
+      }
       if (args[i].equals("--compwhere")) {
         edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
         continue;
@@ -133,7 +139,6 @@ public class Main {
           if (!file.canRead()) {
             System.err.println("Could not open file " + filename);
             exitCode = -1;
-            continue;
           }
         }
         try {
