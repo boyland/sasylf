@@ -3,8 +3,11 @@ package edu.cmu.cs.sasylf.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.cmu.cs.sasylf.util.Errors;
-import org.sasylf.Preferences;
+
+// import org.sasylf.Preferences;
 
 public class Quickfix {
   public String makeQuickfix(String jsonData) {
@@ -12,26 +15,40 @@ public class Quickfix {
     String fixInfo;
     int line;
     String lineText = "";
-    String doc = jsonNode.get("textDocument").asString();
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode jsonNode = objectMapper.readTree(jsonData);
-
+    ObjectMapper objectMapper;
+    String doc;
+    JsonNode jsonNode;
     try {
-      String type = jsonNode.get("errorType").asString();
-      if (type != null)
-        markerType = Errors.valueOf(type);
-      fixInfo = jsonNode.get("errorInfo").asString();
-      line = jsonNode.get("lineNumber").asInt();
-      lineText = doc.split("\\r?\\n")[line];
-    } catch (CoreException e) {
-      e.printStackTrace();
-      return null;
-    } catch (BadLocationException e) {
-      System.err.println("unexpected bad location exception caught:");
-      e.printStackTrace();
-      return null;
+      objectMapper = new ObjectMapper();
+      jsonNode = objectMapper.readTree(jsonData);
+      doc = jsonNode.get("textDocument").asText();
     }
+    catch (JsonProcessingException e) {
+      e.printStackTrace();
+      return "Error";
+    }
+    // try {
+    //   String type = jsonNode.get("errorType").asText();
+    //   if (type != null)
+    //     markerType = Errors.valueOf(type);
+    //   fixInfo = jsonNode.get("errorInfo").asText();
+    //   line = jsonNode.get("lineNumber").asInt();
+    //   lineText = doc.split("\\r?\\n")[line];
+    // } catch (CoreException e) {
+    //   e.printStackTrace();
+    //   return null;
+    // } catch (BadLocationException e) {
+    //   System.err.println("unexpected bad location exception caught:");
+    //   e.printStackTrace();
+    //   return null;
+    // }
+    String type = jsonNode.get("errorType").asText();
+    if (type != null)
+      markerType = Errors.valueOf(type);
+    fixInfo = jsonNode.get("errorInfo").asText();
+    line = jsonNode.get("lineNumber").asInt();
+    lineText = doc.split("\\r?\\n")[line];
     if (markerType == null || line == 0 || lineText == "")
       return null;
 
@@ -48,13 +65,13 @@ public class Quickfix {
       }
       lineIndent = lineText.substring(0, i);
     }
-    int indentAmount = Preferences.getFormatterIndentSize();
+    int indentAmount = jsonNode.get("indentAmount").asInt();
     String indent = "    ";
     if (indentAmount >= 0 && indentAmount <= 8) {
       indent = "        ".substring(0, indentAmount);
     }
 
-    String nl = jsonNode.get("lineDelimeter").asString();
+    String nl = jsonNode.get("lineDelimeter").asText();
     String newText;
     int colon = split[0].indexOf(':');
     int useStart = jsonNode.get("charStart").asInt();
@@ -62,6 +79,7 @@ public class Quickfix {
     String useName = doc.substring(useStart, useEnd);
     String defName;
 
+    JsonNodeFactory factory = JsonNodeFactory.instance;
     if (colon >= 0) {
       defName = split[0].substring(0, colon);
     } else {
@@ -126,6 +144,7 @@ public class Quickfix {
       return resString;
     } catch (Exception e) {
       e.printStackTrace();
+      return "Error";
     }
   }
 }
