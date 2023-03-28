@@ -1,0 +1,18 @@
+terminals S
+
+syntax
+        n ::= 0 | S n
+
+        1 := S 0
+        2 := S 1
+
+judgment plus: n + n = n
+        
+        n1 + n2 = n3
+        -------------- plus-s
+        S n1 + n2 = S n3
+
+lemma simple:
+        exists 1 + 1 = 2
+        result: 1 + 1 = 2 by rule plus-s on _
+end lemma
