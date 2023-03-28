@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Quickfix;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.Scanner;
 
 public class Main {
 
@@ -60,7 +62,14 @@ public class Main {
     PathModuleFinder defaultMF = new PathModuleFinder("");
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("--lsp")) {
-        // TODO: lsp mode
+        String json = "";
+        Scanner sc = new Scanner(System.in);
+        while (sc.hasNextLine()) {
+          json += sc.nextLine();
+        }
+        System.out.println(json);
+        Quickfix C = new Quickfix();
+        System.out.println(C.makeQuickfix(json));
         continue;
       }
       if (args[i].equals("--compwhere")) {
