@@ -1,13 +1,11 @@
 package edu.cmu.cs.sasylf.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.cmu.cs.sasylf.util.Errors;
-
-// import org.sasylf.Preferences;
 
 public class Quickfix {
   public String makeQuickfix(String jsonData) {
@@ -16,18 +14,18 @@ public class Quickfix {
     int line;
     String lineText = "";
 
-    ObjectMapper objectMapper;
+    ObjectMapper objectMapper = new ObjectMapper();
     String doc;
     JsonNode jsonNode;
+    System.out.println(objectMapper.getClass());
     try {
       objectMapper = new ObjectMapper();
       jsonNode = objectMapper.readTree(jsonData);
-      doc = jsonNode.get("textDocument").asText();
-    }
-    catch (JsonProcessingException e) {
+    } catch (Exception e) {
       e.printStackTrace();
       return "Error";
     }
+    doc = jsonNode.get("textDocument").asText();
     // try {
     //   String type = jsonNode.get("errorType").asText();
     //   if (type != null)
