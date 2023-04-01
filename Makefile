@@ -9,11 +9,13 @@ VERSION=`head -1 ChangeLog.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +
 
 default: test
 
+build : SHELL:=/bin/bash
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
 	(cd src && javac -cp ../lib/*:../bin:. -source 1.8 -target 1.8 -d ../bin edu/cmu/cs/sasylf/Main.java edu/cmu/cs/sasylf/term/UnitTests.java)
-	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org
+	(cd bin && cp -r ../lib/*.jar . && find . -name '*.jar' -execdir unzip -o {} \; && rm -r META-INF)
+	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org -C bin com
 
 TESTBIN= bin/org/sasylf/Activator.class
 TESTLIB= bin/org/sasylf/util/Natural.slf
