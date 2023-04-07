@@ -200,26 +200,28 @@ public class Main {
       if (pf == null)
         continue;
 
-      int newErrorCount = pf.getErrorCount();
-      int newWarnings = pf.getWarningCount();
-      @SuppressWarnings("resource")
-      PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
-      if (newErrorCount == 0)
-        ps.print(filename + ": No errors");
-      else if (newErrorCount == 1)
-        ps.print(filename + ": 1 error");
-      else
-        ps.print(filename + ": " + newErrorCount + " errors");
-      if (newWarnings > 0) {
-        if (newWarnings > 1) {
-          ps.print(" and " + newWarnings + " warnings");
-        } else {
-          ps.print(" and 1 warning");
+      if (!ErrorHandler.lsp) {
+        int newErrorCount = pf.getErrorCount();
+        int newWarnings = pf.getWarningCount();
+        @SuppressWarnings("resource")
+        PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
+        if (newErrorCount == 0)
+          ps.print(filename + ": No errors");
+        else if (newErrorCount == 1)
+          ps.print(filename + ": 1 error");
+        else
+          ps.print(filename + ": " + newErrorCount + " errors");
+        if (newWarnings > 0) {
+          if (newWarnings > 1) {
+            ps.print(" and " + newWarnings + " warnings");
+          } else {
+            ps.print(" and 1 warning");
+          }
         }
+        ps.println(" reported.");
+        if (newErrorCount > 0)
+          exitCode = -1;
       }
-      ps.println(" reported.");
-      if (newErrorCount > 0)
-        exitCode = -1;
     }
     System.exit(exitCode);
   }
