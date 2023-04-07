@@ -21,6 +21,7 @@ public class Quickfix {
     Errors markerType = (Errors)marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
 
     fixInfo = (String)marker.getAttribute(Marker.SASYLF_ERROR_INFO);
+    System.out.println(fixInfo);
     line = (int)marker.getAttribute(Marker.LINE_NUMBER, 0);
     if (line > 0) {
       lineInfo = doc.getLineInformation(line - 1);
@@ -44,7 +45,10 @@ public class Quickfix {
       lineIndent = lineText.substring(0, i);
     }
 
-    int indentAmount = doc.getIndentSize();
+    int indentAmount =
+        doc.getLines()[line - 1].length() -
+        doc.getLines()[line - 1].replaceAll("^\\s+", "").length();
+    System.out.println(indentAmount);
     String indent = "    ";
 
     if (indentAmount >= 0 && indentAmount <= 8) {
@@ -79,27 +83,28 @@ public class Quickfix {
       }
 
       VSRegion prevLineInfo = lineInfo;
-      int diff = 0;
-      try {
-        if (split.length > 1)
-          diff = Integer.parseInt(split[1]);
-      } catch (RuntimeException ex) {
-        // muffle array or number format
-      }
-      if (diff > 0)
-        prevLineInfo = doc.getLineInformation(line - 1 - diff);
-      String prevLine =
-          doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength());
-      int prevStart;
-      for (prevStart = 0; prevStart < prevLine.length(); ++prevStart) {
-        int ch = lineText.charAt(prevStart);
-        if (ch == ' ' || ch == '\t')
-          continue;
-        break;
-      }
-      String prevIndent = lineText.substring(0, prevStart);
-      newText = doc.getLineDelimiter() + prevIndent + split[0] +
-                " by unproved" + doc.getLineDelimiter();
+      // int diff = 0;
+      // try {
+      //   if (split.length > 1)
+      //     diff = Integer.parseInt(split[1]);
+      // } catch (RuntimeException ex) {
+      //   // muffle array or number format
+      // }
+      // if (diff > 0)
+      //   prevLineInfo = doc.getLineInformation(line - 1 - diff);
+      // String prevLine =
+      //     doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength());
+      // System.out.println(prevLine);
+      // int prevStart;
+      // for (prevStart = 0; prevStart < prevLine.length(); ++prevStart) {
+      //   int ch = lineText.charAt(prevStart);
+      //   if (ch == ' ' || ch == '\t')
+      //     continue;
+      //   break;
+      // }
+      // String prevIndent = lineText.substring(0, prevStart);
+      newText = doc.getLineDelimiter() + indent + split[0] + " by unproved" +
+                doc.getLineDelimiter();
 
       String extra = "";
 
