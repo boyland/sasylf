@@ -101,8 +101,7 @@ public class Quickfix {
       //   break;
       // }
       // String prevIndent = lineText.substring(0, prevStart);
-      newText = doc.getLineDelimiter() + indent + split[0] + " by unproved" +
-                doc.getLineDelimiter();
+      newText = indent + split[0] + " by unproved" + doc.getLineDelimiter();
 
       String extra = "";
 
