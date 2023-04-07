@@ -61,7 +61,6 @@ public class Quickfix {
       int colon = split[0].indexOf(':');
       int useStart = (int)marker.getAttribute(Marker.CHAR_START, -1);
       int useEnd = (int)marker.getAttribute(Marker.CHAR_END, -1);
-      System.out.println(doc.getBody());
       String useName = doc.get(useStart, useEnd - useStart);
       String defName;
 
@@ -109,9 +108,6 @@ public class Quickfix {
           extra = ", and replace '_' with '" + defName + "'";
         }
       }
-
-      System.out.println(
-          doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength()));
 
       HashMap<String, Object> res = new HashMap<>();
       res.put("newText", newText);
