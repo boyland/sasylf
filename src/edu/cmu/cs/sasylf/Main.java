@@ -13,14 +13,17 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Quickfix;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
+import edu.cmu.cs.sasylf.util.VSDocument;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Scanner;
 
 public class Main {
@@ -48,28 +51,34 @@ public class Main {
           "   --LF          extra info about LF terms in certain error messages");
       System.err.println("   --stdin       pass in slf file via stdin");
       System.err.println(
-          "   --lsp         lsp interface for completions, quick fixes, etc");
+          "   --lsp         lsp interface for completions, quick fixes, etc. note: intended for lsp use only.");
       System.err.println(
           "   --path=dir... use the given directories for package/module checking.");
+      System.err.println(
+          "   --indentAmount=int... the number of spaces in an indent.");
+      System.err.println("   --eol=string... the end of line character.");
       return;
     }
     if (args.length >= 1 && args[0].equals("--version")) {
       System.out.println(Version.getInstance());
       return;
     }
+    String nl = System.lineSeparator();
+    int indentAmount = 4;
     String dir = null;
     PathModuleFinder mf = null;
     PathModuleFinder defaultMF = new PathModuleFinder("");
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("--lsp")) {
-        String json = "";
-        Scanner sc = new Scanner(System.in);
-        while (sc.hasNextLine()) {
-          json += sc.nextLine();
-        }
-        System.out.println(json);
-        Quickfix C = new Quickfix();
-        System.out.println(C.makeQuickfix(json));
+        ErrorHandler.lsp = true;
+        continue;
+      }
+      if (args[i].startsWith("--indentAmount=")) {
+        indentAmount = Integer.parseInt(args[i].substring(15));
+        continue;
+      }
+      if (args[i].startsWith("--eol=")) {
+        nl = args[i].substring(6).equals("cr") ? "\r\n" : "\n";
         continue;
       }
       if (args[i].equals("--compwhere")) {
@@ -151,12 +160,30 @@ public class Main {
           }
         }
         try {
-          Reader r;
+          /**
+           * We take the input from stdin and turn that into a VSDocument that
+           * is needed for the quickfixes.
+           */
+          InputStreamReader r;
           if (args[i].startsWith("--stdin"))
             r = new InputStreamReader(System.in);
           else
             r = new InputStreamReader(new FileInputStream(file), "UTF-8");
-          pf = Proof.parseAndCheck(defaultMF, filename, null, r);
+
+          BufferedReader reader = new BufferedReader(r);
+          StringBuilder sb = new StringBuilder();
+
+          String line;
+          while ((line = reader.readLine()) != null) {
+            sb.append(line);
+            sb.append(nl);
+          }
+
+          String text = sb.toString();
+          ErrorHandler.doc = new VSDocument(text, indentAmount, nl);
+
+          pf = Proof.parseAndCheck(defaultMF, filename, null,
+                                   new StringReader(text));
         } catch (FileNotFoundException ex) {
           System.err.println("Could not open file " + filename);
           exitCode = -1;

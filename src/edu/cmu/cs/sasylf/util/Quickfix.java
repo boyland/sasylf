@@ -1,53 +1,33 @@
 package edu.cmu.cs.sasylf.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Marker;
+import edu.cmu.cs.sasylf.util.VSDocument;
+import edu.cmu.cs.sasylf.util.VSMarker;
+import edu.cmu.cs.sasylf.util.VSRegion;
+import java.util.HashMap;
 
+/**
+ * The makeQuickfix method implements the method for quickfixes used in
+ * Eclipse, but it replaced the Eclipse classes with custom made classes that
+ * mirror the Eclipse ones.
+ */
 public class Quickfix {
-  public String makeQuickfix(String jsonData) {
-    Errors markerType = null;
+  public HashMap<String, Object> makeQuickfix(VSDocument doc, VSMarker marker) {
     String fixInfo;
     int line;
+    VSRegion lineInfo = null;
     String lineText = "";
+    Errors markerType = (Errors)marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    String doc;
-    JsonNode jsonNode;
-    System.out.println(objectMapper.getClass());
-    try {
-      objectMapper = new ObjectMapper();
-      jsonNode = objectMapper.readTree(jsonData);
-    } catch (Exception e) {
-      e.printStackTrace();
-      return "Error";
+    fixInfo = (String)marker.getAttribute(Marker.SASYLF_ERROR_INFO);
+    line = (int)marker.getAttribute(Marker.LINE_NUMBER, 0);
+    if (line > 0) {
+      lineInfo = doc.getLineInformation(line - 1);
+      lineText = doc.get(lineInfo.getOffset(), lineInfo.getLength());
     }
-    doc = jsonNode.get("textDocument").asText();
-    // try {
-    //   String type = jsonNode.get("errorType").asText();
-    //   if (type != null)
-    //     markerType = Errors.valueOf(type);
-    //   fixInfo = jsonNode.get("errorInfo").asText();
-    //   line = jsonNode.get("lineNumber").asInt();
-    //   lineText = doc.split("\\r?\\n")[line];
-    // } catch (CoreException e) {
-    //   e.printStackTrace();
-    //   return null;
-    // } catch (BadLocationException e) {
-    //   System.err.println("unexpected bad location exception caught:");
-    //   e.printStackTrace();
-    //   return null;
-    // }
-    String type = jsonNode.get("errorType").asText();
-    if (type != null)
-      markerType = Errors.valueOf(type);
-    fixInfo = jsonNode.get("errorInfo").asText();
-    line = jsonNode.get("lineNumber").asInt();
-    lineText = doc.split("\\r?\\n")[line];
-    if (markerType == null || line == 0 || lineText == "")
+
+    if (markerType == null || fixInfo == null || line == 0)
       return null;
 
     String[] split = fixInfo.split("\n", -1);
@@ -63,86 +43,86 @@ public class Quickfix {
       }
       lineIndent = lineText.substring(0, i);
     }
-    int indentAmount = jsonNode.get("indentAmount").asInt();
+
+    int indentAmount = doc.getIndentSize();
     String indent = "    ";
+
     if (indentAmount >= 0 && indentAmount <= 8) {
       indent = "        ".substring(0, indentAmount);
     }
 
-    String nl = jsonNode.get("lineDelimeter").asText();
+    String extraIndent = "";
     String newText;
-    int colon = split[0].indexOf(':');
-    int useStart = jsonNode.get("charStart").asInt();
-    int useEnd = jsonNode.get("charStart").asInt();
-    String useName = doc.substring(useStart, useEnd);
-    String defName;
 
-    JsonNodeFactory factory = JsonNodeFactory.instance;
-    if (colon >= 0) {
-      defName = split[0].substring(0, colon);
-    } else {
-      defName = split[0];
-
-      ObjectNode res = factory.objectNode();
-      res.put("newText", defName);
-      res.put("charStart", Integer.toString(useStart));
-      res.put("charEnd", Integer.toString(useStart + useName.length()));
-      res.put("title", "replace '" + useName + " with '" + defName + "'");
-
-      try {
-        String resString = objectMapper.writeValueAsString(res);
-        System.out.println(resString);
-        return resString;
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-
-    int diff = 0;
-    try {
-      if (split.length > 1)
-        diff = Integer.parseInt(split[1]);
-    } catch (RuntimeException ex) {
-      // muffle array or number format
-    }
-
-    String prevLine = doc.split("\\r?\\n")[line - diff];
-    int prevStart;
-    for (prevStart = 0; prevStart < prevLine.length(); ++prevStart) {
-      int ch = lineText.charAt(prevStart);
-      if (ch == ' ' || ch == '\t')
-        continue;
+    switch (markerType) {
+    default:
       break;
-    }
-    String prevIndent = lineText.substring(0, prevStart);
-    newText = prevIndent + split[0] + " by unproved" + nl;
+    case DERIVATION_NOT_FOUND:
+      int colon = split[0].indexOf(':');
+      int useStart = (int)marker.getAttribute(Marker.CHAR_START, -1);
+      int useEnd = (int)marker.getAttribute(Marker.CHAR_END, -1);
+      System.out.println(doc.getBody());
+      String useName = doc.get(useStart, useEnd - useStart);
+      String defName;
 
-    String extra = "";
-    if (!defName.equals(useName)) {
-      if (useName.equals("_")) {
-        extra = ", and replace '_' with '" + defName + "'";
+      if (colon >= 0) {
+        defName = split[0].substring(0, colon);
+      } else {
+        defName = split[0];
+
+        HashMap<String, Object> res = new HashMap<>();
+        res.put("newText", defName);
+        res.put("charStart", useStart);
+        res.put("charEnd", useStart + useName.length());
+        res.put("title", "replace '" + useName + " with '" + defName + "'");
+
+        return res;
       }
+
+      VSRegion prevLineInfo = lineInfo;
+      int diff = 0;
+      try {
+        if (split.length > 1)
+          diff = Integer.parseInt(split[1]);
+      } catch (RuntimeException ex) {
+        // muffle array or number format
+      }
+      if (diff > 0)
+        prevLineInfo = doc.getLineInformation(line - 1 - diff);
+      String prevLine =
+          doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength());
+      int prevStart;
+      for (prevStart = 0; prevStart < prevLine.length(); ++prevStart) {
+        int ch = lineText.charAt(prevStart);
+        if (ch == ' ' || ch == '\t')
+          continue;
+        break;
+      }
+      String prevIndent = lineText.substring(0, prevStart);
+      newText = doc.getLineDelimiter() + prevIndent + split[0] +
+                " by unproved" + doc.getLineDelimiter();
+
+      String extra = "";
+
+      if (!defName.equals(useName)) {
+        if (useName.equals("_")) {
+          extra = ", and replace '_' with '" + defName + "'";
+        }
+      }
+
+      System.out.println(
+          doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength()));
+
+      HashMap<String, Object> res = new HashMap<>();
+      res.put("newText", newText);
+      res.put("charStart", prevLineInfo.getOffset() + prevLineInfo.getLength());
+      res.put("charEnd", prevLineInfo.getOffset() + prevLineInfo.getLength());
+      res.put("title",
+              "insert '" + split[0] + " by unproved' before this line" + extra);
+
+      return res;
     }
 
-    int offset = 0;
-    for (int i = 0; i < line - diff; ++i) {
-      offset += doc.split("\\r?\\n")[i].length();
-    }
-
-    ObjectNode res = factory.objectNode();
-    res.put("newText", newText);
-    res.put("charStart", offset);
-    res.put("charEnd", offset);
-    res.put("title",
-            "insert '" + split[0] + " by unproved' before this line" + extra);
-
-    try {
-      String resString = objectMapper.writeValueAsString(res);
-      System.out.println(resString);
-      return resString;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return "Error";
-    }
+    return null;
   }
 }
