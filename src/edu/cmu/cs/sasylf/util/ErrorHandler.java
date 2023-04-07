@@ -167,12 +167,11 @@ public class ErrorHandler {
 
         int length = lines[line].length();
 
+        String severity = "info";
+
         assert s.getEndLocation().getColumn() == length;
 
         ObjectNode tmp = objectMapper.createObjectNode();
-        tmp.put("Error Message", rep.getMessage());
-        tmp.put("Line", Integer.toString(line));
-        tmp.put("Line", Integer.toString(line));
 
         if (rep instanceof ErrorReport) {
           ErrorReport report = (ErrorReport)(rep);
@@ -196,7 +195,12 @@ public class ErrorHandler {
           } else {
             tmp.putNull("Quickfix");
           }
+          severity = (report.isError()) ? "error" : "warning";
         }
+
+        tmp.put("Error Message", rep.getMessage());
+        tmp.put("Line", Integer.toString(line));
+        tmp.put("Severity", severity);
 
         arrayNode.add(tmp);
       }
