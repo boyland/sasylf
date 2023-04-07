@@ -152,25 +152,30 @@ public class ErrorHandler {
       ArrayNode arrayNode = factory.arrayNode();
 
       for (Report rep : result) {
+        Span s = rep.getSpan();
+        String[] lines = doc.getLines();
+
+        int offset = s.getLocation().getColumn();
+
+        assert s.getLocation().getLine() == s.getEndLocation().getLine();
+        assert s.getLocation().getColumn() == 0;
+        int line = s.getLocation().getLine();
+
+        for (int i = 0; i < line - 1; ++i) {
+          offset += lines[i].length();
+        }
+
+        int length = lines[line].length();
+
+        assert s.getEndLocation().getColumn() == length;
+
+        ObjectNode tmp = objectMapper.createObjectNode();
+        tmp.put("Error Message", rep.getMessage());
+        tmp.put("Line", Integer.toString(line));
+        tmp.put("Line", Integer.toString(line));
+
         if (rep instanceof ErrorReport) {
           ErrorReport report = (ErrorReport)(rep);
-          Span s = report.getSpan();
-          String[] lines = doc.getLines();
-
-          int offset = s.getLocation().getColumn();
-
-          assert s.getLocation().getLine() == s.getEndLocation().getLine();
-          assert s.getLocation().getColumn() == 0;
-          int line = s.getLocation().getLine();
-
-          for (int i = 0; i < line - 1; ++i) {
-            offset += lines[i].length();
-          }
-
-          int length = lines[line].length();
-
-          assert s.getEndLocation().getColumn() == length;
-
           VSMarker marker = new VSMarker();
 
           marker.setAttribute(Marker.SASYLF_ERROR_TYPE, report.getErrorType());
@@ -184,11 +189,6 @@ public class ErrorHandler {
 
           HashMap<String, Object> map = q.makeQuickfix(doc, marker);
 
-          ObjectNode tmp = objectMapper.createObjectNode();
-          tmp.put("Error Message", report.getMessage());
-          tmp.put("Line", Integer.toString(line));
-          tmp.put("Line", Integer.toString(line));
-
           if (map != null) {
             ObjectNode qf = objectMapper.createObjectNode();
             map.forEach((key, value) -> qf.putPOJO(key, value));
@@ -196,9 +196,9 @@ public class ErrorHandler {
           } else {
             tmp.putNull("Quickfix");
           }
-
-          arrayNode.add(tmp);
         }
+
+        arrayNode.add(tmp);
       }
 
       System.out.println(arrayNode.toString());
