@@ -21,7 +21,6 @@ public class Quickfix {
     Errors markerType = (Errors)marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
 
     fixInfo = (String)marker.getAttribute(Marker.SASYLF_ERROR_INFO);
-    System.out.println(fixInfo);
     line = (int)marker.getAttribute(Marker.LINE_NUMBER, 0);
     if (line > 0) {
       lineInfo = doc.getLineInformation(line - 1);
@@ -48,7 +47,6 @@ public class Quickfix {
     int indentAmount =
         doc.getLines()[line - 1].length() -
         doc.getLines()[line - 1].replaceAll("^\\s+", "").length();
-    System.out.println(indentAmount);
     String indent = "    ";
 
     if (indentAmount >= 0 && indentAmount <= 8) {
