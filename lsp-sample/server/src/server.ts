@@ -6,6 +6,7 @@
  */
 import {spawnSync} from 'child_process';
 import {rmSync, writeFileSync} from 'node:fs';
+import {EOL} from 'os';
 import {TextDocument} from 'vscode-languageserver-textdocument';
 import {
   CompletionItem,
@@ -19,7 +20,8 @@ import {
   ProposedFeatures,
   TextDocumentPositionParams,
   TextDocuments,
-  TextDocumentSyncKind
+  TextDocumentSyncKind,
+  TextEdit
 } from 'vscode-languageserver/node';
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -119,6 +121,10 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => { documentSettings.delete(e.document.uri); });
 
+// Map that contains diagnostics encoded with line numbers and error message and
+// their corresponding quickfixes
+const quickfixes: Map<string, any> = new Map();
+
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(
@@ -126,45 +132,57 @@ documents.onDidChangeContent(
 
 // Gives diagonistics based on output of sasylf cli
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+  // Parses json output from sasylf core and turns them into corresponding
+  // diagnostics and quickfixes
   const settings = await getDocumentSettings(textDocument.uri);
 
-  const text = textDocument.getText();
-  const text_lines = text.split('\n');
-  const command = spawnSync('sasylf', [ '--stdin' ], {input : text});
+  const eolSetting =
+      await connection.workspace.getConfiguration({section : "files"});
+  const eol = (eolSetting.eol == "auto") ? EOL : eolSetting.eol;
 
-  const errors: Array<string> = command.stderr.toString().split('\n');
+  const indentSetting =
+      await connection.workspace.getConfiguration({section : "editor"});
+  const indentSize = (indentSetting.indentSize === "tabSize")
+                         ? indentSetting.tabSize
+                         : indentSetting.indentSize;
 
-  const regex = /:(\d+): (.*?): (.*?)$/g;
   const diagnostics: Diagnostic[] = [];
+  const text = textDocument.getText();
+  const text_lines = text.split("\n");
+  const command = spawnSync(
+      'sasylf',
+      [ `--indentAmount=${indentSize}`, `--eol=${eol}`, '--lsp', '--stdin' ],
+      {input : text});
 
-  let problems = 0;
-  for (let i = 0; i < errors.length && problems < settings.maxNumberOfProblems;
-       ++i, ++problems) {
-    const element = errors[i];
-    if (element.trim().length == 0)
+  console.log(command.stdout.toString());
+
+  const output = JSON.parse(command.stdout.toString());
+
+  quickfixes.clear();
+
+  for (let i = 0; i < output.length && i < settings.maxNumberOfProblems - 1;
+       ++i) {
+    const element = output[i];
+    const line = element['Line'] - 1;
+    const quickfix = element['Quickfix'];
+    const start = {
+      line : line,
+      character : text_lines[line].length - text_lines[line].trimStart().length
+    };
+    const end = {line : line, character : text_lines[line].length};
+    const message = element['Error Message'];
+    const severity = element['Severity'];
+    if (severity == "info")
       continue;
-    const matches = element.trim().matchAll(regex);
-    for (const match of matches) {
-      let severity;
-      const line_number = parseInt(match[1]) - 1;
-      const message = match[3].trim();
-      if (match[2].trim() === "info")
-        continue;
-      if (match[2].trim() === "error")
-        severity = DiagnosticSeverity.Error;
-      if (match[2].trim() === "warning")
-        severity = DiagnosticSeverity.Warning;
-      const diagnostic: Diagnostic = {
-        severity : severity,
-        range : {
-          start : {line : line_number, character : 0},
-          end : {line : line_number, character : text_lines[line_number].length}
-        },
-        message : message,
-        source : 'sasylf',
-      };
-      diagnostics.push(diagnostic);
-    }
+    const diagnostic: Diagnostic = {
+      severity : (severity == "warning") ? DiagnosticSeverity.Warning
+                                         : DiagnosticSeverity.Error,
+      range : {start : start, end : end},
+      message : message,
+      source : 'sasylf',
+    };
+    quickfixes.set(`${line}${message}`, quickfix);
+    diagnostics.push(diagnostic);
   }
 
   // Send the computed diagnostics to VSCode.
@@ -202,27 +220,38 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   return item;
 });
 
-// Register a code action provider
-connection.onCodeAction((params) => {
-  console.log(params);
-  const document = documents.get(params.textDocument.uri);
+// Looks for quickfixes in the `quickfixes` map and returns them if they exist
+connection.onCodeAction(async (params) => {
+  const textDocument: TextDocument|undefined =
+      documents.get(params.textDocument.uri);
 
-  if (document == null)
+  if (textDocument == null)
     return;
 
-  const range = params.range;
   const codeActions = [];
 
   // For each diagnostic, try to find a quick fix
   for (const diagnostic of params.context.diagnostics) {
-    console.log(diagnostic);
-    const error = diagnostic.message;
+    const index = `${diagnostic.range.start.line}${diagnostic.message}`;
+    if (!quickfixes.has(index))
+      continue;
+    const quickfix = quickfixes.get(index);
+    if (quickfix == null)
+      continue;
+    const charStart = quickfix['charStart'];
+    const charEnd = quickfix['charEnd'];
+    const start = textDocument.positionAt(charStart);
+    const end = textDocument.positionAt(charEnd);
     codeActions.push({
-      title : 'Example code action',
+      title : 'Code Action',
       kind : 'quickfix',
       diagnostics : [ diagnostic ],
       edit : {
-        changes : {[document.uri] : [ {range : range, newText : 'new text'} ]}
+        changes : {
+          [textDocument.uri] : [
+            {range : {start : start, end : end}, newText : quickfix.newText}
+          ]
+        }
       }
     });
   }
