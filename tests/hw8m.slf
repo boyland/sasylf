@@ -1,0 +1,515 @@
+package edu.cmu.cs.plp;
+
+module hw8 provides
+
+module Natural = org.sasylf.util.Natural
+
+terminals S fn value let in
+
+syntax
+
+n = Natural.n ::= 0 | S n
+
+1 := S 0
+2 := S 1
+3 := S 2
+4 := S 3
+5 := S 4
+
+e ::= x
+  | fn x { e[x] }
+  | e e
+  | #n
+  | e + e
+  | let x = e in e[x]
+
+E ::= *
+  |   E, x
+
+judgment plus = Natural.plus: n + n = n
+judgment equal = Natural.equal: n = n
+
+judgment value: e value
+
+------------------- val-fn
+fn x { e[x] } value
+
+-------- val-nat
+#n value
+
+judgment eval: e => e
+
+e value
+------- eval-val
+e => e
+
+e1 => fn x { e[x] }
+e2 => e2'
+e[e2'] => e'
+------------------- eval-call
+e1 e2 => e'
+
+e1 => e1'
+e2[e1'] => e'
+------------------------- eval-let
+let x = e1 in e2[x] => e'
+
+
+e1 => #n1
+e2 => #n2
+n1 + n2 = n3
+-------------- eval-add
+e1 + e2 => #n3
+
+judgment fold: E |- e ~> e
+assumes E
+
+-------------- fold-var
+E, x |- x ~> x
+
+E, x |- e[x] ~> e'[x]
+------------------------------------ fold-function
+E |- fn x { e[x] } ~> fn x { e'[x] }
+
+E |- e1 ~> e1'
+E, x |- e2[x] ~> e2'[x]
+------------------------------------------------- fold-let
+E |- let x = e1 in e2[x] ~> let x = e1' in e2'[x]
+
+
+E |- e1 ~> e1'
+E |- e2 ~> e2'
+--------------------- fold-app-cong
+E |- e1 e2 ~> e1' e2'
+
+------------- fold-nat
+E |- #n ~> #n
+
+E |- e1 ~> e1'
+E |- e2 ~> e2'
+------------------------- fold-add-cong
+E |- e1 + e2 ~> e1' + e2'
+
+E |- e1 ~> #n1
+E |- e2 ~> #n2
+n1 + n2 = n3
+------------------- fold-add
+E |- e1 + e2 ~> #n3
+
+E |- e1 ~> fn x { e[x] }
+E |- e2 ~> #n
+E |- e[#n] ~> e'
+-------------------- fold-app-prop
+E |- e1 e2 ~> e'
+
+lemma fold-example-1:
+    exists *, x2 |- (fn x1 { x1 + x2 }) #1 ~> #1 + x2.
+    proof by unproved
+end lemma
+
+//lemma fold-example-2:
+//    exists * |- let x = #1 in (#2 + #3) ~> let x = #1 in #5.
+//    proof by unproved
+//end lemma
+
+lemma fold-example-3:
+    exists * |- (fn x { x + #3 }) #1 ~> #4.
+    proof by unproved
+end lemma
+
+/* This lemma is useful to show that once you have rewritten an expression,
+ * then rewriting it again won't have any further effect.
+ *
+ * There's a variant of this lemma stating that:
+ *     forall d: E |- e ~> e'
+ *     exists E |- e ~> e
+ * i.e. if there is a legal transformation, then leaving the code the same
+ * is also a legal transformation.  If you find it helpful, you can prove the
+ * variant of the lemma instead of or in addition to this one.
+ */
+lemma rewrite-reflexive:
+    assumes E
+    forall d: E |- e ~> e'
+    exists E |- e' ~> e'
+    proof by induction on d:
+        case rule
+            ----------------- fold-var
+            _: E', x |- x ~> x
+        is
+            proof by d
+        end case
+
+        case rule
+            d1: E, x |- e1[x] ~> e2[x]
+            ---------------------------------------- fold-function
+            _: E |- fn x { e1[x] } ~> fn x { e2[x] }
+            where e := fn x { e1[x] } and e' := fn x { e2[x] }
+        is
+            d2: E, x |- e2[x] ~> e2[x] by induction hypothesis on d1
+            proof by rule fold-function on d2
+        end case
+
+        case rule
+            d1: E |- e1 ~> e1'
+            d2: E |- e2 ~> e2'
+            ------------------------ fold-app-cong
+            _: E |- e1 e2 ~> e1' e2'
+            where e := e1 e2 and e' := e1' e2'
+        is
+            d3: E |- e1' ~> e1' by induction hypothesis on d1
+            d4: E |- e2' ~> e2' by induction hypothesis on d2
+            proof by rule fold-app-cong on d3, d4
+        end case
+
+        case rule
+            ---------------- fold-nat
+            _: E |- #n ~> #n
+            where e := #n and e' := #n
+        is
+            proof by d
+        end case
+
+        case rule
+            d1: E |- e1 ~> e1'
+            d2: E |- e2 ~> e2'
+            ---------------------------- fold-add-cong
+            _: E |- e1 + e2 ~> e1' + e2'
+            where e := e1 + e2 and e' := e1' + e2'
+        is
+            d3: E |- e1' ~> e1' by induction hypothesis on d1
+            d4: E |- e2' ~> e2' by induction hypothesis on d2
+            proof by rule fold-add-cong on d3, d4
+        end case
+
+        case rule
+            _: E |- e1 ~> #n1
+            _: E |- e2 ~> #n2
+            _: n1 + n2 = n3
+            ---------------------- fold-add
+            _: E |- e1 + e2 ~> #n3
+            where e := e1 + e2 and e' := #n3
+        is
+            proof by rule fold-nat
+        end case
+    end induction
+end lemma
+
+/* This lemma is important for reasoning about applying optimizations to
+ * an expression and then substituting it into another expression that is
+ * also optimized.  It states that rewriting is compositional: rewriting an
+ * expression with a variable and a separate expression, then substituting
+ * is equivalent to substituting first and then applying the rewriting.
+ */
+lemma rewrite-composes:
+    assumes E
+    forall d1: E, x |- e6[x] ~> e8[x]
+    forall d2: E |- e7 ~> e9
+    exists E |- e6[e7] ~> e8[e9]
+    proof by induction on d1:
+        case rule
+            ----------------- fold-var
+            _: E, x |- x ~> x
+            where e6[x] := x and e8[x] := x
+        is
+            proof by d2
+        end case
+
+        /* This case is interesting.  We are applying an optimization to
+         * a variable, but it is not the same variable x that we are
+         * substituting for in the statement of the theorem.
+         */
+        case rule
+            ------------------------ fold-var
+            _: E', x', x |- x' ~> x'
+        is
+            d3: E', x' |- x' ~> x' by rule fold-var
+        end case
+
+        /* This case is interesting because there are two variable involved:
+         * the variable x that we are substituting for in the statement of
+         * the theorem, and some other variable we're calling x' that is
+         * bound in the function.  Note that you'll have a similar situation
+         * with your let construct.  The notation E, x, x' means that the
+         * environment we are considering binds both x and x', in that order.
+         * The notation e0[x][x'] means that both x and x' are bound in e0.
+         */
+        case rule
+            d3: E, x, x' |- e0[x][x'] ~> e1[x][x']
+            ----------------------------------------------------- fold-function
+            _: E, x |- fn x' { e0[x][x'] } ~> fn x' { e1[x][x'] }
+            where e6[x] := fn x' { e0[x][x'] } and e8[x] := fn x' { e1[x][x'] }
+        is
+            /* We want to apply the induction hypothesis (derivation d6 below)
+             * But we can't do that unless the variable we are subsituting
+             * for, x, is the last one in the environment, because it's the
+             * last one in the statement of the theorem.  So, we need to
+             * exchange the order of x and x'.  We saw a use of the exchange
+             * principle in the proof of substitution in lecture 10 (type
+             * soundness).  SASyLF builds in a "by exchange" construct
+             * rather than requiring us to prove a separate lemma as we did
+             * in lecture 10.  It just reorders the two variables in the
+             * context.  It's legal as long as the two variables are different
+             * and the second doesn't depend on the first (which basically 
+             * never happens except in so-called "dependent type systems").
+             */
+            d4: E, x', x |- e0[x][x'] ~> e1[x][x'] by exchange on d3
+            /* Weakening is another principle we saw in lecture 10.  Again,
+             * SASyLF makes things a bit easier for us by building it in.
+             * This just allows us to add a new variable to the context, x'
+             * in this case, which is going to be necessary to make the
+             * use of the induction hypothesis match the theorem.  It's legal
+             * as long as the new variable x' is "fresh"--that is, it isn't
+             * used in d2 or elsewhere in d5.
+             */
+            d5: E, x' |- e7 ~> e9 by weakening on d2
+            d6: E, x' |- e0[e7][x'] ~> e1[e9][x'] by induction hypothesis on d4, d5
+            proof by rule fold-function on d6
+        end case
+
+        case rule
+            d4: E, x |- e0[x] ~> e1[x]
+            d5: E, x |- e2[x] ~> e3[x]
+            ------------------------------------- fold-app-cong
+            _: E, x |- e0[x] e2[x] ~> e1[x] e3[x]
+            where e6[x] := e0[x] e2[x] and e8[x] := e1[x] e3[x]
+        is
+            d6: E |- e0[e7] ~> e1[e9] by induction hypothesis on d4, d2
+            d7: E |- e2[e7] ~> e3[e9] by induction hypothesis on d5, d2
+            _: E |- e0[e7] e2[e7] ~> e1[e9] e3[e9] by rule fold-app-cong on d6, d7
+        end case
+
+        case rule
+            --------------------- fold-nat
+            _: E, x |- #n0 ~> #n0
+            where e6[x] := #n0 and e8[x] := #n0
+        is
+            proof by rule fold-nat
+        end case
+
+        case rule
+            d4: E, x |- e0[x] ~> e1[x]
+            d5: E, x |- e2[x] ~> e3[x]
+            ----------------------------------------- fold-add-cong
+            _: E, x |- e0[x] + e2[x] ~> e1[x] + e3[x]
+            where e6[x] := e0[x] + e2[x] and e8[x] := e1[x] + e3[x]
+        is
+            _142: E |- e0[e7] ~> e1[e9] by induction hypothesis on d4, d2
+            _143: E |- e2[e7] ~> e3[e9] by induction hypothesis on d5, d2
+            proof by rule fold-add-cong on _142, _143
+        end case
+
+        case rule
+            d4: E, x |- e0[x] ~> #n0
+            d5: E, x |- e1[x] ~> #n1
+            d6: n0 + n1 = n2
+            ------------------------------- fold-add
+            _: E, x |- e0[x] + e1[x] ~> #n2
+            where e6[x] := e0[x] + e1[x] and e8[x] := #n2
+        is
+            _170: E |- e0[e7] ~> #n0 by induction hypothesis on d4, d2
+            _172: E |- e1[e7] ~> #n1 by induction hypothesis on d5, d2
+            proof by rule fold-add on _170, _172, d6
+        end case
+    end induction
+end lemma
+
+/* This lemma just states that rewriting an expression and rewriting it again
+ * can always be summarized with a single rewriting.
+ */
+lemma rewrite-transitive:
+    assumes E
+    forall d1: E |- e1 ~> e2
+    forall d2: E |- e2 ~> e3
+    exists E |- e1 ~> e3.
+    proof by induction on d1:
+        case rule
+          _: (E, x) |- e0[x] ~> (fn x' { e11[x][x'] })
+          _: (E, x) |- e2''[x] ~> (e10)
+          _: (E, x) |- e11[x][e10] ~> e8[x]
+          -------------------------- fold-app-prop
+          _: (E, x) |- (e0[x] e2''[x]) ~> e8[x]
+        is
+            proof by unproved
+        end case
+        case rule
+            ----------------- fold-var
+            _: E', x |- x ~> x
+        is
+            proof by case analysis on d2:
+                case rule
+                    ------------------ fold-var
+                    _: E', x |- x ~> x
+                is
+                    proof by d1
+                end case
+            end case analysis
+        end case
+
+        case rule
+            d3: E, x |- e11[x] ~> e21[x]
+            ------------------------------------------ fold-function
+            _: E |- fn x { e11[x] } ~> fn x { e21[x] }
+            where e1 := fn x { e11[x] } and e2 := fn x { e21[x] }
+        is
+            d4: E, x |- e21[x] ~> e31[x] by inversion on d2 where e3 := fn x { e31[x] }
+            d5: E, x |- e11[x] ~> e31[x] by induction hypothesis on d3, d4
+            proof by rule fold-function on d5
+        end case
+
+        case rule
+            d3: E |- e11 ~> e21
+            d4: E |- e12 ~> e22
+            -------------------------- fold-app-cong
+            _: E |- e11 e12 ~> e21 e22
+            where e1 := e11 e12 and e2 := e21 e22
+        is
+            proof by case analysis on d2:
+                case rule
+                    d5: E |- e21 ~> e31
+                    d6: E |- e22 ~> e32
+                    -------------------------- fold-app-cong
+                    _: E |- e21 e22 ~> e31 e32
+                    where e3 := e31 e32
+                is
+                    d7: E |- e11 ~> e31 by induction hypothesis on d3, d5
+                    d8: E |- e12 ~> e32 by induction hypothesis on d4, d6
+                    proof by rule fold-app-cong on d7, d8
+                end case
+            end case analysis
+        end case
+
+        case rule
+            ---------------- fold-nat
+            _: E |- #n ~> #n
+            where e1 := #n and e2 := #n
+        is
+            use inversion on d2 where e3 := #n
+            proof by d1
+        end case
+
+        case rule
+            d3: E |- e11 ~> e21
+            d4: E |- e12 ~> e22
+            ------------------------------ fold-add-cong
+            _: E |- e11 + e12 ~> e21 + e22
+            where e1 := e11 + e12 and e2 := e21 + e22
+        is
+            proof by case analysis on d2:
+                case rule
+                    d5: E |- e21 ~> e31
+                    d6: E |- e22 ~> e32
+                    ------------------------ fold-add-cong
+                    _: E |- e21 + e22 ~> e31 + e32
+                    where e3 := e31 + e32
+                is
+                    d7: E |- e11 ~> e31 by induction hypothesis on d3, d5
+                    d8: E |- e12 ~> e32 by induction hypothesis on d4, d6
+                    proof by rule fold-add-cong on d7, d8
+                end case
+
+                case rule
+                    d5: E |- e21 ~> #n1
+                    d6: E |- e22 ~> #n2
+                    d7: n1 + n2 = n3
+                    ------------------------ fold-add
+                    _: E |- e21 + e22 ~> #n3
+                    where e3 := #n3
+                is
+                    d8: E |- e11 ~> #n1 by induction hypothesis on d3, d5
+                    d9: E |- e12 ~> #n2 by induction hypothesis on d4, d6
+                    proof by rule fold-add on d8, d9, d7
+                end case
+            end case analysis
+        end case
+
+        case rule
+            _: E |- e11 ~> #n1
+            _: E |- e12 ~> #n2
+            _: n1 + n2 = n3
+            ------------------------ fold-add
+            _: E |- e11 + e12 ~> #n3
+            where e1 := e11 + e12 and e2 := #n3
+        is
+            use inversion on d2 where e3 := #n3
+            proof by d1
+        end case
+    end induction
+end lemma
+
+/* This is the main correctness theorem.  The intuition is that if we rewrite
+ * expression e1 to e2 and we evaluate them both, we'll get equivalent results.
+ * If they both evalute to numbers, they'll actually be identical (we could
+ * prove this if need be).  But there's a subtlety: if they evaluate to
+ * functions, then the result of the second (call it e2') might have some
+ * constant folding optimizations embedded within it that aren't in the
+ * first result (call it e1').  But if we optimize e1', we should be able
+ * to get exactly e2', which is what the "exists" part of the theorem states.
+ */
+theorem fold-correct:
+    forall d1: * |- e1 ~> e2
+    forall d2: e1 => e1'
+    forall d3: e2 => e2'
+    exists * |- e1' ~> e2'
+    use induction on d2
+    proof by case analysis on d1:
+        case rule
+            a1: * |- e0 ~> e3
+            a2: (*, x) |- e4[x] ~> e5[x]
+            ------------------------- fold-let
+            _: * |- (let x = e0 in e4[x]) ~> (let x = e3 in e5[x])
+            where e1 := (let x = e0 in e4[x]) and e2 := (let x = e3 in e5[x])
+        is
+            proof by case analysis on d2:
+                case rule
+                    a3: e0 => e6
+                    a4: e4[e6] => e1'
+                    ------------------------- eval-let
+                    _: (let x = e0 in e4[x]) => e1'
+                is
+                    proof by case analysis on d3:
+                        case rule
+                            h1: (let x = e3 in e5[x]) value
+                            ------------- eval-val
+                            _: (let x = e3 in e5[x]) => (let x = e3 in e5[x])
+                            where e2' := (let x = e3 in e5[x])
+                        is
+                            proof by contradiction on h1
+                        end case
+
+                        case rule
+                            a5: e3 => e7
+                            a6: e5[e7] => e2'
+                            ------------------------- eval-let
+                            _: (let x = e3 in e5[x]) => e2'
+                        is
+                            a7: * |- e6 ~> e7 by induction hypothesis on a1, a3, a5
+                            a8: * |- e4[e6] ~> e5[e7] by lemma rewrite-composes on a2,a7
+                            _: * |- e1' ~> e2' by induction hypothesis on a8, a4, a6
+                        end case
+
+                    end case analysis
+                end case
+
+                case rule
+                    q1: (let x = e0 in e4[x]) value
+                    ------------- eval-val
+                    _: (let x = e0 in e4[x]) => (let x = e0 in e4[x])
+                    where e1' := (let x = e0 in e4[x])
+                is
+                    proof by contradiction on q1
+                end case
+
+            end case analysis
+        end case
+
+        case rule
+		  _: (E, x) |- e0[x] ~> (fn x' { e11[x][x'] })
+		  _: (E, x) |- e2''[x] ~> (e10)
+		  _: (E, x) |- e11[x][e10] ~> e8[x]
+		  -------------------------- fold-app-prop
+		  _: (E, x) |- (e0[x] e2''[x]) ~> e8[x]
+        is
+            proof by unproved
+        end case
+    end induction
+end theorem

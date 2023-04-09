@@ -1,0 +1,159 @@
+// POPL 2023 tutorial on SASyLF
+// Exercise 1
+
+
+terminals S
+
+syntax
+   n ::= 0 | S n
+
+// The following are syntactic sugar only
+  1 := S 0
+  2 := S 1
+  3 := S 2
+  4 := S 3
+  5 := S 4
+  6 := S 5
+
+
+judgment nat-eq: n = n
+
+  ----- nat-eq
+  n = n
+  
+    
+judgment plus: n + n = n
+
+  --------- plus-zero
+  0 + n = n
+
+  n1 + n2 = n3
+  ---------------- plus-succ
+  S n1 + n2 = S n3
+   
+
+// Exercise:
+lemma three-plus-one:
+    exists 3 + 1 = 4
+    proof by unproved // TODO
+end lemma
+
+// contradictions are very "useful"
+lemma use-impossible:
+    forall imp: 0 = 1
+    exists 2 + 2 = 3
+    proof by unproved // TODO -- case analysis on imp
+end lemma
+
+lemma bad-fact:
+    forall imp: 2 + 2 = 3
+    exists contradiction // technically an "or" with no parts
+    proof by unproved // TODO (multiple leves of case analysis)
+end lemma             
+            
+
+
+// We prove that n1 + n2 => n3 is a function
+// with the next two theorems
+
+theorem plus-total:
+    forall n1
+    forall n2
+    exists n1 + n2 = n3 // n3 is free (at this point
+    proof by induction on n1:
+        case 0 is // n1 := 0
+            proof by rule plus-zero
+        end case
+        case S n1' is // n1 := S n1', a fresh variable
+            p': n1' + n2 = n3' by induction hypothesis on n1', n2
+            proof by rule plus-succ on p' // implicitly n3 := S n3'
+        end case
+    end induction
+end theorem
+
+theorem plus-unique:
+    forall p: n1 + n2 = n3
+    forall p': n1 + n2 = n3'
+    exists n3 = n3'
+    proof by induction on p:
+        case rule
+            --------------- plus-zero
+            _: 0 + n3 = n3 // always name the consequent of a pattern with _ 
+            where n1 := 0
+            and n2 := n3
+        is
+            use inversion of rule plus-zero on p'
+            where n3' := n3 
+            proof by rule nat-eq
+        end case
+
+        case rule
+            p1: n11 + n2 = n31
+            ---------------------- plus-succ
+            _: (S n11) + n2 = (S n31)
+            where n1 := S n11
+            and n3 := S n31
+        is
+            p1': n11 + n2 = n31' by inversion on p'
+            where n3' := S n31'
+            eq: n31 = n31' by induction hypothesis on p1, p1'
+            use inversion on eq where n31 := n31'
+            proof by rule nat-eq
+        end case
+
+    end induction
+end theorem
+
+
+// Some simple inductive theorems:
+
+// this shows that 
+//  ---------------- plus-zero-right
+//    n + 0 = n
+// is "admissible", i.e., it would be redundant to add
+lemma plus-zero-right:
+    forall n
+    exists n + 0 = n // never provide a name for "exists" predicate -- we don't have it yet
+    use induction on n
+    proof by case analysis on n:
+        case S n' is
+            p': n' + 0 = n' by lemma plus-zero-right on n'
+            proof by unproved
+        end case
+    end case analysis
+end lemma
+
+// Prove the admissibility of
+//    n1 + n2 = n3
+// ----------------- pus-right-succ
+// n1 + S n2 = S n3
+// TODO: use induction
+
+theorem plus-commutative:
+    forall p: n1 + n2 = n3
+    exists n2 + n1 = n3
+    proof by unproved // TODO use previous admissibility lemmas
+end theorem
+
+theorem plus-associative:
+    // variable choice makes this theorem easier to understand/prove:
+    forall p12: n1 + n2 = n3
+    forall p34: n3 + n4 = n7
+    exists n2 + n4 = n6 and n1 + n6 = n7
+    // plus-total could easily give n2 + n4 = n6
+    // but this wouldn't help for trying to prove the second output
+    // Rather we use induction on p12, and then 
+    // to prepare for induction, we do case analysis or inversion on p34.
+    // The inductive hypothesis will return an "and" which requires that
+    // each part is named: p24: n2 + n4 = n6 and p34': n3' + ...
+    // To prove an 'and' judgment, first prove each part separately, and then
+    // "proof by dx, dy: where "dx" and "dy" are the names of the two derivations
+    proof by unproved // TODO
+end theorem
+
+// Extra exercise
+lemma zero-only-plus-identity:
+    forall p: n1 + n2 = n1
+    exists n2 = 0
+    proof by unproved
+end lemma
