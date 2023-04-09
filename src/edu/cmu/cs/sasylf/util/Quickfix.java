@@ -19,6 +19,7 @@ public class Quickfix {
     VSRegion lineInfo = null;
     String lineText = "";
     Errors markerType = (Errors)marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
+    String nl = doc.getLineDelimiter();
 
     fixInfo = (String)marker.getAttribute(Marker.SASYLF_ERROR_INFO);
     line = (int)marker.getAttribute(Marker.LINE_NUMBER, 0);
@@ -101,7 +102,7 @@ public class Quickfix {
       //   break;
       // }
       // String prevIndent = lineText.substring(0, prevStart);
-      newText = indent + split[0] + " by unproved" + doc.getLineDelimiter();
+      newText = nl + indent + split[0] + " by unproved";
 
       String extra = "";
 
@@ -110,7 +111,6 @@ public class Quickfix {
           extra = ", and replace '_' with '" + defName + "'";
         }
       }
-
       HashMap<String, Object> res = new HashMap<>();
       res.put("newText", newText);
       res.put("charStart", prevLineInfo.getOffset() + prevLineInfo.getLength());
