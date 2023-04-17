@@ -14,6 +14,13 @@ import java.util.HashMap;
  * mirror the Eclipse ones.
  */
 public class Quickfix {
+  private HashMap<String, String> getCategoryAndLexicalInfo(String ruleName) {
+    HashMap<String, String> categoryAndLexicalInfo =
+        new HashMap<String, String>();
+
+    return categoryAndLexicalInfo;
+  }
+
   public HashMap<String, Object> makeQuickfix(VSDocument doc, VSMarker marker) {
     String fixInfo;
     int line;
@@ -56,8 +63,16 @@ public class Quickfix {
     }
 
     String extraIndent = "";
-    VSRegion old = new VSFindReplaceDocumentAdapter(doc).find(
-        lineInfo.getOffset(), split[0], true, true, false, false);
+    int ind = doc.getBody().substring(lineInfo.getOffset()).indexOf(split[0]);
+    VSRegion old;
+
+    if (ind == -1) {
+      old = null;
+    } else {
+      old = new VSRegion(ind + lineInfo.getOffset(), split[0].length());
+    }
+    // VSRegion old = new VSFindReplaceDocumentAdapter(doc).find(
+    // lineInfo.getOffset(), split[0], true, true, false, false);
 
     if (old == null) {
       if (split[0].equals(lineText)) {
@@ -71,6 +86,115 @@ public class Quickfix {
     switch (markerType) {
     default:
       break;
+    // case MISSING_CASE:
+    //   int newCursor;
+    //   StringBuilder sb = new StringBuilder();
+    //   if (fixInfo.indexOf("\n\n") == -1) { // syntax case
+    //     int n = split.length - 1;
+    //     for (int i = 0; i < n; ++i) {
+    //       sb.append(lineIndent);
+    //       sb.append(indent);
+    //       sb.append("case ");
+    //       sb.append(split[i]);
+    //       sb.append(" is");
+    //       sb.append(nl);
+    //       sb.append(lineIndent);
+    //       sb.append(indent);
+    //       sb.append(indent);
+    //       sb.append("proof by unproved");
+    //       sb.append(nl);
+    //       sb.append(lineIndent);
+    //       sb.append(indent);
+    //       sb.append("end case");
+    //       sb.append(nl);
+    //       sb.append(nl);
+    //     }
+    //     newCursor = lineIndent.length() + indentAmount + 5;
+    //   } else {
+    //     newCursor = -1;
+    //     boolean startCase = true;
+    //     int n = split.length - 1; // extra line at end
+    //     for (int i = 0; i < n; ++i) {
+    //       if (startCase) {
+    //         sb.append(lineIndent);
+    //         sb.append(indent);
+    //         sb.append("case rule");
+    //         sb.append(nl);
+    //         startCase = false;
+    //       }
+    //       if (split[i].length() == 0) {
+    //         sb.append(lineIndent);
+    //         sb.append(indent);
+    //         sb.append("is");
+    //         sb.append(nl);
+    //         sb.append(lineIndent);
+    //         sb.append(indent);
+    //         sb.append(indent);
+    //         sb.append("proof by unproved");
+    //         sb.append(nl);
+    //         sb.append(lineIndent);
+    //         sb.append(indent);
+    //         sb.append("end case");
+    //         sb.append(nl);
+    //         sb.append(nl);
+    //         startCase = true;
+    //         continue;
+    //       }
+    //       if (newCursor == -1)
+    //         newCursor = sb.length();
+    //       sb.append(lineIndent);
+    //       sb.append(indent);
+    //       sb.append(indent);
+    //       if (split[i].startsWith("---")) {
+    //         String ruleName = split[i].split(" ")[1];
+    //         if (proofEditor != null) {
+    //           ProofElement pe =
+    //               proofEditor.getProofOutline().findProofElementByName(
+    //                   ruleName);
+    //           if (pe != null && pe.getCategory().equals("Rule")) {
+    //             String bar = pe.getLexicalInfo();
+    //             if (bar.length() >= 3) {
+    //               String prefix = bar.substring(0, 3);
+    //               split[i] = prefix + prefix + bar + " " + ruleName;
+    //             }
+    //           }
+    //         }
+    //       } else {
+    //         sb.append("_: ");
+    //       }
+    //       sb.append(split[i]);
+    //       sb.append(nl);
+    //     }
+    //   }
+    //   if (lineText.contains("by contradiction on") &&
+    //       !lineText.contains(
+    //           "by case analysis on")) { // XXX: Could be confused by a
+    //           comment
+    //     IRegion reg = doc.getLineInformation(line - 1); // lines are
+    //     zero-based int lo = lineText.indexOf("contradiction"); String[] parts
+    //     = lineText.split("\\s+"); int l = parts.length;
+    //     // try to avoid dangerous changes
+    //     if (l > 3 && parts[l - 2].equals("on")) {
+    //       String derivName = parts[l - 1];
+    //       newText = "case analysis on " + derivName + ":" + nl + sb +
+    //                 lineIndent + "end case analysis";
+    //       int offset = reg.getOffset() + lo;
+    //       // System.out.println("Converting starting at column " + lo + "
+    //       using
+    //       // '" + newText + "'");
+    //       proposals.add(new MyCompletionProposal(
+    //           res, newText, offset, reg.getLength() - lo, newCursor, null,
+    //           "convert to case analysis with missing case(s)", null,
+    //           fixInfo));
+    //     }
+    //   } else {
+    //     newText = sb.toString();
+    //     proposals.add(new MyCompletionProposal(
+    //         res, newText, doc.getLineOffset(line), 0, newCursor, null,
+    //         "insert missing case(s)", null, fixInfo));
+    //   }
+    //   break;
+
     // case ABSTRACT_NOT_PERMITTED_HERE:
     // case ILLEGAL_ASSUMES:
     // case EXTRANEOUS_ASSUMES:
