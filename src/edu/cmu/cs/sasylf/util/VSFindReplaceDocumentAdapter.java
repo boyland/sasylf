@@ -18,14 +18,13 @@ public class VSFindReplaceDocumentAdapter {
                        boolean caseSensitive, boolean wholeWord,
                        boolean regExSearch) {
     Pattern pattern =
-        regExSearch
-            ? Pattern.compile(findString,
-                              caseSensitive ? 0 : Pattern.CASE_INSENSITIVE)
-            : null;
+        regExSearch ? Pattern.compile(
+                          search, caseSensitive ? 0 : Pattern.CASE_INSENSITIVE)
+                    : null;
 
-    int searchDirection = forwardSearch ? 1 : -1;
+    int searchDirection = searchForward ? 1 : -1;
 
-    while (offset >= 0 && offset < document.getLength()) {
+    while (offset >= 0 && offset < doc.getLength()) {
       String text = doc.get(offset, doc.getLength() - offset);
       int matchIndex;
 
@@ -39,8 +38,8 @@ public class VSFindReplaceDocumentAdapter {
         }
       } else {
         matchIndex = caseSensitive
-                         ? text.indexOf(findString)
-                         : text.toLowerCase().indexOf(findString.toLowerCase());
+                         ? text.indexOf(search)
+                         : text.toLowerCase().indexOf(search.toLowerCase());
 
         if (matchIndex != -1) {
           matchIndex += offset;
@@ -48,7 +47,7 @@ public class VSFindReplaceDocumentAdapter {
       }
 
       if (matchIndex != -1) {
-        return new VSRegion(matchIndex, findString.length());
+        return new VSRegion(matchIndex, search.length());
       }
 
       offset += searchDirection;
