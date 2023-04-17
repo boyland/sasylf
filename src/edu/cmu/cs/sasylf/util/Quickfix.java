@@ -71,15 +71,15 @@ public class Quickfix {
     switch (markerType) {
     default:
       break;
-    case ABSTRACT_NOT_PERMITTED_HERE:
-    case ILLEGAL_ASSUMES:
-    case EXTRANEOUS_ASSUMES:
-      if (old != null) {
-        proposals.add(new MyCompletionProposal(
-            res, "", old.getOffset(), old.getLength(), 0, null,
-            "remove '" + split[0] + "'", null, null));
-      }
-      // fall through -- don't know why
+    // case ABSTRACT_NOT_PERMITTED_HERE:
+    // case ILLEGAL_ASSUMES:
+    // case EXTRANEOUS_ASSUMES:
+    //   if (old != null) {
+    //     proposals.add(new MyCompletionProposal(
+    //         res, "", old.getOffset(), old.getLength(), 0, null,
+    //         "remove '" + split[0] + "'", null, null));
+    //   }
+    //   // fall through -- don't know why
     case RULE_NOT_THEOREM:
     case THEOREM_NOT_RULE:
     case THEOREM_KIND_WRONG:
@@ -89,8 +89,8 @@ public class Quickfix {
     case WRONG_MODULE_NAME:
     case PARTIAL_CASE_ANALYSIS:
       if (old != null) {
+        res = new HashMap<>();
         if (split.length > 1 && split[1].length() > 0) {
-          res = new HashMap<>();
           res.put("newText", split[1]);
           res.put("charStart", old.getOffset());
           res.put("charEnd", old.getOffset() + old.getLength());
@@ -101,28 +101,30 @@ public class Quickfix {
         return res;
       }
       break;
-    case WRONG_PACKAGE:
-      if (split[0].length() == 0) {
-        newText = split[1];
-        proposals.add(new MyCompletionProposal(
-            res, newText + doc.getLineDelimiter(line), doc.getLineOffset(line),
-            0, newText.length(), null, "insert '" + newText + "'", null, null));
-      }
-      // System.out.println("fixInfo = " + fixInfo + ", old = " + old + ", res =
-      // " + res + ", split = " + Arrays.toString(split));
-      if (old != null && split.length > 1) {
-        if (split[1].length() == 0) {
-          proposals.add(new MyCompletionProposal(
-              res, "", old.getOffset(), old.getLength(), 0, null,
-              "remove '" + split[0] + "'", null, null));
-        } else {
-          proposals.add(new MyCompletionProposal(
-              res, split[1], old.getOffset(), old.getLength(), 0, null,
-              "replace '" + split[0] + "' with '" + split[1] + "'", null,
-              null));
-        }
-      }
-      break;
+    // case WRONG_PACKAGE:
+    //   if (split[0].length() == 0) {
+    //     newText = split[1];
+    //     proposals.add(new MyCompletionProposal(
+    //         res, newText + doc.getLineDelimiter(line),
+    //         doc.getLineOffset(line), 0, newText.length(), null, "insert '" +
+    //         newText + "'", null, null));
+    //   }
+    //   // System.out.println("fixInfo = " + fixInfo + ", old = " + old + ",
+    //   res =
+    //   // " + res + ", split = " + Arrays.toString(split));
+    //   if (old != null && split.length > 1) {
+    //     if (split[1].length() == 0) {
+    //       proposals.add(new MyCompletionProposal(
+    //           res, "", old.getOffset(), old.getLength(), 0, null,
+    //           "remove '" + split[0] + "'", null, null));
+    //     } else {
+    //       proposals.add(new MyCompletionProposal(
+    //           res, split[1], old.getOffset(), old.getLength(), 0, null,
+    //           "replace '" + split[0] + "' with '" + split[1] + "'", null,
+    //           null));
+    //     }
+    //   }
+    //   break;
     case ASSUMED_ASSUMES:
       extraIndent = indent;
       // fall through
@@ -155,6 +157,7 @@ public class Quickfix {
         int oldStart = findStart + startPat.length();
         String oldText = lineText.substring(oldStart, findEnd);
 
+        res = new HashMap<>();
         res.put("newText", newText);
         res.put("charStart", lineInfo.getOffset() + oldStart);
         res.put("charEnd", lineInfo.getOffset() + oldStart + oldText.length());
@@ -169,6 +172,7 @@ public class Quickfix {
         if (findBy >= lineIndent.length()) {
           String oldText = lineText.substring(lineIndent.length(), findBy);
 
+          res = new HashMap<>();
           res.put("newText", "_: contradiction");
           res.put("charStart", lineInfo.getOffset() + lineIndent.length());
           res.put("charEnd", lineInfo.getOffset() + lineIndent.length() +
