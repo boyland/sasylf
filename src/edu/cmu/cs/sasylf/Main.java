@@ -177,10 +177,9 @@ public class Main {
           BufferedReader reader = new BufferedReader(r);
           StringBuilder sb = new StringBuilder();
 
-          String line;
-          while ((line = reader.readLine()) != null) {
-            sb.append(line);
-            sb.append(nl);
+          int c = -1;
+          while ((c = reader.read()) != -1) {
+            sb.append((char)c);
           }
 
           String text = sb.toString();

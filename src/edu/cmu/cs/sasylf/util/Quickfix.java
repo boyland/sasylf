@@ -39,7 +39,7 @@ public class Quickfix {
     if (markerType == null || fixInfo == null || line == 0)
       return null;
 
-    String[] split = fixInfo.split("\n", -1);
+    String[] split = fixInfo.split("\r\n|\r|\n", -1);
 
     String lineIndent;
     {
