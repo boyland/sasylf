@@ -23,6 +23,8 @@ public class VSDocument {
     return body.substring(start, start + length);
   }
 
+  public int getLength() { return body.length(); }
+
   public VSRegion getLineInformation(int line) {
     int offset = 0;
 
@@ -31,6 +33,16 @@ public class VSDocument {
     }
 
     return new VSRegion(offset, lines[line].length());
+  }
+
+  public int getLineOffset(int line) {
+    int offset = 0;
+
+    for (int i = 0; i < line - 1; ++i) {
+      offset += lines[i].length();
+    }
+
+    return offset;
   }
 
   public String[] getLines() { return lines; }
