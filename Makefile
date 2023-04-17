@@ -14,8 +14,7 @@ build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
 	(cd src && javac -cp ../lib/*:../bin:. -source 1.8 -target 1.8 -d ../bin edu/cmu/cs/sasylf/Main.java edu/cmu/cs/sasylf/term/UnitTests.java)
-	(cd bin && cp -r ../lib/*.jar . && find . -name '*.jar' -execdir unzip -o {} \; && rm -r META-INF)
-	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org -C bin com
+	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org
 
 TESTBIN= bin/org/sasylf/Activator.class
 TESTLIB= bin/org/sasylf/util/Natural.slf
