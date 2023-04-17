@@ -138,7 +138,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
   const eolSetting =
       await connection.workspace.getConfiguration({section : "files"});
-  const eol = (eolSetting.eol == "auto") ? EOL : eolSetting.eol;
+  const eolSettingString = (eolSetting == "\n") ? "nl" : "cr";
+  const EOLString = (EOL == "\n") ? "nl" : "cr";
+  const eol = (eolSetting.eol == "auto") ? EOLString : eolSettingString;
 
   const indentSetting =
       await connection.workspace.getConfiguration({section : "editor"});
@@ -148,7 +150,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
   const diagnostics: Diagnostic[] = [];
   const text = textDocument.getText();
-  const text_lines = text.split("\n");
+  const text_lines = text.split(/\r?\n/);
   const command = spawnSync(
       'sasylf',
       [ `--indentAmount=${indentSize}`, `--eol=${eol}`, '--lsp', '--stdin' ],
@@ -217,13 +219,13 @@ connection.onCodeAction(async (params) => {
     const start = textDocument.positionAt(charStart);
     const end = textDocument.positionAt(charEnd);
     codeActions.push({
-      title : 'Code Action',
+      title : quickfix['title'],
       kind : 'quickfix',
       diagnostics : [ diagnostic ],
       edit : {
         changes : {
           [textDocument.uri] : [
-            {range : {start : start, end : end}, newText : quickfix.newText}
+            {range : {start : start, end : end}, newText : quickfix['newText']}
           ]
         }
       }
