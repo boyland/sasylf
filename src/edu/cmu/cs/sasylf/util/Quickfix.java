@@ -360,8 +360,8 @@ public class Quickfix {
       }
       res = new HashMap<>();
       res.put("newText", newText);
-      res.put("charStart", prevLineInfo.getOffset() + prevLineInfo.getLength());
-      res.put("charEnd", prevLineInfo.getOffset() + prevLineInfo.getLength());
+      res.put("charStart", prevLineInfo.getOffset());
+      res.put("charEnd", prevLineInfo.getOffset());
       res.put("title",
               "insert '" + split[0] + " by unproved' before this line" + extra);
 
