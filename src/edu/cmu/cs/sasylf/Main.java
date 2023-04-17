@@ -15,14 +15,17 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
 import edu.cmu.cs.sasylf.util.VSDocument;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Scanner;
@@ -35,8 +38,8 @@ public class Main {
    * @throws IOException
    */
   public static void main(String[] args) throws ParseException, IOException {
-    // System.setOut(new PrintStream(System.out, true, "UTF-8"));
-    // System.setErr(new PrintStream(System.err, true, "UTF-8"));
+    System.setOut(new PrintStream(System.out, true, "UTF-8"));
+    System.setErr(new PrintStream(System.err, true, "UTF-8"));
     int exitCode = 0;
     if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
       System.err.println("usage: sasylf [options] file1.slf ...");
@@ -54,6 +57,8 @@ public class Main {
       System.err.println(
           "   --lsp         lsp interface for completions, quick fixes, etc. note: intended for lsp use only.");
       System.err.println(
+          "   --debug       debug mode that does not redirect output in lsp mode");
+      System.err.println(
           "   --path=dir... use the given directories for package/module checking.");
       System.err.println(
           "   --indentAmount=int... the number of spaces in an indent.");
@@ -70,10 +75,17 @@ public class Main {
     String dir = null;
     PathModuleFinder mf = null;
     PathModuleFinder defaultMF = new PathModuleFinder("");
+    boolean debug = false;
     for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("--debug")) {
+        debug = true;
+        continue;
+      }
       if (args[i].equals("--lsp")) {
-        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+        if (!debug) {
+          System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+          System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+        }
         ErrorHandler.lsp = true;
         continue;
       }
@@ -183,6 +195,7 @@ public class Main {
           }
 
           String text = sb.toString();
+
           ErrorHandler.doc = new VSDocument(text, indentAmount, nl);
 
           pf = Proof.parseAndCheck(defaultMF, filename, null,
