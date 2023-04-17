@@ -221,6 +221,8 @@ public class Main {
         ps.println(" reported.");
         if (newErrorCount > 0)
           exitCode = -1;
+      } else {
+        System.out.println(ErrorHandler.arrayNode.toString());
       }
     }
     System.exit(exitCode);

@@ -20,6 +20,7 @@ public class Quickfix {
     VSRegion lineInfo = null;
     String lineText = "";
     Errors markerType = (Errors)marker.getAttribute(Marker.SASYLF_ERROR_TYPE);
+    String nl = doc.getLineDelimiter();
 
     fixInfo = (String)marker.getAttribute(Marker.SASYLF_ERROR_INFO);
     line = (int)marker.getAttribute(Marker.LINE_NUMBER, 0);
@@ -200,7 +201,27 @@ public class Quickfix {
       }
 
       VSRegion prevLineInfo = lineInfo;
-      newText = indent + split[0] + " by unproved" + doc.getLineDelimiter();
+      // int diff = 0;
+      // try {
+      //   if (split.length > 1)
+      //     diff = Integer.parseInt(split[1]);
+      // } catch (RuntimeException ex) {
+      //   // muffle array or number format
+      // }
+      // if (diff > 0)
+      //   prevLineInfo = doc.getLineInformation(line - 1 - diff);
+      // String prevLine =
+      //     doc.get(prevLineInfo.getOffset(), prevLineInfo.getLength());
+      // System.out.println(prevLine);
+      // int prevStart;
+      // for (prevStart = 0; prevStart < prevLine.length(); ++prevStart) {
+      //   int ch = lineText.charAt(prevStart);
+      //   if (ch == ' ' || ch == '\t')
+      //     continue;
+      //   break;
+      // }
+      // String prevIndent = lineText.substring(0, prevStart);
+      newText = nl + indent + split[0] + " by unproved";
 
       String extra = "";
 
@@ -209,7 +230,6 @@ public class Quickfix {
           extra = ", and replace '_' with '" + defName + "'";
         }
       }
-
       res = new HashMap<>();
       res.put("newText", newText);
       res.put("charStart", prevLineInfo.getOffset() + prevLineInfo.getLength());

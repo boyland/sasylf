@@ -26,13 +26,13 @@ public class VSDocument {
   public int getLength() { return body.length(); }
 
   public VSRegion getLineInformation(int line) {
-    int offset = 0;
+    // int offset = 0;
+    //
+    // for (int i = 0; i < line - 1; ++i) {
+    //   offset += lines[i].length();
+    // }
 
-    for (int i = 0; i < line - 1; ++i) {
-      offset += lines[i].length();
-    }
-
-    return new VSRegion(offset, lines[line].length());
+    return new VSRegion(body.indexOf(lines[line - 1]), lines[line - 1].length());
   }
 
   public int getLineOffset(int line) {

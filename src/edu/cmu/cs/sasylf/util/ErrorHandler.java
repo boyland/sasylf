@@ -39,6 +39,7 @@ public class ErrorHandler {
    */
   public static boolean lsp = false;
   public static VSDocument doc = null;
+  public static ArrayNode arrayNode = (JsonNodeFactory.instance).arrayNode();
 
   public static void report(Errors errorType, String msg, Span loc,
                             String debugInfo, boolean isError,
@@ -146,67 +147,63 @@ public class ErrorHandler {
      * If the lsp flag is enabled, we have to create a json object that prints
      * out the desired data to stdout.
      */
-    if (lsp) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      JsonNodeFactory factory = JsonNodeFactory.instance;
-      ArrayNode arrayNode = factory.arrayNode();
+    ObjectMapper objectMapper = new ObjectMapper();
+    // JsonNodeFactory factory = JsonNodeFactory.instance;
 
-      for (Report rep : result) {
-        Span s = rep.getSpan();
-        String[] lines = doc.getLines();
+    for (Report rep : result) {
+      Span s = rep.getSpan();
+      String[] lines = doc.getLines();
 
-        int offset = s.getLocation().getColumn();
+      int offset = s.getLocation().getColumn();
 
-        assert s.getLocation().getLine() == s.getEndLocation().getLine();
-        assert s.getLocation().getColumn() == 0;
-        int line = s.getLocation().getLine();
+      assert s.getLocation().getLine() == s.getEndLocation().getLine();
+      assert s.getLocation().getColumn() == 0;
+      int line = s.getLocation().getLine();
 
-        for (int i = 0; i < line - 1; ++i) {
-          offset += lines[i].length();
-        }
-
-        int length = lines[line].length();
-
-        String severity = "info";
-
-        assert s.getEndLocation().getColumn() == length;
-
-        ObjectNode tmp = objectMapper.createObjectNode();
-
-        if (rep instanceof ErrorReport) {
-          ErrorReport report = (ErrorReport)(rep);
-          VSMarker marker = new VSMarker();
-
-          marker.setAttribute(Marker.SASYLF_ERROR_TYPE, report.getErrorType());
-          marker.setAttribute(Marker.SASYLF_ERROR_INFO,
-                              report.getExtraInformation());
-          marker.setAttribute(Marker.LINE_NUMBER, line);
-          marker.setAttribute(Marker.CHAR_START, offset);
-          marker.setAttribute(Marker.CHAR_END, offset + length);
-
-          Quickfix q = new Quickfix();
-
-          HashMap<String, Object> map = q.makeQuickfix(doc, marker);
-
-          if (map != null) {
-            ObjectNode qf = objectMapper.createObjectNode();
-            map.forEach((key, value) -> qf.putPOJO(key, value));
-            tmp.putObject("Quickfix").setAll(qf);
-          } else {
-            tmp.putNull("Quickfix");
-          }
-          severity = (report.isError()) ? "error" : "warning";
-        }
-
-        tmp.put("Error Message", rep.getMessage());
-        tmp.put("Line", Integer.toString(line));
-        tmp.put("Severity", severity);
-
-        arrayNode.add(tmp);
+      for (int i = 0; i < line - 1; ++i) {
+        offset += lines[i].length();
       }
 
-      System.out.println(arrayNode.toString());
+      int length = lines[line].length();
+
+      String severity = "info";
+
+      assert s.getEndLocation().getColumn() == length;
+
+      ObjectNode tmp = objectMapper.createObjectNode();
+
+      if (rep instanceof ErrorReport) {
+        ErrorReport report = (ErrorReport)(rep);
+        VSMarker marker = new VSMarker();
+
+        marker.setAttribute(Marker.SASYLF_ERROR_TYPE, report.getErrorType());
+        marker.setAttribute(Marker.SASYLF_ERROR_INFO,
+                            report.getExtraInformation());
+        marker.setAttribute(Marker.LINE_NUMBER, line);
+        marker.setAttribute(Marker.CHAR_START, offset);
+        marker.setAttribute(Marker.CHAR_END, offset + length);
+
+        Quickfix q = new Quickfix();
+
+        HashMap<String, Object> map = q.makeQuickfix(doc, marker);
+
+        if (map != null) {
+          ObjectNode qf = objectMapper.createObjectNode();
+          map.forEach((key, value) -> qf.putPOJO(key, value));
+          tmp.putObject("Quickfix").setAll(qf);
+        } else {
+          tmp.putNull("Quickfix");
+        }
+        severity = (report.isError()) ? "error" : "warning";
+      }
+
+      tmp.put("Error Message", rep.getMessage());
+      tmp.put("Line", Integer.toString(line));
+      tmp.put("Severity", severity);
+
+      arrayNode.add(tmp);
     }
+
     return result;
   }
 
