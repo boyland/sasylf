@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.util;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Marker;
 import edu.cmu.cs.sasylf.util.VSDocument;
+import edu.cmu.cs.sasylf.util.VSFindReplaceDocumentAdapter;
 import edu.cmu.cs.sasylf.util.VSMarker;
 import edu.cmu.cs.sasylf.util.VSRegion;
 import java.util.HashMap;
@@ -55,10 +56,128 @@ public class Quickfix {
     }
 
     String extraIndent = "";
+    VSRegion old = new VSFindReplaceDocumentAdapter(doc).find(
+        lineInfo.getOffset(), split[0], true, true, false, false);
+
+    if (old == null) {
+      if (split[0].equals(lineText)) {
+        old = new VSRegion(lineInfo.getOffset(), lineText.length());
+      }
+    }
+
     String newText;
+    HashMap<String, Object> res;
 
     switch (markerType) {
     default:
+      break;
+    case ABSTRACT_NOT_PERMITTED_HERE:
+    case ILLEGAL_ASSUMES:
+    case EXTRANEOUS_ASSUMES:
+      if (old != null) {
+        proposals.add(new MyCompletionProposal(
+            res, "", old.getOffset(), old.getLength(), 0, null,
+            "remove '" + split[0] + "'", null, null));
+      }
+      // fall through -- don't know why
+    case RULE_NOT_THEOREM:
+    case THEOREM_NOT_RULE:
+    case THEOREM_KIND_WRONG:
+    case THEOREM_KIND_MISSING:
+    case INDUCTION_REPEAT:
+    case WRONG_END:
+    case WRONG_MODULE_NAME:
+    case PARTIAL_CASE_ANALYSIS:
+      if (old != null) {
+        if (split.length > 1 && split[1].length() > 0) {
+          res = new HashMap<>();
+          res.put("newText", split[1]);
+          res.put("charStart", old.getOffset());
+          res.put("charEnd", old.getOffset() + old.getLength());
+          res.put("title",
+                  "replace '" + split[0] + "' with '" + split[1] + "'");
+        }
+
+        return res;
+      }
+      break;
+    case WRONG_PACKAGE:
+      if (split[0].length() == 0) {
+        newText = split[1];
+        proposals.add(new MyCompletionProposal(
+            res, newText + doc.getLineDelimiter(line), doc.getLineOffset(line),
+            0, newText.length(), null, "insert '" + newText + "'", null, null));
+      }
+      // System.out.println("fixInfo = " + fixInfo + ", old = " + old + ", res =
+      // " + res + ", split = " + Arrays.toString(split));
+      if (old != null && split.length > 1) {
+        if (split[1].length() == 0) {
+          proposals.add(new MyCompletionProposal(
+              res, "", old.getOffset(), old.getLength(), 0, null,
+              "remove '" + split[0] + "'", null, null));
+        } else {
+          proposals.add(new MyCompletionProposal(
+              res, split[1], old.getOffset(), old.getLength(), 0, null,
+              "replace '" + split[0] + "' with '" + split[1] + "'", null,
+              null));
+        }
+      }
+      break;
+    case ASSUMED_ASSUMES:
+      extraIndent = indent;
+      // fall through
+    case MISSING_ASSUMES:
+      newText = lineIndent + extraIndent + fixInfo;
+
+      res = new HashMap<>();
+      res.put("newText", newText + doc.getLineDelimiter());
+      res.put("charStart", doc.getLineOffset(line));
+      res.put("charEnd", doc.getLineOffset(line) + newText.length());
+      res.put("title", "insert '" + fixInfo + "'");
+
+      return res;
+    case OTHER_JUSTIFIED:
+      if (lineInfo != null) {
+        newText = " " + split[1];
+        int holeStart = split[0].indexOf("...");
+        String startPat = split[0].substring(0, holeStart);
+        String endPat = split[0].substring(holeStart + 3);
+        int findStart = lineText.indexOf(startPat);
+        // System.out.println("indexOf(" + startPat + ") = " + findStart + " in
+        // " + lineText);
+        if (findStart < 0)
+          break;
+        int findEnd = lineText.indexOf(endPat, findStart);
+        // System.out.println("indexOf(" + endPat + ") = " + findEnd + " in " +
+        // lineText);
+        if (findEnd < 0)
+          break;
+        int oldStart = findStart + startPat.length();
+        String oldText = lineText.substring(oldStart, findEnd);
+
+        res.put("newText", newText);
+        res.put("charStart", lineInfo.getOffset() + oldStart);
+        res.put("charEnd", lineInfo.getOffset() + oldStart + oldText.length());
+        res.put("title", "replace '" + oldText + "' with '" + newText + "'");
+
+        return res;
+      }
+      break;
+    case RULE_CONCLUSION_CONTRADICTION:
+      if (lineInfo != null) {
+        int findBy = lineText.indexOf(" by ");
+        if (findBy >= lineIndent.length()) {
+          String oldText = lineText.substring(lineIndent.length(), findBy);
+
+          res.put("newText", "_: contradiction");
+          res.put("charStart", lineInfo.getOffset() + lineIndent.length());
+          res.put("charEnd", lineInfo.getOffset() + lineIndent.length() +
+                                 oldText.length());
+          res.put("title", "replace '" + oldText + "' with '_: contradiction'");
+
+          return res;
+        }
+      }
       break;
     case DERIVATION_NOT_FOUND:
       int colon = split[0].indexOf(':');
@@ -72,7 +191,7 @@ public class Quickfix {
       } else {
         defName = split[0];
 
-        HashMap<String, Object> res = new HashMap<>();
+        res = new HashMap<>();
         res.put("newText", defName);
         res.put("charStart", useStart);
         res.put("charEnd", useStart + useName.length());
@@ -111,7 +230,7 @@ public class Quickfix {
           extra = ", and replace '_' with '" + defName + "'";
         }
       }
-      HashMap<String, Object> res = new HashMap<>();
+      res = new HashMap<>();
       res.put("newText", newText);
       res.put("charStart", prevLineInfo.getOffset() + prevLineInfo.getLength());
       res.put("charEnd", prevLineInfo.getOffset() + prevLineInfo.getLength());
