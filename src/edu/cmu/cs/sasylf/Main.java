@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.io.StringReader;
@@ -63,6 +64,7 @@ public class Main {
       System.out.println(Version.getInstance());
       return;
     }
+    PrintStream originalPrintStream = System.out;
     String nl = System.lineSeparator();
     int indentAmount = 4;
     String dir = null;
@@ -70,6 +72,8 @@ public class Main {
     PathModuleFinder defaultMF = new PathModuleFinder("");
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("--lsp")) {
+        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
         ErrorHandler.lsp = true;
         continue;
       }
@@ -200,30 +204,30 @@ public class Main {
       if (pf == null)
         continue;
 
-      if (!ErrorHandler.lsp) {
-        int newErrorCount = pf.getErrorCount();
-        int newWarnings = pf.getWarningCount();
-        @SuppressWarnings("resource")
-        PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
-        if (newErrorCount == 0)
-          ps.print(filename + ": No errors");
-        else if (newErrorCount == 1)
-          ps.print(filename + ": 1 error");
-        else
-          ps.print(filename + ": " + newErrorCount + " errors");
-        if (newWarnings > 0) {
-          if (newWarnings > 1) {
-            ps.print(" and " + newWarnings + " warnings");
-          } else {
-            ps.print(" and 1 warning");
-          }
+      int newErrorCount = pf.getErrorCount();
+      int newWarnings = pf.getWarningCount();
+      @SuppressWarnings("resource")
+      PrintStream ps = (newErrorCount == 0) ? System.out : System.err;
+      if (newErrorCount == 0)
+        ps.print(filename + ": No errors");
+      else if (newErrorCount == 1)
+        ps.print(filename + ": 1 error");
+      else
+        ps.print(filename + ": " + newErrorCount + " errors");
+      if (newWarnings > 0) {
+        if (newWarnings > 1) {
+          ps.print(" and " + newWarnings + " warnings");
+        } else {
+          ps.print(" and 1 warning");
         }
-        ps.println(" reported.");
-        if (newErrorCount > 0)
-          exitCode = -1;
-      } else {
-        System.out.println(ErrorHandler.arrayNode.toString());
       }
+      ps.println(" reported.");
+      if (newErrorCount > 0)
+        exitCode = -1;
+
+      System.setOut(originalPrintStream);
+      System.setErr(originalPrintStream);
+      System.out.println(ErrorHandler.arrayNode.toString());
     }
     System.exit(exitCode);
   }
