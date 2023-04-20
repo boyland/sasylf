@@ -19,9 +19,9 @@ public class ErrorReport extends Report {
 		else if (getSpan().getLocation() == null) msg = "unknown file (in bad span " + (getSpan().getClass()) + "): ";
 		else msg = getSpan().getLocation().toString() + ": ";
 		if (!isError())
-			msg = msg + "warning: " + this.errorType + ": ";
+			msg = msg + "warning: ";
 		if (isError())
-			msg = msg + "error: " + this.errorType + ": ";
+			msg = msg + "error: ";
 		msg = msg + getMessage();
 		return msg;
 	}
