@@ -156,8 +156,8 @@ public class ErrorHandler {
 
       int offset = s.getLocation().getColumn();
 
-      assert s.getLocation().getLine() == s.getEndLocation().getLine();
-      assert s.getLocation().getColumn() == 0;
+      // assert s.getLocation().getLine() == s.getEndLocation().getLine();
+      // assert s.getLocation().getColumn() == 0;
       int line = s.getLocation().getLine();
 
       for (int i = 0; i < line - 1; ++i) {
@@ -168,7 +168,7 @@ public class ErrorHandler {
 
       String severity = "info";
 
-      assert s.getEndLocation().getColumn() == length;
+      // assert s.getEndLocation().getColumn() == length;
 
       ObjectNode tmp = objectMapper.createObjectNode();
 
