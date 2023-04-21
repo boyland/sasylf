@@ -13,7 +13,7 @@ build : SHELL:=/bin/bash
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
-	(cd src && javac -cp ../lib/*:../bin:. -source 1.8 -target 1.8 -d ../bin edu/cmu/cs/sasylf/Main.java edu/cmu/cs/sasylf/term/UnitTests.java edu/cmu/cs/sasylf/util/UnitTests.java edu/cmu/cs/sasylf/reduction/UnitTests.java)
+	(cd src && javac -cp .:../bin:../lib/* -source 1.8 -target 1.8 -d ../bin ${TESTSRC})
 	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org
 
 TESTBIN= bin/org/sasylf/Activator.class
