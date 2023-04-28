@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.util;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.Reader;
 
 public class ErrorHandler {
 	/**
