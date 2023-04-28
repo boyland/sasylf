@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.io.StringReader;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -20,10 +19,8 @@ import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.Quickfix;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
-import edu.cmu.cs.sasylf.util.VSDocument;
 
 public class Main {
 
@@ -33,8 +30,10 @@ public class Main {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws ParseException, IOException {
-		System.setOut(new PrintStream(System.out, true, "UTF-8"));
-		System.setErr(new PrintStream(System.err, true, "UTF-8"));
+		PrintStream out = new PrintStream(System.out, true, "UTF-8");
+		PrintStream err = new PrintStream(System.err, true, "UTF-8");
+		System.setOut(out);
+		System.setErr(err);
 		int exitCode = 0;
 		if (args.length == 0 || (args.length >= 1 && args[0].equals("--help"))) {
 			System.err.println("usage: sasylf [options] file1.slf ...");
@@ -55,18 +54,12 @@ public class Main {
 					"   --debug       debug mode that does not redirect output in lsp mode");
 			System.err.println(
 					"   --path=dir... use the given directories for package/module checking.");
-			System.err.println(
-					"   --indentAmount=int... the number of spaces in an indent.");
-			System.err.println("   --eol=string... the end of line character.");
 			return;
 		}
 		if (args.length >= 1 && args[0].equals("--version")) {
 			System.out.println(Version.getInstance());
 			return;
 		}
-		PrintStream originalPrintStream = System.out;
-		String nl = System.lineSeparator();
-		int indentAmount = 4;
 		String dir = null;
 		PathModuleFinder mf = null;
 		PathModuleFinder defaultMF = new PathModuleFinder("");
@@ -81,15 +74,7 @@ public class Main {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				ErrorHandler.lsp = true;
-				continue;
-			}
-			if (args[i].startsWith("--indentAmount=")) {
-				indentAmount = Integer.parseInt(args[i].substring(15));
-				continue;
-			}
-			if (args[i].startsWith("--eol=")) {
-				nl = args[i].substring(6).equals("cr") ? "\r\n" : "\n";
+				Proof.setLsp(true);
 				continue;
 			}
 			if (args[i].equals("--compwhere")) {
@@ -180,20 +165,7 @@ public class Main {
 						r = new InputStreamReader(System.in);
 					else r = new InputStreamReader(new FileInputStream(file), "UTF-8");
 
-					BufferedReader reader = new BufferedReader(r);
-					StringBuilder sb = new StringBuilder();
-
-					int c = -1;
-					while ((c = reader.read()) != -1) {
-						sb.append((char)c);
-					}
-
-					String text = sb.toString();
-
-					ErrorHandler.doc = new VSDocument(text, indentAmount, nl);
-
-					pf = Proof.parseAndCheck(defaultMF, filename, null,
-																	 new StringReader(text));
+					pf = Proof.parseAndCheck(defaultMF, filename, null, r);
 				} catch (FileNotFoundException ex) {
 					System.err.println("Could not open file " + filename);
 					exitCode = -1;
@@ -202,8 +174,8 @@ public class Main {
 					// System.err.println("Internal SASyLF
 					// error analyzing " + filename
 					// + " !");
-					e.printStackTrace(); // unexpected
-															 // exception
+					e.printStackTrace();								 // unexpected
+																							 // exception
 					ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(),
 																				null); // "recoverable" = "don't
 																							 // throw"
@@ -229,9 +201,11 @@ public class Main {
 			ps.println(" reported.");
 			if (newErrorCount > 0) exitCode = -1;
 
-			System.setOut(originalPrintStream);
-			System.setErr(originalPrintStream);
-			System.out.println(ErrorHandler.arrayNode.toString());
+			System.setOut(out);
+			System.setErr(err);
+			if (Proof.getLsp()) {
+				System.out.println(Proof.getArrayNode().toString());
+			}
 		}
 		System.exit(exitCode);
 	}

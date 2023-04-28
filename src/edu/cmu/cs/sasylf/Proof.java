@@ -1,5 +1,11 @@
 package edu.cmu.cs.sasylf;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +49,7 @@ public class Proof {
 		this.filename = name;
 		this.id = id;
 	}
-	
+
 	/**
 	 * Construct a result for the given AST and counted number of
 	 * reports during parsing
@@ -55,16 +61,16 @@ public class Proof {
 	 * must not be negative or more than the number of reports.
 	 */
 	public Proof(String filename, ModuleId id, CompUnit cu, int parseReports) {
-		this(filename,id);
+		this(filename, id);
 		syntaxTree = cu;
 		reports = new ArrayList<>(ErrorHandler.getReports());
 		duringParse = parseReports;
 		if (parseReports < 0 || parseReports > reports.size()) {
-			throw new IllegalArgumentException("parseReports wrong: " + parseReports) ;
+			throw new IllegalArgumentException("parseReports wrong: " + parseReports);
 		}
 		if (cu == null) {
 			boolean foundParseError = false;
-			for (int i=0; i < parseReports; ++i) {
+			for (int i = 0; i < parseReports; ++i) {
 				Report r = reports.get(i);
 				if (r instanceof ErrorReport && ((ErrorReport)r).isError()) {
 					foundParseError = true;
@@ -76,22 +82,16 @@ public class Proof {
 			}
 		}
 	}
-	
-	public String getFilename() {
-		return filename;
-	}
-	
-	public ModuleId getModuleId() {
-		return id;
-	}
-	
+
+	public String getFilename() { return filename; }
+
+	public ModuleId getModuleId() { return id; }
+
 	/**
 	 * Return the AST that was parsed.
 	 */
-	public CompUnit getCompilationUnit() {
-		return syntaxTree;
-	}
-	
+	public CompUnit getCompilationUnit() { return syntaxTree; }
+
 	/**
 	 * Return the reports that occurred during processing.
 	 * @return list of report objects (unmodifiable)
@@ -101,7 +101,7 @@ public class Proof {
 		if (reports == null) throw new IllegalStateException("not parsed yet");
 		return Collections.unmodifiableList(reports);
 	}
-	
+
 	/**
 	 * Return the sublist of the the reports that occurred during parsing.
 	 * @return list of report objects (unmodifiable)
@@ -111,7 +111,7 @@ public class Proof {
 		if (reports == null) throw new IllegalStateException("not parsed yet");
 		return Collections.unmodifiableList(reports.subList(0, duringParse));
 	}
-	
+
 	/**
 	 * Return the sublist of the reports that occurred after parsing was over.
 	 * @return list of report objects (unmodifiable)
@@ -119,12 +119,13 @@ public class Proof {
 	 */
 	public List<Report> getAfterParseReports() {
 		if (reports == null) throw new IllegalStateException("not parsed yet");
-		return Collections.unmodifiableList(reports.subList(duringParse, reports.size()));		
+		return Collections.unmodifiableList(
+				reports.subList(duringParse, reports.size()));
 	}
-	
+
 	private int errors = -1;
 	private int warnings = -1;
-	
+
 	protected void cacheErrorCount() {
 		if (errors >= 0) return;
 		int countErrors = 0;
@@ -139,7 +140,7 @@ public class Proof {
 		errors = countErrors;
 		warnings = countWarnings;
 	}
-	
+
 	/**
 	 * Return the number of errors reported
 	 * @return number of errors
@@ -148,7 +149,7 @@ public class Proof {
 		cacheErrorCount();
 		return errors;
 	}
-	
+
 	/**
 	 * Return the number of warnings reported
 	 * @return number of warnings
@@ -157,69 +158,122 @@ public class Proof {
 		cacheErrorCount();
 		return warnings;
 	}
-	
+
 	/**
 	 * Analyze the SASyLF code in the reader and return the results.
 	 * @param mf may be null
 	 * @param filename should not be null
-	 * @param id may be null if not interested in checking package/module-name errors
+	 * @param id may be null if not interested in checking package/module-name
+	 *     errors
 	 * @param r contents to parse; must not be null
 	 * @returns Results object of results, never null
 	 */
-	public static Proof parseAndCheck(ModuleFinder mf, String filename, ModuleId id, Reader r) {
-		Proof result = new Proof(filename,id);
-		result.parseAndCheck(mf,r);
+	private static boolean lsp = false;
+	public static boolean getLsp() { return lsp; }
+	public static void setLsp(boolean lsp) { Proof.lsp = lsp; }
+
+	public static Proof parseAndCheck(ModuleFinder mf, String filename,
+																		ModuleId id, Reader r) {
+		Proof result = new Proof(filename, id);
+		result.parseAndCheck(mf, r);
 		return result;
 	}
-	
+
 	/**
-	 * Analyze the SASyLF code in the reader and initialize remaining parts of results.
-	 * This method can called just once.
+	 * Analyze the SASyLF code in the reader and initialize remaining parts of
+	 * results. This method can called just once.
 	 * @param mf may be null
 	 * @param r contents to parse; must not be null
 	 */
+	private static ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+	public static ArrayNode getArrayNode() { return arrayNode; }
+	public static void setArrayNode(ArrayNode arrayNode) {
+		Proof.arrayNode = arrayNode;
+	}
+
 	public void parseAndCheck(ModuleFinder mf, Reader r) {
 		if (reports != null) {
 			throw new IllegalStateException("Results already determined");
 		}
 		// System.out.println(id + ".parseAndCheck()");
-		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf,r));
+		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf, r));
+
+		if (lsp) {
+			ObjectMapper objectMapper = new ObjectMapper();
+
+			for (Report rep : reports) {
+				Span s = rep.getSpan();
+				Location begin = s.getLocation();
+				Location end = s.getEndLocation();
+
+				String severity = "info";
+
+				ObjectNode tmp = objectMapper.createObjectNode();
+
+				if (rep instanceof ErrorReport) {
+					ErrorReport report = (ErrorReport)(rep);
+
+					tmp.put("Error Type", report.getErrorType().name());
+					tmp.put("Error Info", report.getExtraInformation());
+
+					severity = (report.isError()) ? "error" : "warning";
+				}
+
+				tmp.put("Error Message", rep.getMessage());
+				tmp.put("Severity", severity);
+				tmp.put("Begin Line", begin.getLine());
+				tmp.put("Begin Column", begin.getColumn());
+				tmp.put("End Line", end.getLine());
+				tmp.put("End Column", end.getColumn());
+
+				arrayNode.add(tmp);
+			}
+		}
+
 		cacheErrorCount();
 	}
-	
+
 	private void doParseAndCheck(ModuleFinder mf, Reader r) {
 		FreeVar.reinit();
 		try {
-			syntaxTree = DSLToolkitParser.read(filename,r);
+			syntaxTree = DSLToolkitParser.read(filename, r);
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
-			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {
+			if (e.expectedTokenSequences != null &&
+					e.expectedTokenSequences.length == 1) {
 				String expected = e.tokenImage[e.expectedTokenSequences[0][0]];
-				ErrorHandler.recoverableError(Errors.PARSE_EXPECTED, expected, errorSpan);
+				ErrorHandler.recoverableError(Errors.PARSE_EXPECTED, expected,
+																			errorSpan);
 			} else {
 				// do not use "e.getMessage()": not localized
 				ErrorHandler.recoverableError(Errors.PARSE_ERROR, errorSpan);
 			}
 		} catch (TokenMgrError e) {
-			ErrorHandler.recoverableError(Errors.LEXICAL_ERROR, ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
+			ErrorHandler.recoverableError(
+					Errors.LEXICAL_ERROR,
+					ErrorHandler.lexicalErrorAsLocation(filename, e.getMessage()));
 		} catch (RuntimeException e) {
 			e.printStackTrace();
-			final Span errorSpan = new Location(filename,0,0);
-			ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, "Internal error during parsing: " + e, errorSpan);
+			final Span errorSpan = new Location(filename, 0, 0);
+			ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,
+																		"Internal error during parsing: " + e,
+																		errorSpan);
 		}
 		duringParse = ErrorHandler.getReports().size();
 		if (syntaxTree != null) {
 			try {
 				if (mf == null) syntaxTree.typecheck(new ResourceModuleFinder(), null);
 				else {
-					mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE : id.packageName);
-					syntaxTree.typecheck(mf,id);
+					mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE
+																					: id.packageName);
+					syntaxTree.typecheck(mf, id);
 				}
 			} catch (SASyLFError ex) {
 				// muffle: handled already
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
-				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
+				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,
+																			ex.getLocalizedMessage(), null);
 			}
 		}
 	}
