@@ -212,18 +212,18 @@ public class Proof {
 				if (rep instanceof ErrorReport) {
 					ErrorReport report = (ErrorReport)(rep);
 
-					tmp.put("Error Type", report.getErrorType().name());
-					tmp.put("Error Info", report.getExtraInformation());
+					tmp.put("error_type", report.getErrorType().name());
+					tmp.put("error_info", report.getExtraInformation());
 
 					severity = (report.isError()) ? "error" : "warning";
 				}
 
-				tmp.put("Error Message", rep.getMessage());
-				tmp.put("Severity", severity);
-				tmp.put("Begin Line", begin.getLine());
-				tmp.put("Begin Column", begin.getColumn());
-				tmp.put("End Line", end.getLine());
-				tmp.put("End Column", end.getColumn());
+				tmp.put("error_message", rep.getMessage());
+				tmp.put("severity", severity);
+				tmp.put("begin_line", begin.getLine());
+				tmp.put("begin_column", begin.getColumn());
+				tmp.put("end_line", end.getLine());
+				tmp.put("end_column", end.getColumn());
 
 				arrayNode.add(tmp);
 			}
