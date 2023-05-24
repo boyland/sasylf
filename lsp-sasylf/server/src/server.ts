@@ -5,9 +5,8 @@
  * ------------------------------------------------------------------------------------------
  */
 import {spawnSync} from 'child_process';
-import {rmSync, writeFileSync} from 'node:fs';
-import {EOL} from 'os';
 import {TextDocument} from 'vscode-languageserver-textdocument';
+import {EOL} from 'os';
 import {
   CompletionItem,
   CompletionItemKind,
@@ -51,7 +50,6 @@ connection.onInitialize((params: InitializeParams) => {
   const result: InitializeResult = {
     capabilities : {
       textDocumentSync : TextDocumentSyncKind.Incremental,
-      // Tell the client that this server supports code completion.
       codeActionProvider : {resolveProvider : true},
       completionProvider : {resolveProvider : true},
     }
@@ -123,7 +121,7 @@ documents.onDidClose(e => { documentSettings.delete(e.document.uri); });
 
 // Map that contains diagnostics encoded with line numbers and error message and
 // their corresponding quickfixes
-const quickfixes: Map<string, any> = new Map();
+const quickfixes: Map<string | number | undefined, any> = new Map();
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
@@ -136,54 +134,44 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   // diagnostics and quickfixes
   const settings = await getDocumentSettings(textDocument.uri);
 
-  const eolSetting =
-      await connection.workspace.getConfiguration({section : "files"});
-  const eolSettingString = (eolSetting == "\n") ? "nl" : "cr";
-  const EOLString = (EOL == "\n") ? "nl" : "cr";
-  const eol = (eolSetting.eol == "auto") ? EOLString : eolSettingString;
-
-  const indentSetting =
-      await connection.workspace.getConfiguration({section : "editor"});
-  const indentSize = (indentSetting.indentSize === "tabSize")
-                         ? indentSetting.tabSize
-                         : indentSetting.indentSize;
-
   const diagnostics: Diagnostic[] = [];
   const text = textDocument.getText();
   const text_lines = text.split(/\r?\n/);
   const command = spawnSync(
       'sasylf',
-      [ `--indentAmount=${indentSize}`, `--eol=${eol}`, '--lsp', '--stdin' ],
+      ['--lsp', '--stdin' ],
       {input : text});
 
   console.log(command.stdout.toString());
-
   const output = JSON.parse(command.stdout.toString());
 
   quickfixes.clear();
-
   for (let i = 0; i < output.length && i < settings.maxNumberOfProblems - 1;
        ++i) {
     const element = output[i];
-    const line = element['Line'] - 1;
-    const quickfix = element['Quickfix'];
-    const start = {
-      line : line,
-      character : text_lines[line].length - text_lines[line].trimStart().length
-    };
-    const end = {line : line, character : text_lines[line].length};
-    const message = element['Error Message'];
     const severity = element['Severity'];
     if (severity == "info")
       continue;
+    // if (element['Begin Line'] !== element['End Line']) throw new Error("Begin and end lines do not match, error must be on the same line");
+    // const line = element['Begin Line'] - 1;
+    const start = {
+      line : element['Begin Line'] - 1,
+      character : element['Begin Column'] - 1
+    };
+    const end = {line : element['End Line'] - 1, character : element['End Column'] - 1};
+    const message = element['Error Message'];
+    const range = {start : start,end : end};
+    if (severity == "error") {
+	quickfixes.set(i, {error_type : element["Error Type"], error_info : element["Error Info"], range : range});
+    }
     const diagnostic: Diagnostic = {
       severity : (severity == "warning") ? DiagnosticSeverity.Warning
                                          : DiagnosticSeverity.Error,
-      range : {start : start, end : end},
+      range : range,
       message : message,
       source : 'sasylf',
+      code : i
     };
-    quickfixes.set(`${line}${message}`, quickfix);
     diagnostics.push(diagnostic);
   }
 
@@ -193,7 +181,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onDidChangeWatchedFiles(change => {
   // Monitored files have change in VSCode
-  console.log('We received an file change event');
+  connection.console.log('We received an file change event');
 });
 
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
@@ -206,34 +194,36 @@ connection.onCodeAction(async (params) => {
 
   const codeActions = [];
 
+const eolSetting =
+      await connection.workspace.getConfiguration({section : "files"});
+  const nl = (eolSetting.eol == "auto") ? EOL : eolSetting.eol;
+
   // For each diagnostic, try to find a quick fix
   for (const diagnostic of params.context.diagnostics) {
-    const index = `${diagnostic.range.start.line}${diagnostic.message}`;
-    if (!quickfixes.has(index))
-      continue;
-    const quickfix = quickfixes.get(index);
-    if (quickfix == null)
-      continue;
-    const charStart = quickfix['charStart'];
-    const charEnd = quickfix['charEnd'];
-    const start = textDocument.positionAt(charStart);
-    const end = textDocument.positionAt(charEnd);
-    codeActions.push({
-      title : quickfix['title'],
-      kind : 'quickfix',
-      diagnostics : [ diagnostic ],
-      edit : {
-        changes : {
-          [textDocument.uri] : [
-            {range : {start : start, end : end}, newText : quickfix['newText']}
-          ]
-        }
-      }
-    });
+	const code : string | number | undefined = diagnostic.code;
+	if (code == null) continue;
+	if (!quickfixes.has(code)) continue;
+	const quickfix = quickfixes.get(code);
+	const error_type = quickfix.error_type;
+	if (error_type != "error") continue;
+	const error_info = quickfix.error_info;
+	const range = quickfix.range;
+	const line = range.start.line;
+	if (line === 0) continue;
+	const lineInfo = textDocument.getText(range);
+	const lineText = textDocument.getText(range);
+	const split = error_info.split(/\r?\n/, -1);
+	let newText;
+	switch (error_type) {
+		default: continue;
+		case "MISSING_CASE": continue;
+	}
   }
 
-  return codeActions;
+  return [];
 });
+
+
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
