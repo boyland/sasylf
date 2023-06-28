@@ -21,6 +21,7 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
   TextEdit,
+  Range,
 } from "vscode-languageserver/node";
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -54,7 +55,7 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       codeActionProvider: { resolveProvider: true },
-      completionProvider: { resolveProvider: true },
+      // completionProvider: { resolveProvider: true },
     },
   };
   if (hasWorkspaceFolderCapability) {
@@ -162,8 +163,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const element = output[i];
     const severity = element["Severity"];
     if (severity == "info") continue;
-    // if (element['Begin Line'] !== element['End Line']) throw new Error("Begin and end lines do not match, error must be on the same line");
-    // const line = element['Begin Line'] - 1;
     const start = {
       line: element["Begin Line"] - 1,
       character: element["Begin Column"] - 1,
@@ -174,8 +173,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     };
     const message = element["Error Message"];
     const range = { start: start, end: end };
+    console.log(element["Begin Line"]);
     if (severity == "error") {
       quickfixes.set(i, {
+        error_severity: severity,
         error_type: element["Error Type"],
         error_info: element["Error Info"],
         range: range,
@@ -208,6 +209,8 @@ connection.onCodeAction(async (params) => {
   const textDocument: TextDocument | undefined = documents.get(
     params.textDocument.uri
   );
+  if (textDocument == null) return [];
+  const text: string = textDocument.getText();
 
   if (textDocument == null) return;
 
@@ -224,25 +227,350 @@ connection.onCodeAction(async (params) => {
     if (code == null) continue;
     if (!quickfixes.has(code)) continue;
     const quickfix = quickfixes.get(code);
-    const error_type = quickfix.error_type;
-    if (error_type != "error") continue;
-    const error_info = quickfix.error_info;
+    const errorType: string = quickfix.error_type;
+    const errorInfo: string = quickfix.error_info;
     const range = quickfix.range;
     const line = range.start.line;
-    if (line === 0) continue;
-    const lineInfo = textDocument.getText(range);
-    const lineText = textDocument.getText(range);
-    const split = error_info.split(/\r?\n/, -1);
-    let newText;
-    switch (error_type) {
+    let extraIndent = "";
+    console.log(errorType);
+    console.log(errorInfo);
+    console.log(line);
+    if (errorType == null || errorInfo == null || line == 0) continue;
+    if (range.start.line != range.end.line) {
+      console.log(errorType + " has a multiline error, skipping");
+      continue;
+    }
+    // Range that includes the entire line at line number `line`, 0 indexed
+    const lineInfo: Range = {
+      start: { line: line, character: -1 },
+      end: { line: line, character: Number.MAX_VALUE },
+    };
+
+    const lineText: string = textDocument.getText(lineInfo);
+
+    const split = errorInfo.split(/\r?\n/, -1);
+
+    let lineIndent: string;
+    {
+      let i;
+      for (i = 0; i < lineText.length; ++i) {
+        const ch = lineText.charAt(i);
+        if (ch == " " || ch == "\t") continue;
+        break;
+      }
+      lineIndent = lineText.substring(0, i);
+    }
+    const indentAmount =
+      textDocument.getText({
+        start: { line: line, character: -1 },
+        end: { line: line, character: Number.MAX_VALUE },
+      }).length -
+      textDocument
+        .getText({
+          start: { line: line, character: -1 },
+          end: { line: line, character: Number.MAX_VALUE },
+        })
+        .trimStart().length;
+
+    let indent = "    ";
+    if (indentAmount >= 0 && indentAmount <= 8) {
+      indent = "        ".substring(0, indentAmount);
+    }
+
+    // let extraIndent = "";
+
+    const ind = textDocument
+      .getText({
+        start: { line: lineInfo.start.line, character: 0 },
+        end: { line: Number.MAX_VALUE, character: Number.MAX_VALUE },
+      })
+      .indexOf(split[0]);
+
+    console.log(`INDEX : ${ind}`);
+
+    let old: Range | null = null;
+
+    if (ind != -1) {
+      old = {
+        start: textDocument.positionAt(
+          ind + textDocument.offsetAt(lineInfo.start)
+        ),
+        end: textDocument.positionAt(
+          ind + split[0].length + textDocument.offsetAt(lineInfo.start)
+        ),
+      };
+    }
+
+    if (old == null) {
+      if (split[0] == lineText) {
+        old = lineInfo;
+      }
+    }
+
+    switch (errorType) {
+      case "ABSTRACT_NOT_PERMITTED_HERE":
+      case "ILLEGAL_ASSUMES":
+      case "EXTRANEOUS_ASSUMES":
+        if (old != null) {
+          codeActions.push({
+            title: `remove '${split[0]}'`,
+            kind: "quickfix",
+            diagnostics: [diagnostic],
+            edit: {
+              changes: {
+                [textDocument.uri]: [{ range: old, newText: "" }],
+              },
+            },
+          });
+        }
+      /* falls through */
+      case "RULE_NOT_THEOREM":
+      case "THEOREM_NOT_RULE":
+      case "THEOREM_KIND_WRONG":
+      case "THEOREM_KIND_MISSING":
+      case "INDUCTION_REPEAT":
+      case "WRONG_END":
+      case "WRONG_MODULE_NAME":
+      case "PARTIAL_CASE_ANALYSIS":
+        if (old != null) {
+          if (split.length > 1 && split[1].length > 0) {
+            codeActions.push({
+              title: `replace '${split[0]}' with '${split[1]}'`,
+              kind: "quickfix",
+              diagnostics: [diagnostic],
+              edit: {
+                changes: {
+                  [textDocument.uri]: [{ range: old, newText: split[1] }],
+                },
+              },
+            });
+          }
+        }
+        break;
+      case "WRONG_PACKAGE":
+        if (split[0].length == 0) {
+          codeActions.push({
+            title: `insert '${split[1]}'`,
+            kind: "quickfix",
+            diagnostics: [diagnostic],
+            edit: {
+              changes: {
+                [textDocument.uri]: [
+                  {
+                    range: {
+                      start: {
+                        line: lineInfo.start.line,
+                        character: Number.MAX_VALUE,
+                      },
+                      end: {
+                        line: lineInfo.end.line,
+                        character: Number.MAX_VALUE,
+                      },
+                    },
+                    newText: split[1] + nl,
+                  },
+                ],
+              },
+            },
+          });
+        }
+        if (old != null && split.length > 1) {
+          if (split[1].length == 0) {
+            codeActions.push({
+              title: `remove '${split[0]}'`,
+              kind: "quickfix",
+              diagnostics: [diagnostic],
+              edit: {
+                changes: {
+                  [textDocument.uri]: [{ range: old, newText: "" }],
+                },
+              },
+            });
+          } else {
+            codeActions.push({
+              title: `replace '${split[0]}' with '${split[1]}'`,
+              kind: "quickfix",
+              diagnostics: [diagnostic],
+              edit: {
+                changes: {
+                  [textDocument.uri]: [{ range: old, newText: split[1] }],
+                },
+              },
+            });
+          }
+        }
+        break;
+      case "ASSUMED_ASSUMES":
+        extraIndent = indent;
+      /* falls through */
+      case "MISSING_ASSUMES":
+        codeActions.push({
+          title: `insert '${errorInfo}'`,
+          kind: "quickfix",
+          diagnostics: [diagnostic],
+          edit: {
+            changes: {
+              [textDocument.uri]: [
+                {
+                  range: {
+                    start: {
+                      line: lineInfo.start.line + 1,
+                      character: Number.MAX_VALUE,
+                    },
+                    end: {
+                      line: lineInfo.end.line + 1,
+                      character: Number.MAX_VALUE,
+                    },
+                  },
+                  newText: lineIndent + extraIndent + errorInfo + nl,
+                },
+              ],
+            },
+          },
+        });
+
+        break;
+      case "CASE_REDUNDANT":
+      case "CASE_UNNECESSARY":
+        break;
+      case "OTHER_JUSTIFIED":
+        if (lineInfo != null) {
+          const holeStart = split[0].indexOf("...");
+          const startPat = split[0].substring(0, holeStart);
+          const endPat = split[0].substring(holeStart + 3);
+          const findStart = lineText.indexOf(startPat);
+          if (findStart < 0) break;
+          const findEnd = lineText.indexOf(endPat, findStart);
+          if (findEnd < 0) break;
+          const oldStart = findStart + startPat.length;
+          const oldText = lineText.substring(oldStart, findEnd);
+          codeActions.push({
+            title: `replace '${oldText}' with '${" " + split[1]}'`,
+            kind: "quickfix",
+            diagnostics: [diagnostic],
+            edit: {
+              changes: {
+                [textDocument.uri]: [
+                  {
+                    range: {
+                      start: textDocument.positionAt(
+                        oldStart + textDocument.offsetAt(lineInfo.start)
+                      ),
+                      end: textDocument.positionAt(
+                        oldStart +
+                          textDocument.offsetAt(lineInfo.start) +
+                          oldText.length
+                      ),
+                    },
+                    newText: " " + split[1],
+                  },
+                ],
+              },
+            },
+          });
+        }
+        break;
+      case "RULE_CONCLUSION_CONTRADICTION":
+        if (lineInfo != null) {
+          const findBy = lineText.indexOf(" by ");
+          if (findBy >= lineIndent.length) {
+            const oldText = lineText.substring(lineIndent.length, findBy);
+            codeActions.push({
+              title: `replace '${oldText}' with '_: contradiction'`,
+              kind: "quickfix",
+              diagnostics: [diagnostic],
+              edit: {
+                changes: {
+                  [textDocument.uri]: [
+                    {
+                      range: {
+                        start: textDocument.positionAt(
+                          lineIndent.length +
+                            textDocument.offsetAt(lineInfo.start)
+                        ),
+                        end: textDocument.positionAt(
+                          lineIndent.length +
+                            textDocument.offsetAt(lineInfo.start) +
+                            oldText.length
+                        ),
+                      },
+                      newText: "_: contradiction",
+                    },
+                  ],
+                },
+              },
+            });
+          }
+        }
+        break;
+      case "DERIVATION_NOT_FOUND": {
+        const colon = split[0].indexOf(":");
+        const useName = textDocument.getText(diagnostic.range);
+        let defName;
+        if (colon >= 0) {
+          defName = split[0].substring(0, colon);
+        } else {
+          defName = split[0];
+          codeActions.push({
+            title: `replace '${lineText}' with '${defName}'`,
+            kind: "quickfix",
+            diagnostics: [diagnostic],
+            edit: {
+              changes: {
+                [textDocument.uri]: [{ range: lineInfo, newText: defName }],
+              },
+            },
+          });
+          break;
+        }
+
+        const newText = nl + indent + split[0] + " by unproved";
+        let extra = "";
+
+        const changes = [
+          {
+            range: {
+              start: {
+                line: lineInfo.start.line - 1,
+                character: Number.MAX_VALUE,
+              },
+              end: {
+                line: lineInfo.start.line - 1,
+                character: Number.MAX_VALUE,
+              },
+            },
+            newText: newText,
+          },
+        ];
+
+        if (defName != useName) {
+          if (useName == "_") {
+            extra = `, and replace '_' with '${defName}'`;
+            changes.push({
+              range: diagnostic.range,
+              newText: defName,
+            });
+          }
+        }
+
+        codeActions.push({
+          title: `insert '${split[0]} by unproved' before this line ${extra}`,
+          kind: "quickfix",
+          diagnostics: [diagnostic],
+          edit: {
+            changes: {
+              [textDocument.uri]: changes,
+            },
+          },
+        });
+        break;
+      }
       default:
-        continue;
-      case "MISSING_CASE":
-        continue;
+        break;
     }
   }
-
-  return [];
+  console.log(codeActions);
+  return codeActions;
 });
 
 // Make the text document manager listen on the connection
