@@ -148,7 +148,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
   const diagnostics: Diagnostic[] = [];
   const text = textDocument.getText();
-	console.log(__dirname);
   const command = spawnSync(`java -jar ${__dirname}/../../../SASyLF.jar`, ["--lsp", "--stdin"], { input: text, shell : true });
 
   console.log(command.stdout.toString());
