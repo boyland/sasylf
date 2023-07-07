@@ -148,8 +148,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
   const diagnostics: Diagnostic[] = [];
   const text = textDocument.getText();
-  const text_lines = text.split(/\r?\n/);
-  const command = spawnSync("sasylf", ["--lsp", "--stdin"], { input: text });
+	console.log(__dirname);
+  const command = spawnSync(`java -jar ${__dirname}/../../../SASyLF.jar`, ["--lsp", "--stdin"], { input: text, shell : true });
 
   console.log(command.stdout.toString());
   const output = JSON.parse(command.stdout.toString());
@@ -192,6 +192,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       source: "sasylf",
       code: i,
     };
+		console.log(diagnostic);
     diagnostics.push(diagnostic);
   }
 
@@ -210,7 +211,6 @@ connection.onCodeAction(async (params) => {
     params.textDocument.uri
   );
   if (textDocument == null) return [];
-  const text: string = textDocument.getText();
 
   if (textDocument == null) return;
 
