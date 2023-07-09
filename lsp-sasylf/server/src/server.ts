@@ -39,6 +39,7 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
+    console.log("onInitialize");
     const capabilities = params.capabilities;
 
     // Does the client support the `workspace/configuration` request?
@@ -72,6 +73,7 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
+    console.log("onInitialized");
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
         connection.client.register(
@@ -147,6 +149,7 @@ let compUnit: ast;
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
+    console.log("onDidChangeContent");
     validateTextDocument(change.document);
 });
 
