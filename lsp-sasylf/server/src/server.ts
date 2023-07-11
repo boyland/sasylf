@@ -60,6 +60,7 @@ connection.onInitialize((params: InitializeParams) => {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       codeActionProvider: { resolveProvider: true },
       // completionProvider: { resolveProvider: true },
+      documentSymbolProvider: true
     },
   };
   if (hasWorkspaceFolderCapability) {
