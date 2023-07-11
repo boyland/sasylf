@@ -8,21 +8,25 @@ import { spawnSync } from "child_process";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { EOL } from "os";
 import {
-  CompletionItem,
-  CompletionItemKind,
-  createConnection,
-  Diagnostic,
-  DiagnosticSeverity,
-  DidChangeConfigurationNotification,
-  InitializeParams,
-  InitializeResult,
-  ProposedFeatures,
-  TextDocumentPositionParams,
-  TextDocuments,
-  TextDocumentSyncKind,
-  TextEdit,
-  Range,
+    CompletionItem,
+    CompletionItemKind,
+    createConnection,
+    Diagnostic,
+    DiagnosticSeverity,
+    DidChangeConfigurationNotification,
+    InitializeParams,
+    InitializeResult,
+    ProposedFeatures,
+    TextDocumentPositionParams,
+    TextDocuments,
+    TextDocumentSyncKind,
+    TextEdit,
+    SymbolInformation,
+    DocumentSymbol,
+    SymbolKind,
+    Range,
 } from "vscode-languageserver/node";
+import { ast } from "./ast";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -81,7 +85,7 @@ connection.onInitialized(() => {
 
 // The example settings
 interface ExampleSettings {
-  maxNumberOfProblems: number;
+    maxNumberOfProblems: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not
@@ -134,6 +138,9 @@ documents.onDidClose((e) => {
 // their corresponding quickfixes
 const quickfixes: Map<string | number | undefined, any> = new Map();
 
+// Stores the abstract syntax tree
+let compUnit: ast;
+
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
@@ -150,8 +157,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   const text = textDocument.getText();
   const command = spawnSync(`java -jar ${__dirname}/../../../SASyLF.jar`, ["--lsp", "--stdin"], { input: text, shell : true });
 
-  console.log(command.stdout.toString());
-  const output = JSON.parse(command.stdout.toString());
+  const parsedJson = JSON.parse(command.stdout.toString());
+  const output = parsedJson.Quickfixes;
+  compUnit = parsedJson.AST;
 
   quickfixes.clear();
   for (
@@ -196,6 +204,260 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   // Send the computed diagnostics to VSCode.
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
+
+connection.onDocumentSymbol((identifier) => {
+    // Adds the module to the symbols
+    const res: DocumentSymbol[] = [];
+    const module = compUnit.Module;
+
+    if (!!module.Name) {
+        const moduleSymbol = DocumentSymbol.create(
+            module.Name,
+            undefined,
+            SymbolKind.Module,
+            {
+                start: {
+                    line: module["Begin Line"] - 1,
+                    character: module["Begin Column"] - 1,
+                },
+                end: {
+                    line: module["End Line"] - 1,
+                    character: module["End Column"] - 1,
+                },
+            },
+            {
+                start: {
+                    line: module["Begin Line"] - 1,
+                    character: module["Begin Column"] - 1,
+                },
+                end: {
+                    line: module["End Line"] - 1,
+                    character: module["End Column"] - 1,
+                },
+            },
+        );
+
+        res.push(moduleSymbol);
+    }
+
+    // Adds all the syntaxes declarations to the symbols
+    const syntaxDeclarations = compUnit.Syntax["Syntax Declarations"];
+
+    for (const declaration of syntaxDeclarations) {
+        const children: DocumentSymbol[] = [];
+
+        for (const clause of declaration.Clauses) {
+            const clauseSymbol = DocumentSymbol.create(
+                clause.Name,
+                undefined,
+                SymbolKind.Key,
+                {
+                    start: {
+                        line: clause.Line - 1,
+                        character: clause.Column - 1,
+                    },
+                    end: {
+                        line: clause.Line - 1,
+                        character: clause.Column - 1,
+                    },
+                },
+                {
+                    start: {
+                        line: clause.Line - 1,
+                        character: clause.Column - 1,
+                    },
+                    end: {
+                        line: clause.Line - 1,
+                        character: clause.Column - 1,
+                    },
+                },
+            );
+
+            children.push(clauseSymbol);
+        }
+
+        const declarationSymbol = DocumentSymbol.create(
+            declaration.Name,
+            undefined,
+            SymbolKind.String,
+            {
+                start: {
+                    line: declaration.Line - 1,
+                    character: declaration.Column - 1,
+                },
+                end: {
+                    line: declaration.Line - 1,
+                    character: declaration.Column - 1,
+                },
+            },
+            {
+                start: {
+                    line: declaration.Line - 1,
+                    character: declaration.Column - 1,
+                },
+                end: {
+                    line: declaration.Line - 1,
+                    character: declaration.Column - 1,
+                },
+            },
+            children,
+        );
+
+        res.push(declarationSymbol);
+    }
+
+    // Adds all the sugars to the symbols
+    const sugars = compUnit.Syntax.Sugars;
+
+    for (const sugar of sugars) {
+        const sugarSymbol = DocumentSymbol.create(
+            sugar.Name.slice(0, -1), // Removes the newline
+            undefined,
+            SymbolKind.String,
+            {
+                start: {
+                    line: sugar.Line - 1,
+                    character: sugar.Column - 1,
+                },
+                end: {
+                    line: sugar.Line - 1,
+                    character: sugar.Column - 1,
+                },
+            },
+            {
+                start: {
+                    line: sugar.Line - 1,
+                    character: sugar.Column - 1,
+                },
+                end: {
+                    line: sugar.Line - 1,
+                    character: sugar.Column - 1,
+                },
+            },
+        );
+
+        res.push(sugarSymbol);
+    }
+
+    // Adds the theorems to the symbols
+    const theorems = compUnit.Theorems;
+
+    for (const theorem of theorems) {
+        let detail = "";
+
+        for (const forall of theorem.Foralls) {
+            detail += "∀" + forall;
+        }
+
+        detail += "∃" + theorem.Conclusion;
+
+        const theoremSymbol = DocumentSymbol.create(
+            theorem.Name,
+            detail,
+            theorem.Kind == "theorem" ? SymbolKind.Class : SymbolKind.Struct,
+            {
+                start: {
+                    line: theorem.Line - 1,
+                    character: theorem.Column - 1,
+                },
+                end: {
+                    line: theorem.Line - 1,
+                    character: theorem.Column - 1,
+                },
+            },
+            {
+                start: {
+                    line: theorem.Line - 1,
+                    character: theorem.Column - 1,
+                },
+                end: {
+                    line: theorem.Line - 1,
+                    character: theorem.Column - 1,
+                },
+            },
+        );
+
+        res.push(theoremSymbol);
+    }
+
+    // Adds the judgments to the symbols
+    const judgments = compUnit.Judgments;
+
+    for (const judgment of judgments) {
+        const children: DocumentSymbol[] = [];
+
+        for (const rule of judgment.Rules) {
+            if (rule["In File"]) {
+                let detail = "";
+
+                for (const premise of rule.Premises) {
+                    detail += "∀" + premise;
+                }
+
+                detail += "∃" + rule.Conclusion;
+
+                const ruleSymbol = DocumentSymbol.create(
+                    rule.Name,
+                    detail,
+                    SymbolKind.Property,
+                    {
+                        start: {
+                            line: rule.Line - 1,
+                            character: rule.Column - 1,
+                        },
+                        end: {
+                            line: rule.Line - 1,
+                            character: rule.Column - 1,
+                        },
+                    },
+                    {
+                        start: {
+                            line: rule.Line - 1,
+                            character: rule.Column - 1,
+                        },
+                        end: {
+                            line: rule.Line - 1,
+                            character: rule.Column - 1,
+                        },
+                    },
+                );
+
+                children.push(ruleSymbol);
+            }
+        }
+
+        const judgmentSymbol = DocumentSymbol.create(
+            judgment.Name,
+            judgment.Form,
+            SymbolKind.Variable,
+            {
+                start: {
+                    line: judgment.Line - 1,
+                    character: judgment.Column - 1,
+                },
+                end: {
+                    line: judgment.Line - 1,
+                    character: judgment.Column - 1,
+                },
+            },
+            {
+                start: {
+                    line: judgment.Line - 1,
+                    character: judgment.Column - 1,
+                },
+                end: {
+                    line: judgment.Line - 1,
+                    character: judgment.Column - 1,
+                },
+            },
+            children,
+        );
+
+        res.push(judgmentSymbol);
+    }
+
+    return res;
+});
 
 connection.onDidChangeWatchedFiles((change) => {
   // Monitored files have change in VSCode

@@ -10,7 +10,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Fact;
+import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.ModulePart;
+import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.Sugar;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
+import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
@@ -184,11 +193,10 @@ public class Proof {
 	 * @param mf may be null
 	 * @param r contents to parse; must not be null
 	 */
-	private static ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-	public static ArrayNode getArrayNode() { return arrayNode; }
-	public static void setArrayNode(ArrayNode arrayNode) {
-		Proof.arrayNode = arrayNode;
-	}
+	private final static ObjectMapper objectMapper = new ObjectMapper();
+	private static ObjectNode json = objectMapper.createObjectNode();
+
+	public static String getJSON() { return json.toString(); }
 
 	public void parseAndCheck(ModuleFinder mf, Reader r) {
 		if (reports != null) {
@@ -198,7 +206,9 @@ public class Proof {
 		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf, r));
 
 		if (lsp) {
-			ObjectMapper objectMapper = new ObjectMapper();
+			ArrayNode qfArray = objectMapper.createArrayNode();
+
+			json.put("Quickfixes", qfArray);
 
 			for (Report rep : reports) {
 				Span s = rep.getSpan();
@@ -207,25 +217,153 @@ public class Proof {
 
 				String severity = "info";
 
-				ObjectNode tmp = objectMapper.createObjectNode();
+				ObjectNode qfNode = objectMapper.createObjectNode();
+
+				qfArray.add(qfNode);
 
 				if (rep instanceof ErrorReport) {
 					ErrorReport report = (ErrorReport)(rep);
 
-					tmp.put("error_type", report.getErrorType().name());
-					tmp.put("error_info", report.getExtraInformation());
+					qfNode.put("Error Type", report.getErrorType().name());
+					qfNode.put("Error Info", report.getExtraInformation());
 
 					severity = (report.isError()) ? "error" : "warning";
 				}
 
-				tmp.put("error_message", rep.getMessage());
-				tmp.put("severity", severity);
-				tmp.put("begin_line", begin.getLine());
-				tmp.put("begin_column", begin.getColumn());
-				tmp.put("end_line", end.getLine());
-				tmp.put("end_column", end.getColumn());
+				qfNode.put("Error Message", rep.getMessage());
+				qfNode.put("Severity", severity);
+				qfNode.put("Begin Line", begin.getLine());
+				qfNode.put("Begin Column", begin.getColumn());
+				qfNode.put("End Line", end.getLine());
+				qfNode.put("End Column", end.getColumn());
+			}
 
-				arrayNode.add(tmp);
+			ObjectNode astNode = objectMapper.createObjectNode();
+
+			json.put("AST", astNode);
+
+			ArrayNode theoremsNode = objectMapper.createArrayNode();
+			ObjectNode moduleNode = objectMapper.createObjectNode();
+			ObjectNode syntaxesNode = objectMapper.createObjectNode();
+			ArrayNode judgmentsNode = objectMapper.createArrayNode();
+
+			astNode.put("Theorems", theoremsNode);
+			astNode.put("Module", moduleNode);
+			astNode.put("Syntax", syntaxesNode);
+			astNode.put("Judgments", judgmentsNode);
+
+			ArrayNode syntaxDeclarationsNode = objectMapper.createArrayNode();
+			ArrayNode syntaxSugarsNode = objectMapper.createArrayNode();
+
+			syntaxesNode.put("Syntax Declarations", syntaxDeclarationsNode);
+			syntaxesNode.put("Sugars", syntaxSugarsNode);
+
+			List<Node> pieces = new ArrayList<>();
+			syntaxTree.collectTopLevel(pieces);
+
+			for (Node piece : pieces) {
+				if (piece instanceof Theorem) {
+					Theorem theorem = (Theorem)piece;
+					ObjectNode theoremNode = objectMapper.createObjectNode();
+
+					theoremsNode.add(theoremNode);
+
+					theoremNode.put("Name", theorem.getName());
+					theoremNode.put("Column", theorem.getLocation().getColumn());
+					theoremNode.put("Line", theorem.getLocation().getLine());
+					theoremNode.put("Kind", theorem.getKind());
+
+					ArrayNode forallsNode = objectMapper.createArrayNode();
+
+					theoremNode.put("Foralls", forallsNode);
+
+					for (Fact forall : theorem.getForalls()) {
+						forallsNode.add(forall.getElement().toString());
+					}
+
+					theoremNode.put("Conclusion", theorem.getConclusion().getName());
+				} else if (piece instanceof ModulePart) {
+					ModulePart modulePart = (ModulePart)piece;
+
+					moduleNode.put("Name", modulePart.getName() + ": " +
+																		 modulePart.getModule().toString());
+					moduleNode.put("Begin Column", modulePart.getLocation().getColumn());
+					moduleNode.put("End Column", modulePart.getEndLocation().getColumn());
+					moduleNode.put("Begin Line", modulePart.getLocation().getLine());
+					moduleNode.put("End Line", modulePart.getEndLocation().getLine());
+				} else if (piece instanceof SyntaxDeclaration) {
+					SyntaxDeclaration syntax = (SyntaxDeclaration)piece;
+					ObjectNode syntaxNode = objectMapper.createObjectNode();
+
+					syntaxDeclarationsNode.add(syntaxNode);
+
+					syntaxNode.put("Name", syntax.getName());
+					syntaxNode.put("Column", syntax.getLocation().getColumn());
+					syntaxNode.put("Line", syntax.getLocation().getLine());
+
+					ArrayNode clausesNode = objectMapper.createArrayNode();
+
+					syntaxNode.put("Clauses", clausesNode);
+
+					List<Clause> clauses = syntax.getClauses();
+
+					for (Clause clause : clauses) {
+						ObjectNode clauseNode = objectMapper.createObjectNode();
+
+						clausesNode.add(clauseNode);
+
+						clauseNode.put("Name", clause.getName());
+						clauseNode.put("Column", clause.getLocation().getColumn());
+						clauseNode.put("Line", clause.getLocation().getLine());
+					}
+				} else if (piece instanceof Sugar) {
+					Sugar syntax = (Sugar)piece;
+					ObjectNode syntaxNode = objectMapper.createObjectNode();
+
+					syntaxSugarsNode.add(syntaxNode);
+
+					syntaxNode.put("Name", syntax.toString());
+					syntaxNode.put("Column", syntax.getLocation().getColumn());
+					syntaxNode.put("Line", syntax.getLocation().getLine());
+				} else if (piece instanceof Judgment) {
+					Judgment judgment = (Judgment)piece;
+
+					ObjectNode judgmentNode = objectMapper.createObjectNode();
+
+					judgmentsNode.add(judgmentNode);
+
+					judgmentNode.put("Name", judgment.getName());
+					judgmentNode.put("Column", judgment.getLocation().getColumn());
+					judgmentNode.put("Line", judgment.getLocation().getLine());
+					judgmentNode.put("Form", judgment.getForm().getName());
+
+					List<Rule> rules = judgment.getRules();
+
+					ArrayNode rulesNode = objectMapper.createArrayNode();
+
+					judgmentNode.put("Rules", rulesNode);
+
+					for (Rule rule : rules) {
+						ObjectNode ruleNode = objectMapper.createObjectNode();
+
+						rulesNode.add(ruleNode);
+
+						ArrayNode premisesNode = objectMapper.createArrayNode();
+
+						ruleNode.put("Premises", premisesNode);
+
+						for (Clause clause : rule.getPremises()) {
+							premisesNode.add(clause.getName());
+						}
+
+						ruleNode.put("Name", rule.getName());
+						ruleNode.put("Conclusion", rule.getConclusion().getName());
+						ruleNode.put("In File",
+												 rule.getLocation().getFile().equals(filename));
+						ruleNode.put("Column", rule.getLocation().getColumn());
+						ruleNode.put("Line", rule.getLocation().getLine());
+					}
+				}
 			}
 		}
 
