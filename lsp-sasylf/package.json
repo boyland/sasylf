@@ -48,6 +48,20 @@
                     ".slf"
                 ]
             }
+        ],
+        "grammars": [
+            {
+                "language": "sasylf",
+                "scopeName": "source.sasylf",
+                "path": "./syntaxes/sasylf.tmLanguage.json"
+            }
+        ],
+        "themes": [
+            {
+                "label": "Default Theme",
+                "id": "sasylf.defaultTheme",
+                "path": "./themes/defaultTheme.json"
+            }
         ]
     },
     "scripts": {

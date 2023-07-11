@@ -39,7 +39,6 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
-    console.log("onInitialize");
     const capabilities = params.capabilities;
 
     // Does the client support the `workspace/configuration` request?
@@ -73,12 +72,11 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
-    console.log("onInitialized");
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
         connection.client.register(
             DidChangeConfigurationNotification.type,
-            undefined
+            undefined,
         );
     }
     if (hasWorkspaceFolderCapability) {
@@ -149,7 +147,6 @@ let compUnit: ast;
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
-    console.log("onDidChangeContent");
     validateTextDocument(change.document);
 });
 
@@ -164,7 +161,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const command = spawnSync(
         `java -jar ${__dirname}/../../../SASyLF.jar`,
         ["--lsp", "--stdin"],
-        { input: text, shell: true }
+        { input: text, shell: true },
     );
 
     const parsedJson = JSON.parse(command.stdout.toString());
@@ -244,7 +241,7 @@ connection.onDocumentSymbol((identifier) => {
                     line: module["End Line"] - 1,
                     character: module["End Column"] - 1,
                 },
-            }
+            },
         );
 
         res.push(moduleSymbol);
@@ -280,7 +277,7 @@ connection.onDocumentSymbol((identifier) => {
                         line: clause.Line - 1,
                         character: clause.Column - 1,
                     },
-                }
+                },
             );
 
             children.push(clauseSymbol);
@@ -310,7 +307,7 @@ connection.onDocumentSymbol((identifier) => {
                     character: declaration.Column - 1,
                 },
             },
-            children
+            children,
         );
 
         res.push(declarationSymbol);
@@ -343,7 +340,7 @@ connection.onDocumentSymbol((identifier) => {
                     line: sugar.Line - 1,
                     character: sugar.Column - 1,
                 },
-            }
+            },
         );
 
         res.push(sugarSymbol);
@@ -384,7 +381,7 @@ connection.onDocumentSymbol((identifier) => {
                     line: theorem.Line - 1,
                     character: theorem.Column - 1,
                 },
-            }
+            },
         );
 
         res.push(theoremSymbol);
@@ -429,7 +426,7 @@ connection.onDocumentSymbol((identifier) => {
                             line: rule.Line - 1,
                             character: rule.Column - 1,
                         },
-                    }
+                    },
                 );
 
                 children.push(ruleSymbol);
@@ -460,7 +457,7 @@ connection.onDocumentSymbol((identifier) => {
                     character: judgment.Column - 1,
                 },
             },
-            children
+            children,
         );
 
         res.push(judgmentSymbol);
@@ -477,7 +474,7 @@ connection.onDidChangeWatchedFiles((change) => {
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
     const textDocument: TextDocument | undefined = documents.get(
-        params.textDocument.uri
+        params.textDocument.uri,
     );
     if (textDocument == null) return [];
 
@@ -559,12 +556,12 @@ connection.onCodeAction(async (params) => {
         if (ind != -1) {
             old = {
                 start: textDocument.positionAt(
-                    ind + textDocument.offsetAt(lineInfo.start)
+                    ind + textDocument.offsetAt(lineInfo.start),
                 ),
                 end: textDocument.positionAt(
                     ind +
                         split[0].length +
-                        textDocument.offsetAt(lineInfo.start)
+                        textDocument.offsetAt(lineInfo.start),
                 ),
             };
         }
@@ -736,15 +733,15 @@ connection.onCodeAction(async (params) => {
                                             start: textDocument.positionAt(
                                                 oldStart +
                                                     textDocument.offsetAt(
-                                                        lineInfo.start
-                                                    )
+                                                        lineInfo.start,
+                                                    ),
                                             ),
                                             end: textDocument.positionAt(
                                                 oldStart +
                                                     textDocument.offsetAt(
-                                                        lineInfo.start
+                                                        lineInfo.start,
                                                     ) +
-                                                    oldText.length
+                                                    oldText.length,
                                             ),
                                         },
                                         newText: " " + split[1],
@@ -761,7 +758,7 @@ connection.onCodeAction(async (params) => {
                     if (findBy >= lineIndent.length) {
                         const oldText = lineText.substring(
                             lineIndent.length,
-                            findBy
+                            findBy,
                         );
                         codeActions.push({
                             title: `replace '${oldText}' with '_: contradiction'`,
@@ -775,15 +772,15 @@ connection.onCodeAction(async (params) => {
                                                 start: textDocument.positionAt(
                                                     lineIndent.length +
                                                         textDocument.offsetAt(
-                                                            lineInfo.start
-                                                        )
+                                                            lineInfo.start,
+                                                        ),
                                                 ),
                                                 end: textDocument.positionAt(
                                                     lineIndent.length +
                                                         textDocument.offsetAt(
-                                                            lineInfo.start
+                                                            lineInfo.start,
                                                         ) +
-                                                        oldText.length
+                                                        oldText.length,
                                                 ),
                                             },
                                             newText: "_: contradiction",
