@@ -243,12 +243,12 @@ public class Proof {
 			json.put("AST", astNode);
 
 			ArrayNode theoremsNode = objectMapper.createArrayNode();
-			ObjectNode moduleNode = objectMapper.createObjectNode();
+			ArrayNode modulesNode = objectMapper.createArrayNode();
 			ObjectNode syntaxesNode = objectMapper.createObjectNode();
 			ArrayNode judgmentsNode = objectMapper.createArrayNode();
 
 			astNode.put("Theorems", theoremsNode);
-			astNode.put("Module", moduleNode);
+			astNode.put("Modules", modulesNode);
 			astNode.put("Syntax", syntaxesNode);
 			astNode.put("Judgments", judgmentsNode);
 
@@ -262,6 +262,8 @@ public class Proof {
 			syntaxTree.collectTopLevel(pieces);
 
 			for (Node piece : pieces) {
+				Location startLoc = piece.getLocation();
+				Location endLoc = piece.getEndLocation();
 				if (piece instanceof Theorem) {
 					Theorem theorem = (Theorem)piece;
 					ObjectNode theoremNode = objectMapper.createObjectNode();
@@ -269,8 +271,9 @@ public class Proof {
 					theoremsNode.add(theoremNode);
 
 					theoremNode.put("Name", theorem.getName());
-					theoremNode.put("Column", theorem.getLocation().getColumn());
-					theoremNode.put("Line", theorem.getLocation().getLine());
+					theoremNode.put("Column", startLoc.getColumn());
+					theoremNode.put("Line", startLoc.getLine());
+					theoremNode.put("File", startLoc.getFile());
 					theoremNode.put("Kind", theorem.getKind());
 
 					ArrayNode forallsNode = objectMapper.createArrayNode();
@@ -284,13 +287,16 @@ public class Proof {
 					theoremNode.put("Conclusion", theorem.getConclusion().getName());
 				} else if (piece instanceof ModulePart) {
 					ModulePart modulePart = (ModulePart)piece;
+					ObjectNode moduleNode = objectMapper.createObjectNode();
+					modulesNode.add(moduleNode);
 
 					moduleNode.put("Name", modulePart.getName() + ": " +
-																		 modulePart.getModule().toString());
-					moduleNode.put("Begin Column", modulePart.getLocation().getColumn());
-					moduleNode.put("End Column", modulePart.getEndLocation().getColumn());
-					moduleNode.put("Begin Line", modulePart.getLocation().getLine());
-					moduleNode.put("End Line", modulePart.getEndLocation().getLine());
+								 									 modulePart.getModule().toString());
+					moduleNode.put("Begin Column", startLoc.getColumn());
+					moduleNode.put("End Column", endLoc.getColumn());
+					moduleNode.put("Begin Line", startLoc.getLine());
+					moduleNode.put("End Line", endLoc.getLine());
+					moduleNode.put("File", startLoc.getFile());
 				} else if (piece instanceof SyntaxDeclaration) {
 					SyntaxDeclaration syntax = (SyntaxDeclaration)piece;
 					ObjectNode syntaxNode = objectMapper.createObjectNode();
@@ -298,8 +304,9 @@ public class Proof {
 					syntaxDeclarationsNode.add(syntaxNode);
 
 					syntaxNode.put("Name", syntax.getName());
-					syntaxNode.put("Column", syntax.getLocation().getColumn());
-					syntaxNode.put("Line", syntax.getLocation().getLine());
+					syntaxNode.put("Column", startLoc.getColumn());
+					syntaxNode.put("Line", startLoc.getLine());
+					syntaxNode.put("File", startLoc.getFile());
 
 					ArrayNode clausesNode = objectMapper.createArrayNode();
 
@@ -315,6 +322,7 @@ public class Proof {
 						clauseNode.put("Name", clause.getName());
 						clauseNode.put("Column", clause.getLocation().getColumn());
 						clauseNode.put("Line", clause.getLocation().getLine());
+						clauseNode.put("File", clause.getLocation().getFile());
 					}
 				} else if (piece instanceof Sugar) {
 					Sugar syntax = (Sugar)piece;
@@ -325,6 +333,7 @@ public class Proof {
 					syntaxNode.put("Name", syntax.toString());
 					syntaxNode.put("Column", syntax.getLocation().getColumn());
 					syntaxNode.put("Line", syntax.getLocation().getLine());
+					syntaxNode.put("File", syntax.getLocation().getFile());
 				} else if (piece instanceof Judgment) {
 					Judgment judgment = (Judgment)piece;
 
@@ -336,6 +345,7 @@ public class Proof {
 					judgmentNode.put("Column", judgment.getLocation().getColumn());
 					judgmentNode.put("Line", judgment.getLocation().getLine());
 					judgmentNode.put("Form", judgment.getForm().getName());
+					judgmentNode.put("File", judgment.getLocation().getFile());
 
 					List<Rule> rules = judgment.getRules();
 
@@ -362,6 +372,7 @@ public class Proof {
 												 rule.getLocation().getFile().equals(filename));
 						ruleNode.put("Column", rule.getLocation().getColumn());
 						ruleNode.put("Line", rule.getLocation().getLine());
+						ruleNode.put("File", rule.getLocation().getFile());
 					}
 				}
 			}

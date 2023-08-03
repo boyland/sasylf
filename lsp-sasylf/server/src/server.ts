@@ -8,8 +8,6 @@ import { spawnSync } from "child_process";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { EOL } from "os";
 import {
-	CompletionItem,
-	CompletionItemKind,
 	createConnection,
 	Diagnostic,
 	DiagnosticSeverity,
@@ -17,16 +15,13 @@ import {
 	InitializeParams,
 	InitializeResult,
 	ProposedFeatures,
-	TextDocumentPositionParams,
 	TextDocuments,
 	TextDocumentSyncKind,
-	TextEdit,
-	SymbolInformation,
 	DocumentSymbol,
 	SymbolKind,
 	Range,
 } from "vscode-languageserver/node";
-import { ast } from "./ast";
+import { ast, ruleNode, moduleNode } from "./ast";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -76,7 +71,7 @@ connection.onInitialized(() => {
 		// Register for all configuration changes.
 		connection.client.register(
 			DidChangeConfigurationNotification.type,
-			undefined
+			undefined,
 		);
 	}
 	if (hasWorkspaceFolderCapability) {
@@ -161,7 +156,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const command = spawnSync(
 		`java -jar ${__dirname}/../../../SASyLF.jar`,
 		["--lsp", "--stdin"],
-		{ input: text, shell: true }
+		{ input: text, shell: true },
 	);
 
 	const parsedJson = JSON.parse(command.stdout.toString());
@@ -215,9 +210,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 connection.onDocumentSymbol((identifier) => {
 	// Adds the module to the symbols
 	const res: DocumentSymbol[] = [];
-	const module = compUnit.Module;
+	const modules = compUnit.Modules;
 
-	if (!!module.Name) {
+	for (const module of modules) {
 		const moduleSymbol = DocumentSymbol.create(
 			module.Name,
 			undefined,
@@ -241,7 +236,7 @@ connection.onDocumentSymbol((identifier) => {
 					line: module["End Line"] - 1,
 					character: module["End Column"] - 1,
 				},
-			}
+			},
 		);
 
 		res.push(moduleSymbol);
@@ -277,7 +272,7 @@ connection.onDocumentSymbol((identifier) => {
 						line: clause.Line - 1,
 						character: clause.Column - 1,
 					},
-				}
+				},
 			);
 
 			children.push(clauseSymbol);
@@ -307,7 +302,7 @@ connection.onDocumentSymbol((identifier) => {
 					character: declaration.Column - 1,
 				},
 			},
-			children
+			children,
 		);
 
 		res.push(declarationSymbol);
@@ -340,7 +335,7 @@ connection.onDocumentSymbol((identifier) => {
 					line: sugar.Line - 1,
 					character: sugar.Column - 1,
 				},
-			}
+			},
 		);
 
 		res.push(sugarSymbol);
@@ -381,7 +376,7 @@ connection.onDocumentSymbol((identifier) => {
 					line: theorem.Line - 1,
 					character: theorem.Column - 1,
 				},
-			}
+			},
 		);
 
 		res.push(theoremSymbol);
@@ -426,7 +421,7 @@ connection.onDocumentSymbol((identifier) => {
 							line: rule.Line - 1,
 							character: rule.Column - 1,
 						},
-					}
+					},
 				);
 
 				children.push(ruleSymbol);
@@ -457,7 +452,7 @@ connection.onDocumentSymbol((identifier) => {
 					character: judgment.Column - 1,
 				},
 			},
-			children
+			children,
 		);
 
 		res.push(judgmentSymbol);
@@ -471,14 +466,50 @@ connection.onDidChangeWatchedFiles((change) => {
 	connection.console.log("We received an file change event");
 });
 
+function getLineRange(line: number): Range {
+	return {
+		start: { line, character: -1 },
+		end: { line, character: Number.MAX_VALUE },
+	};
+}
+
+function isBarChar(ch: string): boolean {
+	return ch === "-" || ch === "\u2500" || ch === "\u2014" || ch === "\u2015";
+}
+
+function findRule(ruleName: string): ruleNode | null {
+	let ruleModule = null;
+	let modulePath = null;
+	if (ruleName.includes("'")) {
+		ruleName = ruleName.split(".")[1];
+		ruleModule = ruleName.split(".")[0];
+	}
+	if (ruleModule != null) {
+		const modules: moduleNode[] = compUnit.Modules;
+		for (const module of modules) {
+			if (module.Name === ruleModule) {
+				modulePath = module.File;
+				break;
+			}
+		}
+	}
+	const judgments = compUnit.Judgments;
+	for (const judgment of judgments) {
+		for (const rule of judgment.Rules) {
+			if (rule.File === modulePath && rule.Name === ruleName) {
+				return rule;
+			}
+		}
+	}
+	return null;
+}
+
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
 	const textDocument: TextDocument | undefined = documents.get(
-		params.textDocument.uri
+		params.textDocument.uri,
 	);
 	if (textDocument == null) return [];
-
-	if (textDocument == null) return;
 
 	const codeActions = [];
 
@@ -543,8 +574,6 @@ connection.onCodeAction(async (params) => {
 			indent = "        ".substring(0, indentAmount);
 		}
 
-		// let extraIndent = "";
-
 		const ind = textDocument
 			.getText({
 				start: { line: lineInfo.start.line, character: 0 },
@@ -552,17 +581,15 @@ connection.onCodeAction(async (params) => {
 			})
 			.indexOf(split[0]);
 
-		console.log(`INDEX : ${ind}`);
-
 		let old: Range | null = null;
 
 		if (ind != -1) {
 			old = {
 				start: textDocument.positionAt(
-					ind + textDocument.offsetAt(lineInfo.start)
+					ind + textDocument.offsetAt(lineInfo.start),
 				),
 				end: textDocument.positionAt(
-					ind + split[0].length + textDocument.offsetAt(lineInfo.start)
+					ind + split[0].length + textDocument.offsetAt(lineInfo.start),
 				),
 			};
 		}
@@ -574,6 +601,158 @@ connection.onCodeAction(async (params) => {
 		}
 
 		switch (errorType) {
+			case "MISSING_CASE":
+				let newText = "";
+				if (errorInfo.indexOf("\n\n") == -1) {
+					// syntax case
+					const n = split.length - 1;
+					for (let i = 0; i < n; ++i) {
+						newText = newText.concat(lineIndent);
+						newText = newText.concat(indent);
+						newText = newText.concat("case ");
+						newText = newText.concat(split[i]);
+						newText = newText.concat(" is");
+						newText = newText.concat(nl);
+						newText = newText.concat(lineIndent);
+						newText = newText.concat(indent);
+						newText = newText.concat(indent);
+						newText = newText.concat("proof by unproved");
+						newText = newText.concat(nl);
+						newText = newText.concat(lineIndent);
+						newText = newText.concat(indent);
+						newText = newText.concat("end case");
+						newText = newText.concat(nl);
+						newText = newText.concat(nl);
+					}
+				} else {
+					let startCase = true;
+					const n = split.length - 1; // extra line at end
+					for (let i = 0; i < n; ++i) {
+						if (startCase) {
+							newText = newText.concat(lineIndent);
+							newText = newText.concat(indent);
+							newText = newText.concat("case rule");
+							newText = newText.concat(nl);
+							startCase = false;
+						}
+						if (split[i].length == 0) {
+							newText = newText.concat(lineIndent);
+							newText = newText.concat(indent);
+							newText = newText.concat("is");
+							newText = newText.concat(nl);
+							newText = newText.concat(lineIndent);
+							newText = newText.concat(indent);
+							newText = newText.concat(indent);
+							newText = newText.concat("proof by unproved");
+							newText = newText.concat(nl);
+							newText = newText.concat(lineIndent);
+							newText = newText.concat(indent);
+							newText = newText.concat("end case");
+							newText = newText.concat(nl);
+							newText = newText.concat(nl);
+							startCase = true;
+							continue;
+						}
+						newText = newText.concat(lineIndent);
+						newText = newText.concat(indent);
+						newText = newText.concat(indent);
+						if (split[i].startsWith("---")) {
+							const ruleName = split[i].split(" ")[1];
+							const rule = findRule(ruleName);
+							if (rule !== null) {
+								let ruleText = textDocument.getText(getLineRange(rule.Line));
+								let lexicalInfo = "";
+								for (const c of ruleText) {
+									if (isBarChar(c)) {
+										lexicalInfo += c;
+									} else {
+										break;
+									}
+								}
+								if (lexicalInfo.length >= 3) {
+									split[i] =
+										lexicalInfo.substring(0, 3) +
+										lexicalInfo.substring(0, 3) +
+										lexicalInfo +
+										" " +
+										ruleName;
+								}
+							}
+						} else {
+							newText = newText.concat("_: ");
+						}
+						newText = newText.concat(split[i]);
+						newText = newText.concat(nl);
+					}
+				}
+				if (
+					lineText.includes("by contradiction on") &&
+					!lineText.includes("by case analysis on")
+				) {
+					// XXX: Could be confused by a comment
+					let lo = lineText.indexOf("contradiction");
+					let parts = lineText.split("\\s+");
+					const l = parts.length;
+					// try to avoid dangerous changes
+					if (l > 3 && parts[l - 2] === "on") {
+						let derivName = parts[l - 1];
+						newText =
+							"case analysis on " +
+							derivName +
+							":" +
+							nl +
+							newText +
+							lineIndent +
+							"end case analysis";
+						let offset = textDocument.offsetAt(lineInfo.start) + lo;
+						codeActions.push({
+							title: "convert to case analysis with missing case(s)",
+							kind: "quickfix",
+							diagnostics: [diagnostic],
+							edit: {
+								changes: {
+									[textDocument.uri]: [
+										{
+											range: {
+												start: textDocument.positionAt(offset),
+												end: textDocument.positionAt(
+													offset + lineText.length - lo,
+												),
+											},
+											newText: newText,
+										},
+									],
+								},
+							},
+						});
+					}
+				} else {
+					codeActions.push({
+						title: "insert missing case(s)",
+						kind: "quickfix",
+						diagnostics: [diagnostic],
+						edit: {
+							changes: {
+								[textDocument.uri]: [
+									{
+										range: {
+											start: {
+												line: lineInfo.start.line + 1,
+												character: 0,
+											},
+											end: {
+												line: lineInfo.end.line + 1,
+												character: 0,
+											},
+										},
+										newText: newText,
+									},
+								],
+							},
+						},
+					});
+				}
+				break;
 			case "ABSTRACT_NOT_PERMITTED_HERE":
 			case "ILLEGAL_ASSUMES":
 			case "EXTRANEOUS_ASSUMES":
@@ -720,12 +899,12 @@ connection.onCodeAction(async (params) => {
 									{
 										range: {
 											start: textDocument.positionAt(
-												oldStart + textDocument.offsetAt(lineInfo.start)
+												oldStart + textDocument.offsetAt(lineInfo.start),
 											),
 											end: textDocument.positionAt(
 												oldStart +
 													textDocument.offsetAt(lineInfo.start) +
-													oldText.length
+													oldText.length,
 											),
 										},
 										newText: " " + split[1],
@@ -752,12 +931,12 @@ connection.onCodeAction(async (params) => {
 											range: {
 												start: textDocument.positionAt(
 													lineIndent.length +
-														textDocument.offsetAt(lineInfo.start)
+														textDocument.offsetAt(lineInfo.start),
 												),
 												end: textDocument.positionAt(
 													lineIndent.length +
 														textDocument.offsetAt(lineInfo.start) +
-														oldText.length
+														oldText.length,
 												),
 											},
 											newText: "_: contradiction",

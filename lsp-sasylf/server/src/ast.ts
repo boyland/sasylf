@@ -1,6 +1,6 @@
 export type ast = {
     Theorems: theoremNode[];
-    Module: moduleNode;
+    Modules: moduleNode[];
     Syntax: syntaxesNode;
     Judgments: judgmentNode[];
 };
@@ -20,6 +20,7 @@ export type moduleNode = {
     "End Column": number;
     "Begin Line": number;
     "End Line": number;
+		File : string;
 };
 
 export type syntaxesNode = {
@@ -61,4 +62,5 @@ export type ruleNode = {
     "In File": boolean;
     Column: number;
     Line: number;
+		File : string;
 };
