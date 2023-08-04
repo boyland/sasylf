@@ -1,9 +1,3 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for
- * license information.
- * ------------------------------------------------------------------------------------------
- */
 import { spawnSync } from "child_process";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { EOL } from "os";
@@ -20,8 +14,15 @@ import {
 	DocumentSymbol,
 	SymbolKind,
 	Range,
+	CodeAction,
 } from "vscode-languageserver/node";
-import { ast, ruleNode, moduleNode } from "./ast";
+import { ast } from "./ast";
+import {
+	getLineRange,
+	isBarChar,
+	findRule,
+	getLineRangeFromOffset,
+} from "./utils";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -54,7 +55,6 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			codeActionProvider: { resolveProvider: true },
-			// completionProvider: { resolveProvider: true },
 			documentSymbolProvider: true,
 		},
 	};
@@ -466,44 +466,6 @@ connection.onDidChangeWatchedFiles((change) => {
 	connection.console.log("We received an file change event");
 });
 
-function getLineRange(line: number): Range {
-	return {
-		start: { line, character: -1 },
-		end: { line, character: Number.MAX_VALUE },
-	};
-}
-
-function isBarChar(ch: string): boolean {
-	return ch === "-" || ch === "\u2500" || ch === "\u2014" || ch === "\u2015";
-}
-
-function findRule(ruleName: string): ruleNode | null {
-	let ruleModule = null;
-	let modulePath = null;
-	if (ruleName.includes("'")) {
-		ruleName = ruleName.split(".")[1];
-		ruleModule = ruleName.split(".")[0];
-	}
-	if (ruleModule != null) {
-		const modules: moduleNode[] = compUnit.Modules;
-		for (const module of modules) {
-			if (module.Name === ruleModule) {
-				modulePath = module.File;
-				break;
-			}
-		}
-	}
-	const judgments = compUnit.Judgments;
-	for (const judgment of judgments) {
-		for (const rule of judgment.Rules) {
-			if (rule.File === modulePath && rule.Name === ruleName) {
-				return rule;
-			}
-		}
-	}
-	return null;
-}
-
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
 	const textDocument: TextDocument | undefined = documents.get(
@@ -511,7 +473,7 @@ connection.onCodeAction(async (params) => {
 	);
 	if (textDocument == null) return [];
 
-	const codeActions = [];
+	const codeActions: CodeAction[] = [];
 
 	const eolSetting = await connection.workspace.getConfiguration({
 		section: "files",
@@ -529,19 +491,12 @@ connection.onCodeAction(async (params) => {
 		const range = quickfix.range;
 		const line = range.start.line;
 		let extraIndent = "";
-		console.log(errorType);
-		console.log(errorInfo);
-		console.log(line);
 		if (errorType == null || errorInfo == null || line == 0) continue;
 		if (range.start.line != range.end.line) {
-			console.log(errorType + " has a multiline error, skipping");
 			continue;
 		}
 		// Range that includes the entire line at line number `line`, 0 indexed
-		const lineInfo: Range = {
-			start: { line: line, character: -1 },
-			end: { line: line, character: Number.MAX_VALUE },
-		};
+		const lineInfo: Range = getLineRange(line);
 
 		const lineText: string = textDocument.getText(lineInfo);
 
@@ -558,16 +513,8 @@ connection.onCodeAction(async (params) => {
 			lineIndent = lineText.substring(0, i);
 		}
 		const indentAmount =
-			textDocument.getText({
-				start: { line: line, character: -1 },
-				end: { line: line, character: Number.MAX_VALUE },
-			}).length -
-			textDocument
-				.getText({
-					start: { line: line, character: -1 },
-					end: { line: line, character: Number.MAX_VALUE },
-				})
-				.trimStart().length;
+			textDocument.getText(getLineRange(line)).length -
+			textDocument.getText(getLineRange(line)).trimStart().length;
 
 		let indent = "    ";
 		if (indentAmount >= 0 && indentAmount <= 8) {
@@ -575,23 +522,17 @@ connection.onCodeAction(async (params) => {
 		}
 
 		const ind = textDocument
-			.getText({
-				start: { line: lineInfo.start.line, character: 0 },
-				end: { line: Number.MAX_VALUE, character: Number.MAX_VALUE },
-			})
+			.getText(getLineRange(line, Number.MAX_VALUE, 0, Number.MAX_VALUE))
 			.indexOf(split[0]);
 
 		let old: Range | null = null;
 
 		if (ind != -1) {
-			old = {
-				start: textDocument.positionAt(
-					ind + textDocument.offsetAt(lineInfo.start),
-				),
-				end: textDocument.positionAt(
-					ind + split[0].length + textDocument.offsetAt(lineInfo.start),
-				),
-			};
+			old = getLineRangeFromOffset(
+				ind + textDocument.offsetAt(lineInfo.start),
+				split[0].length,
+				textDocument,
+			);
 		}
 
 		if (old == null) {
@@ -658,7 +599,7 @@ connection.onCodeAction(async (params) => {
 						newText = newText.concat(indent);
 						if (split[i].startsWith("---")) {
 							const ruleName = split[i].split(" ")[1];
-							const rule = findRule(ruleName);
+							const rule = findRule(compUnit, ruleName);
 							if (rule !== null) {
 								let ruleText = textDocument.getText(getLineRange(rule.Line));
 								let lexicalInfo = "";
@@ -735,16 +676,12 @@ connection.onCodeAction(async (params) => {
 							changes: {
 								[textDocument.uri]: [
 									{
-										range: {
-											start: {
-												line: lineInfo.start.line + 1,
-												character: 0,
-											},
-											end: {
-												line: lineInfo.end.line + 1,
-												character: 0,
-											},
-										},
+										range: getLineRange(
+											lineInfo.start.line + 1,
+											lineInfo.end.line + 1,
+											0,
+											0,
+										),
 										newText: newText,
 									},
 								],
@@ -802,16 +739,12 @@ connection.onCodeAction(async (params) => {
 							changes: {
 								[textDocument.uri]: [
 									{
-										range: {
-											start: {
-												line: lineInfo.start.line,
-												character: Number.MAX_VALUE,
-											},
-											end: {
-												line: lineInfo.end.line,
-												character: Number.MAX_VALUE,
-											},
-										},
+										range: getLineRange(
+											lineInfo.start.line,
+											lineInfo.end.line,
+											Number.MAX_VALUE,
+											Number.MAX_VALUE,
+										),
 										newText: split[1] + nl,
 									},
 								],
@@ -857,16 +790,12 @@ connection.onCodeAction(async (params) => {
 						changes: {
 							[textDocument.uri]: [
 								{
-									range: {
-										start: {
-											line: lineInfo.start.line + 1,
-											character: Number.MAX_VALUE,
-										},
-										end: {
-											line: lineInfo.end.line + 1,
-											character: Number.MAX_VALUE,
-										},
-									},
+									range: getLineRange(
+										lineInfo.start.line + 1,
+										lineInfo.end.line + 1,
+										Number.MAX_VALUE,
+										Number.MAX_VALUE,
+									),
 									newText: lineIndent + extraIndent + errorInfo + nl,
 								},
 							],
@@ -897,16 +826,11 @@ connection.onCodeAction(async (params) => {
 							changes: {
 								[textDocument.uri]: [
 									{
-										range: {
-											start: textDocument.positionAt(
-												oldStart + textDocument.offsetAt(lineInfo.start),
-											),
-											end: textDocument.positionAt(
-												oldStart +
-													textDocument.offsetAt(lineInfo.start) +
-													oldText.length,
-											),
-										},
+										range: getLineRangeFromOffset(
+											oldStart + textDocument.offsetAt(lineInfo.start),
+											oldText.length,
+											textDocument,
+										),
 										newText: " " + split[1],
 									},
 								],
@@ -928,17 +852,12 @@ connection.onCodeAction(async (params) => {
 								changes: {
 									[textDocument.uri]: [
 										{
-											range: {
-												start: textDocument.positionAt(
-													lineIndent.length +
-														textDocument.offsetAt(lineInfo.start),
-												),
-												end: textDocument.positionAt(
-													lineIndent.length +
-														textDocument.offsetAt(lineInfo.start) +
-														oldText.length,
-												),
-											},
+											range: getLineRangeFromOffset(
+												lineIndent.length +
+													textDocument.offsetAt(lineInfo.start),
+												oldText.length,
+												textDocument,
+											),
 											newText: "_: contradiction",
 										},
 									],
@@ -974,16 +893,12 @@ connection.onCodeAction(async (params) => {
 
 				const changes = [
 					{
-						range: {
-							start: {
-								line: lineInfo.start.line - 1,
-								character: Number.MAX_VALUE,
-							},
-							end: {
-								line: lineInfo.start.line - 1,
-								character: Number.MAX_VALUE,
-							},
-						},
+						range: getLineRange(
+							lineInfo.start.line,
+							lineInfo.start.line,
+							Number.MAX_VALUE,
+							Number.MAX_VALUE,
+						),
 						newText: newText,
 					},
 				];
@@ -1014,7 +929,6 @@ connection.onCodeAction(async (params) => {
 				break;
 		}
 	}
-	console.log(codeActions);
 	return codeActions;
 });
 
