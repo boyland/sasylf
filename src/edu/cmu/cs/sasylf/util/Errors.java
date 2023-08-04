@@ -158,6 +158,7 @@ public enum Errors {
 	CASE_STRICT_DUP_VAR ("case is overly strict; perhaps it uses a new variable multiple times"),
 	CASE_STRICT_NEED_DEPEND ("case is overly strict; perhaps replace the following with something that could depend on all the variables in the context: "),
 	CASE_MISMATCH ("case doesn't match subject, was unable to unify "),
+	CASE_INVALID ("case is invalid, perhaps a premise ia wrong"),
 	CASE_OCCUR ("case doesn't match subject; perhaps you reused this variable instead of a new one? "),
 	CASE_INCOMPLETE("case leads to incomplete unification; perhaps use a variable instead of "),
 	EXPECTED_VARIABLE   ("only variables can be bound, not syntax"),

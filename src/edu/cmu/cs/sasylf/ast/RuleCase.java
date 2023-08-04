@@ -363,7 +363,7 @@ public class RuleCase extends Case {
 		if (computedCaseTerm == null) {
 			// There must have been a candidate, but it didn't unify or wasn't an instance
 			// It is redundant because it matches the subject, but no case is needed for it.
-			ErrorHandler.error(Errors.CASE_REDUNDANT, this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
+			ErrorHandler.error(Errors.CASE_INVALID, this, "SASyLF considered the LF term " + candidate + " for " + caseTerm);
 		}
 
 		//Util.debug("unifyingSub: ", unifyingSub);
