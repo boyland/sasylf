@@ -1,66 +1,66 @@
 export type ast = {
-    Theorems: theoremNode[];
-    Modules: moduleNode[];
-    Syntax: syntaxesNode;
-    Judgments: judgmentNode[];
+    theorems: theoremNode[];
+    modules: moduleNode[];
+    syntax: syntaxesNode;
+    judgments: judgmentNode[];
 };
 
 export type theoremNode = {
-    Name: string;
-    Column: number;
-    Line: number;
-    Kind: string;
-    Foralls: string[];
-    Conclusion: string;
+    name: string;
+    column: number;
+    line: number;
+    kind: string;
+    foralls: string[];
+    conclusion: string;
 };
 
 export type moduleNode = {
-    Name: string;
-    "Begin Column": number;
-    "End Column": number;
-    "Begin Line": number;
-    "End Line": number;
-		File : string;
+    name: string;
+    begin_column: number;
+    end_column: number;
+    begin_line: number;
+    end_line: number;
+    file: string;
 };
 
 export type syntaxesNode = {
-    "Syntax Declarations": syntaxDeclarationNode[];
-    Sugars: syntaxSugarNode[];
+    syntax_declarations: syntaxDeclarationNode[];
+    sugars: syntaxSugarNode[];
 };
 
 export type syntaxDeclarationNode = {
-    Name: string;
-    Column: number;
-    Line: number;
-    Clauses: clauseNode[];
+    name: string;
+    column: number;
+    line: number;
+    clauses: clauseNode[];
 };
 
 export type clauseNode = {
-    Name: string;
-    Column: number;
-    Line: number;
+    name: string;
+    column: number;
+    line: number;
 };
 
 export type syntaxSugarNode = {
-    Name: string;
-    Column: number;
-    Line: number;
+    name: string;
+    column: number;
+    line: number;
 };
 
 export type judgmentNode = {
-    Name: string;
-    Column: number;
-    Line: number;
-    Form: string;
-    Rules: ruleNode[];
+    name: string;
+    column: number;
+    line: number;
+    form: string;
+    rules: ruleNode[];
 };
 
 export type ruleNode = {
-    Premises: string[];
-    Name: string;
-    Conclusion: string;
-    "In File": boolean;
-    Column: number;
-    Line: number;
-		File : string;
+    premises: string[];
+    name: string;
+    conclusion: string;
+    in_file: boolean;
+    column: number;
+    line: number;
+    file: string;
 };
