@@ -170,23 +170,23 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         ++i
     ) {
         const element = output[i];
-        const severity = element["Severity"];
+        const severity = element["severity"];
         if (severity == "info") continue;
         const start = {
-            line: element["Begin Line"] - 1,
-            character: element["Begin Column"] - 1,
+            line: element["begin_line"] - 1,
+            character: element["begin_column"] - 1,
         };
         const end = {
-            line: element["End Line"] - 1,
-            character: element["End Column"] - 1,
+            line: element["end_line"] - 1,
+            character: element["end_column"] - 1,
         };
-        const message = element["Error Message"];
+        const message = element["error_message"];
         const range = { start: start, end: end };
         if (severity == "error") {
             quickfixes.set(i, {
                 error_severity: severity,
-                error_type: element["Error Type"],
-                error_info: element["Error Info"],
+                error_type: element["error_type"],
+                error_info: element["error_info"],
                 range: range,
             });
         }
