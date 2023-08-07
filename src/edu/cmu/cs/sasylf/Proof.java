@@ -208,7 +208,7 @@ public class Proof {
 		if (lsp) {
 			ArrayNode qfArray = objectMapper.createArrayNode();
 
-			json.put("Quickfixes", qfArray);
+			json.put("quickfixes", qfArray);
 
 			for (Report rep : reports) {
 				Span s = rep.getSpan();
