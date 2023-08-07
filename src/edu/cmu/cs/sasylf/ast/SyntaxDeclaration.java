@@ -517,6 +517,17 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 				for (int i=0; i < n; ++i) {
 					Abstraction a = context.get(i);
 					if (a.getArgType().equals(this.typeTerm())) {
+						Term body = a.getBody();
+						if (body instanceof Abstraction) {
+							// Usually the next abstraction will be one that uses the
+							// variable, but this should be ignored, since it is not a "real" use.
+							body = ((Abstraction)body).getBody().incrFreeDeBruijn(-1);
+						}
+						Util.debug("Checking if ", a.varName, " is in ",body);
+						if (!body.hasBoundVar(1)) {
+							// ErrorHandler.warning(Errors.INTERNAL_ERROR, target, "Doesn't use " + a.varName);
+							continue;
+						}
 						Term term = Term.wrapWithLambdas(context, new BoundVar(n-i));
 						set.add(new Pair<Term,Substitution>(term,new Substitution()));
 					}
