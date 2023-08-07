@@ -56,6 +56,7 @@ connection.onInitialize((params: InitializeParams) => {
             textDocumentSync: TextDocumentSyncKind.Incremental,
             codeActionProvider: { resolveProvider: true },
             documentSymbolProvider: true,
+            definitionProvider: true
         },
     };
     if (hasWorkspaceFolderCapability) {
@@ -206,6 +207,68 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     // Send the computed diagnostics to VSCode.
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
+
+// Implements go to definition
+connection.onDefinition((params) => {
+    const doc = documents.get(params.textDocument.uri);
+
+    if (doc == null) return undefined;
+
+    const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
+    const text = doc.getText();
+    const offset = doc.offsetAt(params.position);
+    let wordStart = offset;
+    let wordEnd = offset;
+
+    // Finds the word underneath the cursor
+    while (
+        !badCharacters.includes(text[wordStart]) ||
+        !badCharacters.includes(text[wordEnd])
+    ) {
+        if (!badCharacters.includes(text[wordStart])) --wordStart;
+        if (!badCharacters.includes(text[wordEnd])) ++wordEnd;
+    }
+
+    const word = text.slice(wordStart + 1, wordEnd);
+
+    // Checks if it is a theorem or lemma
+    const theoremNames = compUnit.theorems.map((theorem) => theorem.name);
+
+    if (theoremNames.includes(word)) {
+        const theorem = compUnit.theorems[theoremNames.indexOf(word)];
+
+        return {
+            uri: params.textDocument.uri,
+            range: {
+                start: { line: theorem.line - 1, character: theorem.column - 1 },
+                end: { line: theorem.line - 1, character: theorem.column - 1 },
+            },
+        };
+    }
+
+    // Checks if it is a rule
+    const rules = compUnit.judgments.map((judgment) => judgment.rules).flat();
+    const ruleNames = rules.map((rule) => rule.name);
+
+    if (ruleNames.includes(word)) {
+        const rule = rules[ruleNames.indexOf(word)];
+
+        if (rule["In File"]) {
+            return {
+                uri: params.textDocument.uri,
+                range: {
+                    start: { line: rule.line - 1, character: rule.column - 1 },
+                    end: { line: rule.line - 1, character: rule.column - 1 },
+                },
+            };
+        }
+
+        return undefined;
+    }
+
+    return undefined;
+});
+
 
 connection.onDocumentSymbol((identifier) => {
     // Adds the module to the symbols
