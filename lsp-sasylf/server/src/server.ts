@@ -16,7 +16,7 @@ import {
     Range,
     CodeAction,
 } from "vscode-languageserver/node";
-import { ast } from "./ast";
+import { ast, moduleNode } from "./ast";
 import {
     getLineRange,
     isBarChar,
@@ -223,18 +223,18 @@ connection.onDocumentSymbol((identifier) => {
                     character: module.begin_column - 1,
                 },
                 end: {
-                    line: module["End Line"] - 1,
-                    character: module["End Column"] - 1,
+                    line: module.end_line - 1,
+                    character: module.end_column - 1,
                 },
             },
             {
                 start: {
-                    line: module["Begin Line"] - 1,
-                    character: module["Begin Column"] - 1,
+                    line: module.begin_line - 1,
+                    character: module.begin_column - 1,
                 },
                 end: {
-                    line: module["End Line"] - 1,
-                    character: module["End Column"] - 1,
+                    line: module.end_line - 1,
+                    character: module.end_column - 1,
                 },
             },
         );
