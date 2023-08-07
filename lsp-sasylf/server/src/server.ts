@@ -389,7 +389,7 @@ connection.onDocumentSymbol((identifier) => {
         const children: DocumentSymbol[] = [];
 
         for (const rule of judgment.rules) {
-            if (rule["In File"]) {
+            if (rule.in_file) {
                 let detail = "";
 
                 for (const premise of rule.premises) {
