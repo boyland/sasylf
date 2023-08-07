@@ -253,7 +253,7 @@ connection.onDefinition((params) => {
     if (ruleNames.includes(word)) {
         const rule = rules[ruleNames.indexOf(word)];
 
-        if (rule["In File"]) {
+        if (rule.in_file) {
             return {
                 uri: params.textDocument.uri,
                 range: {
