@@ -160,7 +160,15 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         { input: text, shell: true },
     );
 
-    const parsedJson = JSON.parse(command.stdout.toString());
+    let parsedJson;
+
+    try {
+        parsedJson = JSON.parse(command.stdout.toString());
+    } catch (e) {
+        console.log("Error during parsing: ", e);
+        return;
+    }
+
     const output = parsedJson.quickfixes;
     compUnit = parsedJson.ast;
 
