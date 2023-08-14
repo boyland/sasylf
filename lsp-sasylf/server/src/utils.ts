@@ -1,11 +1,8 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
     Range,
-    CodeAction,
-    Diagnostic,
-    TextEdit,
 } from "vscode-languageserver/node";
-import { ast, ruleNode, moduleNode } from "./ast";
+import { ast, ruleNode, moduleNode } from "./types";
 
 // Returns a range corresponding to line and char passed in
 export function getLineRange(
