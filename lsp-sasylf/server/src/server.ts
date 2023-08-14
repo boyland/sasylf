@@ -159,7 +159,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         ["--lsp", "--stdin"],
         { input: text, shell: true },
     );
-    console.log(command.stdout.toString());
 
     let parsedJson: parsedData;
 
@@ -271,8 +270,6 @@ connection.onDefinition((params) => {
                 },
             };
         }
-
-        return undefined;
     }
 
     return undefined;
