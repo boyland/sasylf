@@ -2,6 +2,7 @@
 	"name": "lsp-sasylf",
 	"description": "A language server for SASyLF",
 	"version": "1.0.0",
+	"publisher": "Carnegie Mellon University",
 	"repository": "https://github.com/boyland/sasylf",
 	"keywords": [
 		"SASyLF",
