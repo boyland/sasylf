@@ -1,3 +1,19 @@
+export type parsedData = {
+    quickfixes: quickfixNode[],
+    ast: ast
+}
+
+export type quickfixNode = {
+    severity: string,
+    error_type?: string,
+    error_info?: string,
+    error_message: string,
+    begin_line: number,
+    begin_column: number,
+    end_line: number,
+    end_column: number
+}
+
 export type ast = {
     theorems: theoremNode[];
     modules: moduleNode[];

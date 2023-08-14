@@ -16,7 +16,7 @@ import {
     Range,
     CodeAction,
 } from "vscode-languageserver/node";
-import { ast, moduleNode } from "./ast";
+import { ast, parsedData } from "./types";
 import {
     getLineRange,
     isBarChar,
@@ -160,7 +160,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         { input: text, shell: true },
     );
 
-    let parsedJson;
+    let parsedJson: parsedData;
 
     try {
         parsedJson = JSON.parse(command.stdout.toString());
