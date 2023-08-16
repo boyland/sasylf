@@ -15,6 +15,7 @@ export type quickfixNode = {
 }
 
 export type ast = {
+    name: string;
     theorems: theoremNode[];
     modules: moduleNode[];
     syntax: syntaxesNode;
@@ -37,6 +38,7 @@ export type moduleNode = {
     begin_line: number;
     end_line: number;
     file: string;
+    ast: ast;
 };
 
 export type syntaxesNode = {
