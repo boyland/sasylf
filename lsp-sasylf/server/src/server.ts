@@ -56,7 +56,7 @@ connection.onInitialize((params: InitializeParams) => {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			codeActionProvider: { resolveProvider: true },
 			documentSymbolProvider: true,
-			definitionProvider: true
+			definitionProvider: true,
 		},
 	};
 	if (hasWorkspaceFolderCapability) {
@@ -154,11 +154,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	const diagnostics: Diagnostic[] = [];
 	const text = textDocument.getText();
-	const command = spawnSync(
-		`java -jar SASyLF.jar`,
-		["--lsp", "--stdin"],
-		{ input: text, shell: true },
-	);
+	const command = spawnSync(`java -jar SASyLF.jar`, ["--lsp", "--stdin"], {
+		input: text,
+		shell: true,
+	});
 
 	let parsedJson: parsedData;
 
@@ -274,7 +273,6 @@ connection.onDefinition((params) => {
 
 	return undefined;
 });
-
 
 connection.onDocumentSymbol((identifier) => {
 	// Adds the module to the symbols
@@ -549,7 +547,9 @@ connection.onCodeAction(async (params) => {
 	});
 	const nl = eolSetting.eol == "auto" ? EOL : eolSetting.eol;
 
-	const indentSetting = await connection.workspace.getConfiguration({ section: "editor" });
+	const indentSetting = await connection.workspace.getConfiguration({
+		section: "editor",
+	});
 
 	const indentAmount = indentSetting.tabSize;
 
@@ -926,7 +926,7 @@ connection.onCodeAction(async (params) => {
 										{
 											range: getLineRangeFromOffset(
 												lineIndent.length +
-												textDocument.offsetAt(lineInfo.start),
+													textDocument.offsetAt(lineInfo.start),
 												oldText.length,
 												textDocument,
 											),

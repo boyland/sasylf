@@ -1,7 +1,5 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import {
-	Range,
-} from "vscode-languageserver/node";
+import { Range } from "vscode-languageserver/node";
 import { ast, ruleNode, moduleNode } from "./types";
 
 // Returns a range corresponding to line and char passed in
