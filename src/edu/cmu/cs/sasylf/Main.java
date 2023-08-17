@@ -67,6 +67,11 @@ public class Main {
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("--debug")) {
 				debug = true;
+				// If debug flag is set after the lsp flag, then we need to reset out and err
+				if (Proof.getLsp()) {
+					System.setOut(out);
+					System.setErr(err);
+				}
 				continue;
 			}
 			if (args[i].equals("--lsp")) {
@@ -74,6 +79,7 @@ public class Main {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
+				edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
 				Proof.setLsp(true);
 				continue;
 			}
