@@ -3,7 +3,6 @@
 	"description": "A language server for SASyLF",
 	"version": "1.0.0",
 	"publisher": "carnegie-mellon-university",
-	"repository": "https://github.com/boyland/sasylf",
 	"license": "MIT",
 	"keywords": [
 		"SASyLF",
