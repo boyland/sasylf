@@ -2,7 +2,7 @@
 	"name": "SASyLF",
 	"description": "A language server for SASyLF",
 	"version": "1.0.0",
-	"publisher": "carnegie-mellon-university",
+	"publisher": "sasylf",
 	"license": "MIT",
 	"keywords": [
 		"SASyLF",
