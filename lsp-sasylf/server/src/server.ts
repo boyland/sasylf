@@ -151,10 +151,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	const diagnostics: Diagnostic[] = [];
 	const text = textDocument.getText();
-	const command = spawnSync(`java -jar SASyLF.jar`, ["--lsp", "--stdin"], {
+	const command = spawnSync("java", ["-jar", "SASyLF.jar", "--lsp", "--stdin"], {
 		input: text,
-		shell: true,
 	});
+
 
 	let parsedJson: parsedData;
 
@@ -920,7 +920,7 @@ connection.onCodeAction(async (params) => {
 										{
 											range: getLineRangeFromOffset(
 												lineIndent.length +
-													textDocument.offsetAt(lineInfo.start),
+												textDocument.offsetAt(lineInfo.start),
 												oldText.length,
 												textDocument,
 											),
