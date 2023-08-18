@@ -920,7 +920,7 @@ connection.onCodeAction(async (params) => {
 										{
 											range: getLineRangeFromOffset(
 												lineIndent.length +
-												textDocument.offsetAt(lineInfo.start),
+													textDocument.offsetAt(lineInfo.start),
 												oldText.length,
 												textDocument,
 											),
