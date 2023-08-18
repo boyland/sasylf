@@ -205,6 +205,8 @@ public class Proof {
 		// System.out.println(id + ".parseAndCheck()");
 		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf, r));
 
+		// If the lsp flag is set, gather the quickfixes and parse the syntax
+		// tree, adding all the data to a json
 		if (lsp) {
 			ArrayNode qfArray = objectMapper.createArrayNode();
 
