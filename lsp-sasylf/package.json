@@ -1,6 +1,7 @@
 {
 	"name": "SASyLF",
 	"description": "A language server for SASyLF",
+	"icon": "images/sasylf.png",
 	"version": "1.0.0",
 	"publisher": "sasylf",
 	"license": "MIT",
