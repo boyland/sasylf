@@ -3,6 +3,10 @@ import { Range } from "vscode-languageserver/node";
 import { ast, ruleNode, moduleNode } from "./types";
 
 // Returns a range corresponding to line and char passed in
+// If only start_line is passed in, we get entire line
+// end_line defaults to start_line
+// start_char defaults to -1 (first character)
+// end_char defaults to start_char if it is not -1, and Number.MAX_VALUE (last character) otherwise
 export function getLineRange(
 	start_line: number,
 	end_line: number | null = null,
@@ -20,6 +24,7 @@ export function getLineRange(
 	};
 }
 
+// Gets range based off offset and length passed, essentially gets the range of textDocument.substring(offset, length)
 export function getLineRangeFromOffset(
 	offset: number,
 	length: number,
