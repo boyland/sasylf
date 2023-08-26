@@ -2,27 +2,29 @@ import { spawnSync } from "child_process";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { EOL } from "os";
 import {
-	createConnection,
-	Diagnostic,
-	DiagnosticSeverity,
-	DidChangeConfigurationNotification,
-	InitializeParams,
-	InitializeResult,
-	ProposedFeatures,
-	TextDocuments,
-	TextDocumentSyncKind,
-	DocumentSymbol,
-	SymbolKind,
-	Range,
-	CodeAction,
+    createConnection,
+    Diagnostic,
+    DiagnosticSeverity,
+    DidChangeConfigurationNotification,
+    InitializeParams,
+    InitializeResult,
+    ProposedFeatures,
+    TextDocuments,
+    TextDocumentSyncKind,
+    DocumentSymbol,
+    SymbolKind,
+    Range,
+    CodeAction,
 } from "vscode-languageserver/node";
-import { ast, parsedData } from "./types";
+import { ast, parsedData, ruleNode } from "./types";
 import {
-	getLineRange,
-	isBarChar,
-	findRule,
-	getLineRangeFromOffset,
+    getLineRange,
+    isBarChar,
+    findRule,
+    getLineRangeFromOffset,
 } from "./utils";
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -35,56 +37,56 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
-	const capabilities = params.capabilities;
+    const capabilities = params.capabilities;
 
-	// Does the client support the `workspace/configuration` request?
-	// If not, we fall back using global settings.
-	hasConfigurationCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.configuration
-	);
-	hasWorkspaceFolderCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.workspaceFolders
-	);
-	hasDiagnosticRelatedInformationCapability = !!(
-		capabilities.textDocument &&
-		capabilities.textDocument.publishDiagnostics &&
-		capabilities.textDocument.publishDiagnostics.relatedInformation
-	);
+    // Does the client support the `workspace/configuration` request?
+    // If not, we fall back using global settings.
+    hasConfigurationCapability = !!(
+        capabilities.workspace && !!capabilities.workspace.configuration
+    );
+    hasWorkspaceFolderCapability = !!(
+        capabilities.workspace && !!capabilities.workspace.workspaceFolders
+    );
+    hasDiagnosticRelatedInformationCapability = !!(
+        capabilities.textDocument &&
+        capabilities.textDocument.publishDiagnostics &&
+        capabilities.textDocument.publishDiagnostics.relatedInformation
+    );
 
-	const result: InitializeResult = {
-		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
-			codeActionProvider: { resolveProvider: true },
-			documentSymbolProvider: true,
-			definitionProvider: true,
-		},
-	};
-	if (hasWorkspaceFolderCapability) {
-		result.capabilities.workspace = {
-			workspaceFolders: { supported: true },
-		};
-	}
-	return result;
+    const result: InitializeResult = {
+        capabilities: {
+            textDocumentSync: TextDocumentSyncKind.Incremental,
+            codeActionProvider: { resolveProvider: true },
+            documentSymbolProvider: true,
+            definitionProvider: true,
+        },
+    };
+    if (hasWorkspaceFolderCapability) {
+        result.capabilities.workspace = {
+            workspaceFolders: { supported: true },
+        };
+    }
+    return result;
 });
 
 connection.onInitialized(() => {
-	if (hasConfigurationCapability) {
-		// Register for all configuration changes.
-		connection.client.register(
-			DidChangeConfigurationNotification.type,
-			undefined,
-		);
-	}
-	if (hasWorkspaceFolderCapability) {
-		connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-			connection.console.log("Workspace folder change event received.");
-		});
-	}
+    if (hasConfigurationCapability) {
+        // Register for all configuration changes.
+        connection.client.register(
+            DidChangeConfigurationNotification.type,
+            undefined,
+        );
+    }
+    if (hasWorkspaceFolderCapability) {
+        connection.workspace.onDidChangeWorkspaceFolders((_event) => {
+            connection.console.log("Workspace folder change event received.");
+        });
+    }
 });
 
 // The example settings
 interface ExampleSettings {
-	maxNumberOfProblems: number;
+    maxNumberOfProblems: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not
@@ -92,7 +94,7 @@ interface ExampleSettings {
 // this server with the client provided in this example but could happen with
 // other clients.
 const defaultSettings: ExampleSettings = {
-	maxNumberOfProblems: 1000,
+    maxNumberOfProblems: 1000,
 };
 let globalSettings: ExampleSettings = defaultSettings;
 
@@ -100,903 +102,1018 @@ let globalSettings: ExampleSettings = defaultSettings;
 const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
 
 connection.onDidChangeConfiguration((change) => {
-	if (hasConfigurationCapability) {
-		// Reset all cached document settings
-		documentSettings.clear();
-	} else {
-		globalSettings = <ExampleSettings>(
-			(change.settings.languageServerExample || defaultSettings)
-		);
-	}
+    if (hasConfigurationCapability) {
+        // Reset all cached document settings
+        documentSettings.clear();
+    } else {
+        globalSettings = <ExampleSettings>(
+            (change.settings.languageServerExample || defaultSettings)
+        );
+    }
 
-	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
+    // Revalidate all open text documents
+    documents.all().forEach(validateTextDocument);
 });
 
 function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
-	if (!hasConfigurationCapability) {
-		return Promise.resolve(globalSettings);
-	}
-	let result = documentSettings.get(resource);
-	if (!result) {
-		result = connection.workspace.getConfiguration({
-			scopeUri: resource,
-			section: "languageServerExample",
-		});
-		documentSettings.set(resource, result);
-	}
-	return result;
+    if (!hasConfigurationCapability) {
+        return Promise.resolve(globalSettings);
+    }
+    let result = documentSettings.get(resource);
+    if (!result) {
+        result = connection.workspace.getConfiguration({
+            scopeUri: resource,
+            section: "languageServerExample",
+        });
+        documentSettings.set(resource, result);
+    }
+    return result;
 }
 
 // Only keep settings for open documents
 documents.onDidClose((e) => {
-	documentSettings.delete(e.document.uri);
+    documentSettings.delete(e.document.uri);
 });
 
 // Hashmap mapping index of diagnostic to the diagnostic and its quickfix info
 const quickfixes: Map<string | number | undefined, any> = new Map();
 
 // Stores the abstract syntax tree
-let compUnit: ast;
+let compUnit: ast | null;
+
+// Stores the file to put the error logs in
+let logFile: string;
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
-	validateTextDocument(change.document);
+    validateTextDocument(change.document);
 });
+
+function createLogFile(fileName: string): string {
+    // Get path to the log file
+    const logFilePath = path.join(__dirname, "..", "..", "logs", fileName);
+
+    // If it doesn't already exist, create it
+    if (!fs.existsSync(logFilePath)) {
+        fs.writeFileSync(logFilePath, '', { flag: 'w' });
+    }
+
+    return logFilePath
+}
+
+function logErrorToFile(errorMsg: string) {
+    // Create a timestamp for the error message
+    const fileName = new Date().toISOString() + ".log";
+
+    // Create the log file
+    const logFilePath = createLogFile(fileName);
+
+    // Append the error message to the log file
+    fs.appendFile(logFilePath, errorMsg, (err) => {
+        if (err) {
+            console.error('Error writing to the log file:', err);
+        }
+    });
+}
+
+
 
 // Parses diagnostic and ast information from sasylf
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	const settings = await getDocumentSettings(textDocument.uri);
+    const settings = await getDocumentSettings(textDocument.uri);
 
-	const diagnostics: Diagnostic[] = [];
-	const text = textDocument.getText();
-	const command = spawnSync("java", ["-jar", `${__dirname}/../src/SASyLF.jar`, "--lsp", "--stdin"], {
-		input: text,
-		shell: true
-	});
+    const diagnostics: Diagnostic[] = [];
+    const text = textDocument.getText();
+    const command = spawnSync("java", ["-jar", `${__dirname}/../src/SASyLF.jar`, "--stdin"], {
+        input: text,
+        shell: true
+    });
 
+    let parsedJson: parsedData;
+    compUnit = null;
 
-	let parsedJson: parsedData;
+    try {
+        parsedJson = JSON.parse(command.stdout.toString());
+    } catch (e) {
+        let error = "Unknown error";
 
-	try {
-		parsedJson = JSON.parse(command.stdout.toString());
-	} catch (e) {
-		console.log("Error during parsing: ", e);
-		return;
-	}
+        if (e instanceof Error) {
+            error = e.message;
+        }
 
-	const output = parsedJson.quickfixes;
-	compUnit = parsedJson.ast;
+        logErrorToFile(error);
+        return;
+    }
 
-	// Clears previous quickfixes
-	quickfixes.clear();
-	// Adds previous quickfixes limited to max problems setting
-	for (
-		let i = 0;
-		i < output.length && i < settings.maxNumberOfProblems - 1;
-		++i
-	) {
-		const element = output[i];
-		const severity = element["severity"];
-		if (severity == "info") continue;
-		const start = {
-			line: element["begin_line"] - 1,
-			character: element["begin_column"] - 1,
-		};
-		const end = {
-			line: element["end_line"] - 1,
-			character: element["end_column"] - 1,
-		};
-		const message = element["error_message"];
-		const range = { start: start, end: end };
-		quickfixes.set(i, {
-			error_severity: severity,
-			error_type: element["error_type"],
-			error_info: element["error_info"],
-			range: range,
-		});
-		const diagnostic: Diagnostic = {
-			severity:
-				severity == "warning"
-					? DiagnosticSeverity.Warning
-					: DiagnosticSeverity.Error,
-			range: range,
-			message: message,
-			source: "sasylf",
-			code: i,
-		};
-		diagnostics.push(diagnostic);
-	}
+    const output = parsedJson.quickfixes;
+    compUnit = parsedJson.ast;
 
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    // Clears previous quickfixes
+    quickfixes.clear();
+    // Adds previous quickfixes limited to max problems setting
+    for (
+        let i = 0;
+        i < output.length && i < settings.maxNumberOfProblems - 1;
+        ++i
+    ) {
+        const element = output[i];
+        const severity = element["severity"];
+        if (severity == "info") continue;
+        const start = {
+            line: element["begin_line"] - 1,
+            character: element["begin_column"] - 1,
+        };
+        const end = {
+            line: element["end_line"] - 1,
+            character: element["end_column"] - 1,
+        };
+        const message = element["error_message"];
+        const range = { start: start, end: end };
+        quickfixes.set(i, {
+            error_severity: severity,
+            error_type: element["error_type"],
+            error_info: element["error_info"],
+            range: range,
+        });
+        const diagnostic: Diagnostic = {
+            severity:
+                severity == "warning"
+                    ? DiagnosticSeverity.Warning
+                    : DiagnosticSeverity.Error,
+            range: range,
+            message: message,
+            source: "sasylf",
+            code: i,
+        };
+        diagnostics.push(diagnostic);
+    }
+
+    // Send the computed diagnostics to VSCode.
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 // Implements go to definition
 connection.onDefinition((params) => {
-	const doc = documents.get(params.textDocument.uri);
+    if (!compUnit) {
+        logErrorToFile("Comp unit is null");
+        return undefined;
+    }
 
-	if (doc == null) return undefined;
+    const doc = documents.get(params.textDocument.uri);
 
-	const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
-	const text = doc.getText();
-	const offset = doc.offsetAt(params.position);
-	let wordStart = offset;
-	let wordEnd = offset;
+    if (doc == null) return undefined;
 
-	// Finds the word underneath the cursor
-	while (
-		!badCharacters.includes(text[wordStart]) ||
-		!badCharacters.includes(text[wordEnd])
-	) {
-		if (!badCharacters.includes(text[wordStart])) --wordStart;
-		if (!badCharacters.includes(text[wordEnd])) ++wordEnd;
-	}
+    const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
+    const text = doc.getText();
+    const offset = doc.offsetAt(params.position);
+    let wordStart = offset;
+    let wordEnd = offset;
 
-	const word = text.slice(wordStart + 1, wordEnd);
+    // Finds the word underneath the cursor
+    while (
+        !badCharacters.includes(text[wordStart]) ||
+        !badCharacters.includes(text[wordEnd])
+    ) {
+        if (!badCharacters.includes(text[wordStart])) --wordStart;
+        if (!badCharacters.includes(text[wordEnd])) ++wordEnd;
+    }
 
-	// Checks if it is a theorem or lemma
-	const theoremNames = compUnit.theorems.map((theorem) => theorem.name);
+    const word = text.slice(wordStart + 1, wordEnd);
 
-	if (theoremNames.includes(word)) {
-		const theorem = compUnit.theorems[theoremNames.indexOf(word)];
+    // Checks if it is a theorem or lemma
+    let theoremNames: string[];
 
-		return {
-			uri: params.textDocument.uri,
-			range: {
-				start: { line: theorem.line - 1, character: theorem.column - 1 },
-				end: { line: theorem.line - 1, character: theorem.column - 1 },
-			},
-		};
-	}
+    try {
+        theoremNames = compUnit.theorems.map((theorem) => theorem.name);
+    } catch (e) {
+        let error = "Unknown error";
 
-	// Checks if it is a rule
-	const rules = compUnit.judgments.map((judgment) => judgment.rules).flat();
-	const ruleNames = rules.map((rule) => rule.name);
+        if (e instanceof Error) {
+            error = e.message;
+        }
 
-	if (ruleNames.includes(word)) {
-		const rule = rules[ruleNames.indexOf(word)];
+        logErrorToFile(error);
+        return undefined;
+    }
 
-		if (rule.in_file) {
-			return {
-				uri: params.textDocument.uri,
-				range: {
-					start: { line: rule.line - 1, character: rule.column - 1 },
-					end: { line: rule.line - 1, character: rule.column - 1 },
-				},
-			};
-		}
-	}
+    if (theoremNames.includes(word)) {
+        const theorem = compUnit.theorems[theoremNames.indexOf(word)];
 
-	return undefined;
+        return {
+            uri: params.textDocument.uri,
+            range: {
+                start: { line: theorem.line - 1, character: theorem.column - 1 },
+                end: { line: theorem.line - 1, character: theorem.column - 1 },
+            },
+        };
+    }
+
+    // Checks if it is a rule
+    let rules: ruleNode[];
+
+    try {
+        rules = compUnit.judgments.map((judgment) => judgment.rules).flat();
+    } catch (e) {
+
+        let error = "Unknown error";
+
+        if (e instanceof Error) {
+            error = e.message;
+        }
+
+        logErrorToFile(error);
+        return;
+    }
+
+    const ruleNames = rules.map((rule) => rule.name);
+
+    if (ruleNames.includes(word)) {
+        const rule = rules[ruleNames.indexOf(word)];
+
+        if (rule.in_file) {
+            return {
+                uri: params.textDocument.uri,
+                range: {
+                    start: { line: rule.line - 1, character: rule.column - 1 },
+                    end: { line: rule.line - 1, character: rule.column - 1 },
+                },
+            };
+        }
+    }
+
+    return undefined;
 });
 
 // Provides an outline view for the file
-connection.onDocumentSymbol((identifier) => {
-	// Adds the module to the symbols
-	const res: DocumentSymbol[] = [];
-	const modules = compUnit.modules;
+connection.onDocumentSymbol((_) => {
+    if (!compUnit) {
+        logErrorToFile("Comp unit is null");
+        return undefined;
+    }
 
-	for (const module of modules) {
-		const moduleSymbol = DocumentSymbol.create(
-			module.name,
-			undefined,
-			SymbolKind.Module,
-			{
-				start: {
-					line: module.begin_line - 1,
-					character: module.begin_column - 1,
-				},
-				end: {
-					line: module.end_line - 1,
-					character: module.end_column - 1,
-				},
-			},
-			{
-				start: {
-					line: module.begin_line - 1,
-					character: module.begin_column - 1,
-				},
-				end: {
-					line: module.end_line - 1,
-					character: module.end_column - 1,
-				},
-			},
-		);
+    // Adds the module to the symbols
+    const res: DocumentSymbol[] = [];
 
-		res.push(moduleSymbol);
-	}
+    const modules = compUnit.modules;
 
-	// Adds all the syntaxes declarations to the symbols
-	const syntaxDeclarations = compUnit.syntax.syntax_declarations;
+    if (!modules) {
+        logErrorToFile("Modules is not defined");
+        return undefined;
+    }
 
-	for (const declaration of syntaxDeclarations) {
-		const children: DocumentSymbol[] = [];
+    for (const module of modules) {
+        const moduleSymbol = DocumentSymbol.create(
+            module.name,
+            undefined,
+            SymbolKind.Module,
+            {
+                start: {
+                    line: module.begin_line - 1,
+                    character: module.begin_column - 1,
+                },
+                end: {
+                    line: module.end_line - 1,
+                    character: module.end_column - 1,
+                },
+            },
+            {
+                start: {
+                    line: module.begin_line - 1,
+                    character: module.begin_column - 1,
+                },
+                end: {
+                    line: module.end_line - 1,
+                    character: module.end_column - 1,
+                },
+            },
+        );
 
-		for (const clause of declaration.clauses) {
-			const clauseSymbol = DocumentSymbol.create(
-				clause.name,
-				undefined,
-				SymbolKind.Key,
-				{
-					start: {
-						line: clause.line - 1,
-						character: clause.column - 1,
-					},
-					end: {
-						line: clause.line - 1,
-						character: clause.column - 1,
-					},
-				},
-				{
-					start: {
-						line: clause.line - 1,
-						character: clause.column - 1,
-					},
-					end: {
-						line: clause.line - 1,
-						character: clause.column - 1,
-					},
-				},
-			);
+        res.push(moduleSymbol);
+    }
 
-			children.push(clauseSymbol);
-		}
+    // Adds all the syntaxes declarations to the symbols
+    const syntax = compUnit.syntax;
 
-		const declarationSymbol = DocumentSymbol.create(
-			declaration.name,
-			undefined,
-			SymbolKind.String,
-			{
-				start: {
-					line: declaration.line - 1,
-					character: declaration.column - 1,
-				},
-				end: {
-					line: declaration.line - 1,
-					character: declaration.column - 1,
-				},
-			},
-			{
-				start: {
-					line: declaration.line - 1,
-					character: declaration.column - 1,
-				},
-				end: {
-					line: declaration.line - 1,
-					character: declaration.column - 1,
-				},
-			},
-			children,
-		);
+    if (!syntax) {
+        logErrorToFile("Syntax is not defined");
+        return undefined;
+    }
 
-		res.push(declarationSymbol);
-	}
+    const syntaxDeclarations = syntax.syntax_declarations;
 
-	// Adds all the sugars to the symbols
-	const sugars = compUnit.syntax.sugars;
+    if (!syntaxDeclarations) {
+        logErrorToFile("Syntax_declarations is not defined");
+        return undefined;
+    }
 
-	for (const sugar of sugars) {
-		const sugarSymbol = DocumentSymbol.create(
-			sugar.name.slice(0, -1), // Removes the newline
-			undefined,
-			SymbolKind.String,
-			{
-				start: {
-					line: sugar.line - 1,
-					character: sugar.column - 1,
-				},
-				end: {
-					line: sugar.line - 1,
-					character: sugar.column - 1,
-				},
-			},
-			{
-				start: {
-					line: sugar.line - 1,
-					character: sugar.column - 1,
-				},
-				end: {
-					line: sugar.line - 1,
-					character: sugar.column - 1,
-				},
-			},
-		);
+    for (const declaration of syntaxDeclarations) {
+        const children: DocumentSymbol[] = [];
 
-		res.push(sugarSymbol);
-	}
+        for (const clause of declaration.clauses) {
+            const clauseSymbol = DocumentSymbol.create(
+                clause.name,
+                undefined,
+                SymbolKind.Key,
+                {
+                    start: {
+                        line: clause.line - 1,
+                        character: clause.column - 1,
+                    },
+                    end: {
+                        line: clause.line - 1,
+                        character: clause.column - 1,
+                    },
+                },
+                {
+                    start: {
+                        line: clause.line - 1,
+                        character: clause.column - 1,
+                    },
+                    end: {
+                        line: clause.line - 1,
+                        character: clause.column - 1,
+                    },
+                },
+            );
 
-	// Adds the theorems to the symbols
-	const theorems = compUnit.theorems;
+            children.push(clauseSymbol);
+        }
 
-	for (const theorem of theorems) {
-		let detail = "";
+        const declarationSymbol = DocumentSymbol.create(
+            declaration.name,
+            undefined,
+            SymbolKind.String,
+            {
+                start: {
+                    line: declaration.line - 1,
+                    character: declaration.column - 1,
+                },
+                end: {
+                    line: declaration.line - 1,
+                    character: declaration.column - 1,
+                },
+            },
+            {
+                start: {
+                    line: declaration.line - 1,
+                    character: declaration.column - 1,
+                },
+                end: {
+                    line: declaration.line - 1,
+                    character: declaration.column - 1,
+                },
+            },
+            children,
+        );
 
-		for (const forall of theorem.foralls) {
-			detail += "∀" + forall;
-		}
+        res.push(declarationSymbol);
+    }
 
-		detail += "∃" + theorem.conclusion;
+    // Adds all the sugars to the symbols
+    const sugars = syntax.sugars;
 
-		const theoremSymbol = DocumentSymbol.create(
-			theorem.name,
-			detail,
-			theorem.kind == "theorem" ? SymbolKind.Class : SymbolKind.Struct,
-			{
-				start: {
-					line: theorem.line - 1,
-					character: theorem.column - 1,
-				},
-				end: {
-					line: theorem.line - 1,
-					character: theorem.column - 1,
-				},
-			},
-			{
-				start: {
-					line: theorem.line - 1,
-					character: theorem.column - 1,
-				},
-				end: {
-					line: theorem.line - 1,
-					character: theorem.column - 1,
-				},
-			},
-		);
+    if (!sugars) {
+        logErrorToFile("Sugars is not defined");
+        return undefined;
+    }
 
-		res.push(theoremSymbol);
-	}
+    for (const sugar of sugars) {
+        const sugarSymbol = DocumentSymbol.create(
+            sugar.name.slice(0, -1), // Removes the newline
+            undefined,
+            SymbolKind.String,
+            {
+                start: {
+                    line: sugar.line - 1,
+                    character: sugar.column - 1,
+                },
+                end: {
+                    line: sugar.line - 1,
+                    character: sugar.column - 1,
+                },
+            },
+            {
+                start: {
+                    line: sugar.line - 1,
+                    character: sugar.column - 1,
+                },
+                end: {
+                    line: sugar.line - 1,
+                    character: sugar.column - 1,
+                },
+            },
+        );
 
-	// Adds the judgments to the symbols
-	const judgments = compUnit.judgments;
+        res.push(sugarSymbol);
+    }
 
-	for (const judgment of judgments) {
-		const children: DocumentSymbol[] = [];
+    // Adds the theorems to the symbols
+    const theorems = compUnit.theorems;
 
-		for (const rule of judgment.rules) {
-			if (rule.in_file) {
-				let detail = "";
+    if (!theorems) {
+        logErrorToFile("Theorems is not defined");
+        return undefined;
+    }
 
-				for (const premise of rule.premises) {
-					detail += "∀" + premise;
-				}
+    for (const theorem of theorems) {
+        let detail = "";
 
-				detail += "∃" + rule.conclusion;
+        for (const forall of theorem.foralls) {
+            detail += "∀" + forall;
+        }
 
-				const ruleSymbol = DocumentSymbol.create(
-					rule.name,
-					detail,
-					SymbolKind.Property,
-					{
-						start: {
-							line: rule.line - 1,
-							character: rule.column - 1,
-						},
-						end: {
-							line: rule.line - 1,
-							character: rule.column - 1,
-						},
-					},
-					{
-						start: {
-							line: rule.line - 1,
-							character: rule.column - 1,
-						},
-						end: {
-							line: rule.line - 1,
-							character: rule.column - 1,
-						},
-					},
-				);
+        detail += "∃" + theorem.conclusion;
 
-				children.push(ruleSymbol);
-			}
-		}
+        const theoremSymbol = DocumentSymbol.create(
+            theorem.name,
+            detail,
+            theorem.kind == "theorem" ? SymbolKind.Class : SymbolKind.Struct,
+            {
+                start: {
+                    line: theorem.line - 1,
+                    character: theorem.column - 1,
+                },
+                end: {
+                    line: theorem.line - 1,
+                    character: theorem.column - 1,
+                },
+            },
+            {
+                start: {
+                    line: theorem.line - 1,
+                    character: theorem.column - 1,
+                },
+                end: {
+                    line: theorem.line - 1,
+                    character: theorem.column - 1,
+                },
+            },
+        );
 
-		const judgmentSymbol = DocumentSymbol.create(
-			judgment.name,
-			judgment.form,
-			SymbolKind.Variable,
-			{
-				start: {
-					line: judgment.line - 1,
-					character: judgment.column - 1,
-				},
-				end: {
-					line: judgment.line - 1,
-					character: judgment.column - 1,
-				},
-			},
-			{
-				start: {
-					line: judgment.line - 1,
-					character: judgment.column - 1,
-				},
-				end: {
-					line: judgment.line - 1,
-					character: judgment.column - 1,
-				},
-			},
-			children,
-		);
+        res.push(theoremSymbol);
+    }
 
-		res.push(judgmentSymbol);
-	}
+    // Adds the judgments to the symbols
+    const judgments = compUnit.judgments;
 
-	return res;
+    if (!judgments) {
+        logErrorToFile("Judgments is not defined");
+        return undefined;
+    }
+
+    for (const judgment of judgments) {
+        const children: DocumentSymbol[] = [];
+
+        for (const rule of judgment.rules) {
+            if (rule.in_file) {
+                let detail = "";
+
+                for (const premise of rule.premises) {
+                    detail += "∀" + premise;
+                }
+
+                detail += "∃" + rule.conclusion;
+
+                const ruleSymbol = DocumentSymbol.create(
+                    rule.name,
+                    detail,
+                    SymbolKind.Property,
+                    {
+                        start: {
+                            line: rule.line - 1,
+                            character: rule.column - 1,
+                        },
+                        end: {
+                            line: rule.line - 1,
+                            character: rule.column - 1,
+                        },
+                    },
+                    {
+                        start: {
+                            line: rule.line - 1,
+                            character: rule.column - 1,
+                        },
+                        end: {
+                            line: rule.line - 1,
+                            character: rule.column - 1,
+                        },
+                    },
+                );
+
+                children.push(ruleSymbol);
+            }
+        }
+
+        const judgmentSymbol = DocumentSymbol.create(
+            judgment.name,
+            judgment.form,
+            SymbolKind.Variable,
+            {
+                start: {
+                    line: judgment.line - 1,
+                    character: judgment.column - 1,
+                },
+                end: {
+                    line: judgment.line - 1,
+                    character: judgment.column - 1,
+                },
+            },
+            {
+                start: {
+                    line: judgment.line - 1,
+                    character: judgment.column - 1,
+                },
+                end: {
+                    line: judgment.line - 1,
+                    character: judgment.column - 1,
+                },
+            },
+            children,
+        );
+
+        res.push(judgmentSymbol);
+    }
+
+    return res;
 });
 
 connection.onDidChangeWatchedFiles((change) => {
-	// Monitored files have change in VSCode
-	connection.console.log("We received an file change event");
+    // Monitored files have change in VSCode
+    connection.console.log("We received an file change event");
 });
 
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
-	const textDocument: TextDocument | undefined = documents.get(
-		params.textDocument.uri,
-	);
-	if (textDocument == null) return [];
+    const textDocument: TextDocument | undefined = documents.get(
+        params.textDocument.uri,
+    );
+    if (textDocument == null) return [];
 
-	const codeActions: CodeAction[] = [];
+    const codeActions: CodeAction[] = [];
 
-	// Get next line character
-	const eolSetting = await connection.workspace.getConfiguration({
-		section: "files",
-	});
-	const nl = eolSetting.eol == "auto" ? EOL : eolSetting.eol;
+    // Get next line character
+    const eolSetting = await connection.workspace.getConfiguration({
+        section: "files",
+    });
+    const nl = eolSetting.eol == "auto" ? EOL : eolSetting.eol;
 
-	// Get indent amount
-	const indentSetting = await connection.workspace.getConfiguration({
-		section: "editor",
-	});
+    // Get indent amount
+    const indentSetting = await connection.workspace.getConfiguration({
+        section: "editor",
+    });
 
-	const indentAmount = indentSetting.tabSize;
+    const indentAmount = indentSetting.tabSize;
 
-	// For each diagnostic, try to find a quick fix
-	for (const diagnostic of params.context.diagnostics) {
-		const code: string | number | undefined = diagnostic.code;
-		if (code == null) continue;
-		if (!quickfixes.has(code)) continue;
-		const quickfix = quickfixes.get(code);
-		const errorType: string = quickfix.error_type;
-		const errorInfo: string = quickfix.error_info;
-		const range = quickfix.range;
-		const line = range.start.line;
-		let extraIndent = "";
-		if (errorType == null || errorInfo == null || line < 0) continue;
-		// Range that includes the entire line at line number `line`, 0 indexed
-		const lineInfo: Range = getLineRange(line);
+    // For each diagnostic, try to find a quick fix
+    for (const diagnostic of params.context.diagnostics) {
+        const code: string | number | undefined = diagnostic.code;
+        if (code == null) continue;
+        if (!quickfixes.has(code)) continue;
+        const quickfix = quickfixes.get(code);
+        const errorType: string = quickfix.error_type;
+        const errorInfo: string = quickfix.error_info;
+        const range = quickfix.range;
+        const line = range.start.line;
+        let extraIndent = "";
+        if (errorType == null || errorInfo == null || line < 0) continue;
+        // Range that includes the entire line at line number `line`, 0 indexed
+        const lineInfo: Range = getLineRange(line);
 
-		const lineText: string = textDocument.getText(lineInfo);
+        const lineText: string = textDocument.getText(lineInfo);
 
-		const split = errorInfo.split(/\r?\n/, -1);
+        const split = errorInfo.split(/\r?\n/, -1);
 
-		let lineIndent: string;
-		{
-			let i;
-			for (i = 0; i < lineText.length; ++i) {
-				const ch = lineText.charAt(i);
-				if (ch == " " || ch == "\t") continue;
-				break;
-			}
-			lineIndent = lineText.substring(0, i);
-		}
+        let lineIndent: string;
+        {
+            let i: number;
+            for (i = 0; i < lineText.length; ++i) {
+                const ch = lineText.charAt(i);
+                if (ch == " " || ch == "\t") continue;
+                break;
+            }
+            lineIndent = lineText.substring(0, i);
+        }
 
-		let indent = "    ";
-		if (indentAmount >= 0 && indentAmount <= 8) {
-			indent = "        ".substring(0, indentAmount);
-		}
+        let indent = "    ";
+        if (indentAmount >= 0 && indentAmount <= 8) {
+            indent = "        ".substring(0, indentAmount);
+        }
 
-		const ind = textDocument
-			.getText(getLineRange(line, Number.MAX_VALUE, 0, Number.MAX_VALUE))
-			.indexOf(split[0]);
+        const ind = textDocument
+            .getText(getLineRange(line, Number.MAX_VALUE, 0, Number.MAX_VALUE))
+            .indexOf(split[0]);
 
-		let old: Range | null = null;
+        let old: Range | null = null;
 
-		if (ind != -1) {
-			old = getLineRangeFromOffset(
-				ind + textDocument.offsetAt(lineInfo.start),
-				split[0].length,
-				textDocument,
-			);
-		}
+        if (ind != -1) {
+            old = getLineRangeFromOffset(
+                ind + textDocument.offsetAt(lineInfo.start),
+                split[0].length,
+                textDocument,
+            );
+        }
 
-		if (old == null) {
-			if (split[0] == lineText) {
-				old = lineInfo;
-			}
-		}
+        if (old == null) {
+            if (split[0] == lineText) {
+                old = lineInfo;
+            }
+        }
 
-		switch (errorType) {
-			case "MISSING_CASE":
-				let newText = "";
-				if (errorInfo.indexOf("\n\n") == -1) {
-					// syntax case
-					const n = split.length - 1;
-					for (let i = 0; i < n; ++i) {
-						newText = newText.concat(lineIndent);
-						newText = newText.concat(indent);
-						newText = newText.concat("case ");
-						newText = newText.concat(split[i]);
-						newText = newText.concat(" is");
-						newText = newText.concat(nl);
-						newText = newText.concat(lineIndent);
-						newText = newText.concat(indent);
-						newText = newText.concat(indent);
-						newText = newText.concat("proof by unproved");
-						newText = newText.concat(nl);
-						newText = newText.concat(lineIndent);
-						newText = newText.concat(indent);
-						newText = newText.concat("end case");
-						newText = newText.concat(nl);
-						newText = newText.concat(nl);
-					}
-				} else {
-					let startCase = true;
-					const n = split.length - 1; // extra line at end
-					for (let i = 0; i < n; ++i) {
-						if (startCase) {
-							newText = newText.concat(lineIndent);
-							newText = newText.concat(indent);
-							newText = newText.concat("case rule");
-							newText = newText.concat(nl);
-							startCase = false;
-						}
-						if (split[i].length == 0) {
-							newText = newText.concat(lineIndent);
-							newText = newText.concat(indent);
-							newText = newText.concat("is");
-							newText = newText.concat(nl);
-							newText = newText.concat(lineIndent);
-							newText = newText.concat(indent);
-							newText = newText.concat(indent);
-							newText = newText.concat("proof by unproved");
-							newText = newText.concat(nl);
-							newText = newText.concat(lineIndent);
-							newText = newText.concat(indent);
-							newText = newText.concat("end case");
-							newText = newText.concat(nl);
-							newText = newText.concat(nl);
-							startCase = true;
-							continue;
-						}
-						newText = newText.concat(lineIndent);
-						newText = newText.concat(indent);
-						newText = newText.concat(indent);
-						if (split[i].startsWith("---")) {
-							const ruleName = split[i].split(" ")[1];
-							const rule = findRule(compUnit, ruleName);
-							if (rule !== null) {
-								let ruleText = textDocument.getText(getLineRange(rule.line));
-								let lexicalInfo = "";
-								for (const c of ruleText) {
-									if (isBarChar(c)) {
-										lexicalInfo += c;
-									} else {
-										break;
-									}
-								}
-								if (lexicalInfo.length >= 3) {
-									split[i] =
-										lexicalInfo.substring(0, 3) +
-										lexicalInfo.substring(0, 3) +
-										lexicalInfo +
-										" " +
-										ruleName;
-								}
-							}
-						} else {
-							newText = newText.concat("_: ");
-						}
-						newText = newText.concat(split[i]);
-						newText = newText.concat(nl);
-					}
-				}
-				if (
-					lineText.includes("by contradiction on") &&
-					!lineText.includes("by case analysis on")
-				) {
-					// XXX: Could be confused by a comment
-					let lo = lineText.indexOf("contradiction");
-					let parts = lineText.split("\\s+");
-					const l = parts.length;
-					// try to avoid dangerous changes
-					if (l > 3 && parts[l - 2] === "on") {
-						let derivName = parts[l - 1];
-						newText =
-							"case analysis on " +
-							derivName +
-							":" +
-							nl +
-							newText +
-							lineIndent +
-							"end case analysis";
-						let offset = textDocument.offsetAt(lineInfo.start) + lo;
-						codeActions.push({
-							title: "convert to case analysis with missing case(s)",
-							kind: "quickfix",
-							diagnostics: [diagnostic],
-							edit: {
-								changes: {
-									[textDocument.uri]: [
-										{
-											range: {
-												start: textDocument.positionAt(offset),
-												end: textDocument.positionAt(
-													offset + lineText.length - lo,
-												),
-											},
-											newText: newText,
-										},
-									],
-								},
-							},
-						});
-					}
-				} else {
-					codeActions.push({
-						title: "insert missing case(s)",
-						kind: "quickfix",
-						diagnostics: [diagnostic],
-						edit: {
-							changes: {
-								[textDocument.uri]: [
-									{
-										range: getLineRange(
-											lineInfo.start.line + 1,
-											lineInfo.end.line + 1,
-											0,
-											0,
-										),
-										newText: newText,
-									},
-								],
-							},
-						},
-					});
-				}
-				break;
-			case "ABSTRACT_NOT_PERMITTED_HERE":
-			case "ILLEGAL_ASSUMES":
-			case "EXTRANEOUS_ASSUMES":
-				if (old != null) {
-					codeActions.push({
-						title: `remove '${split[0]}'`,
-						kind: "quickfix",
-						diagnostics: [diagnostic],
-						edit: {
-							changes: {
-								[textDocument.uri]: [{ range: old, newText: "" }],
-							},
-						},
-					});
-				}
-			/* falls through */
-			case "RULE_NOT_THEOREM":
-			case "THEOREM_NOT_RULE":
-			case "THEOREM_KIND_WRONG":
-			case "THEOREM_KIND_MISSING":
-			case "INDUCTION_REPEAT":
-			case "WRONG_END":
-			case "WRONG_MODULE_NAME":
-			case "PARTIAL_CASE_ANALYSIS":
-				if (old != null) {
-					if (split.length > 1 && split[1].length > 0) {
-						codeActions.push({
-							title: `replace '${split[0]}' with '${split[1]}'`,
-							kind: "quickfix",
-							diagnostics: [diagnostic],
-							edit: {
-								changes: {
-									[textDocument.uri]: [{ range: old, newText: split[1] }],
-								},
-							},
-						});
-					}
-				}
-				break;
-			case "WRONG_PACKAGE":
-				if (split[0].length == 0) {
-					codeActions.push({
-						title: `insert '${split[1]}'`,
-						kind: "quickfix",
-						diagnostics: [diagnostic],
-						edit: {
-							changes: {
-								[textDocument.uri]: [
-									{
-										range: getLineRange(
-											lineInfo.start.line,
-											lineInfo.end.line,
-											Number.MAX_VALUE,
-											Number.MAX_VALUE,
-										),
-										newText: split[1] + nl,
-									},
-								],
-							},
-						},
-					});
-				}
-				if (old != null && split.length > 1) {
-					if (split[1].length == 0) {
-						codeActions.push({
-							title: `remove '${split[0]}'`,
-							kind: "quickfix",
-							diagnostics: [diagnostic],
-							edit: {
-								changes: {
-									[textDocument.uri]: [{ range: old, newText: "" }],
-								},
-							},
-						});
-					} else {
-						codeActions.push({
-							title: `replace '${split[0]}' with '${split[1]}'`,
-							kind: "quickfix",
-							diagnostics: [diagnostic],
-							edit: {
-								changes: {
-									[textDocument.uri]: [{ range: old, newText: split[1] }],
-								},
-							},
-						});
-					}
-				}
-				break;
-			case "ASSUMED_ASSUMES":
-				extraIndent = indent;
-			/* falls through */
-			case "MISSING_ASSUMES":
-				codeActions.push({
-					title: `insert '${errorInfo}'`,
-					kind: "quickfix",
-					diagnostics: [diagnostic],
-					edit: {
-						changes: {
-							[textDocument.uri]: [
-								{
-									range: getLineRange(
-										lineInfo.start.line + 1,
-										lineInfo.end.line + 1,
-										0,
-									),
-									newText: lineIndent + extraIndent + errorInfo + nl,
-								},
-							],
-						},
-					},
-				});
+        switch (errorType) {
+            case "MISSING_CASE":
+                let newText = "";
+                if (errorInfo.indexOf("\n\n") == -1) {
+                    // syntax case
+                    const n = split.length - 1;
+                    for (let i = 0; i < n; ++i) {
+                        newText = newText.concat(lineIndent);
+                        newText = newText.concat(indent);
+                        newText = newText.concat("case ");
+                        newText = newText.concat(split[i]);
+                        newText = newText.concat(" is");
+                        newText = newText.concat(nl);
+                        newText = newText.concat(lineIndent);
+                        newText = newText.concat(indent);
+                        newText = newText.concat(indent);
+                        newText = newText.concat("proof by unproved");
+                        newText = newText.concat(nl);
+                        newText = newText.concat(lineIndent);
+                        newText = newText.concat(indent);
+                        newText = newText.concat("end case");
+                        newText = newText.concat(nl);
+                        newText = newText.concat(nl);
+                    }
+                } else {
+                    let startCase = true;
+                    const n = split.length - 1; // extra line at end
+                    for (let i = 0; i < n; ++i) {
+                        if (startCase) {
+                            newText = newText.concat(lineIndent);
+                            newText = newText.concat(indent);
+                            newText = newText.concat("case rule");
+                            newText = newText.concat(nl);
+                            startCase = false;
+                        }
+                        if (split[i].length == 0) {
+                            newText = newText.concat(lineIndent);
+                            newText = newText.concat(indent);
+                            newText = newText.concat("is");
+                            newText = newText.concat(nl);
+                            newText = newText.concat(lineIndent);
+                            newText = newText.concat(indent);
+                            newText = newText.concat(indent);
+                            newText = newText.concat("proof by unproved");
+                            newText = newText.concat(nl);
+                            newText = newText.concat(lineIndent);
+                            newText = newText.concat(indent);
+                            newText = newText.concat("end case");
+                            newText = newText.concat(nl);
+                            newText = newText.concat(nl);
+                            startCase = true;
+                            continue;
+                        }
+                        newText = newText.concat(lineIndent);
+                        newText = newText.concat(indent);
+                        newText = newText.concat(indent);
+                        if (split[i].startsWith("---")) {
+                            const ruleName = split[i].split(" ")[1];
 
-				break;
-			case "CASE_REDUNDANT":
-			case "CASE_UNNECESSARY":
-				break;
-			case "OTHER_JUSTIFIED":
-				if (lineInfo != null) {
-					const holeStart = split[0].indexOf("...");
-					const startPat = split[0].substring(0, holeStart);
-					const endPat = split[0].substring(holeStart + 3);
-					const findStart = lineText.indexOf(startPat);
-					if (findStart < 0) break;
-					const findEnd = lineText.indexOf(endPat, findStart);
-					if (findEnd < 0) break;
-					const oldStart = findStart + startPat.length;
-					const oldText = lineText.substring(oldStart, findEnd);
-					codeActions.push({
-						title: `replace '${oldText}' with '${" " + split[1]}'`,
-						kind: "quickfix",
-						diagnostics: [diagnostic],
-						edit: {
-							changes: {
-								[textDocument.uri]: [
-									{
-										range: getLineRangeFromOffset(
-											oldStart + textDocument.offsetAt(lineInfo.start),
-											oldText.length,
-											textDocument,
-										),
-										newText: " " + split[1],
-									},
-								],
-							},
-						},
-					});
-				}
-				break;
-			case "RULE_CONCLUSION_CONTRADICTION":
-				if (lineInfo != null) {
-					const findBy = lineText.indexOf(" by ");
-					if (findBy >= lineIndent.length) {
-						const oldText = lineText.substring(lineIndent.length, findBy);
-						codeActions.push({
-							title: `replace '${oldText}' with '_: contradiction'`,
-							kind: "quickfix",
-							diagnostics: [diagnostic],
-							edit: {
-								changes: {
-									[textDocument.uri]: [
-										{
-											range: getLineRangeFromOffset(
-												lineIndent.length +
-												textDocument.offsetAt(lineInfo.start),
-												oldText.length,
-												textDocument,
-											),
-											newText: "_: contradiction",
-										},
-									],
-								},
-							},
-						});
-					}
-				}
-				break;
-			case "DERIVATION_NOT_FOUND": {
-				const colon = split[0].indexOf(":");
-				const useName = textDocument.getText(diagnostic.range);
-				let defName;
-				if (colon >= 0) {
-					defName = split[0].substring(0, colon);
-				} else {
-					defName = split[0];
-					codeActions.push({
-						title: `replace '${lineText}' with '${defName}'`,
-						kind: "quickfix",
-						diagnostics: [diagnostic],
-						edit: {
-							changes: {
-								[textDocument.uri]: [{ range: lineInfo, newText: defName }],
-							},
-						},
-					});
-					break;
-				}
+                            if (!compUnit) {
+                                logErrorToFile("Comp unit is null");
+                                return undefined;
+                            }
 
-				const newText = nl + indent + split[0] + " by unproved";
-				let extra = "";
+                            const rule = findRule(compUnit, ruleName);
+                            if (rule !== null) {
+                                let ruleText = textDocument.getText(getLineRange(rule.line));
+                                let lexicalInfo = "";
+                                for (const c of ruleText) {
+                                    if (isBarChar(c)) {
+                                        lexicalInfo += c;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                if (lexicalInfo.length >= 3) {
+                                    split[i] =
+                                        lexicalInfo.substring(0, 3) +
+                                        lexicalInfo.substring(0, 3) +
+                                        lexicalInfo +
+                                        " " +
+                                        ruleName;
+                                }
+                            }
+                        } else {
+                            newText = newText.concat("_: ");
+                        }
+                        newText = newText.concat(split[i]);
+                        newText = newText.concat(nl);
+                    }
+                }
+                if (
+                    lineText.includes("by contradiction on") &&
+                    !lineText.includes("by case analysis on")
+                ) {
+                    // XXX: Could be confused by a comment
+                    let lo = lineText.indexOf("contradiction");
+                    let parts = lineText.split("\\s+");
+                    const l = parts.length;
+                    // try to avoid dangerous changes
+                    if (l > 3 && parts[l - 2] === "on") {
+                        let derivName = parts[l - 1];
+                        newText =
+                            "case analysis on " +
+                            derivName +
+                            ":" +
+                            nl +
+                            newText +
+                            lineIndent +
+                            "end case analysis";
+                        let offset = textDocument.offsetAt(lineInfo.start) + lo;
+                        codeActions.push({
+                            title: "convert to case analysis with missing case(s)",
+                            kind: "quickfix",
+                            diagnostics: [diagnostic],
+                            edit: {
+                                changes: {
+                                    [textDocument.uri]: [
+                                        {
+                                            range: {
+                                                start: textDocument.positionAt(offset),
+                                                end: textDocument.positionAt(
+                                                    offset + lineText.length - lo,
+                                                ),
+                                            },
+                                            newText: newText,
+                                        },
+                                    ],
+                                },
+                            },
+                        });
+                    }
+                } else {
+                    codeActions.push({
+                        title: "insert missing case(s)",
+                        kind: "quickfix",
+                        diagnostics: [diagnostic],
+                        edit: {
+                            changes: {
+                                [textDocument.uri]: [
+                                    {
+                                        range: getLineRange(
+                                            lineInfo.start.line + 1,
+                                            lineInfo.end.line + 1,
+                                            0,
+                                            0,
+                                        ),
+                                        newText: newText,
+                                    },
+                                ],
+                            },
+                        },
+                    });
+                }
+                break;
+            case "ABSTRACT_NOT_PERMITTED_HERE":
+            case "ILLEGAL_ASSUMES":
+            case "EXTRANEOUS_ASSUMES":
+                if (old != null) {
+                    codeActions.push({
+                        title: `remove '${split[0]}'`,
+                        kind: "quickfix",
+                        diagnostics: [diagnostic],
+                        edit: {
+                            changes: {
+                                [textDocument.uri]: [{ range: old, newText: "" }],
+                            },
+                        },
+                    });
+                }
+            /* falls through */
+            case "RULE_NOT_THEOREM":
+            case "THEOREM_NOT_RULE":
+            case "THEOREM_KIND_WRONG":
+            case "THEOREM_KIND_MISSING":
+            case "INDUCTION_REPEAT":
+            case "WRONG_END":
+            case "WRONG_MODULE_NAME":
+            case "PARTIAL_CASE_ANALYSIS":
+                if (old != null) {
+                    if (split.length > 1 && split[1].length > 0) {
+                        codeActions.push({
+                            title: `replace '${split[0]}' with '${split[1]}'`,
+                            kind: "quickfix",
+                            diagnostics: [diagnostic],
+                            edit: {
+                                changes: {
+                                    [textDocument.uri]: [{ range: old, newText: split[1] }],
+                                },
+                            },
+                        });
+                    }
+                }
+                break;
+            case "WRONG_PACKAGE":
+                if (split[0].length == 0) {
+                    codeActions.push({
+                        title: `insert '${split[1]}'`,
+                        kind: "quickfix",
+                        diagnostics: [diagnostic],
+                        edit: {
+                            changes: {
+                                [textDocument.uri]: [
+                                    {
+                                        range: getLineRange(
+                                            lineInfo.start.line,
+                                            lineInfo.end.line,
+                                            Number.MAX_VALUE,
+                                            Number.MAX_VALUE,
+                                        ),
+                                        newText: split[1] + nl,
+                                    },
+                                ],
+                            },
+                        },
+                    });
+                }
+                if (old != null && split.length > 1) {
+                    if (split[1].length == 0) {
+                        codeActions.push({
+                            title: `remove '${split[0]}'`,
+                            kind: "quickfix",
+                            diagnostics: [diagnostic],
+                            edit: {
+                                changes: {
+                                    [textDocument.uri]: [{ range: old, newText: "" }],
+                                },
+                            },
+                        });
+                    } else {
+                        codeActions.push({
+                            title: `replace '${split[0]}' with '${split[1]}'`,
+                            kind: "quickfix",
+                            diagnostics: [diagnostic],
+                            edit: {
+                                changes: {
+                                    [textDocument.uri]: [{ range: old, newText: split[1] }],
+                                },
+                            },
+                        });
+                    }
+                }
+                break;
+            case "ASSUMED_ASSUMES":
+                extraIndent = indent;
+            /* falls through */
+            case "MISSING_ASSUMES":
+                codeActions.push({
+                    title: `insert '${errorInfo}'`,
+                    kind: "quickfix",
+                    diagnostics: [diagnostic],
+                    edit: {
+                        changes: {
+                            [textDocument.uri]: [
+                                {
+                                    range: getLineRange(
+                                        lineInfo.start.line + 1,
+                                        lineInfo.end.line + 1,
+                                        0,
+                                    ),
+                                    newText: lineIndent + extraIndent + errorInfo + nl,
+                                },
+                            ],
+                        },
+                    },
+                });
 
-				const changes = [
-					{
-						range: getLineRange(
-							lineInfo.start.line - 1,
-							lineInfo.start.line - 1,
-							Number.MAX_VALUE,
-							Number.MAX_VALUE,
-						),
-						newText: newText,
-					},
-				];
+                break;
+            case "CASE_REDUNDANT":
+            case "CASE_UNNECESSARY":
+                break;
+            case "OTHER_JUSTIFIED":
+                if (lineInfo != null) {
+                    const holeStart = split[0].indexOf("...");
+                    const startPat = split[0].substring(0, holeStart);
+                    const endPat = split[0].substring(holeStart + 3);
+                    const findStart = lineText.indexOf(startPat);
+                    if (findStart < 0) break;
+                    const findEnd = lineText.indexOf(endPat, findStart);
+                    if (findEnd < 0) break;
+                    const oldStart = findStart + startPat.length;
+                    const oldText = lineText.substring(oldStart, findEnd);
+                    codeActions.push({
+                        title: `replace '${oldText}' with '${" " + split[1]}'`,
+                        kind: "quickfix",
+                        diagnostics: [diagnostic],
+                        edit: {
+                            changes: {
+                                [textDocument.uri]: [
+                                    {
+                                        range: getLineRangeFromOffset(
+                                            oldStart + textDocument.offsetAt(lineInfo.start),
+                                            oldText.length,
+                                            textDocument,
+                                        ),
+                                        newText: " " + split[1],
+                                    },
+                                ],
+                            },
+                        },
+                    });
+                }
+                break;
+            case "RULE_CONCLUSION_CONTRADICTION":
+                if (lineInfo != null) {
+                    const findBy = lineText.indexOf(" by ");
+                    if (findBy >= lineIndent.length) {
+                        const oldText = lineText.substring(lineIndent.length, findBy);
+                        codeActions.push({
+                            title: `replace '${oldText}' with '_: contradiction'`,
+                            kind: "quickfix",
+                            diagnostics: [diagnostic],
+                            edit: {
+                                changes: {
+                                    [textDocument.uri]: [
+                                        {
+                                            range: getLineRangeFromOffset(
+                                                lineIndent.length +
+                                                textDocument.offsetAt(lineInfo.start),
+                                                oldText.length,
+                                                textDocument,
+                                            ),
+                                            newText: "_: contradiction",
+                                        },
+                                    ],
+                                },
+                            },
+                        });
+                    }
+                }
+                break;
+            case "DERIVATION_NOT_FOUND": {
+                const colon = split[0].indexOf(":");
+                const useName = textDocument.getText(diagnostic.range);
+                let defName;
+                if (colon >= 0) {
+                    defName = split[0].substring(0, colon);
+                } else {
+                    defName = split[0];
+                    codeActions.push({
+                        title: `replace '${lineText}' with '${defName}'`,
+                        kind: "quickfix",
+                        diagnostics: [diagnostic],
+                        edit: {
+                            changes: {
+                                [textDocument.uri]: [{ range: lineInfo, newText: defName }],
+                            },
+                        },
+                    });
+                    break;
+                }
 
-				if (defName != useName) {
-					if (useName == "_") {
-						extra = `, and replace '_' with '${defName}'`;
-						changes.push({
-							range: diagnostic.range,
-							newText: defName,
-						});
-					}
-				}
+                const newText = nl + indent + split[0] + " by unproved";
+                let extra = "";
 
-				codeActions.push({
-					title: `insert '${split[0]} by unproved' before this line ${extra}`,
-					kind: "quickfix",
-					diagnostics: [diagnostic],
-					edit: {
-						changes: {
-							[textDocument.uri]: changes,
-						},
-					},
-				});
-				break;
-			}
-			default:
-				break;
-		}
-	}
-	return codeActions;
+                const changes = [
+                    {
+                        range: getLineRange(
+                            lineInfo.start.line - 1,
+                            lineInfo.start.line - 1,
+                            Number.MAX_VALUE,
+                            Number.MAX_VALUE,
+                        ),
+                        newText: newText,
+                    },
+                ];
+
+                if (defName != useName) {
+                    if (useName == "_") {
+                        extra = `, and replace '_' with '${defName}'`;
+                        changes.push({
+                            range: diagnostic.range,
+                            newText: defName,
+                        });
+                    }
+                }
+
+                codeActions.push({
+                    title: `insert '${split[0]} by unproved' before this line ${extra}`,
+                    kind: "quickfix",
+                    diagnostics: [diagnostic],
+                    edit: {
+                        changes: {
+                            [textDocument.uri]: changes,
+                        },
+                    },
+                });
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    return codeActions;
 });
 
 // Make the text document manager listen on the connection
