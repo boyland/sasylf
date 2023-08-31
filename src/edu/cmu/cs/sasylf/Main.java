@@ -67,6 +67,12 @@ public class Main {
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("--debug")) {
 				debug = true;
+				// If debug flag is set after the lsp flag, then we need to reset out
+				// and err
+				if (Proof.getLsp()) {
+					System.setOut(out);
+					System.setErr(err);
+				}
 				continue;
 			}
 			if (args[i].equals("--lsp")) {

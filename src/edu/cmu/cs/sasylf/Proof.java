@@ -200,9 +200,6 @@ public class Proof {
 	public static String getJSON() { return json.toString(); }
 
 	private ObjectNode moduleToJSON(Module module) {
-		System.out.println();
-		System.out.println("Module to Json");
-		System.out.println();
 		ObjectNode astNode = objectMapper.createObjectNode();
 
 		astNode.put("name", module.getName());
