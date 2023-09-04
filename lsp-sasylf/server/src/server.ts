@@ -69,6 +69,9 @@ connection.onInitialize((params: InitializeParams) => {
     return result;
 });
 
+// Stores the file to put the error logs in
+let logFile: string;
+
 connection.onInitialized(() => {
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
@@ -82,6 +85,7 @@ connection.onInitialized(() => {
             connection.console.log("Workspace folder change event received.");
         });
     }
+    logFile = new Date().toISOString() + ".log";
 });
 
 // The example settings
@@ -141,33 +145,36 @@ const quickfixes: Map<string | number | undefined, any> = new Map();
 // Stores the abstract syntax tree
 let compUnit: ast | null;
 
-// Stores the file to put the error logs in
-let logFile: string;
-
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
     validateTextDocument(change.document);
 });
 
-function createLogFile(fileName: string): string {
+function createLogFile(): string {
     // Get path to the log file
-    const logFilePath = path.join(__dirname, "..", "..", "logs", fileName);
+    const logFilePath = path.join(__dirname, "..", "..", "logs", logFile);
 
     // If it doesn't already exist, create it
     if (!fs.existsSync(logFilePath)) {
         fs.writeFileSync(logFilePath, '', { flag: 'w' });
     }
 
-    return logFilePath
+    return logFilePath;
 }
 
-function logErrorToFile(errorMsg: string) {
-    // Create a timestamp for the error message
-    const fileName = new Date().toISOString() + ".log";
-
+function logErrorToFile(errorMsg: string, file: string) {
     // Create the log file
-    const logFilePath = createLogFile(fileName);
+    const logFilePath = createLogFile();
+
+    // Append date and file location
+    const date = new Date().toISOString();
+
+    fs.appendFile(logFilePath, file + date, (err) => {
+        if (err) {
+            console.error('Error writing to the log file:', err);
+        }
+    });
 
     // Append the error message to the log file
     fs.appendFile(logFilePath, errorMsg, (err) => {
@@ -176,8 +183,6 @@ function logErrorToFile(errorMsg: string) {
         }
     });
 }
-
-
 
 // Parses diagnostic and ast information from sasylf
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
@@ -202,7 +207,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             error = e.message;
         }
 
-        logErrorToFile(error);
+        logErrorToFile(error, textDocument.uri);
         return;
     }
 
@@ -256,7 +261,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 // Implements go to definition
 connection.onDefinition((params) => {
     if (!compUnit) {
-        logErrorToFile("Comp unit is null");
+        logErrorToFile("Comp unit is null", params.textDocument.uri);
         return undefined;
     }
 
@@ -293,7 +298,7 @@ connection.onDefinition((params) => {
             error = e.message;
         }
 
-        logErrorToFile(error);
+        logErrorToFile(error, params.textDocument.uri);
         return undefined;
     }
 
@@ -322,7 +327,7 @@ connection.onDefinition((params) => {
             error = e.message;
         }
 
-        logErrorToFile(error);
+        logErrorToFile(error, params.textDocument.uri);
         return;
     }
 
@@ -346,9 +351,9 @@ connection.onDefinition((params) => {
 });
 
 // Provides an outline view for the file
-connection.onDocumentSymbol((_) => {
+connection.onDocumentSymbol((params) => {
     if (!compUnit) {
-        logErrorToFile("Comp unit is null");
+        logErrorToFile("Comp unit is null", params.textDocument.uri);
         return undefined;
     }
 
@@ -358,7 +363,7 @@ connection.onDocumentSymbol((_) => {
     const modules = compUnit.modules;
 
     if (!modules) {
-        logErrorToFile("Modules is not defined");
+        logErrorToFile("Modules is not defined", params.textDocument.uri);
         return undefined;
     }
 
@@ -396,14 +401,14 @@ connection.onDocumentSymbol((_) => {
     const syntax = compUnit.syntax;
 
     if (!syntax) {
-        logErrorToFile("Syntax is not defined");
+        logErrorToFile("Syntax is not defined", params.textDocument.uri);
         return undefined;
     }
 
     const syntaxDeclarations = syntax.syntax_declarations;
 
     if (!syntaxDeclarations) {
-        logErrorToFile("Syntax_declarations is not defined");
+        logErrorToFile("Syntax_declarations is not defined", params.textDocument.uri);
         return undefined;
     }
 
@@ -474,7 +479,7 @@ connection.onDocumentSymbol((_) => {
     const sugars = syntax.sugars;
 
     if (!sugars) {
-        logErrorToFile("Sugars is not defined");
+        logErrorToFile("Sugars is not defined", params.textDocument.uri);
         return undefined;
     }
 
@@ -512,7 +517,7 @@ connection.onDocumentSymbol((_) => {
     const theorems = compUnit.theorems;
 
     if (!theorems) {
-        logErrorToFile("Theorems is not defined");
+        logErrorToFile("Theorems is not defined", params.textDocument.uri);
         return undefined;
     }
 
@@ -558,7 +563,7 @@ connection.onDocumentSymbol((_) => {
     const judgments = compUnit.judgments;
 
     if (!judgments) {
-        logErrorToFile("Judgments is not defined");
+        logErrorToFile("Judgments is not defined", params.textDocument.uri);
         return undefined;
     }
 
@@ -780,7 +785,7 @@ connection.onCodeAction(async (params) => {
                             const ruleName = split[i].split(" ")[1];
 
                             if (!compUnit) {
-                                logErrorToFile("Comp unit is null");
+                                logErrorToFile("Comp unit is null", params.textDocument.uri);
                                 return undefined;
                             }
 
