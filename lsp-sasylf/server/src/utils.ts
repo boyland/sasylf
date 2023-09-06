@@ -24,7 +24,6 @@ export function search(
 	input: string,
 	ast: ast,
 	root_uri: string,
-	connection: any,
 ): Location | undefined {
 	let root_path: string = root_uri.substring(7);
 	let result: Range | null;
