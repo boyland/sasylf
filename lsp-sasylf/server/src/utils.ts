@@ -2,36 +2,80 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Range, Location } from "vscode-languageserver/node";
 import { ast, ruleNode, moduleNode, theoremNode } from "./types";
 import * as path from "path";
+import { tmpdir } from "os";
+import { mkdir, writeFile } from "fs";
+import { URI } from "vscode-uri";
+
+function createTemporaryFile(
+	file_path: string,
+	content: string,
+): string | null {
+	const tmp_path = path.join(tmpdir(), file_path);
+	mkdir(path.dirname(tmp_path), { recursive: true }, (err) => {
+		if (err) return null;
+	});
+	writeFile(tmp_path, content, (err) => {
+		if (err) return null;
+	});
+	return tmp_path;
+}
 
 export function search(
 	input: string,
 	ast: ast,
 	root_uri: string,
-): Location | null {
+	connection: any,
+): Location | undefined {
 	let root_path: string = root_uri.substring(7);
 	let result: Range | null;
 	const input_parts = input.split(".");
-	if (input_parts.length != 2) return null;
+	if (input_parts.length != 2) return undefined;
 	const [input_module_name, name] = input_parts;
 	for (const module of ast.modules) {
 		const module_name_parts = module.name.split(": ");
-		if (module_name_parts.length != 2) return null;
+		if (module_name_parts.length != 2) return undefined;
 		const [module_name, module_path] = module_name_parts;
 		let file_path = module_path.split(".");
 		file_path[file_path.length - 1] += ".slf";
-		const formatted_path = path.join(path.dirname(root_path), ...file_path);
+		let formatted_path = path.join(path.dirname(root_path), ...file_path);
 
 		if (module_name == input_module_name) {
 			result = searchNode(name, module.ast.theorems);
-			if (result != null) return { uri: formatted_path, range: result };
+			if (result != null) {
+				if ("text" in module && module.text != null) {
+					let file_result = createTemporaryFile(formatted_path, module.text);
+					if (file_result == null) return undefined;
+					else formatted_path = file_result;
+				}
+				return {
+					uri: URI.from({
+						scheme: "temporary",
+						path: formatted_path,
+					}).toString(),
+					range: result,
+				};
+			}
 			result = searchNode(
 				name,
 				module.ast.judgments.map((judgment) => judgment.rules).flat(),
 			);
-			if (result != null) return { uri: formatted_path, range: result };
+			if (result != null) {
+				if ("text" in module && module.text != null) {
+					let file_result = createTemporaryFile(formatted_path, module.text);
+					if (file_result == null) return undefined;
+					else formatted_path = file_result;
+				}
+				return {
+					uri: URI.from({
+						scheme: "temporary",
+						path: formatted_path,
+					}).toString(),
+					range: result,
+				};
+			}
 		}
 	}
-	return null;
+	return undefined;
 }
 
 export function searchNode(

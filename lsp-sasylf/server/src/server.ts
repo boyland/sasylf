@@ -248,7 +248,7 @@ connection.onDefinition((params) => {
     const word = text.slice(wordStart + 1, wordEnd);
 
     if (word.includes(".")) {
-        return search(word, compUnit, params.textDocument.uri);
+        return search(word, compUnit, params.textDocument.uri, connection);
     }
 
     // Checks if it is a theorem or lemma

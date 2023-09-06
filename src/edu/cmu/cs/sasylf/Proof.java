@@ -9,6 +9,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -260,9 +264,33 @@ public class Proof {
 				moduleNode.put("end_column", endLoc.getColumn());
 				moduleNode.put("begin_line", startLoc.getLine());
 				moduleNode.put("end_line", endLoc.getLine());
-				moduleNode.put("file", startLoc.getFile());
+
+				// moduleNode.put("file", startLoc.getFile());
 
 				Module m = (Module)modulePart.getModule().resolve(null);
+				String file = m instanceof CompUnit
+													? ((CompUnit)m).getLocation().getFile()
+													: startLoc.getFile();
+
+				if (file.charAt(0) == '/' || file.charAt(0) == '\\') {
+					try (InputStream in = getClass().getResourceAsStream(file);
+							 BufferedReader reader =
+									 new BufferedReader(new InputStreamReader(in))) {
+						StringBuilder stringBuilder = new StringBuilder();
+						String line;
+
+						while ((line = reader.readLine()) != null) {
+							stringBuilder.append(line).append('\n');
+						}
+
+						String content = stringBuilder.toString();
+						moduleNode.put("text", content);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+
+				moduleNode.put("file", file);
 				moduleNode.put("ast", moduleToJSON(m));
 			} else if (piece instanceof SyntaxDeclaration) {
 				SyntaxDeclaration syntax = (SyntaxDeclaration)piece;
