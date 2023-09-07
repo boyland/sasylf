@@ -13,9 +13,11 @@ function createTemporaryFile(
 	const tmp_path = path.join(tmpdir(), file_path);
 	mkdir(path.dirname(tmp_path), { recursive: true }, (err) => {
 		if (err) return null;
-	});
-	writeFile(tmp_path, content, (err) => {
-		if (err) return null;
+		else {
+			writeFile(tmp_path, content, (err) => {
+				if (err) return null;
+			});
+		}
 	});
 	return tmp_path;
 }
@@ -36,13 +38,20 @@ export function search(
 		const [module_name, module_path] = module_name_parts;
 		let file_path = module_path.split(".");
 		file_path[file_path.length - 1] += ".slf";
-		let formatted_path = path.join(path.dirname(root_path), ...file_path);
+		const formatted_file_path = path.join(...file_path);
+		let formatted_path = path.join(
+			path.dirname(root_path),
+			formatted_file_path,
+		);
 
 		if (module_name == input_module_name) {
 			result = searchNode(name, module.ast.theorems);
 			if (result != null) {
 				if ("text" in module && module.text != null) {
-					let file_result = createTemporaryFile(formatted_path, module.text);
+					let file_result = createTemporaryFile(
+						formatted_file_path,
+						module.text,
+					);
 					if (file_result == null) return undefined;
 					else formatted_path = file_result;
 				}
@@ -60,7 +69,10 @@ export function search(
 			);
 			if (result != null) {
 				if ("text" in module && module.text != null) {
-					let file_result = createTemporaryFile(formatted_path, module.text);
+					let file_result = createTemporaryFile(
+						formatted_file_path,
+						module.text,
+					);
 					if (file_result == null) return undefined;
 					else formatted_path = file_result;
 				}
