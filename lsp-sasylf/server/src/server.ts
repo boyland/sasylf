@@ -164,13 +164,14 @@ function createLogFile(): string {
 }
 
 function logErrorToFile(errorMsg: string, file: string) {
+    errorMsg += "\n";
     // Create the log file
     const logFilePath = createLogFile();
 
     // Append date and file location
     const date = new Date().toISOString();
 
-    fs.appendFile(logFilePath, file + date, (err) => {
+    fs.appendFile(logFilePath, file + ": " + date + ": ", (err) => {
         if (err) {
             console.error('Error writing to the log file:', err);
         }
