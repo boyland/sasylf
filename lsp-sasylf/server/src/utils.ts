@@ -1,10 +1,11 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Range, Location } from "vscode-languageserver/node";
 import { ast, ruleNode, moduleNode, theoremNode } from "./types";
-import * as path from "path";
 import { tmpdir } from "os";
 import { mkdir, writeFile } from "fs";
 import { URI } from "vscode-uri";
+import * as fs from 'fs';
+import * as path from 'path';
 
 function createTemporaryFile(
     file_path: string,
@@ -169,4 +170,38 @@ export function findRule(compUnit: ast, ruleName: string): ruleNode | null {
         }
     }
     return null;
+}
+
+function createLogFile(logFile: string): string {
+    // Get path to the log file
+    const logFilePath = path.join(__dirname, "..", "..", "logs", logFile);
+
+    // If it doesn't already exist, create it
+    if (!fs.existsSync(logFilePath)) {
+        fs.writeFileSync(logFilePath, '', { flag: 'w' });
+    }
+
+    return logFilePath;
+}
+
+export function logErrorToFile(errorMsg: string, file: string, logFile: string) {
+    errorMsg += "\n";
+    // Create the log file
+    const logFilePath = createLogFile(logFile);
+
+    // Append date and file location
+    const date = new Date().toISOString();
+
+    fs.appendFile(logFilePath, file + ": " + date + ": ", (err) => {
+        if (err) {
+            console.error('Error writing to the log file:', err);
+        }
+    });
+
+    // Append the error message to the log file
+    fs.appendFile(logFilePath, errorMsg, (err) => {
+        if (err) {
+            console.error('Error writing to the log file:', err);
+        }
+    });
 }

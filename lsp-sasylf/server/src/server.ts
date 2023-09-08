@@ -19,13 +19,14 @@ import {
     CompletionItem,
     CompletionItemKind,
 } from "vscode-languageserver/node";
-import { ast, parsedData } from "./types";
+import { ast, parsedData, ruleNode } from "./types";
 import {
     getLineRange,
     isBarChar,
     findRule,
     getLineRangeFromOffset,
     search,
+    logErrorToFile
 } from "./utils";
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -72,6 +73,9 @@ connection.onInitialize((params: InitializeParams) => {
     return result;
 });
 
+// Stores the file to put the error logs in
+let logFile: string;
+
 connection.onInitialized(() => {
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
@@ -85,6 +89,8 @@ connection.onInitialized(() => {
             connection.console.log("Workspace folder change event received.");
         });
     }
+
+    logFile = new Date().toISOString() + ".log";
 });
 
 // The example settings
@@ -150,7 +156,7 @@ documents.onDidClose((e) => {
 const quickfixes: Map<string | number | undefined, any> = new Map();
 
 // Stores the abstract syntax tree
-let compUnit: ast;
+let compUnit: ast | null;
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
@@ -180,7 +186,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     try {
         parsedJson = JSON.parse(command.stdout.toString());
     } catch (e) {
-        console.log("Error during parsing: ", e);
+        let error = "Unknown error";
+
+        if (e instanceof Error) {
+            error = e.message;
+        }
+
+        logErrorToFile(error, textDocument.uri, logFile);
         return;
     }
 
@@ -233,6 +245,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 // Implements go to definition
 connection.onDefinition((params) => {
+    if (!compUnit) {
+        logErrorToFile("Comp unit is null", params.textDocument.uri, logFile);
+        return undefined;
+    }
+
     const doc = documents.get(params.textDocument.uri);
 
     if (doc == null) return undefined;
@@ -261,7 +278,20 @@ connection.onDefinition((params) => {
     }
 
     // Checks if it is a theorem or lemma
-    const theoremNames = compUnit.theorems.map((theorem) => theorem.name);
+    let theoremNames: string[];
+
+    try {
+        theoremNames = compUnit.theorems.map((theorem) => theorem.name);
+    } catch (e) {
+        let error = "Unknown error";
+
+        if (e instanceof Error) {
+            error = e.message;
+        }
+
+        logErrorToFile(error, params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     if (theoremNames.includes(word)) {
         const theorem = compUnit.theorems[theoremNames.indexOf(word)];
@@ -276,7 +306,22 @@ connection.onDefinition((params) => {
     }
 
     // Checks if it is a rule
-    const rules = compUnit.judgments.map((judgment) => judgment.rules).flat();
+    let rules: ruleNode[];
+
+    try {
+        rules = compUnit.judgments.map((judgment) => judgment.rules).flat();
+    } catch (e) {
+
+        let error = "Unknown error";
+
+        if (e instanceof Error) {
+            error = e.message;
+        }
+
+        logErrorToFile(error, params.textDocument.uri, logFile);
+        return;
+    }
+
     const ruleNames = rules.map((rule) => rule.name);
 
     if (ruleNames.includes(word)) {
@@ -298,6 +343,11 @@ connection.onDefinition((params) => {
 
 // Provides completions from other modules
 connection.onCompletion((params, _) => {
+    if (!compUnit) {
+        logErrorToFile("Comp unit is null", params.textDocument.uri, logFile);
+        return undefined;
+    }
+
     const doc = documents.get(params.textDocument.uri);
 
     if (doc == null) return undefined;
@@ -352,10 +402,22 @@ connection.onCompletion((params, _) => {
     return list;
 });
 
-connection.onDocumentSymbol((identifier) => {
+// Provides an outline view for the file
+connection.onDocumentSymbol((params) => {
+    if (!compUnit) {
+        logErrorToFile("Comp unit is null", params.textDocument.uri, logFile);
+        return undefined;
+    }
+
     // Adds the module to the symbols
     const res: DocumentSymbol[] = [];
+
     const modules = compUnit.modules;
+
+    if (!modules) {
+        logErrorToFile("Modules is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     for (const module of modules) {
         const moduleSymbol = DocumentSymbol.create(
@@ -388,7 +450,19 @@ connection.onDocumentSymbol((identifier) => {
     }
 
     // Adds all the syntaxes declarations to the symbols
-    const syntaxDeclarations = compUnit.syntax.syntax_declarations;
+    const syntax = compUnit.syntax;
+
+    if (!syntax) {
+        logErrorToFile("Syntax is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
+
+    const syntaxDeclarations = syntax.syntax_declarations;
+
+    if (!syntaxDeclarations) {
+        logErrorToFile("Syntax_declarations is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     for (const declaration of syntaxDeclarations) {
         const children: DocumentSymbol[] = [];
@@ -454,7 +528,12 @@ connection.onDocumentSymbol((identifier) => {
     }
 
     // Adds all the sugars to the symbols
-    const sugars = compUnit.syntax.sugars;
+    const sugars = syntax.sugars;
+
+    if (!sugars) {
+        logErrorToFile("Sugars is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     for (const sugar of sugars) {
         const sugarSymbol = DocumentSymbol.create(
@@ -488,6 +567,11 @@ connection.onDocumentSymbol((identifier) => {
 
     // Adds the theorems to the symbols
     const theorems = compUnit.theorems;
+
+    if (!theorems) {
+        logErrorToFile("Theorems is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     for (const theorem of theorems) {
         let detail = "";
@@ -529,6 +613,11 @@ connection.onDocumentSymbol((identifier) => {
 
     // Adds the judgments to the symbols
     const judgments = compUnit.judgments;
+
+    if (!judgments) {
+        logErrorToFile("Judgments is not defined", params.textDocument.uri, logFile);
+        return undefined;
+    }
 
     for (const judgment of judgments) {
         const children: DocumentSymbol[] = [];
@@ -606,10 +695,10 @@ connection.onDocumentSymbol((identifier) => {
     return res;
 });
 
-// connection.onDidChangeWatchedFiles((_) => {
-//     // Monitored files have change in VSCode
-//     connection.console.log("We received an file change event");
-// });
+connection.onDidChangeWatchedFiles((change) => {
+    // Monitored files have change in VSCode
+    connection.console.log("We received an file change event");
+});
 
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
@@ -620,10 +709,18 @@ connection.onCodeAction(async (params) => {
 
     const codeActions: CodeAction[] = [];
 
+    // Get next line character
     const eolSetting = await connection.workspace.getConfiguration({
         section: "files",
     });
     const nl = eolSetting.eol == "auto" ? EOL : eolSetting.eol;
+
+    // Get indent amount
+    const indentSetting = await connection.workspace.getConfiguration({
+        section: "editor",
+    });
+
+    const indentAmount = indentSetting.tabSize;
 
     // For each diagnostic, try to find a quick fix
     for (const diagnostic of params.context.diagnostics) {
@@ -636,10 +733,7 @@ connection.onCodeAction(async (params) => {
         const range = quickfix.range;
         const line = range.start.line;
         let extraIndent = "";
-        if (errorType == null || errorInfo == null || line == 0) continue;
-        if (range.start.line != range.end.line) {
-            continue;
-        }
+        if (errorType == null || errorInfo == null || line < 0) continue;
         // Range that includes the entire line at line number `line`, 0 indexed
         const lineInfo: Range = getLineRange(line);
 
@@ -657,9 +751,6 @@ connection.onCodeAction(async (params) => {
             }
             lineIndent = lineText.substring(0, i);
         }
-        const indentAmount =
-            textDocument.getText(getLineRange(line)).length -
-            textDocument.getText(getLineRange(line)).trimStart().length;
 
         let indent = "    ";
         if (indentAmount >= 0 && indentAmount <= 8) {
@@ -744,6 +835,12 @@ connection.onCodeAction(async (params) => {
                         newText = newText.concat(indent);
                         if (split[i].startsWith("---")) {
                             const ruleName = split[i].split(" ")[1];
+
+                            if (!compUnit) {
+                                logErrorToFile("Comp unit is null", params.textDocument.uri, logFile);
+                                return undefined;
+                            }
+
                             const rule = findRule(compUnit, ruleName);
                             if (rule !== null) {
                                 let ruleText = textDocument.getText(getLineRange(rule.line));
@@ -938,8 +1035,7 @@ connection.onCodeAction(async (params) => {
                                     range: getLineRange(
                                         lineInfo.start.line + 1,
                                         lineInfo.end.line + 1,
-                                        Number.MAX_VALUE,
-                                        Number.MAX_VALUE,
+                                        0,
                                     ),
                                     newText: lineIndent + extraIndent + errorInfo + nl,
                                 },
@@ -1015,7 +1111,7 @@ connection.onCodeAction(async (params) => {
             case "DERIVATION_NOT_FOUND": {
                 const colon = split[0].indexOf(":");
                 const useName = textDocument.getText(diagnostic.range);
-                let defName: string;
+                let defName;
                 if (colon >= 0) {
                     defName = split[0].substring(0, colon);
                 } else {
@@ -1039,8 +1135,8 @@ connection.onCodeAction(async (params) => {
                 const changes = [
                     {
                         range: getLineRange(
-                            lineInfo.start.line,
-                            lineInfo.start.line,
+                            lineInfo.start.line - 1,
+                            lineInfo.start.line - 1,
                             Number.MAX_VALUE,
                             Number.MAX_VALUE,
                         ),
