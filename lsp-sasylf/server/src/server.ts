@@ -133,6 +133,14 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
     return result;
 }
 
+documents.onDidOpen((e) => {
+    validateTextDocument(e.document);
+});
+
+documents.onDidSave((e) => {
+    validateTextDocument(e.document);
+});
+
 // Only keep settings for open documents
 documents.onDidClose((e) => {
     documentSettings.delete(e.document.uri);
@@ -146,9 +154,9 @@ let compUnit: ast;
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent((change) => {
-    validateTextDocument(change.document);
-});
+// documents.onDidChangeContent((change) => {
+//     validateTextDocument(change.document);
+// });
 
 // Parses diagnostic and ast information from sasylf
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
@@ -159,7 +167,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const diagnostics: Diagnostic[] = [];
     const text = textDocument.getText();
     const command = spawnSync(
-        `java -jar ${__dirname}/../src/SASyLF.jar`,
+        `java -jar ${__dirname}/../SASyLF.jar`,
         ["--lsp", "--stdin"],
         {
             input: text,
@@ -229,6 +237,8 @@ connection.onDefinition((params) => {
 
     if (doc == null) return undefined;
 
+    validateTextDocument(doc);
+
     const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
     const text = doc.getText();
     const offset = doc.offsetAt(params.position);
@@ -292,6 +302,8 @@ connection.onCompletion((params, _) => {
 
     if (doc == null) return undefined;
 
+    validateTextDocument(doc);
+
     const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
     const text = doc.getText();
     const offset = doc.offsetAt(params.position);
@@ -310,7 +322,6 @@ connection.onCompletion((params, _) => {
 
     for (const module of compUnit.modules) {
         if (module.name.split(":")[0] == word) {
-            console.log(module);
             ast = module.ast;
         }
     }
@@ -595,10 +606,10 @@ connection.onDocumentSymbol((identifier) => {
     return res;
 });
 
-connection.onDidChangeWatchedFiles((change) => {
-    // Monitored files have change in VSCode
-    connection.console.log("We received an file change event");
-});
+// connection.onDidChangeWatchedFiles((_) => {
+//     // Monitored files have change in VSCode
+//     connection.console.log("We received an file change event");
+// });
 
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
@@ -638,7 +649,7 @@ connection.onCodeAction(async (params) => {
 
         let lineIndent: string;
         {
-            let i;
+            let i: number;
             for (i = 0; i < lineText.length; ++i) {
                 const ch = lineText.charAt(i);
                 if (ch == " " || ch == "\t") continue;
@@ -1004,7 +1015,7 @@ connection.onCodeAction(async (params) => {
             case "DERIVATION_NOT_FOUND": {
                 const colon = split[0].indexOf(":");
                 const useName = textDocument.getText(diagnostic.range);
-                let defName;
+                let defName: string;
                 if (colon >= 0) {
                     defName = split[0].substring(0, colon);
                 } else {
