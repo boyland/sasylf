@@ -9,6 +9,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
@@ -21,6 +25,7 @@ import edu.cmu.cs.sasylf.ast.Sugar;
 import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
+import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
@@ -198,6 +203,178 @@ public class Proof {
 
 	public static String getJSON() { return json.toString(); }
 
+	private ObjectNode moduleToJSON(Module module) {
+		ObjectNode astNode = objectMapper.createObjectNode();
+
+		astNode.put("name", module.getName());
+
+		ArrayNode theoremsNode = objectMapper.createArrayNode();
+		ArrayNode modulesNode = objectMapper.createArrayNode();
+		ObjectNode syntaxesNode = objectMapper.createObjectNode();
+		ArrayNode judgmentsNode = objectMapper.createArrayNode();
+
+		astNode.put("theorems", theoremsNode);
+		astNode.put("modules", modulesNode);
+		astNode.put("syntax", syntaxesNode);
+		astNode.put("judgments", judgmentsNode);
+
+		ArrayNode syntaxDeclarationsNode = objectMapper.createArrayNode();
+		ArrayNode syntaxSugarsNode = objectMapper.createArrayNode();
+
+		syntaxesNode.put("syntax_declarations", syntaxDeclarationsNode);
+		syntaxesNode.put("sugars", syntaxSugarsNode);
+
+		List<Node> pieces = new ArrayList<>();
+		module.collectTopLevel(pieces);
+
+		for (Node piece : pieces) {
+			Location startLoc = piece.getLocation();
+			Location endLoc = piece.getEndLocation();
+
+			if (piece instanceof Theorem) {
+				Theorem theorem = (Theorem)piece;
+				ObjectNode theoremNode = objectMapper.createObjectNode();
+
+				theoremsNode.add(theoremNode);
+
+				theoremNode.put("name", theorem.getName());
+				theoremNode.put("column", startLoc.getColumn());
+				theoremNode.put("line", startLoc.getLine());
+				theoremNode.put("file", startLoc.getFile());
+				theoremNode.put("kind", theorem.getKind());
+
+				ArrayNode forallsNode = objectMapper.createArrayNode();
+
+				theoremNode.put("foralls", forallsNode);
+
+				for (Fact forall : theorem.getForalls()) {
+					forallsNode.add(forall.getElement().toString());
+				}
+
+				theoremNode.put("conclusion", theorem.getConclusion().getName());
+			} else if (piece instanceof ModulePart) {
+				ModulePart modulePart = (ModulePart)piece;
+				ObjectNode moduleNode = objectMapper.createObjectNode();
+
+				modulesNode.add(moduleNode);
+
+				moduleNode.put("name", modulePart.getName() + ": " +
+																	 modulePart.getModule().toString());
+				moduleNode.put("begin_column", startLoc.getColumn());
+				moduleNode.put("end_column", endLoc.getColumn());
+				moduleNode.put("begin_line", startLoc.getLine());
+				moduleNode.put("end_line", endLoc.getLine());
+
+				// moduleNode.put("file", startLoc.getFile());
+
+				Module m = (Module)modulePart.getModule().resolve(null);
+				String file = m instanceof CompUnit
+													? ((CompUnit)m).getLocation().getFile()
+													: startLoc.getFile();
+
+				if (file.charAt(0) == '/' || file.charAt(0) == '\\') {
+					try (InputStream in = getClass().getResourceAsStream(file);
+							 BufferedReader reader =
+									 new BufferedReader(new InputStreamReader(in))) {
+						StringBuilder stringBuilder = new StringBuilder();
+						String line;
+
+						while ((line = reader.readLine()) != null) {
+							stringBuilder.append(line).append('\n');
+						}
+
+						String content = stringBuilder.toString();
+						moduleNode.put("text", content);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+
+				moduleNode.put("file", file);
+				moduleNode.put("ast", moduleToJSON(m));
+			} else if (piece instanceof SyntaxDeclaration) {
+				SyntaxDeclaration syntax = (SyntaxDeclaration)piece;
+				ObjectNode syntaxNode = objectMapper.createObjectNode();
+
+				syntaxDeclarationsNode.add(syntaxNode);
+
+				syntaxNode.put("name", syntax.getName());
+				syntaxNode.put("column", startLoc.getColumn());
+				syntaxNode.put("line", startLoc.getLine());
+				syntaxNode.put("file", startLoc.getFile());
+
+				ArrayNode clausesNode = objectMapper.createArrayNode();
+
+				syntaxNode.put("clauses", clausesNode);
+
+				List<Clause> clauses = syntax.getClauses();
+
+				for (Clause clause : clauses) {
+					ObjectNode clauseNode = objectMapper.createObjectNode();
+
+					clausesNode.add(clauseNode);
+
+					clauseNode.put("name", clause.getName());
+					clauseNode.put("column", clause.getLocation().getColumn());
+					clauseNode.put("line", clause.getLocation().getLine());
+					clauseNode.put("file", clause.getLocation().getFile());
+				}
+			} else if (piece instanceof Sugar) {
+				Sugar syntax = (Sugar)piece;
+				ObjectNode syntaxNode = objectMapper.createObjectNode();
+
+				syntaxSugarsNode.add(syntaxNode);
+
+				syntaxNode.put("name", syntax.toString());
+				syntaxNode.put("column", syntax.getLocation().getColumn());
+				syntaxNode.put("line", syntax.getLocation().getLine());
+				syntaxNode.put("file", syntax.getLocation().getFile());
+			} else if (piece instanceof Judgment) {
+				Judgment judgment = (Judgment)piece;
+
+				ObjectNode judgmentNode = objectMapper.createObjectNode();
+
+				judgmentsNode.add(judgmentNode);
+
+				judgmentNode.put("name", judgment.getName());
+				judgmentNode.put("column", judgment.getLocation().getColumn());
+				judgmentNode.put("line", judgment.getLocation().getLine());
+				judgmentNode.put("form", judgment.getForm().getName());
+				judgmentNode.put("file", judgment.getLocation().getFile());
+
+				List<Rule> rules = judgment.getRules();
+
+				ArrayNode rulesNode = objectMapper.createArrayNode();
+
+				judgmentNode.put("rules", rulesNode);
+
+				for (Rule rule : rules) {
+					ObjectNode ruleNode = objectMapper.createObjectNode();
+
+					rulesNode.add(ruleNode);
+
+					ArrayNode premisesNode = objectMapper.createArrayNode();
+
+					ruleNode.put("premises", premisesNode);
+
+					for (Clause clause : rule.getPremises()) {
+						premisesNode.add(clause.getName());
+					}
+
+					ruleNode.put("name", rule.getName());
+					ruleNode.put("conclusion", rule.getConclusion().getName());
+					ruleNode.put("in_file",
+											 rule.getLocation().getFile().equals(filename));
+					ruleNode.put("column", rule.getLocation().getColumn());
+					ruleNode.put("line", rule.getLocation().getLine());
+					ruleNode.put("file", rule.getLocation().getFile());
+				}
+			}
+		}
+
+		return astNode;
+	}
+
 	public void parseAndCheck(ModuleFinder mf, Reader r) {
 		if (reports != null) {
 			throw new IllegalStateException("Results already determined");
@@ -240,144 +417,7 @@ public class Proof {
 				qfNode.put("end_column", end.getColumn());
 			}
 
-			ObjectNode astNode = objectMapper.createObjectNode();
-
-			json.put("ast", astNode);
-
-			ArrayNode theoremsNode = objectMapper.createArrayNode();
-			ArrayNode modulesNode = objectMapper.createArrayNode();
-			ObjectNode syntaxesNode = objectMapper.createObjectNode();
-			ArrayNode judgmentsNode = objectMapper.createArrayNode();
-
-			astNode.put("theorems", theoremsNode);
-			astNode.put("modules", modulesNode);
-			astNode.put("syntax", syntaxesNode);
-			astNode.put("judgments", judgmentsNode);
-
-			ArrayNode syntaxDeclarationsNode = objectMapper.createArrayNode();
-			ArrayNode syntaxSugarsNode = objectMapper.createArrayNode();
-
-			syntaxesNode.put("syntax_declarations", syntaxDeclarationsNode);
-			syntaxesNode.put("sugars", syntaxSugarsNode);
-
-			List<Node> pieces = new ArrayList<>();
-			syntaxTree.collectTopLevel(pieces);
-
-			for (Node piece : pieces) {
-				Location startLoc = piece.getLocation();
-				Location endLoc = piece.getEndLocation();
-				if (piece instanceof Theorem) {
-					Theorem theorem = (Theorem)piece;
-					ObjectNode theoremNode = objectMapper.createObjectNode();
-
-					theoremsNode.add(theoremNode);
-
-					theoremNode.put("name", theorem.getName());
-					theoremNode.put("column", startLoc.getColumn());
-					theoremNode.put("line", startLoc.getLine());
-					theoremNode.put("file", startLoc.getFile());
-					theoremNode.put("kind", theorem.getKind());
-
-					ArrayNode forallsNode = objectMapper.createArrayNode();
-
-					theoremNode.put("foralls", forallsNode);
-
-					for (Fact forall : theorem.getForalls()) {
-						forallsNode.add(forall.getElement().toString());
-					}
-
-					theoremNode.put("conclusion", theorem.getConclusion().getName());
-				} else if (piece instanceof ModulePart) {
-					ModulePart modulePart = (ModulePart)piece;
-					ObjectNode moduleNode = objectMapper.createObjectNode();
-					modulesNode.add(moduleNode);
-
-					moduleNode.put("name", modulePart.getName() + ": " +
-																		 modulePart.getModule().toString());
-					moduleNode.put("begin_column", startLoc.getColumn());
-					moduleNode.put("end_column", endLoc.getColumn());
-					moduleNode.put("begin_line", startLoc.getLine());
-					moduleNode.put("end_line", endLoc.getLine());
-					moduleNode.put("file", startLoc.getFile());
-				} else if (piece instanceof SyntaxDeclaration) {
-					SyntaxDeclaration syntax = (SyntaxDeclaration)piece;
-					ObjectNode syntaxNode = objectMapper.createObjectNode();
-
-					syntaxDeclarationsNode.add(syntaxNode);
-
-					syntaxNode.put("name", syntax.getName());
-					syntaxNode.put("column", startLoc.getColumn());
-					syntaxNode.put("line", startLoc.getLine());
-					syntaxNode.put("file", startLoc.getFile());
-
-					ArrayNode clausesNode = objectMapper.createArrayNode();
-
-					syntaxNode.put("clauses", clausesNode);
-
-					List<Clause> clauses = syntax.getClauses();
-
-					for (Clause clause : clauses) {
-						ObjectNode clauseNode = objectMapper.createObjectNode();
-
-						clausesNode.add(clauseNode);
-
-						clauseNode.put("name", clause.getName());
-						clauseNode.put("column", clause.getLocation().getColumn());
-						clauseNode.put("line", clause.getLocation().getLine());
-						clauseNode.put("file", clause.getLocation().getFile());
-					}
-				} else if (piece instanceof Sugar) {
-					Sugar syntax = (Sugar)piece;
-					ObjectNode syntaxNode = objectMapper.createObjectNode();
-
-					syntaxSugarsNode.add(syntaxNode);
-
-					syntaxNode.put("name", syntax.toString());
-					syntaxNode.put("column", syntax.getLocation().getColumn());
-					syntaxNode.put("line", syntax.getLocation().getLine());
-					syntaxNode.put("file", syntax.getLocation().getFile());
-				} else if (piece instanceof Judgment) {
-					Judgment judgment = (Judgment)piece;
-
-					ObjectNode judgmentNode = objectMapper.createObjectNode();
-
-					judgmentsNode.add(judgmentNode);
-
-					judgmentNode.put("name", judgment.getName());
-					judgmentNode.put("column", judgment.getLocation().getColumn());
-					judgmentNode.put("line", judgment.getLocation().getLine());
-					judgmentNode.put("form", judgment.getForm().getName());
-					judgmentNode.put("file", judgment.getLocation().getFile());
-
-					List<Rule> rules = judgment.getRules();
-
-					ArrayNode rulesNode = objectMapper.createArrayNode();
-
-					judgmentNode.put("rules", rulesNode);
-
-					for (Rule rule : rules) {
-						ObjectNode ruleNode = objectMapper.createObjectNode();
-
-						rulesNode.add(ruleNode);
-
-						ArrayNode premisesNode = objectMapper.createArrayNode();
-
-						ruleNode.put("premises", premisesNode);
-
-						for (Clause clause : rule.getPremises()) {
-							premisesNode.add(clause.getName());
-						}
-
-						ruleNode.put("name", rule.getName());
-						ruleNode.put("conclusion", rule.getConclusion().getName());
-						ruleNode.put("in_file",
-												 rule.getLocation().getFile().equals(filename));
-						ruleNode.put("column", rule.getLocation().getColumn());
-						ruleNode.put("line", rule.getLocation().getLine());
-						ruleNode.put("file", rule.getLocation().getFile());
-					}
-				}
-			}
+			json.put("ast", moduleToJSON((Module)syntaxTree));
 		}
 
 		cacheErrorCount();
