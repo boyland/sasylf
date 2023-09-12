@@ -1,4 +1,4 @@
-SASyLF version 1.5.1
+SASyLF version 1.5.2a1
 Copyright (c) 2009 by Jonathan Aldrich
 Additional contributions by John Boyland and others
 
@@ -13,6 +13,8 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 RELEASE HISTORY
 
+1.5.2	Bug fixes
+    Resolved issues #114, #119, #121
 1.5.1	Bug fixes
 	Better error handling in syntactic sugar
 	Bug fix: "_" could be used, which was confusing.
