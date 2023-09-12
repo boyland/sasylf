@@ -67,7 +67,7 @@ public class CheckProofsHandler extends AbstractHandler {
 			MessageDialog.openInformation(
 					window.getShell(),
 					"SASyLF Check Proofs ",
-					"Cannot find resource for " + activeEditor);
+					"Cannot check proofs in files that are not in a project.");
 		} else if (!res.getName().endsWith(".slf")) {
 			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 			MessageDialog.openInformation(
