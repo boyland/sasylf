@@ -35,6 +35,8 @@ const connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
+let prevDate : Date;
+
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
@@ -90,7 +92,8 @@ connection.onInitialized(() => {
         });
     }
 
-    logFile = new Date().toISOString() + ".log";
+		prevDate = new Date();
+    logFile = prevDate.toISOString() + ".log";
 });
 
 // The example settings
@@ -160,9 +163,15 @@ let compUnit: ast | null;
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-// documents.onDidChangeContent((change) => {
-//     validateTextDocument(change.document);
-// });
+documents.onDidChangeContent((change) => {
+		const curDate = new Date();
+		console.log(curDate.getTime() - prevDate.getTime());
+		if (curDate.getTime() - prevDate.getTime() >= 500) {
+			console.log("validating");
+			validateTextDocument(change.document);
+		}
+		prevDate = curDate;
+});
 
 // Parses diagnostic and ast information from sasylf
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
@@ -254,7 +263,7 @@ connection.onDefinition((params) => {
 
     if (doc == null) return undefined;
 
-    validateTextDocument(doc);
+    // validateTextDocument(doc);
 
     const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
     const text = doc.getText();
@@ -352,7 +361,7 @@ connection.onCompletion((params, _) => {
 
     if (doc == null) return undefined;
 
-    validateTextDocument(doc);
+    // validateTextDocument(doc);
 
     const badCharacters: String[] = [" ", "\t", "\n", "\r", "\f", "\v", "(", ")"];
     const text = doc.getText();
