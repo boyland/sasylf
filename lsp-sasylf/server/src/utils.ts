@@ -13,7 +13,7 @@ function createTemporaryFile(
 ): string | null {
     const tmp_path = path.join(tmpdir(), file_path);
     mkdirSync(path.dirname(tmp_path), { recursive: true });
-		writeFileSync(tmp_path, content);
+    writeFileSync(tmp_path, content);
     return tmp_path;
 }
 
@@ -168,7 +168,13 @@ export function findRule(compUnit: ast, ruleName: string): ruleNode | null {
 
 function createLogFile(logFile: string): string {
     // Get path to the log file
+    const logDirectoryPath = path.join(__dirname, "..", "..", "logs");
     const logFilePath = path.join(__dirname, "..", "..", "logs", logFile);
+
+    if (!fs.existsSync(logDirectoryPath)) {
+        // If it doesn't exist, create the directory
+        fs.mkdirSync(logDirectoryPath);
+    }
 
     // If it doesn't already exist, create it
     if (!fs.existsSync(logFilePath)) {
