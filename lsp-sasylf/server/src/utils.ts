@@ -2,24 +2,18 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Range, Location } from "vscode-languageserver/node";
 import { ast, ruleNode, moduleNode, theoremNode } from "./types";
 import { tmpdir } from "os";
-import { mkdir, writeFile } from "fs";
+import { mkdirSync, writeFileSync } from "fs";
 import { URI } from "vscode-uri";
-import * as fs from 'fs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 function createTemporaryFile(
     file_path: string,
     content: string,
 ): string | null {
     const tmp_path = path.join(tmpdir(), file_path);
-    mkdir(path.dirname(tmp_path), { recursive: true }, (err) => {
-        if (err) return null;
-        else {
-            writeFile(tmp_path, content, (err) => {
-                if (err) return null;
-            });
-        }
-    });
+    mkdirSync(path.dirname(tmp_path), { recursive: true });
+		writeFileSync(tmp_path, content);
     return tmp_path;
 }
 
