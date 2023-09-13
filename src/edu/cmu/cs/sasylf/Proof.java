@@ -204,6 +204,8 @@ public class Proof {
 	public static String getJSON() { return json.toString(); }
 
 	private ObjectNode moduleToJSON(Module module) {
+		if (module == null) return null;
+
 		ObjectNode astNode = objectMapper.createObjectNode();
 
 		astNode.put("name", module.getName());
