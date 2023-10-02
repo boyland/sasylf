@@ -4,6 +4,8 @@ import {
 	ExtensionContext,
 	TextDocumentContentProvider,
 	Uri,
+	window,
+	commands
 } from "vscode";
 
 import {
@@ -16,6 +18,13 @@ import {
 import { readFileSync } from "fs";
 
 let client: LanguageClient;
+
+function validateHandler(_) {
+	client.sendNotification(
+		"custom/validateTextDocument",
+		window.activeTextEditor.document.uri.toString()
+	);
+}
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in node
@@ -52,6 +61,10 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		workspace.registerTextDocumentContentProvider(myScheme, myProvider),
+	);
+
+	context.subscriptions.push(
+		commands.registerCommand("sasylf.Validate", validateHandler),
 	);
 
 	// Create the language client and start the client.

@@ -721,6 +721,13 @@ connection.onDidChangeWatchedFiles((change) => {
 	connection.console.log("We received an file change event");
 });
 
+connection.onNotification("custom/validateTextDocument", (uri: string) => {
+	const document : TextDocument | undefined = documents.get(uri);
+	if (document != undefined) {
+		validateTextDocument(document);
+	}
+});
+
 // Looks for quickfixes in the `quickfixes` map and returns them if they exist
 connection.onCodeAction(async (params) => {
 	const textDocument: TextDocument | undefined = documents.get(
