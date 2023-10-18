@@ -65,6 +65,12 @@
 				"id": "sasylf.defaultTheme",
 				"path": "./themes/defaultTheme.json"
 			}
+		],
+		"commands": [
+			{
+				"command": "sasylf.Validate",
+				"title": "Validate Current Document"
+			}
 		]
 	},
 	"prettier": {
