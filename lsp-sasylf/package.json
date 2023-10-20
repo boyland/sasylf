@@ -70,6 +70,10 @@
 			{
 				"command": "sasylf.Validate",
 				"title": "Validate Current Document"
+			},
+			{
+				"command": "sasylf.Test",
+				"title": "Open GUI"
 			}
 		]
 	},
