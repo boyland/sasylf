@@ -33,10 +33,11 @@ function validateHandler(_: any[]) {
 
 function testHandler(_: any[]) {
     const text = window.activeTextEditor?.document.getText();
+    console.log(text);
 
     if (!text) return;
 
-    spawn("python3", [`${__dirname}/../../app/test.py`, text]);
+    spawn("python3", [`${__dirname}/../../app/main.py`, text]);
 }
 
 export function activate(context: ExtensionContext) {

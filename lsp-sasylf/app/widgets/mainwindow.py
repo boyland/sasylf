@@ -1,7 +1,4 @@
-import sys
-
 from PyQt6.QtWidgets import (
-    QApplication,
     QMainWindow,
     QCheckBox,
     QVBoxLayout,
@@ -10,11 +7,9 @@ from PyQt6.QtWidgets import (
     QScrollArea,
 )
 
-text = sys.argv[1]
-
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, text):
         super().__init__()
 
         central_widget = QWidget(self)
@@ -40,11 +35,3 @@ class MainWindow(QMainWindow):
             self.scroll_area.show()
         else:
             self.scroll_area.hide()
-
-
-app = QApplication([])
-
-window = MainWindow()
-window.show()
-
-app.exec()
