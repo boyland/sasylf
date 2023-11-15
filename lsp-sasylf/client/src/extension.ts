@@ -31,13 +31,40 @@ function validateHandler(_: any[]) {
     );
 }
 
-function testHandler(_: any[]) {
+function appHandler(_: any[]) {
     const text = window.activeTextEditor?.document.getText();
-    console.log(text);
 
     if (!text) return;
 
-    spawn("python3", [`${__dirname}/../../app/main.py`, text]);
+    client.sendRequest(
+        "custom/getAST"
+    ).then(ast => {
+        const childProcess = spawn("python3", [`${__dirname}/../../app/main.py`, JSON.stringify(ast)]);
+
+        childProcess.on('error', (err) => {
+            console.error('Error:', err.message);
+        });
+
+        // Listen for the process to exit
+        childProcess.on('exit', (code, signal) => {
+            if (code !== null) {
+                console.log(`Process exited with code ${code}`);
+            } else if (signal !== null) {
+                console.log(`Process killed by signal ${signal}`);
+            } else {
+                console.log('Process exited');
+            }
+        });
+
+        // Listen for stdout and stderr data
+        childProcess.stdout.on('data', (data) => {
+            console.log('stdout:', data.toString());
+        });
+
+        childProcess.stderr.on('data', (data) => {
+            console.error('stderr:', data.toString());
+        });
+    });
 }
 
 export function activate(context: ExtensionContext) {
@@ -82,7 +109,7 @@ export function activate(context: ExtensionContext) {
     );
 
     context.subscriptions.push(
-        commands.registerCommand("sasylf.Test", testHandler),
+        commands.registerCommand("sasylf.App", appHandler),
     );
 
     // Create the language client and start the client.

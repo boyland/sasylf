@@ -72,8 +72,8 @@
 				"title": "Validate Current Document"
 			},
 			{
-				"command": "sasylf.Test",
-				"title": "Open GUI"
+				"command": "sasylf.App",
+				"title": "Open App"
 			}
 		]
 	},

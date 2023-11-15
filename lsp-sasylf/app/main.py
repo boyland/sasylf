@@ -1,7 +1,7 @@
 import sys
 
 from PyQt6.QtWidgets import QApplication
-from widgets.mainwindow import MainWindow
+from widgets.main_window import MainWindow
 
 text = sys.argv[1]
 
