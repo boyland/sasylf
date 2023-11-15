@@ -3,4 +3,4 @@ node_modules
 client/server
 .vscode-test
 package-lock.json
-app/widgets/__pycache__
+app/widgets/__pycache__/
