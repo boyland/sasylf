@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtWidgets import QMainWindow, QTabWidget, QTextEdit, QVBoxLayout
 from widgets.util_widgets import JudgmentWidget, RuleWidget
 
 
@@ -37,7 +36,6 @@ class Judgment(QVBoxLayout):
             rules[-1].clicked.connect(self.on_click)
             self.addWidget(rules[-1])
 
-    @pyqtSlot(RuleWidget)
     def on_click(self, sender: RuleWidget):
         mainWindow = self
 
@@ -48,8 +46,10 @@ class Judgment(QVBoxLayout):
         assert mainWindow is not None
         assert isinstance(mainWindow, QMainWindow)
 
-        textEdit = mainWindow.centralWidget()
+        tabWidget = mainWindow.centralWidget()
+        assert isinstance(tabWidget, QTabWidget)
 
+        textEdit = tabWidget.currentWidget()
         assert isinstance(textEdit, QTextEdit)
 
         textEdit.setText(sender.text())

@@ -5,9 +5,11 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QScrollArea,
+    QTabWidget,
 )
 from PyQt6.QtCore import Qt
 from widgets.judgment import Judgment
+from widgets.util_widgets import Tabs
 import json
 
 
@@ -21,20 +23,23 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("background-color: white; color: black;")
         self.setWindowTitle("Derivation Builder")
 
-        rules_dock = QDockWidget("Rules", self)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, rules_dock)
+        rulesDock = QDockWidget("Rules", self)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, rulesDock)
 
-        scroll_area = QScrollArea(self)
-        scroll_area.setWidgetResizable(True)
+        scrollArea = QScrollArea(self)
+        scrollArea.setWidgetResizable(True)
 
-        dock_content = QWidget(self)
-        dock_main_layout = QVBoxLayout(dock_content)
+        dockContent = QWidget(self)
+        dockMainLayout = QVBoxLayout(dockContent)
 
         for judgment in ast["judgments"]:
-            dock_main_layout.addLayout(Judgment(judgment))
+            dockMainLayout.addLayout(Judgment(judgment))
 
-        scroll_area.setWidget(dock_content)
-        rules_dock.setWidget(scroll_area)
+        scrollArea.setWidget(dockContent)
+        rulesDock.setWidget(scrollArea)
 
-        main_widget = QTextEdit()
-        self.setCentralWidget(main_widget)
+        tabWidget = Tabs(self)
+
+        mainWidget = QTextEdit()
+        tabWidget.addTab(mainWidget, "Tab 1")
+        self.setCentralWidget(tabWidget)

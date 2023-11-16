@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QTabWidget, QTextEdit, QWidget, QPushButton
 from PyQt6.QtGui import QFont, QMouseEvent, QColor
 from PyQt6.QtCore import (
     QParallelAnimationGroup,
@@ -57,8 +57,8 @@ class RuleWidget(CodeText):
 
         colorAnim = makeProperty(b"color", "white", "black")
         textColorAnim = makeProperty(b"textColor", "black", "white")
-        clickForwardAnim = makeProperty(b"color", "black", "green", 400)
-        clickBackwardAnim = makeProperty(b"color", "green", "black", 400)
+        clickForwardAnim = makeProperty(b"color", "black", "green", 300)
+        clickBackwardAnim = makeProperty(b"color", "green", "black", 300)
 
         self.animGroup = QParallelAnimationGroup(self)
         self.animGroup.addAnimation(colorAnim)
@@ -117,3 +117,21 @@ class RuleWidget(CodeText):
             self.clickGroup.stop()
             self.clickGroup.start()
             self.clicked.emit(self)
+
+
+class Tabs(QTabWidget):
+    def __init__(self, parent: QWidget | None = None):
+        super(QTabWidget, self).__init__(parent)
+
+        button = QPushButton("+")
+        self.setCornerWidget(button)
+        button.clicked.connect(self.newTab)
+
+        self.setTabsClosable(True)
+        self.tabCloseRequested.connect(self.closeTab)
+
+    def newTab(self):
+        self.addTab(QTextEdit(), "New Tab")
+
+    def closeTab(self, index: int):
+        self.removeTab(index)
