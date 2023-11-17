@@ -58,7 +58,7 @@ function appHandler(_: any[]) {
 
         // Listen for stdout and stderr data
         childProcess.stdout.on('data', (data) => {
-            console.log('stdout:', data.toString());
+            console.error('stdout:', data.toString());
         });
 
         childProcess.stderr.on('data', (data) => {

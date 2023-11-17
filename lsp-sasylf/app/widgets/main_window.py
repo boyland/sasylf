@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QScrollArea,
-    QTabWidget,
 )
 from PyQt6.QtCore import Qt
 from widgets.judgment import Judgment
