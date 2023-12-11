@@ -8,7 +8,7 @@ SASyLF (pronounced "Sassy Elf") is an LF-based proof assistant specialized to ch
 
 The [Wiki](https://github.com/boyland/sasylf/wiki) has pages for [installing](https://github.com/boyland/sasylf/wiki/Install) and [running](https://github.com/boyland/sasylf/wiki/Running-SASyLF) SASyLF.
 
-Summary: get the JAR file from the release page and either put in the `dropins/` folder of the Eclipse distribution or use it with `java -jar`.
+Summary: To use VSCode, type SASyLF in the Extensions:Marketplace search box and install the [extension](https://marketplace.visualstudio.com/items?itemName=sasylf.SASyLF).  To use the Eclipse IDE or the command line, get the JAR file from the release page and either put in the `dropins/` folder of the Eclipse distribution or use it with `java -jar`.
 
 ## Documentation
 
