@@ -39,31 +39,37 @@ function appHandler(_: any[]) {
     client.sendRequest(
         "custom/getAST"
     ).then(ast => {
-        const childProcess = spawn("python3", [`${__dirname}/../../app/main.py`, JSON.stringify(ast)]);
+        // const childProcess = spawn("python3", [`${__dirname}/../../app/main.py`, JSON.stringify(ast)]);
+        var spawn_env = JSON.parse(JSON.stringify(process.env));
+        delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
+        delete spawn_env.ELECTRON_RUN_AS_NODE;
 
-        childProcess.on('error', (err) => {
-            console.error('Error:', err.message);
-        });
+        process.chdir(`${__dirname}/../../electron_app`);
+        const childProcess = spawn("npm", ["start", JSON.stringify(ast)], { env: spawn_env, detached: true });
+
+        // childProcess.on('error', (err) => {
+        //     console.error('Error:', err.message);
+        // });
 
         // Listen for the process to exit
-        childProcess.on('exit', (code, signal) => {
-            if (code !== null) {
-                console.log(`Process exited with code ${code}`);
-            } else if (signal !== null) {
-                console.log(`Process killed by signal ${signal}`);
-            } else {
-                console.log('Process exited');
-            }
-        });
+        // childProcess.on('exit', (code, signal) => {
+        //     if (code !== null) {
+        //         console.log(`Process exited with code ${code}`);
+        //     } else if (signal !== null) {
+        //         console.log(`Process killed by signal ${signal}`);
+        //     } else {
+        //         console.log('Process exited');
+        //     }
+        // });
 
         // Listen for stdout and stderr data
-        childProcess.stdout.on('data', (data) => {
-            console.error('stdout:', data.toString());
-        });
+        // childProcess.stdout.on('data', (data) => {
+        //     console.error('stdout:', data.toString());
+        // });
 
-        childProcess.stderr.on('data', (data) => {
-            console.error('stderr:', data.toString());
-        });
+        // childProcess.stderr.on('data', (data) => {
+        //     console.error('stderr:', data.toString());
+        // });
     });
 }
 

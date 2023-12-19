@@ -5,11 +5,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.StringReader;
 import java.io.Reader;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
@@ -23,7 +26,6 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
 
 public class Main {
-
 	/**
 	 * @param args the files to parse and typecheck
 	 * @throws ParseException
@@ -65,14 +67,26 @@ public class Main {
 		PathModuleFinder defaultMF = new PathModuleFinder("");
 		boolean debug = false;
 		for (int i = 0; i < args.length; ++i) {
-			if (args[i].equals("--debug")) {
-				debug = true;
-				// If debug flag is set after the lsp flag, then we need to reset out
-				// and err
-				if (Proof.getLsp()) {
-					System.setOut(out);
-					System.setErr(err);
-				}
+			// if (args[i].equals("--debug")) {
+			// 	debug = true;
+			// 	// If debug flag is set after the lsp flag, then we need to reset out
+			// 	// and err
+			// 	if (Proof.getLsp()) {
+			// 		System.setOut(out);
+			// 		System.setErr(err);
+			// 	}
+			// 	continue;
+			// }
+			if (args[i].startsWith("--parse=")) {
+				String str = args[i].substring(8);
+				StringReader reader = new StringReader(str);
+				DSLToolkitParser parser = new DSLToolkitParser(reader);
+				Proof.setClause(parser.ExprToNL());
+				continue;
+			}
+			if (args[i].startsWith("--rule=")) {
+				String rule = args[i].substring(7);
+				Proof.setRule(rule);
 				continue;
 			}
 			if (args[i].equals("--lsp")) {

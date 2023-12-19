@@ -6,23 +6,32 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
 import edu.cmu.cs.sasylf.ast.Clause;
+import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Node;
 import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.RuleLike;
 import edu.cmu.cs.sasylf.ast.Sugar;
 import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
+import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.Module;
@@ -31,7 +40,12 @@ import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
+import edu.cmu.cs.sasylf.term.Abstraction;
+import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.term.Substitution;
+import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -184,6 +198,12 @@ public class Proof {
 	private static boolean lsp = false;
 	public static boolean getLsp() { return lsp; }
 	public static void setLsp(boolean lsp) { Proof.lsp = lsp; }
+
+	private static Clause c;
+	public static void setClause(Clause c) { Proof.c = c; }
+
+	private static String r;
+	public static void setRule(String r) { Proof.r = r; }
 
 	public static Proof parseAndCheck(ModuleFinder mf, String filename,
 																		ModuleId id, Reader r) {
@@ -425,6 +445,25 @@ public class Proof {
 		cacheErrorCount();
 	}
 
+	private RuleLike findRule(String n) {
+		List<Node> pieces = new ArrayList<>();
+		syntaxTree.collectTopLevel(pieces);
+
+		for (Node piece : pieces) {
+			if (piece instanceof Theorem && ((Theorem)piece).getName().equals(n))
+				return (RuleLike)piece;
+			else if (piece instanceof Judgment) {
+				Judgment judgment = (Judgment)piece;
+
+				for (Rule rule : judgment.getRules()) {
+					if (rule.getName().equals(n)) return (RuleLike)rule;
+				}
+			}
+		}
+
+		return null;
+	}
+
 	private void doParseAndCheck(ModuleFinder mf, Reader r) {
 		FreeVar.reinit();
 		try {
@@ -451,7 +490,57 @@ public class Proof {
 																		"Internal error during parsing: " + e,
 																		errorSpan);
 		}
+		Context ctx = null;
+		try {
+			if (mf != null) ctx = new Context(new ResourceModuleFinder(), syntaxTree);
+			else {
+				mf.setCurrentPackage(id == null ? ModuleFinder.EMPTY_PACKAGE
+																				: id.packageName);
+				ctx = new Context(mf, syntaxTree);
+			}
+		} catch (SASyLFError ex) {
+			// muffle: handled already
+		} catch (RuntimeException ex) {
+			ex.printStackTrace();
+			ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,
+																		ex.getLocalizedMessage(), null);
+		}
+		syntaxTree.typecheck(ctx, id);
+		c.typecheck(ctx);
+		Element e = c.computeClause(ctx);
+		StringWriter sw = new StringWriter();
 		duringParse = ErrorHandler.getReports().size();
+		RuleLike ruleLike = findRule(Proof.r);
+		List<Abstraction> addedContext = new ArrayList<Abstraction>();
+		List<Term> allArgs = new ArrayList<>();
+
+		int counter = 0;
+		for (Element premise : ruleLike.getPremises()) {
+			allArgs.add(Facade.FreshVar("" + counter, premise.getType().typeTerm()));
+			counter += 1;
+		}
+
+		allArgs.add(e.asTerm());
+		Term subject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
+		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
+		Term pattern =
+				ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
+		TermPrinter tp = new TermPrinter(ctx, null, ruleLike.getLocation(), false);
+		System.out.println(pattern.toString());
+		System.out.println(subject.toString());
+		Substitution callSub = pattern.unify(subject);
+		Set<FreeVar> vars = e.asTerm().getFreeVariables();
+		callSub.avoid(vars);
+		System.out.println(callSub.toString());
+		Term actual = subject.substitute(callSub);
+		System.out.println(actual.toString());
+		ctx.inputVars = new HashSet<FreeVar>();
+		ctx.outputVars = new HashSet<FreeVar>();
+		ctx.recursiveTheorems = new HashMap<String, Theorem>();
+
+		for (Term arg : ((Application)actual).getArguments()) {
+			System.out.println(tp.toString(tp.asClause(arg)));
+		}
 		if (syntaxTree != null) {
 			try {
 				if (mf == null) syntaxTree.typecheck(new ResourceModuleFinder(), null);
