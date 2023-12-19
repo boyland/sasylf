@@ -6,6 +6,7 @@ export default function MyApp() {
 		<div className="d-flex flex-column">
 			<MyButton />
 			<MyButton />
+			<UploadButton />
 		</div>
 	);
 }
@@ -20,6 +21,28 @@ function MyButton() {
 				--------- sum-z
 				<br />z + n = n
 			</code>
+		</button>
+	);
+}
+
+function handleUpload() {
+	const dialogConfig = {
+        title: 'Select a file',
+        buttonLabel: 'Upload',
+        properties: ['openFile']
+    };
+    console.log("Upload clicked");
+    electron.openDialog('showOpenDialog', dialogConfig).then(result => console.log(result.filePaths[0]));
+}
+
+function UploadButton() {
+	return (
+		<button
+			className="btn btn-primary"
+			onClick={handleUpload}
+			style={{ textAlign: "right", width: "fit-content" }}
+		>
+			Upload
 		</button>
 	);
 }
