@@ -1,9 +1,10 @@
 @import "bootstrap/scss/bootstrap";
 
+html,
 body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
 		Arial, sans-serif;
 	margin: auto;
-	max-width: 38rem;
-	padding: 2rem;
+	height: 100%;
+	padding: 1rem;
 }
