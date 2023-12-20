@@ -65,18 +65,7 @@ public class Main {
 		String dir = null;
 		PathModuleFinder mf = null;
 		PathModuleFinder defaultMF = new PathModuleFinder("");
-		boolean debug = false;
 		for (int i = 0; i < args.length; ++i) {
-			// if (args[i].equals("--debug")) {
-			// 	debug = true;
-			// 	// If debug flag is set after the lsp flag, then we need to reset out
-			// 	// and err
-			// 	if (Proof.getLsp()) {
-			// 		System.setOut(out);
-			// 		System.setErr(err);
-			// 	}
-			// 	continue;
-			// }
 			if (args[i].startsWith("--parse=")) {
 				String str = args[i].substring(8);
 				StringReader reader = new StringReader(str);
@@ -90,7 +79,7 @@ public class Main {
 				continue;
 			}
 			if (args[i].equals("--lsp")) {
-				if (!debug) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
@@ -117,6 +106,8 @@ public class Main {
 			}
 			if (args[i].equals("--debug")) {
 				edu.cmu.cs.sasylf.util.Util.DEBUG = true;
+				System.setOut(out);
+				System.setErr(err);
 				continue;
 			}
 			if (args[i].equals("--waitForCR")) {
