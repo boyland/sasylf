@@ -511,17 +511,14 @@ public class Proof {
 		StringWriter sw = new StringWriter();
 		duringParse = ErrorHandler.getReports().size();
 		RuleLike ruleLike = findRule(Proof.r);
+		List<Fact> inputs = new ArrayList<Fact>();
 		List<Abstraction> addedContext = new ArrayList<Abstraction>();
-		List<Term> allArgs = new ArrayList<>();
 
-		int counter = 0;
 		for (Element premise : ruleLike.getPremises()) {
-			allArgs.add(Facade.FreshVar("" + counter, premise.getType().typeTerm()));
-			counter += 1;
+			inputs.add(premise.asFact(ctx, ctx.assumedContext));
 		}
+		Term subject = ruleLike.checkApplication(ctx, inputs, e.asFact(ctx, ctx.assumedContext), addedContext, null, false);
 
-		allArgs.add(e.asTerm());
-		Term subject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
 		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 		Term pattern =
 				ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
