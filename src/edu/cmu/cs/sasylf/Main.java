@@ -67,6 +67,10 @@ public class Main {
 		PathModuleFinder defaultMF = new PathModuleFinder("");
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].startsWith("--parse=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String str = args[i].substring(8);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
@@ -74,6 +78,10 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--rule=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String rule = args[i].substring(7);
 				Proof.setRule(rule);
 				continue;
@@ -83,7 +91,6 @@ public class Main {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
 				Proof.setLsp(true);
 				continue;
 			}
@@ -217,6 +224,9 @@ public class Main {
 			System.setErr(err);
 			if (Proof.getLsp()) {
 				System.out.println(Proof.getJSON());
+			}
+			if (Proof.getClause() != null && Proof.getRule() != null) {
+				System.out.println(Proof.getPremises());
 			}
 		}
 		System.exit(exitCode);
