@@ -13,17 +13,6 @@ if (require('electron-squirrel-startup'))
     app.quit();
 
 const createWindow = (): void => {
-    readFile("./ast.json", 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        compUnit = JSON.parse(data);
-    });
-
-    ipcMain.handle('getAST', () => compUnit);
-
     const mainWindow = new BrowserWindow({
         height: 600,
         width: 800,
@@ -36,10 +25,22 @@ const createWindow = (): void => {
 };
 
 const setup = (): void => {
-	ipcMain.handle('dialog', (event, method, params) => {       
-		return dialog[method](params)
-  });
-	createWindow();
+    ipcMain.handle('dialog', (_, method, params) => {
+        return dialog[method](params)
+    });
+
+    readFile("./ast.json", 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return;
+        }
+
+        compUnit = JSON.parse(data);
+    });
+
+    ipcMain.handle('getAST', () => compUnit);
+
+    createWindow();
 };
 
 

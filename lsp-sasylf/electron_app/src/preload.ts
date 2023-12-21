@@ -1,5 +1,6 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, OpenDialogOptions } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    getAST: () => ipcRenderer.invoke('getAST'), 
-  openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config)});
+    getAST: () => ipcRenderer.invoke('getAST'),
+    openDialog: (method: string, config: OpenDialogOptions) => ipcRenderer.invoke('dialog', method, config)
+});
