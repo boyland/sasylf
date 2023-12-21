@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { ast } from "./types";
 import { RuleLikes } from "./components/bank";
-import { UploadButton } from "./components/upload";
+import { Draggable } from "./components/draggable";
+import { Droppable } from "./components/droppable";
+import { DndContext } from "@dnd-kit/core";
 
 export default function MyApp() {
 	const [rules, setRules]: any = useState(null);
@@ -17,12 +19,7 @@ export default function MyApp() {
 			.then((compUnit: ast) => myHandler(compUnit));
 	}, []);
 
-	return (
-		<>
-			{rules}
-			<UploadButton />
-		</>
-	);
+	return <div className="d-flex">{rules}</div>;
 }
 
 const appContainer = document.createElement("div");

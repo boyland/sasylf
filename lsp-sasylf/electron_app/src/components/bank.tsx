@@ -48,7 +48,7 @@ function Judgment(props: JudgmentProps) {
 	);
 }
 
-function ruleToText(rule: ruleNode): React.JSX.Element {
+function ruleToText(rule: ruleNode) {
 	let max_len = 0;
 	const lines: string[] = [];
 
@@ -74,7 +74,7 @@ function ruleToText(rule: ruleNode): React.JSX.Element {
 	);
 }
 
-function theoremToText(theorem: theoremNode): React.JSX.Element {
+function theoremToText(theorem: theoremNode) {
 	let max_len = 0;
 	const lines: string[] = [];
 
