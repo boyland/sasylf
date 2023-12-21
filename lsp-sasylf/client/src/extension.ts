@@ -15,7 +15,7 @@ import {
     TransportKind,
 } from "vscode-languageclient/node";
 
-import { readFileSync } from "fs";
+import { readFileSync, writeFile } from "fs";
 import { spawn } from "child_process";
 
 let client: LanguageClient;
@@ -45,7 +45,16 @@ function appHandler(_: any[]) {
         delete spawn_env.ELECTRON_RUN_AS_NODE;
 
         process.chdir(`${__dirname}/../../electron_app`);
-        const childProcess = spawn("npm", ["start", JSON.stringify(ast)], { env: spawn_env, detached: true });
+
+        writeFile("./ast.json", JSON.stringify(ast), 'utf8', (err) => {
+            if (err) {
+                console.error('Error writing to file:', err);
+            } else {
+                console.log('File written successfully.');
+            }
+        });
+
+        spawn("npm", ["start"], { env: spawn_env, detached: true });
 
         // childProcess.on('error', (err) => {
         //     console.error('Error:', err.message);

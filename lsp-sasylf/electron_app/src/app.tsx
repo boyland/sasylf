@@ -1,28 +1,27 @@
 import React from "react";
+import { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { ast } from "./types";
+import { RuleLikes } from "./components/bank";
 
 export default function MyApp() {
-	return (
-		<div className="d-flex flex-column">
-			<MyButton />
-			<MyButton />
-		</div>
-	);
+	const [rules, setRules]: any = useState(null);
+
+	const myHandler = (compUnit: ast) => {
+		setRules(<RuleLikes compUnit={compUnit} />);
+	};
+
+	useEffect(() => {
+		(window as any).electronAPI
+			.getAST()
+			.then((compUnit: ast) => myHandler(compUnit));
+	}, []);
+
+	return <>{rules}</>;
 }
 
-function MyButton() {
-	return (
-		<button
-			className="btn btn-primary m-1"
-			style={{ textAlign: "left", width: "fit-content" }}
-		>
-			<code style={{ color: "inherit" }}>
-				--------- sum-z
-				<br />z + n = n
-			</code>
-		</button>
-	);
-}
+const appContainer = document.createElement("div");
+document.body.appendChild(appContainer);
 
-const root = createRoot(document.body);
+const root = createRoot(appContainer);
 root.render(<MyApp />);
