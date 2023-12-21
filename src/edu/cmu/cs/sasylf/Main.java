@@ -65,19 +65,12 @@ public class Main {
 		String dir = null;
 		PathModuleFinder mf = null;
 		PathModuleFinder defaultMF = new PathModuleFinder("");
-		boolean debug = false;
 		for (int i = 0; i < args.length; ++i) {
-			// if (args[i].equals("--debug")) {
-			// 	debug = true;
-			// 	// If debug flag is set after the lsp flag, then we need to reset out
-			// 	// and err
-			// 	if (Proof.getLsp()) {
-			// 		System.setOut(out);
-			// 		System.setErr(err);
-			// 	}
-			// 	continue;
-			// }
 			if (args[i].startsWith("--parse=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String str = args[i].substring(8);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
@@ -85,16 +78,19 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--rule=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String rule = args[i].substring(7);
 				Proof.setRule(rule);
 				continue;
 			}
 			if (args[i].equals("--lsp")) {
-				if (!debug) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				edu.cmu.cs.sasylf.util.Util.COMP_WHERE = true;
 				Proof.setLsp(true);
 				continue;
 			}
@@ -117,6 +113,8 @@ public class Main {
 			}
 			if (args[i].equals("--debug")) {
 				edu.cmu.cs.sasylf.util.Util.DEBUG = true;
+				System.setOut(out);
+				System.setErr(err);
 				continue;
 			}
 			if (args[i].equals("--waitForCR")) {
@@ -226,6 +224,9 @@ public class Main {
 			System.setErr(err);
 			if (Proof.getLsp()) {
 				System.out.println(Proof.getJSON());
+			}
+			if (Proof.getClause() != null && Proof.getRule() != null) {
+				System.out.println(Proof.getPremises());
 			}
 		}
 		System.exit(exitCode);
