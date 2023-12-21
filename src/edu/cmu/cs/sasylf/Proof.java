@@ -199,11 +199,13 @@ public class Proof {
 	public static boolean getLsp() { return lsp; }
 	public static void setLsp(boolean lsp) { Proof.lsp = lsp; }
 
-	private static Clause c;
+	private static Clause c = null;
 	public static void setClause(Clause c) { Proof.c = c; }
+	public static Clause getClause() { return c; }
 
-	private static String r;
+	private static String r = null;
 	public static void setRule(String r) { Proof.r = r; }
+	public static String getRule() { return r; }
 
 	public static Proof parseAndCheck(ModuleFinder mf, String filename,
 																		ModuleId id, Reader r) {
@@ -464,6 +466,10 @@ public class Proof {
 		return null;
 	}
 
+	private static ObjectNode premises = objectMapper.createObjectNode();
+
+	public static String getPremises() { return premises.toString(); }
+
 	private void doParseAndCheck(ModuleFinder mf, Reader r) {
 		FreeVar.reinit();
 		try {
@@ -505,39 +511,6 @@ public class Proof {
 			ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,
 																		ex.getLocalizedMessage(), null);
 		}
-		syntaxTree.typecheck(ctx, id);
-		c.typecheck(ctx);
-		Element e = c.computeClause(ctx);
-		StringWriter sw = new StringWriter();
-		duringParse = ErrorHandler.getReports().size();
-		RuleLike ruleLike = findRule(Proof.r);
-		List<Fact> inputs = new ArrayList<Fact>();
-		List<Abstraction> addedContext = new ArrayList<Abstraction>();
-
-		for (Element premise : ruleLike.getPremises()) {
-			inputs.add(premise.asFact(ctx, ctx.assumedContext));
-		}
-		Term subject = ruleLike.checkApplication(ctx, inputs, e.asFact(ctx, ctx.assumedContext), addedContext, null, false);
-
-		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
-		Term pattern =
-				ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
-		TermPrinter tp = new TermPrinter(ctx, null, ruleLike.getLocation(), false);
-		System.out.println(pattern.toString());
-		System.out.println(subject.toString());
-		Substitution callSub = pattern.unify(subject);
-		Set<FreeVar> vars = e.asTerm().getFreeVariables();
-		callSub.avoid(vars);
-		System.out.println(callSub.toString());
-		Term actual = subject.substitute(callSub);
-		System.out.println(actual.toString());
-		ctx.inputVars = new HashSet<FreeVar>();
-		ctx.outputVars = new HashSet<FreeVar>();
-		ctx.recursiveTheorems = new HashMap<String, Theorem>();
-
-		for (Term arg : ((Application)actual).getArguments()) {
-			System.out.println(tp.toString(tp.asClause(arg)));
-		}
 		if (syntaxTree != null) {
 			try {
 				if (mf == null) syntaxTree.typecheck(new ResourceModuleFinder(), null);
@@ -552,6 +525,45 @@ public class Proof {
 				ex.printStackTrace();
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR,
 																			ex.getLocalizedMessage(), null);
+			}
+		}
+
+		if (c != null && r != null) {
+			RuleLike ruleLike = findRule(Proof.r);
+			syntaxTree.typecheck(ctx, id);
+			c.typecheck(ctx);
+			Element e = c.computeClause(ctx);
+			List<Fact> inputs = new ArrayList<Fact>();
+			List<Abstraction> addedContext = new ArrayList<Abstraction>();
+
+			for (Element premise : ruleLike.getPremises()) {
+				inputs.add(premise.asFact(ctx, ctx.assumedContext));
+			}
+			Term subject = ruleLike.checkApplication(
+					ctx, inputs, e.asFact(ctx, ctx.assumedContext), addedContext, null,
+					false);
+
+			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
+			Term pattern =
+					ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
+			Substitution callSub = pattern.unify(subject);
+			Set<FreeVar> vars = e.asTerm().getFreeVariables();
+			callSub.avoid(vars);
+			Term actual = subject.substitute(callSub);
+
+			TermPrinter tp =
+					new TermPrinter(ctx, null, ruleLike.getLocation(), false);
+			if (ctx.inputVars == null)
+				ctx.inputVars = new HashSet<FreeVar>();
+			if (ctx.outputVars == null)
+				ctx.outputVars = new HashSet<FreeVar>();
+			if (ctx.recursiveTheorems == null)
+				ctx.recursiveTheorems = new HashMap<String, Theorem>();
+
+			ArrayNode premiseNode = objectMapper.createArrayNode();
+			premises.put("arguments", premiseNode);
+			for (Term arg : ((Application)actual).getArguments()) {
+				premiseNode.add(tp.toString(tp.asClause(arg)));
 			}
 		}
 	}
