@@ -40,7 +40,7 @@ function setupMenu() {
     const newMenu = new Menu();
     defaultMenu.items
         .forEach(x => {
-            if (x.role === "filemenu") {
+            if (x.role?.toLowerCase() === "filemenu") {
                 const newSubmenu = new Menu();
 
                 if (!x.submenu) return;

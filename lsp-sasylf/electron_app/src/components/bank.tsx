@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Collapse from "react-bootstrap/Collapse";
+import Offcanvas from "react-bootstrap/Offcanvas";
+import { FaArrowRightLong } from "react-icons/fa6";
 import { ast, judgmentNode, ruleNode, theoremNode } from "../types";
 
 interface RuleLikeProps {
@@ -100,11 +102,11 @@ function theoremToText(theorem: theoremNode) {
 	);
 }
 
-interface RuleLikesProps {
+interface ASTProps {
 	compUnit: ast;
 }
 
-export function RuleLikes(props: RuleLikesProps) {
+function RuleLikes(props: ASTProps) {
 	const theorems = props.compUnit.theorems.map((value) => theoremToText(value));
 
 	const theoremsElements = theorems.map((thm, ind) => (
@@ -124,5 +126,29 @@ export function RuleLikes(props: RuleLikesProps) {
 			{theoremsElements}
 			{judgments}
 		</div>
+	);
+}
+
+export default function Bank(props: ASTProps) {
+	const [show, setShow] = useState(false);
+
+	const handleClose = () => setShow(false);
+	const handleShow = () => setShow(true);
+
+	return (
+		<>
+			<Button variant="outline-dark" className="open-bank" onClick={handleShow}>
+				<FaArrowRightLong size={25} />
+			</Button>
+
+			<Offcanvas show={show} onHide={handleClose} backdrop={false}>
+				<Offcanvas.Header closeButton>
+					<Offcanvas.Title>Rules Bank</Offcanvas.Title>
+				</Offcanvas.Header>
+				<Offcanvas.Body>
+					<RuleLikes compUnit={props.compUnit} />
+				</Offcanvas.Body>
+			</Offcanvas>
+		</>
 	);
 }
