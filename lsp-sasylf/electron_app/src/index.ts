@@ -22,6 +22,8 @@ const createWindow = (): void => {
     });
 
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+		console.log(process.argv);
 };
 
 const setup = (): void => {
@@ -29,14 +31,9 @@ const setup = (): void => {
         return dialog[method](params)
     });
 
-    readFile("./ast.json", 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        compUnit = JSON.parse(data);
-    });
+		if (process.argv.length > 2) {
+			compUnit = JSON.parse(process.argv[2]);
+		}
 
     ipcMain.handle('getAST', () => compUnit);
 
