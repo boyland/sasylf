@@ -140,8 +140,12 @@ export default function Bank(props: ASTProps) {
 			<Button variant="outline-dark" className="open-bank" onClick={handleShow}>
 				<FaArrowRightLong size={25} />
 			</Button>
-
-			<Offcanvas show={show} onHide={handleClose} backdrop={false}>
+			<Offcanvas
+				show={show}
+				onHide={handleClose}
+				backdrop={false}
+				id="bank-canvas"
+			>
 				<Offcanvas.Header closeButton>
 					<Offcanvas.Title>Rules Bank</Offcanvas.Title>
 				</Offcanvas.Header>

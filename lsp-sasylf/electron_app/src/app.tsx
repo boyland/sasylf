@@ -18,10 +18,10 @@ export default function MyApp() {
 	}, []);
 
 	return (
-		<div className="d-flex flex-row">
+		<>
 			{rules}
 			<ProofArea />
-		</div>
+		</>
 	);
 }
 
