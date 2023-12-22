@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { ast } from "./types";
-import { RuleLikes } from "./components/bank";
+import Bank from "./components/bank";
+import ProofArea from "./components/proof";
 
 export default function MyApp() {
 	const [rules, setRules]: any = useState(null);
 
 	const myHandler = (compUnit: ast) => {
-		setRules(<RuleLikes compUnit={compUnit} />);
+		setRules(<Bank compUnit={compUnit} />);
 	};
 
 	useEffect(() => {
@@ -16,7 +17,12 @@ export default function MyApp() {
 			.then((compUnit: ast) => myHandler(compUnit));
 	}, []);
 
-	return <>{rules}</>;
+	return (
+		<>
+			{rules}
+			<ProofArea />
+		</>
+	);
 }
 
 const appContainer = document.createElement("div");

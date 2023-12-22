@@ -40,7 +40,7 @@ function setupMenu() {
     const newMenu = new Menu();
     defaultMenu.items
         .forEach(x => {
-            if (x.role === "filemenu") {
+            if (x.role?.toLowerCase() === "filemenu") {
                 const newSubmenu = new Menu();
 
                 if (!x.submenu) return;
@@ -64,9 +64,14 @@ function setupMenu() {
 }
 
 const setup = (): void => {
-		if (process.argv.length > 2) {
-			compUnit = JSON.parse(process.argv[2]);
-		}
+    readFile("./ast.json", 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return;
+        }
+
+        compUnit = JSON.parse(data);
+    });
 
     ipcMain.handle('getAST', () => compUnit);
 

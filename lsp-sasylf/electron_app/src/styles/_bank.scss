@@ -7,6 +7,14 @@
 	color: inherit;
 }
 
-.bank {
+.bank,
+#bank-canvas {
 	width: fit-content;
+}
+
+.open-bank {
+	position: absolute;
+	top: 50%;
+	left: 5px;
+	border-color: rgba(0, 0, 0, 0);
 }
