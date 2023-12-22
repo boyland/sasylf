@@ -46,39 +46,7 @@ function appHandler(_: any[]) {
 
         process.chdir(`${__dirname}/../../electron_app`);
 
-        writeFile("./ast.json", JSON.stringify(ast), 'utf8', (err) => {
-            if (err) {
-                console.error('Error writing to file:', err);
-            } else {
-                console.log('File written successfully.');
-            }
-        });
-
-        spawn("npm", ["start"], { env: spawn_env, detached: true });
-
-        // childProcess.on('error', (err) => {
-        //     console.error('Error:', err.message);
-        // });
-
-        // Listen for the process to exit
-        // childProcess.on('exit', (code, signal) => {
-        //     if (code !== null) {
-        //         console.log(`Process exited with code ${code}`);
-        //     } else if (signal !== null) {
-        //         console.log(`Process killed by signal ${signal}`);
-        //     } else {
-        //         console.log('Process exited');
-        //     }
-        // });
-
-        // Listen for stdout and stderr data
-        // childProcess.stdout.on('data', (data) => {
-        //     console.error('stdout:', data.toString());
-        // });
-
-        // childProcess.stderr.on('data', (data) => {
-        //     console.error('stderr:', data.toString());
-        // });
+        spawn("npm", ["run", "start", "--", "--", JSON.stringify(ast)], { env: spawn_env, detached: true });
     });
 }
 

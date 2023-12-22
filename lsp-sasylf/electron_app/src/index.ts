@@ -64,14 +64,9 @@ function setupMenu() {
 }
 
 const setup = (): void => {
-    readFile("./ast.json", 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        compUnit = JSON.parse(data);
-    });
+		if (process.argv.length > 2) {
+			compUnit = JSON.parse(process.argv[2]);
+		}
 
     ipcMain.handle('getAST', () => compUnit);
 
