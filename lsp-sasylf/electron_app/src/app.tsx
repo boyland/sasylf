@@ -9,14 +9,14 @@ export default function MyApp() {
 	const [compUnit, setCompUnit] = useState<ast | null>(null);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-	const myHandler = (newCompUnit: ast) => {
+	const myHandler = (newCompUnit: ast | null) => {
 		setCompUnit(newCompUnit);
 	};
 
 	useEffect(() => {
 		(window as any).electronAPI
 			.getAST()
-			.then((compUnit: ast) => myHandler(compUnit));
+			.then((compUnit: ast | null) => myHandler(compUnit));
 	}, []);
 
 	function handleDragStart(event: DragStartEvent) {
