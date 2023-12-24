@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ast } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
+import Canvas from "./components/canvas";
 import { DndContext, DragStartEvent, UniqueIdentifier } from "@dnd-kit/core";
 
 export default function MyApp() {
@@ -31,6 +32,7 @@ export default function MyApp() {
 		<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 			<Bank compUnit={compUnit} activeId={activeId} />
 			<ProofArea />
+			<Canvas />
 		</DndContext>
 	);
 }
