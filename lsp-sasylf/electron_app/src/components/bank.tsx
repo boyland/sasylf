@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
 import Collapse from "react-bootstrap/Collapse";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { ast, judgmentNode, ruleNode, theoremNode } from "../types";
+import Draggable from "./draggable";
+import { DragOverlay, UniqueIdentifier } from "@dnd-kit/core";
+import { snapCenterToCursor } from "@dnd-kit/modifiers";
 
 interface RuleLikeProps {
 	text: React.JSX.Element;
+	className?: string;
 }
 
 function RuleLike(props: RuleLikeProps) {
@@ -24,9 +29,9 @@ interface JudgmentProps {
 function Judgment(props: JudgmentProps) {
 	const rules = props.judgment.rules.map((rule) => ruleToText(rule));
 	const rulesElements = rules.map((rule, ind) => (
-		<div key={ind}>
-			<RuleLike text={rule} />
-		</div>
+		<Draggable key={ind} id={rule[1]}>
+			<RuleLike text={rule[0]} />
+		</Draggable>
 	));
 	const [open, setOpen] = useState(false);
 
@@ -50,7 +55,7 @@ function Judgment(props: JudgmentProps) {
 	);
 }
 
-function ruleToText(rule: ruleNode) {
+function ruleToText(rule: ruleNode): [React.JSX.Element, string] {
 	let max_len = 0;
 	const lines: string[] = [];
 
@@ -64,7 +69,7 @@ function ruleToText(rule: ruleNode) {
 	lines.push(`${"-".repeat(max_len)} ${rule.name}`);
 	lines.push(rule.conclusion);
 
-	return (
+	return [
 		<>
 			{lines.map((line, ind) => (
 				<div key={ind}>
@@ -72,11 +77,12 @@ function ruleToText(rule: ruleNode) {
 					<br />
 				</div>
 			))}
-		</>
-	);
+		</>,
+		rule.name,
+	];
 }
 
-function theoremToText(theorem: theoremNode) {
+function theoremToText(theorem: theoremNode): [React.JSX.Element, string] {
 	let max_len = 0;
 	const lines: string[] = [];
 
@@ -90,7 +96,7 @@ function theoremToText(theorem: theoremNode) {
 	lines.push(`${"-".repeat(max_len)} ${theorem.name}`);
 	lines.push(theorem.conclusion);
 
-	return (
+	return [
 		<>
 			{lines.map((line, ind) => (
 				<div key={ind}>
@@ -98,8 +104,9 @@ function theoremToText(theorem: theoremNode) {
 					<br />
 				</div>
 			))}
-		</>
-	);
+		</>,
+		theorem.name,
+	];
 }
 
 interface ASTProps {
@@ -110,32 +117,35 @@ function RuleLikes(props: ASTProps) {
 	const theorems = props.compUnit.theorems.map((value) => theoremToText(value));
 
 	const theoremsElements = theorems.map((thm, ind) => (
-		<div key={ind}>
-			<RuleLike text={thm} key={ind} />
-		</div>
+		<Draggable key={ind} id={thm[1]}>
+			<RuleLike text={thm[0]} />
+		</Draggable>
 	));
 
 	const judgments = props.compUnit.judgments.map((value, ind) => (
-		<div key={ind}>
-			<Judgment judgment={value} />
-		</div>
+		<Judgment key={ind} judgment={value} />
 	));
 
 	return (
-		<div className="d-flex flex-column bank">
+		<div className="d-flex flex-column exact">
 			{theoremsElements}
 			{judgments}
 		</div>
 	);
 }
 
-export default function Bank(props: ASTProps) {
+interface BankProps {
+	compUnit: ast | null;
+	activeId: UniqueIdentifier | null;
+}
+
+export default function Bank(props: BankProps) {
 	const [show, setShow] = useState(false);
 
 	const handleClose = () => setShow(false);
 	const handleShow = () => setShow(true);
 
-	return (
+	return props.compUnit ? (
 		<>
 			<Button variant="outline-dark" className="open-bank" onClick={handleShow}>
 				<FaArrowRightLong size={25} />
@@ -151,8 +161,15 @@ export default function Bank(props: ASTProps) {
 				</Offcanvas.Header>
 				<Offcanvas.Body>
 					<RuleLikes compUnit={props.compUnit} />
+					<DragOverlay modifiers={[snapCenterToCursor]}>
+						{props.activeId ? (
+							<Card body className="exact" border="dark" text="dark">
+								<code className="rule-like-text">{props.activeId}</code>
+							</Card>
+						) : null}
+					</DragOverlay>
 				</Offcanvas.Body>
 			</Offcanvas>
 		</>
-	);
+	) : null;
 }

@@ -3,12 +3,14 @@ import { createRoot } from "react-dom/client";
 import { ast } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
+import { DndContext, DragStartEvent, UniqueIdentifier } from "@dnd-kit/core";
 
 export default function MyApp() {
-	const [rules, setRules]: any = useState(null);
+	const [compUnit, setCompUnit] = useState<ast | null>(null);
+	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-	const myHandler = (compUnit: ast) => {
-		setRules(<Bank compUnit={compUnit} />);
+	const myHandler = (newCompUnit: ast) => {
+		setCompUnit(newCompUnit);
 	};
 
 	useEffect(() => {
@@ -17,11 +19,19 @@ export default function MyApp() {
 			.then((compUnit: ast) => myHandler(compUnit));
 	}, []);
 
+	function handleDragStart(event: DragStartEvent) {
+		setActiveId(event.active.id);
+	}
+
+	function handleDragEnd() {
+		setActiveId(null);
+	}
+
 	return (
-		<>
-			{rules}
+		<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+			<Bank compUnit={compUnit} activeId={activeId} />
 			<ProofArea />
-		</>
+		</DndContext>
 	);
 }
 
