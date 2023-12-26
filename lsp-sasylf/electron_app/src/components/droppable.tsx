@@ -6,11 +6,11 @@ export default function Droppable(props: any) {
 		id: props.id,
 	});
 	const style = {
-		opacity: isOver ? 1 : 0.5,
+		opacity: isOver ? 0.5 : 1,
 	};
 
 	return (
-		<div ref={setNodeRef} style={style}>
+		<div className={`${props.className} p-2`} ref={setNodeRef} style={style}>
 			{props.children}
 		</div>
 	);

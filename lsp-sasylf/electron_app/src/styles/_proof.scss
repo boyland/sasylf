@@ -2,10 +2,27 @@
 	justify-content: center;
 }
 
+.node-line {
+	background-color: black;
+	height: 4px;
+	border-radius: 5px;
+	width: stretch;
+}
+
 .proof-input {
-	width: fit-content;
 	position: absolute;
 	bottom: 0;
-	align-self: stretch;
 	font-family: "Courier New", monospace;
+	align-items: center;
+}
+
+.drop-area {
+	position: absolute;
+	bottom: 4.5px;
+	border: dashed;
+	border-radius: 10px;
+}
+
+.rule-drop {
+	white-space: nowrap;
 }

@@ -3,15 +3,18 @@ import { createRoot } from "react-dom/client";
 import { ast } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
-import { DndContext, DragStartEvent, UniqueIdentifier } from "@dnd-kit/core";
+import {
+	DndContext,
+	DragEndEvent,
+	DragStartEvent,
+	UniqueIdentifier,
+} from "@dnd-kit/core";
+import { snapCenterToCursor } from "@dnd-kit/modifiers";
 
 export default function MyApp() {
 	const [compUnit, setCompUnit] = useState<ast | null>(null);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-
-	const myHandler = (newCompUnit: ast | null) => {
-		setCompUnit(newCompUnit);
-	};
+	const [dropped, setDropped] = useState({});
 
 	useEffect(() => {
 		(window as any).electronAPI
@@ -19,18 +22,32 @@ export default function MyApp() {
 			.then((compUnit: ast | null) => myHandler(compUnit));
 	}, []);
 
-	function handleDragStart(event: DragStartEvent) {
-		setActiveId(event.active.id);
-	}
+	const myHandler = (newCompUnit: ast | null) => setCompUnit(newCompUnit);
 
-	function handleDragEnd() {
+	const removeHandler = (id: number) => {
+		const newDropped = { ...dropped };
+		delete newDropped[id];
+		setDropped(newDropped);
+	};
+
+	const handleDragStart = (event: DragStartEvent) =>
+		setActiveId(event.active.id);
+
+	const handleDragEnd = (event: DragEndEvent) => {
 		setActiveId(null);
-	}
+
+		if (event.over && !(event.over.id in dropped))
+			setDropped({ ...dropped, [event.over.id]: event.active.id });
+	};
 
 	return (
-		<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+		<DndContext
+			modifiers={[snapCenterToCursor]}
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+		>
 			<Bank compUnit={compUnit} activeId={activeId} />
-			<ProofArea />
+			<ProofArea dropped={dropped} remove={removeHandler} />
 		</DndContext>
 	);
 }

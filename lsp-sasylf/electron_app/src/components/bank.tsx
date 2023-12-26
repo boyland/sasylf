@@ -7,7 +7,6 @@ import { FaArrowRightLong } from "react-icons/fa6";
 import { ast, judgmentNode, ruleNode, theoremNode } from "../types";
 import Draggable from "./draggable";
 import { DragOverlay, UniqueIdentifier } from "@dnd-kit/core";
-import { snapCenterToCursor } from "@dnd-kit/modifiers";
 
 interface RuleLikeProps {
 	text: React.JSX.Element;
@@ -22,11 +21,7 @@ function RuleLike(props: RuleLikeProps) {
 	);
 }
 
-interface JudgmentProps {
-	judgment: judgmentNode;
-}
-
-function Judgment(props: JudgmentProps) {
+function Judgment(props: { judgment: judgmentNode }) {
 	const rules = props.judgment.rules.map((rule) => ruleToText(rule));
 	const rulesElements = rules.map((rule, ind) => (
 		<Draggable key={ind} id={rule[1]}>
@@ -109,11 +104,7 @@ function theoremToText(theorem: theoremNode): [React.JSX.Element, string] {
 	];
 }
 
-interface ASTProps {
-	compUnit: ast;
-}
-
-function RuleLikes(props: ASTProps) {
+function RuleLikes(props: { compUnit: ast }) {
 	const theorems = props.compUnit.theorems.map((value) => theoremToText(value));
 
 	const theoremsElements = theorems.map((thm, ind) => (
@@ -161,7 +152,7 @@ export default function Bank(props: BankProps) {
 				</Offcanvas.Header>
 				<Offcanvas.Body>
 					<RuleLikes compUnit={props.compUnit} />
-					<DragOverlay modifiers={[snapCenterToCursor]}>
+					<DragOverlay>
 						{props.activeId ? (
 							<Card body className="exact" border="dark" text="dark">
 								<code className="rule-like-text">{props.activeId}</code>
