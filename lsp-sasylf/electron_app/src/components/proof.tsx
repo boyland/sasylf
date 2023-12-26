@@ -1,32 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
+import { DroppedContext } from "./state";
 
 let nodeCounter = 1;
 
 interface nodeProps {
-	dropped: any;
 	conclusion: string;
-	remove: (id: number) => void;
+	root: boolean;
 }
 
 function ProofNode(props: nodeProps) {
+	const [dropped, remove] = useContext(DroppedContext);
+
 	const [id, setId] = useState(0);
+	const className = `d-flex flex-row proof-node m-2 ${
+		props.root ? "root-node" : ""
+	}`;
 
 	useEffect(() => setId(nodeCounter++), []);
 
 	return (
-		<div className="d-flex flex-row proof-input m-2">
+		<div className={className}>
 			<div className="d-flex flex-column">
 				<div className="node-line"></div>
 				<span className="conclusion">{props.conclusion}</span>
 			</div>
 			<Droppable id={id} className="rule-drop">
 				<div className="drop-area p-2">
-					{id in props.dropped ? (
+					{id in dropped ? (
 						<>
-							{props.dropped[id]}{" "}
-							<CloseButton onClick={() => props.remove(id)} />
+							{dropped[id]} <CloseButton onClick={() => remove(id)} />
 						</>
 					) : (
 						"Put rule here"
@@ -37,19 +41,10 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-interface proofProps {
-	dropped: any;
-	remove: (id: number) => void;
-}
-
-export default function ProofArea(props: proofProps) {
+export default function ProofArea() {
 	return (
 		<div className="d-flex proof-area">
-			<ProofNode
-				dropped={props.dropped}
-				conclusion="(s n1') + n2 = (s n3')"
-				remove={props.remove}
-			/>
+			<ProofNode conclusion="(s n1') + n2 = (s n3')" root />
 		</div>
 	);
 }

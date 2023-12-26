@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { createRoot } from "react-dom/client";
 import { ast } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
+import { DroppedContext } from "./components/state";
 import {
 	DndContext,
 	DragEndEvent,
@@ -19,10 +20,10 @@ export default function MyApp() {
 	useEffect(() => {
 		(window as any).electronAPI
 			.getAST()
-			.then((compUnit: ast | null) => myHandler(compUnit));
+			.then((compUnit: ast | null) => compUnitHandler(compUnit));
 	}, []);
 
-	const myHandler = (newCompUnit: ast | null) => setCompUnit(newCompUnit);
+	const compUnitHandler = (newCompUnit: ast | null) => setCompUnit(newCompUnit);
 
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
@@ -47,7 +48,9 @@ export default function MyApp() {
 			onDragEnd={handleDragEnd}
 		>
 			<Bank compUnit={compUnit} activeId={activeId} />
-			<ProofArea dropped={dropped} remove={removeHandler} />
+			<DroppedContext.Provider value={[dropped, removeHandler]}>
+				<ProofArea />
+			</DroppedContext.Provider>
 		</DndContext>
 	);
 }
