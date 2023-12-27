@@ -10,22 +10,47 @@
 }
 
 .proof-node {
-	position: absolute;
 	font-family: "Courier New", monospace;
-	align-items: center;
+	align-items: flex-end;
 }
 
 .root-node {
+	position: absolute;
 	bottom: 0;
 }
 
 .drop-area {
-	position: absolute;
-	bottom: 4.5px;
+	position: relative;
 	border: dashed;
 	border-radius: 10px;
 }
 
-.rule-drop {
+.no-wrap {
 	white-space: nowrap;
+}
+
+.drop-container {
+	white-space: nowrap;
+	align-self: stretch;
+	align-items: flex-end;
+}
+
+.premises {
+	justify-content: center;
+}
+
+.premise {
+	margin-right: 30px;
+}
+
+.premise:last-child {
+	margin-right: 0;
+}
+
+.centered-text {
+	text-align: center;
+}
+
+.spacer {
+	visibility: hidden;
 }

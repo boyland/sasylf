@@ -5,28 +5,53 @@ import { DroppedContext } from "./state";
 
 let nodeCounter = 1;
 
+function Premises(props: { args: string[] }) {
+	return (
+		<div className="d-flex flex-row premises">
+			{props.args.slice(0, -1).map((arg, ind) => (
+				<ProofNode
+					className="premise"
+					conclusion={arg}
+					root={false}
+					key={ind}
+				/>
+			))}
+		</div>
+	);
+}
+
 interface nodeProps {
 	conclusion: string;
 	root: boolean;
+	className?: string;
 }
 
 function ProofNode(props: nodeProps) {
 	const [dropped, remove] = useContext(DroppedContext);
-
 	const [id, setId] = useState(0);
-	const className = `d-flex flex-row proof-node m-2 ${
-		props.root ? "root-node" : ""
-	}`;
+	const [args, setArgs] = useState<string[] | null>(null);
 
 	useEffect(() => setId(nodeCounter++), []);
+	useEffect(() => {
+		if (id in dropped)
+			(window as any).electronAPI
+				.parse(props.conclusion, dropped[id])
+				.then((res: string[]) => setArgs(res));
+		else setArgs(null);
+	}, [dropped]);
 
 	return (
-		<div className={className}>
+		<div
+			className={`d-flex flex-row proof-node m-3 ${
+				props.root ? "root-node" : ""
+			}`}
+		>
 			<div className="d-flex flex-column">
+				{args ? <Premises args={args} /> : null}
 				<div className="node-line"></div>
-				<span className="conclusion">{props.conclusion}</span>
+				<span className="centered-text no-wrap">{props.conclusion}</span>
 			</div>
-			<Droppable id={id} className="rule-drop">
+			<Droppable id={id} className="d-flex drop-container">
 				<div className="drop-area p-2">
 					{id in dropped ? (
 						<>
@@ -44,7 +69,7 @@ function ProofNode(props: nodeProps) {
 export default function ProofArea() {
 	return (
 		<div className="d-flex proof-area">
-			<ProofNode conclusion="(s n1') + n2 = (s n3')" root />
+			<ProofNode conclusion="(s (z)) + n = (s n)" root />
 		</div>
 	);
 }
