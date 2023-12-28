@@ -29,6 +29,7 @@ interface nodeProps {
 function ProofNode(props: nodeProps) {
 	const [dropped, remove] = useContext(DroppedContext);
 	const [id, setId] = useState(0);
+	const [duplicate, setDuplicate] = useState(false);
 	const [args, setArgs] = useState<string[] | null>(null);
 
 	useEffect(() => setId(nodeCounter++), []);
@@ -38,6 +39,8 @@ function ProofNode(props: nodeProps) {
 				.parse(props.conclusion, dropped[id])
 				.then((res: string[]) => setArgs(res));
 		else setArgs(null);
+
+		setDuplicate(props.conclusion in Object.values(dropped));
 	}, [dropped]);
 
 	return (
@@ -51,17 +54,25 @@ function ProofNode(props: nodeProps) {
 				<div className="node-line"></div>
 				<span className="centered-text no-wrap">{props.conclusion}</span>
 			</div>
-			<Droppable id={id} className="d-flex drop-container">
-				<div className="drop-area p-2">
-					{id in dropped ? (
-						<>
-							{dropped[id]} <CloseButton onClick={() => remove(id)} />
-						</>
-					) : (
-						"Put rule here"
-					)}
+			{duplicate ? (
+				<div className="d-flex drop-container">
+					<div className="drop-area p-2 m-2" style={{ opacity: 0.5 }}>
+						Elsewhere
+					</div>
 				</div>
-			</Droppable>
+			) : (
+				<Droppable id={id} className="d-flex drop-container">
+					<div className="drop-area p-2">
+						{id in dropped ? (
+							<>
+								{dropped[id]} <CloseButton onClick={() => remove(id)} />
+							</>
+						) : (
+							"Put rule here"
+						)}
+					</div>
+				</Droppable>
+			)}
 		</div>
 	);
 }
