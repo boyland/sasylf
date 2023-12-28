@@ -9,14 +9,12 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 export default function MyApp() {
 	const [tabs, setTabs] = useState<Array<tab>>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-	const [activeTab, setActiveTab] = useState<UniqueIdentifier | null>(null);
 
 	const addTab = (compUnit: ast | null, name: string) => {
 		let maxId = -1;
 		for (const e of tabs) {
 			maxId = Math.max(e.id, maxId);
 			if (e.ast == compUnit) {
-				setActiveTab(e.id);
 				return;
 			}
 		}
