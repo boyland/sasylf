@@ -77,6 +77,14 @@ public class Main {
 				Proof.setClause(parser.ExprToNL());
 				continue;
 			}
+			if (args[i].startsWith("--premises=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
+				Proof.setPremise(args[i].substring(11));
+				continue;
+			}
 			if (args[i].startsWith("--rule=")) {
 				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
@@ -227,6 +235,9 @@ public class Main {
 			}
 			if (Proof.getClause() != null && Proof.getRule() != null) {
 				System.out.println(Proof.getPremises());
+			}
+			if (Proof.getPremise() != null && Proof.getRule() != null) {
+				System.out.println(Proof.getConclusions());
 			}
 		}
 		System.exit(exitCode);

@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.io.BufferedReader;
@@ -195,6 +198,9 @@ public class Proof {
 	 * @param r contents to parse; must not be null
 	 * @returns Results object of results, never null
 	 */
+	private final static ObjectMapper objectMapper = new ObjectMapper();
+	private static ObjectNode json = objectMapper.createObjectNode();
+
 	private static boolean lsp = false;
 	public static boolean getLsp() { return lsp; }
 	public static void setLsp(boolean lsp) { Proof.lsp = lsp; }
@@ -206,6 +212,21 @@ public class Proof {
 	private static String r = null;
 	public static void setRule(String r) { Proof.r = r; }
 	public static String getRule() { return r; }
+
+	private static List<Clause> p = null;
+	public static void setPremise(String p)
+			throws JsonProcessingException, ParseException {
+
+		Map<String, List<String>> map = objectMapper.readValue(p, Map.class);
+		List<Clause> premises = new ArrayList<>();
+		for (String s : map.get("premises")) {
+			StringReader reader = new StringReader(s);
+			DSLToolkitParser parser = new DSLToolkitParser(reader);
+			premises.add(parser.ExprToNL());
+		}
+		Proof.p = premises;
+	}
+	public static List<Clause> getPremise() { return p; }
 
 	public static Proof parseAndCheck(ModuleFinder mf, String filename,
 																		ModuleId id, Reader r) {
@@ -220,8 +241,6 @@ public class Proof {
 	 * @param mf may be null
 	 * @param r contents to parse; must not be null
 	 */
-	private final static ObjectMapper objectMapper = new ObjectMapper();
-	private static ObjectNode json = objectMapper.createObjectNode();
 
 	public static String getJSON() { return json.toString(); }
 
@@ -467,8 +486,10 @@ public class Proof {
 	}
 
 	private static ObjectNode premises = objectMapper.createObjectNode();
+	private static ObjectNode conclusions = objectMapper.createObjectNode();
 
 	public static String getPremises() { return premises.toString(); }
+	public static String getConclusions() { return conclusions.toString(); }
 
 	private void doParseAndCheck(ModuleFinder mf, Reader r) {
 		FreeVar.reinit();
@@ -553,10 +574,8 @@ public class Proof {
 
 			TermPrinter tp =
 					new TermPrinter(ctx, null, ruleLike.getLocation(), false);
-			if (ctx.inputVars == null)
-				ctx.inputVars = new HashSet<FreeVar>();
-			if (ctx.outputVars == null)
-				ctx.outputVars = new HashSet<FreeVar>();
+			if (ctx.inputVars == null) ctx.inputVars = new HashSet<FreeVar>();
+			if (ctx.outputVars == null) ctx.outputVars = new HashSet<FreeVar>();
 			if (ctx.recursiveTheorems == null)
 				ctx.recursiveTheorems = new HashMap<String, Theorem>();
 
@@ -565,6 +584,50 @@ public class Proof {
 			for (Term arg : ((Application)actual).getArguments()) {
 				premiseNode.add(tp.toString(tp.asClause(arg)));
 			}
+		}
+
+		if (p != null && r != null) {
+			RuleLike ruleLike = findRule(Proof.r);
+			syntaxTree.typecheck(ctx, id);
+			List<Fact> inputs = new ArrayList<Fact>();
+			List<Abstraction> addedContext = new ArrayList<Abstraction>();
+
+			Element conclusion = ruleLike.getConclusion();
+
+			for (Clause premise : p) {
+				premise.typecheck(ctx);
+			}
+			for (Clause premise : p) {
+				Element e = premise.computeClause(ctx);
+				inputs.add(e.asFact(ctx, ctx.assumedContext));
+			}
+
+			// TODO: Add assert to make sure the number of premises passed in is
+			// consistent with the number of premises expected by the rule
+
+			Term subject = ruleLike.checkApplication(
+					ctx, inputs, conclusion.asFact(ctx, ctx.assumedContext), addedContext,
+					null, false);
+
+			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
+			Term pattern =
+					ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
+			Substitution callSub = subject.unify(pattern);
+			Term actual = subject.substitute(callSub);
+
+			TermPrinter tp =
+					new TermPrinter(ctx, null, ruleLike.getLocation(), false);
+			if (ctx.inputVars == null) ctx.inputVars = new HashSet<FreeVar>();
+			if (ctx.outputVars == null) ctx.outputVars = new HashSet<FreeVar>();
+			if (ctx.recursiveTheorems == null)
+				ctx.recursiveTheorems = new HashMap<String, Theorem>();
+
+			ArrayNode conclusionNode = objectMapper.createArrayNode();
+			conclusions.put("conclusion", conclusionNode);
+			conclusionNode.add(tp.toString(tp.asClause(
+					((Application)actual)
+							.getArguments()
+							.get(((Application)actual).getArguments().size() - 1))));
 		}
 	}
 }
