@@ -32,18 +32,17 @@ const createWindow = (): BrowserWindow => {
 	return mainWindow;
 };
 
-function handleUpload(mainWindow: BrowserWindow, filepath: string) {
+function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 	const command = spawnSync(
 		`java -jar ${__dirname}/../../SASyLF.jar`,
-		["--lsp", filepath],
+		["--lsp", filePath],
 		{ shell: true },
 	);
 
 	const output = JSON.parse(command.stdout.toString());
 	const compUnit: ast = output["ast"];
-	const fileName = filepath.replace(/^.*[\\/]/, "");
 
-	mainWindow.webContents.send("add-ast", { compUnit, fileName });
+	mainWindow.webContents.send("add-ast", { compUnit, filePath });
 
 	return;
 }

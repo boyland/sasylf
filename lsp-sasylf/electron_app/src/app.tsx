@@ -10,19 +10,28 @@ export default function MyApp() {
 	const [tabs, setTabs] = useState<Array<tab>>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-	const addTab = (compUnit: ast | null, name: string) => {
-		let maxId = -1;
+	const addTab = (compUnit: ast | null, filePath: string) => {
+		let maxId: number = -1;
+		let occurences: number = 0;
 		for (const e of tabs) {
 			maxId = Math.max(e.id, maxId);
-			if (e.ast == compUnit) {
-				return;
-			}
+			if (e.filePath === filePath) occurences += 1;
 		}
-		setTabs(tabs.concat([{ ast: compUnit, id: maxId + 1, name }]));
+		const fileName = filePath.replace(/^.*[\\/]/, "");
+		setTabs(
+			tabs.concat([
+				{
+					ast: compUnit,
+					id: maxId + 1,
+					filePath,
+					name: fileName + (occurences === 0 ? "" : ` (${occurences})`),
+				},
+			]),
+		);
 	};
 
-	(window as any).electronAPI.addAST(({ compUnit, fileName }) =>
-		addTab(compUnit, fileName),
+	(window as any).electronAPI.addAST(({ compUnit, filePath }) =>
+		addTab(compUnit, filePath),
 	);
 
 	function handleDragStart(event: DragStartEvent) {

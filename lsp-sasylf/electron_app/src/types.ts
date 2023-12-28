@@ -72,4 +72,5 @@ export type tab = {
 	ast: ast;
 	id: number;
 	name: string;
+	filePath : string;
 };
