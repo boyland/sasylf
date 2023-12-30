@@ -19,14 +19,15 @@ export default function MyApp() {
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [dropped, setDropped] = useState({});
 
-	const addTab = (compUnit: ast | null, filePath: string) => {
+	const addTab = (compUnit: ast | null, filePath: string | null) => {
 		let maxId: number = -1;
 		let occurences: number = 0;
 		for (const e of tabs) {
 			maxId = Math.max(e.id, maxId);
 			if (e.filePath === filePath) occurences += 1;
 		}
-		const fileName = filePath.replace(/^.*[\\/]/, "");
+		const fileName =
+			filePath === null ? "untitled" : filePath.replace(/^.*[\\/]/, "");
 		setTabs(
 			tabs.concat([
 				{
@@ -39,9 +40,9 @@ export default function MyApp() {
 		);
 	};
 
-	(window as any).electronAPI.addAST(({ compUnit, filePath }) =>
-		addTab(compUnit, filePath),
-	);
+	(window as any).electronAPI.addAST(({ compUnit, filePath }) => {
+		addTab(compUnit, filePath);
+	});
 
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };

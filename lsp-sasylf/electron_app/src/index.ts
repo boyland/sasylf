@@ -43,8 +43,6 @@ function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 	const compUnit: ast = output["ast"];
 
 	mainWindow.webContents.send("add-ast", { compUnit, filePath });
-
-	return;
 }
 
 function setupMenu(mainWindow: BrowserWindow) {
@@ -110,12 +108,16 @@ const setup = (): void => {
 	const mainWindow = createWindow();
 
 	ipcMain.handle("parse", parse);
-	if (process.argv.length > 2)
-		mainWindow.webContents.send("add-ast", {
-			compUnit: JSON.parse(process.argv[2]),
-			fileName: "unamed",
-		});
 	setupMenu(mainWindow);
+
+	if (process.argv.length > 2) {
+		mainWindow.webContents.on("did-finish-load", () => {
+			mainWindow.webContents.send("add-ast", {
+				compUnit: JSON.parse(process.argv[2]),
+				filePath: null,
+			});
+		});
+	}
 };
 
 // This method will be called when Electron has finished
