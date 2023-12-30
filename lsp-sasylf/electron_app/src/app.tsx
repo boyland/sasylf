@@ -85,11 +85,10 @@ export default function MyApp() {
 						</DroppedContext.Provider>
 					</DndContext>
 					<button
-						className="btn btn-primary"
+						className="btn btn-danger close-button"
 						onClick={() => handleClose(element.id)}
-						style={{ textAlign: "right", width: "fit-content" }}
 					>
-						Close
+						Close Tab
 					</button>
 				</TabPanel>
 			))}
