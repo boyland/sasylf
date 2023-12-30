@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
+import Canvas from "./components/canvas";
 import { DroppedContext } from "./components/state";
 import {
 	DndContext,
@@ -72,16 +73,17 @@ export default function MyApp() {
 
 			{tabs.map((element) => (
 				<TabPanel>
-		<DndContext
-			modifiers={[snapCenterToCursor]}
-			onDragStart={handleDragStart}
-			onDragEnd={handleDragEnd}
-		>
-			<Bank compUnit={element.ast} activeId={activeId} />
-			<DroppedContext.Provider value={[dropped, removeHandler]}>
-				<ProofArea />
-			</DroppedContext.Provider>
-		</DndContext>
+					<DndContext
+						modifiers={[snapCenterToCursor]}
+						onDragStart={handleDragStart}
+						onDragEnd={handleDragEnd}
+					>
+						<Bank compUnit={element.ast} activeId={activeId} />
+						<DroppedContext.Provider value={[dropped, removeHandler]}>
+							<ProofArea />
+							<Canvas />
+						</DroppedContext.Provider>
+					</DndContext>
 					<button
 						className="btn btn-primary"
 						onClick={() => handleClose(element.id)}

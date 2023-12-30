@@ -1,0 +1,22 @@
+.zoomable-canvas {
+	overflow: hidden;
+	width: 75vw;
+	height: 75vh;
+	position: relative;
+}
+
+.canvas {
+	width: 75vw;
+	height: 75vh;
+	background-color: #eee;
+	z-index: -1;
+}
+
+.tools {
+	position: absolute;
+	z-index: 9;
+	display: flex;
+	justify-content: space-between;
+	bottom: 0;
+	right: 0;
+}

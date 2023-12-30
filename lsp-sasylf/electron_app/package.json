@@ -57,6 +57,7 @@
 		"react-bootstrap": "^2.9.1",
 		"react-dom": "^18.2.0",
 		"react-icons": "^4.12.0",
-		"react-tabs": "^6.0.2"
+		"react-tabs": "^6.0.2",
+		"react-zoom-pan-pinch": "^3.3.0"
 	}
 }
