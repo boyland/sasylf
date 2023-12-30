@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { ast } from "./types";
+import { ast, tab } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import { DroppedContext } from "./components/state";
@@ -11,19 +11,36 @@ import {
 	UniqueIdentifier,
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 
 export default function MyApp() {
-	const [compUnit, setCompUnit] = useState<ast | null>(null);
+	const [tabs, setTabs] = useState<Array<tab>>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [dropped, setDropped] = useState({});
 
-	useEffect(() => {
-		(window as any).electronAPI
-			.getAST()
-			.then((compUnit: ast | null) => compUnitHandler(compUnit));
-	}, []);
+	const addTab = (compUnit: ast | null, filePath: string) => {
+		let maxId: number = -1;
+		let occurences: number = 0;
+		for (const e of tabs) {
+			maxId = Math.max(e.id, maxId);
+			if (e.filePath === filePath) occurences += 1;
+		}
+		const fileName = filePath.replace(/^.*[\\/]/, "");
+		setTabs(
+			tabs.concat([
+				{
+					ast: compUnit,
+					id: maxId + 1,
+					filePath,
+					name: fileName + (occurences === 0 ? "" : ` (${occurences})`),
+				},
+			]),
+		);
+	};
 
-	const compUnitHandler = (newCompUnit: ast | null) => setCompUnit(newCompUnit);
+	(window as any).electronAPI.addAST(({ compUnit, filePath }) =>
+		addTab(compUnit, filePath),
+	);
 
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
@@ -41,17 +58,40 @@ export default function MyApp() {
 			setDropped({ ...dropped, [event.over.id]: event.active.id });
 	};
 
+	function handleClose(id: number) {
+		setTabs(tabs.filter((element) => element.id !== id));
+	}
+
 	return (
+		<Tabs>
+			<TabList>
+				{tabs.map((element) => (
+					<Tab>{element.name}</Tab>
+				))}
+			</TabList>
+
+			{tabs.map((element) => (
+				<TabPanel>
 		<DndContext
 			modifiers={[snapCenterToCursor]}
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
 		>
-			<Bank compUnit={compUnit} activeId={activeId} />
+			<Bank compUnit={element.ast} activeId={activeId} />
 			<DroppedContext.Provider value={[dropped, removeHandler]}>
 				<ProofArea />
 			</DroppedContext.Provider>
 		</DndContext>
+					<button
+						className="btn btn-primary"
+						onClick={() => handleClose(element.id)}
+						style={{ textAlign: "right", width: "fit-content" }}
+					>
+						Close
+					</button>
+				</TabPanel>
+			))}
+		</Tabs>
 	);
 }
 

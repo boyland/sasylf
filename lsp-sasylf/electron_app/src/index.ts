@@ -15,12 +15,11 @@ import { ast } from "./types";
 // whether you're running in development or production).
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-let compUnit: ast | null = null;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) app.quit();
 
-const createWindow = (): void => {
+const createWindow = (): BrowserWindow => {
 	const mainWindow = new BrowserWindow({
 		height: 600,
 		width: 800,
@@ -30,27 +29,25 @@ const createWindow = (): void => {
 	});
 
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+	return mainWindow;
 };
 
-function handleUpload(filepath: string) {
+function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 	const command = spawnSync(
 		`java -jar ${__dirname}/../../SASyLF.jar`,
-		["--lsp", filepath],
+		["--lsp", filePath],
 		{ shell: true },
 	);
 
 	const output = JSON.parse(command.stdout.toString());
-	const newCompUnit: ast = output["ast"];
+	const compUnit: ast = output["ast"];
 
-	if (newCompUnit != compUnit) {
-		compUnit = newCompUnit;
-		BrowserWindow.getAllWindows()[0].reload();
-	}
+	mainWindow.webContents.send("add-ast", { compUnit, filePath });
 
 	return;
 }
 
-function setupMenu() {
+function setupMenu(mainWindow: BrowserWindow) {
 	let defaultMenu = Menu.getApplicationMenu();
 
 	if (!defaultMenu) return;
@@ -64,7 +61,7 @@ function setupMenu() {
 	const selectFile = (_: Electron.MenuItem) =>
 		dialog
 			.showOpenDialog(dialogConfig)
-			.then((result) => handleUpload(result.filePaths[0]));
+			.then((result) => handleUpload(mainWindow, result.filePaths[0]));
 
 	const newMenu = new Menu();
 	defaultMenu.items.forEach((x) => {
@@ -110,13 +107,15 @@ function parse(_: IpcMainInvokeEvent, conclusion: string, rule: string) {
 }
 
 const setup = (): void => {
-	if (process.argv.length > 2) compUnit = JSON.parse(process.argv[2]);
+	const mainWindow = createWindow();
 
-	ipcMain.handle("getAST", () => compUnit);
 	ipcMain.handle("parse", parse);
-
-	createWindow();
-	setupMenu();
+	if (process.argv.length > 2)
+		mainWindow.webContents.send("add-ast", {
+			compUnit: JSON.parse(process.argv[2]),
+			fileName: "unamed",
+		});
+	setupMenu(mainWindow);
 };
 
 // This method will be called when Electron has finished

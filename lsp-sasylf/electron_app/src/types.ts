@@ -67,3 +67,10 @@ export type ruleNode = {
 	line: number;
 	file: string;
 };
+
+export type tab = {
+	ast: ast;
+	id: number;
+	name: string;
+	filePath: string;
+};
