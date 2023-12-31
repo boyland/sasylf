@@ -20,30 +20,22 @@ export default function MyApp() {
 	const [dropped, setDropped] = useState({});
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
-	const addTab = (compUnit: ast | null, filePath: string | null) => {
-		let maxId: number = -1;
-		let occurences: number = 0;
-		for (const e of tabs) {
-			maxId = Math.max(e.id, maxId);
-			if (e.filePath === filePath) occurences += 1;
-		}
-		const fileName =
-			filePath === null ? "untitled" : filePath.replace(/^.*[\\/]/, "");
+	const addTab = (compUnit: ast | null, name: string | null) => {
+		const maxId: number = Math.max(...tabs.map((element) => element.id));
 		setTabs(
 			tabs.concat([
 				{
 					ast: compUnit,
 					id: maxId + 1,
-					filePath,
-					name: fileName + (occurences === 0 ? "" : ` (${occurences})`),
+					name,
 				},
 			]),
 		);
 		setSelectedIndex(tabs.length);
 	};
 
-	(window as any).electronAPI.addAST(({ compUnit, filePath }) => {
-		addTab(compUnit, filePath);
+	(window as any).electronAPI.addAST(({ compUnit, name }) => {
+		addTab(compUnit, name);
 	});
 
 	const removeHandler = (id: number) => {

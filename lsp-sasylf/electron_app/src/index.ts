@@ -42,7 +42,9 @@ function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 	const output = JSON.parse(command.stdout.toString());
 	const compUnit: ast = output["ast"];
 
-	mainWindow.webContents.send("add-ast", { compUnit, filePath });
+	const name = filePath.replace(/^.*[\\/]/, "");
+
+	mainWindow.webContents.send("add-ast", { compUnit, name });
 }
 
 function setupMenu(mainWindow: BrowserWindow) {
@@ -114,7 +116,7 @@ const setup = (): void => {
 		mainWindow.webContents.on("did-finish-load", () => {
 			mainWindow.webContents.send("add-ast", {
 				compUnit: JSON.parse(process.argv[2]),
-				filePath: null,
+				name: "untitled",
 			});
 		});
 	}
