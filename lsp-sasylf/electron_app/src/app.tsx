@@ -18,6 +18,7 @@ export default function MyApp() {
 	const [tabs, setTabs] = useState<Array<tab>>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [dropped, setDropped] = useState({});
+	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	const addTab = (compUnit: ast | null, filePath: string | null) => {
 		let maxId: number = -1;
@@ -38,6 +39,7 @@ export default function MyApp() {
 				},
 			]),
 		);
+		setSelectedIndex(tabs.length);
 	};
 
 	(window as any).electronAPI.addAST(({ compUnit, filePath }) => {
@@ -65,7 +67,10 @@ export default function MyApp() {
 	}
 
 	return (
-		<Tabs>
+		<Tabs
+			selectedIndex={selectedIndex}
+			onSelect={(index) => setSelectedIndex(index)}
+		>
 			<TabList>
 				{tabs.map((element) => (
 					<Tab>{element.name}</Tab>
