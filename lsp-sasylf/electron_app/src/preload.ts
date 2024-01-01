@@ -7,4 +7,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("add-ast", (_event, value) => {
 			callback(value);
 		}),
+	addToClipboard: (content: string) =>
+		ipcRenderer.invoke("add-to-clipboard", content),
+	saveFile: (theorem: string) => ipcRenderer.invoke("save-file", theorem),
 });

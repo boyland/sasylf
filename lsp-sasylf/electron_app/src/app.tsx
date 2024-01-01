@@ -4,6 +4,7 @@ import { ast, tab } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
+import Export from "./components/export";
 import { DroppedContext } from "./components/state";
 import {
 	DndContext,
@@ -58,6 +59,10 @@ export default function MyApp() {
 		setTabs(tabs.filter((element) => element.id !== id));
 	}
 
+	function handleExport() {
+		return;
+	}
+
 	return (
 		<Tabs
 			selectedIndex={selectedIndex}
@@ -83,11 +88,12 @@ export default function MyApp() {
 						</DroppedContext.Provider>
 					</DndContext>
 					<button
-						className="btn btn-danger close-button"
+						className="btn btn-danger m-1"
 						onClick={() => handleClose(element.id)}
 					>
 						Close Tab
 					</button>
+					<Export />
 				</TabPanel>
 			))}
 		</Tabs>
