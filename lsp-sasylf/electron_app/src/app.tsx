@@ -59,10 +59,6 @@ export default function MyApp() {
 		setTabs(tabs.filter((element) => element.id !== id));
 	}
 
-	function handleExport() {
-		return;
-	}
-
 	return (
 		<Tabs
 			selectedIndex={selectedIndex}
@@ -88,7 +84,7 @@ export default function MyApp() {
 						</DroppedContext.Provider>
 					</DndContext>
 					<button
-						className="btn btn-danger m-1"
+						className="btn btn-danger m-1 close-button"
 						onClick={() => handleClose(element.id)}
 					>
 						Close Tab
