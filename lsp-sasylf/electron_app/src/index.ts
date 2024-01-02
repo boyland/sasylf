@@ -65,6 +65,10 @@ function setupMenu(mainWindow: BrowserWindow) {
 			.showOpenDialog(dialogConfig)
 			.then((result) => handleUpload(mainWindow, result.filePaths[0]));
 
+	const exportFile = (_: Electron.MenuItem) => {
+		mainWindow.webContents.send("show-modal");
+	};
+
 	const newMenu = new Menu();
 	defaultMenu.items.forEach((x) => {
 		if (x.role?.toLowerCase() === "filemenu") {
@@ -78,6 +82,11 @@ function setupMenu(mainWindow: BrowserWindow) {
 				click: selectFile,
 			});
 			newSubmenu.append(fileItem);
+			const exportItem = new MenuItem({
+				label: "Export",
+				click: exportFile,
+			});
+			newSubmenu.append(exportItem);
 
 			newMenu.append(
 				new MenuItem({

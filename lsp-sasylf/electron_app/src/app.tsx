@@ -20,6 +20,7 @@ export default function MyApp() {
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [dropped, setDropped] = useState({});
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [show, setShow] = useState(false);
 
 	const addTab = (compUnit: ast | null, name: string | null) => {
 		const maxId: number = Math.max(...tabs.map((element) => element.id));
@@ -39,6 +40,10 @@ export default function MyApp() {
 		addTab(compUnit, name);
 	});
 
+	(window as any).electronAPI.showModal(() => {
+		setShow(true);
+	});
+
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
 		delete newDropped[id];
@@ -55,44 +60,46 @@ export default function MyApp() {
 			setDropped({ ...dropped, [event.over.id]: event.active.id });
 	};
 
-	function handleClose(id: number) {
+	function handleCloseTab(id: number) {
 		setTabs(tabs.filter((element) => element.id !== id));
 	}
 
 	return (
-		<Tabs
-			selectedIndex={selectedIndex}
-			onSelect={(index) => setSelectedIndex(index)}
-		>
-			<TabList>
-				{tabs.map((element) => (
-					<Tab>{element.name}</Tab>
-				))}
-			</TabList>
+		<>
+			<Tabs
+				selectedIndex={selectedIndex}
+				onSelect={(index) => setSelectedIndex(index)}
+			>
+				<TabList>
+					{tabs.map((element) => (
+						<Tab>{element.name}</Tab>
+					))}
+				</TabList>
 
-			{tabs.map((element) => (
-				<TabPanel>
-					<DndContext
-						modifiers={[snapCenterToCursor]}
-						onDragStart={handleDragStart}
-						onDragEnd={handleDragEnd}
-					>
-						<Bank compUnit={element.ast} activeId={activeId} />
-						<DroppedContext.Provider value={[dropped, removeHandler]}>
-							<ProofArea />
-							<Canvas />
-						</DroppedContext.Provider>
-					</DndContext>
-					<button
-						className="btn btn-danger m-1 close-button"
-						onClick={() => handleClose(element.id)}
-					>
-						Close Tab
-					</button>
-					<Export />
-				</TabPanel>
-			))}
-		</Tabs>
+				{tabs.map((element) => (
+					<TabPanel>
+						<DndContext
+							modifiers={[snapCenterToCursor]}
+							onDragStart={handleDragStart}
+							onDragEnd={handleDragEnd}
+						>
+							<Bank compUnit={element.ast} activeId={activeId} />
+							<DroppedContext.Provider value={[dropped, removeHandler]}>
+								<ProofArea />
+								<Canvas />
+							</DroppedContext.Provider>
+						</DndContext>
+						<button
+							className="btn btn-danger m-1 close-button"
+							onClick={() => handleCloseTab(element.id)}
+						>
+							Close Tab
+						</button>
+					</TabPanel>
+				))}
+			</Tabs>
+			<Export show={show} onHide={() => setShow(false)} />
+		</>
 	);
 }
 

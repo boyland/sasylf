@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	addToClipboard: (content: string) =>
 		ipcRenderer.invoke("add-to-clipboard", content),
 	saveFile: (theorem: string) => ipcRenderer.invoke("save-file", theorem),
+	showModal: (callback) => ipcRenderer.on("show-modal", (_event) => callback()),
 });
