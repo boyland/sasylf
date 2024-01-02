@@ -53,7 +53,7 @@ function ProofNode(props: nodeProps) {
 			<div className="d-flex flex-column">
 				{args ? <Premises args={args} /> : null}
 				<div className="node-line"></div>
-				<div className="d-flex flex-row" style={{ alignItems: "center" }}>
+				<div className="d-flex flex-row conclusion">
 					<Form.Control
 						size="sm"
 						className="m-1"
