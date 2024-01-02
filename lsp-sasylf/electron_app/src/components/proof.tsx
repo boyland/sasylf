@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
+import Form from "react-bootstrap/Form";
 
 let nodeCounter = 1;
 
@@ -52,7 +53,16 @@ function ProofNode(props: nodeProps) {
 			<div className="d-flex flex-column">
 				{args ? <Premises args={args} /> : null}
 				<div className="node-line"></div>
-				<span className="centered-text no-wrap">{props.conclusion}</span>
+				<div className="d-flex flex-row" style={{ alignItems: "center" }}>
+					<Form.Control
+						size="sm"
+						className="m-1"
+						type="text"
+						placeholder="Name"
+						htmlSize={5}
+					/>
+					<span className="centered-text no-wrap">{props.conclusion}</span>
+				</div>
 			</div>
 			{duplicate ? (
 				<div className="d-flex drop-container">
@@ -61,7 +71,7 @@ function ProofNode(props: nodeProps) {
 					</div>
 				</div>
 			) : (
-				<Droppable id={id} className="d-flex drop-container">
+				<Droppable id={id} className="d-flex stretch-container">
 					<div className="drop-area p-2">
 						{id in dropped ? (
 							<>
