@@ -1,13 +1,12 @@
-import React, { Component } from "react";
-
+import React from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-const Canvas = () => {
+const Canvas = (props: { children: any }) => {
 	return (
 		<div className="zoomable-canvas border border-5">
 			<TransformWrapper>
-				{({ zoomIn, zoomOut, resetTransform, ..._ }) => (
-					<React.Fragment>
+				{({ zoomIn, zoomOut, resetTransform }) => (
+					<>
 						<div className="tools">
 							<button
 								className="btn btn-primary btn-lg m-1"
@@ -29,9 +28,9 @@ const Canvas = () => {
 							</button>
 						</div>
 						<TransformComponent wrapperClass="tcomponent">
-							<div className="canvas">Hello world</div>
+							<div className="canvas">{props.children}</div>
 						</TransformComponent>
-					</React.Fragment>
+					</>
 				)}
 			</TransformWrapper>
 		</div>

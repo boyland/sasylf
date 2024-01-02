@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -12,31 +12,29 @@ import {
 	UniqueIdentifier,
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import Tab from "react-bootstrap/Tab";
+import Nav from "react-bootstrap/Nav";
+import CloseButton from "react-bootstrap/CloseButton";
 
 export default function MyApp() {
-	const [tabs, setTabs] = useState<Array<tab>>([]);
+	const [tabs, setTabs] = useState<tab[]>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [dropped, setDropped] = useState({});
-	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [activeKey, setActiveKey] = useState<string | number>(0);
 
-	const addTab = (compUnit: ast | null, name: string | null) => {
-		const maxId: number = Math.max(...tabs.map((element) => element.id));
+	const addTab = (compUnit: ast | null, name: string | null) =>
 		setTabs(
 			tabs.concat([
 				{
 					ast: compUnit,
-					id: maxId + 1,
+					id: tabs.length,
 					name,
-				},
+				} as tab,
 			]),
 		);
-		setSelectedIndex(tabs.length);
-	};
-
-	(window as any).electronAPI.addAST(({ compUnit, name }) => {
-		addTab(compUnit, name);
-	});
+	(window as any).electronAPI.addAST(({ compUnit, name }) =>
+		addTab(compUnit, name),
+	);
 
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
@@ -56,41 +54,48 @@ export default function MyApp() {
 
 	function handleClose(id: number) {
 		setTabs(tabs.filter((element) => element.id !== id));
+		setActiveKey(0);
 	}
 
 	return (
-		<Tabs
-			selectedIndex={selectedIndex}
-			onSelect={(index) => setSelectedIndex(index)}
+		<Tab.Container
+			onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
+			activeKey={activeKey}
 		>
-			<TabList>
+			<Nav variant="tabs" className="flex-row">
 				{tabs.map((element) => (
-					<Tab>{element.name}</Tab>
+					<Nav.Item className="d-flex flex-row" key={element.id}>
+						<Nav.Link eventKey={element.id.toString()}>
+							{element.name}
+							<CloseButton
+								onClick={(event) => {
+									event.stopPropagation();
+									handleClose(element.id);
+								}}
+							/>
+						</Nav.Link>
+					</Nav.Item>
 				))}
-			</TabList>
-
+			</Nav>
 			{tabs.map((element) => (
-				<TabPanel>
-					<DndContext
-						modifiers={[snapCenterToCursor]}
-						onDragStart={handleDragStart}
-						onDragEnd={handleDragEnd}
-					>
-						<Bank compUnit={element.ast} activeId={activeId} />
-						<DroppedContext.Provider value={[dropped, removeHandler]}>
-							<ProofArea />
-							<Canvas />
-						</DroppedContext.Provider>
-					</DndContext>
-					<button
-						className="btn btn-danger close-button"
-						onClick={() => handleClose(element.id)}
-					>
-						Close Tab
-					</button>
-				</TabPanel>
+				<Tab.Content key={element.id}>
+					<Tab.Pane eventKey={element.id.toString()}>
+						<DndContext
+							modifiers={[snapCenterToCursor]}
+							onDragStart={handleDragStart}
+							onDragEnd={handleDragEnd}
+						>
+							<Canvas>
+								<Bank compUnit={element.ast} activeId={activeId} />
+								<DroppedContext.Provider value={[dropped, removeHandler]}>
+									<ProofArea />
+								</DroppedContext.Provider>
+							</Canvas>
+						</DndContext>
+					</Tab.Pane>
+				</Tab.Content>
 			))}
-		</Tabs>
+		</Tab.Container>
 	);
 }
 
