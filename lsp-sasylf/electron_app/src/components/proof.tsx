@@ -56,7 +56,7 @@ function ProofNode(props: nodeProps) {
 				<div className="d-flex flex-row conclusion">
 					<Form.Control
 						size="sm"
-						className="m-1"
+						className="panning-excluded m-1"
 						type="text"
 						placeholder="Name"
 						htmlSize={5}
