@@ -85,8 +85,8 @@ export default function MyApp() {
 							onDragStart={handleDragStart}
 							onDragEnd={handleDragEnd}
 						>
+							<Bank compUnit={element.ast} activeId={activeId} />
 							<Canvas>
-								<Bank compUnit={element.ast} activeId={activeId} />
 								<DroppedContext.Provider value={[dropped, removeHandler]}>
 									<ProofArea />
 								</DroppedContext.Provider>
