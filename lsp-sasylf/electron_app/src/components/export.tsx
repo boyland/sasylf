@@ -1,3 +1,4 @@
+import React from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Button from "react-bootstrap/Button";
@@ -27,7 +28,6 @@ export default function Export(props: ExportProps) {
 			(window as any).electronAPI.saveFile(theorem);
 		}
 		props.onHide();
-		return;
 	}
 
 	return (
@@ -45,8 +45,13 @@ export default function Export(props: ExportProps) {
 							placeholder="cut-admissible"
 						/>
 					</InputGroup>
-					<Form.Check name="clipboard" label="Export to clipboard" />
 					<Form.Check
+						className="m-1"
+						name="clipboard"
+						label="Export to clipboard"
+					/>
+					<Form.Check
+						className="m-1"
 						name="file"
 						label="Export to file"
 						defaultChecked={true}

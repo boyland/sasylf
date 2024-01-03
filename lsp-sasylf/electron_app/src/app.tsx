@@ -34,6 +34,7 @@ export default function MyApp() {
 				} as tab,
 			]),
 		);
+
 	(window as any).electronAPI.addAST(({ compUnit, name }) =>
 		addTab(compUnit, name),
 	);
@@ -64,47 +65,45 @@ export default function MyApp() {
 	}
 
 	return (
-		<>
-			<Tab.Container
-				onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
-				activeKey={activeKey}
-			>
-				<Nav variant="tabs" className="flex-row">
-					{tabs.map((element) => (
-						<Nav.Item className="d-flex flex-row" key={element.id}>
-							<Nav.Link eventKey={element.id.toString()}>
-								{element.name}
-								<CloseButton
-									onClick={(event) => {
-										event.stopPropagation();
-										handleCloseTab(element.id);
-									}}
-								/>
-							</Nav.Link>
-						</Nav.Item>
-					))}
-				</Nav>
+		<Tab.Container
+			onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
+			activeKey={activeKey}
+		>
+			<Nav variant="tabs" className="flex-row">
 				{tabs.map((element) => (
-					<Tab.Content key={element.id}>
-						<Tab.Pane eventKey={element.id.toString()}>
-							<DndContext
-								modifiers={[snapCenterToCursor]}
-								onDragStart={handleDragStart}
-								onDragEnd={handleDragEnd}
-							>
-								<Bank compUnit={element.ast} activeId={activeId} />
-								<Canvas>
-									<DroppedContext.Provider value={[dropped, removeHandler]}>
-										<ProofArea />
-									</DroppedContext.Provider>
-								</Canvas>
-							</DndContext>
-						</Tab.Pane>
-					</Tab.Content>
+					<Nav.Item className="d-flex flex-row" key={element.id}>
+						<Nav.Link eventKey={element.id.toString()}>
+							{element.name}
+							<CloseButton
+								onClick={(event) => {
+									event.stopPropagation();
+									handleCloseTab(element.id);
+								}}
+							/>
+						</Nav.Link>
+					</Nav.Item>
 				))}
-			</Tab.Container>
-			<Export show={show} onHide={() => setShow(false)} />
-		</>
+			</Nav>
+			{tabs.map((element) => (
+				<Tab.Content key={element.id}>
+					<Tab.Pane eventKey={element.id.toString()}>
+						<DndContext
+							modifiers={[snapCenterToCursor]}
+							onDragStart={handleDragStart}
+							onDragEnd={handleDragEnd}
+						>
+							<Bank compUnit={element.ast} activeId={activeId} />
+							<Export show={show} onHide={() => setShow(false)} />
+							<Canvas>
+								<DroppedContext.Provider value={[dropped, removeHandler]}>
+									<ProofArea />
+								</DroppedContext.Provider>
+							</Canvas>
+						</DndContext>
+					</Tab.Pane>
+				</Tab.Content>
+			))}
+		</Tab.Container>
 	);
 }
 
