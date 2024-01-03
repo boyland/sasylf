@@ -1,14 +1,12 @@
 .zoomable-canvas {
 	overflow: hidden;
-	width: 75vw;
-	height: 75vh;
 	position: relative;
 }
 
 .canvas {
-	width: 75vw;
-	height: 75vh;
-	background-color: #eee;
+	height: 90vh;
+	width: 97vw;
+	background-color: rgba(0, 0, 0, 0);
 	z-index: -1;
 }
 
