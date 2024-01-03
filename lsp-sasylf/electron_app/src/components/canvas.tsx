@@ -5,7 +5,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 const Canvas = () => {
 	return (
 		<div className="zoomable-canvas border border-5">
-			<TransformWrapper>
+			<TransformWrapper limitToBounds={false}>
 				{({ zoomIn, zoomOut, resetTransform, ..._ }) => (
 					<React.Fragment>
 						<div className="tools">
