@@ -93,7 +93,6 @@ export default function MyApp() {
 							onDragEnd={handleDragEnd}
 						>
 							<Bank compUnit={element.ast} activeId={activeId} />
-							<Export show={show} onHide={() => setShow(false)} />
 							<Canvas>
 								<DroppedContext.Provider value={[dropped, removeHandler]}>
 									<ProofArea />
@@ -103,6 +102,7 @@ export default function MyApp() {
 					</Tab.Pane>
 				</Tab.Content>
 			))}
+			<Export show={show} onHide={() => setShow(false)} />
 		</Tab.Container>
 	);
 }
