@@ -66,13 +66,13 @@ function ProofNode(props: nodeProps) {
 			</div>
 			{duplicate ? (
 				<div className="d-flex drop-container">
-					<div className="drop-area p-2 m-2" style={{ opacity: 0.5 }}>
+					<div className="drop-area rule p-2 m-2" style={{ opacity: 0.5 }}>
 						Elsewhere
 					</div>
 				</div>
 			) : (
 				<Droppable id={id} className="d-flex stretch-container">
-					<div className="drop-area p-2">
+					<div className="drop-area rule p-2">
 						{id in dropped ? (
 							<>
 								{dropped[id]} <CloseButton onClick={() => remove(id)} />
@@ -87,9 +87,9 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-export default function ProofArea() {
+export default function ProofArea({ proofRef }) {
 	return (
-		<div className="d-flex proof-area">
+		<div className="d-flex proof-area" ref={proofRef}>
 			<ProofNode conclusion="(s (z)) + n = (s n)" root />
 		</div>
 	);
