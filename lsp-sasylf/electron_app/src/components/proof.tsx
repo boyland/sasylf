@@ -51,7 +51,7 @@ function ProofNode(props: nodeProps) {
 			}`}
 		>
 			<div className="d-flex flex-column">
-				{args ? <Premises args={args} /> : null}
+				{args && args.length > 1 ? <Premises args={args} /> : null}
 				<div className="node-line"></div>
 				<div className="d-flex flex-row conclusion">
 					<Form.Control
