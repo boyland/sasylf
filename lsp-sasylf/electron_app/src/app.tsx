@@ -52,7 +52,11 @@ export default function MyApp() {
 	const handleDragEnd = (event: DragEndEvent) => {
 		setActiveText(null);
 
-		if (event.over && !(event.over.id in dropped))
+		if (
+			event.over &&
+			event.active.data.current?.text &&
+			!(event.over.id in dropped)
+		)
 			setDropped({
 				...dropped,
 				[event.over.id]: event.active.data.current?.text,
