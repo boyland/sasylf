@@ -23,7 +23,7 @@ export default function MyApp() {
 	let proofRef = useRef(null);
 
 	const addTab = (compUnit: ast | null, name: string | null) => {
-		const maxId = Math.max(...tabs.map((element) => element.id));
+		const maxId = Math.max(-1, ...tabs.map((element) => element.id));
 		setTabs(
 			tabs.concat([
 				{
