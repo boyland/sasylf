@@ -22,16 +22,18 @@ export default function MyApp() {
 	const [activeKey, setActiveKey] = useState<string | number>(0);
 	let proofRef = useRef(null);
 
-	const addTab = (compUnit: ast | null, name: string | null) =>
+	const addTab = (compUnit: ast | null, name: string | null) => {
+		const maxId = Math.max(...tabs.map((element) => element.id));
 		setTabs(
 			tabs.concat([
 				{
 					ast: compUnit,
-					id: tabs.length,
+					id: maxId + 1,
 					name,
 				} as tab,
 			]),
 		);
+	};
 
 	(window as any).electronAPI.addAST(({ compUnit, name }) =>
 		addTab(compUnit, name),
