@@ -54,7 +54,7 @@ export default function MyApp() {
 
 		if (
 			event.over &&
-			event.active.data.current?.text &&
+			event.active.data.current?.ruleLike &&
 			!(event.over.id in dropped)
 		)
 			setDropped({
