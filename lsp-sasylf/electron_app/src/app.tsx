@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -20,6 +20,7 @@ export default function MyApp() {
 	const [dropped, setDropped] = useState({});
 	const [show, setShow] = useState(false);
 	const [activeKey, setActiveKey] = useState<string | number>(0);
+	let proofRef = useRef(null);
 
 	const addTab = (compUnit: ast | null, name: string | null) =>
 		setTabs(
@@ -99,13 +100,12 @@ export default function MyApp() {
 							<Bank compUnit={element.ast} />
 							<Canvas>
 								<DroppedContext.Provider value={[dropped, removeHandler]}>
-									<ProofArea />
+									<ProofArea proofRef={proofRef} />
 								</DroppedContext.Provider>
 							</Canvas>
 						</Tab.Pane>
 					</Tab.Content>
 				))}
-				<Export show={show} onHide={() => setShow(false)} />
 				<DragOverlay zIndex={1060}>
 					{activeText ? (
 						<Card body className="exact" border="dark" text="dark">
@@ -114,6 +114,7 @@ export default function MyApp() {
 					) : null}
 				</DragOverlay>
 			</DndContext>
+			<Export show={show} onHide={() => setShow(false)} proofRef={proofRef} />
 		</Tab.Container>
 	);
 }

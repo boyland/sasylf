@@ -90,9 +90,9 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-export default function ProofArea() {
+export default function ProofArea({ proofRef }) {
 	return (
-		<div className="d-flex proof-area">
+		<div className="d-flex proof-area" ref={proofRef}>
 			<ProofNode conclusion="(s (z)) + n = (s n)" root />
 		</div>
 	);
