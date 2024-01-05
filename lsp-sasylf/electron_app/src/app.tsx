@@ -33,6 +33,7 @@ export default function MyApp() {
 				} as tab,
 			]),
 		);
+		setActiveKey(maxId + 1);
 	};
 
 	(window as any).electronAPI.addAST(({ compUnit, name }) =>
@@ -102,7 +103,11 @@ export default function MyApp() {
 							<Bank compUnit={element.ast} />
 							<Canvas>
 								<DroppedContext.Provider value={[dropped, removeHandler]}>
-									<ProofArea proofRef={proofRef} />
+									{element.id === activeKey ? (
+										<ProofArea proofRef={proofRef} />
+									) : (
+										<ProofArea />
+									)}
 								</DroppedContext.Provider>
 							</Canvas>
 						</Tab.Pane>

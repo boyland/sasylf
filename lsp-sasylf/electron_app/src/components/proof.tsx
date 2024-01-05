@@ -71,7 +71,9 @@ function ProofNode(props: nodeProps) {
 							placeholder="Name"
 							htmlSize={5}
 						/>
-						<span className="centered-text no-wrap panning-excluded">{props.conclusion}</span>
+						<span className="centered-text no-wrap panning-excluded">
+							{props.conclusion}
+						</span>
 					</div>
 				</Draggable>
 			</div>
@@ -90,10 +92,14 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-export default function ProofArea({ proofRef }) {
-	return (
-		<div className="d-flex proof-area" ref={proofRef}>
+export default function ProofArea(props) {
+	return props.hasOwnProperty("proofRef") ? (
+		<div className="d-flex proof-area" ref={props.proofRef}>
 			<ProofNode conclusion="(s (z)) + n = (s n)" root />
+		</div>
+	) : (
+		<div className="d-flex proof-area">
+			<ProofNode conclusion="hi" root />
 		</div>
 	);
 }
