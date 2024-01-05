@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, {
+	useState,
+	useEffect,
+	useContext,
+	MutableRefObject,
+} from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
@@ -61,21 +66,21 @@ function ProofNode(props: nodeProps) {
 						<div className="drop-node-area p-2">Copy node here</div>
 					</Droppable>
 				)}
-				<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
-					<div className="node-line"></div>
-					<div className="d-flex flex-row conclusion">
-						<Form.Control
-							size="sm"
-							className="panning-excluded m-1"
-							type="text"
-							placeholder="Name"
-							htmlSize={5}
-						/>
+				<div className="node-line"></div>
+				<div className="d-flex flex-row conclusion">
+					<Form.Control
+						size="sm"
+						className="panning-excluded m-1"
+						type="text"
+						placeholder="Name"
+						htmlSize={5}
+					/>
+					<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
 						<span className="centered-text no-wrap panning-excluded">
 							{props.conclusion}
 						</span>
-					</div>
-				</Draggable>
+					</Draggable>
+				</div>
 			</div>
 			<Droppable id={id} className="d-flex stretch-container">
 				<div className="drop-area rule p-2">
@@ -92,7 +97,9 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-export default function ProofArea(props) {
+export default function ProofArea(props: {
+	proofRef?: MutableRefObject<null>;
+}) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
 			<ProofNode conclusion="(s (z)) + n = (s n)" root />
