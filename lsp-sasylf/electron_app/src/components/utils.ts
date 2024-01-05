@@ -9,9 +9,6 @@ function getTree(proofNode: Element | undefined): line | null {
 	if (!proofNode) return null;
 
 	const containers = proofNode.getElementsByClassName("conclusion");
-
-	if (containers.length === 0) return null;
-
 	const container = containers[containers.length - 1];
 	const conclusion = container.getElementsByTagName("span")[0].textContent;
 	const name = container.getElementsByTagName("input")[0].value;
@@ -47,7 +44,7 @@ function theoremHelper(root: Element | undefined): lineText[] {
 	if (!tree) return [];
 
 	function bfs(l: line) {
-		let res: line[] = [];
+		let res: line[] = [l];
 
 		for (const premise of l.premises) res = res.concat(bfs(premise));
 
@@ -67,7 +64,9 @@ export function createTheorem(theoremName: string, dom: HTMLDivElement | null) {
 	let content = `theorem ${theoremName} : ${conclusion}.\n`;
 	for (const node of nodes) {
 		content += `${node.name}: ${node.conclusion} by rule ${node.rule.trim()}${
-			node.premises.length === 0 ? "" : ` on ${node.premises.join(", ")}`
+			node.premises.length === 0
+				? ""
+				: ` on ${node.premises.map((premise) => premise.name).join(", ")}`
 		}\n`;
 	}
 	return content;
