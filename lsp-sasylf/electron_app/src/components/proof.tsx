@@ -71,7 +71,7 @@ function ProofNode(props: nodeProps) {
 							placeholder="Name"
 							htmlSize={5}
 						/>
-						<span className="centered-text no-wrap">{props.conclusion}</span>
+						<span className="centered-text no-wrap panning-excluded">{props.conclusion}</span>
 					</div>
 				</Draggable>
 			</div>
