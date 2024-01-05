@@ -6,20 +6,17 @@ import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
 import Export from "./components/export";
 import { DroppedContext } from "./components/state";
-import {
-	DndContext,
-	DragEndEvent,
-	DragStartEvent,
-	UniqueIdentifier,
-} from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
 import CloseButton from "react-bootstrap/CloseButton";
+import Card from "react-bootstrap/Card";
+import { DragOverlay } from "@dnd-kit/core";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
-	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+	const [activeText, setActiveText] = useState<string | null>(null);
 	const [dropped, setDropped] = useState({});
 	const [show, setShow] = useState(false);
 	const [activeKey, setActiveKey] = useState<string | number>(0);
@@ -50,13 +47,16 @@ export default function MyApp() {
 	};
 
 	const handleDragStart = (event: DragStartEvent) =>
-		setActiveId(event.active.id);
+		setActiveText(event.active.data.current?.text);
 
 	const handleDragEnd = (event: DragEndEvent) => {
-		setActiveId(null);
+		setActiveText(null);
 
 		if (event.over && !(event.over.id in dropped))
-			setDropped({ ...dropped, [event.over.id]: event.active.id });
+			setDropped({
+				...dropped,
+				[event.over.id]: event.active.data.current?.text,
+			});
 	};
 
 	function handleCloseTab(id: number) {
@@ -69,40 +69,47 @@ export default function MyApp() {
 			onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
 			activeKey={activeKey}
 		>
-			<Nav variant="tabs" className="flex-row">
+			<DndContext
+				modifiers={[snapCenterToCursor]}
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEnd}
+			>
+				<Nav variant="tabs" className="flex-row">
+					{tabs.map((element) => (
+						<Nav.Item className="d-flex flex-row" key={element.id}>
+							<Nav.Link eventKey={element.id.toString()}>
+								{element.name}
+								<CloseButton
+									onClick={(event) => {
+										event.stopPropagation();
+										handleCloseTab(element.id);
+									}}
+								/>
+							</Nav.Link>
+						</Nav.Item>
+					))}
+				</Nav>
 				{tabs.map((element) => (
-					<Nav.Item className="d-flex flex-row" key={element.id}>
-						<Nav.Link eventKey={element.id.toString()}>
-							{element.name}
-							<CloseButton
-								onClick={(event) => {
-									event.stopPropagation();
-									handleCloseTab(element.id);
-								}}
-							/>
-						</Nav.Link>
-					</Nav.Item>
-				))}
-			</Nav>
-			{tabs.map((element) => (
-				<Tab.Content key={element.id}>
-					<Tab.Pane eventKey={element.id.toString()}>
-						<DndContext
-							modifiers={[snapCenterToCursor]}
-							onDragStart={handleDragStart}
-							onDragEnd={handleDragEnd}
-						>
-							<Bank compUnit={element.ast} activeId={activeId} />
+					<Tab.Content key={element.id}>
+						<Tab.Pane eventKey={element.id.toString()}>
+							<Bank compUnit={element.ast} />
 							<Canvas>
 								<DroppedContext.Provider value={[dropped, removeHandler]}>
 									<ProofArea />
 								</DroppedContext.Provider>
 							</Canvas>
-						</DndContext>
-					</Tab.Pane>
-				</Tab.Content>
-			))}
-			<Export show={show} onHide={() => setShow(false)} />
+						</Tab.Pane>
+					</Tab.Content>
+				))}
+				<Export show={show} onHide={() => setShow(false)} />
+				<DragOverlay zIndex={1060}>
+					{activeText ? (
+						<Card body className="exact" border="dark" text="dark">
+							<code className="rule-like-text">{activeText}</code>
+						</Card>
+					) : null}
+				</DragOverlay>
+			</DndContext>
 		</Tab.Container>
 	);
 }

@@ -3,6 +3,7 @@ import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
+import Draggable from "./draggable";
 
 let nodeCounter = 1;
 
@@ -52,17 +53,19 @@ function ProofNode(props: nodeProps) {
 		>
 			<div className="d-flex flex-column">
 				{args && args.length > 1 ? <Premises args={args} /> : null}
-				<div className="node-line"></div>
-				<div className="d-flex flex-row conclusion">
-					<Form.Control
-						size="sm"
-						className="panning-excluded m-1"
-						type="text"
-						placeholder="Name"
-						htmlSize={5}
-					/>
-					<span className="centered-text no-wrap">{props.conclusion}</span>
-				</div>
+				<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
+					<div className="node-line"></div>
+					<div className="d-flex flex-row conclusion">
+						<Form.Control
+							size="sm"
+							className="panning-excluded m-1"
+							type="text"
+							placeholder="Name"
+							htmlSize={5}
+						/>
+						<span className="centered-text no-wrap">{props.conclusion}</span>
+					</div>
+				</Draggable>
 			</div>
 			{duplicate ? (
 				<div className="d-flex drop-container">
