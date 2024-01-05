@@ -11,7 +11,7 @@ public class SolveReport extends Report {
 
 	private final Proof proof;
 	public SolveReport(Span loc, Proof solution) {
-		super(loc, "solution found");
+		super(loc, "info: solution found");
 		proof = solution;
 	}
 

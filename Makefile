@@ -9,14 +9,19 @@ VERSION=`head -1 ChangeLog.txt | sed 's/^SASyLF version \(.*\).$$/\1/'`.v`date +
 
 default: test
 
+build : SHELL:=/bin/bash
 build :
 	(cd src && cd edu && cd cmu && cd cs && cd sasylf && cd parser; javacc parser.jj)
 	mkdir -p bin
-	(cd src && javac -source 1.8 -target 1.8 -classpath ../bin:. -d ../bin edu/cmu/cs/sasylf/Main.java edu/cmu/cs/sasylf/term/UnitTests.java)
+	(cd src && javac -cp .:../bin:../lib/* -source 1.8 -target 1.8 -d ../bin edu/cmu/cs/sasylf/Main.java ${TESTSRC})
 	jar cmf sasylf.mf SASyLF.jar ChangeLog.txt -C bin edu -C library org
 
 TESTBIN= bin/org/sasylf/Activator.class
 TESTLIB= bin/org/sasylf/util/Natural.slf
+TESTSRC= edu/cmu/cs/sasylf/term/UnitTests.java \
+	 edu/cmu/cs/sasylf/util/UnitTests.java \
+	 edu/cmu/cs/sasylf/reduction/UnitTests.java
+
 build-plugin : ${TESTBIN} ${TESTLIB} ChangeLog.txt
 	jar cmf META-INF/MANIFEST.MF org.sasylf_${VERSION}.jar plugin.xml ChangeLog.txt icons/*.gif icons/*.png -C bin . 
 
@@ -28,6 +33,7 @@ ${TESTBIN}:
 
 ${TESTLIB}:
 	${MAKE} install-lib
+
 
 .PHONY: install-lib
 install-lib:

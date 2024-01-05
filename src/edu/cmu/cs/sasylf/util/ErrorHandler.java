@@ -1,10 +1,8 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.term.FreeVar;
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.cmu.cs.sasylf.term.FreeVar;
-
 
 public class ErrorHandler {
 	/**
@@ -14,17 +12,23 @@ public class ErrorHandler {
 	 * if "null" is passed for the parameter.
 	 * @param errorType error type, defaults to UNSPECIFIED
 	 * @param msg extra information associated with error, defaults to "".
-	 * This text should be language independent to aid (future) internationalization,
-	 * unless this is an {@link Errors#INTERNAL_ERROR}.
-	 * Usually it is redundant to include text from within the span covered by this report.
+	 * This text should be language independent to aid (future)
+	 * internationalization, unless this is an {@link Errors#INTERNAL_ERROR}.
+	 * Usually it is redundant to include text from within the span covered by
+	 * this report.
 	 * @param loc location of the error, defaults to the last span.
-	 * The default should be avoided, since very few places in the code base update the last span.
-	 * @param debugInfo extra information used for --LF flag, also used for quick fixes, optionally null.
+	 * The default should be avoided, since very few places in the code base
+	 * update the last span.
+	 * @param debugInfo extra information used for --LF flag, also used for quick
+	 *     fixes, optionally null.
 	 * This information need not be language independent.
 	 * @param isError whether an error (or just a warning)
-	 * @param throwable whether this method should throw a SASyLF error after reporting the error
+	 * @param throwable whether this method should throw a SASyLF error after
+	 *     reporting the error
 	 */
-	public static void report(Errors errorType, String msg, Span loc, String debugInfo, boolean isError, boolean throwable) {
+	public static void report(Errors errorType, String msg, Span loc,
+														String debugInfo, boolean isError,
+														boolean throwable) {
 		if (errorType == null) errorType = Errors.UNSPECIFIED;
 		if (msg == null) msg = "";
 		if (loc == null) loc = lastSpan.get();
@@ -49,23 +53,23 @@ public class ErrorHandler {
 			}
 		}
 	}
-	
+
 	public static void recoverableError(Errors x, Span obj) {
-		recoverableError(x,null,obj,null);
+		recoverableError(x, null, obj, null);
 	}
 
 	public static void recoverableError(Errors x, String msg, Span obj) {
-		recoverableError(x,msg,obj,null);
+		recoverableError(x, msg, obj, null);
 	}
 
 	public static void recoverableError(Errors x, Span obj, String info) {
-		recoverableError(x,null,obj,info);
+		recoverableError(x, null, obj, info);
 	}
 
-	public static void recoverableError(Errors errorType, String msg, Span obj, String debugInfo) {
+	public static void recoverableError(Errors errorType, String msg, Span obj,
+																			String debugInfo) {
 		report(errorType, msg, obj, debugInfo, true, false);
 	}
-
 
 	public static void warning(Errors errorType, Span obj) {
 		warning(errorType, null, obj, null);
@@ -74,15 +78,15 @@ public class ErrorHandler {
 	public static void warning(Errors errorType, String added, Span obj) {
 		warning(errorType, added, obj, null);
 	}
-	
+
 	public static void warning(Errors errorType, Span obj, String fixInfo) {
 		warning(errorType, null, obj, fixInfo);
 	}
 
-	public static void warning(Errors errorType, String msg, Span obj, String debugInfo) {
+	public static void warning(Errors errorType, String msg, Span obj,
+														 String debugInfo) {
 		report(errorType, msg, obj, debugInfo, false, false);
 	}
-	
 
 	public static void error(Errors errorType, Span obj) {
 		error(errorType, null, obj, null);
@@ -96,17 +100,15 @@ public class ErrorHandler {
 		error(errorType, msg, obj, null);
 	}
 
-	public static void error(Errors errorType, String msg, Span obj, String debugInfo) {
+	public static void error(Errors errorType, String msg, Span obj,
+													 String debugInfo) {
 		report(errorType, msg, obj, debugInfo, true, true);
 	}
-	
 
-	private static void logReport(Report r) {
-		reports.get().add(r);
-	}
-	
+	private static void logReport(Report r) { reports.get().add(r); }
+
 	public static List<Report> getReports() { return reports.get(); }
-	
+
 	/**
 	 * Run the given action with a new set of error reports.
 	 * The current reports are preserved unchanged.
@@ -122,15 +124,16 @@ public class ErrorHandler {
 		} finally {
 			reports.set(saved);
 		}
+
 		return result;
 	}
-	
+
 	/**
 	 * Start a new check session.
 	 * This starts the reports on a fresh list and clears the
 	 * free variables. Mixing two functions like this is a bad idea.
 	 * It also doesn't give a way to protect existing problems
-	 * @deprecated use {@link #withFreshReports(Runnable)} and 
+	 * @deprecated use {@link #withFreshReports(Runnable)} and
 	 * call {@link FreeVar.reinit} directly.
 	 */
 	@Deprecated
@@ -138,7 +141,7 @@ public class ErrorHandler {
 		reports.remove();
 		FreeVar.reinit();
 	}
-	
+
 	public static int getErrorCount() {
 		int errorCount = 0;
 		for (Report r : reports.get()) {
@@ -146,7 +149,7 @@ public class ErrorHandler {
 		}
 		return errorCount;
 	}
-	public static int getWarningCount() { 
+	public static int getWarningCount() {
 		int warnCount = 0;
 		for (Report r : reports.get()) {
 			if (r.isError()) continue;
@@ -164,23 +167,24 @@ public class ErrorHandler {
 
 	private static ThreadLocal<Span> lastSpan = new ThreadLocal<Span>();
 
-	private static ThreadLocal<List<Report>> reports = new ThreadLocal<List<Report>>(){
-		@Override
-		protected List<Report> initialValue() {
-			return new ArrayList<Report>();
-		}
-	};
+	private static ThreadLocal<List<Report>> reports =
+			new ThreadLocal<List<Report>>() {
+				@Override
+				protected List<Report> initialValue() {
+					return new ArrayList<Report>();
+				}
+			};
 
 	public static Location lexicalErrorAsLocation(String file, String error) {
 		try {
 			int lind = error.indexOf("line ");
 			int cind = error.indexOf(", column ");
-			int eind = error.indexOf(".", cind+1);
-			int line = Integer.parseInt(error.substring(lind+5, cind));
-			int column = Integer.parseInt(error.substring(cind+9, eind));
-			return new Location(file,line,column);
+			int eind = error.indexOf(".", cind + 1);
+			int line = Integer.parseInt(error.substring(lind + 5, cind));
+			int column = Integer.parseInt(error.substring(cind + 9, eind));
+			return new Location(file, line, column);
 		} catch (RuntimeException e) {
-			return new Location(file,0,0);
+			return new Location(file, 0, 0);
 		}
 	}
 }
