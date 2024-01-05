@@ -76,7 +76,7 @@ function ProofNode(props: nodeProps) {
 				</Draggable>
 			</div>
 			<Droppable id={id} className="d-flex stretch-container">
-				<div className="drop-area p-2">
+				<div className="drop-area rule p-2">
 					{id in dropped ? (
 						<>
 							{dropped[id]} <CloseButton onClick={() => remove(id)} />
