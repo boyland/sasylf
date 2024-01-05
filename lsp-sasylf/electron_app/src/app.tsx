@@ -116,7 +116,7 @@ export default function MyApp() {
 				<DragOverlay zIndex={1060}>
 					{activeText ? (
 						<Card body className="exact" border="dark" text="dark">
-							<code className="rule-like-text">{activeText}</code>
+							<code className="rule-like-text no-wrap">{activeText}</code>
 						</Card>
 					) : null}
 				</DragOverlay>
