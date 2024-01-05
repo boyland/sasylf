@@ -31,28 +31,36 @@ interface nodeProps {
 function ProofNode(props: nodeProps) {
 	const [dropped, remove] = useContext(DroppedContext);
 	const [id, setId] = useState(0);
-	const [duplicate, setDuplicate] = useState(false);
 	const [args, setArgs] = useState<string[] | null>(null);
 
-	useEffect(() => setId(nodeCounter++), []);
+	useEffect(() => {
+		setId(nodeCounter++);
+		nodeCounter++;
+	}, []);
 	useEffect(() => {
 		if (id in dropped)
 			(window as any).electronAPI
 				.parse(props.conclusion, dropped[id])
 				.then((res: string[]) => setArgs(res));
 		else setArgs(null);
-
-		setDuplicate(props.conclusion in Object.values(dropped));
 	}, [dropped]);
 
 	return (
 		<div
-			className={`d-flex flex-row proof-node m-3 ${
+			className={`d-flex flex-row proof-node m-2 ${
 				props.root ? "root-node" : ""
 			}`}
 		>
 			<div className="d-flex flex-column">
-				{args && args.length > 1 ? <Premises args={args} /> : null}
+				{args ? (
+					args.length > 1 ? (
+						<Premises args={args} />
+					) : null
+				) : (
+					<Droppable id={id + 1} className="d-flex stretch-container">
+						<div className="drop-node-area p-2">Copy node here</div>
+					</Droppable>
+				)}
 				<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
 					<div className="node-line"></div>
 					<div className="d-flex flex-row conclusion">
@@ -67,25 +75,17 @@ function ProofNode(props: nodeProps) {
 					</div>
 				</Draggable>
 			</div>
-			{duplicate ? (
-				<div className="d-flex drop-container">
-					<div className="drop-area p-2 m-2" style={{ opacity: 0.5 }}>
-						Elsewhere
-					</div>
+			<Droppable id={id} className="d-flex stretch-container">
+				<div className="drop-area p-2">
+					{id in dropped ? (
+						<>
+							{dropped[id]} <CloseButton onClick={() => remove(id)} />
+						</>
+					) : (
+						"Put rule here"
+					)}
 				</div>
-			) : (
-				<Droppable id={id} className="d-flex stretch-container">
-					<div className="drop-area p-2">
-						{id in dropped ? (
-							<>
-								{dropped[id]} <CloseButton onClick={() => remove(id)} />
-							</>
-						) : (
-							"Put rule here"
-						)}
-					</div>
-				</Droppable>
-			)}
+			</Droppable>
 		</div>
 	);
 }
