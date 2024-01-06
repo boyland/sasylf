@@ -6,7 +6,12 @@ import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
 import Export from "./components/export";
 import { DroppedContext } from "./components/state";
-import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import {
+	DndContext,
+	DragEndEvent,
+	DragStartEvent,
+	UniqueIdentifier,
+} from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
@@ -49,6 +54,12 @@ export default function MyApp() {
 		setDropped(newDropped);
 	};
 
+	const addHandler = (id: UniqueIdentifier, text: string) =>
+		setDropped({
+			...dropped,
+			[id]: text,
+		});
+
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
@@ -60,11 +71,7 @@ export default function MyApp() {
 
 		if (active.data.current?.ruleLike != over.data.current?.ruleLike) return;
 
-		if (!(over.id in dropped))
-			setDropped({
-				...dropped,
-				[over.id]: active.data.current?.text,
-			});
+		if (!(over.id in dropped)) addHandler(over.id, active.data.current?.text);
 	};
 
 	function handleCloseTab(id: number) {
@@ -102,7 +109,9 @@ export default function MyApp() {
 						<Tab.Pane eventKey={element.id.toString()}>
 							<Bank compUnit={element.ast} />
 							<Canvas>
-								<DroppedContext.Provider value={{ dropped, removeHandler }}>
+								<DroppedContext.Provider
+									value={{ dropped, removeHandler, addHandler }}
+								>
 									<ProofArea proofRef={proofRef} />
 								</DroppedContext.Provider>
 							</Canvas>

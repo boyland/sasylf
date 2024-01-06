@@ -4,11 +4,11 @@ import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
-import { line } from "./utils";
+import { line, extractPremise } from "./utils";
 
 let nodeCounter = 1;
 
-function Premises(props: { args: string[] }) {
+function Premises(props: { args: string[]; tree: line | null }) {
 	return (
 		<div className="d-flex flex-row premises">
 			{props.args.slice(0, -1).map((arg, ind) => (
@@ -17,6 +17,7 @@ function Premises(props: { args: string[] }) {
 					conclusion={arg}
 					root={false}
 					key={ind}
+					tree={props.tree ? extractPremise(arg, props.tree) : null}
 				/>
 			))}
 		</div>
@@ -27,17 +28,19 @@ interface nodeProps {
 	conclusion: string;
 	root: boolean;
 	className?: string;
-	tree?: line;
+	tree: line | null;
 }
 
 function ProofNode(props: nodeProps) {
-	const { dropped, removeHandler } = useContext(DroppedContext);
+	const { dropped, removeHandler, addHandler } = useContext(DroppedContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 
 	useEffect(() => {
 		setId(nodeCounter++);
 		nodeCounter++;
+
+		if (props.tree) addHandler(id, props.tree.rule);
 	}, []);
 	useEffect(() => {
 		if (id in dropped)
@@ -56,7 +59,7 @@ function ProofNode(props: nodeProps) {
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
-						<Premises args={args} />
+						<Premises args={args} tree={props.tree} />
 					) : null
 				) : (
 					<Droppable
@@ -103,7 +106,7 @@ function ProofNode(props: nodeProps) {
 export default function ProofArea({ proofRef }) {
 	return (
 		<div className="d-flex proof-area" ref={proofRef}>
-			<ProofNode conclusion="(s (z)) + n = (s n)" root />
+			<ProofNode conclusion="(s (z)) + n = (s n)" root tree={null} />
 		</div>
 	);
 }

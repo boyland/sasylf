@@ -5,6 +5,13 @@ export type line = {
 	premises: line[];
 };
 
+export function extractPremise(conclusion: string, tree: line) {
+	for (const premise of tree.premises)
+		if (premise.conclusion === conclusion) return premise;
+
+	return null;
+}
+
 export function getTree(proofNode: Element | undefined): line | null {
 	if (!proofNode) return null;
 
