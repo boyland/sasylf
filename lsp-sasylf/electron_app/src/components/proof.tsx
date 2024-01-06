@@ -9,6 +9,7 @@ import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
+import { input } from "../types";
 
 let nodeCounter = 1;
 
@@ -99,14 +100,19 @@ function ProofNode(props: nodeProps) {
 
 export default function ProofArea(props: {
 	proofRef?: MutableRefObject<null>;
+	inputs: input[];
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<ProofNode conclusion="(s (z)) + n = (s n)" root />
+			{props.inputs.map(({ conclusion, free }) => (
+				<ProofNode conclusion={conclusion} root />
+			))}
 		</div>
 	) : (
 		<div className="d-flex proof-area">
-			<ProofNode conclusion="hi" root />
+			{props.inputs.map(({ conclusion, free }) => (
+				<ProofNode conclusion={conclusion} root />
+			))}
 		</div>
 	);
 }

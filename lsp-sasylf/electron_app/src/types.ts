@@ -68,8 +68,14 @@ export type ruleNode = {
 	file: string;
 };
 
+export type input = {
+	free: boolean;
+	conclusion: string;
+};
+
 export type tab = {
 	ast: ast;
 	id: number;
 	name: string;
+	inputs: input[];
 };
