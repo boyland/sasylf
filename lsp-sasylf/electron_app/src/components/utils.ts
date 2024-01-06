@@ -1,11 +1,11 @@
-type line = {
+export type line = {
 	conclusion: string;
 	name: string;
 	rule: string;
 	premises: line[];
 };
 
-function getTree(proofNode: Element | undefined): line | null {
+export function getTree(proofNode: Element | undefined): line | null {
 	if (!proofNode) return null;
 
 	const containers = proofNode.getElementsByClassName("conclusion");

@@ -1,6 +1,11 @@
 import { createContext } from "react";
 
-export const DroppedContext = createContext<[any, (id: number) => void]>([
-	{},
-	(_: number) => {},
-]);
+type Context = {
+	dropped: any;
+	removeHandler: (_: number) => void;
+};
+
+export const DroppedContext = createContext<Context>({
+	dropped: {},
+	removeHandler: (_: number) => {},
+});

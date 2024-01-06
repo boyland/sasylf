@@ -4,6 +4,7 @@ import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
+import { line } from "./utils";
 
 let nodeCounter = 1;
 
@@ -26,10 +27,11 @@ interface nodeProps {
 	conclusion: string;
 	root: boolean;
 	className?: string;
+	tree?: line;
 }
 
 function ProofNode(props: nodeProps) {
-	const [dropped, remove] = useContext(DroppedContext);
+	const { dropped, removeHandler } = useContext(DroppedContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 
@@ -87,7 +89,7 @@ function ProofNode(props: nodeProps) {
 				<div className="drop-area rule p-2">
 					{id in dropped ? (
 						<>
-							{dropped[id]} <CloseButton onClick={() => remove(id)} />
+							{dropped[id]} <CloseButton onClick={() => removeHandler(id)} />
 						</>
 					) : (
 						"Put rule here"

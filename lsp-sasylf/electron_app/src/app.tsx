@@ -102,7 +102,7 @@ export default function MyApp() {
 						<Tab.Pane eventKey={element.id.toString()}>
 							<Bank compUnit={element.ast} />
 							<Canvas>
-								<DroppedContext.Provider value={[dropped, removeHandler]}>
+								<DroppedContext.Provider value={{ dropped, removeHandler }}>
 									<ProofArea proofRef={proofRef} />
 								</DroppedContext.Provider>
 							</Canvas>
