@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, {
+	useState,
+	useEffect,
+	useContext,
+	MutableRefObject,
+} from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
 import { line, extractPremise } from "./utils";
+import { input } from "../types";
 
 let nodeCounter = 1;
 
@@ -15,7 +21,6 @@ function Premises(props: { args: string[]; tree: line | null }) {
 				<ProofNode
 					className="premise"
 					conclusion={arg}
-					root={false}
 					key={ind}
 					tree={props.tree ? extractPremise(arg, props.tree) : null}
 				/>
@@ -26,7 +31,6 @@ function Premises(props: { args: string[]; tree: line | null }) {
 
 interface nodeProps {
 	conclusion: string;
-	root: boolean;
 	className?: string;
 	tree: line | null;
 }
@@ -51,11 +55,7 @@ function ProofNode(props: nodeProps) {
 	}, [dropped]);
 
 	return (
-		<div
-			className={`d-flex flex-row proof-node m-2 ${
-				props.root ? "root-node" : ""
-			}`}
-		>
+		<div className={"d-flex flex-row proof-node m-2"}>
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
@@ -80,7 +80,9 @@ function ProofNode(props: nodeProps) {
 						htmlSize={5}
 					/>
 					<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
-						<span className="centered-text no-wrap">{props.conclusion}</span>
+						<span className="centered-text no-wrap panning-excluded">
+							{props.conclusion}
+						</span>
 					</Draggable>
 				</div>
 			</div>
@@ -103,10 +105,21 @@ function ProofNode(props: nodeProps) {
 	);
 }
 
-export default function ProofArea({ proofRef }) {
-	return (
-		<div className="d-flex proof-area" ref={proofRef}>
-			<ProofNode conclusion="(s (z)) + n = (s n)" root tree={null} />
+export default function ProofArea(props: {
+	proofRef?: MutableRefObject<null>;
+	inputs: input[];
+}) {
+	return props.hasOwnProperty("proofRef") ? (
+		<div className="d-flex proof-area" ref={props.proofRef}>
+			{props.inputs.map(({ conclusion, free }, ind) => (
+				<ProofNode key={ind} conclusion={conclusion} tree={null} />
+			))}
+		</div>
+	) : (
+		<div className="d-flex proof-area">
+			{props.inputs.map(({ conclusion, free }, ind) => (
+				<ProofNode key={ind} conclusion={conclusion} tree={null} />
+			))}
 		</div>
 	);
 }

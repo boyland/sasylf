@@ -5,6 +5,7 @@ import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
 import Export from "./components/export";
+import Input from "./components/input";
 import { DroppedContext } from "./components/state";
 import {
 	DndContext,
@@ -17,13 +18,15 @@ import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
 import CloseButton from "react-bootstrap/CloseButton";
 import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
 	const [activeText, setActiveText] = useState<string | null>(null);
 	const [dropped, setDropped] = useState({});
-	const [show, setShow] = useState(false);
+	const [showExport, setShowExport] = useState(false);
+	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<string | number>(0);
 	let proofRef = useRef(null);
 
@@ -35,9 +38,11 @@ export default function MyApp() {
 					ast: compUnit,
 					id: maxId + 1,
 					name,
+					inputs: [],
 				} as tab,
 			]),
 		);
+		setActiveKey(maxId + 1);
 	};
 
 	(window as any).electronAPI.addAST(({ compUnit, name }) =>
@@ -45,7 +50,7 @@ export default function MyApp() {
 	);
 
 	(window as any).electronAPI.showModal(() => {
-		setShow(true);
+		setShowExport(true);
 	});
 
 	const removeHandler = (id: number) => {
@@ -80,54 +85,76 @@ export default function MyApp() {
 	}
 
 	return (
-		<Tab.Container
-			onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
-			activeKey={activeKey}
-		>
-			<DndContext
-				modifiers={[snapCenterToCursor]}
-				onDragStart={handleDragStart}
-				onDragEnd={handleDragEnd}
+		<div>
+			<Tab.Container
+				onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
+				activeKey={activeKey}
 			>
-				<Nav variant="tabs" className="flex-row">
+				<DndContext
+					modifiers={[snapCenterToCursor]}
+					onDragStart={handleDragStart}
+					onDragEnd={handleDragEnd}
+				>
+					<Nav variant="tabs" className="flex-row">
+						{tabs.map((element) => (
+							<Nav.Item className="d-flex flex-row" key={element.id}>
+								<Nav.Link eventKey={element.id.toString()}>
+									{element.name}
+									<CloseButton
+										onClick={(event) => {
+											event.stopPropagation();
+											handleCloseTab(element.id);
+										}}
+									/>
+								</Nav.Link>
+							</Nav.Item>
+						))}
+					</Nav>
 					{tabs.map((element) => (
-						<Nav.Item className="d-flex flex-row" key={element.id}>
-							<Nav.Link eventKey={element.id.toString()}>
-								{element.name}
-								<CloseButton
-									onClick={(event) => {
-										event.stopPropagation();
-										handleCloseTab(element.id);
-									}}
-								/>
-							</Nav.Link>
-						</Nav.Item>
-					))}
-				</Nav>
-				{tabs.map((element) => (
-					<Tab.Content key={element.id}>
-						<Tab.Pane eventKey={element.id.toString()}>
-							<Bank compUnit={element.ast} />
-							<Canvas>
-								<DroppedContext.Provider
-									value={{ dropped, removeHandler, addHandler }}
+						<Tab.Content key={element.id}>
+							<Tab.Pane eventKey={element.id.toString()}>
+								<Bank compUnit={element.ast} />
+								<Canvas>
+									<DroppedContext.Provider
+										value={{ dropped, removeHandler, addHandler }}
+									>
+										{element.id === activeKey ? (
+											<ProofArea proofRef={proofRef} inputs={element.inputs} />
+										) : (
+											<ProofArea inputs={element.inputs} />
+										)}
+									</DroppedContext.Provider>
+								</Canvas>
+								<Button
+									variant="success"
+									className="input-theorem"
+									onClick={() => setShowInput(true)}
 								>
-									<ProofArea proofRef={proofRef} />
-								</DroppedContext.Provider>
-							</Canvas>
-						</Tab.Pane>
-					</Tab.Content>
-				))}
-				<DragOverlay zIndex={1060}>
-					{activeText ? (
-						<Card body className="exact" border="dark" text="dark">
-							<code className="rule-like-text">{activeText}</code>
-						</Card>
-					) : null}
-				</DragOverlay>
-			</DndContext>
-			<Export show={show} onHide={() => setShow(false)} proofRef={proofRef} />
-		</Tab.Container>
+									New Theorem
+								</Button>
+								<Input
+									show={showInput}
+									onHide={() => setShowInput(false)}
+									inputs={element.inputs}
+								/>
+							</Tab.Pane>
+						</Tab.Content>
+					))}
+					<DragOverlay zIndex={1060}>
+						{activeText ? (
+							<Card body className="exact" border="dark" text="dark">
+								<code className="rule-like-text no-wrap">{activeText}</code>
+							</Card>
+						) : null}
+					</DragOverlay>
+				</DndContext>
+			</Tab.Container>
+			<Export
+				show={showExport}
+				onHide={() => setShowExport(false)}
+				proofRef={proofRef}
+			/>
+		</div>
 	);
 }
 
