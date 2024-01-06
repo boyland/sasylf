@@ -57,25 +57,33 @@ function ProofNode(props: nodeProps) {
 						<Premises args={args} />
 					) : null
 				) : (
-					<Droppable id={id + 1} className="d-flex stretch-container">
+					<Droppable
+						id={id + 1}
+						data={{ ruleLike: false }}
+						className="d-flex stretch-container"
+					>
 						<div className="drop-node-area p-2">Copy node here</div>
 					</Droppable>
 				)}
-				<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
-					<div className="node-line"></div>
-					<div className="d-flex flex-row conclusion">
-						<Form.Control
-							size="sm"
-							className="panning-excluded m-1"
-							type="text"
-							placeholder="Name"
-							htmlSize={5}
-						/>
+				<div className="node-line"></div>
+				<div className="d-flex flex-row conclusion">
+					<Form.Control
+						size="sm"
+						className="panning-excluded m-1"
+						type="text"
+						placeholder="Name"
+						htmlSize={5}
+					/>
+					<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
 						<span className="centered-text no-wrap">{props.conclusion}</span>
-					</div>
-				</Draggable>
+					</Draggable>
+				</div>
 			</div>
-			<Droppable id={id} className="d-flex stretch-container">
+			<Droppable
+				id={id}
+				data={{ ruleLike: true }}
+				className="d-flex stretch-container"
+			>
 				<div className="drop-area rule p-2">
 					{id in dropped ? (
 						<>

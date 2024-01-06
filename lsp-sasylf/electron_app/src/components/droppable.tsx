@@ -5,11 +5,13 @@ interface droppableProps {
 	id: number;
 	children: any;
 	className: string;
+	data: { ruleLike: boolean };
 }
 
 export default function Droppable(props: droppableProps) {
 	const { isOver, setNodeRef } = useDroppable({
 		id: props.id,
+		data: props.data,
 	});
 	const style = {
 		opacity: isOver ? 0.5 : 1,
