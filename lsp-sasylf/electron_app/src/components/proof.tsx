@@ -17,12 +17,7 @@ function Premises(props: { args: string[] }) {
 	return (
 		<div className="d-flex flex-row premises">
 			{props.args.slice(0, -1).map((arg, ind) => (
-				<ProofNode
-					className="premise"
-					conclusion={arg}
-					root={false}
-					key={ind}
-				/>
+				<ProofNode className="premise" conclusion={arg} key={ind} />
 			))}
 		</div>
 	);
@@ -30,7 +25,6 @@ function Premises(props: { args: string[] }) {
 
 interface nodeProps {
 	conclusion: string;
-	root: boolean;
 	className?: string;
 }
 
@@ -52,11 +46,7 @@ function ProofNode(props: nodeProps) {
 	}, [dropped]);
 
 	return (
-		<div
-			className={`d-flex flex-row proof-node m-2 ${
-				props.root ? "root-node" : ""
-			}`}
-		>
+		<div className={"d-flex flex-row proof-node m-2"}>
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
@@ -104,14 +94,14 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			{props.inputs.map(({ conclusion, free }) => (
-				<ProofNode conclusion={conclusion} root />
+			{props.inputs.map(({ conclusion, free }, ind) => (
+				<ProofNode key={ind} conclusion={conclusion} />
 			))}
 		</div>
 	) : (
 		<div className="d-flex proof-area">
-			{props.inputs.map(({ conclusion, free }) => (
-				<ProofNode conclusion={conclusion} root />
+			{props.inputs.map(({ conclusion, free }, ind) => (
+				<ProofNode key={ind} conclusion={conclusion} />
 			))}
 		</div>
 	);

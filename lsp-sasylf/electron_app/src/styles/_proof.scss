@@ -1,5 +1,8 @@
 .proof-area {
 	justify-content: center;
+	justify-self: center;
+	position: absolute;
+	bottom: 0;
 }
 
 .node-line {
@@ -12,11 +15,6 @@
 .proof-node {
 	font-family: "Courier New", monospace;
 	align-items: flex-end;
-}
-
-.root-node {
-	position: relative;
-	bottom: 0;
 }
 
 .drop-area {

@@ -47,6 +47,7 @@ export default function Input(props: InputProps) {
 						type="switch"
 						name="free"
 						label="Allow free variables"
+						className="m-1"
 					/>
 					<Button variant="success" type="submit">
 						Create
