@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, RefObject } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -20,6 +20,7 @@ import CloseButton from "react-bootstrap/CloseButton";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
+import { getTree } from "./components/utils";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
@@ -28,6 +29,7 @@ export default function MyApp() {
 	const [showExport, setShowExport] = useState(false);
 	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<string | number>(0);
+	const [refs, setRefs] = useState({});
 	let proofRef = useRef(null);
 
 	const addTab = (compUnit: ast | null, name: string | null) => {
@@ -53,30 +55,50 @@ export default function MyApp() {
 		setShowExport(true);
 	});
 
+	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
+		setRefs({
+			...refs,
+			[id]: ref,
+		});
+
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
 		delete newDropped[id];
 		setDropped(newDropped);
 	};
 
-	const addHandler = (id: UniqueIdentifier, text: string) =>
-		setDropped({
-			...dropped,
-			[id]: text,
-		});
+	const addHandler = (id: UniqueIdentifier, text: string) => {
+		if (!(id in dropped))
+			setDropped({
+				...dropped,
+				[id]: text,
+			});
+	};
 
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
+		const activeData = active.data.current;
 		setActiveText(null);
 
 		if (!over) return;
 
-		if (active.data.current?.ruleLike != over.data.current?.ruleLike) return;
+		const overData = over.data.current;
 
-		if (!(over.id in dropped)) addHandler(over.id, active.data.current?.text);
+		if (activeData?.ruleLike != overData?.ruleLike) return;
+
+		const ruleLike = active.data.current?.ruleLike;
+
+		if (ruleLike && !(over.id in dropped))
+			addHandler(over.id, activeData?.text);
+		if (!ruleLike && activeData?.text === overData?.text) {
+			const event = new CustomEvent("tree", {
+				detail: { tree: getTree(refs[active.id].current), overId: over.id },
+			});
+			document.dispatchEvent(event);
+		}
 	};
 
 	function handleCloseTab(id: number) {
@@ -116,7 +138,7 @@ export default function MyApp() {
 								<Bank compUnit={element.ast} />
 								<Canvas>
 									<DroppedContext.Provider
-										value={{ dropped, removeHandler, addHandler }}
+										value={{ dropped, addRef, removeHandler, addHandler }}
 									>
 										{element.id === activeKey ? (
 											<ProofArea proofRef={proofRef} inputs={element.inputs} />

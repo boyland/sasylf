@@ -1,11 +1,12 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { Data } from "./utils";
 
 interface droppableProps {
 	id: number;
 	children: any;
 	className: string;
-	data: { ruleLike: boolean };
+	data: Data;
 }
 
 export default function Droppable(props: droppableProps) {

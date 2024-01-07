@@ -2,6 +2,7 @@ import React, {
 	useState,
 	useEffect,
 	useContext,
+	useRef,
 	MutableRefObject,
 } from "react";
 import Droppable from "./droppable";
@@ -38,39 +39,65 @@ interface nodeProps {
 }
 
 function ProofNode(props: nodeProps) {
-	const { dropped, removeHandler, addHandler } = useContext(DroppedContext);
+	const { dropped, addRef, removeHandler, addHandler } =
+		useContext(DroppedContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
+	const [tree, setTree] = useState<line | null>(null);
+	let proofNodeRef = useRef(null);
 
 	useEffect(() => {
 		setId(nodeCounter++);
-		nodeCounter++;
+		setTree(props.tree);
 
-		if (props.tree) addHandler(id, props.tree.rule);
+		nodeCounter++;
+		const localId = nodeCounter - 2;
+		addRef(localId, proofNodeRef);
+
+		if (props.tree) addHandler(localId, props.tree.rule);
+
+		const listener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (localId + 1 === detail.overId) setTree(detail.tree);
+		};
+
+		document.addEventListener("tree", listener);
+
+		return () => document.removeEventListener("tree", listener);
 	}, []);
 	useEffect(() => {
-		if (id in dropped)
+		if (id in dropped && !tree)
 			(window as any).electronAPI
 				.parse(props.conclusion, dropped[id])
 				.then((res: string[]) => setArgs(res));
 		else setArgs(null);
 	}, [dropped]);
+	useEffect(() => {
+		if (tree) addHandler(id, tree.rule);
+	}, [tree]);
 
 	return (
 		<div
 			className={`d-flex flex-row proof-node m-2 ${
 				props.root ? "root-node" : ""
 			}`}
+			ref={proofNodeRef}
 		>
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
-						<Premises args={args} tree={props.tree} />
+						<Premises args={args} tree={null} />
 					) : null
+				) : tree ? (
+					<Premises
+						args={[...tree.premises.map((value) => value.conclusion), ""]}
+						tree={tree}
+					/>
 				) : (
 					<Droppable
 						id={id + 1}
-						data={{ ruleLike: false }}
+						data={{ ruleLike: false, text: props.conclusion }}
 						className="d-flex stretch-container"
 					>
 						<div className="drop-node-area p-2">Copy node here</div>
@@ -100,7 +127,13 @@ function ProofNode(props: nodeProps) {
 				<div className="drop-area rule p-2">
 					{id in dropped ? (
 						<>
-							{dropped[id]} <CloseButton onClick={() => removeHandler(id)} />
+							{dropped[id]}{" "}
+							<CloseButton
+								onClick={() => {
+									removeHandler(id);
+									setTree(null);
+								}}
+							/>
 						</>
 					) : (
 						"Put rule here"

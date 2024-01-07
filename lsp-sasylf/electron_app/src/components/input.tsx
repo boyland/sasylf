@@ -21,9 +21,6 @@ export default function Input(props: InputProps) {
 		const formJson = Object.fromEntries(formData.entries());
 		const conclusion: string = formJson.conclusion as string;
 		const free: boolean = formJson.hasOwnProperty("free");
-		console.log(formJson);
-		console.log(conclusion);
-		console.log(free);
 		props.inputs.push({ conclusion, free });
 		props.onHide();
 	}
