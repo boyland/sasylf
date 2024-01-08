@@ -120,7 +120,7 @@ function ProofNode(props: nodeProps) {
 						data={{
 							ruleLike: false,
 							text: props.conclusion,
-							key: props.root ? props.ind : null,
+							ind: props.root ? props.ind : null,
 						}}
 					>
 						<span className="centered-text no-wrap panning-excluded">

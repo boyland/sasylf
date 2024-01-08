@@ -118,8 +118,9 @@ export default function MyApp() {
 			});
 			document.dispatchEvent(event);
 
-			if (shiftRef.current && activeData?.key != null) {
+			if (shiftRef.current && activeData?.ind != null) {
 				// TODO Doug code here
+				// activeData?.ind is the index of the input in the corresponding tab
 			}
 		}
 	};
