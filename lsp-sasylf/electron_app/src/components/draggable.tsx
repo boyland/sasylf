@@ -1,10 +1,6 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-
-interface Data {
-	ruleLike: boolean;
-	text: string;
-}
+import { Data } from "./utils";
 
 interface draggableProps {
 	id: number | string;

@@ -79,3 +79,9 @@ export type tab = {
 	name: string;
 	inputs: input[];
 };
+
+export type Data = {
+	ruleLike: boolean;
+	text?: string;
+	key?: string | null;
+};

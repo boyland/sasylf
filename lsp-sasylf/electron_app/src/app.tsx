@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, RefObject } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -7,7 +7,12 @@ import Canvas from "./components/canvas";
 import Export from "./components/export";
 import Input from "./components/input";
 import { DroppedContext } from "./components/state";
-import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import {
+	DndContext,
+	DragEndEvent,
+	DragStartEvent,
+	UniqueIdentifier,
+} from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
@@ -15,6 +20,7 @@ import CloseButton from "react-bootstrap/CloseButton";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
+import { getTree } from "./components/utils";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
@@ -22,8 +28,28 @@ export default function MyApp() {
 	const [dropped, setDropped] = useState({});
 	const [showExport, setShowExport] = useState(false);
 	const [showInput, setShowInput] = useState(false);
-	const [activeKey, setActiveKey] = useState<string | number>(0);
-	let proofRef = useRef(null);
+	const [activeKey, setActiveKey] = useState<number>(0);
+	const [refs, setRefs] = useState({});
+
+	const shiftRef = useRef(false);
+	const proofRef = useRef(null);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Shift") shiftRef.current = true;
+		};
+		const handleKeyUp = (event: KeyboardEvent) => {
+			if (event.key === "Shift") shiftRef.current = false;
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("keyup", handleKeyUp);
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("keyup", handleKeyUp);
+		};
+	}, []);
 
 	const addTab = (compUnit: ast | null, name: string | null) => {
 		const maxId = Math.max(-1, ...tabs.map((element) => element.id));
@@ -50,27 +76,57 @@ export default function MyApp() {
 		});
 	}, [tabs]);
 
+	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
+		setRefs({
+			...refs,
+			[id]: ref,
+		});
+
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
 		delete newDropped[id];
 		setDropped(newDropped);
 	};
 
+	const addHandler = (id: UniqueIdentifier, text: string) => {
+		if (!(id in dropped))
+			setDropped({
+				...dropped,
+				[id]: text,
+			});
+	};
+
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
 	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event;
+		const activeData = active.data.current;
 		setActiveText(null);
 
-		if (
-			event.over &&
-			event.active.data.current?.ruleLike &&
-			!(event.over.id in dropped)
-		)
-			setDropped({
-				...dropped,
-				[event.over.id]: event.active.data.current?.text,
+		if (!over) return;
+
+		const overData = over.data.current;
+
+		if (activeData?.ruleLike != overData?.ruleLike) return;
+
+		const ruleLike = active.data.current?.ruleLike;
+
+		if (ruleLike && !(over.id in dropped))
+			addHandler(over.id, activeData?.text);
+		if (!ruleLike && activeData?.text === overData?.text) {
+			const event = new CustomEvent("tree", {
+				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
+			document.dispatchEvent(event);
+			if (shiftRef.current && activeData?.ind != null) {
+				for (const tab of tabs) {
+					if (tab.id === activeKey) {
+						delete tab.inputs[activeData?.ind];
+					}
+				}
+			}
+		}
 	};
 
 	function handleCloseTab(id: number) {
@@ -81,7 +137,7 @@ export default function MyApp() {
 	return (
 		<div>
 			<Tab.Container
-				onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
+				onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
 				activeKey={activeKey}
 			>
 				<DndContext
@@ -92,7 +148,7 @@ export default function MyApp() {
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
 							<Nav.Item className="d-flex flex-row" key={element.id}>
-								<Nav.Link eventKey={element.id.toString()}>
+								<Nav.Link eventKey={element.id}>
 									{element.name}
 									<CloseButton
 										onClick={(event) => {
@@ -106,10 +162,12 @@ export default function MyApp() {
 					</Nav>
 					{tabs.map((element) => (
 						<Tab.Content key={element.id}>
-							<Tab.Pane eventKey={element.id.toString()}>
+							<Tab.Pane eventKey={element.id}>
 								<Bank compUnit={element.ast} />
 								<Canvas>
-									<DroppedContext.Provider value={[dropped, removeHandler]}>
+									<DroppedContext.Provider
+										value={{ dropped, addRef, removeHandler, addHandler }}
+									>
 										{element.id === activeKey ? (
 											<ProofArea proofRef={proofRef} inputs={element.inputs} />
 										) : (
@@ -134,7 +192,12 @@ export default function MyApp() {
 					))}
 					<DragOverlay zIndex={1060}>
 						{activeText ? (
-							<Card body className="exact" border="dark" text="dark">
+							<Card
+								body
+								className="exact"
+								border="dark"
+								text={shiftRef.current ? "info" : "dark"}
+							>
 								<code className="rule-like-text no-wrap">{activeText}</code>
 							</Card>
 						) : null}
