@@ -36,6 +36,7 @@ interface nodeProps {
 	className?: string;
 	tree: line | null;
 	root?: boolean;
+	ind?: number;
 }
 
 function ProofNode(props: nodeProps) {
@@ -114,7 +115,14 @@ function ProofNode(props: nodeProps) {
 						type="text"
 						placeholder="Name"
 					/>
-					<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
+					<Draggable
+						id={id}
+						data={{
+							ruleLike: false,
+							text: props.conclusion,
+							key: props.root ? props.ind : null,
+						}}
+					>
 						<span className="centered-text no-wrap panning-excluded">
 							{props.conclusion}
 						</span>
@@ -153,13 +161,25 @@ export default function ProofArea(props: {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
 			{props.inputs.map(({ conclusion, free }, ind) => (
-				<ProofNode key={ind} conclusion={conclusion} tree={null} root />
+				<ProofNode
+					ind={ind}
+					key={ind}
+					conclusion={conclusion}
+					tree={null}
+					root
+				/>
 			))}
 		</div>
 	) : (
 		<div className="d-flex proof-area">
 			{props.inputs.map(({ conclusion, free }, ind) => (
-				<ProofNode key={ind} conclusion={conclusion} tree={null} root />
+				<ProofNode
+					ind={ind}
+					key={ind}
+					conclusion={conclusion}
+					tree={null}
+					root
+				/>
 			))}
 		</div>
 	);

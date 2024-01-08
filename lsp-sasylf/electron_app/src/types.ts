@@ -83,4 +83,5 @@ export type tab = {
 export type Data = {
 	ruleLike: boolean;
 	text?: string;
+	key?: string | null;
 };

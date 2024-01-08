@@ -1,4 +1,4 @@
-import React, { useState, useRef, RefObject } from "react";
+import React, { useState, useRef, useEffect, RefObject } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -28,9 +28,28 @@ export default function MyApp() {
 	const [dropped, setDropped] = useState({});
 	const [showExport, setShowExport] = useState(false);
 	const [showInput, setShowInput] = useState(false);
-	const [activeKey, setActiveKey] = useState<string | number>(0);
+	const [activeKey, setActiveKey] = useState<number>(0);
 	const [refs, setRefs] = useState({});
-	let proofRef = useRef(null);
+
+	const shiftRef = useRef(false);
+	const proofRef = useRef(null);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Shift") shiftRef.current = true;
+		};
+		const handleKeyUp = (event: KeyboardEvent) => {
+			if (event.key === "Shift") shiftRef.current = false;
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("keyup", handleKeyUp);
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("keyup", handleKeyUp);
+		};
+	}, []);
 
 	const addTab = (compUnit: ast | null, name: string | null) => {
 		const maxId = Math.max(-1, ...tabs.map((element) => element.id));
@@ -98,6 +117,10 @@ export default function MyApp() {
 				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
 			document.dispatchEvent(event);
+
+			if (shiftRef.current && activeData?.key != null) {
+				// TODO Doug code here
+			}
 		}
 	};
 
@@ -109,7 +132,7 @@ export default function MyApp() {
 	return (
 		<div>
 			<Tab.Container
-				onSelect={(eventKey) => setActiveKey(eventKey ? eventKey : 0)}
+				onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
 				activeKey={activeKey}
 			>
 				<DndContext
@@ -120,7 +143,7 @@ export default function MyApp() {
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
 							<Nav.Item className="d-flex flex-row" key={element.id}>
-								<Nav.Link eventKey={element.id.toString()}>
+								<Nav.Link eventKey={element.id}>
 									{element.name}
 									<CloseButton
 										onClick={(event) => {
@@ -134,7 +157,7 @@ export default function MyApp() {
 					</Nav>
 					{tabs.map((element) => (
 						<Tab.Content key={element.id}>
-							<Tab.Pane eventKey={element.id.toString()}>
+							<Tab.Pane eventKey={element.id}>
 								<Bank compUnit={element.ast} />
 								<Canvas>
 									<DroppedContext.Provider
@@ -164,7 +187,12 @@ export default function MyApp() {
 					))}
 					<DragOverlay zIndex={1060}>
 						{activeText ? (
-							<Card body className="exact" border="dark" text="dark">
+							<Card
+								body
+								className="exact"
+								border="dark"
+								text={shiftRef.current ? "info" : "dark"}
+							>
 								<code className="rule-like-text no-wrap">{activeText}</code>
 							</Card>
 						) : null}
