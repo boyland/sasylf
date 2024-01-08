@@ -557,12 +557,28 @@ public class Proof {
 			List<Fact> inputs = new ArrayList<Fact>();
 			List<Abstraction> addedContext = new ArrayList<Abstraction>();
 
+			// the substitution to get fresh variables
+			Substitution freshSub = new Substitution();
+
+			// the substitution to handle possible dependencies on the context
+			// (this cannot be used until we have removed bindings of variable free
+			// NTs)
+			Substitution adaptSub = new Substitution();
+
+			// the variable-free NTs that should not be adapted:
+			Set<FreeVar> varFree = new HashSet<FreeVar>();
+
+			// after adaptation, the free variables in the premises
+			Set<FreeVar> freeVars = new HashSet<FreeVar>();
+
+			List<Term> addedTypes = new ArrayList<Term>();
 			for (Element premise : ruleLike.getPremises()) {
 				inputs.add(premise.asFact(ctx, ctx.assumedContext));
 			}
+
 			Term subject = ruleLike.checkApplication(
 					ctx, inputs, e.asFact(ctx, ctx.assumedContext), addedContext, null,
-					false);
+					true, addedTypes, freshSub, adaptSub, varFree);
 
 			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 			Term pattern =

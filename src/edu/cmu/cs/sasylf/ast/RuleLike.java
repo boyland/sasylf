@@ -304,6 +304,124 @@ public abstract class RuleLike extends Node implements Named {
 	}
 
 	/**
+	 * Generate a term for the application of this rule/theorem with the given
+	 * inputs and outputs.   We also return the implied binding of the assumed
+	 * context as a list of wrapping abstractions. Uses fresh terms for the
+	 * premises to support bottom up
+	 * @param ctx
+	 * @param inputs
+	 * @param output
+	 * @param addedContext Output parameter:
+	 * what context do the actuals (inputs and outputs) 
+	 * assume is passed implicitly.
+	 * @param errorPoint
+	 * @param isPattern
+	 * @return
+	 */
+	public Application checkApplication(Context ctx, List<? extends Fact> inputs, Fact output, List<Abstraction> addedContext, Node errorPoint, boolean isPattern, List<Term> addedTypes, Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
+		Util.verify(addedContext != null && addedContext.isEmpty(), "output parameter should be empty");
+		int n = getPremises().size();
+		if (inputs.size() != n) {
+			ErrorHandler.error(Errors.RULE_PREMISE_NUMBER, getKind()+" "+getName()+", which expects "+n, errorPoint);
+		}
+
+		// For better error reporting, do a first stab at type-checking the arguments and result
+		for (int i=0; i < n; ++i) {
+			Element formal = getPremises().get(i);
+			Fact input = inputs.get(i);
+			if (input instanceof DerivationPlaceholder) continue; // don't check
+			Element actual = input.getElement();
+			if (formal.getType().typeTerm() != actual.getType().typeTerm()) {
+				ErrorHandler.error(Errors.RULE_PREMISE_MISMATCH, (i+1) + ": " + formal.getType().getName(), isPattern ? input : errorPoint);
+			}
+		}
+		Element concElem = output.getElement();
+		if (concElem.getType().typeTerm() != getConclusion().getType().typeTerm()) {
+			if (!isPattern && getConclusion().asTerm() == OrJudgment.getContradictionConstant()) {
+				ErrorHandler.error(Errors.RULE_CONCLUSION_CONTRADICTION, concElem.getType().getName(), 
+							errorPoint,"_: contradiction");
+			} else {
+				ErrorHandler.error(Errors.RULE_CONCLUSION_MISMATCH, getConclusion().getType().getName() + " != " + concElem.getType().getName(), 
+						isPattern ? output : errorPoint);
+			}
+		}
+
+		List<Term> allArgs = new ArrayList<Term>();
+
+		// we now go through the arguments and match each against the corresponding formal
+		// and split each into the context that needs to be split off to match the formal
+		// and a term (with bindings into the context).
+		List<List<Abstraction>> allContexts = new ArrayList<List<Abstraction>>();
+		for (int i=0; i < n; ++i) {
+			Element formal = getPremises().get(i);
+			Fact input = inputs.get(i);
+			if (input instanceof DerivationPlaceholder) {
+				DerivationPlaceholder ph = (DerivationPlaceholder)input;
+				if (ph.getTerm() instanceof FreeVar) {
+					allContexts.add(Collections.emptyList());
+					allArgs.add(ph.getTerm());
+					continue; // don't check
+				}
+			}
+			Element actual = input.getElement();
+			String name = "argument #"+ (i+1);
+			if (isPattern) { // flow complex
+				if (formal.getRoot() != null && concElem.getRoot() != null) {
+					if (!concElem.getRoot().equals(actual.getRoot())) {
+						ErrorHandler.error(Errors.CONTEXT_DISCARDED,"" + concElem.getRoot(), input);
+					}
+				} else if (concElem.getRoot() == null && actual.getRoot() != null) {
+					ErrorHandler.recoverableError(Errors.PREMISE_CONTEXT_MISMATCH, input);
+				}
+			} else if (!Derivation.checkRootMatch(ctx,actual,formal,null)) {
+				Node source = errorPoint;
+				if (errorPoint instanceof DerivationWithArgs) {
+					source = ((DerivationWithArgs)errorPoint).getArgStrings().get(i);
+				}
+				ErrorHandler.error(Errors.CONTEXT_DISCARDED,"" + actual.getRoot(),source);
+			}
+			getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint, addedTypes, freshSub, adaptSub, varFree);
+		}
+		getArgContextAndTerm(ctx, "conclusion", getConclusion(), concElem, allContexts, allArgs, output);
+
+		addedContext.addAll(unionContexts(ctx,allContexts, errorPoint));
+
+
+		// Now weaken all premises to fit the combined context
+		// Except (1) the conclusion cannot be weakened to fit because it's an output
+		//        (2) In general, we want to force the user to explicitly weaken all derivations
+		//            so only syntax can be explicitly weakened.
+		//        (3) We don't need to weaken things that don't have a root in the rule.
+		// If this is a rule pattern match, we can't allow any weakenings, but since we currently
+		// only weaken SyntaxAssumptions and rules don't have these, we are fine.  
+		// Then we use a different error message however.
+		for (int i=0; i < n; ++i) {
+			Element formal = getPremises().get(i);
+			if (formal.getRoot() == null) continue;
+			if (formal.getType() instanceof SyntaxDeclaration) {
+				List<Abstraction> abs = allContexts.get(i);
+				Term t = allArgs.get(i);
+				allArgs.set(i,weakenArg(abs,addedContext,t));
+			} else if (allContexts.get(i).size() != addedContext.size()) {
+				if (isPattern)
+					ErrorHandler.error(Errors.CASE_CONTEXT_INCONSISTENT, inputs.get(i));
+				else
+					ErrorHandler.error(Errors.OTHER_CONTEXT_NEEDED, Term.wrappingAbstractionsToString(addedContext), errorPoint);
+			}
+		}
+		if (getConclusion().getRoot() != null &&
+				allContexts.get(n).size() != addedContext.size()) {
+			if (isPattern)
+				ErrorHandler.error(Errors.CASE_CONTEXT_INCONSISTENT, output);
+			else
+				ErrorHandler.error(Errors.OTHER_CONTEXT_JUSTIFIED, Term.wrappingAbstractionsToString(addedContext), errorPoint);
+		}
+
+
+		return Facade.App(getRuleAppConstant(), allArgs);
+	}
+
+	/**
 	 * @param name
 	 * @param formal
 	 * @param actual
@@ -314,6 +432,41 @@ public abstract class RuleLike extends Node implements Named {
 			Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs, Node errorPoint) {
 		Term f = formal.asTerm();
 		Term a = actual.asTerm().substitute(ctx.currentSub);
+		int diff = a.countLambdas() - f.countLambdas();
+		// Leave context errors until later when we can give specific
+		// error messages depending on whether this is a case or a call
+		/*if (diff < 0) {
+			ErrorHandler.error(name + " to " + getName() + " expects more in context than given",errorPoint,
+					"SASyLF expected the " + name + " to be " +f+ " but was given " + a + " from " + actual);
+		} else*/ if (diff <= 0) {
+			allContexts.add(Collections.<Abstraction>emptyList());
+			allArgs.add(a);
+		} else {
+			/*if (formal.getRoot() == null) {
+				ErrorHandler.error(name + " to " + getName() + " doesn't expect/permit extra bindings", errorPoint,
+						"SASyLF computed the " + name + " supplied as " + a); 
+			}*/
+			List<Abstraction> context = new ArrayList<Abstraction>();
+			allContexts.add(context);
+			allArgs.add(Term.getWrappingAbstractions(a, context, diff));
+		}
+	}
+
+	/** getArgContextAndTerm that generates a fresh term
+	 * @param name
+	 * @param formal
+	 * @param actual
+	 * @param allContexts
+	 * @param allArgs
+	 * @param addedTypes
+	 * @param freshSub
+	 * @param adaptSub
+	 * @param varFree
+	 */
+	protected void getArgContextAndTerm(Context ctx, String name, Element formal,
+			Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs, Node errorPoint, List<Term> addedTypes, Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
+		Term f = formal.asTerm();
+		Term a = getFreshAdaptedTerm(actual, addedTypes, freshSub, adaptSub, varFree).substitute(ctx.currentSub);
 		int diff = a.countLambdas() - f.countLambdas();
 		// Leave context errors until later when we can give specific
 		// error messages depending on whether this is a case or a call
