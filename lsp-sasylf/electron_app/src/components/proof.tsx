@@ -47,11 +47,12 @@ function ProofNode(props: nodeProps) {
 	const [tree, setTree] = useState<line | null>(null);
 	let proofNodeRef = useRef(null);
 
+	const safeSetTree = (tree: line | null) =>
+		setTree(tree && tree.rule === "Put rule here" ? null : tree);
+
 	useEffect(() => {
 		setId(nodeCounter++);
-		setTree(
-			props.tree && props.tree.rule === "Put rule here" ? null : props.tree,
-		);
+		safeSetTree(props.tree);
 
 		nodeCounter++;
 		const localId = nodeCounter - 2;
@@ -63,7 +64,7 @@ function ProofNode(props: nodeProps) {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (localId + 1 === detail.overId) setTree(detail.tree);
+			if (localId + 1 === detail.overId) safeSetTree(detail.tree);
 		};
 
 		document.addEventListener("tree", listener);
