@@ -5,11 +5,6 @@ export type line = {
 	premises: line[];
 };
 
-export interface Data {
-	ruleLike: boolean;
-	text?: string;
-}
-
 export function extractPremise(conclusion: string, tree: line) {
 	for (const premise of tree.premises)
 		if (premise.conclusion === conclusion) return premise;

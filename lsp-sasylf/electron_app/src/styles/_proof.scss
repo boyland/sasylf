@@ -22,6 +22,7 @@
 	border: dashed;
 	border-radius: 10px;
 	bottom: 11px;
+	white-space: nowrap;
 }
 
 .drop-node-area {
@@ -29,6 +30,7 @@
 	border-radius: 10px;
 	width: stretch;
 	text-align: center;
+	white-space: nowrap;
 }
 
 .no-wrap {
@@ -65,4 +67,14 @@
 	margin: auto;
 	align-items: center;
 	width: fit-content;
+}
+
+.name-input {
+	width: 65px;
+}
+
+.invisible {
+	opacity: 0;
+	position: absolute;
+	left: -9999px;
 }

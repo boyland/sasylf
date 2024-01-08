@@ -80,8 +80,8 @@ function ProofNode(props: nodeProps) {
 	return (
 		<div
 			className={`d-flex flex-row proof-node m-2 ${
-				props.root ? "root-node" : ""
-			}`}
+				props.className ? props.className : ""
+			} ${props.root ? "root-node" : ""}`}
 			ref={proofNodeRef}
 		>
 			<div className="d-flex flex-column">
@@ -107,10 +107,9 @@ function ProofNode(props: nodeProps) {
 				<div className="d-flex flex-row conclusion">
 					<Form.Control
 						size="sm"
-						className="panning-excluded m-1"
+						className="name-input panning-excluded m-1"
 						type="text"
 						placeholder="Name"
-						htmlSize={5}
 					/>
 					<Draggable id={id} data={{ ruleLike: false, text: props.conclusion }}>
 						<span className="centered-text no-wrap panning-excluded">
@@ -150,6 +149,7 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
+			<ProofNode className="invisible" conclusion="" tree={null} root />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode key={ind} conclusion={conclusion} tree={null} root />
 			))}

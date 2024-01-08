@@ -1,15 +1,16 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { Data } from "./utils";
+import { Data } from "../types";
 
 interface droppableProps {
 	id: number;
 	children: any;
 	className: string;
-	data: Data;
+	data?: Data;
 }
 
 export default function Droppable(props: droppableProps) {
+	console.log(props.id, props.data);
 	const { isOver, setNodeRef } = useDroppable({
 		id: props.id,
 		data: props.data,
