@@ -13,7 +13,7 @@ import Draggable from "./draggable";
 import { line, extractPremise } from "./utils";
 import { input } from "../types";
 
-let nodeCounter = 1;
+let nodeCounter = 2;
 
 function Premises(props: { args: string[]; tree: line | null }) {
 	return (
@@ -48,13 +48,16 @@ function ProofNode(props: nodeProps) {
 
 	useEffect(() => {
 		setId(nodeCounter++);
-		setTree(props.tree);
+		setTree(
+			props.tree && props.tree.rule === "Put rule here" ? null : props.tree,
+		);
 
 		nodeCounter++;
 		const localId = nodeCounter - 2;
 		addRef(localId, proofNodeRef);
 
-		if (props.tree) addHandler(localId, props.tree.rule);
+		if (props.tree && props.tree.rule !== "Put rule here")
+			addHandler(localId, props.tree.rule);
 
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
@@ -79,9 +82,9 @@ function ProofNode(props: nodeProps) {
 
 	return (
 		<div
-			className={`d-flex flex-row proof-node m-2 ${
+			className={`d-flex flex-row proof-node ${
 				props.className ? props.className : ""
-			} ${props.root ? "root-node" : ""}`}
+			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
 		>
 			<div className="d-flex flex-column">
@@ -149,7 +152,6 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<ProofNode className="invisible" conclusion="" tree={null} />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode key={ind} conclusion={conclusion} tree={null} root />
 			))}

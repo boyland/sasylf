@@ -10,7 +10,6 @@ interface droppableProps {
 }
 
 export default function Droppable(props: droppableProps) {
-	console.log(props.id, props.data);
 	const { isOver, setNodeRef } = useDroppable({
 		id: props.id,
 		data: props.data,
