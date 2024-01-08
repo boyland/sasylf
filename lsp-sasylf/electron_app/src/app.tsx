@@ -117,10 +117,12 @@ export default function MyApp() {
 				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
 			document.dispatchEvent(event);
-
 			if (shiftRef.current && activeData?.ind != null) {
-				// TODO Doug code here
-				// activeData?.ind is the index of the input in the corresponding tab
+				for (const tab of tabs) {
+					if (tab.id === activeKey) {
+						delete tab.inputs[activeData?.ind];
+					}
+				}
 			}
 		}
 	};
