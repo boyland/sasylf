@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { ast, tab } from "./types";
 import Bank from "./components/bank";
@@ -40,13 +40,15 @@ export default function MyApp() {
 		setActiveKey(maxId + 1);
 	};
 
-	(window as any).electronAPI.addAST(({ compUnit, name }) =>
-		addTab(compUnit, name),
-	);
+	useEffect(() => {
+		(window as any).electronAPI.addAST(({ compUnit, name }) =>
+			addTab(compUnit, name),
+		);
 
-	(window as any).electronAPI.showModal(() => {
-		setShowExport(true);
-	});
+		(window as any).electronAPI.showModal(() => {
+			setShowExport(true);
+		});
+	}, [tabs]);
 
 	const removeHandler = (id: number) => {
 		const newDropped = { ...dropped };
