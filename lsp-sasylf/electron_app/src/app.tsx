@@ -188,6 +188,12 @@ export default function MyApp() {
 									inputs={element.inputs}
 								/>
 							</Tab.Pane>
+							<Export
+								show={showExport}
+								onHide={() => setShowExport(false)}
+								proofRef={proofRef}
+								inputs={element.inputs}
+							/>
 						</Tab.Content>
 					))}
 					<DragOverlay zIndex={1060}>
@@ -204,11 +210,6 @@ export default function MyApp() {
 					</DragOverlay>
 				</DndContext>
 			</Tab.Container>
-			<Export
-				show={showExport}
-				onHide={() => setShowExport(false)}
-				proofRef={proofRef}
-			/>
 		</div>
 	);
 }

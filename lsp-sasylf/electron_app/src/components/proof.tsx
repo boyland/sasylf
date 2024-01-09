@@ -159,22 +159,11 @@ export default function ProofArea(props: {
 	proofRef?: MutableRefObject<null>;
 	inputs: input[];
 }) {
-	return props.hasOwnProperty("proofRef") ? (
+	return (
 		<div className="d-flex proof-area" ref={props.proofRef}>
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode
-					ind={ind}
-					key={ind}
-					conclusion={conclusion}
-					tree={null}
-					root
-				/>
-			))}
-		</div>
-	) : (
-		<div className="d-flex proof-area">
-			{props.inputs.map(({ conclusion, free }, ind) => (
-				<ProofNode
+					className={`${free ? "free" : ""}`}
 					ind={ind}
 					key={ind}
 					conclusion={conclusion}
