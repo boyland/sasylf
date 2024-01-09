@@ -124,13 +124,19 @@ function RuleLikes(props: { compUnit: ast }) {
 }
 
 interface BankProps {
-	compUnit: ast | null;
+	compUnit: ast | undefined;
+	show: boolean;
+	toggleShow: () => void;
+	bankRef: React.RefObject<HTMLDivElement>;
 }
 
 export default function Bank(props: BankProps) {
 	const [show, setShow] = useState(false);
 
-	const handleClose = () => setShow(false);
+	const handleClose = () => {
+		setShow(false);
+		props.toggleShow();
+	};
 	const handleShow = () => setShow(true);
 
 	return props.compUnit ? (
@@ -143,11 +149,12 @@ export default function Bank(props: BankProps) {
 				onHide={handleClose}
 				backdrop={false}
 				id="bank-canvas"
+				onEnter={() => props.toggleShow()}
 			>
 				<Offcanvas.Header closeButton>
 					<Offcanvas.Title>Rules Bank</Offcanvas.Title>
 				</Offcanvas.Header>
-				<Offcanvas.Body>
+				<Offcanvas.Body ref={props.bankRef}>
 					<RuleLikes compUnit={props.compUnit} />
 				</Offcanvas.Body>
 			</Offcanvas>

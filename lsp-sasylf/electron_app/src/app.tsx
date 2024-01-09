@@ -21,6 +21,7 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 import { getTree } from "./components/utils";
+import styled, { keyframes } from "styled-components";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
@@ -30,9 +31,11 @@ export default function MyApp() {
 	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<number>(0);
 	const [refs, setRefs] = useState({});
+	const [show, setShow] = useState(false);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef(null);
+	const bankRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -119,13 +122,10 @@ export default function MyApp() {
 				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
 			document.dispatchEvent(event);
-			if (shiftRef.current && activeData?.ind != null) {
-				for (const tab of tabs) {
-					if (tab.id === activeKey) {
-						delete tab.inputs[activeData?.ind];
-					}
-				}
-			}
+
+			if (shiftRef.current && activeData?.ind != null)
+				for (const tab of tabs)
+					if (tab.id === activeKey) delete tab.inputs[activeData?.ind];
 		}
 	};
 
@@ -134,16 +134,45 @@ export default function MyApp() {
 		setActiveKey(0);
 	}
 
+	const [Anim, setAnim] = useState(styled.div`
+		margin-left: 0;
+	`);
+
+	useEffect(() => {
+		const shift = keyframes`
+            from {
+                margin-left: 0;
+            }
+            to {
+                margin-left: ${bankRef.current?.offsetWidth}px;
+            }
+        `;
+
+		const NewAnim = styled.div`
+			animation: ${shift} 0.3s linear;
+			animation-direction: ${show ? "normal" : "reverse"};
+			margin-left: ${show ? bankRef.current?.offsetWidth : "0"}px;
+		`;
+
+		setAnim(NewAnim);
+	}, [show]);
+
 	return (
-		<div>
-			<Tab.Container
-				onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
-				activeKey={activeKey}
-			>
-				<DndContext
-					modifiers={[snapCenterToCursor]}
-					onDragStart={handleDragStart}
-					onDragEnd={handleDragEnd}
+		<DndContext
+			modifiers={[snapCenterToCursor]}
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+		>
+			<Bank
+				show={show}
+				toggleShow={() => setShow(!show)}
+				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
+				bankRef={bankRef}
+			/>
+			<Anim>
+				<Tab.Container
+					onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
+					activeKey={activeKey}
 				>
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
@@ -163,7 +192,6 @@ export default function MyApp() {
 					{tabs.map((element) => (
 						<Tab.Content key={element.id}>
 							<Tab.Pane eventKey={element.id}>
-								<Bank compUnit={element.ast} />
 								<Canvas>
 									<DroppedContext.Provider
 										value={{ dropped, addRef, removeHandler, addHandler }}
@@ -190,26 +218,26 @@ export default function MyApp() {
 							</Tab.Pane>
 						</Tab.Content>
 					))}
-					<DragOverlay zIndex={1060}>
-						{activeText ? (
-							<Card
-								body
-								className="exact"
-								border="dark"
-								text={shiftRef.current ? "info" : "dark"}
-							>
-								<code className="rule-like-text no-wrap">{activeText}</code>
-							</Card>
-						) : null}
-					</DragOverlay>
-				</DndContext>
-			</Tab.Container>
+				</Tab.Container>
+			</Anim>
 			<Export
 				show={showExport}
 				onHide={() => setShowExport(false)}
 				proofRef={proofRef}
 			/>
-		</div>
+			<DragOverlay zIndex={1060}>
+				{activeText ? (
+					<Card
+						body
+						className="exact"
+						border="dark"
+						text={shiftRef.current ? "info" : "dark"}
+					>
+						<code className="rule-like-text no-wrap">{activeText}</code>
+					</Card>
+				) : null}
+			</DragOverlay>
+		</DndContext>
 	);
 }
 
