@@ -7,10 +7,10 @@ import React, {
 } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
-import { DroppedContext } from "./state";
+import { DroppedContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
-import { line, extractPremise } from "./utils";
+import { line, replaceElement, extractPremise } from "./utils";
 import { input } from "../types";
 
 let nodeCounter = 2;
@@ -24,9 +24,101 @@ function Premises(props: { args: string[]; tree: line | null }) {
 					conclusion={arg}
 					key={ind}
 					tree={props.tree ? extractPremise(arg, props.tree) : null}
-					root={false}
 				/>
 			))}
+		</div>
+	);
+}
+
+function TopDownNode({
+	numPremises,
+	rule,
+}: {
+	numPremises: number;
+	rule: string;
+}) {
+	const file = useContext(FileContext);
+	const [ids, setIds] = useState<number[]>(Array(numPremises).fill(0));
+	const [trees, setTrees] = useState<(line | null)[]>(
+		Array(numPremises).fill(null),
+	);
+	const [premises, setPremises] = useState<(string | null)[]>(
+		Array(numPremises).fill(null),
+	);
+	const [numUsed, setNumUsed] = useState(0);
+	const [conclusion, setConclusion] = useState<string | null>(null);
+	const [tree, setTree] = useState<line | null>(null);
+
+	useEffect(
+		() =>
+			setIds(Array.from(Array(numPremises).keys()).map((_) => nodeCounter++)),
+		[],
+	);
+	useEffect(() => {
+		const listener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (ids[0] <= detail.overId && detail.overId <= ids[ids.length - 1]) {
+				const ind = detail.overId - ids[0];
+				setTrees(replaceElement(trees, ind, detail.tree));
+				setPremises(replaceElement(premises, ind, detail.text));
+				setNumUsed(numUsed + 1);
+			}
+		};
+
+		document.addEventListener("topdown-tree", listener);
+
+		return () => document.removeEventListener("topdown-tree", listener);
+	}, [ids, trees, premises]);
+	useEffect(() => {
+		if (numUsed != numPremises) return;
+
+		(window as any).electronAPI
+			.topdownParse({ premises }, rule, file)
+			.then((res: string) => setConclusion(res));
+	}, [numUsed]);
+	useEffect(() => {
+		if (!conclusion) return;
+		if (trees.filter((elem) => elem == null).length) return;
+
+		setTree({ conclusion, name: "", rule, premises: trees as line[] });
+	}, [conclusion]);
+
+	const deletePremise = (ind: number) => {
+		setTrees(replaceElement(trees, ind, null));
+		setPremises(replaceElement(premises, ind, null));
+		setNumUsed(numUsed - 1);
+	};
+
+	return conclusion ? (
+		<ProofNode conclusion={conclusion} tree={tree} root />
+	) : (
+		<div className="d-flex flex-row topdown-node m-2">
+			<div className="d-flex flex-column">
+				<div className="d-flex flex-row">
+					{premises.map((premise, ind) => (
+						<Droppable
+							id={ids[ind]}
+							key={ind}
+							data={{ type: "topdown" }}
+							className="d-flex stretch-container"
+						>
+							<div className="drop-node-area p-2">
+								{premise ? (
+									<>
+										{premise} <CloseButton onClick={() => deletePremise(ind)} />
+									</>
+								) : (
+									`Premise ${ind}`
+								)}
+							</div>
+						</Droppable>
+					))}
+				</div>
+				<div className="node-line"></div>
+				<span className="centered-text">Conclusion pending</span>
+			</div>
+			<span className="topdown-rule m-2">{rule}</span>
 		</div>
 	);
 }
@@ -42,6 +134,7 @@ interface nodeProps {
 function ProofNode(props: nodeProps) {
 	const { dropped, addRef, removeHandler, addHandler } =
 		useContext(DroppedContext);
+	const file = useContext(FileContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
@@ -74,10 +167,11 @@ function ProofNode(props: nodeProps) {
 	useEffect(() => {
 		if (id in dropped && !tree)
 			(window as any).electronAPI
-				.parse(props.conclusion, dropped[id])
+				.parse(props.conclusion, dropped[id], file)
 				.then((res: string[]) => setArgs(res));
 		else setArgs(null);
 	}, [dropped]);
+	useEffect(() => safeSetTree(props.tree), [props.tree]);
 	useEffect(() => {
 		if (tree) addHandler(id, tree.rule);
 	}, [tree]);
@@ -102,7 +196,7 @@ function ProofNode(props: nodeProps) {
 				) : (
 					<Droppable
 						id={id + 1}
-						data={{ ruleLike: false, text: props.conclusion }}
+						data={{ type: "copy", text: props.conclusion }}
 						className="d-flex stretch-container"
 					>
 						<div className="drop-node-area p-2">Copy node here</div>
@@ -119,7 +213,7 @@ function ProofNode(props: nodeProps) {
 					<Draggable
 						id={id}
 						data={{
-							ruleLike: false,
+							type: "node",
 							text: props.conclusion,
 							ind: props.root ? props.ind : null,
 						}}
@@ -132,7 +226,7 @@ function ProofNode(props: nodeProps) {
 			</div>
 			<Droppable
 				id={id}
-				data={{ ruleLike: true }}
+				data={{ type: "rule" }}
 				className="d-flex stretch-container"
 			>
 				<div className="drop-area rule p-2">
@@ -161,6 +255,7 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
+			<TopDownNode numPremises={2} rule="less-transitive" />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode
 					ind={ind}

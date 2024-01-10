@@ -14,3 +14,5 @@ export const DroppedContext = createContext<Context>({
 	removeHandler: (_) => {},
 	addHandler: (_, __) => {},
 });
+
+export const FileContext = createContext("");

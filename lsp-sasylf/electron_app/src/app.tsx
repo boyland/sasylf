@@ -6,7 +6,7 @@ import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
 import Export from "./components/export";
 import Input from "./components/input";
-import { DroppedContext } from "./components/state";
+import { DroppedContext, FileContext } from "./components/state";
 import {
 	DndContext,
 	DragEndEvent,
@@ -51,7 +51,7 @@ export default function MyApp() {
 		};
 	}, []);
 
-	const addTab = (compUnit: ast | null, name: string | null) => {
+	const addTab = (compUnit: ast | null, name: string | null, file: string) => {
 		const maxId = Math.max(-1, ...tabs.map((element) => element.id));
 		setTabs(
 			tabs.concat([
@@ -60,6 +60,7 @@ export default function MyApp() {
 					id: maxId + 1,
 					name,
 					inputs: [],
+					file,
 				} as tab,
 			]),
 		);
@@ -67,8 +68,8 @@ export default function MyApp() {
 	};
 
 	useEffect(() => {
-		(window as any).electronAPI.addAST(({ compUnit, name }) =>
-			addTab(compUnit, name),
+		(window as any).electronAPI.addAST(({ compUnit, name, file }) =>
+			addTab(compUnit, name, file),
 		);
 
 		(window as any).electronAPI.showModal(() => {
@@ -107,14 +108,16 @@ export default function MyApp() {
 		if (!over) return;
 
 		const overData = over.data.current;
+		const overType = overData?.type;
+		const activeType = activeData?.type;
 
-		if (activeData?.ruleLike != overData?.ruleLike) return;
-
-		const ruleLike = active.data.current?.ruleLike;
-
-		if (ruleLike && !(over.id in dropped))
+		if (overType === "rule" && activeType === "rule" && !(over.id in dropped))
 			addHandler(over.id, activeData?.text);
-		if (!ruleLike && activeData?.text === overData?.text) {
+		if (
+			overType === "copy" &&
+			activeType === "node" &&
+			activeData?.text === overData?.text
+		) {
 			const event = new CustomEvent("tree", {
 				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
@@ -126,6 +129,16 @@ export default function MyApp() {
 					}
 				}
 			}
+		}
+		if (overType === "topdown" && activeType === "node") {
+			const event = new CustomEvent("topdown-tree", {
+				detail: {
+					tree: getTree(refs[active.id].current),
+					overId: over.id,
+					text: activeData?.text,
+				},
+			});
+			document.dispatchEvent(event);
 		}
 	};
 
@@ -168,11 +181,16 @@ export default function MyApp() {
 									<DroppedContext.Provider
 										value={{ dropped, addRef, removeHandler, addHandler }}
 									>
-										{element.id === activeKey ? (
-											<ProofArea proofRef={proofRef} inputs={element.inputs} />
-										) : (
-											<ProofArea inputs={element.inputs} />
-										)}
+										<FileContext.Provider value={element.file}>
+											{element.id === activeKey ? (
+												<ProofArea
+													proofRef={proofRef}
+													inputs={element.inputs}
+												/>
+											) : (
+												<ProofArea inputs={element.inputs} />
+											)}
+										</FileContext.Provider>
 									</DroppedContext.Provider>
 								</Canvas>
 								<Button

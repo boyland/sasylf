@@ -22,7 +22,7 @@ function RuleLike(props: RuleLikeProps) {
 function Judgment(props: { judgment: judgmentNode }) {
 	const rules = props.judgment.rules.map((rule) => ruleToText(rule));
 	const rulesElements = rules.map((rule, ind) => (
-		<Draggable key={ind} id={rule[1]} data={{ ruleLike: true, text: rule[1] }}>
+		<Draggable key={ind} id={rule[1]} data={{ type: "rule", text: rule[1] }}>
 			<RuleLike text={rule[0]} />
 		</Draggable>
 	));
@@ -106,7 +106,7 @@ function RuleLikes(props: { compUnit: ast }) {
 	const theorems = props.compUnit.theorems.map((value) => theoremToText(value));
 
 	const theoremsElements = theorems.map((thm, ind) => (
-		<Draggable key={ind} id={thm[1]} data={{ ruleLike: true, text: thm[1] }}>
+		<Draggable key={ind} id={thm[1]} data={{ type: "rule", text: thm[1] }}>
 			<RuleLike text={thm[0]} />
 		</Draggable>
 	));

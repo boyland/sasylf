@@ -78,10 +78,11 @@ export type tab = {
 	id: number;
 	name: string;
 	inputs: input[];
+	file: string;
 };
 
 export type Data = {
-	ruleLike: boolean;
+	type: string;
 	text?: string;
 	key?: string | null;
 };
