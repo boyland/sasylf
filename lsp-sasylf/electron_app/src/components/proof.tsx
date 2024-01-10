@@ -15,7 +15,17 @@ import { input } from "../types";
 
 let nodeCounter = 2;
 
-function Premises(props: { args: string[]; tree: line | null }) {
+interface TopdownHandler {
+	fn: (id: number) => void;
+	level: boolean;
+	ind?: number;
+}
+
+function Premises(props: {
+	args: string[];
+	tree: line | null;
+	topdownHandler: TopdownHandler | null;
+}) {
 	return (
 		<div className="d-flex flex-row premises">
 			{props.args.slice(0, -1).map((arg, ind) => (
@@ -24,6 +34,15 @@ function Premises(props: { args: string[]; tree: line | null }) {
 					conclusion={arg}
 					key={ind}
 					tree={props.tree ? extractPremise(arg, props.tree) : null}
+					{...(props.topdownHandler
+						? {
+								topdownHandler: {
+									fn: props.topdownHandler.fn,
+									level: true,
+									ind,
+								},
+							}
+						: {})}
 				/>
 			))}
 		</div>
@@ -71,7 +90,10 @@ function TopDownNode({
 		return () => document.removeEventListener("topdown-tree", listener);
 	}, [ids, trees, premises]);
 	useEffect(() => {
-		if (numUsed != numPremises) return;
+		if (numUsed != numPremises) {
+			setConclusion(null);
+			return;
+		}
 
 		(window as any).electronAPI
 			.topdownParse({ premises }, rule, file)
@@ -91,7 +113,15 @@ function TopDownNode({
 	};
 
 	return conclusion ? (
-		<ProofNode conclusion={conclusion} tree={tree} root />
+		<ProofNode
+			conclusion={conclusion}
+			tree={tree}
+			topdownHandler={{
+				fn: (ind: number) => deletePremise(ind),
+				level: false,
+			}}
+			root
+		/>
 	) : (
 		<div className="d-flex flex-row topdown-node m-2">
 			<div className="d-flex flex-column">
@@ -101,7 +131,7 @@ function TopDownNode({
 							id={ids[ind]}
 							key={ind}
 							data={{ type: "topdown" }}
-							className="d-flex stretch-container"
+							className="d-flex stretch-container fill-width"
 						>
 							<div className="drop-node-area p-2">
 								{premise ? (
@@ -109,7 +139,7 @@ function TopDownNode({
 										{premise} <CloseButton onClick={() => deletePremise(ind)} />
 									</>
 								) : (
-									`Premise ${ind}`
+									`Premise ${ind + 1}`
 								)}
 							</div>
 						</Droppable>
@@ -129,6 +159,7 @@ interface nodeProps {
 	tree: line | null;
 	root?: boolean;
 	ind?: number;
+	topdownHandler?: TopdownHandler;
 }
 
 function ProofNode(props: nodeProps) {
@@ -183,15 +214,36 @@ function ProofNode(props: nodeProps) {
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
 		>
+			{props.topdownHandler && props.topdownHandler.level ? (
+				<CloseButton
+					className="topdown-close"
+					onClick={() =>
+						props.topdownHandler?.fn(props.topdownHandler.ind as number)
+					}
+				/>
+			) : null}
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
-						<Premises args={args} tree={null} />
+						<Premises
+							args={args}
+							tree={null}
+							topdownHandler={
+								props.topdownHandler && !props.topdownHandler.level
+									? props.topdownHandler
+									: null
+							}
+						/>
 					) : null
 				) : tree ? (
 					<Premises
 						args={[...tree.premises.map((value) => value.conclusion), ""]}
 						tree={tree}
+						topdownHandler={
+							props.topdownHandler && !props.topdownHandler.level
+								? props.topdownHandler
+								: null
+						}
 					/>
 				) : (
 					<Droppable
@@ -255,7 +307,7 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<TopDownNode numPremises={2} rule="less-transitive" />
+			<TopDownNode numPremises={1} rule="sum-s" />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode
 					ind={ind}

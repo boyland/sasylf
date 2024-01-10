@@ -38,6 +38,10 @@
 	justify-content: center;
 }
 
+.fill-width {
+	flex: 1;
+}
+
 .no-wrap {
 	white-space: nowrap;
 }
@@ -51,6 +55,11 @@
 .topdown-node {
 	align-items: flex-end;
 	font-family: "Courier New", monospace;
+}
+
+.topdown-close {
+	position: relative;
+	bottom: 29px;
 }
 
 .drop-container {
