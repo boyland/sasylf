@@ -11,7 +11,7 @@ import { DroppedContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
 import { line, replaceElement, extractPremise } from "./utils";
-import { input } from "../types";
+import { input, ast } from "../types";
 
 let nodeCounter = 2;
 
@@ -49,14 +49,25 @@ function Premises(props: {
 	);
 }
 
-function TopDownNode({
-	numPremises,
-	rule,
-}: {
-	numPremises: number;
-	rule: string;
-}) {
+const getNumPremises = (ast: ast | null, rule: string) => {
+	if (!ast) return 0;
+
+	const thm = ast?.theorems.find((elem) => elem.name === rule);
+	if (thm) return thm.foralls.length;
+
+	for (const judgment of ast.judgments) {
+		const rle = judgment.rules.find((elem) => elem.name === rule);
+		if (rle) return rle.premises.length;
+	}
+
+	return 0;
+};
+
+function TopDownNode({ rule }: { rule: string }) {
+	const { ast } = useContext(DroppedContext);
 	const file = useContext(FileContext);
+	const numPremises = getNumPremises(ast, rule);
+
 	const [ids, setIds] = useState<number[]>(Array(numPremises).fill(0));
 	const [trees, setTrees] = useState<(line | null)[]>(
 		Array(numPremises).fill(null),
@@ -307,7 +318,7 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<TopDownNode numPremises={1} rule="sum-s" />
+			<TopDownNode rule="less-transitive" />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode
 					ind={ind}

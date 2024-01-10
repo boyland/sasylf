@@ -179,7 +179,13 @@ export default function MyApp() {
 								<Bank compUnit={element.ast} />
 								<Canvas>
 									<DroppedContext.Provider
-										value={{ dropped, addRef, removeHandler, addHandler }}
+										value={{
+											dropped,
+											addRef,
+											removeHandler,
+											addHandler,
+											ast: element.ast,
+										}}
 									>
 										<FileContext.Provider value={element.file}>
 											{element.id === activeKey ? (
