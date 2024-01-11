@@ -114,12 +114,17 @@ export default function MyApp() {
 		if (overType === "rule" && activeType === "rule" && !(over.id in dropped))
 			addHandler(over.id, activeData?.text);
 		if (
-			overType === "copy" &&
 			activeType === "node" &&
-			activeData?.text === overData?.text
+			((overType === "copy" && activeData?.text === overData?.text) ||
+				overType === "topdown")
 		) {
-			const event = new CustomEvent("tree", {
-				detail: { tree: getTree(refs[active.id].current), overId: over.id },
+			const which = overType === "topdown";
+			const event = new CustomEvent(which ? "topdown-tree" : "tree", {
+				detail: {
+					tree: getTree(refs[active.id].current),
+					overId: over.id,
+					text: which ? activeData?.text : "",
+				},
 			});
 			document.dispatchEvent(event);
 			if (shiftRef.current && activeData?.ind != null) {
@@ -129,16 +134,6 @@ export default function MyApp() {
 					}
 				}
 			}
-		}
-		if (overType === "topdown" && activeType === "node") {
-			const event = new CustomEvent("topdown-tree", {
-				detail: {
-					tree: getTree(refs[active.id].current),
-					overId: over.id,
-					text: activeData?.text,
-				},
-			});
-			document.dispatchEvent(event);
 		}
 	};
 
