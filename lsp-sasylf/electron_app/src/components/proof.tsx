@@ -9,6 +9,7 @@ import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
+import Fade from "react-bootstrap/Fade";
 import Draggable from "./draggable";
 import { line, extractPremise } from "./utils";
 import { input } from "../types";
@@ -45,6 +46,7 @@ function ProofNode(props: nodeProps) {
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
+	const [open, setOpen] = useState(true);
 	let proofNodeRef = useRef(null);
 
 	const safeSetTree = (tree: line | null) =>
@@ -64,94 +66,116 @@ function ProofNode(props: nodeProps) {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (localId + 1 === detail.overId) safeSetTree(detail.tree);
+			if (localId + 1 === detail.overId) {
+				safeSetTree(detail.tree);
+				setTimeout(() => setOpen(true), 300);
+			}
 		};
 
 		document.addEventListener("tree", listener);
 
-		return () => document.removeEventListener("tree", listener);
+		const openListener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (localId + 1 === detail.overId || localId === detail.overId)
+				setOpen(false);
+		};
+
+		document.addEventListener("drag-end", openListener);
+
+		return () => {
+			document.removeEventListener("tree", listener);
+			document.removeEventListener("drag-end", openListener);
+		};
 	}, []);
 	useEffect(() => {
-		if (id in dropped && !tree)
+		if (id in dropped && !tree) {
 			(window as any).electronAPI
 				.parse(props.conclusion, dropped[id])
 				.then((res: string[]) => setArgs(res));
-		else setArgs(null);
+		} else setArgs(null);
 	}, [dropped]);
+	useEffect(() => setOpen(true), [args]);
 	useEffect(() => {
 		if (tree) addHandler(id, tree.rule);
+		setTimeout(() => setOpen(true), 300);
 	}, [tree]);
 
 	return (
-		<div
-			className={`d-flex flex-row proof-node ${
-				props.className ? props.className : ""
-			} ${props.root ? "root-node" : "m-2"}`}
-			ref={proofNodeRef}
-		>
-			<div className="d-flex flex-column">
-				{args ? (
-					args.length > 1 ? (
-						<Premises args={args} tree={null} />
-					) : null
-				) : tree ? (
-					<Premises
-						args={[...tree.premises.map((value) => value.conclusion), ""]}
-						tree={tree}
-					/>
-				) : (
-					<Droppable
-						id={id + 1}
-						data={{ ruleLike: false, text: props.conclusion }}
-						className="d-flex stretch-container"
-					>
-						<div className="drop-node-area p-2">Copy node here</div>
-					</Droppable>
-				)}
-				<div className="node-line"></div>
-				<div className="d-flex flex-row conclusion">
-					<Form.Control
-						size="sm"
-						className="name-input panning-excluded m-1"
-						type="text"
-						placeholder="Name"
-					/>
-					<Draggable
-						id={id}
-						data={{
-							ruleLike: false,
-							text: props.conclusion,
-							ind: props.root ? props.ind : null,
-						}}
-					>
-						<span className="centered-text no-wrap panning-excluded">
-							{props.conclusion}
-						</span>
-					</Draggable>
-				</div>
-			</div>
-			<Droppable
-				id={id}
-				data={{ ruleLike: true }}
-				className="d-flex stretch-container"
+		<Fade in={open}>
+			<div
+				className={`d-flex flex-row proof-node ${
+					props.className ? props.className : ""
+				} ${props.root ? "root-node" : "m-2"}`}
+				ref={proofNodeRef}
 			>
-				<div className="drop-area rule p-2">
-					{id in dropped ? (
-						<>
-							{dropped[id]}{" "}
-							<CloseButton
-								onClick={() => {
-									removeHandler(id);
-									setTree(null);
-								}}
-							/>
-						</>
+				<div className="d-flex flex-column">
+					{args ? (
+						args.length > 1 ? (
+							<Premises args={args} tree={null} />
+						) : null
+					) : tree ? (
+						<Premises
+							args={[...tree.premises.map((value) => value.conclusion), ""]}
+							tree={tree}
+						/>
 					) : (
-						"Put rule here"
+						<Droppable
+							id={id + 1}
+							data={{ ruleLike: false, text: props.conclusion }}
+							className="d-flex stretch-container"
+						>
+							<div className="drop-node-area p-2">Copy node here</div>
+						</Droppable>
 					)}
+					<div className="node-line"></div>
+					<div className="d-flex flex-row conclusion">
+						<Form.Control
+							size="sm"
+							className="name-input panning-excluded m-1"
+							type="text"
+							placeholder="Name"
+						/>
+						<Draggable
+							id={id}
+							data={{
+								ruleLike: false,
+								text: props.conclusion,
+								ind: props.root ? props.ind : null,
+							}}
+						>
+							<span className="centered-text no-wrap panning-excluded">
+								{props.conclusion}
+							</span>
+						</Draggable>
+					</div>
 				</div>
-			</Droppable>
-		</div>
+				<Droppable
+					id={id}
+					data={{ ruleLike: true }}
+					className="d-flex stretch-container"
+				>
+					<div className="drop-area rule p-2">
+						{id in dropped ? (
+							<>
+								{dropped[id]}{" "}
+								<CloseButton
+									onClick={() => {
+										setOpen(false);
+										setTimeout(() => {
+											removeHandler(id);
+											setTree(null);
+										}, 300);
+									}}
+								/>
+							</>
+						) : (
+							"Put rule here"
+						)}
+					</div>
+				</Droppable>
+			</div>
+		</Fade>
 	);
 }
 

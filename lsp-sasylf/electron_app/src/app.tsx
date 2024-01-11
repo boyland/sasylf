@@ -110,23 +110,30 @@ export default function MyApp() {
 
 		if (activeData?.ruleLike != overData?.ruleLike) return;
 
+		const startEvent = new CustomEvent("drag-end", {
+			detail: { overId: over.id },
+		});
+		document.dispatchEvent(startEvent);
+
 		const ruleLike = active.data.current?.ruleLike;
 
-		if (ruleLike && !(over.id in dropped))
-			addHandler(over.id, activeData?.text);
-		if (!ruleLike && activeData?.text === overData?.text) {
-			const event = new CustomEvent("tree", {
-				detail: { tree: getTree(refs[active.id].current), overId: over.id },
-			});
-			document.dispatchEvent(event);
-			if (shiftRef.current && activeData?.ind != null) {
-				for (const tab of tabs) {
-					if (tab.id === activeKey) {
-						delete tab.inputs[activeData?.ind];
+		setTimeout(() => {
+			if (ruleLike && !(over.id in dropped))
+				addHandler(over.id, activeData?.text);
+			if (!ruleLike && activeData?.text === overData?.text) {
+				const event = new CustomEvent("tree", {
+					detail: { tree: getTree(refs[active.id].current), overId: over.id },
+				});
+				document.dispatchEvent(event);
+				if (shiftRef.current && activeData?.ind != null) {
+					for (const tab of tabs) {
+						if (tab.id === activeKey) {
+							delete tab.inputs[activeData?.ind];
+						}
 					}
 				}
 			}
-		}
+		}, 300);
 	};
 
 	function handleCloseTab(id: number) {
