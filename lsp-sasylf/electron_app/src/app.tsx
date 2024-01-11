@@ -100,7 +100,12 @@ export default function MyApp() {
 		setActiveText(event.active.data.current?.text);
 
 	const deleteInput = (activeKey: number, ind: number) => {
-		for (const tab of tabs) if (tab.id == activeKey) delete tab.inputs[ind];
+		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
+
+		for (const tab of newTabs)
+			if (tab.id == activeKey) tab.inputs.splice(ind, 1);
+
+		setTabs(newTabs);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -123,9 +128,9 @@ export default function MyApp() {
 				detail: { tree: getTree(refs[active.id].current), overId: over.id },
 			});
 			document.dispatchEvent(event);
-			if (shiftRef.current && activeData?.ind != null) {
+
+			if (shiftRef.current && activeData?.ind != null)
 				deleteInput(activeKey, activeData?.ind);
-			}
 		}
 	};
 
