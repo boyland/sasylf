@@ -32,7 +32,7 @@ export default function MyApp() {
 	const [refs, setRefs] = useState({});
 
 	const shiftRef = useRef(false);
-	const proofRef = useRef(null);
+	const proofRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -181,9 +181,20 @@ export default function MyApp() {
 										value={{ dropped, addRef, removeHandler, addHandler }}
 									>
 										{element.id === activeKey ? (
-											<ProofArea proofRef={proofRef} inputs={element.inputs} />
+											<ProofArea
+												proofRef={proofRef}
+												inputs={element.inputs}
+												deleteHandler={(ind: number) =>
+													deleteInput(element.id, ind)
+												}
+											/>
 										) : (
-											<ProofArea inputs={element.inputs} />
+											<ProofArea
+												inputs={element.inputs}
+												deleteHandler={(ind: number) =>
+													deleteInput(element.id, ind)
+												}
+											/>
 										)}
 									</DroppedContext.Provider>
 								</Canvas>

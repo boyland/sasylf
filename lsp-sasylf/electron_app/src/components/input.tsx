@@ -21,7 +21,11 @@ export default function Input(props: InputProps) {
 		const formJson = Object.fromEntries(formData.entries());
 		const conclusion: string = formJson.conclusion as string;
 		const free: boolean = formJson.hasOwnProperty("free");
-		props.inputs.push({ conclusion, free });
+		props.inputs.push({
+			conclusion,
+			free,
+			id: Math.max(-1, ...props.inputs.map((element) => element.id)) + 1,
+		});
 		props.onHide();
 	}
 
@@ -40,7 +44,7 @@ export default function Input(props: InputProps) {
 							placeholder="(s (z)) + n = (s n)"
 						/>
 					</InputGroup>
-					<Form.Check // prettier-ignore
+					<Form.Check
 						type="switch"
 						name="free"
 						label="Allow free variables"
