@@ -99,13 +99,18 @@ export default function MyApp() {
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
-	const deleteInput = (activeKey: number, ind: number) => {
+	const deleteInput = (activeKey: number, ind: number, deleteId: number) => {
+		const startEvent = new CustomEvent("fade", {
+			detail: { deleteId },
+		});
+		document.dispatchEvent(startEvent);
+
 		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
 
 		for (const tab of newTabs)
 			if (tab.id == activeKey) tab.inputs.splice(ind, 1);
 
-		setTabs(newTabs);
+		setTimeout(() => setTabs(newTabs), 300);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -136,7 +141,7 @@ export default function MyApp() {
 				document.dispatchEvent(event);
 
 				if (shiftRef.current && activeData?.ind != null)
-					deleteInput(activeKey, activeData?.ind);
+					deleteInput(activeKey, activeData?.ind, active.id as number);
 			}
 		}, 300);
 	};
@@ -184,15 +189,15 @@ export default function MyApp() {
 											<ProofArea
 												proofRef={proofRef}
 												inputs={element.inputs}
-												deleteHandler={(ind: number) =>
-													deleteInput(element.id, ind)
+												deleteHandler={(ind: number, deleteId: number) =>
+													deleteInput(element.id, ind, deleteId)
 												}
 											/>
 										) : (
 											<ProofArea
 												inputs={element.inputs}
-												deleteHandler={(ind: number) =>
-													deleteInput(element.id, ind)
+												deleteHandler={(ind: number, deleteId: number) =>
+													deleteInput(element.id, ind, deleteId)
 												}
 											/>
 										)}

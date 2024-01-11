@@ -40,7 +40,7 @@ interface nodeProps {
 	tree: line | null;
 	root?: boolean;
 	ind?: number;
-	deleteHandler?: () => void;
+	deleteHandler?: (deleteId: number) => void;
 }
 
 function ProofNode(props: nodeProps) {
@@ -62,7 +62,6 @@ function ProofNode(props: nodeProps) {
 		nodeCounter++;
 		const localId = nodeCounter - 2;
 		addRef(localId, proofNodeRef);
-		console.log(localId, props.conclusion);
 
 		if (props.tree && props.tree.rule !== "Put rule here")
 			addHandler(localId, props.tree.rule);
@@ -71,7 +70,6 @@ function ProofNode(props: nodeProps) {
 			const detail = (event as CustomEvent).detail;
 
 			if (localId + 1 === detail.overId) {
-				console.log(detail.tree);
 				safeSetTree(detail.tree);
 				setTimeout(() => setOpen(true), 300);
 			}
@@ -117,6 +115,14 @@ function ProofNode(props: nodeProps) {
 				} ${props.root ? "root-node" : "m-2"}`}
 				ref={proofNodeRef}
 			>
+				{props.root ? (
+					<CloseButton
+						className="topdown-close"
+						onClick={() =>
+							props.deleteHandler ? props.deleteHandler(id) : null
+						}
+					/>
+				) : null}
 				<div className="d-flex flex-column">
 					{args ? (
 						<Premises args={args} tree={null} />
@@ -188,7 +194,7 @@ function ProofNode(props: nodeProps) {
 export default function ProofArea(props: {
 	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
-	deleteHandler: (ind: number) => void;
+	deleteHandler: (ind: number, deleteId: number) => void;
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
@@ -198,7 +204,9 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={() => props.deleteHandler(ind)}
+					deleteHandler={(deleteId: number) =>
+						props.deleteHandler(ind, deleteId)
+					}
 					root
 				/>
 			))}
@@ -211,7 +219,9 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={() => props.deleteHandler(ind)}
+					deleteHandler={(deleteId: number) =>
+						props.deleteHandler(ind, deleteId)
+					}
 					root
 				/>
 			))}
