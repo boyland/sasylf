@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, RefObject } from "react";
 import { createRoot } from "react-dom/client";
-import { ast, tab } from "./types";
+import { ast, tab, input } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
@@ -108,6 +108,14 @@ export default function MyApp() {
 		setTabs(newTabs);
 	};
 
+	const appendInput = (activeKey: number, inp: input) => {
+		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
+
+		for (const tab of newTabs) if (tab.id == activeKey) tab.inputs.push(inp);
+
+		setTabs(newTabs);
+	};
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		const activeData = active.data.current;
@@ -202,6 +210,7 @@ export default function MyApp() {
 									show={showInput}
 									onHide={() => setShowInput(false)}
 									inputs={element.inputs}
+									appendHandler={(inp: input) => appendInput(element.id, inp)}
 								/>
 							</Tab.Pane>
 						</Tab.Content>

@@ -3,31 +3,30 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
 import { input } from "../types";
 
 interface InputProps {
 	show: boolean;
 	onHide: () => void;
 	inputs: input[];
+	appendHandler: (inp: input) => void;
 }
 
 export default function Input(props: InputProps) {
-	function handleExport(event) {
+	const handleExport: React.FormEventHandler<HTMLFormElement> = (event) => {
 		event.preventDefault();
-		const formData = new FormData(event.target);
+		const formData = new FormData(event.target as HTMLFormElement);
 
 		const formJson = Object.fromEntries(formData.entries());
 		const conclusion: string = formJson.conclusion as string;
 		const free: boolean = formJson.hasOwnProperty("free");
-		props.inputs.push({
+		props.appendHandler({
 			conclusion,
 			free,
 			id: Math.max(-1, ...props.inputs.map((element) => element.id)) + 1,
 		});
 		props.onHide();
-	}
+	};
 
 	return (
 		<Modal show={props.show} onHide={props.onHide}>
