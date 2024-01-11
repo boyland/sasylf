@@ -32,7 +32,7 @@ export default function MyApp() {
 	const [refs, setRefs] = useState({});
 
 	const shiftRef = useRef(false);
-	const proofRef = useRef(null);
+	const proofRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {

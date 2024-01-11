@@ -3,19 +3,21 @@ import React, {
 	useEffect,
 	useContext,
 	useRef,
-	MutableRefObject,
+	RefObject,
 } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
-import { line, extractPremise } from "./utils";
-import { input } from "../types";
+import { extractPremise } from "./utils";
+import { line, input } from "../types";
 
 let nodeCounter = 2;
 
 function Premises(props: { args: string[]; tree: line | null }) {
+	if (props.args.length <= 1) return null;
+
 	return (
 		<div className="d-flex flex-row premises">
 			{props.args.slice(0, -1).map((arg, ind) => (
@@ -58,6 +60,7 @@ function ProofNode(props: nodeProps) {
 		nodeCounter++;
 		const localId = nodeCounter - 2;
 		addRef(localId, proofNodeRef);
+		console.log(localId, props.conclusion);
 
 		if (props.tree && props.tree.rule !== "Put rule here")
 			addHandler(localId, props.tree.rule);
@@ -82,6 +85,9 @@ function ProofNode(props: nodeProps) {
 	useEffect(() => {
 		if (tree) addHandler(id, tree.rule);
 	}, [tree]);
+	useEffect(() => {
+		if (props.tree) addHandler(id, props.tree.rule);
+	}, [props.tree]);
 
 	return (
 		<div
@@ -95,9 +101,7 @@ function ProofNode(props: nodeProps) {
 			) : null}
 			<div className="d-flex flex-column">
 				{args ? (
-					args.length > 1 ? (
-						<Premises args={args} tree={null} />
-					) : null
+					<Premises args={args} tree={null} />
 				) : tree ? (
 					<Premises
 						args={[...tree.premises.map((value) => value.conclusion), ""]}
@@ -160,16 +164,16 @@ function ProofNode(props: nodeProps) {
 }
 
 export default function ProofArea(props: {
-	proofRef?: MutableRefObject<null>;
+	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
 	deleteHandler: (ind: number) => void;
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			{props.inputs.map(({ conclusion, free }, ind) => (
+			{props.inputs.map(({ conclusion, free, id }, ind) => (
 				<ProofNode
 					ind={ind}
-					key={ind}
+					key={id}
 					conclusion={conclusion}
 					tree={null}
 					deleteHandler={() => props.deleteHandler(ind)}
@@ -179,10 +183,10 @@ export default function ProofArea(props: {
 		</div>
 	) : (
 		<div className="d-flex proof-area">
-			{props.inputs.map(({ conclusion, free }, ind) => (
+			{props.inputs.map(({ conclusion, free, id }, ind) => (
 				<ProofNode
 					ind={ind}
-					key={ind}
+					key={id}
 					conclusion={conclusion}
 					tree={null}
 					deleteHandler={() => props.deleteHandler(ind)}

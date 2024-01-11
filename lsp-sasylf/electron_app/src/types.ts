@@ -68,9 +68,17 @@ export type ruleNode = {
 	file: string;
 };
 
+export type line = {
+	conclusion: string;
+	name: string;
+	rule: string;
+	premises: line[];
+};
+
 export type input = {
 	free: boolean;
 	conclusion: string;
+	id: number;
 };
 
 export type tab = {

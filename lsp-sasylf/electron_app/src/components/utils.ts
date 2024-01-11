@@ -1,9 +1,4 @@
-export type line = {
-	conclusion: string;
-	name: string;
-	rule: string;
-	premises: line[];
-};
+import { line } from "../types";
 
 export function extractPremise(conclusion: string, tree: line) {
 	for (const premise of tree.premises)
