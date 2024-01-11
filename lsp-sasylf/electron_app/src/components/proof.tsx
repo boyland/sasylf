@@ -37,6 +37,7 @@ interface nodeProps {
 	tree: line | null;
 	root?: boolean;
 	ind?: number;
+	deleteHandler?: () => void;
 }
 
 function ProofNode(props: nodeProps) {
@@ -89,6 +90,9 @@ function ProofNode(props: nodeProps) {
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
 		>
+			{props.root ? (
+				<CloseButton className="topdown-close" onClick={props.deleteHandler} />
+			) : null}
 			<div className="d-flex flex-column">
 				{args ? (
 					args.length > 1 ? (
@@ -158,6 +162,7 @@ function ProofNode(props: nodeProps) {
 export default function ProofArea(props: {
 	proofRef?: MutableRefObject<null>;
 	inputs: input[];
+	deleteHandler: (ind: number) => void;
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
@@ -167,6 +172,7 @@ export default function ProofArea(props: {
 					key={ind}
 					conclusion={conclusion}
 					tree={null}
+					deleteHandler={() => props.deleteHandler(ind)}
 					root
 				/>
 			))}
@@ -179,6 +185,7 @@ export default function ProofArea(props: {
 					key={ind}
 					conclusion={conclusion}
 					tree={null}
+					deleteHandler={() => props.deleteHandler(ind)}
 					root
 				/>
 			))}

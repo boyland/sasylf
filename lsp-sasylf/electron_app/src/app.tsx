@@ -99,6 +99,10 @@ export default function MyApp() {
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
+	const deleteInput = (activeKey: number, ind: number) => {
+		for (const tab of tabs) if (tab.id == activeKey) delete tab.inputs[ind];
+	};
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		const activeData = active.data.current;
@@ -120,11 +124,7 @@ export default function MyApp() {
 			});
 			document.dispatchEvent(event);
 			if (shiftRef.current && activeData?.ind != null) {
-				for (const tab of tabs) {
-					if (tab.id === activeKey) {
-						delete tab.inputs[activeData?.ind];
-					}
-				}
+				deleteInput(activeKey, activeData?.ind);
 			}
 		}
 	};
@@ -169,9 +169,20 @@ export default function MyApp() {
 										value={{ dropped, addRef, removeHandler, addHandler }}
 									>
 										{element.id === activeKey ? (
-											<ProofArea proofRef={proofRef} inputs={element.inputs} />
+											<ProofArea
+												proofRef={proofRef}
+												inputs={element.inputs}
+												deleteHandler={(ind: number) =>
+													deleteInput(element.id, ind)
+												}
+											/>
 										) : (
-											<ProofArea inputs={element.inputs} />
+											<ProofArea
+												inputs={element.inputs}
+												deleteHandler={(ind: number) =>
+													deleteInput(element.id, ind)
+												}
+											/>
 										)}
 									</DroppedContext.Provider>
 								</Canvas>
