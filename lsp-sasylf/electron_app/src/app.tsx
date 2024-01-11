@@ -32,6 +32,10 @@ export default function MyApp() {
 	const [activeKey, setActiveKey] = useState<number>(0);
 	const [refs, setRefs] = useState({});
 	const [show, setShow] = useState(false);
+	const [marginLeft, setMarginLeft] = useState(0);
+	const [Anim, setAnim] = useState(styled.div`
+		margin-left: 0;
+	`);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef(null);
@@ -134,10 +138,6 @@ export default function MyApp() {
 		setActiveKey(0);
 	}
 
-	const [Anim, setAnim] = useState(styled.div`
-		margin-left: 0;
-	`);
-
 	useEffect(() => {
 		const shift = keyframes`
             from {
@@ -156,6 +156,13 @@ export default function MyApp() {
 
 		setAnim(NewAnim);
 	}, [show]);
+	useEffect(
+		() =>
+			setAnim(styled.div`
+				margin-left: ${marginLeft}px;
+			`),
+		[marginLeft],
+	);
 
 	return (
 		<DndContext
@@ -191,7 +198,12 @@ export default function MyApp() {
 					</Nav>
 					{tabs.map((element) => (
 						<Tab.Content key={element.id}>
-							<Tab.Pane eventKey={element.id}>
+							<Tab.Pane
+								eventKey={element.id}
+								onEnter={() =>
+									setMarginLeft(bankRef.current?.offsetWidth as number)
+								}
+							>
 								<Canvas>
 									<DroppedContext.Provider
 										value={{ dropped, addRef, removeHandler, addHandler }}
