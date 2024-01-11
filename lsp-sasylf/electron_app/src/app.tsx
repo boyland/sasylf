@@ -99,6 +99,15 @@ export default function MyApp() {
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
+	const deleteInput = (activeKey: number, ind: number) => {
+		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
+
+		for (const tab of newTabs)
+			if (tab.id == activeKey) tab.inputs.splice(ind, 1);
+
+		setTabs(newTabs);
+	};
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		const activeData = active.data.current;
@@ -110,8 +119,8 @@ export default function MyApp() {
 
 		if (activeData?.ruleLike != overData?.ruleLike) return;
 
-		const startEvent = new CustomEvent("drag-end", {
-			detail: { overId: over.id },
+		const startEvent = new CustomEvent("fade", {
+			detail: { deleteId: over.id },
 		});
 		document.dispatchEvent(startEvent);
 
@@ -125,13 +134,9 @@ export default function MyApp() {
 					detail: { tree: getTree(refs[active.id].current), overId: over.id },
 				});
 				document.dispatchEvent(event);
-				if (shiftRef.current && activeData?.ind != null) {
-					for (const tab of tabs) {
-						if (tab.id === activeKey) {
-							delete tab.inputs[activeData?.ind];
-						}
-					}
-				}
+
+				if (shiftRef.current && activeData?.ind != null)
+					deleteInput(activeKey, activeData?.ind);
 			}
 		}, 300);
 	};
@@ -155,7 +160,7 @@ export default function MyApp() {
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
 							<Nav.Item className="d-flex flex-row" key={element.id}>
-								<Nav.Link eventKey={element.id}>
+								<Nav.Link className="d-flex center-align" eventKey={element.id}>
 									{element.name}
 									<CloseButton
 										onClick={(event) => {

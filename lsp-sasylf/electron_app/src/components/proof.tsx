@@ -67,6 +67,7 @@ function ProofNode(props: nodeProps) {
 			const detail = (event as CustomEvent).detail;
 
 			if (localId + 1 === detail.overId) {
+				console.log(detail.tree);
 				safeSetTree(detail.tree);
 				setTimeout(() => setOpen(true), 300);
 			}
@@ -77,15 +78,15 @@ function ProofNode(props: nodeProps) {
 		const openListener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (localId + 1 === detail.overId || localId === detail.overId)
+			if (localId + 1 === detail.deleteId || localId === detail.deleteId)
 				setOpen(false);
 		};
 
-		document.addEventListener("drag-end", openListener);
+		document.addEventListener("fade", openListener);
 
 		return () => {
 			document.removeEventListener("tree", listener);
-			document.removeEventListener("drag-end", openListener);
+			document.removeEventListener("fade", openListener);
 		};
 	}, []);
 	useEffect(() => {
