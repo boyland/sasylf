@@ -125,7 +125,6 @@ function RuleLikes(props: { compUnit: ast }) {
 
 interface BankProps {
 	compUnit: ast | undefined;
-	show: boolean;
 	toggleShow: () => void;
 	bankRef: React.RefObject<HTMLDivElement>;
 }

@@ -86,6 +86,13 @@ export default function MyApp() {
 			setShowExport(true);
 		});
 	}, [tabs]);
+	useEffect(
+		() =>
+			setAnim(styled.div`
+				margin-left: ${show ? bankRef.current?.offsetWidth : 0}px;
+			`),
+		[activeKey],
+	);
 
 	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
 		setRefs({
@@ -138,9 +145,10 @@ export default function MyApp() {
 	};
 
 	function handleCloseTab(id: number) {
-		setTabs(tabs.filter((element) => element.id !== id));
+		const newTabs = tabs.filter((element) => element.id !== id);
+		setTabs(newTabs);
 		setCanvasStates(canvasStates.filter((element) => element.id !== id));
-		setActiveKey(0);
+		setActiveKey(newTabs[0].id);
 	}
 
 	useEffect(() => {
@@ -176,7 +184,6 @@ export default function MyApp() {
 			onDragEnd={handleDragEnd}
 		>
 			<Bank
-				show={show}
 				toggleShow={() => setShow(!show)}
 				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
 				bankRef={bankRef}
