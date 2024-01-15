@@ -148,7 +148,12 @@ export default function MyApp() {
 		const newTabs = tabs.filter((element) => element.id !== id);
 		setTabs(newTabs);
 		setCanvasStates(canvasStates.filter((element) => element.id !== id));
-		setActiveKey(newTabs[0].id);
+
+		if (newTabs.length) setActiveKey(newTabs[0].id);
+		else {
+			setActiveKey(0);
+			setShow(false);
+		}
 	}
 
 	useEffect(() => {
