@@ -85,3 +85,10 @@ export type Data = {
 	text?: string;
 	key?: string | null;
 };
+
+export type canvasState = {
+	x: number;
+	y: number;
+	scale: number;
+	id: number;
+};

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, RefObject } from "react";
 import { createRoot } from "react-dom/client";
-import { ast, tab } from "./types";
+import { ast, tab, canvasState } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
@@ -36,6 +36,7 @@ export default function MyApp() {
 	const [Anim, setAnim] = useState(styled.div`
 		margin-left: 0;
 	`);
+	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef(null);
@@ -69,6 +70,9 @@ export default function MyApp() {
 					inputs: [],
 				} as tab,
 			]),
+		);
+		setCanvasStates(
+			canvasStates.concat([{ x: 0, y: 0, scale: 1, id: maxId + 1 }]),
 		);
 		setActiveKey(maxId + 1);
 	};
@@ -135,6 +139,7 @@ export default function MyApp() {
 
 	function handleCloseTab(id: number) {
 		setTabs(tabs.filter((element) => element.id !== id));
+		setCanvasStates(canvasStates.filter((element) => element.id !== id));
 		setActiveKey(0);
 	}
 
@@ -196,7 +201,7 @@ export default function MyApp() {
 							</Nav.Item>
 						))}
 					</Nav>
-					{tabs.map((element) => (
+					{tabs.map((element, index) => (
 						<Tab.Content key={element.id}>
 							<Tab.Pane
 								eventKey={element.id}
@@ -204,7 +209,11 @@ export default function MyApp() {
 									setMarginLeft(bankRef.current?.offsetWidth as number)
 								}
 							>
-								<Canvas>
+								<Canvas
+									index={index}
+									canvasStates={canvasStates}
+									setCanvasStates={setCanvasStates}
+								>
 									<DroppedContext.Provider
 										value={{ dropped, addRef, removeHandler, addHandler }}
 									>

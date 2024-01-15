@@ -1,14 +1,48 @@
-import React from "react";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import React, { useState } from "react";
+import {
+	TransformWrapper,
+	TransformComponent,
+	useTransformInit,
+	useTransformEffect,
+} from "react-zoom-pan-pinch";
 
-const Canvas = (props: { children: any }) => {
+const TransformComponentWrapper = (props: {
+	children: any;
+	index: number;
+	canvasStates: any;
+	setCanvasStates: any;
+	setTransform: any;
+}) => {
+	useTransformInit(({ state, instance }) => {
+		const { scale, x, y } = props.canvasStates[props.index];
+		props.setTransform(x, y, scale, 0);
+	});
+
+	useTransformEffect(({ state, instance }) => {
+		const newCanvasStates = [...props.canvasStates];
+		newCanvasStates[props.index] = {
+			scale: state.scale,
+			x: state.positionX,
+			y: state.positionY,
+		};
+		props.setCanvasStates(newCanvasStates);
+	});
+	return props.children;
+};
+
+const Canvas = (props: {
+	children: any;
+	index: number;
+	canvasStates: any;
+	setCanvasStates: any;
+}) => {
 	return (
 		<div className="zoomable-canvas border border-5">
 			<TransformWrapper
 				limitToBounds={false}
 				panning={{ excluded: ["panning-excluded"] }}
 			>
-				{({ zoomIn, zoomOut, resetTransform }) => (
+				{({ zoomIn, zoomOut, resetTransform, setTransform }) => (
 					<>
 						<div className="tools">
 							<button
@@ -30,9 +64,16 @@ const Canvas = (props: { children: any }) => {
 								Reset
 							</button>
 						</div>
-						<TransformComponent wrapperClass="tcomponent">
-							<div className="canvas">{props.children}</div>
-						</TransformComponent>
+						<TransformComponentWrapper
+							index={props.index}
+							canvasStates={props.canvasStates}
+							setTransform={setTransform}
+							setCanvasStates={props.setCanvasStates}
+						>
+							<TransformComponent wrapperClass="tcomponent">
+								<div className="canvas">{props.children}</div>
+							</TransformComponent>
+						</TransformComponentWrapper>
 					</>
 				)}
 			</TransformWrapper>
