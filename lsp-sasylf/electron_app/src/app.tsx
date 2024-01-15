@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, RefObject } from "react";
 import { createRoot } from "react-dom/client";
-import { ast, tab, input } from "./types";
+import { ast, tab, input, canvasState } from "./types";
 import Bank from "./components/bank";
 import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
@@ -21,6 +21,7 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 import { getTree } from "./components/utils";
+import styled, { keyframes } from "styled-components";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
@@ -30,9 +31,16 @@ export default function MyApp() {
 	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<number>(0);
 	const [refs, setRefs] = useState({});
+	const [show, setShow] = useState(false);
+	const [marginLeft, setMarginLeft] = useState(0);
+	const [Anim, setAnim] = useState(styled.div`
+		margin-left: 0;
+	`);
+	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef<HTMLDivElement>(null);
+	const bankRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -63,6 +71,9 @@ export default function MyApp() {
 				} as tab,
 			]),
 		);
+		setCanvasStates(
+			canvasStates.concat([{ x: 0, y: 0, scale: 1, id: maxId + 1 }]),
+		);
 		setActiveKey(maxId + 1);
 	};
 
@@ -75,6 +86,13 @@ export default function MyApp() {
 			setShowExport(true);
 		});
 	}, [tabs]);
+	useEffect(
+		() =>
+			setAnim(styled.div`
+				margin-left: ${show ? bankRef.current?.offsetWidth : 0}px;
+			`),
+		[activeKey],
+	);
 
 	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
 		setRefs({
@@ -143,20 +161,58 @@ export default function MyApp() {
 	};
 
 	function handleCloseTab(id: number) {
-		setTabs(tabs.filter((element) => element.id !== id));
-		setActiveKey(0);
+		const newTabs = tabs.filter((element) => element.id !== id);
+		setTabs(newTabs);
+		setCanvasStates(canvasStates.filter((element) => element.id !== id));
+
+		if (newTabs.length) setActiveKey(newTabs[0].id);
+		else {
+			setActiveKey(0);
+			setShow(false);
+		}
 	}
 
+	useEffect(() => {
+		const shift = keyframes`
+            from {
+                margin-left: 0;
+            }
+            to {
+                margin-left: ${bankRef.current?.offsetWidth}px;
+            }
+        `;
+
+		const NewAnim = styled.div`
+			animation: ${shift} 0.3s linear;
+			animation-direction: ${show ? "normal" : "reverse"};
+			margin-left: ${show ? bankRef.current?.offsetWidth : "0"}px;
+		`;
+
+		setAnim(NewAnim);
+	}, [show]);
+	useEffect(
+		() =>
+			setAnim(styled.div`
+				margin-left: ${marginLeft}px;
+			`),
+		[marginLeft],
+	);
+
 	return (
-		<div>
-			<Tab.Container
-				onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
-				activeKey={activeKey}
-			>
-				<DndContext
-					modifiers={[snapCenterToCursor]}
-					onDragStart={handleDragStart}
-					onDragEnd={handleDragEnd}
+		<DndContext
+			modifiers={[snapCenterToCursor]}
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+		>
+			<Bank
+				toggleShow={() => setShow(!show)}
+				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
+				bankRef={bankRef}
+			/>
+			<Anim>
+				<Tab.Container
+					onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
+					activeKey={activeKey}
 				>
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
@@ -173,11 +229,19 @@ export default function MyApp() {
 							</Nav.Item>
 						))}
 					</Nav>
-					{tabs.map((element) => (
+					{tabs.map((element, index) => (
 						<Tab.Content key={element.id}>
-							<Tab.Pane eventKey={element.id}>
-								<Bank compUnit={element.ast} />
-								<Canvas>
+							<Tab.Pane
+								eventKey={element.id}
+								onEnter={() =>
+									setMarginLeft(bankRef.current?.offsetWidth as number)
+								}
+							>
+								<Canvas
+									index={index}
+									canvasStates={canvasStates}
+									setCanvasStates={setCanvasStates}
+								>
 									<DroppedContext.Provider
 										value={{ dropped, addRef, removeHandler, addHandler }}
 									>
@@ -215,26 +279,26 @@ export default function MyApp() {
 							</Tab.Pane>
 						</Tab.Content>
 					))}
-					<DragOverlay zIndex={1060}>
-						{activeText ? (
-							<Card
-								body
-								className="exact"
-								border="dark"
-								text={shiftRef.current ? "info" : "dark"}
-							>
-								<code className="rule-like-text no-wrap">{activeText}</code>
-							</Card>
-						) : null}
-					</DragOverlay>
-				</DndContext>
-			</Tab.Container>
+				</Tab.Container>
+			</Anim>
 			<Export
 				show={showExport}
 				onHide={() => setShowExport(false)}
 				proofRef={proofRef}
 			/>
-		</div>
+			<DragOverlay zIndex={1060}>
+				{activeText ? (
+					<Card
+						body
+						className="exact"
+						border="dark"
+						text={shiftRef.current ? "info" : "dark"}
+					>
+						<code className="rule-like-text no-wrap">{activeText}</code>
+					</Card>
+				) : null}
+			</DragOverlay>
+		</DndContext>
 	);
 }
 
