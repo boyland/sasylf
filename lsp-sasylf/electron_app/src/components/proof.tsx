@@ -211,18 +211,21 @@ function ProofNode(props: nodeProps) {
 		return () => document.removeEventListener("tree", listener);
 	}, []);
 	useEffect(() => {
-		if (id in dropped && !tree)
+		if (id in dropped && !tree) {
+			console.log(dropped);
+			console.log(id);
 			(window as any).electronAPI
 				.parse(props.conclusion, dropped[id], file)
 				.then((res: string[]) => setArgs(res));
-		else setArgs(null);
+		} else setArgs(null);
 	}, [dropped]);
 	useEffect(() => safeSetTree(props.tree), [props.tree]);
 	useEffect(() => {
 		if (tree) addHandler(id, tree.rule);
 	}, [tree]);
 	useEffect(() => {
-		if (props.tree) addHandler(id, props.tree.rule);
+		if (props.tree && id && props.tree.rule !== "Put rule here")
+			addHandler(id, props.tree.rule);
 	}, [props.tree]);
 
 	return (
@@ -327,7 +330,6 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<TopDownNode rule="less-transitive" />
 			{props.inputs.map(({ conclusion, free, id }, ind) => (
 				<ProofNode
 					ind={ind}
