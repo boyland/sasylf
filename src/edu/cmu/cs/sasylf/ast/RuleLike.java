@@ -318,7 +318,7 @@ public abstract class RuleLike extends Node implements Named {
 	 * @param isPattern
 	 * @return
 	 */
-	public Application checkApplication(Context ctx, List<? extends Fact> inputs, Fact output, List<Abstraction> addedContext, Node errorPoint, boolean isPattern, List<Term> addedTypes, Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
+	public Application checkApplication(Context ctx, List<? extends Fact> inputs, Fact output, List<Abstraction> addedContext, Node errorPoint, boolean isPattern, List<Term> addedTypes, Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree, boolean freshPremises, boolean freshConclusion) {
 		Util.verify(addedContext != null && addedContext.isEmpty(), "output parameter should be empty");
 		int n = getPremises().size();
 		if (inputs.size() != n) {
@@ -380,9 +380,17 @@ public abstract class RuleLike extends Node implements Named {
 				}
 				ErrorHandler.error(Errors.CONTEXT_DISCARDED,"" + actual.getRoot(),source);
 			}
-			getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint, addedTypes, freshSub, adaptSub, varFree);
+			if (freshPremises) {
+				getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint, addedTypes, freshSub, adaptSub, varFree);
+			} else {
+				getArgContextAndTerm(ctx, name, formal, actual, allContexts, allArgs, isPattern ? input : errorPoint);
+			}
 		}
-		getArgContextAndTerm(ctx, "conclusion", getConclusion(), concElem, allContexts, allArgs, output);
+		if (freshConclusion) {
+			getArgContextAndTerm(ctx, "conclusion", getConclusion(), concElem, allContexts, allArgs, output, addedTypes, freshSub, adaptSub, varFree);
+		} else {
+			getArgContextAndTerm(ctx, "conclusion", getConclusion(), concElem, allContexts, allArgs, output);
+		}
 
 		addedContext.addAll(unionContexts(ctx,allContexts, errorPoint));
 
@@ -466,7 +474,7 @@ public abstract class RuleLike extends Node implements Named {
 	protected void getArgContextAndTerm(Context ctx, String name, Element formal,
 			Element actual, List<List<Abstraction>> allContexts, List<Term> allArgs, Node errorPoint, List<Term> addedTypes, Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
 		Term f = formal.asTerm();
-		Term a = getFreshAdaptedTerm(actual, addedTypes, freshSub, adaptSub, varFree).substitute(ctx.currentSub);
+		Term a =  getFreshAdaptedTerm(actual, addedTypes, freshSub, adaptSub, varFree).substitute(ctx.currentSub);
 		int diff = a.countLambdas() - f.countLambdas();
 		// Leave context errors until later when we can give specific
 		// error messages depending on whether this is a case or a call

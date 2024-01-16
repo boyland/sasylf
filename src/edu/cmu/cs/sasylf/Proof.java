@@ -549,6 +549,22 @@ public class Proof {
 			}
 		}
 
+		// the substitution to get fresh variables
+		Substitution freshSub = new Substitution();
+
+		// the substitution to handle possible dependencies on the context
+		// (this cannot be used until we have removed bindings of variable free
+		// NTs)
+		Substitution adaptSub = new Substitution();
+
+		// the variable-free NTs that should not be adapted:
+		Set<FreeVar> varFree = new HashSet<FreeVar>();
+
+		// after adaptation, the free variables in the premises
+		Set<FreeVar> freeVars = new HashSet<FreeVar>();
+
+		List<Term> addedTypes = new ArrayList<Term>();
+
 		if (c != null && r != null) {
 			RuleLike ruleLike = findRule(Proof.r);
 			syntaxTree.typecheck(ctx, id);
@@ -557,28 +573,13 @@ public class Proof {
 			List<Fact> inputs = new ArrayList<Fact>();
 			List<Abstraction> addedContext = new ArrayList<Abstraction>();
 
-			// the substitution to get fresh variables
-			Substitution freshSub = new Substitution();
-
-			// the substitution to handle possible dependencies on the context
-			// (this cannot be used until we have removed bindings of variable free
-			// NTs)
-			Substitution adaptSub = new Substitution();
-
-			// the variable-free NTs that should not be adapted:
-			Set<FreeVar> varFree = new HashSet<FreeVar>();
-
-			// after adaptation, the free variables in the premises
-			Set<FreeVar> freeVars = new HashSet<FreeVar>();
-
-			List<Term> addedTypes = new ArrayList<Term>();
 			for (Element premise : ruleLike.getPremises()) {
 				inputs.add(premise.asFact(ctx, ctx.assumedContext));
 			}
 
 			Term subject = ruleLike.checkApplication(
 					ctx, inputs, e.asFact(ctx, ctx.assumedContext), addedContext, null,
-					true, addedTypes, freshSub, adaptSub, varFree);
+					false, addedTypes, freshSub, adaptSub, varFree, true, false);
 
 			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 			Term pattern =
@@ -610,11 +611,14 @@ public class Proof {
 
 			Element conclusion = ruleLike.getConclusion();
 
+			Set<FreeVar> vars = new HashSet<FreeVar>();
+
 			for (Clause premise : p) {
 				premise.typecheck(ctx);
 			}
 			for (Clause premise : p) {
 				Element e = premise.computeClause(ctx);
+				vars.addAll(e.asTerm().getFreeVariables());
 				inputs.add(e.asFact(ctx, ctx.assumedContext));
 			}
 
@@ -622,13 +626,14 @@ public class Proof {
 			// consistent with the number of premises expected by the rule
 
 			Term subject = ruleLike.checkApplication(
-					ctx, inputs, conclusion.asFact(ctx, ctx.assumedContext), addedContext,
-					null, false);
+					ctx, inputs, conclusion.asFact(ctx, ctx.assumedContext), addedContext, null,
+					true, addedTypes, freshSub, adaptSub, varFree, false, true);
 
 			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 			Term pattern =
 					ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
 			Substitution callSub = subject.unify(pattern);
+			callSub.avoid(vars);
 			Term actual = subject.substitute(callSub);
 
 			TermPrinter tp =
