@@ -54,7 +54,7 @@ function theoremHelper(root: Element | undefined): lineText[] {
 	function bfs(l: line) {
 		let res: line[] = [l];
 
-		for (const premise of l.premises) res = res.concat(bfs(premise));
+		for (const premise of l.premises) res = bfs(premise).concat([l]);
 
 		return res;
 	}
@@ -62,20 +62,40 @@ function theoremHelper(root: Element | undefined): lineText[] {
 	return bfs(tree);
 }
 
-export function createTheorem(theoremName: string, dom: HTMLDivElement | null) {
-	const root = dom?.getElementsByClassName("root-node")[0];
-	const nodes = theoremHelper(root);
+export function createTheorem(
+	theoremName: string,
+	quantifiers: string,
+	rootNode: Element | null,
+) {
+	const nodes = theoremHelper(rootNode);
 
 	if (!nodes) return;
 
-	const conclusion = nodes[0].conclusion;
-	let content = `theorem ${theoremName} : ${conclusion}.\n`;
+	const conclusion = nodes[nodes.length - 1].conclusion;
+	let content = `theorem ${theoremName} : ${quantifiers} ${conclusion}.\n`;
 	for (const node of nodes) {
 		content += `${node.name}: ${node.conclusion} by rule ${node.rule.trim()}${
 			node.premises.length === 0
 				? ""
 				: ` on ${node.premises.map((premise) => premise.name).join(", ")}`
 		}\n`;
+	}
+	return content;
+}
+
+export function createTheorems(
+	theoremNames: string[],
+	quantifiers: string[],
+	wanted: Set<number>,
+	dom: HTMLDivElement | null,
+): string {
+	const rootNodes = dom?.getElementsByClassName("root-node");
+	// TODO : assert len of rootNodes and theoremNames
+	if (!rootNodes) return "";
+	let content: string = "";
+	for (let i = 0; i < rootNodes.length; ++i) {
+		if (wanted.has(i))
+			content += createTheorem(theoremNames[i], quantifiers[i], rootNodes[i]);
 	}
 	return content;
 }

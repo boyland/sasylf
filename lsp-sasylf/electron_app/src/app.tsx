@@ -309,15 +309,16 @@ export default function MyApp() {
 									appendHandler={(inp: input) => appendInput(element.id, inp)}
 								/>
 							</Tab.Pane>
+							<Export
+								show={showExport}
+								onHide={() => setShowExport(false)}
+								proofRef={proofRef}
+								inputs={element.inputs}
+							/>
 						</Tab.Content>
 					))}
 				</Tab.Container>
 			</Anim>
-			<Export
-				show={showExport}
-				onHide={() => setShowExport(false)}
-				proofRef={proofRef}
-			/>
 			<DragOverlay zIndex={1060}>
 				{activeText ? (
 					<Card

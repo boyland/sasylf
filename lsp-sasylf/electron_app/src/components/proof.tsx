@@ -356,25 +356,11 @@ export default function ProofArea(props: {
 	inputs: input[];
 	deleteHandler: (ind: number, deleteId: number) => void;
 }) {
-	return props.hasOwnProperty("proofRef") ? (
+	return (
 		<div className="d-flex proof-area" ref={props.proofRef}>
 			{props.inputs.map(({ conclusion, free, id }, ind) => (
 				<ProofNode
-					ind={ind}
-					key={id}
-					conclusion={conclusion}
-					tree={null}
-					deleteHandler={(deleteId: number) =>
-						props.deleteHandler(ind, deleteId)
-					}
-					root
-				/>
-			))}
-		</div>
-	) : (
-		<div className="d-flex proof-area">
-			{props.inputs.map(({ conclusion, free, id }, ind) => (
-				<ProofNode
+					className={`${free ? "free" : ""}`}
 					ind={ind}
 					key={id}
 					conclusion={conclusion}
