@@ -118,13 +118,18 @@ export default function MyApp() {
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
-	const deleteInput = (activeKey: number, ind: number) => {
+	const deleteInput = (activeKey: number, ind: number, deleteId: number) => {
+		const startEvent = new CustomEvent("fade", {
+			detail: { deleteId },
+		});
+		document.dispatchEvent(startEvent);
+
 		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
 
 		for (const tab of newTabs)
 			if (tab.id == activeKey) tab.inputs.splice(ind, 1);
 
-		setTabs(newTabs);
+		setTimeout(() => setTabs(newTabs), 300);
 	};
 
 	const appendInput = (activeKey: number, inp: input) => {
@@ -146,13 +151,24 @@ export default function MyApp() {
 		const overType = overData?.type;
 		const activeType = activeData?.type;
 
-		if (overType === "rule" && activeType === "rule" && !(over.id in dropped))
+		if (overType === "rule" && activeType === "rule" && !(over.id in dropped)) {
+			const startEvent = new CustomEvent("fade", {
+				detail: { deleteId: over.id },
+			});
+			document.dispatchEvent(startEvent);
+
 			addHandler(over.id, activeData?.text);
+		}
 		if (
 			activeType === "node" &&
 			((overType === "copy" && activeData?.text === overData?.text) ||
 				overType === "topdown")
 		) {
+			const startEvent = new CustomEvent("fade", {
+				detail: { deleteId: over.id },
+			});
+			document.dispatchEvent(startEvent);
+
 			const which = overType === "topdown";
 			const event = new CustomEvent(which ? "topdown-tree" : "tree", {
 				detail: {
@@ -164,7 +180,7 @@ export default function MyApp() {
 			document.dispatchEvent(event);
 
 			if (shiftRef.current && activeData?.ind != null)
-				deleteInput(activeKey, activeData?.ind);
+				deleteInput(activeKey, activeData?.ind, active.id as number);
 		}
 	};
 
@@ -225,7 +241,7 @@ export default function MyApp() {
 					<Nav variant="tabs" className="flex-row">
 						{tabs.map((element) => (
 							<Nav.Item className="d-flex flex-row" key={element.id}>
-								<Nav.Link eventKey={element.id}>
+								<Nav.Link className="d-flex center-align" eventKey={element.id}>
 									{element.name}
 									<CloseButton
 										onClick={(event) => {
@@ -264,15 +280,15 @@ export default function MyApp() {
 												<ProofArea
 													proofRef={proofRef}
 													inputs={element.inputs}
-													deleteHandler={(ind: number) =>
-														deleteInput(element.id, ind)
+													deleteHandler={(ind: number, deleteId: number) =>
+														deleteInput(element.id, ind, deleteId)
 													}
 												/>
 											) : (
 												<ProofArea
 													inputs={element.inputs}
-													deleteHandler={(ind: number) =>
-														deleteInput(element.id, ind)
+													deleteHandler={(ind: number, deleteId: number) =>
+														deleteInput(element.id, ind, deleteId)
 													}
 												/>
 											)}

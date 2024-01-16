@@ -9,6 +9,7 @@ import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
+import Fade from "react-bootstrap/Fade";
 import Draggable from "./draggable";
 import { replaceElement, extractPremise } from "./utils";
 import { line, input, ast } from "../types";
@@ -172,8 +173,8 @@ interface nodeProps {
 	tree: line | null;
 	root?: boolean;
 	ind?: number;
-	deleteHandler?: () => void;
 	topdownHandler?: TopdownHandler;
+	deleteHandler?: (deleteId: number) => void;
 }
 
 function ProofNode(props: nodeProps) {
@@ -183,6 +184,7 @@ function ProofNode(props: nodeProps) {
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
+	const [open, setOpen] = useState(true);
 	let proofNodeRef = useRef(null);
 
 	const safeSetTree = (tree: line | null) =>
@@ -195,7 +197,6 @@ function ProofNode(props: nodeProps) {
 		nodeCounter++;
 		const localId = nodeCounter - 2;
 		addRef(localId, proofNodeRef);
-		console.log(localId, props.conclusion);
 
 		if (props.tree && props.tree.rule !== "Put rule here")
 			addHandler(localId, props.tree.rule);
@@ -203,130 +204,157 @@ function ProofNode(props: nodeProps) {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (localId + 1 === detail.overId) safeSetTree(detail.tree);
+			if (localId + 1 === detail.overId) {
+				safeSetTree(detail.tree);
+				setTimeout(() => setOpen(true), 300);
+			}
 		};
 
 		document.addEventListener("tree", listener);
 
-		return () => document.removeEventListener("tree", listener);
+		const openListener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (localId + 1 === detail.deleteId || localId === detail.deleteId)
+				setOpen(false);
+		};
+
+		document.addEventListener("fade", openListener);
+
+		return () => {
+			document.removeEventListener("tree", listener);
+			document.removeEventListener("fade", openListener);
+		};
 	}, []);
 	useEffect(() => {
 		if (id in dropped && !tree) {
-			console.log(dropped);
-			console.log(id);
 			(window as any).electronAPI
 				.parse(props.conclusion, dropped[id], file)
 				.then((res: string[]) => setArgs(res));
 		} else setArgs(null);
 	}, [dropped]);
-	useEffect(() => safeSetTree(props.tree), [props.tree]);
+	useEffect(() => setOpen(true), [args]);
 	useEffect(() => {
 		if (tree) addHandler(id, tree.rule);
+		setTimeout(() => setOpen(true), 300);
 	}, [tree]);
 	useEffect(() => {
+		safeSetTree(props.tree);
+
 		if (props.tree && id && props.tree.rule !== "Put rule here")
 			addHandler(id, props.tree.rule);
 	}, [props.tree]);
 
 	return (
-		<div
-			className={`d-flex flex-row proof-node ${
-				props.className ? props.className : ""
-			} ${props.root ? "root-node" : "m-2"}`}
-			ref={proofNodeRef}
-		>
-			{props.root ? (
-				<CloseButton className="topdown-close" onClick={props.deleteHandler} />
-			) : null}
-			{props.topdownHandler && props.topdownHandler.level ? (
-				<CloseButton
-					className="topdown-close"
-					onClick={() =>
-						props.topdownHandler?.fn(props.topdownHandler.ind as number)
-					}
-				/>
-			) : null}
-			<div className="d-flex flex-column">
-				{args ? (
-					<Premises
-						args={args}
-						tree={null}
-						topdownHandler={
-							props.topdownHandler && !props.topdownHandler.level
-								? props.topdownHandler
-								: null
-						}
-					/>
-				) : tree ? (
-					<Premises
-						args={[...tree.premises.map((value) => value.conclusion), ""]}
-						tree={tree}
-						topdownHandler={
-							props.topdownHandler && !props.topdownHandler.level
-								? props.topdownHandler
-								: null
-						}
-					/>
-				) : (
-					<Droppable
-						id={id + 1}
-						data={{ type: "copy", text: props.conclusion }}
-						className="d-flex stretch-container"
-					>
-						<div className="drop-node-area p-2">Copy node here</div>
-					</Droppable>
-				)}
-				<div className="node-line"></div>
-				<div className="d-flex flex-row conclusion">
-					<Form.Control
-						size="sm"
-						className="name-input panning-excluded m-1"
-						type="text"
-						placeholder="Name"
-					/>
-					<Draggable
-						id={id}
-						data={{
-							type: "node",
-							text: props.conclusion,
-							ind: props.root ? props.ind : null,
-						}}
-					>
-						<span className="centered-text no-wrap panning-excluded">
-							{props.conclusion}
-						</span>
-					</Draggable>
-				</div>
-			</div>
-			<Droppable
-				id={id}
-				data={{ type: "rule" }}
-				className="d-flex stretch-container"
+		<Fade in={open}>
+			<div
+				className={`d-flex flex-row proof-node ${
+					props.className ? props.className : ""
+				} ${props.root ? "root-node" : "m-2"}`}
+				ref={proofNodeRef}
 			>
-				<div className="drop-area rule p-2">
-					{id in dropped ? (
-						<>
-							{dropped[id]}{" "}
-							<CloseButton
-								onClick={() => {
-									removeHandler(id);
-									setTree(null);
-								}}
-							/>
-						</>
+				{props.root ? (
+					<CloseButton
+						className="topdown-close"
+						onClick={() =>
+							props.deleteHandler ? props.deleteHandler(id) : null
+						}
+					/>
+				) : null}
+				{props.topdownHandler && props.topdownHandler.level ? (
+					<CloseButton
+						className="topdown-close"
+						onClick={() =>
+							props.topdownHandler?.fn(props.topdownHandler.ind as number)
+						}
+					/>
+				) : null}
+				<div className="d-flex flex-column">
+					{args ? (
+						<Premises
+							args={args}
+							tree={null}
+							topdownHandler={
+								props.topdownHandler && !props.topdownHandler.level
+									? props.topdownHandler
+									: null
+							}
+						/>
+					) : tree ? (
+						<Premises
+							args={[...tree.premises.map((value) => value.conclusion), ""]}
+							tree={tree}
+							topdownHandler={
+								props.topdownHandler && !props.topdownHandler.level
+									? props.topdownHandler
+									: null
+							}
+						/>
 					) : (
-						"Put rule here"
+						<Droppable
+							id={id + 1}
+							data={{ type: "copy", text: props.conclusion }}
+							className="d-flex stretch-container"
+						>
+							<div className="drop-node-area p-2">Copy node here</div>
+						</Droppable>
 					)}
+					<div className="node-line"></div>
+					<div className="d-flex flex-row conclusion">
+						<Form.Control
+							size="sm"
+							className="name-input panning-excluded m-1"
+							type="text"
+							placeholder="Name"
+						/>
+						<Draggable
+							id={id}
+							data={{
+								type: "node",
+								text: props.conclusion,
+								ind: props.root ? props.ind : null,
+							}}
+						>
+							<span className="centered-text no-wrap panning-excluded">
+								{props.conclusion}
+							</span>
+						</Draggable>
+					</div>
 				</div>
-			</Droppable>
-		</div>
+				<Droppable
+					id={id}
+					data={{ type: "rule" }}
+					className="d-flex stretch-container"
+				>
+					<div className="drop-area rule p-2">
+						{id in dropped ? (
+							<>
+								{dropped[id]}{" "}
+								<CloseButton
+									onClick={() => {
+										setOpen(false);
+
+										setTimeout(() => {
+											removeHandler(id);
+											setTree(null);
+										}, 300);
+									}}
+								/>
+							</>
+						) : (
+							"Put rule here"
+						)}
+					</div>
+				</Droppable>
+			</div>
+		</Fade>
 	);
 }
 
 export default function ProofArea(props: {
 	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
-	deleteHandler: (ind: number) => void;
+	deleteHandler: (ind: number, deleteId: number) => void;
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
@@ -336,7 +364,9 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={() => props.deleteHandler(ind)}
+					deleteHandler={(deleteId: number) =>
+						props.deleteHandler(ind, deleteId)
+					}
 					root
 				/>
 			))}
@@ -349,7 +379,9 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={() => props.deleteHandler(ind)}
+					deleteHandler={(deleteId: number) =>
+						props.deleteHandler(ind, deleteId)
+					}
 					root
 				/>
 			))}
