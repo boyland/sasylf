@@ -23,6 +23,8 @@
 }
 
 .drop-area {
+	display: flex;
+	align-items: center;
 	position: relative;
 	border: dashed;
 	border-radius: 10px;
@@ -31,15 +33,38 @@
 }
 
 .drop-node-area {
+	display: flex;
 	border: dashed;
 	border-radius: 10px;
 	width: stretch;
 	text-align: center;
 	white-space: nowrap;
+	align-items: center;
+	justify-content: center;
+}
+
+.fill-width {
+	flex: 1;
 }
 
 .no-wrap {
 	white-space: nowrap;
+}
+
+.topdown-rule {
+	position: relative;
+	white-space: nowrap;
+	bottom: 5px;
+}
+
+.topdown-node {
+	align-items: flex-end;
+	font-family: "Courier New", monospace;
+}
+
+.topdown-close {
+	position: relative;
+	bottom: 29px;
 }
 
 .drop-container {

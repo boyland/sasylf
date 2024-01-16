@@ -1,5 +1,11 @@
 import { line } from "../types";
 
+export const replaceElement = <T>(arr: T[], index: number, newItem: T) => [
+	...arr.slice(0, index),
+	newItem,
+	...arr.slice(index + 1),
+];
+
 export function extractPremise(conclusion: string, tree: line) {
 	for (const premise of tree.premises)
 		if (premise.conclusion === conclusion) return premise;
