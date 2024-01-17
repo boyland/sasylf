@@ -135,6 +135,15 @@ export default function MyApp() {
 				}
 			}
 		}
+		if (activeType === "rule" && overType === "topdown-rule") {
+			const event = new CustomEvent("topdown-rule", {
+				detail: {
+					overId: over.id,
+					text: activeData?.text,
+				},
+			});
+			document.dispatchEvent(event);
+		}
 	};
 
 	function handleCloseTab(id: number) {

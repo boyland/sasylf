@@ -1,6 +1,5 @@
-export const replaceElement = <T>(arr: T[], index: number, newItem: T) => [
+export const deleteElement = <T>(arr: T[], index: number) => [
 	...arr.slice(0, index),
-	newItem,
 	...arr.slice(index + 1),
 ];
 
