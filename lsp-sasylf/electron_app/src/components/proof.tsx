@@ -352,7 +352,7 @@ function ProofNode(props: nodeProps) {
 }
 
 export default function ProofArea(props: {
-	proofRef?: RefObject<HTMLDivElement>;
+	proofRef?: any;
 	inputs: input[];
 	deleteHandler: (ind: number, deleteId: number) => void;
 }) {
@@ -365,9 +365,9 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={(deleteId: number) =>
-						props.deleteHandler(ind, deleteId)
-					}
+					deleteHandler={(deleteId: number) => {
+						props.deleteHandler(ind, deleteId);
+					}}
 					root
 				/>
 			))}

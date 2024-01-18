@@ -40,6 +40,7 @@ export default function MyApp() {
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef<HTMLDivElement>(null);
+	// const [proofRef, setProofRef] = useState(null);
 	const bankRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -265,6 +266,8 @@ export default function MyApp() {
 									index={index}
 									canvasStates={canvasStates}
 									setCanvasStates={setCanvasStates}
+									inputs={element.inputs}
+									proofRef={proofRef}
 								>
 									<DroppedContext.Provider
 										value={{
