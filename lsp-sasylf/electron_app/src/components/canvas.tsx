@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, RefObject } from "react";
 import {
 	TransformWrapper,
 	TransformComponent,
@@ -33,11 +33,12 @@ const TransformComponentWrapper = (props: {
 	return props.children;
 };
 
-function TheoremList(props: { proofRef: any; zoomToElement: any }) {
+function TheoremList(props: {
+	proofRef: RefObject<HTMLDivElement>;
+	zoomToElement: any;
+}) {
 	if (props.proofRef.current == null) return <></>;
 	const rootNodes = props.proofRef.current.getElementsByClassName("root-node");
-	console.log(props.proofRef.current);
-	console.log(rootNodes);
 	const n = rootNodes.length;
 	const conclusions: string[] = Array(rootNodes.length);
 	for (let i = 0; i < n; ++i) {
@@ -49,8 +50,11 @@ function TheoremList(props: { proofRef: any; zoomToElement: any }) {
 	}
 	return (
 		<ListGroup className="theorem-list m-1">
-			{Array.from(Array(n).keys()).map((i) => (
-				<ListGroup.Item onClick={() => props.zoomToElement(rootNodes[i])}>
+			{Array.from(Array(n).keys()).map((i, ind) => (
+				<ListGroup.Item
+					key={ind}
+					onClick={() => props.zoomToElement(rootNodes[i])}
+				>
 					{conclusions[i]}
 				</ListGroup.Item>
 			))}
@@ -63,7 +67,7 @@ const Canvas = (props: {
 	index: number;
 	canvasStates: any;
 	setCanvasStates: any;
-	proofRef: any;
+	proofRef: RefObject<HTMLDivElement>;
 	inputs: input[];
 }) => {
 	return (

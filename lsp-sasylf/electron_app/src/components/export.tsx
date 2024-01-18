@@ -60,7 +60,7 @@ export default function Export(props: ExportProps) {
 			<Modal.Body>
 				<Form method="post" onSubmit={handleExport}>
 					{props.inputs.map(({ conclusion, free }, index) => (
-						<InputGroup size="sm">
+						<InputGroup size="sm" key={index}>
 							<InputGroup.Checkbox name={`${index.toString()}-index`} />
 							<InputGroup.Text>{conclusion}</InputGroup.Text>
 							{free ? (
