@@ -364,7 +364,6 @@ export default function ProofArea(props: {
 }) {
 	return props.hasOwnProperty("proofRef") ? (
 		<div className="d-flex proof-area" ref={props.proofRef}>
-			<TopDownNode prems={["n1 < n3"]} />
 			{props.inputs.map(({ conclusion, free }, ind) => (
 				<ProofNode
 					ind={ind}
