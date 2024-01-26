@@ -11,8 +11,9 @@ import { DroppedContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Fade from "react-bootstrap/Fade";
 import Draggable from "./draggable";
-import { replaceElement, extractPremise } from "./utils";
+import { deleteElement, extractPremise } from "./utils";
 import { line, input, ast } from "../types";
+import ErrorModal from "./error";
 
 let nodeCounter = 2;
 
@@ -66,35 +67,56 @@ const getNumPremises = (ast: ast | null, rule: string) => {
 	return 0;
 };
 
-function TopDownNode({ rule }: { rule: string }) {
+function TopDownNode({ prems }: { prems: string[] }) {
 	const { ast } = useContext(DroppedContext);
 	const file = useContext(FileContext);
-	const numPremises = getNumPremises(ast, rule);
 
-	const [ids, setIds] = useState<number[]>(Array(numPremises).fill(0));
-	const [trees, setTrees] = useState<(line | null)[]>(
-		Array(numPremises).fill(null),
-	);
-	const [premises, setPremises] = useState<(string | null)[]>(
-		Array(numPremises).fill(null),
-	);
+	const [rule, setRule] = useState<string | null>(null);
+	const [id, setId] = useState(0);
+	const [trees, setTrees] = useState<line[]>([]);
+	const [premises, setPremises] = useState<string[]>([]);
 	const [numUsed, setNumUsed] = useState(0);
 	const [conclusion, setConclusion] = useState<string | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
+	const [showModal, setShowModal] = useState(false);
 
-	useEffect(
-		() =>
-			setIds(Array.from(Array(numPremises).keys()).map((_) => nodeCounter++)),
-		[],
-	);
+	useEffect(() => {
+		setId(nodeCounter++);
+		nodeCounter++;
+		setPremises(prems);
+		setNumUsed(prems.length);
+		setTrees(
+			prems.map((value) => {
+				return {
+					conclusion: value,
+					name: "",
+					rule: "Put rule here",
+					premises: [],
+				};
+			}),
+		);
+	}, []);
 	useEffect(() => {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (ids[0] <= detail.overId && detail.overId <= ids[ids.length - 1]) {
-				const ind = detail.overId - ids[0];
-				setTrees(replaceElement(trees, ind, detail.tree));
-				setPremises(replaceElement(premises, ind, detail.text));
+			if (detail.overId == id + 1) {
+				if (getNumPremises(ast, detail.text) < numUsed) setShowModal(true);
+				else setRule(detail.text);
+			}
+		};
+
+		document.addEventListener("topdown-rule", listener);
+
+		return () => document.removeEventListener("topdown-rule", listener);
+	}, [id, numUsed]);
+	useEffect(() => {
+		const listener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (detail.overId == id) {
+				setTrees([...trees, detail.tree]);
+				setPremises([...premises, detail.text]);
 				setNumUsed(numUsed + 1);
 			}
 		};
@@ -102,9 +124,11 @@ function TopDownNode({ rule }: { rule: string }) {
 		document.addEventListener("topdown-tree", listener);
 
 		return () => document.removeEventListener("topdown-tree", listener);
-	}, [ids, trees, premises]);
+	}, [id, trees, premises]);
 	useEffect(() => {
-		if (numUsed != numPremises) {
+		if (!rule) return;
+
+		if (numUsed != getNumPremises(ast, rule)) {
 			setConclusion(null);
 			return;
 		}
@@ -112,58 +136,80 @@ function TopDownNode({ rule }: { rule: string }) {
 		(window as any).electronAPI
 			.topdownParse({ premises }, rule, file)
 			.then((res: string) => setConclusion(res));
-	}, [numUsed]);
+	}, [numUsed, rule]);
 	useEffect(() => {
-		if (!conclusion) return;
+		if (!conclusion || !rule) return;
 		if (trees.filter((elem) => elem == null).length) return;
 
-		setTree({ conclusion, name: "", rule, premises: trees as line[] });
+		setTree({ conclusion, name: "", rule, premises: trees });
 	}, [conclusion]);
 
 	const deletePremise = (ind: number) => {
-		setTrees(replaceElement(trees, ind, null));
-		setPremises(replaceElement(premises, ind, null));
+		setTrees(deleteElement(trees, ind));
+		setPremises(deleteElement(premises, ind));
 		setNumUsed(numUsed - 1);
 	};
 
-	return conclusion ? (
-		<ProofNode
-			conclusion={conclusion}
-			tree={tree}
-			topdownHandler={{
-				fn: (ind: number) => deletePremise(ind),
-				level: false,
-			}}
-			root
-		/>
-	) : (
-		<div className="d-flex flex-row topdown-node m-2">
-			<div className="d-flex flex-column">
-				<div className="d-flex flex-row">
-					{premises.map((premise, ind) => (
-						<Droppable
-							id={ids[ind]}
-							key={ind}
-							data={{ type: "topdown" }}
-							className="d-flex stretch-container fill-width"
-						>
-							<div className="drop-node-area p-2">
-								{premise ? (
-									<>
+	return (
+		<>
+			<ErrorModal
+				show={showModal}
+				text="Wrong number of premises for specified rule"
+				toggleShow={() => setShowModal(!showModal)}
+			/>
+			{conclusion ? (
+				<ProofNode
+					conclusion={conclusion}
+					tree={tree}
+					topdownHandler={{
+						fn: (ind: number) => deletePremise(ind),
+						level: false,
+					}}
+					root
+				/>
+			) : (
+				<div className="d-flex flex-row topdown-node m-2">
+					<div className="d-flex flex-column">
+						<div className="d-flex flex-row">
+							{premises.map((premise, ind) => (
+								<div
+									className="d-flex stretch-container fill-width p-2"
+									key={ind}
+								>
+									<div className="drop-node-area p-2">
 										{premise} <CloseButton onClick={() => deletePremise(ind)} />
-									</>
-								) : (
-									`Premise ${ind + 1}`
-								)}
-							</div>
-						</Droppable>
-					))}
+									</div>
+								</div>
+							))}
+							<Droppable
+								id={id}
+								data={{ type: "topdown" }}
+								className="d-flex stretch-container fill-width"
+							>
+								<div className="drop-node-area p-2">Add premise</div>
+							</Droppable>
+						</div>
+						<div className="node-line"></div>
+						<span className="centered-text">Conclusion pending</span>
+					</div>
+					<Droppable
+						id={id + 1}
+						data={{ type: "topdown-rule" }}
+						className="d-flex stretch-container"
+					>
+						<div className="drop-area topdown-rule p-2">
+							{rule ? (
+								<>
+									{rule} <CloseButton onClick={() => setRule(null)} />
+								</>
+							) : (
+								"Put rule here"
+							)}
+						</div>
+					</Droppable>
 				</div>
-				<div className="node-line"></div>
-				<span className="centered-text">Conclusion pending</span>
-			</div>
-			<span className="topdown-rule m-2">{rule}</span>
-		</div>
+			)}
+		</>
 	);
 }
 

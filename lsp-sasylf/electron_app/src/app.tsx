@@ -167,6 +167,15 @@ export default function MyApp() {
 			if (shiftRef.current && activeData?.ind != null)
 				deleteInput(activeKey, activeData?.ind, active.id as number);
 		}
+		if (activeType === "rule" && overType === "topdown-rule") {
+			const event = new CustomEvent("topdown-rule", {
+				detail: {
+					overId: over.id,
+					text: activeData?.text,
+				},
+			});
+			document.dispatchEvent(event);
+		}
 	};
 
 	function handleCloseTab(id: number) {
