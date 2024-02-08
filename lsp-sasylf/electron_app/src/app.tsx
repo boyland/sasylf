@@ -78,13 +78,6 @@ export default function MyApp() {
 			setShowExport(true);
 		});
 	}, [tabs]);
-	// useEffect(
-	// 	() =>
-	// 		setAnim(styled.div`
-	// 			margin-left: ${show ? bankRef.current?.offsetWidth : 0}px;
-	// 		`),
-	// 	[activeKey],
-	// );
 
 	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
 		setRefs({
