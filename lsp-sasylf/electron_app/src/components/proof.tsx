@@ -9,7 +9,6 @@ import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { DroppedContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
-import Fade from "react-bootstrap/Fade";
 import Draggable from "./draggable";
 import { deleteElement, extractPremise } from "./utils";
 import { line, input, ast } from "../types";
@@ -220,16 +219,16 @@ interface nodeProps {
 	root?: boolean;
 	ind?: number;
 	topdownHandler?: TopdownHandler;
-	deleteHandler?: (deleteId: number) => void;
+	deleteHandler?: () => void;
 }
 
 function ProofNode(props: nodeProps) {
-	const { dropped, addRef, removeHandler, addHandler } =
-		useContext(DroppedContext);
+	const { addRef } = useContext(DroppedContext);
 	const file = useContext(FileContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
+	const [rule, setRule] = useState<string | null>(null);
 	let proofNodeRef = useRef(null);
 
 	const safeSetTree = (tree: line | null) =>
@@ -238,39 +237,38 @@ function ProofNode(props: nodeProps) {
 	useEffect(() => {
 		setId(nodeCounter++);
 		safeSetTree(props.tree);
-
-		nodeCounter++;
-		const localId = nodeCounter - 2;
-		addRef(localId, proofNodeRef);
-
-		if (props.tree && props.tree.rule !== "Put rule here")
-			addHandler(localId, props.tree.rule);
-
+		addRef(nodeCounter++ - 1, proofNodeRef);
+	}, []);
+	useEffect(() => {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
 
-			if (localId + 1 === detail.overId) safeSetTree(detail.tree);
+			if (id === detail.overId) safeSetTree(detail.tree);
+		};
+
+		const ruleListener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (id === detail.overId) if (!rule && !tree) setRule(detail.text);
 		};
 
 		document.addEventListener("tree", listener);
+		document.addEventListener("rule", ruleListener);
 
-		return () => document.removeEventListener("tree", listener);
-	}, []);
+		return () => {
+			document.removeEventListener("tree", listener);
+			document.removeEventListener("rule", ruleListener);
+		};
+	}, [id]);
 	useEffect(() => {
-		if (id in dropped && !tree) {
+		if (rule && !tree)
 			(window as any).electronAPI
-				.parse(props.conclusion, dropped[id], file)
+				.parse(props.conclusion, rule, file)
 				.then((res: string[]) => setArgs(res));
-		} else setArgs(null);
-	}, [dropped]);
-	useEffect(() => {
-		if (tree) addHandler(id, tree.rule);
-	}, [tree]);
+		else setArgs(null);
+	}, [rule]);
 	useEffect(() => {
 		safeSetTree(props.tree);
-
-		if (props.tree && id && props.tree.rule !== "Put rule here")
-			addHandler(id, props.tree.rule);
 	}, [props.tree]);
 
 	return (
@@ -283,7 +281,7 @@ function ProofNode(props: nodeProps) {
 			{props.root ? (
 				<CloseButton
 					className="topdown-close"
-					onClick={() => (props.deleteHandler ? props.deleteHandler(id) : null)}
+					onClick={() => (props.deleteHandler ? props.deleteHandler() : null)}
 				/>
 			) : null}
 			{props.topdownHandler && props.topdownHandler.level ? (
@@ -352,12 +350,12 @@ function ProofNode(props: nodeProps) {
 				className="d-flex stretch-container"
 			>
 				<div className="drop-area rule p-2">
-					{id in dropped ? (
+					{tree || rule ? (
 						<>
-							{dropped[id]}{" "}
+							{tree ? tree.rule : rule}{" "}
 							<CloseButton
 								onClick={() => {
-									removeHandler(id);
+									setRule(null);
 									setTree(null);
 								}}
 							/>
@@ -374,7 +372,7 @@ function ProofNode(props: nodeProps) {
 export default function ProofArea(props: {
 	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
-	deleteHandler: (ind: number, deleteId: number) => void;
+	deleteHandler: (ind: number) => void;
 }) {
 	return (
 		<div className="d-flex proof-area" ref={props.proofRef}>
@@ -385,8 +383,8 @@ export default function ProofArea(props: {
 					key={id}
 					conclusion={conclusion}
 					tree={null}
-					deleteHandler={(deleteId: number) => {
-						props.deleteHandler(ind, deleteId);
+					deleteHandler={() => {
+						props.deleteHandler(ind);
 					}}
 					root
 				/>

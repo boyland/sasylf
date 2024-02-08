@@ -7,12 +7,7 @@ import Canvas from "./components/canvas";
 import Export from "./components/export";
 import Input from "./components/input";
 import { DroppedContext, FileContext } from "./components/state";
-import {
-	DndContext,
-	DragEndEvent,
-	DragStartEvent,
-	UniqueIdentifier,
-} from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
@@ -21,27 +16,22 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 import { getTree } from "./components/utils";
-import styled, { keyframes } from "styled-components";
+import { Transition } from "react-transition-group";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
 	const [activeText, setActiveText] = useState<string | null>(null);
-	const [dropped, setDropped] = useState({});
 	const [showExport, setShowExport] = useState(false);
 	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<number>(0);
 	const [refs, setRefs] = useState({});
 	const [show, setShow] = useState(false);
-	const [marginLeft, setMarginLeft] = useState(0);
-	const [Anim, setAnim] = useState(styled.div`
-		margin-left: 0;
-	`);
 	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef<HTMLDivElement>(null);
-	// const [proofRef, setProofRef] = useState(null);
 	const bankRef = useRef<HTMLDivElement>(null);
+	const animRef = useRef(null);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -88,13 +78,13 @@ export default function MyApp() {
 			setShowExport(true);
 		});
 	}, [tabs]);
-	useEffect(
-		() =>
-			setAnim(styled.div`
-				margin-left: ${show ? bankRef.current?.offsetWidth : 0}px;
-			`),
-		[activeKey],
-	);
+	// useEffect(
+	// 	() =>
+	// 		setAnim(styled.div`
+	// 			margin-left: ${show ? bankRef.current?.offsetWidth : 0}px;
+	// 		`),
+	// 	[activeKey],
+	// );
 
 	const addRef = (id: number, ref: RefObject<HTMLDivElement>) =>
 		setRefs({
@@ -102,24 +92,10 @@ export default function MyApp() {
 			[id]: ref,
 		});
 
-	const removeHandler = (id: number) => {
-		const newDropped = { ...dropped };
-		delete newDropped[id];
-		setDropped(newDropped);
-	};
-
-	const addHandler = (id: UniqueIdentifier, text: string) => {
-		if (!(id in dropped))
-			setDropped({
-				...dropped,
-				[id]: text,
-			});
-	};
-
 	const handleDragStart = (event: DragStartEvent) =>
 		setActiveText(event.active.data.current?.text);
 
-	const deleteInput = (activeKey: number, ind: number, deleteId: number) => {
+	const deleteInput = (activeKey: number, ind: number) => {
 		const newTabs: tab[] = tabs.map((tab) => JSON.parse(JSON.stringify(tab)));
 
 		for (const tab of newTabs)
@@ -147,8 +123,18 @@ export default function MyApp() {
 		const overType = overData?.type;
 		const activeType = activeData?.type;
 
-		if (overType === "rule" && activeType === "rule" && !(over.id in dropped))
-			addHandler(over.id, activeData?.text);
+		if (overType === "rule" && activeType === "rule") {
+			const event = new CustomEvent("rule", {
+				detail: {
+					overId: over.id,
+					text: activeData?.text,
+				},
+			});
+			document.dispatchEvent(event);
+
+			if (shiftRef.current && activeData?.ind != null)
+				deleteInput(activeKey, activeData?.ind);
+		}
 		if (
 			activeType === "node" &&
 			((overType === "copy" && activeData?.text === overData?.text) ||
@@ -165,7 +151,7 @@ export default function MyApp() {
 			document.dispatchEvent(event);
 
 			if (shiftRef.current && activeData?.ind != null)
-				deleteInput(activeKey, activeData?.ind, active.id as number);
+				deleteInput(activeKey, activeData?.ind);
 		}
 		if (activeType === "rule" && overType === "topdown-rule") {
 			const event = new CustomEvent("topdown-rule", {
@@ -190,31 +176,9 @@ export default function MyApp() {
 		}
 	}
 
-	useEffect(() => {
-		const shift = keyframes`
-            from {
-                margin-left: 0;
-            }
-            to {
-                margin-left: ${bankRef.current?.offsetWidth}px;
-            }
-        `;
-
-		const NewAnim = styled.div`
-			animation: ${shift} 0.3s linear;
-			animation-direction: ${show ? "normal" : "reverse"};
-			margin-left: ${show ? bankRef.current?.offsetWidth : "0"}px;
-		`;
-
-		setAnim(NewAnim);
-	}, [show]);
-	useEffect(
-		() =>
-			setAnim(styled.div`
-				margin-left: ${marginLeft}px;
-			`),
-		[marginLeft],
-	);
+	const defaultStyle = {
+		transition: "margin-left 0.3s linear",
+	};
 
 	return (
 		<DndContext
@@ -227,94 +191,105 @@ export default function MyApp() {
 				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
 				bankRef={bankRef}
 			/>
-			<Anim>
-				<Tab.Container
-					onSelect={(eventKey) => setActiveKey(eventKey ? Number(eventKey) : 0)}
-					activeKey={activeKey}
-				>
-					<Nav variant="tabs" className="flex-row">
-						{tabs.map((element) => (
-							<Nav.Item className="d-flex flex-row" key={element.id}>
-								<Nav.Link className="d-flex center-align" eventKey={element.id}>
-									{element.name}
-									<CloseButton
-										onClick={(event) => {
-											event.stopPropagation();
-											handleCloseTab(element.id);
-										}}
+			<Transition nodeRef={animRef} in={show} timeout={300}>
+				{(state) => (
+					<div
+						ref={animRef}
+						style={{
+							...defaultStyle,
+							marginLeft: ["entering", "entered"].includes(state)
+								? bankRef.current?.offsetWidth
+								: 0,
+						}}
+					>
+						<Tab.Container
+							onSelect={(eventKey) =>
+								setActiveKey(eventKey ? Number(eventKey) : 0)
+							}
+							activeKey={activeKey}
+						>
+							<Nav variant="tabs" className="flex-row">
+								{tabs.map((element) => (
+									<Nav.Item className="d-flex flex-row" key={element.id}>
+										<Nav.Link
+											className="d-flex center-align"
+											eventKey={element.id}
+										>
+											{element.name}
+											<CloseButton
+												onClick={(event) => {
+													event.stopPropagation();
+													handleCloseTab(element.id);
+												}}
+											/>
+										</Nav.Link>
+									</Nav.Item>
+								))}
+							</Nav>
+							{tabs.map((element, index) => (
+								<Tab.Content key={element.id}>
+									<Tab.Pane eventKey={element.id}>
+										<Canvas
+											index={index}
+											canvasStates={canvasStates}
+											setCanvasStates={setCanvasStates}
+											inputs={element.inputs}
+											proofRef={proofRef}
+										>
+											<DroppedContext.Provider
+												value={{
+													addRef,
+													ast: element.ast,
+												}}
+											>
+												<FileContext.Provider value={element.file}>
+													{element.id === activeKey ? (
+														<ProofArea
+															proofRef={proofRef}
+															inputs={element.inputs}
+															deleteHandler={(ind: number) =>
+																deleteInput(element.id, ind)
+															}
+														/>
+													) : (
+														<ProofArea
+															inputs={element.inputs}
+															deleteHandler={(ind: number) =>
+																deleteInput(element.id, ind)
+															}
+														/>
+													)}
+												</FileContext.Provider>
+											</DroppedContext.Provider>
+										</Canvas>
+										<Button
+											variant="success"
+											className="input-theorem"
+											onClick={() => setShowInput(true)}
+										>
+											New Theorem
+										</Button>
+										<Input
+											show={showInput}
+											onHide={() => setShowInput(false)}
+											inputs={element.inputs}
+											appendHandler={(inp: input) =>
+												appendInput(element.id, inp)
+											}
+										/>
+									</Tab.Pane>
+									<Export
+										show={showExport}
+										onHide={() => setShowExport(false)}
+										proofRef={proofRef}
+										inputs={element.inputs}
 									/>
-								</Nav.Link>
-							</Nav.Item>
-						))}
-					</Nav>
-					{tabs.map((element, index) => (
-						<Tab.Content key={element.id}>
-							<Tab.Pane
-								eventKey={element.id}
-								onEnter={() =>
-									setMarginLeft(bankRef.current?.offsetWidth as number)
-								}
-							>
-								<Canvas
-									index={index}
-									canvasStates={canvasStates}
-									setCanvasStates={setCanvasStates}
-									inputs={element.inputs}
-									proofRef={proofRef}
-								>
-									<DroppedContext.Provider
-										value={{
-											dropped,
-											addRef,
-											removeHandler,
-											addHandler,
-											ast: element.ast,
-										}}
-									>
-										<FileContext.Provider value={element.file}>
-											{element.id === activeKey ? (
-												<ProofArea
-													proofRef={proofRef}
-													inputs={element.inputs}
-													deleteHandler={(ind: number, deleteId: number) =>
-														deleteInput(element.id, ind, deleteId)
-													}
-												/>
-											) : (
-												<ProofArea
-													inputs={element.inputs}
-													deleteHandler={(ind: number, deleteId: number) =>
-														deleteInput(element.id, ind, deleteId)
-													}
-												/>
-											)}
-										</FileContext.Provider>
-									</DroppedContext.Provider>
-								</Canvas>
-								<Button
-									variant="success"
-									className="input-theorem"
-									onClick={() => setShowInput(true)}
-								>
-									New Theorem
-								</Button>
-								<Input
-									show={showInput}
-									onHide={() => setShowInput(false)}
-									inputs={element.inputs}
-									appendHandler={(inp: input) => appendInput(element.id, inp)}
-								/>
-							</Tab.Pane>
-							<Export
-								show={showExport}
-								onHide={() => setShowExport(false)}
-								proofRef={proofRef}
-								inputs={element.inputs}
-							/>
-						</Tab.Content>
-					))}
-				</Tab.Container>
-			</Anim>
+								</Tab.Content>
+							))}
+						</Tab.Container>
+					</div>
+				)}
+			</Transition>
 			<DragOverlay zIndex={1060}>
 				{activeText ? (
 					<Card
