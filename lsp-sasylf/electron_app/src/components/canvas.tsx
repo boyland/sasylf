@@ -27,6 +27,7 @@ const TransformComponentWrapper = (props: {
 			scale: state.scale,
 			x: state.positionX,
 			y: state.positionY,
+			id: props.canvasStates[props.index].id,
 		};
 		props.setCanvasStates(newCanvasStates);
 	});
@@ -74,7 +75,10 @@ const Canvas = (props: {
 		<div className="zoomable-canvas border border-5">
 			<TransformWrapper
 				limitToBounds={false}
-				panning={{ excluded: ["panning-excluded"] }}
+				panning={{
+					excluded: ["panning-excluded"],
+					allowRightClickPan: false,
+				}}
 			>
 				{({ zoomIn, zoomOut, resetTransform, setTransform, zoomToElement }) => (
 					<>
