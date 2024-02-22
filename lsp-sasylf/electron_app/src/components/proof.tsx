@@ -15,7 +15,6 @@ import { line, input, ast } from "../types";
 import ErrorModal from "./error";
 
 let nodeCounter = 2;
-
 interface TopdownHandler {
 	fn: (id: number) => void;
 	level: boolean;
@@ -26,6 +25,7 @@ function Premises(props: {
 	args: string[];
 	tree: line | null;
 	topdownHandler: TopdownHandler | null;
+	showContextMenu: any;
 }) {
 	if (props.args.length <= 1) return null;
 
@@ -37,6 +37,7 @@ function Premises(props: {
 					conclusion={arg}
 					key={ind}
 					tree={props.tree ? extractPremise(arg, props.tree) : null}
+					showContextMenu={props.showContextMenu}
 					{...(props.topdownHandler
 						? {
 								topdownHandler: {
@@ -220,6 +221,7 @@ interface nodeProps {
 	ind?: number;
 	topdownHandler?: TopdownHandler;
 	deleteHandler?: () => void;
+	showContextMenu: any;
 }
 
 function ProofNode(props: nodeProps) {
@@ -277,6 +279,7 @@ function ProofNode(props: nodeProps) {
 				props.className ? props.className : ""
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
+			onContextMenu={props.showContextMenu}
 		>
 			{props.root ? (
 				<CloseButton
@@ -302,6 +305,7 @@ function ProofNode(props: nodeProps) {
 								? props.topdownHandler
 								: null
 						}
+						showContextMenu={props.showContextMenu}
 					/>
 				) : tree ? (
 					<Premises
@@ -312,6 +316,7 @@ function ProofNode(props: nodeProps) {
 								? props.topdownHandler
 								: null
 						}
+						showContextMenu={props.showContextMenu}
 					/>
 				) : (
 					<Droppable
@@ -373,22 +378,26 @@ export default function ProofArea(props: {
 	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
 	deleteHandler: (ind: number) => void;
+	showContextMenu: any;
 }) {
 	return (
-		<div className="d-flex proof-area" ref={props.proofRef}>
-			{props.inputs.map(({ conclusion, free, id }, ind) => (
-				<ProofNode
-					className={`${free ? "free" : ""}`}
-					ind={ind}
-					key={id}
-					conclusion={conclusion}
-					tree={null}
-					deleteHandler={() => {
-						props.deleteHandler(ind);
-					}}
-					root
-				/>
-			))}
-		</div>
+		<>
+			<div className="d-flex proof-area" ref={props.proofRef}>
+				{props.inputs.map(({ conclusion, free, id }, ind) => (
+					<ProofNode
+						className={`${free ? "free" : ""}`}
+						ind={ind}
+						key={id}
+						conclusion={conclusion}
+						tree={null}
+						deleteHandler={() => {
+							props.deleteHandler(ind);
+						}}
+						showContextMenu={props.showContextMenu}
+						root
+					/>
+				))}
+			</div>
+		</>
 	);
 }

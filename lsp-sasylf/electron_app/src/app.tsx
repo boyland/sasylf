@@ -17,6 +17,8 @@ import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 import { getTree } from "./components/utils";
 import { Transition } from "react-transition-group";
+import { useContextMenu } from "react-contexify";
+import ContextMenu from "./components/menu";
 
 export default function MyApp() {
 	const [tabs, setTabs] = useState<tab[]>([]);
@@ -32,6 +34,7 @@ export default function MyApp() {
 	const proofRef = useRef<HTMLDivElement>(null);
 	const bankRef = useRef<HTMLDivElement>(null);
 	const animRef = useRef(null);
+	const { show: showContextMenu } = useContextMenu({ id: "3" });
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -243,6 +246,15 @@ export default function MyApp() {
 															deleteHandler={(ind: number) =>
 																deleteInput(element.id, ind)
 															}
+															showContextMenu={(event: any) => {
+																showContextMenu({
+																	event: event,
+																	position: {
+																		x: event.clientX,
+																		y: event.clientY,
+																	},
+																});
+															}}
 														/>
 													) : (
 														<ProofArea
@@ -250,6 +262,15 @@ export default function MyApp() {
 															deleteHandler={(ind: number) =>
 																deleteInput(element.id, ind)
 															}
+															showContextMenu={(event: any) => {
+																showContextMenu({
+																	event: event,
+																	position: {
+																		x: event.clientX,
+																		y: event.clientY,
+																	},
+																});
+															}}
 														/>
 													)}
 												</FileContext.Provider>
@@ -280,6 +301,7 @@ export default function MyApp() {
 								</Tab.Content>
 							))}
 						</Tab.Container>
+						<ContextMenu MENU_ID={"3"} />
 					</div>
 				)}
 			</Transition>
