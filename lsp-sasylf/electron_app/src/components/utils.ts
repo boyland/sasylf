@@ -71,9 +71,9 @@ export function createTheorem(
 	if (!nodes) return;
 
 	const conclusion = nodes[nodes.length - 1].conclusion;
-	let content = `theorem ${theoremName} : ${quantifiers} ${conclusion}.\n`;
+	let content = `theorem ${theoremName.trim()} : ${quantifiers.trim()} exists ${conclusion.trim()}.\n`;
 	for (const node of nodes) {
-		content += `${node.name}: ${node.conclusion} by rule ${node.rule.trim()}${
+		content += `${node.name.trim()}: ${node.conclusion.trim()} by rule ${node.rule.trim()}${
 			node.premises.length === 0
 				? ""
 				: ` on ${node.premises.map((premise) => premise.name).join(", ")}`
