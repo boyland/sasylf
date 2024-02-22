@@ -20,7 +20,7 @@ export default function Export(props: ExportProps) {
 
 		const formJson = Object.fromEntries(formData.entries());
 		const theoremNames: string[] = new Array(props.inputs.length).fill("");
-		const quantifiers: string[] = new Array(props.inputs.length).fill("exists");
+		const quantifiers: string[] = new Array(props.inputs.length).fill("");
 		const wanted: Set<number> = new Set();
 		for (const [key, value] of formData.entries()) {
 			let index: number = 0;
