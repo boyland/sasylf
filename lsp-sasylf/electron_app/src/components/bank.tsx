@@ -28,6 +28,11 @@ function Judgment(props: { judgment: judgmentNode }) {
 	));
 	const [open, setOpen] = useState(false);
 
+	const onChange = () => {
+		const event = new Event("resize");
+		document.dispatchEvent(event);
+	};
+
 	return (
 		<>
 			<Button
@@ -39,7 +44,7 @@ function Judgment(props: { judgment: judgmentNode }) {
 			>
 				<code className="rule-like-text">{`judgment ${props.judgment.name}: ${props.judgment.form}`}</code>
 			</Button>
-			<Collapse in={open}>
+			<Collapse in={open} onEntered={onChange} onExited={onChange}>
 				<div id={props.judgment.name}>
 					<div className="d-flex flex-column">{rulesElements}</div>
 				</div>
