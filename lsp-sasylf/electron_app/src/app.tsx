@@ -29,12 +29,15 @@ export default function MyApp() {
 	const [refs, setRefs] = useState({});
 	const [show, setShow] = useState(false);
 	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
+	const [offsetWidth, setOffsetWidth] = useState<number | undefined>(0);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef<HTMLDivElement>(null);
 	const bankRef = useRef<HTMLDivElement>(null);
 	const animRef = useRef(null);
 	const { show: showContextMenu } = useContextMenu({ id: "3" });
+
+	const updateOffsetWidth = () => setOffsetWidth(bankRef.current?.offsetWidth);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -47,9 +50,14 @@ export default function MyApp() {
 		document.addEventListener("keydown", handleKeyDown);
 		document.addEventListener("keyup", handleKeyUp);
 
+		const resizeListener = (_: Event) => updateOffsetWidth();
+
+		document.addEventListener("resize", resizeListener);
+
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
 			document.removeEventListener("keyup", handleKeyUp);
+			document.removeEventListener("resize", resizeListener);
 		};
 	}, []);
 
@@ -172,9 +180,10 @@ export default function MyApp() {
 		}
 	}
 
-	const defaultStyle = {
-		transition: "margin-left 0.3s linear",
-	};
+	const onSelect = (eventKey: string | null) =>
+		setActiveKey(eventKey ? Number(eventKey) : 0);
+
+	useEffect(() => updateOffsetWidth(), [activeKey]);
 
 	return (
 		<DndContext
@@ -183,7 +192,10 @@ export default function MyApp() {
 			onDragEnd={handleDragEnd}
 		>
 			<Bank
-				toggleShow={() => setShow(!show)}
+				toggleShow={() => {
+					setShow(!show);
+					updateOffsetWidth();
+				}}
 				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
 				bankRef={bankRef}
 			/>
@@ -192,18 +204,13 @@ export default function MyApp() {
 					<div
 						ref={animRef}
 						style={{
-							...defaultStyle,
+							transition: "margin-left 0.3s linear",
 							marginLeft: ["entering", "entered"].includes(state)
-								? bankRef.current?.offsetWidth
+								? offsetWidth
 								: 0,
 						}}
 					>
-						<Tab.Container
-							onSelect={(eventKey) =>
-								setActiveKey(eventKey ? Number(eventKey) : 0)
-							}
-							activeKey={activeKey}
-						>
+						<Tab.Container onSelect={onSelect} activeKey={activeKey}>
 							<Nav variant="tabs" className="flex-row">
 								{tabs.map((element) => (
 									<Nav.Item className="d-flex flex-row" key={element.id}>
