@@ -89,10 +89,10 @@ export type tab = {
 	file: string;
 };
 
-export type Data = {
+export type data = {
 	type: string;
 	text?: string;
-	key?: string | null;
+	ind?: string | number | undefined;
 };
 
 export type canvasState = {

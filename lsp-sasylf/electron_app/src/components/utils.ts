@@ -12,7 +12,7 @@ export function extractPremise(conclusion: string, tree: line) {
 	return null;
 }
 
-export function getTree(proofNode: Element | undefined): line | null {
+export function getTree(proofNode: Element | null): line | null {
 	if (!proofNode) return null;
 
 	const containers = proofNode.getElementsByClassName("conclusion");
@@ -43,7 +43,7 @@ type lineText = {
 	premises: line[];
 };
 
-function theoremHelper(root: Element | undefined): lineText[] {
+function theoremHelper(root: Element | null): lineText[] {
 	if (!root) return [];
 
 	const tree = getTree(root);

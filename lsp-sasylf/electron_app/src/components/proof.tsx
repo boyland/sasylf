@@ -4,10 +4,11 @@ import React, {
 	useContext,
 	useRef,
 	RefObject,
+	MouseEventHandler,
 } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
-import { DroppedContext, FileContext } from "./state";
+import { NodeContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
 import { deleteElement, extractPremise } from "./utils";
@@ -25,7 +26,6 @@ function Premises(props: {
 	args: string[];
 	tree: line | null;
 	topdownHandler: TopdownHandler | null;
-	showContextMenu: any;
 }) {
 	if (props.args.length <= 1) return null;
 
@@ -37,7 +37,6 @@ function Premises(props: {
 					conclusion={arg}
 					key={ind}
 					tree={props.tree ? extractPremise(arg, props.tree) : null}
-					showContextMenu={props.showContextMenu}
 					{...(props.topdownHandler
 						? {
 								topdownHandler: {
@@ -68,7 +67,7 @@ const getNumPremises = (ast: ast | null, rule: string) => {
 };
 
 function TopDownNode({ prems }: { prems: string[] }) {
-	const { ast } = useContext(DroppedContext);
+	const { ast } = useContext(NodeContext);
 	const file = useContext(FileContext);
 
 	const [rule, setRule] = useState<string | null>(null);
@@ -96,6 +95,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 			}),
 		);
 	}, []);
+
 	useEffect(() => {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
@@ -110,6 +110,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 
 		return () => document.removeEventListener("topdown-rule", listener);
 	}, [id, numUsed]);
+
 	useEffect(() => {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
@@ -125,6 +126,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 
 		return () => document.removeEventListener("topdown-tree", listener);
 	}, [id, trees, premises]);
+
 	useEffect(() => {
 		if (!rule) return;
 
@@ -137,6 +139,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 			.topdownParse({ premises }, rule, file)
 			.then((res: string) => setConclusion(res));
 	}, [numUsed, rule]);
+
 	useEffect(() => {
 		if (!conclusion || !rule) return;
 		if (trees.filter((elem) => elem == null).length) return;
@@ -221,11 +224,10 @@ interface nodeProps {
 	ind?: number;
 	topdownHandler?: TopdownHandler;
 	deleteHandler?: () => void;
-	showContextMenu: any;
 }
 
 function ProofNode(props: nodeProps) {
-	const { addRef } = useContext(DroppedContext);
+	const { addRef, showContextMenu } = useContext(NodeContext);
 	const file = useContext(FileContext);
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
@@ -279,7 +281,7 @@ function ProofNode(props: nodeProps) {
 				props.className ? props.className : ""
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
-			onContextMenu={props.showContextMenu}
+			onContextMenu={showContextMenu}
 		>
 			{props.root ? (
 				<CloseButton
@@ -305,7 +307,6 @@ function ProofNode(props: nodeProps) {
 								? props.topdownHandler
 								: null
 						}
-						showContextMenu={props.showContextMenu}
 					/>
 				) : tree ? (
 					<Premises
@@ -316,7 +317,6 @@ function ProofNode(props: nodeProps) {
 								? props.topdownHandler
 								: null
 						}
-						showContextMenu={props.showContextMenu}
 					/>
 				) : (
 					<Droppable
@@ -340,7 +340,7 @@ function ProofNode(props: nodeProps) {
 						data={{
 							type: "node",
 							text: props.conclusion,
-							ind: props.root ? props.ind : null,
+							ind: props.root ? props.ind : undefined,
 						}}
 					>
 						<span className="centered-text no-wrap panning-excluded">
@@ -378,7 +378,6 @@ export default function ProofArea(props: {
 	proofRef?: RefObject<HTMLDivElement>;
 	inputs: input[];
 	deleteHandler: (ind: number) => void;
-	showContextMenu: any;
 }) {
 	return (
 		<>
@@ -393,7 +392,6 @@ export default function ProofArea(props: {
 						deleteHandler={() => {
 							props.deleteHandler(ind);
 						}}
-						showContextMenu={props.showContextMenu}
 						root
 					/>
 				))}

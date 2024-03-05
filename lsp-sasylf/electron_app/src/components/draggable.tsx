@@ -1,11 +1,11 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { Data } from "./utils";
+import { data } from "../types";
 
 interface draggableProps {
 	id: number | string;
 	children: any;
-	data: Data;
+	data: data;
 }
 
 export default function Draggable(props: draggableProps) {

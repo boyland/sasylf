@@ -1,13 +1,15 @@
-import { createContext, RefObject } from "react";
+import { createContext, RefObject, MouseEventHandler } from "react";
 import { ast } from "../types";
 
 type Context = {
 	addRef: (id: number, ref: RefObject<HTMLDivElement>) => void;
+	showContextMenu: MouseEventHandler<HTMLDivElement>;
 	ast: ast | null;
 };
 
-export const DroppedContext = createContext<Context>({
+export const NodeContext = createContext<Context>({
 	addRef: (_, __) => {},
+	showContextMenu: (_) => {},
 	ast: null,
 });
 

@@ -6,7 +6,7 @@ import ProofArea from "./components/proof";
 import Canvas from "./components/canvas";
 import Export from "./components/export";
 import Input from "./components/input";
-import { DroppedContext, FileContext } from "./components/state";
+import { NodeContext, FileContext } from "./components/state";
 import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import Tab from "react-bootstrap/Tab";
@@ -26,7 +26,9 @@ export default function MyApp() {
 	const [showExport, setShowExport] = useState(false);
 	const [showInput, setShowInput] = useState(false);
 	const [activeKey, setActiveKey] = useState<number>(0);
-	const [refs, setRefs] = useState({});
+	const [refs, setRefs] = useState<Record<number, RefObject<HTMLDivElement>>>(
+		{},
+	);
 	const [show, setShow] = useState(false);
 	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
 	const [offsetWidth, setOffsetWidth] = useState<number | undefined>(0);
@@ -81,8 +83,16 @@ export default function MyApp() {
 	};
 
 	useEffect(() => {
-		(window as any).electronAPI.addAST(({ compUnit, name, file }) =>
-			addTab(compUnit, name, file),
+		(window as any).electronAPI.addAST(
+			({
+				compUnit,
+				name,
+				file,
+			}: {
+				compUnit: ast | null;
+				name: string | null;
+				file: string;
+			}) => addTab(compUnit, name, file),
 		);
 
 		(window as any).electronAPI.showModal(() => {
@@ -147,7 +157,7 @@ export default function MyApp() {
 			const which = overType === "topdown";
 			const event = new CustomEvent(which ? "topdown-tree" : "tree", {
 				detail: {
-					tree: getTree(refs[active.id].current),
+					tree: getTree(refs[active.id as number].current),
 					overId: over.id,
 					text: which ? activeData?.text : "",
 				},
@@ -239,10 +249,19 @@ export default function MyApp() {
 											inputs={element.inputs}
 											proofRef={proofRef}
 										>
-											<DroppedContext.Provider
+											<NodeContext.Provider
 												value={{
 													addRef,
 													ast: element.ast,
+													showContextMenu: (event) => {
+														showContextMenu({
+															event: event,
+															position: {
+																x: event.clientX,
+																y: event.clientY,
+															},
+														});
+													},
 												}}
 											>
 												<FileContext.Provider value={element.file}>
@@ -253,15 +272,6 @@ export default function MyApp() {
 															deleteHandler={(ind: number) =>
 																deleteInput(element.id, ind)
 															}
-															showContextMenu={(event: any) => {
-																showContextMenu({
-																	event: event,
-																	position: {
-																		x: event.clientX,
-																		y: event.clientY,
-																	},
-																});
-															}}
 														/>
 													) : (
 														<ProofArea
@@ -269,19 +279,10 @@ export default function MyApp() {
 															deleteHandler={(ind: number) =>
 																deleteInput(element.id, ind)
 															}
-															showContextMenu={(event: any) => {
-																showContextMenu({
-																	event: event,
-																	position: {
-																		x: event.clientX,
-																		y: event.clientY,
-																	},
-																});
-															}}
 														/>
 													)}
 												</FileContext.Provider>
-											</DroppedContext.Provider>
+											</NodeContext.Provider>
 										</Canvas>
 										<Button
 											variant="success"
