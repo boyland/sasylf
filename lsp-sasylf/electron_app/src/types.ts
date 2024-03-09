@@ -101,3 +101,9 @@ export type canvasState = {
 	scale: number;
 	id: number;
 };
+
+export enum Direction {
+	Both,
+	Up,
+	Down,
+}

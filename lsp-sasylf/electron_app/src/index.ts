@@ -105,6 +105,29 @@ function setupMenu(mainWindow: BrowserWindow) {
 	Menu.setApplicationMenu(newMenu);
 }
 
+function substitute(
+	_: IpcMainInvokeEvent,
+	conclusion: string,
+	oldVar: string,
+	newVar: string,
+	file: string,
+) {
+	const command = spawnSync(
+		"java",
+		[
+			"-jar",
+			`${__dirname}/../../SASyLF.jar`,
+			`--substitute="${conclusion}"`,
+			`--old="${oldVar}"`,
+			`--new="${newVar}"`,
+			file,
+		],
+		{ shell: true },
+	);
+
+	return command.stdout.toString();
+}
+
 function parse(
 	_: IpcMainInvokeEvent,
 	conclusion: string,
@@ -174,6 +197,7 @@ const setup = (): void => {
 	const mainWindow = createWindow();
 	setupMenu(mainWindow);
 
+	ipcMain.handle("substitute", substitute);
 	ipcMain.handle("parse", parse);
 	ipcMain.handle("topdown-parse", topdownParse);
 	ipcMain.handle("add-to-clipboard", addToClipboard);

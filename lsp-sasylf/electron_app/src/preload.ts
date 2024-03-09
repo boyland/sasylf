@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from "electron";
 import { ast } from "./types";
 
 contextBridge.exposeInMainWorld("electronAPI", {
+	substitute: (clause: string, oldVar: string, newVar: string, file: string) =>
+		ipcRenderer.invoke("substitute", clause, oldVar, newVar, file),
 	parse: (conclusion: string, rule: string, file: string) =>
 		ipcRenderer.invoke("parse", conclusion, rule, file),
 	addAST: (

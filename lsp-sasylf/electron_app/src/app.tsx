@@ -253,9 +253,13 @@ export default function MyApp() {
 												value={{
 													addRef,
 													ast: element.ast,
-													showContextMenu: (event) => {
+													showContextMenu: (
+														event: React.MouseEvent,
+														nodeId: number,
+													) => {
 														showContextMenu({
 															event: event,
+															props: { nodeId },
 															position: {
 																x: event.clientX,
 																y: event.clientY,

@@ -12,6 +12,30 @@ export function extractPremise(conclusion: string, tree: line) {
 	return null;
 }
 
+export function getChildrenIds(proofNode: Element | null) {
+	const res: number[] = [];
+
+	if (!proofNode) return res;
+
+	const premiseNodes = proofNode.getElementsByClassName("premises");
+
+	for (const premise of premiseNodes) {
+		const containers = premise.getElementsByClassName("premise");
+		const container = containers[containers.length - 1];
+		res.push(parseInt(container.id));
+	}
+
+	return res;
+}
+
+export function getParentId(proofNode: Element | null) {
+	if (!proofNode || proofNode.classList.contains("root-node")) return -1;
+
+	const res = proofNode.parentElement?.parentElement?.parentElement?.id;
+
+	return res ? parseInt(res) : -1;
+}
+
 export function getTree(proofNode: Element | null): line | null {
 	if (!proofNode) return null;
 

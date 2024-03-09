@@ -4,15 +4,19 @@ import React, {
 	useContext,
 	useRef,
 	RefObject,
-	MouseEventHandler,
 } from "react";
 import Droppable from "./droppable";
 import CloseButton from "react-bootstrap/CloseButton";
 import { NodeContext, FileContext } from "./state";
 import Form from "react-bootstrap/Form";
 import Draggable from "./draggable";
-import { deleteElement, extractPremise } from "./utils";
-import { line, input, ast } from "../types";
+import {
+	deleteElement,
+	extractPremise,
+	getChildrenIds,
+	getParentId,
+} from "./utils";
+import { line, input, ast, Direction } from "../types";
 import ErrorModal from "./error";
 
 let nodeCounter = 2;
@@ -216,6 +220,36 @@ function TopDownNode({ prems }: { prems: string[] }) {
 	);
 }
 
+function propagateUp(
+	node: Element | null,
+	data: { oldvar: string; newvar: string },
+) {
+	const parId = getParentId(node);
+
+	if (parId < 0) return;
+
+	const event = new CustomEvent("replace", {
+		detail: { nodeId: parId, data, dir: Direction.Up },
+	});
+
+	document.dispatchEvent(event);
+}
+
+function propagateDown(
+	node: Element | null,
+	data: { oldvar: string; newvar: string },
+) {
+	const childIds = getChildrenIds(node);
+
+	for (const id of childIds) {
+		const event = new CustomEvent("replace", {
+			detail: { nodeId: id, data, dir: Direction.Down },
+		});
+
+		document.dispatchEvent(event);
+	}
+}
+
 interface nodeProps {
 	conclusion: string;
 	className?: string;
@@ -229,11 +263,16 @@ interface nodeProps {
 function ProofNode(props: nodeProps) {
 	const { addRef, showContextMenu } = useContext(NodeContext);
 	const file = useContext(FileContext);
+
 	const [id, setId] = useState(0);
 	const [args, setArgs] = useState<string[] | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
 	const [rule, setRule] = useState<string | null>(null);
-	let proofNodeRef = useRef(null);
+	const [conclusion, setConclusion] = useState("");
+	const [show, setShow] = useState(false);
+	const [errorText, setErrorText] = useState("");
+
+	const proofNodeRef = useRef<HTMLDivElement>(null);
 
 	const safeSetTree = (tree: line | null) =>
 		setTree(tree && tree.rule === "Put rule here" ? null : tree);
@@ -243,6 +282,9 @@ function ProofNode(props: nodeProps) {
 		safeSetTree(props.tree);
 		addRef(nodeCounter++ - 1, proofNodeRef);
 	}, []);
+
+	useEffect(() => setConclusion(props.conclusion), [props.conclusion]);
+
 	useEffect(() => {
 		const listener = (event: Event) => {
 			const detail = (event as CustomEvent).detail;
@@ -256,24 +298,50 @@ function ProofNode(props: nodeProps) {
 			if (id === detail.overId) if (!rule && !tree) setRule(detail.text);
 		};
 
+		const replaceListener = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+
+			if (id === detail.nodeId)
+				(window as any).electronAPI
+					.substitute(conclusion, detail.data.oldvar, detail.data.newvar, file)
+					.then((res: string) => {
+						if (res !== "null") {
+							if (res.startsWith("Err:")) {
+								setErrorText(res.slice(4));
+								setShow(true);
+							} else {
+								setConclusion(res);
+
+								if ([Direction.Both, Direction.Up].includes(detail.dir))
+									propagateUp(proofNodeRef.current, detail.data);
+
+								if ([Direction.Both, Direction.Down].includes(detail.dir))
+									propagateDown(proofNodeRef.current, detail.data);
+							}
+						}
+					});
+		};
+
 		document.addEventListener("tree", listener);
 		document.addEventListener("rule", ruleListener);
+		document.addEventListener("replace", replaceListener);
 
 		return () => {
 			document.removeEventListener("tree", listener);
 			document.removeEventListener("rule", ruleListener);
+			document.removeEventListener("replace", replaceListener);
 		};
-	}, [id]);
+	}, [id, rule, tree, conclusion]);
+
 	useEffect(() => {
 		if (rule && !tree)
 			(window as any).electronAPI
-				.parse(props.conclusion, rule, file)
+				.parse(conclusion, rule, file)
 				.then((res: string[]) => setArgs(res));
 		else setArgs(null);
 	}, [rule]);
-	useEffect(() => {
-		safeSetTree(props.tree);
-	}, [props.tree]);
+
+	useEffect(() => safeSetTree(props.tree), [props.tree]);
 
 	return (
 		<div
@@ -281,14 +349,20 @@ function ProofNode(props: nodeProps) {
 				props.className ? props.className : ""
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
-			onContextMenu={showContextMenu}
+			id={id.toString()}
 		>
+			<ErrorModal
+				show={show}
+				text={errorText}
+				toggleShow={() => setShow(!show)}
+			/>
 			{props.root ? (
 				<CloseButton
 					className="topdown-close"
 					onClick={() => (props.deleteHandler ? props.deleteHandler() : null)}
 				/>
 			) : null}
+
 			{props.topdownHandler && props.topdownHandler.level ? (
 				<CloseButton
 					className="topdown-close"
@@ -297,6 +371,7 @@ function ProofNode(props: nodeProps) {
 					}
 				/>
 			) : null}
+
 			<div className="d-flex flex-column">
 				{args ? (
 					<Premises
@@ -328,6 +403,7 @@ function ProofNode(props: nodeProps) {
 					</Droppable>
 				)}
 				<div className="node-line"></div>
+
 				<div className="d-flex flex-row conclusion">
 					<Form.Control
 						size="sm"
@@ -335,6 +411,7 @@ function ProofNode(props: nodeProps) {
 						type="text"
 						placeholder="Name"
 					/>
+
 					<Draggable
 						id={id}
 						data={{
@@ -343,12 +420,16 @@ function ProofNode(props: nodeProps) {
 							ind: props.root ? props.ind : undefined,
 						}}
 					>
-						<span className="centered-text no-wrap panning-excluded">
-							{props.conclusion}
+						<span
+							className="centered-text no-wrap panning-excluded"
+							onContextMenu={(event) => showContextMenu(event, id)}
+						>
+							{conclusion}
 						</span>
 					</Draggable>
 				</div>
 			</div>
+
 			<Droppable
 				id={id}
 				data={{ type: "rule" }}

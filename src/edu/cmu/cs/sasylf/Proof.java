@@ -485,6 +485,26 @@ public class Proof {
 		return null;
 	}
 
+	private static String oldVar = null;
+
+	public static void setOldVar(String oldVar) { Proof.oldVar = oldVar; }
+
+	private static String newVar = null;
+
+	public static void setNewVar(String newVar) { Proof.newVar = newVar; }
+
+	private static Clause sclause = null;
+
+	public static Clause getSclause() { return sclause; }
+
+	public static void setSclause(Clause substitutee) {
+		Proof.sclause = substitutee;
+	}
+
+	private static String newClause = null;
+
+	public static String getNewClause() { return newClause; }
+
 	private static ObjectNode premises = objectMapper.createObjectNode();
 	private static ObjectNode conclusions = objectMapper.createObjectNode();
 
@@ -565,6 +585,39 @@ public class Proof {
 
 		List<Term> addedTypes = new ArrayList<Term>();
 
+		if (sclause != null) {
+			try {
+				syntaxTree.typecheck(ctx, id);
+				sclause.typecheck(ctx);
+
+				Element e = sclause.computeClause(ctx);
+				FreeVar oldTerm = null;
+
+				for (FreeVar var : e.asTerm().getFreeVariables())
+					if (var.getName().equals(oldVar)) {
+						oldTerm = var;
+						break;
+					}
+
+				if (oldTerm != null) {
+					Substitution sub =
+							new Substitution(Facade.FVar(newVar, oldTerm.getType()), oldTerm);
+					Term t = e.asTerm().substitute(sub);
+					TermPrinter tp =
+							new TermPrinter(ctx, null, new Location(filename, 0, 0), false);
+
+					if (ctx.inputVars == null) ctx.inputVars = new HashSet<FreeVar>();
+					if (ctx.outputVars == null) ctx.outputVars = new HashSet<FreeVar>();
+					if (ctx.recursiveTheorems == null)
+						ctx.recursiveTheorems = new HashMap<String, Theorem>();
+
+					newClause = tp.toString(t, true);
+				}
+			} catch (Exception exp) {
+				newClause = "Err:" + exp.getMessage();
+			}
+		}
+
 		if (c != null && r != null) {
 			RuleLike ruleLike = findRule(Proof.r);
 			syntaxTree.typecheck(ctx, id);
@@ -622,12 +675,9 @@ public class Proof {
 				inputs.add(e.asFact(ctx, ctx.assumedContext));
 			}
 
-			// TODO: Add assert to make sure the number of premises passed in is
-			// consistent with the number of premises expected by the rule
-
 			Term subject = ruleLike.checkApplication(
-					ctx, inputs, conclusion.asFact(ctx, ctx.assumedContext), addedContext, null,
-					true, addedTypes, freshSub, adaptSub, varFree, false, true);
+					ctx, inputs, conclusion.asFact(ctx, ctx.assumedContext), addedContext,
+					null, true, addedTypes, freshSub, adaptSub, varFree, false, true);
 
 			Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 			Term pattern =

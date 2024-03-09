@@ -1,18 +1,16 @@
 package edu.cmu.cs.sasylf;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.StringReader;
 import java.io.Reader;
+import java.io.StringReader;
+
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.PathModuleFinder;
@@ -75,6 +73,25 @@ public class Main {
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
 				Proof.setClause(parser.ExprToNL());
+				continue;
+			}
+			if (args[i].startsWith("--substitute=")) {
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
+				String str = args[i].substring(13);
+				StringReader reader = new StringReader(str);
+				DSLToolkitParser parser = new DSLToolkitParser(reader);
+				Proof.setSclause(parser.ExprToNL());
+				continue;
+			}
+			if (args[i].startsWith("--old=")) {
+				Proof.setOldVar(args[i].substring(6));
+				continue;
+			}
+			if (args[i].startsWith("--new=")) {
+				Proof.setNewVar(args[i].substring(6));
 				continue;
 			}
 			if (args[i].startsWith("--premises=")) {
@@ -238,6 +255,9 @@ public class Main {
 			}
 			if (Proof.getPremise() != null && Proof.getRule() != null) {
 				System.out.println(Proof.getConclusions());
+			}
+			if (Proof.getSclause() != null) {
+				System.out.print(Proof.getNewClause());
 			}
 		}
 		System.exit(exitCode);
