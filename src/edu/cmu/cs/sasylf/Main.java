@@ -18,8 +18,10 @@ import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Report;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
 
@@ -99,7 +101,10 @@ public class Main {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				Proof.setPremise(args[i].substring(11));
+				try {
+					Proof.setPremise(args[i].substring(11));
+				} catch (Exception e) {
+				}
 				continue;
 			}
 			if (args[i].startsWith("--rule=")) {
@@ -199,11 +204,6 @@ public class Main {
 					}
 				}
 				try {
-					/**
-					 * We take the input from stdin and turn
-					 * that into a VSDocument that is needed
-					 * for the quickfixes.
-					 */
 					InputStreamReader r;
 					if (args[i].startsWith("--stdin"))
 						r = new InputStreamReader(System.in);
@@ -251,13 +251,16 @@ public class Main {
 				System.out.println(Proof.getJSON());
 			}
 			if (Proof.getClause() != null && Proof.getRule() != null) {
-				System.out.println(Proof.getPremises());
+				if (newErrorCount == 0) System.out.println(Proof.getPremises());
+				else System.out.println(pf.getErrorReports());
 			}
 			if (Proof.getPremise() != null && Proof.getRule() != null) {
-				System.out.println(Proof.getConclusions());
+				if (newErrorCount == 0) System.out.println(Proof.getConclusions());
+				else System.out.println(pf.getErrorReports());
 			}
 			if (Proof.getSclause() != null) {
-				System.out.print(Proof.getNewClause());
+				if (newErrorCount == 0) System.out.println(Proof.getNewClause());
+				else System.out.println(pf.getErrorReports());
 			}
 		}
 		System.exit(exitCode);

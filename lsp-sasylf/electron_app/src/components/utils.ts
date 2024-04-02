@@ -1,5 +1,9 @@
 import { line } from "../types";
 
+export function capitalize(str: string) {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export const deleteElement = <T>(arr: T[], index: number) => [
 	...arr.slice(0, index),
 	...arr.slice(index + 1),

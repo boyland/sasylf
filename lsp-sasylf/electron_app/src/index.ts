@@ -125,7 +125,7 @@ function substitute(
 		{ shell: true },
 	);
 
-	return command.stdout.toString();
+	return JSON.parse(command.stdout.toString());
 }
 
 function parse(
@@ -146,7 +146,7 @@ function parse(
 		{ shell: true },
 	);
 
-	return JSON.parse(command.stdout.toString()).arguments;
+	return JSON.parse(command.stdout.toString());
 }
 
 function topdownParse(

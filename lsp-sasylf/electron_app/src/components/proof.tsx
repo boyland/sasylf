@@ -15,6 +15,7 @@ import {
 	extractPremise,
 	getChildrenIds,
 	getParentId,
+	capitalize,
 } from "./utils";
 import { line, input, ast, Direction } from "../types";
 import ErrorModal from "./error";
@@ -82,6 +83,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 	const [conclusion, setConclusion] = useState<string | null>(null);
 	const [tree, setTree] = useState<line | null>(null);
 	const [showModal, setShowModal] = useState(false);
+	const [errorText, setErrorText] = useState("");
 
 	useEffect(() => {
 		setId(nodeCounter++);
@@ -105,8 +107,10 @@ function TopDownNode({ prems }: { prems: string[] }) {
 			const detail = (event as CustomEvent).detail;
 
 			if (detail.overId == id + 1) {
-				if (getNumPremises(ast, detail.text) < numUsed) setShowModal(true);
-				else setRule(detail.text);
+				if (getNumPremises(ast, detail.text) < numUsed) {
+					setErrorText("Wrong number of premises for specified rule");
+					setShowModal(true);
+				} else setRule(detail.text);
 			}
 		};
 
@@ -141,7 +145,17 @@ function TopDownNode({ prems }: { prems: string[] }) {
 
 		(window as any).electronAPI
 			.topdownParse({ premises }, rule, file)
-			.then((res: string) => setConclusion(res));
+			.then((res: { conclusion?: string[]; errors?: string[] }) => {
+				if (res.conclusion) setConclusion(res.conclusion[0]);
+				else if (res.errors) {
+					setErrorText(
+						res.errors
+							.map((error) => capitalize(error.split("error: ")[1]))
+							.join("\n"),
+					);
+					setShowModal(true);
+				}
+			});
 	}, [numUsed, rule]);
 
 	useEffect(() => {
@@ -161,7 +175,7 @@ function TopDownNode({ prems }: { prems: string[] }) {
 		<>
 			<ErrorModal
 				show={showModal}
-				text="Wrong number of premises for specified rule"
+				text={errorText}
 				toggleShow={() => setShowModal(!showModal)}
 			/>
 			{conclusion ? (
@@ -304,13 +318,17 @@ function ProofNode(props: nodeProps) {
 			if (id === detail.nodeId)
 				(window as any).electronAPI
 					.substitute(conclusion, detail.data.oldvar, detail.data.newvar, file)
-					.then((res: string) => {
-						if (res !== "null") {
-							if (res.startsWith("Err:")) {
-								setErrorText(res.slice(4));
+					.then((res: { result?: string; errors?: string[] }) => {
+						if (Object.keys(res).length != 0) {
+							if (res.errors) {
+								setErrorText(
+									res.errors
+										.map((error) => capitalize(error.split("error: ")[1]))
+										.join("\n"),
+								);
 								setShow(true);
-							} else {
-								setConclusion(res);
+							} else if (res.result) {
+								setConclusion(res.result);
 
 								if ([Direction.Both, Direction.Up].includes(detail.dir))
 									propagateUp(proofNodeRef.current, detail.data);
@@ -337,7 +355,17 @@ function ProofNode(props: nodeProps) {
 		if (rule && !tree)
 			(window as any).electronAPI
 				.parse(conclusion, rule, file)
-				.then((res: string[]) => setArgs(res));
+				.then((res: { arguments?: string[]; errors?: string[] }) => {
+					if (res.arguments) setArgs(res.arguments);
+					else if (res.errors) {
+						setErrorText(
+							res.errors
+								.map((error) => capitalize(error.split("error: ")[1]))
+								.join("\n"),
+						);
+						setShow(true);
+					}
+				});
 		else setArgs(null);
 	}, [rule]);
 
