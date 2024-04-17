@@ -78,10 +78,10 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--substitute=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
+				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				// }
 				String str = args[i].substring(13);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
@@ -93,7 +93,10 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--new=")) {
-				Proof.setNewVar(args[i].substring(6));
+				String str = args[i].substring(6);
+				StringReader reader = new StringReader(str);
+				DSLToolkitParser parser = new DSLToolkitParser(reader);
+				Proof.setNewVar(parser.ExprToNL());
 				continue;
 			}
 			if (args[i].startsWith("--premises=")) {

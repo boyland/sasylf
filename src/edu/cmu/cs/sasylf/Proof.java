@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.Context;
+import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Fact;
@@ -41,7 +42,6 @@ import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
-import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
 import edu.cmu.cs.sasylf.parser.TokenMgrError;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -510,9 +510,9 @@ public class Proof {
 
 	public static void setOldVar(String oldVar) { Proof.oldVar = oldVar; }
 
-	private static String newVar = null;
+	private static Clause newVar = null;
 
-	public static void setNewVar(String newVar) { Proof.newVar = newVar; }
+	public static void setNewVar(Clause newVar) { Proof.newVar = newVar; }
 
 	private static Clause sclause = null;
 
@@ -621,12 +621,15 @@ public class Proof {
 					}
 
 				if (oldTerm != null) {
-					NonTerminal nt =
-							new NonTerminal(newVar, new Location(filename, 0, 0));
-					nt.typecheck(ctx);
+					// NonTerminal nt =
+					// 		new NonTerminal(newVar, new Location(filename, 0, 0));
+					// nt.typecheck(ctx);
+					newVar.typecheck(ctx);
 
-					Substitution sub =
-							new Substitution(Facade.FVar(newVar, nt.getTypeTerm()), oldTerm);
+					Substitution sub = new Substitution(
+							Facade.FVar(newVar.toString(), newVar.asTerm().getType()),
+							oldTerm);
+					System.out.println("Sub: " + sub);
 					Term t = e.asTerm().substitute(sub);
 					TermPrinter tp =
 							new TermPrinter(ctx, null, new Location(filename, 0, 0), false);
@@ -639,6 +642,7 @@ public class Proof {
 					newClause.put("result", tp.toString(t, true));
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
