@@ -621,15 +621,11 @@ public class Proof {
 					}
 
 				if (oldTerm != null) {
-					// NonTerminal nt =
-					// 		new NonTerminal(newVar, new Location(filename, 0, 0));
-					// nt.typecheck(ctx);
-					newVar.typecheck(ctx);
+					Clause c = newVar.typecheck(ctx);
+					Element ce = c.computeClause(ctx);
 
 					Substitution sub = new Substitution(
-							Facade.FVar(newVar.toString(), newVar.asTerm().getType()),
-							oldTerm);
-					System.out.println("Sub: " + sub);
+							Facade.FVar(newVar.toString(), ce.asTerm().getType()), oldTerm);
 					Term t = e.asTerm().substitute(sub);
 					TermPrinter tp =
 							new TermPrinter(ctx, null, new Location(filename, 0, 0), false);
