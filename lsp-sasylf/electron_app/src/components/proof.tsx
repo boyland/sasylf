@@ -199,6 +199,10 @@ function TopDownNode({
 						level: false,
 					}}
 					deleteHandler={deleteHandler}
+					topdownClose={() => {
+						setConclusion(null);
+						setRule(null);
+					}}
 					root
 				/>
 			) : (
@@ -286,6 +290,7 @@ interface nodeProps {
 	ind?: number;
 	topdownHandler?: TopdownHandler;
 	deleteHandler?: () => void;
+	topdownClose?: () => void;
 }
 
 function ProofNode(props: nodeProps) {
@@ -486,8 +491,11 @@ function ProofNode(props: nodeProps) {
 							{tree ? tree.rule : rule}{" "}
 							<CloseButton
 								onClick={() => {
-									setRule(null);
-									setTree(null);
+									if (props.topdownClose) props.topdownClose();
+									else {
+										setRule(null);
+										setTree(null);
+									}
 								}}
 							/>
 						</>
