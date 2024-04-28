@@ -167,7 +167,7 @@ function topdownParse(
 		{ shell: true },
 	);
 
-	return JSON.parse(command.stdout.toString()).conclusion[0];
+	return JSON.parse(command.stdout.toString());
 }
 
 function addToClipboard(_: IpcMainInvokeEvent, content: string) {

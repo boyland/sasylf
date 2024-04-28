@@ -52,6 +52,9 @@ export default function Export(props: ExportProps) {
 		props.onHide();
 	};
 
+	const rootNodes = props.proofRef.current?.getElementsByClassName("root-node");
+	const rootNodesArray = rootNodes ? Array.from(rootNodes) : [];
+
 	return (
 		<Modal show={props.show} onHide={props.onHide}>
 			<Modal.Header closeButton>
@@ -59,26 +62,33 @@ export default function Export(props: ExportProps) {
 			</Modal.Header>
 			<Modal.Body>
 				<Form method="post" onSubmit={handleExport}>
-					{props.inputs.map(({ conclusion, free }, index) => (
-						<InputGroup size="sm" key={index}>
-							<InputGroup.Checkbox name={`${index.toString()}-index`} />
-							<InputGroup.Text>{conclusion}</InputGroup.Text>
-							{free ? (
+					{rootNodesArray.map((rootNode, index) => {
+						const containers = rootNode.getElementsByClassName("conclusion");
+						const container = containers[containers.length - 1];
+						const conclusion =
+							container.getElementsByTagName("span")[0].textContent;
+
+						return (
+							<InputGroup size="sm" key={index}>
+								<InputGroup.Checkbox name={`${index.toString()}-index`} />
+								<InputGroup.Text>{conclusion}</InputGroup.Text>
+								{rootNode.classList.contains("free") ? (
+									<Form.Control
+										name={`${index.toString()}-forall`}
+										type="text"
+										placeholder="Quantifiers"
+									/>
+								) : (
+									<></>
+								)}
 								<Form.Control
-									name={`${index.toString()}-forall`}
+									name={`${index.toString()}-name`}
 									type="text"
-									placeholder="Quantifiers"
+									placeholder="Theorem Name"
 								/>
-							) : (
-								<></>
-							)}
-							<Form.Control
-								name={`${index.toString()}-name`}
-								type="text"
-								placeholder="Theorem Name"
-							/>
-						</InputGroup>
-					))}
+							</InputGroup>
+						);
+					})}
 					<Form.Check
 						type="switch"
 						className="m-1"

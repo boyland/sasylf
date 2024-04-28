@@ -71,7 +71,15 @@ const getNumPremises = (ast: ast | null, rule: string) => {
 	return 0;
 };
 
-function TopDownNode({ prems }: { prems: string[] }) {
+function TopDownNode({
+	prems,
+	deleteHandler,
+	className,
+}: {
+	prems: string[];
+	deleteHandler: () => void;
+	className: string;
+}) {
 	const { ast } = useContext(NodeContext);
 	const file = useContext(FileContext);
 
@@ -180,16 +188,19 @@ function TopDownNode({ prems }: { prems: string[] }) {
 			/>
 			{conclusion ? (
 				<ProofNode
+					className={className}
 					conclusion={conclusion}
 					tree={tree}
 					topdownHandler={{
 						fn: (ind: number) => deletePremise(ind),
 						level: false,
 					}}
+					deleteHandler={deleteHandler}
 					root
 				/>
 			) : (
-				<div className="d-flex flex-row topdown-node m-2">
+				<div className={"d-flex flex-row topdown-node m-2"}>
+					<CloseButton className="topdown-close" onClick={deleteHandler} />
 					<div className="d-flex flex-column">
 						<div className="d-flex flex-row">
 							{premises.map((premise, ind) => (
@@ -491,19 +502,30 @@ export default function ProofArea(props: {
 	return (
 		<>
 			<div className="d-flex proof-area" ref={props.proofRef}>
-				{props.inputs.map(({ conclusion, free, id }, ind) => (
-					<ProofNode
-						className={`${free ? "free" : ""}`}
-						ind={ind}
-						key={id}
-						conclusion={conclusion}
-						tree={null}
-						deleteHandler={() => {
-							props.deleteHandler(ind);
-						}}
-						root
-					/>
-				))}
+				{props.inputs.map(({ input, free, id, type }, ind) =>
+					type === "Conclusion" ? (
+						<ProofNode
+							className={`${free ? "free" : ""}`}
+							ind={ind}
+							key={id}
+							conclusion={input[0]}
+							tree={null}
+							deleteHandler={() => {
+								props.deleteHandler(ind);
+							}}
+							root
+						/>
+					) : (
+						<TopDownNode
+							className={`${free ? "free" : ""}`}
+							prems={input}
+							key={id}
+							deleteHandler={() => {
+								props.deleteHandler(ind);
+							}}
+						/>
+					),
+				)}
 			</div>
 		</>
 	);

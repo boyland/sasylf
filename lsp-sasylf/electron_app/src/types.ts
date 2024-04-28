@@ -77,7 +77,8 @@ export type line = {
 
 export type input = {
 	free: boolean;
-	conclusion: string;
+	input: string[];
+	type: string;
 	id: number;
 };
 
