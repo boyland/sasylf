@@ -162,6 +162,9 @@ function TopDownNode({
 							.join("\n"),
 					);
 					setShowModal(true);
+				} else {
+					setErrorText("Invalid rule");
+					setShowModal(true);
 				}
 			});
 	}, [numUsed, rule]);
@@ -374,6 +377,9 @@ function ProofNode(props: nodeProps) {
 								.map((error) => capitalize(error.split("error: ")[1]))
 								.join("\n"),
 						);
+						setShow(true);
+					} else {
+						setErrorText("Invalid rule");
 						setShow(true);
 					}
 				});
