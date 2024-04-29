@@ -396,7 +396,7 @@ function ProofNode(props: nodeProps) {
 	return (
 		<div
 			className={`d-flex flex-row proof-node ${
-				props.className ? props.className : ""
+				props.className || ""
 			} ${props.root ? "root-node" : "m-2"}`}
 			ref={proofNodeRef}
 			id={id.toString()}

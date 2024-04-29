@@ -212,7 +212,7 @@ const setup = (): void => {
 		mainWindow.webContents.on("did-finish-load", () => {
 			mainWindow.webContents.send("add-ast", {
 				compUnit: JSON.parse(process.argv[2]),
-				name: "untitled",
+				name: path.basename(process.argv[3]),
 				file: process.argv[3],
 			});
 		});
