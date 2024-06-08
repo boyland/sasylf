@@ -221,11 +221,8 @@ public class Main {
 					// System.err.println("Internal SASyLF
 					// error analyzing " + filename
 					// + " !");
-					e.printStackTrace(); // unexpected
-															 // exception
-					ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(),
-																				null); // "recoverable" = "don't
-																							 // throw"
+					e.printStackTrace(); // unexpected exception
+					ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, e.toString(), null); // "recoverable" = "don't throw"
 				}
 			}
 
@@ -285,8 +282,7 @@ public class Main {
 	 * the errors separately.
 	 */
 	@Deprecated
-	public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
-																			 ModuleId id, Reader r) {
+	public static CompUnit parseAndCheck(ModuleFinder mf, String filename, ModuleId id, Reader r) {
 		Proof p = new Proof(filename, id);
 		p.parseAndCheck(mf, r);
 		return p.getCompilationUnit();
