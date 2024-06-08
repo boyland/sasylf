@@ -7,7 +7,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	parse: (conclusion: string, rule: string, file: string) =>
 		ipcRenderer.invoke("parse", conclusion, rule, file),
 	addAST: (
-		callback: (value: { compUnit: ast; name: string; file: string }) => void,
+		callback: (value: {
+			compUnit: ast;
+			name: string;
+			file: string;
+			unicode: string[];
+		}) => void,
 	) =>
 		ipcRenderer.on("add-ast", (_event, value) => {
 			callback(value);

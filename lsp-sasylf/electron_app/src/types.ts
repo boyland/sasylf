@@ -88,6 +88,7 @@ export type tab = {
 	name: string;
 	inputs: input[];
 	file: string;
+	unicode: string[];
 };
 
 export type data = {
