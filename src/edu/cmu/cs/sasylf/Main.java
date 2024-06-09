@@ -70,10 +70,10 @@ public class Main {
 
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].startsWith("--parse=")) {
-				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				// }
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String str = args[i].substring(8);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
@@ -81,10 +81,10 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--substitute=")) {
-				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				// }
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String str = args[i].substring(13);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
@@ -114,10 +114,10 @@ public class Main {
 				continue;
 			}
 			if (args[i].startsWith("--rule=")) {
-				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				// }
+				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				}
 				String rule = args[i].substring(7);
 				lspHandler.setRule(rule);
 				continue;

@@ -394,8 +394,6 @@ public class Proof {
 						break;
 					}
 
-                System.out.println(oldTerm);
-
 				if (oldTerm != null) {
 					Clause c = newVar.typecheck(ctx);
 					Element ce = c.computeClause(ctx);
