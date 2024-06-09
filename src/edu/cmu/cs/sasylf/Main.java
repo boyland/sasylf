@@ -24,6 +24,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Report;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
+import edu.cmu.cs.sasylf.util.LSPHandler;
 
 public class Main {
 	/**
@@ -65,38 +66,40 @@ public class Main {
 		String dir = null;
 		PathModuleFinder mf = null;
 		PathModuleFinder defaultMF = new PathModuleFinder("");
+        LSPHandler lspHandler = Proof.getLspHandler();
+
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].startsWith("--parse=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
+				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				// }
 				String str = args[i].substring(8);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				Proof.setClause(parser.ExprToNL());
+				lspHandler.setClause(parser.ExprToNL());
 				continue;
 			}
 			if (args[i].startsWith("--substitute=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
+				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				// }
 				String str = args[i].substring(13);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				Proof.setSclause(parser.ExprToNL());
+				lspHandler.setSclause(parser.ExprToNL());
 				continue;
 			}
 			if (args[i].startsWith("--old=")) {
-				Proof.setOldVar(args[i].substring(6));
+				lspHandler.setOldVar(args[i].substring(6));
 				continue;
 			}
 			if (args[i].startsWith("--new=")) {
 				String str = args[i].substring(6);
 				StringReader reader = new StringReader(str);
 				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				Proof.setNewVar(parser.ExprToNL());
+				lspHandler.setNewVar(parser.ExprToNL());
 				continue;
 			}
 			if (args[i].startsWith("--premises=")) {
@@ -105,18 +108,18 @@ public class Main {
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
 				try {
-					Proof.setPremise(args[i].substring(11));
+					lspHandler.setPremise(args[i].substring(11));
 				} catch (Exception e) {
 				}
 				continue;
 			}
 			if (args[i].startsWith("--rule=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
+				// if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
+				// 	System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+				// 	System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+				// }
 				String rule = args[i].substring(7);
-				Proof.setRule(rule);
+				lspHandler.setRule(rule);
 				continue;
 			}
 			if (args[i].equals("--lsp")) {
@@ -124,7 +127,7 @@ public class Main {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				Proof.setLsp(true);
+				lspHandler.setLsp(true);
 				continue;
 			}
 			if (args[i].equals("--compwhere")) {
@@ -247,19 +250,19 @@ public class Main {
 
 			System.setOut(out);
 			System.setErr(err);
-			if (Proof.getLsp()) {
-				System.out.println(Proof.getJSON());
+			if (lspHandler.getLsp()) {
+				System.out.println(lspHandler.getJson().toString());
 			}
-			if (Proof.getClause() != null && Proof.getRule() != null) {
-				if (newErrorCount == 0) System.out.println(Proof.getPremises());
+			if (lspHandler.getClause() != null && lspHandler.getRule() != null) {
+				if (newErrorCount == 0) System.out.println(lspHandler.getPremises().toString());
 				else System.out.println(pf.getErrorReports());
 			}
-			if (Proof.getPremise() != null && Proof.getRule() != null) {
-				if (newErrorCount == 0) System.out.println(Proof.getConclusions());
+			if (lspHandler.getPremise() != null && lspHandler.getRule() != null) {
+				if (newErrorCount == 0) System.out.println(lspHandler.getConclusions().toString());
 				else System.out.println(pf.getErrorReports());
 			}
-			if (Proof.getSclause() != null) {
-				if (newErrorCount == 0) System.out.println(Proof.getNewClause());
+			if (lspHandler.getSclause() != null) {
+				if (newErrorCount == 0) System.out.println(lspHandler.getNewClause().toString());
 				else System.out.println(pf.getErrorReports());
 			}
 		}
