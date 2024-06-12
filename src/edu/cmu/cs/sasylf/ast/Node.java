@@ -10,7 +10,7 @@ import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 
-public abstract class Node implements Span {
+public abstract class Node implements Span, Cloneable {
 	public Node() {}
 	public Node(Location l) { 
 		this(l,l);
