@@ -114,4 +114,11 @@ public class JudgmentPart implements Part {
 		}
 	}
 
+	public void substitute(String from, String to) {
+		System.out.println("Substituting in JudgmentPart");
+		for (Judgment j : judgments) {
+			j.substitute(from, to);
+		}
+	}
+
 }

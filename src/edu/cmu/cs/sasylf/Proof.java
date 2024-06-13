@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.JudgmentPart;
+import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
@@ -191,6 +193,20 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
+			System.out.println("PRINTING ORIGINAL SYNTAX TREE");
+			System.out.println(syntaxTree);
+			// Substitute
+			for (Part p : syntaxTree.getParts()) {
+				if (!(p instanceof JudgmentPart)) {
+					continue;
+				}
+				JudgmentPart jp = (JudgmentPart) p;
+				jp.substitute("n", "m");
+			}
+			System.out.println("PRINTING SUBSTITUTED SYNTAX TREE");
+			System.out.println(syntaxTree);
+			System.out.println("FINISHED");
+			System.exit(0);
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
 			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {

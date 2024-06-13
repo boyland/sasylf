@@ -94,4 +94,37 @@ public class Terminal extends Element implements ElemType {
 	public Term typeTerm() {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
+	
+	public void substitute(String from, String to) {
+
+		/*
+			We want to check if symbol matches from
+
+			We need to remove these characters from the back of the string, then check if they are equal
+
+			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are **filler characters**
+		
+		*/
+
+		// First, check that from is a prefix of symbol
+
+		if (!symbol.startsWith(from)) {
+			return;
+		}
+
+
+		// Check that all characters after the prefix match are filler characters
+
+		int fromLength = from.length();
+
+		String filler = symbol.substring(fromLength);
+
+		// the filler characters are 0-9, _, and '
+
+		if (filler.matches("^[0-9_']*$")) {
+			symbol = to + filler;
+		}
+
+		
+	}
 }

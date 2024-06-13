@@ -71,6 +71,10 @@ public class CompUnit extends Node implements Module {
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;
 
+	public List<Part> getParts() {
+		return parts;
+	}
+
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#prettyPrint(java.io.PrintWriter)
 	 */

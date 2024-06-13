@@ -151,4 +151,8 @@ public class Variable extends Element {
 
 		return new BoundVar(varBindings.size()-index);
 	}
+
+	public void substitute(String from, String to) {
+		// do nothing
+	}
 }

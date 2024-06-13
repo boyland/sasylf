@@ -145,4 +145,6 @@ public abstract class Element extends Node {
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return term;
 	}
+
+	public abstract void substitute(String from, String to);
 }

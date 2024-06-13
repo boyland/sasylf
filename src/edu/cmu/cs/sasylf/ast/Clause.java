@@ -49,6 +49,11 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		elements.add(e);
 		Location l = e.getEndLocation();
 		if (l != null) setEndLocation(l);
+		System.out.println("Adding element to clause");
+		// print the sequence of tokens
+		for (Element el : elements) {
+			System.out.println(el.toString());
+		}
 	}
 
 	public List<Element> getElements() { return elements; }
@@ -645,6 +650,12 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	public Set<Pair<Term,Substitution>> caseAnalyze(Context ctx, Term term, Element target,
 			Node source) {
 		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
+	}
+
+	public void substitute (String from, String to) {
+		for (Element e : elements) {
+			e.substitute(from, to);
+		}
 	}
 
 }

@@ -204,6 +204,28 @@ public class Judgment extends Node implements ClauseType, Named {
 			result.put(rule, caseResult);
 		}
 	}
+
+	public void substitute(String from, String to) {
+		System.out.println("Substituting in Judgment " + name);
+		/*
+			private List<Rule> rules;
+			private Clause form;
+			private String name;
+			private NonTerminal assume;
+			private boolean isAbstract;
+		*/
+		
+		for (Rule r : rules) {
+			r.substitute(from, to);
+		}
+
+		// We are not substituting the name
+
+		form.substitute(from, to);
+
+		// TODO: I think something else might need to be done here
+
+	}
 	
 	
 }
