@@ -9,6 +9,8 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
 import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
+import edu.cmu.cs.sasylf.ast.Theorem;
+import edu.cmu.cs.sasylf.ast.TheoremPart;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
@@ -194,23 +196,32 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
-			System.out.println("PRINTING ORIGINAL SYNTAX TREE");
-			System.out.println(syntaxTree);
-			// Substitute
+
+			// substitution
+
+			String from = "e";
+			String to = "n";
+
 			for (Part p : syntaxTree.getParts()) {
-				if (p instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) p;
-					jp.substitute("e", "n");
+				if (p instanceof TheoremPart) {
+					TheoremPart tp = (TheoremPart) p;
+					tp.substitute(from, to);
 				}
 				else if (p instanceof SyntaxPart) {
 					SyntaxPart sp = (SyntaxPart) p;
-					sp.substitute("e", "n");
+					sp.substitute(from, to);
 				}
+				else if (p instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) p;
+					jp.substitute(from, to);
+				}
+
 			}
-			System.out.println("PRINTING SUBSTITUTED SYNTAX TREE");
+
 			System.out.println(syntaxTree);
-			System.out.println("FINISHED");
+
 			System.exit(0);
+
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
 			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {
@@ -242,5 +253,15 @@ public class Proof {
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
 			}
 		}
+		for (Part p : syntaxTree.getParts()) {
+			if (p instanceof TheoremPart) {
+				TheoremPart tp = (TheoremPart) p;
+				for (Theorem t : tp.getTheorems()) {
+					System.out.println("Printing derivations");
+					System.out.println(t.getDerivations());
+				}
+			}
+		}
 	}
+
 }

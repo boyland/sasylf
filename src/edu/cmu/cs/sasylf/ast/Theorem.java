@@ -345,8 +345,8 @@ public class Theorem extends RuleLike {
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";
 	private NonTerminal assumes = null;
-	private List<Fact> foralls = new ArrayList<Fact>();
-	private Clause exists;
+	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+	private Clause exists; // substitution here
 	private final List<Derivation> derivations;
 	private Theorem andTheorem;
 	private Theorem firstInGroup = this;
@@ -362,6 +362,22 @@ public class Theorem extends RuleLike {
 		for (Derivation derivation : derivations) {
 			derivation.collectQualNames(consumer);
 		}
+	}
+
+	public void substitute(String from, String to) {
+		System.out.println("Substituting in theorem " + getName());
+		// substitute in foralls
+		for (Fact f : foralls) {
+			System.out.println("Substituting in forall " + f);
+			System.out.println("Class: " + f.getClass());
+			f.substitute(from, to);
+		}
+
+		// substitute in exists
+		System.out.println("Substituting in exists");
+		exists.substitute(from, to);
+
+		// I don't think we need to substitute in derivations
 	}
 
 }

@@ -20,4 +20,9 @@ public class VariableAssumption extends SyntaxAssumption {
 	}
 
 	private Variable variable;
+	
+	public void substitute(String from, String to) {
+		// Do nothing
+		// TODO: should we do something?
+	}
 }

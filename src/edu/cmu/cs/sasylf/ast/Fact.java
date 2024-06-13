@@ -46,4 +46,6 @@ public abstract class Fact extends Node {
 			ctx.addVarFree(free,getLocation());
 		}
 	}
+
+	public abstract void substitute(String from, String to);
 }

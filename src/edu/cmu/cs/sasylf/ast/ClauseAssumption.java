@@ -33,4 +33,8 @@ public class ClauseAssumption extends SyntaxAssumption {
 	public void addToDerivationMap(Context ctx) {
 		throw new UnsupportedOperationException();
 	}
+
+	public void substitute(String from, String to) {
+		clause.substitute(from, to);
+	}
 }

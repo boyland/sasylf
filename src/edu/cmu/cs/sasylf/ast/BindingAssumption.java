@@ -38,4 +38,9 @@ public class BindingAssumption extends NonTerminalAssumption {
 	}
 
 	private Binding binding;
+
+	public void substitute(String from, String to) {
+		// Do nothing
+		// TODO: should we do something?
+	}
 }

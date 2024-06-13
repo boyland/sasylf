@@ -354,4 +354,8 @@ public abstract class Derivation extends Fact {
 		// can't check any more because of relaxation
 		return true;
 	}
+
+	public void substitute(String from, String to) {
+		if (clause != null) clause.substitute(from, to);
+	}
 }

@@ -15,6 +15,10 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
  */
 public class TheoremPart implements Part {
 	List<Theorem> theorems;
+
+	public List<Theorem> getTheorems() {
+		return theorems;
+	}
 	
 	/**
 	 * Create a part from a list of theorems.
@@ -60,6 +64,12 @@ public class TheoremPart implements Part {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		for (Theorem theorem : theorems) {
 			theorem.collectQualNames(consumer);
+		}
+	}
+
+	public void substitute(String from, String to) {
+		for (Theorem theorem : theorems) {
+			theorem.substitute(from, to);
 		}
 	}
 }
