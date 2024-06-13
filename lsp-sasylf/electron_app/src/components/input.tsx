@@ -9,14 +9,39 @@ interface InputProps {
 	onHide: () => void;
 	inputs: input[];
 	appendHandler: (inp: input) => void;
+	unicode: string[];
 }
 
 export default function Input(props: InputProps) {
 	const [selectedType, setSelectedType] = React.useState<string>("Premises");
 	const [numInputs, setNumInputs] = React.useState<number>(1);
+	const inputRefs = React.useRef([]);
+	const [currentRefIndex, setCurrentRefIndex] = React.useState<number>(0);
 
 	const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSelectedType(event.target.value);
+		const newType = event.target.value;
+		if (newType == "Conclusion") {
+			setCurrentRefIndex(0);
+		}
+		setSelectedType(newType);
+	};
+
+	const handleAddUnicode = (character: string) => {
+		if (selectedType == "Conclusion") {
+			setCurrentRefIndex(0);
+		}
+		console.log(currentRefIndex);
+		console.log(inputRefs.current);
+		const curInput = inputRefs.current[currentRefIndex];
+		const startPos = curInput.selectionStart;
+		const endPos = curInput.selectionEnd;
+		curInput.value =
+			curInput.value.substring(0, startPos) +
+			character +
+			curInput.value.substring(endPos);
+		// Reset selection range after insert character;
+		curInput.focus();
+		curInput.setSelectionRange(startPos + 1, endPos + 1);
 	};
 
 	const handleExport: React.FormEventHandler<HTMLFormElement> = (event) => {
@@ -73,6 +98,12 @@ export default function Input(props: InputProps) {
 						onChange={handleTypeChange}
 					/>
 
+					{props.unicode.map((char, _) => (
+						<Button className="m-1" onClick={() => handleAddUnicode(char)}>
+							{char}
+						</Button>
+					))}
+
 					{selectedType === "Premises" && (
 						/* Render Premises-specific form elements */
 						<>
@@ -83,12 +114,17 @@ export default function Input(props: InputProps) {
 									placeholder="Enter premise"
 									className="m-1"
 									key={ind}
+									ref={(el) => (inputRefs.current[ind] = el)}
+									onFocus={() => setCurrentRefIndex(ind)}
 								/>
 							))}
 							<Button
 								variant="success"
 								className="m-1"
-								onClick={() => setNumInputs(numInputs + 1)}
+								onClick={() => {
+									setCurrentRefIndex(numInputs);
+									setNumInputs(numInputs + 1);
+								}}
 							>
 								Add Premise
 							</Button>
@@ -101,6 +137,8 @@ export default function Input(props: InputProps) {
 							name="input"
 							type="text"
 							placeholder="Enter conclusion"
+							ref={(el) => (inputRefs.current[0] = el)}
+							onFocus={() => setCurrentRefIndex(0)}
 						/>
 					)}
 

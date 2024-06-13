@@ -307,6 +307,7 @@ export default function MyApp() {
 											show={showInput}
 											onHide={() => setShowInput(false)}
 											inputs={element.inputs}
+											unicode={element.unicode}
 											appendHandler={(inp: input) =>
 												appendInput(element.id, inp)
 											}
