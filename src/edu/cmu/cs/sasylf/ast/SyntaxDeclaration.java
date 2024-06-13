@@ -63,7 +63,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	@Override
 	public boolean isAbstract() { return isAbstract; }
 
-	private List<Clause> elements;
+	private List<Clause> elements; // productions
 	private NonTerminal nonTerminal;
 	private Set<String> alternates;
 	private Variable variable;
@@ -569,7 +569,13 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			}
 		}
 
-
 	}
-	
+
+	public void substitute(String from, String to) {
+		// perform the substitution for each of the productions
+		for (Clause c : elements) {
+			c.substitute(from, to);
+		}
+	}
+
 }

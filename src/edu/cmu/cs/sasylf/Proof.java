@@ -8,6 +8,7 @@ import java.util.List;
 import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
 import edu.cmu.cs.sasylf.ast.Part;
+import edu.cmu.cs.sasylf.ast.SyntaxPart;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.ResourceModuleFinder;
@@ -197,11 +198,14 @@ public class Proof {
 			System.out.println(syntaxTree);
 			// Substitute
 			for (Part p : syntaxTree.getParts()) {
-				if (!(p instanceof JudgmentPart)) {
-					continue;
+				if (p instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) p;
+					jp.substitute("e", "n");
 				}
-				JudgmentPart jp = (JudgmentPart) p;
-				jp.substitute("n", "m");
+				else if (p instanceof SyntaxPart) {
+					SyntaxPart sp = (SyntaxPart) p;
+					sp.substitute("e", "n");
+				}
 			}
 			System.out.println("PRINTING SUBSTITUTED SYNTAX TREE");
 			System.out.println(syntaxTree);

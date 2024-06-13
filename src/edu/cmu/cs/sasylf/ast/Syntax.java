@@ -72,4 +72,6 @@ public abstract class Syntax extends Node {
 	 * definitions.
 	 */
 	public void checkSubordination() {}
+
+	public abstract void substitute(String from, String to);
 }

@@ -1,0 +1,69 @@
+package slf
+
+module testmodule
+
+provides
+
+terminals S
+
+syntax
+
+  nat_nonid ::= S nat_e
+
+  nat_id ::= 0
+
+  nat_e ::= nat_nonid | nat_id
+
+judgment add-nat: nat_e + nat_e = nat_e
+
+  ------------ add-nat-id
+  0 + nat_e = nat_e
+
+  nat_e1 + nat_e2 = nat_e3
+  ------------ add-nat-nonid
+  S nat_e1 + nat_e2 = S nat_e3
+
+theorem nat-left-identity:
+  forall nat_e
+  exists 0 + nat_e = nat_e
+  proof by rule add-nat-id
+end theorem
+
+theorem nat-right-identity:
+  forall nat_e
+  exists nat_e + 0 = nat_e
+  proof by induction on nat_e:
+    case nat_nonid0 is
+      proof by case analysis on nat_nonid0:
+        case S nat_e0 is
+          ih: nat_e0 + 0 = nat_e0 by induction hypothesis on nat_e0
+          p: S nat_e0 + 0 = S nat_e0 by rule add-nat-nonid on ih
+          proof by p
+        end case
+      end case analysis
+    end case
+    case nat_id0 is
+      proof by case analysis on nat_id0:
+        case 0 is
+          // we want to show that 0 + 0 = 0
+          proof by rule add-nat-id
+        end case
+      end case analysis
+    end case
+  end induction
+end theorem
+
+
+module IntSet = slf.set [
+  nat_nonid,
+  nat_id,
+  e,
+  add-nat,
+  nat-left-identity,
+  nat-right-identity
+]
+
+
+/*
+module Natural = org.sasylf.util.Natural
+*/

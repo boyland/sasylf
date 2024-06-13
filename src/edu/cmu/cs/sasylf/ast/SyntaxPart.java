@@ -100,4 +100,11 @@ public class SyntaxPart implements Part {
 			syn.collectQualNames(consumer);
 		}
 	}
+
+	public void substitute(String from, String to) {
+		for (Syntax s : syntax) {
+			s.substitute(from, to);
+		}
+	}
+
 }

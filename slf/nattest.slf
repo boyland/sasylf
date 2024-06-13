@@ -1,0 +1,18 @@
+module nattest
+
+provides
+
+terminals S
+
+syntax
+
+  n ::= 0 | S n
+
+judgment nat-plus: n + n = n
+
+  --------- plus-zero
+  0 + n = n
+
+  n1 + n2 = n3
+  ---------------- plus-succ
+  S n1 + n2 = S n3
