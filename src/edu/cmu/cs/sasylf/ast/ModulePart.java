@@ -90,4 +90,9 @@ public class ModulePart extends Node implements Part, Named {
 			name.visit(consumer);
 		}
 	}
+
+	public void substitute(String from, String to) {
+		// Do nothing
+		// TODO: I'm pretty sure that nothing should be done here
+	}
 }

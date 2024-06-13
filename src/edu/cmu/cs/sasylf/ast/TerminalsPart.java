@@ -52,4 +52,9 @@ public class TerminalsPart implements Part {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		// Do nothing
 	}
+
+	public void substitute(String from, String to) {
+		// Do nothing
+		// TODO: I'm pretty sure that nothing should be done here
+	}
 }

@@ -203,19 +203,7 @@ public class Proof {
 			String to = "n";
 
 			for (Part p : syntaxTree.getParts()) {
-				if (p instanceof TheoremPart) {
-					TheoremPart tp = (TheoremPart) p;
-					tp.substitute(from, to);
-				}
-				else if (p instanceof SyntaxPart) {
-					SyntaxPart sp = (SyntaxPart) p;
-					sp.substitute(from, to);
-				}
-				else if (p instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) p;
-					jp.substitute(from, to);
-				}
-
+				p.substitute(from, to);
 			}
 
 			System.out.println(syntaxTree);

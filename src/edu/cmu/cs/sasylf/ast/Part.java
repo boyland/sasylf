@@ -31,4 +31,6 @@ public interface Part {
 	public abstract void collectRuleLike(Map<String,? super RuleLike> map);
 	
 	public abstract void collectQualNames(Consumer<QualName> consumer);
+
+	public abstract void substitute(String from, String to);
 }
