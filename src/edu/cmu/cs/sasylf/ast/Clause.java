@@ -60,9 +60,13 @@ public class Clause extends Element implements CanBeCase {
 		Clause result;
 
 		result = (Clause) super.clone();
-		
 
-		result.elements = new ArrayList<Element>(elements);
+		List<Element> newElements = new ArrayList<Element>();
+
+		for (Element e : elements) {
+			newElements.add(e.clone());
+		}
+		result.elements = newElements;
 
 		return result;
 	}

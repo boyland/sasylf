@@ -138,4 +138,8 @@ public class JudgmentPart implements Part {
 		return sb.toString();
 	}
 
+	public List<Judgment> getJudgments() {
+		return judgments;
+	}
+
 }

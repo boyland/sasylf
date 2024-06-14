@@ -147,4 +147,7 @@ public abstract class Element extends Node {
 	}
 
 	public abstract void substitute(String from, String to);
+	public Element clone() {
+		return (Element) super.clone();
+	}
 }
