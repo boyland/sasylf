@@ -231,7 +231,9 @@ public class QualName extends Node {
 
 		clone.source = source.clone();
 
-		// We aren't cloning the resolution
+		// Set the resolution to null, since it now potentially refers to a different object
+
+		source.resolution = null;
 
 		return clone;
 	}
