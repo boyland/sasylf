@@ -71,6 +71,10 @@ public class CompUnit extends Node implements Module {
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;
 
+	public List<Part> getParams() {
+		return params;
+	}
+
 	public List<Part> getParts() {
 		return parts;
 	}
@@ -167,6 +171,7 @@ public class CompUnit extends Node implements Module {
 				// already reported
 			}
 		}
+
 	}
 
 	private void checkFilename(ModuleId id) {

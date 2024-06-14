@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
 import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.Syntax;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
 import edu.cmu.cs.sasylf.ast.TerminalsPart;
 import edu.cmu.cs.sasylf.ast.Theorem;
@@ -204,17 +205,6 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
-
-			CompUnit syntaxTreeClone = syntaxTree.clone();
-
-			syntaxTreeClone.substitute("n", "m");
-
-			System.out.println("Original");
-			System.out.println(syntaxTree);
-			System.out.println("Clone");
-			System.out.println(syntaxTreeClone);
-
-
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
 			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {
@@ -246,6 +236,7 @@ public class Proof {
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
 			}
 		}
+		
 	}
 
 }

@@ -24,6 +24,11 @@ public class QualName extends Node {
 	
 	private Object resolution;
 	private int version;
+
+
+	public String getName() {
+		return name;
+	}
 	
 	/**
 	 * Create a qualified name attached (using ".") to a previous qualified name

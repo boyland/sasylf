@@ -34,7 +34,7 @@ public class Context implements Cloneable {
 	public final ModuleFinder moduleFinder;
 	public final CompUnit compUnit;
 	public Set<String> termSet = new HashSet<String>();
-	private Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
+	public Map<String,SyntaxDeclaration> synMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,SyntaxDeclaration> synTypeMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
 	private Map<String,Judgment> judgLFMap = new HashMap<String,Judgment>();

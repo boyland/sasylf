@@ -22,6 +22,10 @@ public class SyntaxPart implements Part {
 	public SyntaxPart(List<Syntax> sdecls) {
 		syntax = new ArrayList<Syntax>(sdecls);
 	}
+
+	public List<Syntax> getSyntax() {
+		return syntax;
+	}
 	
 	/**
 	 * @param out
