@@ -267,7 +267,7 @@ export default function MyApp() {
 													) => {
 														showContextMenu({
 															event: event,
-															props: { nodeId, unicode: element.unicode },
+															props: { nodeId },
 															position: {
 																x: event.clientX,
 																y: event.clientY,
@@ -322,7 +322,7 @@ export default function MyApp() {
 								</Tab.Content>
 							))}
 						</Tab.Container>
-						<ContextMenu MENU_ID="3" unicode={["h"]} />
+						<ContextMenu MENU_ID="3" />
 					</div>
 				)}
 			</Transition>

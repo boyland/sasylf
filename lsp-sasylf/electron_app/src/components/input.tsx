@@ -15,7 +15,7 @@ interface InputProps {
 export default function Input(props: InputProps) {
 	const [selectedType, setSelectedType] = React.useState<string>("Premises");
 	const [numInputs, setNumInputs] = React.useState<number>(1);
-	const inputRefs = React.useRef([]);
+	const inputRefs = React.useRef<HTMLInputElement[]>([]);
 	const [currentRefIndex, setCurrentRefIndex] = React.useState<number>(0);
 
 	const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,8 +33,8 @@ export default function Input(props: InputProps) {
 		console.log(currentRefIndex);
 		console.log(inputRefs.current);
 		const curInput = inputRefs.current[currentRefIndex];
-		const startPos = curInput.selectionStart;
-		const endPos = curInput.selectionEnd;
+		const startPos = curInput.selectionStart!;
+		const endPos = curInput.selectionEnd!;
 		curInput.value =
 			curInput.value.substring(0, startPos) +
 			character +
@@ -114,7 +114,7 @@ export default function Input(props: InputProps) {
 									placeholder="Enter premise"
 									className="m-1"
 									key={ind}
-									ref={(el) => (inputRefs.current[ind] = el)}
+									ref={(el: HTMLInputElement) => (inputRefs.current[ind] = el)}
 									onFocus={() => setCurrentRefIndex(ind)}
 								/>
 							))}
@@ -137,7 +137,7 @@ export default function Input(props: InputProps) {
 							name="input"
 							type="text"
 							placeholder="Enter conclusion"
-							ref={(el) => (inputRefs.current[0] = el)}
+							ref={(el: HTMLInputElement) => (inputRefs.current[0] = el)}
 							onFocus={() => setCurrentRefIndex(0)}
 						/>
 					)}

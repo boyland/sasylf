@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, Submenu, Item, ItemParams } from "react-contexify";
+import { Menu, Item, ItemParams } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
@@ -7,7 +7,7 @@ import Button from "react-bootstrap/Button";
 import InputGroup from "react-bootstrap/InputGroup";
 import { Direction } from "../types";
 
-function ContextMenu(props: { MENU_ID: string; unicode: string[] }) {
+function ContextMenu(props: { MENU_ID: string }) {
 	const [show, setShow] = useState(false);
 	const [nodeId, setNodeId] = useState(0);
 
@@ -33,11 +33,6 @@ function ContextMenu(props: { MENU_ID: string; unicode: string[] }) {
 		<>
 			<Menu id={props.MENU_ID}>
 				<Item onClick={handleItemClick}>Replace free variables</Item>
-				{props.unicode.length != 0 ? (
-					<Submenu label="Select unicode">
-						<Item>{props.unicode.join(", ")}</Item>
-					</Submenu>
-				) : null}
 			</Menu>
 
 			<Modal show={show} onHide={() => setShow(false)}>
