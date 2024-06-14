@@ -1,4 +1,5 @@
 import { line } from "../types";
+import { readFileSync } from "fs";
 
 export function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);

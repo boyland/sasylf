@@ -63,7 +63,12 @@ export default function MyApp() {
 		};
 	}, []);
 
-	const addTab = (compUnit: ast | null, name: string | null, file: string) => {
+	const addTab = (
+		compUnit: ast | null,
+		name: string | null,
+		file: string,
+		unicode: string[],
+	) => {
 		const maxId = Math.max(-1, ...tabs.map((element) => element.id));
 		setTabs(
 			tabs.concat([
@@ -73,6 +78,7 @@ export default function MyApp() {
 					name,
 					inputs: [],
 					file,
+					unicode,
 				} as tab,
 			]),
 		);
@@ -88,11 +94,13 @@ export default function MyApp() {
 				compUnit,
 				name,
 				file,
+				unicode,
 			}: {
 				compUnit: ast | null;
 				name: string | null;
 				file: string;
-			}) => addTab(compUnit, name, file),
+				unicode: string[];
+			}) => addTab(compUnit, name, file, unicode),
 		);
 
 		(window as any).electronAPI.showModal(() => {
@@ -299,6 +307,7 @@ export default function MyApp() {
 											show={showInput}
 											onHide={() => setShowInput(false)}
 											inputs={element.inputs}
+											unicode={element.unicode}
 											appendHandler={(inp: input) =>
 												appendInput(element.id, inp)
 											}
@@ -313,7 +322,7 @@ export default function MyApp() {
 								</Tab.Content>
 							))}
 						</Tab.Container>
-						<ContextMenu MENU_ID={"3"} />
+						<ContextMenu MENU_ID="3" />
 					</div>
 				)}
 			</Transition>

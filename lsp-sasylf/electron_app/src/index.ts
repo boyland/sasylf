@@ -12,7 +12,7 @@ import {
 } from "electron";
 import { spawnSync } from "child_process";
 import { ast } from "./types";
-import { PathOrFileDescriptor, readFile, writeFile } from "fs";
+import { PathOrFileDescriptor, readFile, readFileSync, writeFile } from "fs";
 import path from "node:path";
 import os from "node:os";
 
@@ -38,6 +38,14 @@ const createWindow = (): BrowserWindow => {
 	return mainWindow;
 };
 
+const getUnicode = (file: string) => {
+	const data = readFileSync(file).toString();
+
+	return Array.from(
+		new Set(data.split("").filter((char) => char.charCodeAt(0) > 127)),
+	);
+};
+
 function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 	const command = spawnSync(
 		`java -jar ${__dirname}/../../SASyLF.jar`,
@@ -50,7 +58,12 @@ function handleUpload(mainWindow: BrowserWindow, filePath: string) {
 
 	const name = filePath.replace(/^.*[\\/]/, "");
 
-	mainWindow.webContents.send("add-ast", { compUnit, name, file: filePath });
+	mainWindow.webContents.send("add-ast", {
+		compUnit,
+		name,
+		file: filePath,
+		unicode: getUnicode(filePath),
+	});
 }
 
 function setupMenu(mainWindow: BrowserWindow) {
@@ -214,6 +227,7 @@ const setup = (): void => {
 				compUnit: JSON.parse(process.argv[2]),
 				name: path.basename(process.argv[3]),
 				file: process.argv[3],
+				unicode: getUnicode(process.argv[3]),
 			});
 		});
 	}
