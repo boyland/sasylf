@@ -3,7 +3,7 @@ import Button from "react-bootstrap/Button";
 import Collapse from "react-bootstrap/Collapse";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { FaArrowRightLong } from "react-icons/fa6";
-import { ast, judgmentNode, ruleNode, theoremNode } from "../types";
+import { ast, judgmentNode, ruleNode, theoremNode, moduleNode } from "../types";
 import Draggable from "./draggable";
 
 interface RuleLikeProps {
@@ -19,13 +19,17 @@ function RuleLike(props: RuleLikeProps) {
 	);
 }
 
-function Judgment(props: { judgment: judgmentNode }) {
-	const rules = props.judgment.rules.map((rule) => ruleToText(rule));
-	const rulesElements = rules.map((rule, ind) => (
-		<Draggable key={ind} id={rule[1]} data={{ type: "rule", text: rule[1] }}>
-			<RuleLike text={rule[0]} />
-		</Draggable>
-	));
+function BankCollapse({
+	children,
+	name,
+	variant,
+	title,
+}: {
+	children: React.ReactNode;
+	name: string;
+	variant: string;
+	title: string;
+}) {
 	const [open, setOpen] = useState(false);
 
 	const onChange = () => {
@@ -39,17 +43,48 @@ function Judgment(props: { judgment: judgmentNode }) {
 				className="m-1 rule-like"
 				onClick={() => setOpen(!open)}
 				aria-expanded={open}
-				aria-controls={props.judgment.name}
-				variant="outline-secondary"
+				aria-controls={name}
+				variant={variant}
 			>
-				<code className="rule-like-text">{`judgment ${props.judgment.name}: ${props.judgment.form}`}</code>
+				<code className="rule-like-text">{title}</code>
 			</Button>
 			<Collapse in={open} onEntered={onChange} onExited={onChange}>
-				<div id={props.judgment.name}>
-					<div className="d-flex flex-column">{rulesElements}</div>
-				</div>
+				<div id={name}>{children}</div>
 			</Collapse>
 		</>
+	);
+}
+
+function Judgment(props: { judgment: judgmentNode }) {
+	const rules = props.judgment.rules.map((rule) => ruleToText(rule));
+	const rulesElements = rules.map((rule, ind) => (
+		<Draggable key={ind} id={rule[1]} data={{ type: "rule", text: rule[1] }}>
+			<RuleLike text={rule[0]} />
+		</Draggable>
+	));
+
+	return (
+		<BankCollapse
+			name={props.judgment.name}
+			title={`judgment ${props.judgment.name}: ${props.judgment.form}`}
+			variant="outline-secondary"
+		>
+			<div id={props.judgment.name}>
+				<div className="d-flex flex-column">{rulesElements}</div>
+			</div>
+		</BankCollapse>
+	);
+}
+
+function Module(props: { module: moduleNode }) {
+	return (
+		<BankCollapse
+			title={`module ${props.module.name}`}
+			variant="outline-success"
+			name={props.module.name}
+		>
+			<RuleLikes compUnit={props.module.ast} />
+		</BankCollapse>
 	);
 }
 
@@ -120,10 +155,15 @@ function RuleLikes(props: { compUnit: ast }) {
 		<Judgment key={ind} judgment={value} />
 	));
 
+	const modules = props.compUnit.modules.map((value, ind) => (
+		<Module key={ind} module={value} />
+	));
+
 	return (
 		<div className="d-flex flex-column exact">
 			{theoremsElements}
 			{judgments}
+			{modules}
 		</div>
 	);
 }
