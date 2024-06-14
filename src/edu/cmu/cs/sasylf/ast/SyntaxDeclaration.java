@@ -578,4 +578,48 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 	}
 
+	public SyntaxDeclaration copy() {
+		// substitute for each of the clauses
+		List<Clause> newClauses = new ArrayList<>();
+		for (Clause c : elements) {
+			newClauses.add(c.copy());
+		}
+		SyntaxDeclaration result = new SyntaxDeclaration(getLocation(), nonTerminal, newClauses);
+		// TODO: I don't think we need to do anything else here
+		return result;
+	}
+
+	public SyntaxDeclaration clone() {
+		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();
+		/*
+			private List<Clause> elements; // productions
+			private NonTerminal nonTerminal;
+			private Set<String> alternates;
+			private Variable variable;
+			private ClauseDef context;
+			private boolean isAbstract;
+	 	*/
+
+		List<Clause> newElements = new ArrayList<>();
+		for (Clause c : elements) {
+			newElements.add(c.clone());
+		}
+		clone.elements = newElements;
+
+		clone.nonTerminal = nonTerminal.clone();
+
+		clone.alternates = new HashSet<>(alternates);
+
+		if (variable != null) {
+			clone.variable = variable.clone();
+		}
+
+		if (context != null) {
+			clone.context = (ClauseDef) context.clone();
+		}
+
+		return clone;
+		
+	}
+
 }

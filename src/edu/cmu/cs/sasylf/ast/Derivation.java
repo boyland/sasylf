@@ -358,4 +358,20 @@ public abstract class Derivation extends Fact {
 	public void substitute(String from, String to) {
 		if (clause != null) clause.substitute(from, to);
 	}
+
+	public Derivation clone() {
+		Derivation newDerivation = (Derivation) super.clone();
+
+		/*
+			protected Clause clause;
+			protected final boolean wasProof; // this derivation was originally "proof by ..."
+			private boolean clauseChecked = false;
+		*/
+
+		newDerivation.clause = clause.clone();
+
+		return newDerivation;
+
+	}
+
 }

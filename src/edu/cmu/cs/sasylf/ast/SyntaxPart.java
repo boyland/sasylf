@@ -107,4 +107,18 @@ public class SyntaxPart implements Part {
 		}
 	}
 
+	public SyntaxPart clone() {
+		try {
+			SyntaxPart clone = (SyntaxPart) super.clone();
+			clone.syntax = new ArrayList<Syntax>();
+			for (Syntax s : syntax) {
+				clone.syntax.add(s.clone());
+			}
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new Error("unexpected error",e);
+		}
+
+	}
+
 }

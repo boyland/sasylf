@@ -19,8 +19,8 @@ import edu.cmu.cs.sasylf.util.Location;
  * </ul>
  */
 public class QualName extends Node {
-	private final QualName source;
-	private final String name;
+	private QualName source;
+	private String name;
 	
 	private Object resolution;
 	private int version;
@@ -217,5 +217,22 @@ public class QualName extends Node {
 		
 		// otherwise, visit the source and do the same thing recursively
 		source.visit(consumer);
+	}
+
+	public QualName clone() {
+		QualName clone = (QualName) super.clone();
+		/*
+			private final QualName source;
+			private final String name;
+			
+			private Object resolution;
+			private int version;
+ 		*/
+
+		clone.source = source.clone();
+
+		// We aren't cloning the resolution
+
+		return clone;
 	}
 }

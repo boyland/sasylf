@@ -248,4 +248,10 @@ public class CompUnit extends Node implements Module {
 		}
 		return declCache.get(name);
 	}
+
+	public void substitute(String from, String to) {
+		for (Part part : parts) {
+			part.substitute(from, to);
+		}
+	}
 }

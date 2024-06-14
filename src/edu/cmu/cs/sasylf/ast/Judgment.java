@@ -1,6 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +57,7 @@ public class Judgment extends Node implements ClauseType, Named {
 	private List<Rule> rules;
 	private Clause form;
 	private String name;
-	private NonTerminal assume;
+	public NonTerminal assume;
 	private boolean isAbstract;
 
 	@Override
@@ -226,7 +228,35 @@ public class Judgment extends Node implements ClauseType, Named {
 		// TODO: I think something else might need to be done here
 
 	}
-	
-	
+
+	public Judgment clone() {
+		
+		Judgment newJudgment = (Judgment) super.clone();
+		
+		/*
+
+			Make deep copies of the following fields:
+				private List<Rule> rules;
+				private Clause form;
+				private String name;
+				private NonTerminal assume;
+				private boolean isAbstract;
+		*/
+
+		List<Rule> newRules = new ArrayList<>();
+		for (Rule r : rules) {
+			newRules.add(r.clone());
+		}
+		newJudgment.rules = newRules;
+		
+		newJudgment.form = form.clone();
+
+		if (newJudgment.assume != null) {
+			newJudgment.assume = assume.clone();
+		}
+		
+		return newJudgment;
+	}
+
 }
 

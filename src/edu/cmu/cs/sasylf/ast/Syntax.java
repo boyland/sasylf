@@ -74,4 +74,7 @@ public abstract class Syntax extends Node {
 	public void checkSubordination() {}
 
 	public abstract void substitute(String from, String to);
+	public Syntax clone() {
+		return (Syntax) super.clone();
+	}
 }

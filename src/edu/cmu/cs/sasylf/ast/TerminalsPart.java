@@ -57,4 +57,28 @@ public class TerminalsPart implements Part {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}
+
+	public TerminalsPart clone() {
+		try {
+			TerminalsPart clone = (TerminalsPart) super.clone();
+			HashSet<String> newDeclaredTerminals = new HashSet<>();
+			newDeclaredTerminals.addAll(declaredTerminals);
+			clone.declaredTerminals = newDeclaredTerminals;
+			return clone;
+		}
+		catch (CloneNotSupportedException e) {
+			throw new Error("unexpected error: " + e);
+		}
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("terminals ");
+		for (String t : declaredTerminals) {
+			sb.append(t);
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
+	
 }

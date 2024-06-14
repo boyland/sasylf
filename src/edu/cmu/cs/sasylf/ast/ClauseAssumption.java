@@ -37,4 +37,10 @@ public class ClauseAssumption extends SyntaxAssumption {
 	public void substitute(String from, String to) {
 		clause.substitute(from, to);
 	}
+
+	public ClauseAssumption clone() {
+		ClauseAssumption clone = (ClauseAssumption) super.clone();
+		clone.clause = clause.clone();
+		return clone;
+	}
 }

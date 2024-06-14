@@ -191,4 +191,8 @@ public class Sugar extends Syntax {
 		// TODO: should we do something?
 	}
 
+	public Sugar copy() {
+		return new Sugar(sugar.copy(), (Clause)replacement.copy());
+	}
+
 }

@@ -12,6 +12,11 @@ requires
 
   abstract judgment add: e + e = e
 
+  judgment eq: e = e
+
+    ------ eq
+    e = e
+
   abstract theorem left-identity:
     forall e
     forall id

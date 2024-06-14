@@ -121,4 +121,21 @@ public class JudgmentPart implements Part {
 		}
 	}
 
+	public JudgmentPart clone() {
+		List<Judgment> newJudgments = new ArrayList<Judgment>();
+		for (Judgment j : judgments) {
+			newJudgments.add(j.clone());
+		}
+		return new JudgmentPart(newJudgments);
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Judgment j : judgments) {
+			sb.append(j.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
 }

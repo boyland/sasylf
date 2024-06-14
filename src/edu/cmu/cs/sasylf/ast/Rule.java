@@ -500,6 +500,25 @@ public class Rule extends RuleLike implements CanBeCase {
 		}
 		conclusion.substitute(from, to);
 	}
+
+	public Rule clone() {
+		/*
+			private List<Clause> premises;
+			private Clause conclusion;
+			private int isAssumpt = 0;
+		*/
+
+		Rule clone = (Rule) super.clone();
+		List<Clause> newPremises = new ArrayList<Clause>();
+		for (Clause c : premises) {
+			newPremises.add(c.clone());
+		}
+		clone.premises = newPremises;
+
+		clone.conclusion = conclusion.clone();
+
+		return clone;
+	}
 	
 }
 

@@ -22,6 +22,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
+	private SyntaxDeclaration ty;
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
 		super(l);
@@ -30,6 +31,7 @@ public class NonTerminal extends Element {
 		if (l != null) {
 			super.setEndLocation(l.add(s.length()));
 		}
+		this.ty = ty;
 	}
 
 	public String getSymbol() { return symbol; }
@@ -232,6 +234,10 @@ public class NonTerminal extends Element {
 
 		
 	}
-
+	
+	public NonTerminal clone() {
+		// I think it's fine if we don't copy the location and ty
+		return new NonTerminal(new String(symbol), getLocation(), ty);
+	}
 
 }

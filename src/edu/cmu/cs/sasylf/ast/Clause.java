@@ -32,7 +32,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
-public class Clause extends Element implements CanBeCase, Cloneable {
+public class Clause extends Element implements CanBeCase {
 	
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
 	public Clause(Element e) { 
@@ -49,11 +49,6 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		elements.add(e);
 		Location l = e.getEndLocation();
 		if (l != null) setEndLocation(l);
-		System.out.println("Adding element to clause");
-		// print the sequence of tokens
-		for (Element el : elements) {
-			System.out.println(el.toString());
-		}
 	}
 
 	public List<Element> getElements() { return elements; }
@@ -64,11 +59,8 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	public Clause clone() {
 		Clause result;
 
-		try {
-			result = (Clause) super.clone();
-		} catch (CloneNotSupportedException e) {
-			return null;
-		}
+		result = (Clause) super.clone();
+		
 
 		result.elements = new ArrayList<Element>(elements);
 

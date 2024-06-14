@@ -190,4 +190,8 @@ public class Binding extends Element {
 		// TODO: Fix this
 	}
 
+	public Binding copy() {
+		return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
+	}
+
 }

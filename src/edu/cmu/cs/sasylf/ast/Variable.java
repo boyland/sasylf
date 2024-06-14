@@ -155,4 +155,12 @@ public class Variable extends Element {
 	public void substitute(String from, String to) {
 		// do nothing
 	}
+
+	public Variable clone() {
+		Variable clone = (Variable) super.clone();
+		
+		clone.type = type.clone();
+
+		return clone;
+	}
 }

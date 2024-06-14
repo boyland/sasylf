@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 /**
  * A part of a compilation unit/module.
  */
-public interface Part {
+public interface Part extends Cloneable {
 
 	/**
 	 * Type check the elements in this chunk.

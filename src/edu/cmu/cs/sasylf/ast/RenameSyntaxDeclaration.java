@@ -18,8 +18,8 @@ import edu.cmu.cs.sasylf.util.Location;
  * Make sure it works even when the source is hidden in a module.
  */
 public class RenameSyntaxDeclaration extends SyntaxDeclaration {
-	private final QualName source;
-	private SyntaxDeclaration original;
+	public QualName source;
+	public SyntaxDeclaration original;
 	
 	/**
 	 * Rename a syntax declaration (optionally) with clauses that must match the
@@ -178,4 +178,12 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
 	}
+
+	public RenameSyntaxDeclaration clone() {
+		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.clone(); 
+		clone.source = source.clone();
+		clone.original = original.clone();
+		return clone;
+	}
+
 }

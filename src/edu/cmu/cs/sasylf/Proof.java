@@ -1,6 +1,8 @@
 package edu.cmu.cs.sasylf;
 
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +11,7 @@ import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
 import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
+import edu.cmu.cs.sasylf.ast.TerminalsPart;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.ast.TheoremPart;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -196,17 +199,31 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
+			
+			// Get the first terminal part in the syntax tree
 
-			// substitution
-
-			String from = "e";
-			String to = "n";
+			JudgmentPart jp = null;
 
 			for (Part p : syntaxTree.getParts()) {
-				p.substitute(from, to);
+				System.out.println(p);
+				if (p instanceof JudgmentPart) {
+					System.out.println("Instance found");
+					System.out.println(p);
+					jp = (JudgmentPart) p;
+					break;
+				}
 			}
 
-			System.out.println(syntaxTree);
+			// clone it
+
+			JudgmentPart jp2 = jp.clone();
+
+			System.out.println("Original");
+			System.out.println(jp);
+			System.out.println("Clone");
+			System.out.println(jp2);
+
+			System.out.println(jp == jp2);
 
 			System.exit(0);
 

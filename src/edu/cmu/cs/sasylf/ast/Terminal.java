@@ -9,10 +9,12 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class Terminal extends Element implements ElemType {
+	private Span sp;
 	public Terminal(String s, Span sp) { 
 		super(sp.getLocation()); 
 		symbol = s; 
 		super.setEndLocation(sp.getEndLocation());
+		this.sp = sp;
 	}
 
 	@Override
@@ -124,7 +126,11 @@ public class Terminal extends Element implements ElemType {
 		if (filler.matches("^[0-9_']*$")) {
 			symbol = to + filler;
 		}
+	
+	}
 
-		
+	public Terminal copy() {
+		// I think it's fine if we don't copy the span
+		return new Terminal(new String(symbol), sp);
 	}
 }
