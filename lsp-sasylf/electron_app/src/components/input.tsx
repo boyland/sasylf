@@ -30,8 +30,6 @@ export default function Input(props: InputProps) {
 		if (selectedType == "Conclusion") {
 			setCurrentRefIndex(0);
 		}
-		console.log(currentRefIndex);
-		console.log(inputRefs.current);
 		const curInput = inputRefs.current[currentRefIndex];
 		const startPos = curInput.selectionStart!;
 		const endPos = curInput.selectionEnd!;
@@ -98,8 +96,12 @@ export default function Input(props: InputProps) {
 						onChange={handleTypeChange}
 					/>
 
-					{props.unicode.map((char, _) => (
-						<Button className="m-1" onClick={() => handleAddUnicode(char)}>
+					{props.unicode.map((char, ind) => (
+						<Button
+							key={ind}
+							className="m-1"
+							onClick={() => handleAddUnicode(char)}
+						>
 							{char}
 						</Button>
 					))}
