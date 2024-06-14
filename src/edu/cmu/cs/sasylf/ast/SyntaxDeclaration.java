@@ -576,6 +576,21 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		for (Clause c : elements) {
 			c.substitute(from, to);
 		}
+		// substitute for the NonTerminal
+
+		nonTerminal.substitute(from, to);
+
+		// substitute in the alternates
+		// if to isn't in alternates, add it
+		// if from is in alternates, remove it
+
+		if (alternates.contains(from)) {
+			alternates.remove(from);
+		}
+
+		if (!alternates.contains(to)) {
+			alternates.add(to);
+		}
 	}
 
 

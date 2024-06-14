@@ -254,4 +254,30 @@ public class CompUnit extends Node implements Module {
 			part.substitute(from, to);
 		}
 	}
+
+	public CompUnit clone() {
+		CompUnit clone = (CompUnit) super.clone();
+		/*
+			private PackageDeclaration packageDecl;
+			private String moduleName;
+			private List<Part> params = new ArrayList<Part>();
+			private List<Part> parts = new ArrayList<Part>();
+			private int parseReports;
+		*/
+		clone.packageDecl = packageDecl.clone();
+
+		List<Part> newParams = new ArrayList<>();
+		for (Part p: params) {
+			newParams.add(p.clone());
+		}
+		clone.params = newParams;
+
+		List<Part> newParts = new ArrayList<>();
+		for (Part p : parts) {
+			newParts.add(p.clone());
+		}
+		clone.parts = newParts;
+
+		return clone;
+	}
 }

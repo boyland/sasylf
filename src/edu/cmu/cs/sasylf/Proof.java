@@ -205,35 +205,15 @@ public class Proof {
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
 
-			// Get the first TheoremPart in the syntax tree
+			CompUnit syntaxTreeClone = syntaxTree.clone();
 
-			TheoremPart tp = null;
-
-			for (Part p : syntaxTree.getParts()) {
-				if (p instanceof TheoremPart) {
-					tp = (TheoremPart) p;
-					break;
-				}
-			}
-
-			TheoremPart tpClone = tp.clone();
-
-			List<Fact> foralls = tp.getTheorems().get(0).getForalls();
-			List<Fact> forallsClone = tpClone.getTheorems().get(0).getForalls();
-
-			System.out.println(foralls.get(0) == forallsClone.get(0));
-
-
-			tpClone.substitute("n", "m");
+			syntaxTreeClone.substitute("n", "m");
 
 			System.out.println("Original");
-			System.out.println(tp);
+			System.out.println(syntaxTree);
 			System.out.println("Clone");
-			System.out.println(tpClone);
-			
+			System.out.println(syntaxTreeClone);
 
-
-			System.exit(0);
 
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
@@ -264,15 +244,6 @@ public class Proof {
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
-			}
-		}
-		for (Part p : syntaxTree.getParts()) {
-			if (p instanceof TheoremPart) {
-				TheoremPart tp = (TheoremPart) p;
-				for (Theorem t : tp.getTheorems()) {
-					System.out.println("Printing derivations");
-					System.out.println(t.getDerivations());
-				}
 			}
 		}
 	}

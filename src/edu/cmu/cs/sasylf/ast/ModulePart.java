@@ -17,8 +17,8 @@ import edu.cmu.cs.sasylf.util.Location;
  */
 public class ModulePart extends Node implements Part, Named {
 	private String name;
-	private QualName module;
-	private List<QualName> arguments;
+	QualName module;
+	List<QualName> arguments;
 	
 	public ModulePart(Location l, String name, QualName module, List<QualName> arguments, Location endl) {
 		super(l,endl);
@@ -95,4 +95,27 @@ public class ModulePart extends Node implements Part, Named {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}
+
+	public ModulePart clone() {
+		/*
+			private String name;
+			private QualName module;
+			private List<QualName> arguments;
+		*/
+
+		ModulePart clone = (ModulePart) super.clone();
+		
+		clone.module = clone.module.clone();
+		
+		List<QualName> newArguments = new ArrayList<>();
+
+		for (QualName argument : arguments) {
+			newArguments.add(argument.clone());
+		}
+		clone.arguments = newArguments;
+
+		return clone;
+	}
+
+
 }

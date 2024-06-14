@@ -229,11 +229,11 @@ public class QualName extends Node {
 			private int version;
  		*/
 
-		clone.source = source.clone();
+		if (clone.source != null) clone.source = source.clone();
 
 		// Set the resolution to null, since it now potentially refers to a different object
 
-		source.resolution = null; // need to call the typecheck method again after cloning/substitution
+		clone.resolution = null; // need to call the typecheck method again after cloning/substitution
 
 		return clone;
 	}

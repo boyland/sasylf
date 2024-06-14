@@ -33,4 +33,5 @@ public interface Part extends Cloneable {
 	public abstract void collectQualNames(Consumer<QualName> consumer);
 
 	public abstract void substitute(String from, String to);
+	public abstract Part clone();
 }

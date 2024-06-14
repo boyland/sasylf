@@ -53,4 +53,10 @@ public class PackageDeclaration extends Node {
 		}
 		return sb.toString();
 	}
+
+	public PackageDeclaration clone() {
+		PackageDeclaration clone = (PackageDeclaration) super.clone();
+		clone.name = clone.name.clone();
+		return clone;
+	}
 }
