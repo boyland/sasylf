@@ -586,11 +586,9 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 		if (alternates.contains(from)) {
 			alternates.remove(from);
-		}
-
-		if (!alternates.contains(to)) {
 			alternates.add(to);
 		}
+
 	}
 
 
