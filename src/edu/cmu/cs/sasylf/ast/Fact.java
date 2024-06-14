@@ -48,4 +48,7 @@ public abstract class Fact extends Node {
 	}
 
 	public abstract void substitute(String from, String to);
+	public Fact clone() {
+		return (Fact) super.clone();
+	}
 }

@@ -50,4 +50,11 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	public void substitute(String from, String to) {
 		nonTerminal.substitute(from, to);
 	}
+
+	public NonTerminalAssumption clone() {
+		NonTerminalAssumption clone = (NonTerminalAssumption) super.clone();
+
+		clone.nonTerminal = clone.nonTerminal.clone();
+		return clone;
+	}
 }

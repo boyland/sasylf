@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -192,7 +192,7 @@ public class Sugar extends Syntax {
 	}
 
 	public Sugar copy() {
-		return new Sugar(sugar.copy(), (Clause)replacement.copy());
+		return new Sugar(sugar.clone(), (Clause)replacement.clone());
 	}
 
 }

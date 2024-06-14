@@ -7,9 +7,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Element;
+import edu.cmu.cs.sasylf.ast.Fact;
+import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
 import edu.cmu.cs.sasylf.ast.Part;
+import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
 import edu.cmu.cs.sasylf.ast.TerminalsPart;
 import edu.cmu.cs.sasylf.ast.Theorem;
@@ -199,31 +204,34 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
-			
-			// Get the first terminal part in the syntax tree
 
-			JudgmentPart jp = null;
+			// Get the first TheoremPart in the syntax tree
+
+			TheoremPart tp = null;
 
 			for (Part p : syntaxTree.getParts()) {
-				System.out.println(p);
-				if (p instanceof JudgmentPart) {
-					System.out.println("Instance found");
-					System.out.println(p);
-					jp = (JudgmentPart) p;
+				if (p instanceof TheoremPart) {
+					tp = (TheoremPart) p;
 					break;
 				}
 			}
 
-			// clone it
+			TheoremPart tpClone = tp.clone();
 
-			JudgmentPart jp2 = jp.clone();
+			List<Fact> foralls = tp.getTheorems().get(0).getForalls();
+			List<Fact> forallsClone = tpClone.getTheorems().get(0).getForalls();
+
+			System.out.println(foralls.get(0) == forallsClone.get(0));
+
+
+			tpClone.substitute("n", "m");
 
 			System.out.println("Original");
-			System.out.println(jp);
+			System.out.println(tp);
 			System.out.println("Clone");
-			System.out.println(jp2);
+			System.out.println(tpClone);
+			
 
-			System.out.println(jp == jp2);
 
 			System.exit(0);
 

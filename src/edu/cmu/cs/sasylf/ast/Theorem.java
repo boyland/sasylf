@@ -344,14 +344,14 @@ public class Theorem extends RuleLike {
 
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";
-	private NonTerminal assumes = null;
-	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
-	private Clause exists; // substitution here
-	private final List<Derivation> derivations;
-	private Theorem andTheorem;
-	private Theorem firstInGroup = this;
+	NonTerminal assumes = null;
+	List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+	Clause exists; // substitution here
+	List<Derivation> derivations;
+	Theorem andTheorem;
+	Theorem firstInGroup = this;
 	private int indexInGroup = 0;
-	private InductionSchema inductionScheme = InductionSchema.nullInduction;
+	InductionSchema inductionScheme = InductionSchema.nullInduction;
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
 	private final boolean isAbstract;
@@ -378,6 +378,53 @@ public class Theorem extends RuleLike {
 		exists.substitute(from, to);
 
 		// I don't think we need to substitute in derivations
+	}
+
+	public Theorem clone() {
+		Theorem clone = (Theorem) super.clone();
+		/*
+			private String kind = "theorem";
+			private String kindTitle = "Theorem";
+			private NonTerminal assumes = null;
+			private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+			private Clause exists; // substitution here
+			private final List<Derivation> derivations;
+			private Theorem andTheorem;
+			private Theorem firstInGroup = this;
+			private int indexInGroup = 0;
+			private InductionSchema inductionScheme = InductionSchema.nullInduction;
+			private boolean interfaceChecked=false;
+			private boolean interfaceOK = false;
+			private final boolean isAbstract;
+		*/
+
+		// skip kind and kindTitle
+
+		if (clone.assumes != null) {
+			clone.assumes = assumes.clone();
+		}
+
+		List<Fact> newForalls = new ArrayList<Fact>();
+		for (Fact f : foralls) {
+			newForalls.add(f.clone()); // fix this
+		}
+		clone.foralls = newForalls;
+
+		clone.exists = clone.exists.clone();
+
+		clone.derivations = new ArrayList<>(); // don't clone the derivations
+
+		if (clone.andTheorem != null) {
+			clone.andTheorem = clone.andTheorem.clone();
+		}
+
+		clone.firstInGroup = clone; // TODO: I'm pretty sure this is the right thing to do here
+
+		// TODO: Clone inductionScheme here
+
+		// The rest are primatives, so we don't need to clone them
+
+		return clone;
 	}
 
 }

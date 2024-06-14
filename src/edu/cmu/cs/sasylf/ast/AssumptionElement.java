@@ -144,14 +144,19 @@ public class AssumptionElement extends Element {
 	}
 
 	private Element context;
-	private Element base;
+private Element base;
 
 	public void substitute(String from, String to) {
 		// Do nothing
 		// TODO: I'm pretty sure that this is wrong
 	}
 
-	public AssumptionElement copy() {
-		return new AssumptionElement(getLocation(), base.copy(), context.copy());
+	public AssumptionElement clone() {
+		AssumptionElement clone = (AssumptionElement) super.clone();
+
+		clone.context = clone.context.clone();
+		clone.base = clone.base.clone();
+
+		return clone;
 	}
 }

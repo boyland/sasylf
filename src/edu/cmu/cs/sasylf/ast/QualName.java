@@ -233,7 +233,7 @@ public class QualName extends Node {
 
 		// Set the resolution to null, since it now potentially refers to a different object
 
-		source.resolution = null;
+		source.resolution = null; // need to call the typecheck method again after cloning/substitution
 
 		return clone;
 	}

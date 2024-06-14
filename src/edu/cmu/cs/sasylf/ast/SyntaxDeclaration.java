@@ -578,16 +578,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 	}
 
-	public SyntaxDeclaration copy() {
-		// substitute for each of the clauses
-		List<Clause> newClauses = new ArrayList<>();
-		for (Clause c : elements) {
-			newClauses.add(c.copy());
-		}
-		SyntaxDeclaration result = new SyntaxDeclaration(getLocation(), nonTerminal, newClauses);
-		// TODO: I don't think we need to do anything else here
-		return result;
-	}
+
 
 	public SyntaxDeclaration clone() {
 		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();

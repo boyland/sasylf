@@ -72,4 +72,35 @@ public class TheoremPart implements Part {
 			theorem.substitute(from, to);
 		}
 	}
+
+	
+	public TheoremPart clone() {
+		// clone each theorem
+		TheoremPart clone;
+		try {
+			clone = (TheoremPart) super.clone();
+		
+			List<Theorem> newTheorems = new ArrayList<Theorem>();
+			for (Theorem theorem : theorems) {
+				newTheorems.add(theorem.clone());
+			}
+			clone.theorems = newTheorems;
+			return clone;
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in TheoremPart");
+			System.exit(1);
+			return null;
+		}
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Theorem t: theorems) {
+			sb.append(t.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+	
 }
