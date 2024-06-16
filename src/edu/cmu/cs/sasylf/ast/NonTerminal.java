@@ -236,8 +236,9 @@ public class NonTerminal extends Element {
 	}
 	
 	public NonTerminal clone() {
-		// I think it's fine if we don't copy the location and ty
-		return new NonTerminal(new String(symbol), getLocation(), ty);
+		NonTerminal clone = (NonTerminal) super.clone();
+		
+		return clone;
 	}
 
 }
