@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -228,9 +229,15 @@ public class Judgment extends Node implements ClauseType, Named {
 
 	}
 
-	public Judgment clone() {
-		
-		Judgment newJudgment = (Judgment) super.clone();
+	public Judgment copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Judgment) cd.getCloneFor(this);
+		Judgment newJudgment;
+
+		try {
+			newJudgment = (Judgment) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new Error("Java clone() weirdness");
+		}
 		
 		/*
 
@@ -244,17 +251,18 @@ public class Judgment extends Node implements ClauseType, Named {
 
 		List<Rule> newRules = new ArrayList<>();
 		for (Rule r : rules) {
-			newRules.add(r.clone());
+			newRules.add(r.copy(cd));
 		}
 		newJudgment.rules = newRules;
 		
-		newJudgment.form = form.clone();
+		newJudgment.form = form.copy(cd);
 
 		if (newJudgment.assume != null) {
-			newJudgment.assume = assume.clone();
+			newJudgment.assume = (NonTerminal) assume.copy(cd);
 		}
 		
 		return newJudgment;
+		
 	}
 
 }

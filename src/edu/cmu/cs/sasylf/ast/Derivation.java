@@ -125,6 +125,7 @@ public abstract class Derivation extends Fact {
 			Derivation d = derivations.get(i);
 			if (d.clause == null) {
 				// we copy over to get the right location for things
+				// TODO: Fix this
 				d.clause = ctx.currentGoalClause.clone();
 				d.clause.setLocation(d.getLocation());
 				d.clause.setEndLocation(d.getLocation().add(PROOF_SIZE));
@@ -359,19 +360,6 @@ public abstract class Derivation extends Fact {
 		if (clause != null) clause.substitute(from, to);
 	}
 
-	public Derivation clone() {
-		Derivation newDerivation = (Derivation) super.clone();
 
-		/*
-			protected Clause clause;
-			protected final boolean wasProof; // this derivation was originally "proof by ..."
-			private boolean clauseChecked = false;
-		*/
-
-		newDerivation.clause = clause.clone();
-
-		return newDerivation;
-
-	}
 
 }

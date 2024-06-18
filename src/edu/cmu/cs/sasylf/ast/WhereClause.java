@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -442,5 +443,13 @@ public class WhereClause extends Node {
 	 */
 	public boolean isEmpty() {
 		return clauses.isEmpty();
+	}
+
+	@Override
+	public WhereClause copy(CloneData cd) {
+		// unimplemented
+		System.out.println("WhereClause.copy not implemented");
+		System.exit(0);
+		return null;
 	}
 }

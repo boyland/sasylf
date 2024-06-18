@@ -3,10 +3,12 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -46,5 +48,11 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, source, "");
 		Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
 		if (p != null) ctx.subderivations.put(this, p);
+	}
+	@Override
+	public DerivationByPrevious copy(CloneData cd) {
+		System.out.println("DerivationByPrevious.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

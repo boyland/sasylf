@@ -2,9 +2,11 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.StringSpan;
 
 public class DerivationByTheorem extends DerivationByIHRule {
@@ -79,5 +81,12 @@ public class DerivationByTheorem extends DerivationByIHRule {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		theoremName.visit(consumer);
+	}
+
+	@Override
+	public DerivationByTheorem copy(CloneData cd) {
+		System.out.println("DerivationByTheorem.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

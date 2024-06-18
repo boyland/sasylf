@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.Objects;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -9,6 +10,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class DerivationByWeakening extends DerivationWithArgs {
 	public DerivationByWeakening(String n, Location l, Clause c) {
@@ -105,5 +107,12 @@ public class DerivationByWeakening extends DerivationWithArgs {
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(arg))
 			ctx.subderivations.put(this,ctx.subderivations.get(arg));
+	}
+
+	@Override
+	public DerivationByWeakening copy(CloneData cd) {
+		System.out.println("DerivationByWeakening.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

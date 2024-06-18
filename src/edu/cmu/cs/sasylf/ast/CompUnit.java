@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -17,6 +18,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Span;
 
 
 public class CompUnit extends Node implements Module {
@@ -260,26 +262,39 @@ public class CompUnit extends Node implements Module {
 		}
 	}
 
+	public CompUnit copy(CloneData cd) {
+		// unimplemented
+		System.out.println("CompUnit.copy unimplemented");
+		System.exit(0);
+		return null;
+	}
+
+	@Override
 	public CompUnit clone() {
-		CompUnit clone = (CompUnit) super.clone();
-		/*
-			private PackageDeclaration packageDecl;
-			private String moduleName;
-			private List<Part> params = new ArrayList<Part>();
-			private List<Part> parts = new ArrayList<Part>();
-			private int parseReports;
-		*/
-		clone.packageDecl = packageDecl.clone();
+
+		CloneData cd = new CloneData();
+
+		CompUnit clone;
+
+		try {
+			clone = (CompUnit) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in CompUnit");
+			System.exit(1);
+			return null;
+		}
+	
+		clone.packageDecl = packageDecl.copy(cd);
 
 		List<Part> newParams = new ArrayList<>();
 		for (Part p: params) {
-			newParams.add(p.clone());
+			newParams.add(p.copy(cd));
 		}
 		clone.params = newParams;
 
 		List<Part> newParts = new ArrayList<>();
 		for (Part p : parts) {
-			newParts.add(p.clone());
+			newParts.add(p.copy(cd));
 		}
 		clone.parts = newParts;
 

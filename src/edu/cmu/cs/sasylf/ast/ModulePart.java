@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -221,21 +222,25 @@ public class ModulePart extends Node implements Part, Named {
 		// TODO: I'm pretty sure that nothing should be done here
 	}
 
-	public ModulePart clone() {
-		/*
-			private String name;
-			private QualName module;
-			private List<QualName> arguments;
-		*/
+	public ModulePart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ModulePart) cd.getCloneFor(this);
+		ModulePart clone;
 
-		ModulePart clone = (ModulePart) super.clone();
+		try {
+			clone = (ModulePart) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in ModulePart");
+			System.exit(1);
+			return null;
+		}
 		
-		clone.module = clone.module.clone();
+		clone.module = clone.module.copy(cd);
 		
 		List<QualName> newArguments = new ArrayList<>();
 
 		for (QualName argument : arguments) {
-			newArguments.add(argument.clone());
+			newArguments.add(argument.copy(cd));
 		}
 		clone.arguments = newArguments;
 

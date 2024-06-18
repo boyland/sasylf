@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -10,4 +11,14 @@ public class DerivationByAssumption extends Derivation {
 	}
 
 	// verify: error if this is actually part of a derivation--it's for foralls only!
+
+
+	public DerivationByAssumption copy(CloneData cd) {
+		System.out.println("DerivationByAssumption.copy unimplemented");
+		System.exit(0);
+		return null;
+	}
+
+
+
 }

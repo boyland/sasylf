@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -501,21 +502,34 @@ public class Rule extends RuleLike implements CanBeCase {
 		conclusion.substitute(from, to);
 	}
 
-	public Rule clone() {
+	public Rule copy(CloneData cd) {
 		/*
 			private List<Clause> premises;
 			private Clause conclusion;
 			private int isAssumpt = 0;
 		*/
 
-		Rule clone = (Rule) super.clone();
+		if (cd.containsCloneFor(this)) return (Rule) cd.getCloneFor(this);
+
+		Rule clone;
+
+		try {
+			clone = (Rule) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Rule");
+			System.exit(1);
+			return null;
+		}
+
 		List<Clause> newPremises = new ArrayList<Clause>();
 		for (Clause c : premises) {
-			newPremises.add(c.clone());
+			newPremises.add(c.copy(cd));
 		}
 		clone.premises = newPremises;
 
-		clone.conclusion = conclusion.clone();
+		clone.conclusion = conclusion.copy(cd);
+
+		cd.addCloneFor(this, clone);
 
 		return clone;
 	}

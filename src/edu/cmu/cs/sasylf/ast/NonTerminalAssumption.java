@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -51,10 +52,10 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		nonTerminal.substitute(from, to);
 	}
 
-	public NonTerminalAssumption clone() {
-		NonTerminalAssumption clone = (NonTerminalAssumption) super.clone();
-
-		clone.nonTerminal = clone.nonTerminal.clone();
-		return clone;
+	@Override
+	public Fact copy(CloneData cd) {
+		System.out.println("NonTerminalAssumption.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -15,6 +16,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * Syntactic sugar productions: syntax that 
@@ -191,8 +193,36 @@ public class Sugar extends Syntax {
 		// TODO: should we do something?
 	}
 
-	public Sugar copy() {
-		return new Sugar(sugar.clone(), (Clause)replacement.clone());
+	@Override
+	public Sugar copy(CloneData cd) {
+		
+		/*
+			private Clause sugar;
+			private NonTerminal typeName;
+			private SyntaxDeclaration type;
+			private Element replacement;
+			private boolean typeChecked;
+		
+		*/
+		if (cd.containsCloneFor(this)) return (Sugar) cd.getCloneFor(this);
+
+		Sugar clone;
+		try {
+			clone = (Sugar) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Sugar");
+			System.exit(1);
+			return null;
+		}
+
+		clone.sugar = clone.sugar.copy(cd);
+		clone.typeName = clone.typeName.copy(cd);
+		clone.type = clone.type.copy(cd);
+		clone.replacement = clone.replacement.copy(cd);
+
+		cd.addCloneFor(this, clone);
+		
+		return clone;
 	}
 
 }

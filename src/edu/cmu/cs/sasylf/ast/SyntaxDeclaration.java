@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -591,18 +592,17 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
+	public SyntaxDeclaration copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (SyntaxDeclaration) cd.getCloneFor(this);
 
-
-	public SyntaxDeclaration clone() {
-		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();
-		/*
-			private List<Clause> elements; // productions
-			private NonTerminal nonTerminal;
-			private Set<String> alternates;
-			private Variable variable;
-			private ClauseDef context;
-			private boolean isAbstract;
-	 	*/
+		SyntaxDeclaration clone;
+		try {
+			clone = (SyntaxDeclaration) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in SyntaxDeclaration");
+			System.exit(1);
+			return null;
+		}
 
 		List<Clause> newElements = new ArrayList<>();
 		for (Clause c : elements) {
@@ -610,20 +610,22 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 		clone.elements = newElements;
 
-		clone.nonTerminal = nonTerminal.clone();
+		clone.nonTerminal = (NonTerminal) nonTerminal.copy(cd);
 
 		clone.alternates = new HashSet<>(alternates);
 
 		if (variable != null) {
-			clone.variable = variable.clone();
+			clone.variable = variable.copy(cd);
 		}
 
 		if (context != null) {
 			clone.context = (ClauseDef) context.clone();
 		}
 
+		cd.addCloneFor(this, clone);
+
 		return clone;
-		
+
 	}
 
 }

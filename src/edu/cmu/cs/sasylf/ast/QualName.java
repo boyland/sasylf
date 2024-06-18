@@ -3,11 +3,13 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * A qualified name, used in the SASyLF module system.
@@ -224,22 +226,21 @@ public class QualName extends Node {
 		source.visit(consumer);
 	}
 
-	public QualName clone() {
-		QualName clone = (QualName) super.clone();
-		/*
-			private final QualName source;
-			private final String name;
-			
-			private Object resolution;
-			private int version;
- 		*/
+	public QualName copy(CloneData cd) {
+		QualName clone;
+		try {
+			clone = (QualName) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in QualName");
+			System.exit(1);
+			return null;
+		}
 
-		if (clone.source != null) clone.source = source.clone();
+		if (source != null) {
+			clone.source = clone.source.copy(cd);
+		}
 
-		// Set the resolution to null, since it now potentially refers to a different object
-
-		clone.resolution = null; // need to call the typecheck method again after cloning/substitution
-
+		cd.addCloneFor(this, clone);
 		return clone;
 	}
 }

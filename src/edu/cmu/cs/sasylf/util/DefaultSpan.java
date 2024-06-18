@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.CloneData;
+
 public class DefaultSpan implements Span {
 
 	public DefaultSpan(Location l) {
@@ -30,4 +32,23 @@ public class DefaultSpan implements Span {
 	}
 
 	private Location start, end;
+
+	public DefaultSpan copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (DefaultSpan) cd.getCloneFor(this);
+		DefaultSpan clone;
+		try {
+			clone = (DefaultSpan) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("CloneNotSupportedException in DefaultSpan");
+			System.exit(1);
+			return null;
+		}
+
+		clone.start = clone.start.copy(cd);
+		clone.end = clone.end.copy(cd);
+
+		cd.addCloneFor(this, clone);
+
+		return clone;
+	}
 }

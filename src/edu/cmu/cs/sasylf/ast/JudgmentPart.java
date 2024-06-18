@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -115,16 +116,30 @@ public class JudgmentPart implements Part {
 	}
 
 	public void substitute(String from, String to) {
-		System.out.println("Substituting in JudgmentPart");
 		for (Judgment j : judgments) {
 			j.substitute(from, to);
 		}
 	}
 
-	public JudgmentPart clone() {
+	public JudgmentPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (JudgmentPart) cd.getCloneFor(this);
+
+		try {
+			JudgmentPart clone = (JudgmentPart) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in JudgmentPart");
+			System.exit(1);
+			return null;
+		}
+
 		List<Judgment> newJudgments = new ArrayList<Judgment>();
 		for (Judgment j : judgments) {
-			newJudgments.add(j.clone());
+			if (cd.containsCloneFor(j)) {
+				newJudgments.add((Judgment) cd.getCloneFor(j));
+			}
+			Judgment jCopy = j.copy(cd);
+			newJudgments.add(jCopy);
+			cd.addCloneFor(j, jCopy);
 		}
 		return new JudgmentPart(newJudgments);
 	}

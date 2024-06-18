@@ -2,10 +2,12 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class DerivationUnproved extends Derivation {
 	public DerivationUnproved(String n, Location l, Clause c) {
@@ -36,5 +38,12 @@ public class DerivationUnproved extends Derivation {
 			}
 		}
 		ErrorHandler.warning(Errors.DERIVATION_UNPROVED, form, this, t.toString());
+	}
+
+	@Override
+	public DerivationUnproved copy(CloneData cd) {
+		System.out.println("DerivationUnproved.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

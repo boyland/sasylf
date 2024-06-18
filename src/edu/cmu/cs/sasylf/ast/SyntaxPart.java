@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -111,18 +112,20 @@ public class SyntaxPart implements Part {
 		}
 	}
 
-	public SyntaxPart clone() {
+	public SyntaxPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (SyntaxPart) cd.getCloneFor(this);
 		try {
 			SyntaxPart clone = (SyntaxPart) super.clone();
 			clone.syntax = new ArrayList<Syntax>();
 			for (Syntax s : syntax) {
-				clone.syntax.add(s.clone());
+				clone.syntax.add(s.copy(cd));
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new Error("unexpected error",e);
+			throw new Error("unexpected error", e);
 		}
-
 	}
+
+
 
 }

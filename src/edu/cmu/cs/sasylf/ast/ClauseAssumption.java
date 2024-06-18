@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -38,9 +39,26 @@ public class ClauseAssumption extends SyntaxAssumption {
 		clause.substitute(from, to);
 	}
 
-	public ClauseAssumption clone() {
-		ClauseAssumption clone = (ClauseAssumption) super.clone();
-		clone.clause = clause.clone();
+	public ClauseAssumption copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ClauseAssumption) cd.getCloneFor(this);
+
+
+		ClauseAssumption clone;
+
+		try {
+			clone = (ClauseAssumption) this.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supperted in " + this.getClass());
+			System.exit(1);
+			return null;
+		}
+
+		clone.clause = clause.copy(cd);
+	
+		cd.addCloneFor(this, clone);
+
 		return clone;
+
 	}
 }

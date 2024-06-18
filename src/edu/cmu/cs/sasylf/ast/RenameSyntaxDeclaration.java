@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -179,11 +180,21 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		source.visit(consumer);
 	}
 
-	public RenameSyntaxDeclaration clone() {
-		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.clone(); 
-		clone.source = source.clone();
-		clone.original = original.clone();
+	public RenameSyntaxDeclaration copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (RenameSyntaxDeclaration) cd.getCloneFor(this);
+
+		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.copy(cd);
+
+		// clone source and original
+
+		clone.source = clone.source.copy(cd);
+		clone.original = clone.original.copy(cd);
+
+		cd.addCloneFor(this, clone);
+
 		return clone;
 	}
+
+
 
 }

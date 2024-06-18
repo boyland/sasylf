@@ -93,7 +93,7 @@ public class QuickFixHandler extends AbstractHandler {
 			ICompletionProposal[] proposals = MarkerResolutionGenerator.getProposals(doc, markers[i]);
 			if (proposals != null) {
 				for (ICompletionProposal prop : proposals) {
-					resolutionMap.put(new CompletionProposalMarkerResolution(doc, prop),Collections.singletonList(markers[i]));
+					resolutionMap.addCloneFor(new CompletionProposalMarkerResolution(doc, prop),Collections.singletonList(markers[i]));
 				}
 			}
 		}

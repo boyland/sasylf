@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -147,7 +148,10 @@ public abstract class Element extends Node {
 	}
 
 	public abstract void substitute(String from, String to);
-	public Element clone() {
-		return (Element) super.clone();
+
+
+	public Element copy(CloneData cd) {
+		throw new UnsupportedOperationException("copy not supported for " + this.getClass().getSimpleName());
 	}
+
 }
