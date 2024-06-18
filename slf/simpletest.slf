@@ -9,3 +9,4 @@ syntax
   n ::= 0 | S n
 
   1 := S 0
+

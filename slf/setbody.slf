@@ -1,0 +1,56 @@
+package slf
+
+module set
+
+provides
+
+  terminals empty
+
+  syntax
+    
+    s ::= empty | e :: s // hide the implementation
+
+  judgment sum-of-set: s +-> e
+
+    ------------ add-empty
+    empty +-> id
+
+    s +-> e2
+    e1 + e2 = e3
+    ------------ add-cons
+    e1 :: s +-> e3
+
+  theorem eval-1:
+    exists empty +-> id
+    d: empty +-> id by rule add-empty
+    proof by d
+  end theorem
+
+  theorem eval-2:
+    forall e
+    exists e :: empty +-> e
+    d1: empty +-> id by rule add-empty
+    d2: e + id = e by theorem right-identity on e, id
+    d3: e :: empty +-> e by rule add-cons on d1, d2
+    proof by d3
+  end theorem
+
+/*
+  Suppose we then wrote
+
+  module intset = set (
+    syntax n ::= 0 | S n
+  )
+
+  This produces the following module
+
+  module intset
+
+  provides
+    terminals empty
+    syntax
+      n ::= 0 | S n
+      s ::= empty | n :: s
+*/
+
+

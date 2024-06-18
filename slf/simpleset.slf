@@ -1,0 +1,20 @@
+package slf
+
+module simpleset
+
+requires
+
+  abstract syntax e
+
+provides
+
+  terminals empty head isempty
+
+  syntax
+
+    s ::= empty | e :: s
+
+judgment eq: s = s
+
+  ------- eq
+  s = s

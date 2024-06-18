@@ -1,0 +1,27 @@
+package slf
+
+module testing
+
+provides
+
+terminals S A B C D
+
+syntax
+  n ::= 0 | S n
+
+  a ::= A | B
+
+  b ::= C | D
+
+module test1mod = slf.test1
+
+module test2mod = slf.simpleset[n]
+
+module test3mod = slf.simpleset[a]
+
+syntax s = test2mod.s
+
+syntax ss = test3mod.s
+
+judgment eq2 = test2mod.eq : ss = ss
+

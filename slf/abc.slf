@@ -1,0 +1,18 @@
+package slf
+
+module abc
+
+provides
+
+terminals A B C emptyaset isa
+
+syntax
+
+  char ::= A | B | C
+
+  aset ::= emptyaset | char :: aset
+
+judgment isa : isa char
+
+  ------ isa-A
+  isa A

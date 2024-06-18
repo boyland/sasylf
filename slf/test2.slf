@@ -1,0 +1,13 @@
+package slf
+
+module test2
+
+requires
+
+abstract syntax e
+
+provides
+
+terminals empty S
+
+  s ::= empty | e :: s
