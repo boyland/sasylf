@@ -171,12 +171,6 @@ public class ModulePart extends Node implements Part, Named {
 			// add the new module to the context
 
 			ctx.modMap.put(name, newModule);
-
-			System.out.println("\n              New module: \n");
-			System.out.println(newModule);
-			System.out.println("\n\n");
-
-
 		}
 	}
 

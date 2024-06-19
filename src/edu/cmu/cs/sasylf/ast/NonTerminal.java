@@ -58,6 +58,7 @@ public class NonTerminal extends Element {
 
 	@Override
 	public int hashCode() { return symbol.hashCode(); }
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
@@ -235,7 +236,12 @@ public class NonTerminal extends Element {
 	}
 
 	public NonTerminal copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (NonTerminal) cd.getCloneFor(this);
+
+		if (cd.containsCloneFor(this)) {
+			return (NonTerminal) cd.getCloneFor(this);
+		}
+
+		
 
 		NonTerminal clone;
 		try {
@@ -254,9 +260,12 @@ public class NonTerminal extends Element {
 
 		cd.addCloneFor(this, clone);
 		
-		if (clone.type != null) clone.type = clone.type.copy(cd);
+		if (clone.type != null) {
+			clone.type = clone.type.copy(cd);
+		}
 		if (clone.ty != null) clone.ty = clone.ty.copy(cd);
 		
 		return clone;
 	}
+
 }

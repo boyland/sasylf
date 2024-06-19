@@ -189,8 +189,8 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 		cd.addCloneFor(this, clone);
 
-		clone.source = clone.source.copy(cd);
-		clone.original = clone.original.copy(cd);
+		if (clone.source != null) clone.source = clone.source.copy(cd);
+		if (clone.original != null) clone.original = clone.original.copy(cd);
 
 		return clone;
 	}

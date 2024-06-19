@@ -13,9 +13,11 @@ import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
 import edu.cmu.cs.sasylf.ast.TerminalsPart;
 import edu.cmu.cs.sasylf.ast.Theorem;
@@ -205,6 +207,51 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
+			/*
+			CompUnit clone = syntaxTree.clone();
+			
+			// get the first SyntaxPart from each
+			
+			SyntaxPart sp1 = null;
+			SyntaxPart sp2 = null;
+
+			for (Part p : syntaxTree.getParts()) {
+				if (p instanceof SyntaxPart) {
+					sp1 = (SyntaxPart) p;
+					break;
+				}
+			}
+
+			for (Part p : clone.getParts()) {
+				if (p instanceof SyntaxPart) {
+					sp2 = (SyntaxPart) p;
+					break;
+				}
+			}
+
+			// get the first Syntax from each
+
+			SyntaxDeclaration s1 = (SyntaxDeclaration) sp1.getSyntax().get(1);
+			SyntaxDeclaration s2 = (SyntaxDeclaration) sp2.getSyntax().get(1);
+
+			Clause c1 = s1.getClauses().get(1);
+			Clause c2 = s2.getClauses().get(1);
+
+			Element e1 = c1.getElements().get(0);
+			Element e2 = c2.getElements().get(0);
+
+			NonTerminal nt1 = (NonTerminal) e1;
+
+			NonTerminal nt2 = (NonTerminal) e2;
+
+			System.out.println("\n Original: \n\n");
+			System.out.println(syntaxTree);
+			System.out.println("\n Clone: \n\n");
+			System.out.println(clone);
+
+			System.exit(0);
+			*/
+			
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
 			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {

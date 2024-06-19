@@ -1,13 +1,14 @@
 package edu.cmu.cs.sasylf;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 public class CloneData {
   private final Map<Object, Object> cloneMap;
 
   public CloneData() {
-    cloneMap = new HashMap<Object, Object>();
+    cloneMap = new IdentityHashMap<>();
   }
 
   public void addCloneFor(Object key, Object value) {
@@ -20,6 +21,10 @@ public class CloneData {
 
   public Object getCloneFor(Object key) {
     return cloneMap.get(key);
+  }
+
+  public Map<Object, Object> getMap() {
+    return cloneMap;
   }
 
 }

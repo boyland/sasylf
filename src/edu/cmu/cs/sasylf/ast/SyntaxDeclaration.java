@@ -89,6 +89,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	
 	@Override
 	public void prettyPrint(PrintWriter out) {
+
 		for (String alt : alternates) {
 			if (!nonTerminal.getSymbol().equals(alt)) {
 				out.print(alt);
@@ -409,11 +410,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		return context;
 	}
 
-	@Override
-	public String toString() {
-		return nonTerminal.toString();
-	}
-
 	private Set<SyntaxDeclaration> varTypes;
 	/**
 	 * Return the variable types that this context nonterminal can include
@@ -593,18 +589,21 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	}
 
 	public SyntaxDeclaration copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (SyntaxDeclaration) cd.getCloneFor(this);
+		if (cd.containsCloneFor(this)) {
+			return (SyntaxDeclaration) cd.getCloneFor(this);
+		}
 
 		SyntaxDeclaration clone;
 		try {
 			clone = (SyntaxDeclaration) super.clone();
 		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in SyntaxDeclaration");
 			System.exit(1);
 			return null;
 		}
 
 		cd.addCloneFor(this, clone);
+
+		clone.nonTerminal = (NonTerminal) nonTerminal.copy(cd);
 		
 		List<Clause> newElements = new ArrayList<>();
 		for (Clause c : elements) {
@@ -612,7 +611,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 		clone.elements = newElements;
 
-		clone.nonTerminal = (NonTerminal) nonTerminal.copy(cd);
+		
 
 		clone.alternates = new HashSet<>(alternates);
 
