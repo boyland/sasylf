@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -568,14 +569,17 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
 		// perform the substitution for each of the productions
 		for (Clause c : elements) {
-			c.substitute(from, to);
+			c.substitute(from, to, sd);
 		}
 		// substitute for the NonTerminal
 
-		nonTerminal.substitute(from, to);
+		nonTerminal.substitute(from, to, sd);
 
 		// substitute in the alternates
 		// if to isn't in alternates, add it

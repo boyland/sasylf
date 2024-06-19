@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
@@ -675,9 +676,11 @@ public class Clause extends Element implements CanBeCase {
 		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
-	public void substitute (String from, String to) {
+	public void substitute (String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		for (Element e : elements) {
-			e.substitute(from, to);
+			e.substitute(from, to, sd);
 		}
 	}
 

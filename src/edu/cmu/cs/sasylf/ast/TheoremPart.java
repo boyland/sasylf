@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -68,9 +69,12 @@ public class TheoremPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
 		for (Theorem theorem : theorems) {
-			theorem.substitute(from, to);
+			theorem.substitute(from, to, sd);
 		}
 	}
 

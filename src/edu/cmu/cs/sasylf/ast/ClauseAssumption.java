@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -35,8 +36,10 @@ public class ClauseAssumption extends SyntaxAssumption {
 		throw new UnsupportedOperationException();
 	}
 
-	public void substitute(String from, String to) {
-		clause.substitute(from, to);
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		clause.substitute(from, to, sd);
 	}
 
 	public ClauseAssumption copy(CloneData cd) {

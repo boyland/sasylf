@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -206,7 +207,9 @@ public class NonTerminal extends Element {
 		freeSet.add(this);
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 	
 		/*
 			We want to check if symbol matches from
@@ -237,12 +240,12 @@ public class NonTerminal extends Element {
 		if (type != null) {
 			System.out.println("substituting in type");
 			System.out.println("Before: " + type);
-			type.substitute(from, to);
+			type.substitute(from, to, sd);
 			System.out.println("After: " + type);
 		}
 
 		if (ty != null) {
-			ty.substitute(from, to);
+			ty.substitute(from, to, sd);
 		}
 
 

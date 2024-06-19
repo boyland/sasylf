@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -147,7 +148,7 @@ public abstract class Element extends Node {
 		return term;
 	}
 
-	public abstract void substitute(String from, String to);
+	public abstract void substitute(String from, String to, SubstitutionData sd);
 
 
 	public Element copy(CloneData cd) {

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -164,7 +165,7 @@ public class ModulePart extends Node implements Part, Named {
 				
 				// substitute the parameter with the argument
 
-				newModule.substitute(parameterName, argumentName);
+				newModule.substitute(parameterName, argumentName, new SubstitutionData());
 			
 			}
 
@@ -210,7 +211,7 @@ public class ModulePart extends Node implements Part, Named {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}

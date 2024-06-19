@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -48,7 +49,7 @@ public abstract class Fact extends Node {
 		}
 	}
 
-	public abstract void substitute(String from, String to);
+	public abstract void substitute(String from, String to, SubstitutionData sd);
 
 	public abstract Fact copy(CloneData cd);
 }

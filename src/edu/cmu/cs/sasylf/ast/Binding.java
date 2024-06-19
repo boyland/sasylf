@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -186,7 +187,7 @@ public class Binding extends Element {
 		}
 	}
 
-	public void substitute(String from, String to ) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// do nothing
 		// TODO: Fix this
 	}

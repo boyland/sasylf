@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -48,8 +49,10 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	private NonTerminal nonTerminal;
 	private boolean isTheoremArg = false;
 
-	public void substitute(String from, String to) {
-		nonTerminal.substitute(from, to);
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		nonTerminal.substitute(from, to, sd);
 	}
 
 	@Override

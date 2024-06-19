@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -207,7 +208,9 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		/*
 			private List<Rule> rules;
 			private Clause form;
@@ -217,12 +220,12 @@ public class Judgment extends Node implements ClauseType, Named {
 		*/
 		
 		for (Rule r : rules) {
-			r.substitute(from, to);
+			r.substitute(from, to, sd);
 		}
 
 		// We are not substituting the name
 
-		form.substitute(from, to);
+		form.substitute(from, to, sd);
 
 		// TODO: I think something else might need to be done here
 

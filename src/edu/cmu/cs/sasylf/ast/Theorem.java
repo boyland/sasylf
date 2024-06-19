@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -366,14 +367,17 @@ public class Theorem extends RuleLike {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
 		// substitute in foralls
 		for (Fact f : foralls) {
-			f.substitute(from, to);
+			f.substitute(from, to, sd);
 		}
 
 		// substitute in exists
-		exists.substitute(from, to);
+		exists.substitute(from, to, sd);
 
 		// I don't think we need to substitute in derivations
 	}

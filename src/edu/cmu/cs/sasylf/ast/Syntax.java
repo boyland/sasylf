@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -74,7 +75,7 @@ public abstract class Syntax extends Node {
 	 */
 	public void checkSubordination() {}
 
-	public abstract void substitute(String from, String to);
+	public abstract void substitute(String from, String to, SubstitutionData sd);
 
 	public abstract Syntax copy(CloneData cd);
 }

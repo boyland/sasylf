@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -106,9 +107,11 @@ public class SyntaxPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		for (Syntax s : syntax) {
-			s.substitute(from, to);
+			s.substitute(from, to, sd);
 		}
 	}
 

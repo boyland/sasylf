@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.term.Substitution;
 
 /**
  * Declared terminals/
@@ -55,7 +57,7 @@ public class TerminalsPart implements Part {
 		// Do nothing
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}

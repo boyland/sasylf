@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -356,8 +357,10 @@ public abstract class Derivation extends Fact {
 		return true;
 	}
 
-	public void substitute(String from, String to) {
-		if (clause != null) clause.substitute(from, to);
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		if (clause != null) clause.substitute(from, to, sd);
 	}
 
 
