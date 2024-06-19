@@ -233,6 +233,19 @@ public class NonTerminal extends Element {
 		if (filler.matches("^[0-9_']*$")) {
 			symbol = to + filler;
 		}
+
+		if (type != null) {
+			System.out.println("substituting in type");
+			System.out.println("Before: " + type);
+			type.substitute(from, to);
+			System.out.println("After: " + type);
+		}
+
+		if (ty != null) {
+			ty.substitute(from, to);
+		}
+
+
 	}
 
 	public NonTerminal copy(CloneData cd) {

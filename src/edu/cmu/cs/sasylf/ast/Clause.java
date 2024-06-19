@@ -273,14 +273,13 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		/*System.out.println("checkMatch: " + orig + "  |  " + repl);
+		System.out.println("checkMatch: " + orig + "  |  " + repl);
 		System.out.println("orig.getElemType(): " + orig.getElemType() + "  |  repl.getElemType(): " + repl.getElemType());
-		System.out.println("orig class: " + orig.getClass());
-		System.out.println("orig.getElemType() class: " + orig.getElemType().getClass());*/
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
-		/*System.out.println("type1: " + type1);
-		System.out.println("type2: " + type2);*/
+		System.out.println("type1: " + type1);
+		System.out.println("type2: " + type2);
+		System.out.println(type1 == type2);
 		if (type1 != type2) {
 			ErrorHandler.error(Errors.RENAME_TYPE_MISMATCH, repl.getElemType().getName() + " != " + orig.getElemType().getName(), repl,
 					"SASyLF computed the LF types as " + type1 + " and " + type2);
