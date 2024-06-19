@@ -93,9 +93,6 @@ public class ModulePart extends Node implements Part, Named {
 
 				Object argResolution = argument.resolve(ctx);
 
-				System.out.println("Parameter is of type: " + parameter.getClass());
-				System.out.println("Argument resolution is of type: " + argResolution.getClass());
-
 				// Use instanceof to check that argument and parameter match
 			
 				if (parameter instanceof SyntaxPart && !(argResolution instanceof Syntax)) {
@@ -175,8 +172,10 @@ public class ModulePart extends Node implements Part, Named {
 
 			ctx.modMap.put(name, newModule);
 
-			System.out.println("New module: ");
+			System.out.println("\n              New module: \n");
 			System.out.println(newModule);
+			System.out.println("\n\n");
+
 
 		}
 	}
@@ -234,6 +233,8 @@ public class ModulePart extends Node implements Part, Named {
 			System.exit(1);
 			return null;
 		}
+
+		cd.addCloneFor(this, clone);
 		
 		clone.module = clone.module.copy(cd);
 		

@@ -162,9 +162,9 @@ public class Variable extends Element {
 
 		Variable clone = (Variable) super.copy(cd);
 
-		clone.type = clone.type.copy(cd);
-
 		cd.addCloneFor(this, clone);
+
+		clone.type = clone.type.copy(cd);
 
 		return clone;
 	}

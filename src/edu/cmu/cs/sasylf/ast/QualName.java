@@ -236,11 +236,12 @@ public class QualName extends Node {
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+
 		if (source != null) {
 			clone.source = clone.source.copy(cd);
 		}
 
-		cd.addCloneFor(this, clone);
 		return clone;
 	}
 }

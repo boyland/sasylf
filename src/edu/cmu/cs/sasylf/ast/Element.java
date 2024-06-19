@@ -151,7 +151,8 @@ public abstract class Element extends Node {
 
 
 	public Element copy(CloneData cd) {
-		throw new UnsupportedOperationException("copy not supported for " + this.getClass().getSimpleName());
+
+		throw new UnsupportedOperationException("copy not supported for " + this.getClass().getSimpleName() + "In Element");
 	}
 
 }

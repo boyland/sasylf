@@ -40,9 +40,9 @@ public class VariableAssumption extends SyntaxAssumption {
 			return null;
 		}
 
-		clone.variable = clone.variable.copy(cd);
-
 		cd.addCloneFor(this, clone);
+
+		clone.variable = clone.variable.copy(cd);
 
 		return clone;
 	}

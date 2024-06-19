@@ -367,16 +367,12 @@ public class Theorem extends RuleLike {
 	}
 
 	public void substitute(String from, String to) {
-		System.out.println("Substituting in theorem " + getName());
 		// substitute in foralls
 		for (Fact f : foralls) {
-			System.out.println("Substituting in forall " + f);
-			System.out.println("Class: " + f.getClass());
 			f.substitute(from, to);
 		}
 
 		// substitute in exists
-		System.out.println("Substituting in exists");
 		exists.substitute(from, to);
 
 		// I don't think we need to substitute in derivations
@@ -394,6 +390,8 @@ public class Theorem extends RuleLike {
 			System.exit(1);
 			return null;
 		}
+
+		cd.addCloneFor(this, clone);
 
 		// skip kind and kindTitle
 
@@ -416,8 +414,6 @@ public class Theorem extends RuleLike {
 		}
 
 		clone.firstInGroup = clone.firstInGroup.copy(cd);
-
-		cd.addCloneFor(this, clone);
 
 		return clone;
 	}

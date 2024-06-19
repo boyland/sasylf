@@ -42,7 +42,6 @@ public class ClauseAssumption extends SyntaxAssumption {
 	public ClauseAssumption copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (ClauseAssumption) cd.getCloneFor(this);
 
-
 		ClauseAssumption clone;
 
 		try {
@@ -54,9 +53,11 @@ public class ClauseAssumption extends SyntaxAssumption {
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+		
 		clone.clause = clause.copy(cd);
 	
-		cd.addCloneFor(this, clone);
+		
 
 		return clone;
 

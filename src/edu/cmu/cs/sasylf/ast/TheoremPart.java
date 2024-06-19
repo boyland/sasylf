@@ -79,6 +79,7 @@ public class TheoremPart implements Part {
 		TheoremPart clone;
 		try {
 			clone = (TheoremPart) super.clone();
+			cd.addCloneFor(this, clone);
 		
 			List<Theorem> newTheorems = new ArrayList<Theorem>();
 			for (Theorem theorem : theorems) {

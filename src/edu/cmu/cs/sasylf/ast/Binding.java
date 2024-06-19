@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -190,8 +191,38 @@ public class Binding extends Element {
 		// TODO: Fix this
 	}
 
-	public Binding copy() {
-		return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
+	public Binding copy(CloneData cd) {
+		//return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
+		if (cd.containsCloneFor(this)) return (Binding) cd.getCloneFor(this);
+		Binding clone;
+		try {
+			clone = (Binding) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Error in Binding.copy");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		/*
+			private List<Element> elements;
+			private NonTerminal nonTerminal;
+		*/
+
+		// clone the elements
+
+		List<Element> newElements = new ArrayList<Element>();
+		for (Element e: elements) {
+			newElements.add(e.copy(cd));
+		}
+		clone.elements = newElements;
+
+		// clone the nonTerminal
+
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+
+		return clone;
 	}
 
 }

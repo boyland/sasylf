@@ -82,6 +82,7 @@ public class TerminalsPart implements Part {
 
 		try {
 			TerminalsPart clone = (TerminalsPart) super.clone();
+			cd.addCloneFor(this, clone);
 			HashSet<String> newDeclaredTerminals = new HashSet<>();
 			newDeclaredTerminals.addAll(declaredTerminals);
 			clone.declaredTerminals = newDeclaredTerminals;

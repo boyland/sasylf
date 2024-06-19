@@ -116,6 +116,7 @@ public class SyntaxPart implements Part {
 		if (cd.containsCloneFor(this)) return (SyntaxPart) cd.getCloneFor(this);
 		try {
 			SyntaxPart clone = (SyntaxPart) super.clone();
+			cd.addCloneFor(this, clone);
 			clone.syntax = new ArrayList<Syntax>();
 			for (Syntax s : syntax) {
 				clone.syntax.add(s.copy(cd));

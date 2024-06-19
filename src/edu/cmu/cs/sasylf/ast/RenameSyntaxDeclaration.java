@@ -187,10 +187,10 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 		// clone source and original
 
+		cd.addCloneFor(this, clone);
+
 		clone.source = clone.source.copy(cd);
 		clone.original = clone.original.copy(cd);
-
-		cd.addCloneFor(this, clone);
 
 		return clone;
 	}

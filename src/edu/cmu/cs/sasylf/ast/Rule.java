@@ -525,11 +525,12 @@ public class Rule extends RuleLike implements CanBeCase {
 		for (Clause c : premises) {
 			newPremises.add(c.copy(cd));
 		}
+
+		cd.addCloneFor(this, clone);
+		
 		clone.premises = newPremises;
 
 		clone.conclusion = conclusion.copy(cd);
-
-		cd.addCloneFor(this, clone);
 
 		return clone;
 	}

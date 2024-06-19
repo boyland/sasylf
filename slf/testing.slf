@@ -15,9 +15,9 @@ syntax
 
 module test1mod = slf.test1
 
-module test2mod = slf.simpleset[n]
+module test2mod = slf.simpleset[a]
 
-module test3mod = slf.simpleset[a]
+module test3mod = slf.simpleset[n]
 
 syntax s = test2mod.s
 

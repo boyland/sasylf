@@ -123,25 +123,25 @@ public class JudgmentPart implements Part {
 
 	public JudgmentPart copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (JudgmentPart) cd.getCloneFor(this);
-
+		JudgmentPart clone;
 		try {
-			JudgmentPart clone = (JudgmentPart) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in JudgmentPart");
+			clone = (JudgmentPart) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supperted in " + this.getClass());
 			System.exit(1);
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+
 		List<Judgment> newJudgments = new ArrayList<Judgment>();
 		for (Judgment j : judgments) {
-			if (cd.containsCloneFor(j)) {
-				newJudgments.add((Judgment) cd.getCloneFor(j));
-			}
-			Judgment jCopy = j.copy(cd);
-			newJudgments.add(jCopy);
-			cd.addCloneFor(j, jCopy);
+			newJudgments.add(j.copy(cd));
 		}
-		return new JudgmentPart(newJudgments);
+		clone.judgments = newJudgments;
+		
+		return clone;
 	}
 
 	public String toString() {

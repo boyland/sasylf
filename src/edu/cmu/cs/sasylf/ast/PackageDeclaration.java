@@ -69,9 +69,9 @@ public class PackageDeclaration extends Node {
 			return null;
 		}
 
-		clone.name = name.copy(cd);
-
 		cd.addCloneFor(this, clone);
+
+		clone.name = name.copy(cd);
 
 		return clone;
 	}

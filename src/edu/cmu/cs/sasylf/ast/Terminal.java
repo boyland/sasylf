@@ -143,6 +143,8 @@ public class Terminal extends Element implements ElemType {
 			System.exit(1);
 			return null;
 		}
+		
+		cd.addCloneFor(this, clone);
 
 		/*
 			We have to clone the following attributes
@@ -155,8 +157,6 @@ public class Terminal extends Element implements ElemType {
 		clone.sp = sp.copy(cd);
 
 		// the other attributes are immutable, so we don't need to clone them
-
-		cd.addCloneFor(this, clone);
 		
 		return clone;
 	}

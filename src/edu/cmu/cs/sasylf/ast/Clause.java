@@ -69,10 +69,10 @@ public class Clause extends Element implements CanBeCase {
 
 	public Clause copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Clause) cd.getCloneFor(this);
-		Clause result;
+		Clause clone;
 
 		try {
-			result = (Clause) super.clone();
+			clone = (Clause) super.clone();
 		}
 		catch(CloneNotSupportedException e) {
 			System.out.println("Clone not supported in Clause");
@@ -80,14 +80,16 @@ public class Clause extends Element implements CanBeCase {
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+
 		List<Element> newElements = new ArrayList<Element>();
 
 		for (Element e : elements) {
 			newElements.add(e.copy(cd));
 		}
-		result.elements = newElements;
+		clone.elements = newElements;
 
-		return result;
+		return clone;
 	}
 
 	public List<ElemType> getElemTypes() {

@@ -156,11 +156,12 @@ public class AssumptionElement extends Element {
 		if (cd.containsCloneFor(this)) return (AssumptionElement) cd.getCloneFor(this);
 
 		AssumptionElement clone = (AssumptionElement) super.copy(cd);
+		cd.addCloneFor(this, clone);
 
 		clone.context = context.copy(cd);
 		clone.base = base.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		
 
 		return clone;
 	}

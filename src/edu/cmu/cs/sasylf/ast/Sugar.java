@@ -215,12 +215,12 @@ public class Sugar extends Syntax {
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+		
 		clone.sugar = clone.sugar.copy(cd);
 		clone.typeName = clone.typeName.copy(cd);
 		clone.type = clone.type.copy(cd);
 		clone.replacement = clone.replacement.copy(cd);
-
-		cd.addCloneFor(this, clone);
 		
 		return clone;
 	}

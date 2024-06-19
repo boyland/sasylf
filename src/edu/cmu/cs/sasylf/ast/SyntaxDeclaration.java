@@ -604,9 +604,11 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			return null;
 		}
 
+		cd.addCloneFor(this, clone);
+		
 		List<Clause> newElements = new ArrayList<>();
 		for (Clause c : elements) {
-			newElements.add(c.clone());
+			newElements.add(c.copy(cd));
 		}
 		clone.elements = newElements;
 
@@ -619,10 +621,8 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 
 		if (context != null) {
-			clone.context = (ClauseDef) context.clone();
+			clone.context = (ClauseDef) context.copy(cd);
 		}
-
-		cd.addCloneFor(this, clone);
 
 		return clone;
 

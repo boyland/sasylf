@@ -232,15 +232,19 @@ public class NonTerminal extends Element {
 		if (filler.matches("^[0-9_']*$")) {
 			symbol = to + filler;
 		}
-
-		
 	}
 
 	public NonTerminal copy(CloneData cd) {
-
 		if (cd.containsCloneFor(this)) return (NonTerminal) cd.getCloneFor(this);
 
-		NonTerminal clone = (NonTerminal) super.copy(cd);
+		NonTerminal clone;
+		try {
+			clone = (NonTerminal) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("CloneNotSupportedException in NonTerminal");
+			System.exit(1);
+			return null;
+		}
 		
 		/*
 			private String symbol;
@@ -248,13 +252,11 @@ public class NonTerminal extends Element {
 			private SyntaxDeclaration ty;
 		 */
 
-		clone.type = clone.type.copy(cd);
-		clone.ty = clone.ty.copy(cd);
-		
 		cd.addCloneFor(this, clone);
-
-		return clone;
 		
+		if (clone.type != null) clone.type = clone.type.copy(cd);
+		if (clone.ty != null) clone.ty = clone.ty.copy(cd);
+		
+		return clone;
 	}
-
 }

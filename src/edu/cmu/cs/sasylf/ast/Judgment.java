@@ -208,7 +208,6 @@ public class Judgment extends Node implements ClauseType, Named {
 	}
 
 	public void substitute(String from, String to) {
-		System.out.println("Substituting in Judgment " + name);
 		/*
 			private List<Rule> rules;
 			private Clause form;
@@ -231,13 +230,15 @@ public class Judgment extends Node implements ClauseType, Named {
 
 	public Judgment copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Judgment) cd.getCloneFor(this);
-		Judgment newJudgment;
+		Judgment clone;
 
 		try {
-			newJudgment = (Judgment) super.clone();
+			clone = (Judgment) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new Error("Java clone() weirdness");
 		}
+		
+		cd.addCloneFor(this, clone);
 		
 		/*
 
@@ -253,15 +254,15 @@ public class Judgment extends Node implements ClauseType, Named {
 		for (Rule r : rules) {
 			newRules.add(r.copy(cd));
 		}
-		newJudgment.rules = newRules;
+		clone.rules = newRules;
 		
-		newJudgment.form = form.copy(cd);
+		clone.form = form.copy(cd);
 
-		if (newJudgment.assume != null) {
-			newJudgment.assume = (NonTerminal) assume.copy(cd);
+		if (clone.assume != null) {
+			clone.assume = (NonTerminal) assume.copy(cd);
 		}
 		
-		return newJudgment;
+		return clone;
 		
 	}
 
