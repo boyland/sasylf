@@ -2,10 +2,11 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 
-public abstract class Atom extends Term {
+public abstract class Atom extends Term implements Cloneable {
 	protected Atom(String name) { this.name = name; }
 
 	public final String getName() { return name; }
@@ -39,4 +40,6 @@ public abstract class Atom extends Term {
 	public String toString() {
 		return name;
 	}
+	
+	public abstract Atom copy(CloneData cd);
 }

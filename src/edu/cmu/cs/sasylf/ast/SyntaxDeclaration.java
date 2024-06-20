@@ -573,22 +573,61 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		// perform the substitution for each of the productions
+		/*
+			We need to substitute in the following properties:
+
+			private List<Clause> elements; // productions
+			private NonTerminal nonTerminal;
+			private Set<String> alternates;
+			private Variable variable;
+			private ClauseDef context;
+			private boolean isAbstract;
+
+			private Constant term = null;
+			private GrmNonTerminal gnt;
+			private GrmTerminal gt;
+
+			private boolean isProductive;
+			private Status isProductiveStatus = Status.NOTSTARTED;
+			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
+		*/
+
 		for (Clause c : elements) {
 			c.substitute(from, to, sd);
 		}
-		// substitute for the NonTerminal
 
 		nonTerminal.substitute(from, to, sd);
 
-		// substitute in the alternates
-		// if to isn't in alternates, add it
-		// if from is in alternates, remove it
+		/*
+			For alternates, we need to remove from (if it exists) and we need to add to
+		*/
 
 		if (alternates.contains(from)) {
 			alternates.remove(from);
 			alternates.add(to);
 		}
+
+		if (variable != null) {
+			variable.substitute(from, to, sd);
+		}
+
+		if (context != null) {
+			context.substitute(from, to, sd);
+		}
+
+		if (term != null) {
+			term.substitute(from, to, sd);
+		}
+
+		if (gnt != null) {
+			gnt.substitute(from, to, sd);
+		}
+
+		if (gt != null) {
+			gt.substitute(from, to, sd);
+		}
+
+		// computed is static, so we don't need to substitute in there
 
 	}
 
@@ -601,34 +640,61 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		try {
 			clone = (SyntaxDeclaration) super.clone();
 		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in SyntaxDeclaration");
 			System.exit(1);
 			return null;
 		}
 
 		cd.addCloneFor(this, clone);
 
-		clone.nonTerminal = (NonTerminal) nonTerminal.copy(cd);
-		
-		List<Clause> newElements = new ArrayList<>();
+		/*
+			We need to clone the following properties:
+
+			private List<Clause> elements; // productions
+			private NonTerminal nonTerminal;
+			private Set<String> alternates;
+			private Variable variable;
+			private ClauseDef context;
+			private boolean isAbstract;
+
+			private Constant term = null;
+			private GrmNonTerminal gnt;
+			private GrmTerminal gt;
+
+			private boolean isProductive;
+			private Status isProductiveStatus = Status.NOTSTARTED;
+			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
+		*/
+
+		clone.elements = new ArrayList<Clause>();
 		for (Clause c : elements) {
-			newElements.add(c.copy(cd));
-		}
-		clone.elements = newElements;
-
-		
-
-		clone.alternates = new HashSet<>(alternates);
-
-		if (variable != null) {
-			clone.variable = variable.copy(cd);
+			clone.elements.add(c.copy(cd));
 		}
 
-		if (context != null) {
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+
+		clone.alternates = new HashSet<String>();
+		clone.alternates.addAll(alternates);
+
+		if (clone.variable != null) {
+			clone.variable = clone.variable.copy(cd);
+		}
+
+		if (clone.context != null) {
 			clone.context = (ClauseDef) context.copy(cd);
 		}
 
-		return clone;
+		clone.term = clone.term.copy(cd);
 
+		clone.gnt = clone.gnt.copy(cd);
+
+		clone.gt = clone.gt.copy(cd);
+		
+		// the next two are enums, so we don't need to copy them
+
+		// computed is static, so we don't need to copy it
+		
+		return clone;
 	}
 
 }

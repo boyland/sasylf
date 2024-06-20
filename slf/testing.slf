@@ -23,5 +23,5 @@ syntax s = test2mod.s
 
 syntax ss = test3mod.s
 
-judgment eq2 = test2mod.eq : ss = ss
+judgment eq2 = test2mod.eq : s = s
 

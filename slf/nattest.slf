@@ -18,6 +18,7 @@ judgment nat-plus: n + n = n
   S n1 + n2 = S n3
 
 
+/*
 theorem right-id:
   forall n
   exists n + 0 = n
@@ -34,3 +35,4 @@ theorem right-id:
     
   end induction
 end theorem
+*/

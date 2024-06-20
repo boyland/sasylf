@@ -278,6 +278,7 @@ public class Clause extends Element implements CanBeCase {
 		System.out.println("orig.getElemType(): " + orig.getElemType() + "  |  repl.getElemType(): " + repl.getElemType());
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
+		System.out.println(orig.getElemType().getClass());
 		System.out.println("type1: " + type1);
 		System.out.println("type2: " + type2);
 		System.out.println(type1 == type2);

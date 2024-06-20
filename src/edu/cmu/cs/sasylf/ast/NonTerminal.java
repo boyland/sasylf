@@ -238,10 +238,7 @@ public class NonTerminal extends Element {
 		}
 
 		if (type != null) {
-			System.out.println("substituting in type");
-			System.out.println("Before: " + type);
 			type.substitute(from, to, sd);
-			System.out.println("After: " + type);
 		}
 
 		if (ty != null) {

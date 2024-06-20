@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
 
 public class GrmNonTerminal implements NonTerminal {
@@ -18,6 +20,22 @@ public class GrmNonTerminal implements NonTerminal {
 	@Override
 	public boolean equals(Object s) {
 		return s instanceof GrmNonTerminal && string.equals(((GrmNonTerminal)s).string);
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		if (string.equals(from)) {
+			string = to;
+		}
+	}
+
+	public GrmNonTerminal copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (GrmNonTerminal) cd.getCloneFor(this);
+		GrmNonTerminal clone = new GrmNonTerminal(string);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 }
