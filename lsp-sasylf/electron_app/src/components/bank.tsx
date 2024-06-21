@@ -185,13 +185,8 @@ export default function Bank(props: BankProps) {
 	const handleClose = () => props.setWidth(0);
 	const handleShow = () => props.setWidth(props.bankRef.current!.scrollWidth);
 
-	const startResizing = (_: React.MouseEvent) => {
-		setIsResizing(true);
-	};
-
-	const stopResizing = () => {
-		setIsResizing(false);
-	};
+	const startResizing = (_: React.MouseEvent) => setIsResizing(true);
+	const stopResizing = () => setIsResizing(false);
 
 	const resize = (e: MouseEvent) => {
 		if (isResizing)
@@ -217,7 +212,12 @@ export default function Bank(props: BankProps) {
 			</Button>
 			<div
 				className="bank-outer"
-				style={{ width: props.width }}
+				style={{
+					width: props.width,
+					transition: "ease",
+					transitionDuration: isResizing ? "0s" : "0.5s",
+					transitionProperty: "width",
+				}}
 			>
 				<div className="bank-header">
 					<h3 className="no-wrap">Rules Bank</h3>

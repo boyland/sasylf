@@ -34,7 +34,7 @@
 	flex: none;
 	z-index: 1044;
 	background: white;
-	transition: width 0.5s ease;
+	// transition: width 0.5s ease;
 }
 
 .bank-header {
@@ -51,11 +51,4 @@
 	justify-self: flex-end;
 	cursor: col-resize;
 	resize: horizontal;
-}
-
-.bank-resizer:hover {
-	width: 2px;
-    margin-left: 2px;
-    margin-right: 4px;
-	background: red;
 }
