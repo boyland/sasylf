@@ -38,7 +38,60 @@ public class LSPConverter {
         this.lsp = lsp;
     }
 
-	public ObjectNode moduleToJSON(Module module, String filename) {
+    public String errorReportsToJson(List<Report> reports) {
+		ObjectNode res = objectMapper.createObjectNode();
+		ArrayNode errorReports = objectMapper.createArrayNode();
+
+		res.put("errors", errorReports);
+
+		for (Report r : reports) {
+			if (r instanceof ErrorReport) {
+				ErrorReport er = (ErrorReport)r;
+				if (er.isError()) errorReports.add(er.toString());
+			}
+		}
+
+		return res.toString();
+    }
+
+    public void reportsToJSON(Module module, List<Report> reports, String filename) {
+		if (lsp) {
+			ArrayNode qfArray = objectMapper.createArrayNode();
+			json.put("quickfixes", qfArray);
+
+			for (Report rep : reports) {
+				Span s = rep.getSpan();
+				Location begin = s.getLocation();
+				Location end = s.getEndLocation();
+
+				String severity = "info";
+
+				ObjectNode qfNode = objectMapper.createObjectNode();
+
+				qfArray.add(qfNode);
+
+				if (rep instanceof ErrorReport) {
+					ErrorReport report = (ErrorReport)(rep);
+
+					qfNode.put("error_type", report.getErrorType().name());
+					qfNode.put("error_info", report.getExtraInformation());
+
+					severity = (report.isError()) ? "error" : "warning";
+				}
+
+				qfNode.put("error_message", rep.getMessage());
+				qfNode.put("severity", severity);
+				qfNode.put("begin_line", begin.getLine());
+				qfNode.put("begin_column", begin.getColumn());
+				qfNode.put("end_line", end.getLine());
+				qfNode.put("end_column", end.getColumn());
+			}
+
+			json.put("ast", moduleToJSON(module, filename));
+		}
+    }
+
+	private ObjectNode moduleToJSON(Module module, String filename) {
 		if (module == null) return null;
 
 		ObjectNode astNode = objectMapper.createObjectNode();

@@ -4,3 +4,7 @@ client/server
 .vscode-test
 package-lock.json
 app/widgets/__pycache__/
+server/SASyLF.jar
+electron_app/SASyLF.jar
+server/lib/*.jar
+electron_app/lib/*.jar

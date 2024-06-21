@@ -178,20 +178,7 @@ public class Proof {
 	 * @return error reports as a json string
 	 */
 	public String getErrorReports() {
-        ObjectMapper objectMapper = lspConverter.getObjectMapper();
-		ObjectNode res = objectMapper.createObjectNode();
-		ArrayNode errorReports = objectMapper.createArrayNode();
-
-		res.put("errors", errorReports);
-
-		for (Report r : getReports()) {
-			if (r instanceof ErrorReport) {
-				ErrorReport er = (ErrorReport)r;
-				if (er.isError()) errorReports.add(er.toString());
-			}
-		}
-
-		return res.toString();
+        return lspConverter.errorReportsToJson(getReports());
 	}
 
 	/**
@@ -245,47 +232,9 @@ public class Proof {
 		}
 		// System.out.println(id + ".parseAndCheck()");
 		reports = ErrorHandler.withFreshReports(() -> doParseAndCheck(mf, r));
-		ObjectMapper objectMapper = lspConverter.getObjectMapper();
-		ObjectNode json = lspConverter.getJson();
-
 		// If the lsp flag is set, gather the quickfixes and parse the syntax
 		// tree, adding all the data to a json
-		if (lspConverter.getLsp()) {
-			ArrayNode qfArray = objectMapper.createArrayNode();
-
-			json.put("quickfixes", qfArray);
-
-			for (Report rep : reports) {
-				Span s = rep.getSpan();
-				Location begin = s.getLocation();
-				Location end = s.getEndLocation();
-
-				String severity = "info";
-
-				ObjectNode qfNode = objectMapper.createObjectNode();
-
-				qfArray.add(qfNode);
-
-				if (rep instanceof ErrorReport) {
-					ErrorReport report = (ErrorReport)(rep);
-
-					qfNode.put("error_type", report.getErrorType().name());
-					qfNode.put("error_info", report.getExtraInformation());
-
-					severity = (report.isError()) ? "error" : "warning";
-				}
-
-				qfNode.put("error_message", rep.getMessage());
-				qfNode.put("severity", severity);
-				qfNode.put("begin_line", begin.getLine());
-				qfNode.put("begin_column", begin.getColumn());
-				qfNode.put("end_line", end.getLine());
-				qfNode.put("end_column", end.getColumn());
-			}
-
-			json.put("ast", lspConverter.moduleToJSON((Module)syntaxTree, filename));
-		}
-
+        lspConverter.reportsToJSON((Module)syntaxTree, reports, filename);
 		cacheErrorCount();
 	}
 
