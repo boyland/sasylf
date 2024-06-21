@@ -1,6 +1,13 @@
 .rule-like {
 	text-align: left;
+	text-wrap: nowrap;
 	width: stretch;
+}
+
+.rule-likes {
+	display: flex;
+	flex-direction: column;
+	width: fit-content;
 }
 
 .rule-like-text {
@@ -18,4 +25,30 @@
 	left: 40px;
 	border-color: rgba(0, 0, 0, 0);
 	z-index: 10;
+}
+
+.bank-outer {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	flex: none;
+	z-index: 1044;
+	background: white;
+	// transition: width 0.5s ease;
+}
+
+.bank-header {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	padding: 5px;
+}
+
+.bank-resizer {
+    flex: none;
+    width: 8px;
+	justify-self: flex-end;
+	cursor: col-resize;
+	resize: horizontal;
 }

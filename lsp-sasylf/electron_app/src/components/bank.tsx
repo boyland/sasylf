@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
+import CloseButton from "react-bootstrap/CloseButton";
 import Collapse from "react-bootstrap/Collapse";
-import Offcanvas from "react-bootstrap/Offcanvas";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { ast, judgmentNode, ruleNode, theoremNode, moduleNode } from "../types";
 import Draggable from "./draggable";
@@ -48,7 +48,7 @@ function BankCollapse({
 			>
 				<code className="rule-like-text">{title}</code>
 			</Button>
-			<Collapse in={open} onEntered={onChange} onExited={onChange}>
+			<Collapse in={open} onEntering={onChange} onExited={onChange}>
 				<div id={name}>{children}</div>
 			</Collapse>
 		</>
@@ -142,7 +142,10 @@ function theoremToText(theorem: theoremNode): [React.JSX.Element, string] {
 	];
 }
 
-function RuleLikes(props: { compUnit: ast }) {
+function RuleLikes(props: {
+	compUnit: ast;
+	bankRef?: React.RefObject<HTMLDivElement>;
+}) {
 	const theorems = props.compUnit.theorems.map((value) => theoremToText(value));
 
 	const theoremsElements = theorems.map((thm, ind) => (
@@ -160,7 +163,7 @@ function RuleLikes(props: { compUnit: ast }) {
 	));
 
 	return (
-		<div className="d-flex flex-column exact">
+		<div className="rule-likes" ref={props.bankRef}>
 			{theoremsElements}
 			{judgments}
 			{modules}
@@ -172,36 +175,57 @@ interface BankProps {
 	compUnit: ast | undefined;
 	toggleShow: () => void;
 	bankRef: React.RefObject<HTMLDivElement>;
+	width: number;
+	setWidth: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export default function Bank(props: BankProps) {
-	const [show, setShow] = useState(false);
+	const [isResizing, setIsResizing] = useState(false);
 
-	const handleClose = () => {
-		setShow(false);
-		props.toggleShow();
+	const handleClose = () => props.setWidth(0);
+	const handleShow = () => props.setWidth(props.bankRef.current!.scrollWidth);
+
+	const startResizing = (_: React.MouseEvent) => setIsResizing(true);
+	const stopResizing = () => setIsResizing(false);
+
+	const resize = (e: MouseEvent) => {
+		if (isResizing)
+			props.setWidth(
+				e.clientX - props.bankRef.current!.getBoundingClientRect().left,
+			);
 	};
-	const handleShow = () => setShow(true);
+
+	React.useEffect(() => {
+		window.addEventListener("mousemove", resize);
+		window.addEventListener("mouseup", stopResizing);
+
+		return () => {
+			window.removeEventListener("mousemove", resize);
+			window.removeEventListener("mouseup", stopResizing);
+		};
+	}, [resize, stopResizing]);
 
 	return props.compUnit ? (
 		<>
 			<Button variant="outline-dark" className="open-bank" onClick={handleShow}>
 				<FaArrowRightLong size={25} />
 			</Button>
-			<Offcanvas
-				show={show}
-				onHide={handleClose}
-				backdrop={false}
-				id="bank-canvas"
-				onEnter={() => props.toggleShow()}
+			<div
+				className="bank-outer"
+				style={{
+					width: props.width,
+					transition: "ease",
+					transitionDuration: isResizing ? "0s" : "0.5s",
+					transitionProperty: "width",
+				}}
 			>
-				<Offcanvas.Header closeButton>
-					<Offcanvas.Title>Rules Bank</Offcanvas.Title>
-				</Offcanvas.Header>
-				<Offcanvas.Body ref={props.bankRef}>
-					<RuleLikes compUnit={props.compUnit} />
-				</Offcanvas.Body>
-			</Offcanvas>
+				<div className="bank-header">
+					<h3 className="no-wrap">Rules Bank</h3>
+					<CloseButton onClick={handleClose} />
+				</div>
+				<RuleLikes compUnit={props.compUnit} bankRef={props.bankRef} />
+			</div>
+			<div className="bank-resizer" onMouseDown={startResizing} />
 		</>
 	) : null;
 }

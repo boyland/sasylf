@@ -16,7 +16,6 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { DragOverlay } from "@dnd-kit/core";
 import { getTree } from "./components/utils";
-import { Transition } from "react-transition-group";
 import { useContextMenu } from "react-contexify";
 import ContextMenu from "./components/menu";
 
@@ -31,15 +30,14 @@ export default function MyApp() {
 	);
 	const [show, setShow] = useState(false);
 	const [canvasStates, setCanvasStates] = useState<canvasState[]>([]);
-	const [offsetWidth, setOffsetWidth] = useState<number | undefined>(0);
+	const [offsetWidth, setOffsetWidth] = useState<number>(0);
 
 	const shiftRef = useRef(false);
 	const proofRef = useRef<HTMLDivElement>(null);
 	const bankRef = useRef<HTMLDivElement>(null);
-	const animRef = useRef(null);
 	const { show: showContextMenu } = useContextMenu({ id: "3" });
 
-	const updateOffsetWidth = () => setOffsetWidth(bankRef.current?.offsetWidth);
+	const updateOffsetWidth = () => setOffsetWidth(bankRef.current!.scrollWidth);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -201,7 +199,9 @@ export default function MyApp() {
 	const onSelect = (eventKey: string | null) =>
 		setActiveKey(eventKey ? Number(eventKey) : 0);
 
-	useEffect(() => updateOffsetWidth(), [activeKey]);
+	useEffect(() => {
+		if (show) updateOffsetWidth();
+	}, [activeKey]);
 
 	return (
 		<DndContext
@@ -209,135 +209,125 @@ export default function MyApp() {
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
 		>
-			<Bank
-				toggleShow={() => {
-					setShow(!show);
-					updateOffsetWidth();
-				}}
-				compUnit={tabs.find((value) => value.id === activeKey)?.ast}
-				bankRef={bankRef}
-			/>
-			<Transition nodeRef={animRef} in={show} timeout={300}>
-				{(state) => (
-					<div
-						ref={animRef}
-						style={{
-							transition: "margin-left 0.3s linear",
-							marginLeft: ["entering", "entered"].includes(state)
-								? offsetWidth
-								: 0,
-						}}
-					>
-						<Tab.Container onSelect={onSelect} activeKey={activeKey}>
-							<Nav variant="tabs" className="flex-row">
-								{tabs.map((element) => (
-									<Nav.Item className="d-flex flex-row" key={element.id}>
-										<Nav.Link
-											className="d-flex center-align"
-											eventKey={element.id}
-										>
-											{element.name}
-											<CloseButton
-												onClick={(event) => {
-													event.stopPropagation();
-													handleCloseTab(element.id);
-												}}
-											/>
-										</Nav.Link>
-									</Nav.Item>
-								))}
-							</Nav>
-							{tabs.map((element, index) => (
-								<Tab.Content key={element.id}>
-									<Tab.Pane eventKey={element.id}>
-										<Canvas
-											index={index}
-											canvasStates={canvasStates}
-											setCanvasStates={setCanvasStates}
-											inputs={element.inputs}
-											proofRef={proofRef}
-										>
-											<NodeContext.Provider
-												value={{
-													addRef,
-													ast: element.ast,
-													showContextMenu: (
-														event: React.MouseEvent,
-														nodeId: number,
-													) => {
-														showContextMenu({
-															event: event,
-															props: { nodeId },
-															position: {
-																x: event.clientX,
-																y: event.clientY,
-															},
-														});
-													},
-												}}
-											>
-												<FileContext.Provider value={element.file}>
-													{element.id === activeKey ? (
-														<ProofArea
-															proofRef={proofRef}
-															inputs={element.inputs}
-															deleteHandler={(ind: number) =>
-																deleteInput(element.id, ind)
-															}
-														/>
-													) : (
-														<ProofArea
-															inputs={element.inputs}
-															deleteHandler={(ind: number) =>
-																deleteInput(element.id, ind)
-															}
-														/>
-													)}
-												</FileContext.Provider>
-											</NodeContext.Provider>
-										</Canvas>
-										<Button
-											variant="success"
-											className="input-theorem"
-											onClick={() => setShowInput(true)}
-										>
-											New Theorem
-										</Button>
-										<Input
-											show={showInput}
-											onHide={() => setShowInput(false)}
-											inputs={element.inputs}
-											unicode={element.unicode}
-											appendHandler={(inp: input) =>
-												appendInput(element.id, inp)
-											}
+			<div className="d-flex flex-row">
+				<Bank
+					toggleShow={() => {
+						setShow(!show);
+						updateOffsetWidth();
+					}}
+					compUnit={tabs.find((value) => value.id === activeKey)?.ast}
+					bankRef={bankRef}
+					width={offsetWidth}
+					setWidth={setOffsetWidth}
+				/>
+				<div className="main-area">
+					<Tab.Container onSelect={onSelect} activeKey={activeKey}>
+						<Nav variant="tabs" className="flex-row">
+							{tabs.map((element) => (
+								<Nav.Item className="d-flex flex-row" key={element.id}>
+									<Nav.Link
+										className="d-flex center-align"
+										eventKey={element.id}
+									>
+										{element.name}
+										<CloseButton
+											onClick={(event) => {
+												event.stopPropagation();
+												handleCloseTab(element.id);
+											}}
 										/>
-									</Tab.Pane>
-									<Export
-										show={showExport}
-										onHide={() => setShowExport(false)}
-										proofRef={proofRef}
-										inputs={element.inputs}
-									/>
-								</Tab.Content>
+									</Nav.Link>
+								</Nav.Item>
 							))}
-						</Tab.Container>
-						<ContextMenu MENU_ID="3" />
-					</div>
-				)}
-			</Transition>
-			<DragOverlay zIndex={1060}>
-				{activeText ? (
-					<Card
-						body
-						className="exact"
-						border="dark"
-						text={shiftRef.current ? "info" : "dark"}
-					>
-						<code className="rule-like-text no-wrap">{activeText}</code>
-					</Card>
-				) : null}
-			</DragOverlay>
+						</Nav>
+						{tabs.map((element, index) => (
+							<Tab.Content key={element.id}>
+								<Tab.Pane eventKey={element.id}>
+									<Canvas
+										index={index}
+										canvasStates={canvasStates}
+										setCanvasStates={setCanvasStates}
+										inputs={element.inputs}
+										proofRef={proofRef}
+									>
+										<NodeContext.Provider
+											value={{
+												addRef,
+												ast: element.ast,
+												showContextMenu: (
+													event: React.MouseEvent,
+													nodeId: number,
+												) => {
+													showContextMenu({
+														event: event,
+														props: { nodeId },
+														position: {
+															x: event.clientX,
+															y: event.clientY,
+														},
+													});
+												},
+											}}
+										>
+											<FileContext.Provider value={element.file}>
+												{element.id === activeKey ? (
+													<ProofArea
+														proofRef={proofRef}
+														inputs={element.inputs}
+														deleteHandler={(ind: number) =>
+															deleteInput(element.id, ind)
+														}
+													/>
+												) : (
+													<ProofArea
+														inputs={element.inputs}
+														deleteHandler={(ind: number) =>
+															deleteInput(element.id, ind)
+														}
+													/>
+												)}
+											</FileContext.Provider>
+										</NodeContext.Provider>
+									</Canvas>
+									<Button
+										variant="success"
+										className="input-theorem"
+										onClick={() => setShowInput(true)}
+									>
+										New Theorem
+									</Button>
+									<Input
+										show={showInput}
+										onHide={() => setShowInput(false)}
+										inputs={element.inputs}
+										unicode={element.unicode}
+										appendHandler={(inp: input) => appendInput(element.id, inp)}
+									/>
+								</Tab.Pane>
+								<Export
+									show={showExport}
+									onHide={() => setShowExport(false)}
+									proofRef={proofRef}
+									inputs={element.inputs}
+								/>
+							</Tab.Content>
+						))}
+					</Tab.Container>
+				</div>
+				<ContextMenu MENU_ID="3" />
+				<DragOverlay zIndex={1060}>
+					{activeText ? (
+						<Card
+							body
+							className="exact"
+							border="dark"
+							text={shiftRef.current ? "info" : "dark"}
+						>
+							<code className="rule-like-text no-wrap">{activeText}</code>
+						</Card>
+					) : null}
+				</DragOverlay>
+			</div>
 		</DndContext>
 	);
 }
