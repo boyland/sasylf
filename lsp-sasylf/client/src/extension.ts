@@ -15,7 +15,7 @@ import {
 	TransportKind,
 } from "vscode-languageclient/node";
 
-import { readFileSync, writeFile } from "fs";
+import { readFileSync } from "fs";
 import { spawn } from "child_process";
 
 let client: LanguageClient;
@@ -34,7 +34,6 @@ function appHandler(_: any[]) {
 	if (!text) return;
 
 	client.sendRequest("custom/getAST").then((ast) => {
-		// const childProcess = spawn("python3", [`${__dirname}/../../app/main.py`, JSON.stringify(ast)]);
 		var spawn_env = JSON.parse(JSON.stringify(process.env));
 		delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
 		delete spawn_env.ELECTRON_RUN_AS_NODE;

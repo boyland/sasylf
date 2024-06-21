@@ -128,8 +128,9 @@ function substitute(
 	const command = spawnSync(
 		"java",
 		[
-			"-jar",
+			"-cp",
 			`${__dirname}/../../SASyLF.jar`,
+			"edu.cmu.cs.sasylf.VSCodeExtension",
 			`--substitute="${conclusion}"`,
 			`--old="${oldVar}"`,
 			`--new="${newVar}"`,
@@ -150,8 +151,9 @@ function parse(
 	const command = spawnSync(
 		"java",
 		[
-			"-jar",
+			"-cp",
 			`${__dirname}/../../SASyLF.jar`,
+			"edu.cmu.cs.sasylf.VSCodeExtension",
 			`--parse="${conclusion}"`,
 			`--rule="${rule}"`,
 			file,
@@ -171,8 +173,9 @@ function topdownParse(
 	const command = spawnSync(
 		"java",
 		[
-			"-jar",
+			"-cp",
 			`${__dirname}/../../SASyLF.jar`,
+			"edu.cmu.cs.sasylf.VSCodeExtension",
 			`--premises="${JSON.stringify(premises).replace(/"/g, '\\"')}"`,
 			`--rule="${rule}"`,
 			file,

@@ -24,7 +24,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Report;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.TaskReport;
-import edu.cmu.cs.sasylf.util.LSPHandler;
+import edu.cmu.cs.sasylf.util.LSPConverter;
 
 public class Main {
 	/**
@@ -66,68 +66,14 @@ public class Main {
 		String dir = null;
 		PathModuleFinder mf = null;
 		PathModuleFinder defaultMF = new PathModuleFinder("");
-        LSPHandler lspHandler = Proof.getLspHandler();
 
 		for (int i = 0; i < args.length; ++i) {
-			if (args[i].startsWith("--parse=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
-				String str = args[i].substring(8);
-				StringReader reader = new StringReader(str);
-				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				lspHandler.setClause(parser.ExprToNL());
-				continue;
-			}
-			if (args[i].startsWith("--substitute=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
-				String str = args[i].substring(13);
-				StringReader reader = new StringReader(str);
-				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				lspHandler.setSclause(parser.ExprToNL());
-				continue;
-			}
-			if (args[i].startsWith("--old=")) {
-				lspHandler.setOldVar(args[i].substring(6));
-				continue;
-			}
-			if (args[i].startsWith("--new=")) {
-				String str = args[i].substring(6);
-				StringReader reader = new StringReader(str);
-				DSLToolkitParser parser = new DSLToolkitParser(reader);
-				lspHandler.setNewVar(parser.ExprToNL());
-				continue;
-			}
-			if (args[i].startsWith("--premises=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
-				try {
-					lspHandler.setPremise(args[i].substring(11));
-				} catch (Exception e) {
-				}
-				continue;
-			}
-			if (args[i].startsWith("--rule=")) {
-				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
-					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-				}
-				String rule = args[i].substring(7);
-				lspHandler.setRule(rule);
-				continue;
-			}
 			if (args[i].equals("--lsp")) {
 				if (!edu.cmu.cs.sasylf.util.Util.DEBUG) {
 					System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 					System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 				}
-				lspHandler.setLsp(true);
+				Proof.getLspConverter().setLsp(true);
 				continue;
 			}
 			if (args[i].equals("--compwhere")) {
@@ -250,20 +196,8 @@ public class Main {
 
 			System.setOut(out);
 			System.setErr(err);
-			if (lspHandler.getLsp()) {
-				System.out.println(lspHandler.getJson().toString());
-			}
-			if (lspHandler.getClause() != null && lspHandler.getRule() != null) {
-				if (newErrorCount == 0) System.out.println(lspHandler.getPremises().toString());
-				else System.out.println(pf.getErrorReports());
-			}
-			if (lspHandler.getPremise() != null && lspHandler.getRule() != null) {
-				if (newErrorCount == 0) System.out.println(lspHandler.getConclusions().toString());
-				else System.out.println(pf.getErrorReports());
-			}
-			if (lspHandler.getSclause() != null) {
-				if (newErrorCount == 0) System.out.println(lspHandler.getNewClause().toString());
-				else System.out.println(pf.getErrorReports());
+			if (Proof.getLspConverter().getLsp()) {
+				System.out.println(Proof.getLspConverter().getJson().toString());
 			}
 		}
 		System.exit(exitCode);
@@ -285,7 +219,8 @@ public class Main {
 	 * the errors separately.
 	 */
 	@Deprecated
-	public static CompUnit parseAndCheck(ModuleFinder mf, String filename, ModuleId id, Reader r) {
+	public static CompUnit parseAndCheck(ModuleFinder mf, String filename,
+																			 ModuleId id, Reader r) {
 		Proof p = new Proof(filename, id);
 		p.parseAndCheck(mf, r);
 		return p.getCompilationUnit();

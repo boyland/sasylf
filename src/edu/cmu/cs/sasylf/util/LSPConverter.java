@@ -4,93 +4,39 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.CompUnit;
-import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Node;
+import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.Sugar;
 import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
-import edu.cmu.cs.sasylf.ast.TermPrinter;
 import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.module.Module;
-import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
-import edu.cmu.cs.sasylf.parser.ParseException;
-import edu.cmu.cs.sasylf.ast.Rule;
-import edu.cmu.cs.sasylf.ast.RuleLike;
-import edu.cmu.cs.sasylf.term.Abstraction;
-import edu.cmu.cs.sasylf.term.Application;
-import edu.cmu.cs.sasylf.term.Facade;
-import edu.cmu.cs.sasylf.term.FreeVar;
-import edu.cmu.cs.sasylf.term.Substitution;
-import edu.cmu.cs.sasylf.term.Term;
 
-public class LSPHandler {
+public class LSPConverter {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	public ObjectMapper getObjectMapper() { return objectMapper; }
 
-	public final ObjectNode json = objectMapper.createObjectNode();
+	private final ObjectNode json = objectMapper.createObjectNode();
 	public ObjectNode getJson() { return json; }
 
-	private boolean lsp = false;
-	public boolean getLsp() { return lsp; }
-	public void setLsp(boolean lsp) { this.lsp = lsp; }
-
-	private Clause clause = null;
-	public void setClause(Clause c) { this.clause = c; }
-	public Clause getClause() { return clause; }
-
-	private String rule = null;
-	public void setRule(String r) { this.rule = r; }
-	public String getRule() { return rule; }
-
-	private List<Clause> premise = null;
-	public void setPremise(String p)
-			throws JsonProcessingException, ParseException {
-
-		Map<String, List<String>> map = objectMapper.readValue(p, Map.class);
-		List<Clause> premises = new ArrayList<>();
-		for (String s : map.get("premises")) {
-			StringReader reader = new StringReader(s);
-			DSLToolkitParser parser = new DSLToolkitParser(reader);
-			premises.add(parser.ExprToNL());
-		}
-		this.premise = premises;
-	}
-	public List<Clause> getPremise() { return premise; }
-
-	private String oldVar = null;
-	public String getOldVar() { return oldVar; }
-	public void setOldVar(String oldVar) { this.oldVar = oldVar; }
-
-	private Clause newVar = null;
-	public Clause getNewVar() { return newVar; }
-	public void setNewVar(Clause newVar) { this.newVar = newVar; }
-
-	private Clause sclause = null;
-	public Clause getSclause() { return sclause; }
-	public void setSclause(Clause substitutee) { sclause = substitutee; }
-
-	private final ObjectNode newClause = objectMapper.createObjectNode();
-	public ObjectNode getNewClause() { return newClause; }
-
-	private final ObjectNode premises = objectMapper.createObjectNode();
-	public ObjectNode getPremises() { return premises; }
-
-	private final ObjectNode conclusions = objectMapper.createObjectNode();
-	public ObjectNode getConclusions() { return conclusions; }
+    private boolean lsp;
+    public boolean getLsp() {
+        return lsp;
+    }
+    public void setLsp(boolean lsp) {
+        this.lsp = lsp;
+    }
 
 	public ObjectNode moduleToJSON(Module module, String filename) {
 		if (module == null) return null;
