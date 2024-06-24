@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -105,24 +107,29 @@ public class SyntaxPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		for (Syntax s : syntax) {
-			s.substitute(from, to);
+			s.substitute(from, to, sd);
 		}
 	}
 
-	public SyntaxPart clone() {
+	public SyntaxPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (SyntaxPart) cd.getCloneFor(this);
 		try {
 			SyntaxPart clone = (SyntaxPart) super.clone();
+			cd.addCloneFor(this, clone);
 			clone.syntax = new ArrayList<Syntax>();
 			for (Syntax s : syntax) {
-				clone.syntax.add(s.clone());
+				clone.syntax.add(s.copy(cd));
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new Error("unexpected error",e);
+			throw new Error("unexpected error", e);
 		}
-
 	}
+
+
 
 }

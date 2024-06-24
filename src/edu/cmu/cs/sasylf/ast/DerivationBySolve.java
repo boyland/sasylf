@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.prover.Proof;
 import edu.cmu.cs.sasylf.prover.ProofImpl;
 import edu.cmu.cs.sasylf.prover.Prover;
@@ -10,6 +11,7 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class DerivationBySolve extends Derivation {
 	public DerivationBySolve(String n, Location l, Clause c) {
@@ -38,5 +40,12 @@ public class DerivationBySolve extends Derivation {
 			ErrorHandler.report(new SolveReport(this,complete));
 			ErrorHandler.warning(Errors.SOLVE_UNRELIABLE, this);
 		}
+	}
+
+	@Override
+	public DerivationBySolve copy(CloneData cd) {
+		System.out.println("DerivationBySolve.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

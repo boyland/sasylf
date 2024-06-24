@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -149,5 +151,34 @@ public class BoundVar extends Atom {
 	public Term getType() {
 		return Constant.UNKNOWN_TYPE;
 	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		// do nothing because the only attribute is its indexb
+	}
 	
+	@Override
+	public BoundVar copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (BoundVar) cd.getCloneFor(this);
+
+		BoundVar clone;
+
+		try {
+			clone = (BoundVar) super.clone();
+		}
+		catch(CloneNotSupportedException e) {
+			System.out.println("Clone not supported for BoundVar");
+			System.exit(1);
+			return null;
+		}
+		
+		cd.addCloneFor(this, clone);
+
+		
+		
+		return clone;
+	}
+
 }

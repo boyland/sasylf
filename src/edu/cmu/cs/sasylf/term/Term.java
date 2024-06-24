@@ -13,6 +13,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -21,7 +23,7 @@ import edu.cmu.cs.sasylf.util.Util;
  * Application, BoundVar, and FreeVar.
  */
 
-public abstract class Term {
+public abstract class Term implements Cloneable{
 	// only for free variables
 	public final Substitution freshSubstitution(Substitution s) {
 		Set<FreeVar> vars = getFreeVariables();
@@ -595,4 +597,8 @@ public abstract class Term {
 		if (fv != null && fv != other) return contains(fv);
 		return this.equals(other) || containsProper(other);
 	}
+
+	public abstract void substitute(String from, String to, SubstitutionData sd);
+	
+	public abstract Term copy(CloneData cd);
 }

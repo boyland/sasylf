@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -88,6 +90,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	
 	@Override
 	public void prettyPrint(PrintWriter out) {
+
 		for (String alt : alternates) {
 			if (!nonTerminal.getSymbol().equals(alt)) {
 				out.print(alt);
@@ -186,8 +189,8 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 				else cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
-				ctx.setProduction(cd.getConstructorName(),cd);
-				ctx.parseMap.put(cd.getElemTypes(), cd);
+				ctx.setProduction(cd.getConstructorName(),cd);Context.updateVersion();
+				ctx.parseMap.put(cd.getElemTypes(), cd);Context.updateVersion();
 
 				GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);
 				ctx.ruleSet.add(r);
@@ -196,7 +199,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 					GrmRule rParens = new GrmRule(getSymbol(), new ArrayList<Symbol>(r.getRightSide()), cd);
 					rParens.getRightSide().add(0, GrmUtil.getLeftParen());
 					rParens.getRightSide().add(GrmUtil.getRightParen());					
-					ctx.ruleSet.add(rParens);
+					ctx.ruleSet.add(rParens);Context.updateVersion();
 				}
 			}
 		}
@@ -217,13 +220,14 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 		// compute a rule mapping the terminal for this Syntax to the NonTerminal for this Syntax, with and without parens
 		GrmRule termRule = new GrmRule(getSymbol(), new GrmTerminal[] { getTermSymbol() }, null);
-		ctx.ruleSet.add(termRule);
+		ctx.ruleSet.add(termRule);Context.updateVersion();
 		termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.getLeftParen(), getTermSymbol(), GrmUtil.getRightParen() }, null);
-		ctx.ruleSet.add(termRule);
+		ctx.ruleSet.add(termRule);Context.updateVersion();
 
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
 		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
-		ctx.ruleSet.add(startRule);
+		ctx.ruleSet.add(startRule);Context.updateVersion();
+
 	}
 	
 	/**
@@ -408,11 +412,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		return context;
 	}
 
-	@Override
-	public String toString() {
-		return nonTerminal.toString();
-	}
-
 	private Set<SyntaxDeclaration> varTypes;
 	/**
 	 * Return the variable types that this context nonterminal can include
@@ -571,59 +570,132 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
-	public void substitute(String from, String to) {
-		// perform the substitution for each of the productions
-		for (Clause c : elements) {
-			c.substitute(from, to);
-		}
-		// substitute for the NonTerminal
-
-		nonTerminal.substitute(from, to);
-
-		// substitute in the alternates
-		// if to isn't in alternates, add it
-		// if from is in alternates, remove it
-
-		if (alternates.contains(from)) {
-			alternates.remove(from);
-			alternates.add(to);
-		}
-
-	}
-
-
-
-	public SyntaxDeclaration clone() {
-		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
 		/*
+			We need to substitute in the following properties:
+
 			private List<Clause> elements; // productions
 			private NonTerminal nonTerminal;
 			private Set<String> alternates;
 			private Variable variable;
 			private ClauseDef context;
 			private boolean isAbstract;
-	 	*/
 
-		List<Clause> newElements = new ArrayList<>();
+			private Constant term = null;
+			private GrmNonTerminal gnt;
+			private GrmTerminal gt;
+
+			private boolean isProductive;
+			private Status isProductiveStatus = Status.NOTSTARTED;
+			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
+		*/
+
 		for (Clause c : elements) {
-			newElements.add(c.clone());
+			c.substitute(from, to, sd);
 		}
-		clone.elements = newElements;
 
-		clone.nonTerminal = nonTerminal.clone();
+		nonTerminal.substitute(from, to, sd);
 
-		clone.alternates = new HashSet<>(alternates);
+		/*
+			For alternates, we need to remove from (if it exists) and we need to add to
+		*/
+
+		if (alternates.contains(from)) {
+			alternates.remove(from);
+			alternates.add(to);
+		}
 
 		if (variable != null) {
-			clone.variable = variable.clone();
+			variable.substitute(from, to, sd);
 		}
 
 		if (context != null) {
-			clone.context = (ClauseDef) context.clone();
+			context.substitute(from, to, sd);
 		}
 
-		return clone;
+		if (term != null) {
+			term.substitute(from, to, sd);
+		}
+
+		if (gnt != null) {
+			gnt.substitute(from, to, sd);
+		}
+
+		if (gt != null) {
+			gt.substitute(from, to, sd);
+		}
+
+		// computed is static, so we don't need to substitute in there
+
+	}
+
+	public SyntaxDeclaration copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) {
+			return (SyntaxDeclaration) cd.getCloneFor(this);
+		}
+
+		SyntaxDeclaration clone;
+		try {
+			clone = (SyntaxDeclaration) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in SyntaxDeclaration");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		/*
+			We need to clone the following properties:
+
+			private List<Clause> elements; // productions
+			private NonTerminal nonTerminal;
+			private Set<String> alternates;
+			private Variable variable;
+			private ClauseDef context;
+			private boolean isAbstract;
+
+			private Constant term = null;
+			private GrmNonTerminal gnt;
+			private GrmTerminal gt;
+
+			private boolean isProductive;
+			private Status isProductiveStatus = Status.NOTSTARTED;
+			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
+		*/
+
+		clone.elements = new ArrayList<Clause>();
+		for (Clause c : elements) {
+			clone.elements.add(c.copy(cd));
+		}
+
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+
+		clone.alternates = new HashSet<String>();
+		clone.alternates.addAll(alternates);
+
+		if (clone.variable != null) {
+			clone.variable = clone.variable.copy(cd);
+		}
+
+		if (clone.context != null) {
+			clone.context = (ClauseDef) context.copy(cd);
+		}
+
+		clone.term = clone.term.copy(cd);
+
+		clone.gnt = clone.gnt.copy(cd);
+
+		clone.gt = clone.gt.copy(cd);
 		
+		// the next two are enums, so we don't need to copy them
+
+		// computed is static, so we don't need to copy it
+		
+		return clone;
 	}
 
 }

@@ -13,9 +13,11 @@ import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.ast.Fact;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.JudgmentPart;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.Part;
 import edu.cmu.cs.sasylf.ast.Rule;
 import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.SyntaxPart;
 import edu.cmu.cs.sasylf.ast.TerminalsPart;
 import edu.cmu.cs.sasylf.ast.Theorem;
@@ -205,6 +207,38 @@ public class Proof {
 		FreeVar.reinit();
 		try {
 			syntaxTree = DSLToolkitParser.read(filename,r);
+			/*
+			CompUnit syntaxTreeClone = syntaxTree.clone();
+
+			//syntaxTreeClone.substitute("n", "m", new SubstitutionData());
+
+			// get the first syntax part from each one
+
+			SyntaxPart sp1 = (SyntaxPart) syntaxTree.getParts().get(1);
+			SyntaxPart sp2 = (SyntaxPart) syntaxTreeClone.getParts().get(1);
+
+			// get the first syntax declaration from each one
+
+			SyntaxDeclaration sd1 = (SyntaxDeclaration) sp1.getSyntax().get(0);
+			SyntaxDeclaration sd2 = (SyntaxDeclaration) sp2.getSyntax().get(0);
+
+
+			NonTerminal nt1 = sd1.getNonTerminal();
+			NonTerminal nt2 = sd2.getNonTerminal();
+
+			// check the types
+
+			SyntaxDeclaration type1 = nt1.getType();
+			SyntaxDeclaration type2 = nt2.getType();
+
+			System.out.println("sd1 == type1 : " + (sd1 == type1));
+			System.out.println("sd2 == type2 : " + (sd2 == type2));
+			System.out.println("sd1 == sd2 : " + (sd1 == sd2));
+			System.out.println("type1 == type2 : " + (type1 == type2));
+			
+			System.exit(0);
+			*/
+
 		} catch (ParseException e) {
 			final TokenSpan errorSpan = new TokenSpan(e.currentToken.next);
 			if (e.expectedTokenSequences != null && e.expectedTokenSequences.length == 1) {

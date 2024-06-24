@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -125,6 +126,7 @@ public abstract class Derivation extends Fact {
 			Derivation d = derivations.get(i);
 			if (d.clause == null) {
 				// we copy over to get the right location for things
+				// TODO: Fix this
 				d.clause = ctx.currentGoalClause.clone();
 				d.clause.setLocation(d.getLocation());
 				d.clause.setEndLocation(d.getLocation().add(PROOF_SIZE));
@@ -355,23 +357,12 @@ public abstract class Derivation extends Fact {
 		return true;
 	}
 
-	public void substitute(String from, String to) {
-		if (clause != null) clause.substitute(from, to);
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		if (clause != null) clause.substitute(from, to, sd);
 	}
 
-	public Derivation clone() {
-		Derivation newDerivation = (Derivation) super.clone();
 
-		/*
-			protected Clause clause;
-			protected final boolean wasProof; // this derivation was originally "proof by ..."
-			private boolean clauseChecked = false;
-		*/
-
-		newDerivation.clause = clause.clone();
-
-		return newDerivation;
-
-	}
 
 }

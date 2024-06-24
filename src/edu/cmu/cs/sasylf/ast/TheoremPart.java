@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -67,22 +69,25 @@ public class TheoremPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
 		for (Theorem theorem : theorems) {
-			theorem.substitute(from, to);
+			theorem.substitute(from, to, sd);
 		}
 	}
 
-	
-	public TheoremPart clone() {
-		// clone each theorem
+	public TheoremPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (TheoremPart) cd.getCloneFor(this);
 		TheoremPart clone;
 		try {
 			clone = (TheoremPart) super.clone();
+			cd.addCloneFor(this, clone);
 		
 			List<Theorem> newTheorems = new ArrayList<Theorem>();
 			for (Theorem theorem : theorems) {
-				newTheorems.add(theorem.clone());
+				newTheorems.add(theorem.copy(cd));
 			}
 			clone.theorems = newTheorems;
 			return clone;

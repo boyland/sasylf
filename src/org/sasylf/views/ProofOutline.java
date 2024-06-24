@@ -168,7 +168,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						Location loc = r.getLocation();
 						Position barPos = convertLocToPos(document, loc);
 						try {
-							String barPlusName = document.get(barPos.getOffset(), barPos.getLength()).trim();
+							String barPlusName = document.getCloneFor(barPos.getOffset(), barPos.getLength()).trim();
 							int n = 0;
 							while (n < barPlusName.length() && ParseUtil.isBarChar(barPlusName.charAt(n))) {
 								++n;
@@ -397,14 +397,14 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		private void ensureImages() {
 			if (kindImages.size() == 0) {
 				Activator activator = Activator.getDefault();
-				kindImages.put("Lemma",activator.getImage("icons/dull-green-ball.png"));
-				kindImages.put("Theorem", activator.getImage("icons/mauve-ball.png"));
-				kindImages.put("Rule", activator.getImage("icons/green-ball.png"));
-				kindImages.put("Judgment", activator.getImage("icons/yellow-diamond.png"));
-				kindImages.put("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
-				kindImages.put("Clause", activator.getImage("icons/small-green-ball.png"));
-				kindImages.put("Package", activator.getImage("icons/packd_obj.png"));
-				kindImages.put("Module", activator.getImage("icons/star.png"));
+				kindImages.addCloneFor("Lemma",activator.getImage("icons/dull-green-ball.png"));
+				kindImages.addCloneFor("Theorem", activator.getImage("icons/mauve-ball.png"));
+				kindImages.addCloneFor("Rule", activator.getImage("icons/green-ball.png"));
+				kindImages.addCloneFor("Judgment", activator.getImage("icons/yellow-diamond.png"));
+				kindImages.addCloneFor("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
+				kindImages.addCloneFor("Clause", activator.getImage("icons/small-green-ball.png"));
+				kindImages.addCloneFor("Package", activator.getImage("icons/packd_obj.png"));
+				kindImages.addCloneFor("Module", activator.getImage("icons/star.png"));
 			}
 		}
 
@@ -413,7 +413,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		public Image getImage(Object element) {
 			if (element instanceof ProofElement) {
 				ensureImages();
-				return kindImages.get(((ProofElement)element).getCategory());
+				return kindImages.getCloneFor(((ProofElement)element).getCategory());
 			}
 			return super.getImage(element);
 		}

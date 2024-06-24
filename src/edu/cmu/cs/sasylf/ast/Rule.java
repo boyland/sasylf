@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -494,28 +496,45 @@ public class Rule extends RuleLike implements CanBeCase {
 	private Judgment judgment;
 	private boolean ruleIsOk = false;
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
 		for (Clause c : premises) {
-			c.substitute(from, to);
+			c.substitute(from, to, sd);
 		}
-		conclusion.substitute(from, to);
+		conclusion.substitute(from, to, sd);
 	}
 
-	public Rule clone() {
+	public Rule copy(CloneData cd) {
 		/*
 			private List<Clause> premises;
 			private Clause conclusion;
 			private int isAssumpt = 0;
 		*/
 
-		Rule clone = (Rule) super.clone();
+		if (cd.containsCloneFor(this)) return (Rule) cd.getCloneFor(this);
+
+		Rule clone;
+
+		try {
+			clone = (Rule) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Rule");
+			System.exit(1);
+			return null;
+		}
+
 		List<Clause> newPremises = new ArrayList<Clause>();
 		for (Clause c : premises) {
-			newPremises.add(c.clone());
+			newPremises.add(c.copy(cd));
 		}
+
+		cd.addCloneFor(this, clone);
+		
 		clone.premises = newPremises;
 
-		clone.conclusion = conclusion.clone();
+		clone.conclusion = conclusion.copy(cd);
 
 		return clone;
 	}

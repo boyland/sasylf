@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
+
 /**
  * A syntax assumption with a context, and maybe bindings
  * e.g.  t[x] assumes Gamma, x:T
@@ -39,8 +41,9 @@ public class BindingAssumption extends NonTerminalAssumption {
 
 	private Binding binding;
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?
+		super.substitute(from, to, sd);
 	}
 }

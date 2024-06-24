@@ -3,11 +3,14 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * A qualified name, used in the SASyLF module system.
@@ -103,7 +106,7 @@ public class QualName extends Node {
 		if (version != ctx.version()) resolution = null;
 		if (resolution == null) {
 			version = ctx.version();
-			if (source == null) {
+			if (source == null) { // if we are resolving it from the main (top level) module
 				resolution = ctx.modMap.get(name);
 				if (resolution == null) resolution = ctx.getSyntax(name);
 				if (resolution == null) resolution = ctx.ruleMap.get(name);
@@ -224,21 +227,35 @@ public class QualName extends Node {
 		source.visit(consumer);
 	}
 
-	public QualName clone() {
-		QualName clone = (QualName) super.clone();
-		/*
-			private final QualName source;
-			private final String name;
-			
-			private Object resolution;
-			private int version;
- 		*/
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		// TODO: I don't think we need the next line
+		// if (source != null) source.substitute(from, to, sd);
+		if (name.equals(from)) {
+			name = to;
+			resolution = null; // because we changed the name, it points to something else now
+		}
+	
+	}
 
-		if (clone.source != null) clone.source = source.clone();
+	public QualName copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (QualName) cd.getCloneFor(this);
 
-		// Set the resolution to null, since it now potentially refers to a different object
+		QualName clone;
+		try {
+			clone = (QualName) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in QualName");
+			System.exit(1);
+			return null;
+		}
 
-		clone.resolution = null; // need to call the typecheck method again after cloning/substitution
+		cd.addCloneFor(this, clone);
+
+		if (source != null) {
+			clone.source = clone.source.copy(cd);
+		}
 
 		return clone;
 	}

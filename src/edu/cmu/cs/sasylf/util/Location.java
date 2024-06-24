@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.Token;
 
@@ -57,6 +58,25 @@ public class Location implements Span {
 	@Override
 	public Location getEndLocation() {
 		return this;
+	}
+
+	public Location copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Location) cd.getCloneFor(this);
+
+		Location clone;
+
+		try {
+			clone = (Location) this.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Location");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		return clone;
 	}
 
 

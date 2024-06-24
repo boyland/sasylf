@@ -1,5 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.util.Location;
 
 public class VariableAssumption extends SyntaxAssumption {
@@ -21,8 +24,28 @@ public class VariableAssumption extends SyntaxAssumption {
 
 	private Variable variable;
 	
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?
+	}
+
+	@Override
+	public Fact copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Fact) cd.getCloneFor(this);
+
+		VariableAssumption clone;
+		try {
+			clone = (VariableAssumption) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in VariableAssumption");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		clone.variable = clone.variable.copy(cd);
+
+		return clone;
 	}
 }

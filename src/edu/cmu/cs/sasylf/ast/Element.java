@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -20,8 +22,8 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
  */
 public abstract class Element extends Node {
 	
-	private Term term;
-	private GrmTerminal terminal;
+	protected Term term;
+	protected GrmTerminal terminal;
 
 	public Element(Location l) { super(l); }
 
@@ -146,8 +148,25 @@ public abstract class Element extends Node {
 		return term;
 	}
 
-	public abstract void substitute(String from, String to);
-	public Element clone() {
-		return (Element) super.clone();
+	public abstract void substitute(String from, String to, SubstitutionData sd);
+
+
+	public Element copy(CloneData cd) {
+		Element clone;
+		try {
+			clone = (Element) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Error in Element.copy");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		if (clone.term != null) clone.term = clone.term.copy(cd);
+		if (clone.terminal != null) clone.terminal = clone.terminal.copy(cd);
+
+		return clone;
 	}
+
 }

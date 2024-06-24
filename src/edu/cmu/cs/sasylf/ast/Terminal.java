@@ -3,6 +3,8 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.Pair;
@@ -97,7 +99,9 @@ public class Terminal extends Element implements ElemType {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
 	
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 
 		/*
 			We want to check if symbol matches from
@@ -129,8 +133,26 @@ public class Terminal extends Element implements ElemType {
 	
 	}
 
-	public Terminal copy() {
-		// I think it's fine if we don't copy the span
-		return new Terminal(new String(symbol), sp);
+	public Terminal copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Terminal) cd.getCloneFor(this);
+
+		// make a clone
+		Terminal clone = (Terminal) super.copy(cd);
+		
+		cd.addCloneFor(this, clone);
+
+		/*
+			We have to clone the following attributes
+
+			private Span sp;
+			private String symbol;
+			private boolean mustQuote;
+		*/
+
+		clone.sp = sp.copy(cd);
+
+		// the other attributes are immutable, so we don't need to clone them
+		
+		return clone;
 	}
 }

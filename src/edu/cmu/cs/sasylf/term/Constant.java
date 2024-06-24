@@ -2,6 +2,8 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.Queue;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 
@@ -27,5 +29,43 @@ public class Constant extends Atom {
 			Term.unifyHelper(current, worklist);
 		else
 			throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);
+	}
+
+	public void substitute (String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		if (type != null) {
+			type.substitute(from, to, sd);
+		}
+	}
+
+
+	@Override
+	public Constant copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Constant) cd.getCloneFor(this);
+
+		Constant clone;
+
+		try {
+			clone = (Constant) super.clone();
+		}
+		catch(CloneNotSupportedException e) {
+			System.out.println("Clone not supported for Constant");
+			System.exit(1);
+			return null;
+		}
+		
+		cd.addCloneFor(this, clone);
+
+		/*
+			Term type;
+		*/
+
+		if (clone.type != null) {
+			clone.type = clone.type.copy(cd);
+		}
+
+		return clone;
 	}
 }

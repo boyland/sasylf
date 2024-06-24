@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
@@ -54,6 +55,12 @@ public class Case extends Node {
 		for (Derivation derivation : derivations) {
 			derivation.collectQualNames(consumer);
 		}
+	}
+
+	public Case copy(CloneData cd) {
+		System.out.println("Case.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }
 

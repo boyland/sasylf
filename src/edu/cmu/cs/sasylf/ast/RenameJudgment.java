@@ -36,7 +36,10 @@ public class RenameJudgment extends Judgment {
 	
 	@Override
 	public void defineConstructor(Context ctx) {
+
 		Object resolution = source.resolveNotPackage(ctx);
+
+		
 		if (resolution != null) {
 			if (resolution instanceof Judgment) {
 				original = (Judgment)resolution;
@@ -51,6 +54,7 @@ public class RenameJudgment extends Judgment {
 			super.setForm(cd);
 		}
 		super.defineConstructor(ctx);
+
 	}
 
 	@Override
@@ -73,9 +77,14 @@ public class RenameJudgment extends Judgment {
 			} else if (super.getAssume() != null) {
 				ErrorHandler.recoverableError(Errors.RENAME_ASSUME_MISMATCH, this);
 			}
+			// getForm() is the form of the judgment as the user has declared it
+			// original.getForm() is the form of the judgment as the module has declared it
+			// we want to check if they match
+
 			getForm().checkClauseMatch(original.getForm());
 		}
 		// super.typecheck(ctx);
+		Context.updateVersion();
 	}
 
 	

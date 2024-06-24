@@ -7,6 +7,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.term.Substitution;
+
 /**
  * Declared terminals/
  */
@@ -36,6 +40,7 @@ public class TerminalsPart implements Part {
 	@Override
 	public void typecheck(Context ctx) {
 		ctx.termSet.addAll(declaredTerminals);
+		Context.updateVersion();
 	}
 	
 	@Override
@@ -53,14 +58,34 @@ public class TerminalsPart implements Part {
 		// Do nothing
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}
 
+	/**
+	 * @deprecated
+	 * @return a clone of this part
+	 */
 	public TerminalsPart clone() {
 		try {
 			TerminalsPart clone = (TerminalsPart) super.clone();
+			HashSet<String> newDeclaredTerminals = new HashSet<>();
+			newDeclaredTerminals.addAll(declaredTerminals);
+			clone.declaredTerminals = newDeclaredTerminals;
+			return clone;
+		}
+		catch (CloneNotSupportedException e) {
+			throw new Error("unexpected error: " + e);
+		}
+	}
+
+	public TerminalsPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (TerminalsPart) cd.getCloneFor(this);
+
+		try {
+			TerminalsPart clone = (TerminalsPart) super.clone();
+			cd.addCloneFor(this, clone);
 			HashSet<String> newDeclaredTerminals = new HashSet<>();
 			newDeclaredTerminals.addAll(declaredTerminals);
 			clone.declaredTerminals = newDeclaredTerminals;

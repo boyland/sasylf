@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -18,6 +19,7 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInversion extends DerivationWithArgs {
@@ -261,5 +263,12 @@ public class DerivationByInversion extends DerivationWithArgs {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		if (ruleName != null) ruleName.visit(consumer);
+	}
+
+	@Override
+	public DerivationByInversion copy(CloneData cd) {
+		System.out.println("DerivationByInversion.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }

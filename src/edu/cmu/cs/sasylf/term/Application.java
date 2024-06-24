@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -40,8 +42,8 @@ public class Application extends Term {
 		this(f, Arrays.asList(new Term[] { a }));
 	}
 
-	private final Atom function;
-	private final List<? extends Term> arguments;
+	private Atom function;
+	private List<? extends Term> arguments;
 
 	public Atom getFunction() { return function; }
 	public List<? extends Term> getArguments() { return arguments; }
@@ -749,6 +751,47 @@ public class Application extends Term {
 			if (arg.contains(other)) return true;
 		}
 		return false;
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		function.substitute(from, to, sd);
+		for (Term arg: arguments) {
+			arg.substitute(from, to, sd);
+		}
+	}
+
+	@Override
+	public Application copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Application) cd.getCloneFor(this);
+
+		Application clone;
+
+		try {
+			clone = (Application) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Application");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		/*
+			private final Atom function;
+			private final List<? extends Term> arguments;
+		*/
+
+		clone.function = clone.function.copy(cd);
+		List<Term> newArgs = new ArrayList<Term>();
+		for (Term arg: clone.arguments) {
+			newArgs.add(arg.copy(cd));
+		}
+		clone.arguments = newArgs;
+
+		return clone;
 	}
 
 

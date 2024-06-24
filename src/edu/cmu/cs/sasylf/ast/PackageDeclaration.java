@@ -3,9 +3,11 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.Span;
 
 public class PackageDeclaration extends Node {
 	private QualName name;
@@ -54,9 +56,23 @@ public class PackageDeclaration extends Node {
 		return sb.toString();
 	}
 
-	public PackageDeclaration clone() {
-		PackageDeclaration clone = (PackageDeclaration) super.clone();
-		clone.name = clone.name.clone();
+	public PackageDeclaration copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (PackageDeclaration) cd.getCloneFor(this);
+
+		PackageDeclaration clone;
+
+		try {
+			clone = (PackageDeclaration) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in PackageDeclaration");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		clone.name = name.copy(cd);
+
 		return clone;
 	}
 }

@@ -7,7 +7,10 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -109,6 +112,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		}
 		// now do what we normally do:
 		super.typecheck(ctx);
+		Context.updateVersion();
 	}
 
 	
@@ -179,11 +183,37 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		source.visit(consumer);
 	}
 
-	public RenameSyntaxDeclaration clone() {
-		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.clone(); 
-		clone.source = source.clone();
-		clone.original = original.clone();
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		super.substitute(from, to, sd);
+
+		/*
+			public QualName source;
+			public SyntaxDeclaration original;
+		*/
+
+		if (source != null) source.substitute(from, to, sd);
+		if (original != null) original.substitute(from, to, sd);
+
+	}
+
+	public RenameSyntaxDeclaration copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (RenameSyntaxDeclaration) cd.getCloneFor(this);
+
+		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.copy(cd);
+
+		// clone source and original
+
+		cd.addCloneFor(this, clone);
+
+		if (clone.source != null) clone.source = clone.source.copy(cd);
+		if (clone.original != null) {
+			clone.original = clone.original.copy(cd);
+		}
 		return clone;
 	}
+
+
 
 }

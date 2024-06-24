@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -17,6 +19,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.Span;
 
 
 public class CompUnit extends Node implements Module {
@@ -66,7 +69,7 @@ public class CompUnit extends Node implements Module {
 	}
 
 	private PackageDeclaration packageDecl;
-	private String moduleName;
+	public String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;
@@ -172,6 +175,112 @@ public class CompUnit extends Node implements Module {
 			}
 		}
 
+		/*
+		System.out.println("-------Finished typechecking CompUnit-------");
+
+		// get the two modules
+
+		CompUnit test2mod = (CompUnit) ctx.modMap.get("test2mod");
+		CompUnit test3mod = (CompUnit) ctx.modMap.get("test3mod");
+
+		if (test2mod == null || test3mod == null) return;
+
+		SyntaxPart sp1 = (SyntaxPart) test2mod.getParts().get(1);
+		SyntaxPart sp2 = (SyntaxPart) test3mod.getParts().get(1);
+
+		// get the first syntax part from each one
+
+		SyntaxDeclaration sd1 = (SyntaxDeclaration) sp1.getSyntax().get(0);
+		SyntaxDeclaration sd2 = (SyntaxDeclaration) sp2.getSyntax().get(0);
+
+		System.out.println("sd1: " + sd1);
+		System.out.println("sd2: " + sd2);
+		
+		Clause c1 = sd1.getClauses().get(1);
+		Clause c2 = sd2.getClauses().get(1);
+
+		// get the s in each of the clauses - that's the index 2 element
+
+		NonTerminal nt1 = (NonTerminal) c1.getElements().get(3);
+		NonTerminal nt2 = (NonTerminal) c2.getElements().get(3);
+
+		System.out.println("nt1: " + nt1);
+		System.out.println("nt2: " + nt2);
+
+		// check the types
+
+		SyntaxDeclaration type1 = nt1.getType();
+		SyntaxDeclaration type2 = nt2.getType();
+
+		System.out.println("type1: " + type1);
+		System.out.println("type2: " + type2);
+
+		System.out.println("sd1 == type1 : " + (sd1 == type1));
+		System.out.println("sd2 == type2 : " + (sd2 == type2));
+
+		System.out.println("------- All Good -------");
+
+		// get the ss and sss syntax declarations
+
+		RenameSyntaxDeclaration ss = (RenameSyntaxDeclaration) ctx.getSyntax("ss");
+		RenameSyntaxDeclaration sss = (RenameSyntaxDeclaration) ctx.getSyntax("sss");
+
+		System.out.println(ss);
+		System.out.println(sss);
+
+		SyntaxDeclaration ssOriginal = ss.original;
+		SyntaxDeclaration sssOriginal = sss.original;
+
+		System.out.println("ssOriginal: " + ssOriginal);
+		System.out.println("sssOriginal: " + sssOriginal);
+
+		// check if they're equal to the original syntax declarations
+
+		System.out.println("type1 == ssOriginal : " + (type1 == ssOriginal));
+		System.out.println("type2 == sssOriginal : " + (type2 == sssOriginal));
+
+		// check ss in the first judgment declared in the main module
+
+		JudgmentPart jp = (JudgmentPart) getParts().get(7);
+
+		RenameJudgment j1 = (RenameJudgment) jp.getJudgments().get(0);
+
+		Clause j1Form = j1.getForm();
+
+		// get the first nonterminal in the clause
+
+		NonTerminal j1NT = (NonTerminal) j1Form.getElements().get(0);
+
+		// get the type of the nonterminal
+
+		RenameSyntaxDeclaration j1NTType = (RenameSyntaxDeclaration) j1NT.getType();
+
+		SyntaxDeclaration j1NTOriginal = j1NTType.original;
+		
+		System.out.println("j1NTOriginal: " + j1NTOriginal);
+
+		// check if it's equal to the original syntax declaration
+
+		System.out.println("type1 == j1NTOriginal : " + (type1 == j1NTOriginal));
+		
+		// check s in the functor
+
+		CompUnit test1mod = (CompUnit) ctx.modMap.get("test1mod");
+
+		// get the first syntax part
+
+		SyntaxPart sp = (SyntaxPart) test1mod.getParts().get(1);
+		
+		SyntaxDeclaration s1 = (SyntaxDeclaration) sp.getSyntax().get(0);
+		
+		NonTerminal s1NT = s1.getNonTerminal();
+
+		SyntaxDeclaration s1NTType = s1NT.getType();
+
+		System.out.println(s1NTType);
+
+		System.out.println("-------------------");
+		*/
 	}
 
 	private void checkFilename(ModuleId id) {
@@ -185,6 +294,7 @@ public class CompUnit extends Node implements Module {
 				ErrorHandler.warning(Errors.WRONG_MODULE_NAME, this, moduleName+"\n"+id.moduleName);
 			}
 		}
+		
 	}
 
 	/* (non-Javadoc)
@@ -233,53 +343,75 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
+
+		// the bug fix is making this code always run
 		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
+
 			this.collectTopLevel(things);
+
 			this.collectRuleLike(declCache); // doesn't get syntax declarations or judgments
+
 			for (Node n : things) {
 				if (n instanceof SyntaxDeclaration) {
-					SyntaxDeclaration sd = (SyntaxDeclaration)n;
+					SyntaxDeclaration sd = (SyntaxDeclaration)n; // TODO: check here
 					for (String s : sd.getAlternates()) {
 						declCache.put(s, sd);
 					}
 				} else if (n instanceof Judgment) {
-					Judgment jd = (Judgment)n;
+					Judgment jd = (Judgment)n; // TODO: check here
 					declCache.put(jd.getName(),jd);
 				}
 			}
 			cacheVersion = ctx.version();
 		}
-		return declCache.get(name);
+		Object result = declCache.get(name);
+
+		return result;
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		for (Part part : parts) {
-			part.substitute(from, to);
+			part.substitute(from, to, sd);
 		}
 	}
 
+	public CompUnit copy(CloneData cd) {
+		// unimplemented
+		System.out.println("CompUnit.copy unimplemented");
+		System.exit(0);
+		return null;
+	}
+
+	@Override
 	public CompUnit clone() {
-		CompUnit clone = (CompUnit) super.clone();
-		/*
-			private PackageDeclaration packageDecl;
-			private String moduleName;
-			private List<Part> params = new ArrayList<Part>();
-			private List<Part> parts = new ArrayList<Part>();
-			private int parseReports;
-		*/
-		clone.packageDecl = packageDecl.clone();
+
+		CloneData cd = new CloneData();
+
+		CompUnit clone;
+
+		try {
+			clone = (CompUnit) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in CompUnit");
+			System.exit(1);
+			return null;
+		}
+	
+		clone.packageDecl = packageDecl.copy(cd);
 
 		List<Part> newParams = new ArrayList<>();
 		for (Part p: params) {
-			newParams.add(p.clone());
+			newParams.add(p.copy(cd));
 		}
 		clone.params = newParams;
 
 		List<Part> newParts = new ArrayList<>();
 		for (Part p : parts) {
-			newParts.add(p.clone());
+			newParts.add(p.copy(cd));
 		}
 		clone.parts = newParts;
 

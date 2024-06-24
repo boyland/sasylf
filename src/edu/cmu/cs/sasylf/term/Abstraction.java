@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -393,5 +395,55 @@ public class Abstraction extends Term {
 			}
 		}
 		return body.contains(other);
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		/*
+			public Term varType;
+			public String varName;
+			private Term body;
+		*/
+	
+		if (varType != null) {
+			varType.substitute(from, to, sd);
+		}
+
+		if (varName.equals(from)) {
+			varName = to;
+		}
+
+		body.substitute(from, to, sd);
+	}
+
+	@Override
+	public Abstraction copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Abstraction) cd.getCloneFor(this);
+		
+		Abstraction clone;
+
+		try {
+			clone = (Abstraction) super.clone();
+		}
+		catch(CloneNotSupportedException e) {
+			System.out.println("Clone not supported for Abstraction");
+			System.exit(1);
+			return null;
+		}
+		
+		cd.addCloneFor(this, clone);
+
+		/*
+			public Term varType;
+			public String varName;
+			private Term body;
+		*/
+
+		clone.varType = clone.varType.copy(cd);
+		clone.body = clone.body.copy(cd);
+
+		return clone;
 	}
 }

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Relation;
 import edu.cmu.cs.sasylf.util.TransitiveRelation;
@@ -289,5 +291,47 @@ public class FreeVar extends Atom {
 			return t.incrFreeDeBruijn(varIncrAmount);
 		else
 			return this;
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return ;
+		sd.setSubstitutedFor(this);
+		
+		/*
+			private int stamp;
+			private Term type;
+		*/
+
+		if (type != null) {
+			type.substitute(from, to, sd);
+		}
+	}
+
+	@Override
+	public FreeVar copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (FreeVar) cd.getCloneFor(this);
+
+		FreeVar clone;
+
+		try {
+			clone = (FreeVar) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("CloneNotSupportedException in FreeVar");
+			System.exit(1);
+			return null;
+		}
+
+		/*
+			private int stamp;
+			private Term type;
+		*/
+
+		cd.addCloneFor(this, clone);
+
+		if (clone.type != null) {
+			clone.type = clone.type.copy(cd);
+		}
+
+		return clone;
 	}
 }

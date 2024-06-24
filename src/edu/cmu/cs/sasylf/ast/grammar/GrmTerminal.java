@@ -1,5 +1,7 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.grammar.*;
 
@@ -24,6 +26,37 @@ public class GrmTerminal implements Terminal {
 
 	public Element getElement() {
 		return element;
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		if (string.equals(from)) {
+			string = to;
+		}
+
+		if (element != null) element.substitute(from, to, sd);
+	}
+
+	public GrmTerminal copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (GrmTerminal) cd.getCloneFor(this);
+		
+		GrmTerminal clone;
+		try {
+			clone = (GrmTerminal) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("CloneNotSupportedException in GrmTerminal");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		clone.element = clone.element.copy(cd);
+		
+		return clone;
 	}
 
 }

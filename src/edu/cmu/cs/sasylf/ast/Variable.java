@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -152,14 +154,18 @@ public class Variable extends Element {
 		return new BoundVar(varBindings.size()-index);
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// do nothing
 	}
 
-	public Variable clone() {
-		Variable clone = (Variable) super.clone();
-		
-		clone.type = type.clone();
+	public Variable copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Variable) cd.getCloneFor(this);
+
+		Variable clone = (Variable) super.copy(cd);
+
+		cd.addCloneFor(this, clone);
+
+		clone.type = clone.type.copy(cd);
 
 		return clone;
 	}

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -155,6 +157,7 @@ public class Judgment extends Node implements ClauseType, Named {
 				// go on to next error
 			}
 		}
+		Context.updateVersion();
 	}
 
 	/**
@@ -206,8 +209,9 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 	}
 
-	public void substitute(String from, String to) {
-		System.out.println("Substituting in Judgment " + name);
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		/*
 			private List<Rule> rules;
 			private Clause form;
@@ -217,20 +221,28 @@ public class Judgment extends Node implements ClauseType, Named {
 		*/
 		
 		for (Rule r : rules) {
-			r.substitute(from, to);
+			r.substitute(from, to, sd);
 		}
 
 		// We are not substituting the name
 
-		form.substitute(from, to);
+		form.substitute(from, to, sd);
 
 		// TODO: I think something else might need to be done here
 
 	}
 
-	public Judgment clone() {
+	public Judgment copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Judgment) cd.getCloneFor(this);
+		Judgment clone;
+
+		try {
+			clone = (Judgment) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new Error("Java clone() weirdness");
+		}
 		
-		Judgment newJudgment = (Judgment) super.clone();
+		cd.addCloneFor(this, clone);
 		
 		/*
 
@@ -244,17 +256,18 @@ public class Judgment extends Node implements ClauseType, Named {
 
 		List<Rule> newRules = new ArrayList<>();
 		for (Rule r : rules) {
-			newRules.add(r.clone());
+			newRules.add(r.copy(cd));
 		}
-		newJudgment.rules = newRules;
+		clone.rules = newRules;
 		
-		newJudgment.form = form.clone();
+		clone.form = form.copy(cd);
 
-		if (newJudgment.assume != null) {
-			newJudgment.assume = assume.clone();
+		if (clone.assume != null) {
+			clone.assume = (NonTerminal) assume.copy(cd);
 		}
 		
-		return newJudgment;
+		return clone;
+		
 	}
 
 }

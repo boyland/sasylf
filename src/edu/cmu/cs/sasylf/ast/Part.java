@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
+
 /**
  * A part of a compilation unit/module.
  */
@@ -32,6 +35,6 @@ public interface Part extends Cloneable {
 	
 	public abstract void collectQualNames(Consumer<QualName> consumer);
 
-	public abstract void substitute(String from, String to);
-	public abstract Part clone();
+	public abstract void substitute(String from, String to, SubstitutionData sd);
+	public abstract Part copy(CloneData cd);
 }

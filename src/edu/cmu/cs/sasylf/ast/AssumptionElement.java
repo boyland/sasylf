@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -144,19 +146,25 @@ public class AssumptionElement extends Element {
 	}
 
 	private Element context;
-private Element base;
+	private Element base;
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that this is wrong
 	}
 
-	public AssumptionElement clone() {
-		AssumptionElement clone = (AssumptionElement) super.clone();
+	public AssumptionElement copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (AssumptionElement) cd.getCloneFor(this);
 
-		clone.context = clone.context.clone();
-		clone.base = clone.base.clone();
+		AssumptionElement clone = (AssumptionElement) super.copy(cd);
+		cd.addCloneFor(this, clone);
+
+		clone.context = context.copy(cd);
+		clone.base = base.copy(cd);
+
+		
 
 		return clone;
 	}
+
 }

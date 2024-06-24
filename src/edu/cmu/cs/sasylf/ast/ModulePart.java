@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -42,7 +44,7 @@ public class ModulePart extends Node implements Part, Named {
 	
 	/*
 	@Override
-	public void typecheck(Context ctx) {
+	public void  (Context ctx) {
 		Object resolution = module.resolve(ctx);
 		if (resolution instanceof Module) {
 			ctx.modMap.put(name, (Module)resolution);
@@ -91,9 +93,6 @@ public class ModulePart extends Node implements Part, Named {
 				// resolve the argument
 
 				Object argResolution = argument.resolve(ctx);
-
-				System.out.println("Parameter is of type: " + parameter.getClass());
-				System.out.println("Argument resolution is of type: " + argResolution.getClass());
 
 				// Use instanceof to check that argument and parameter match
 			
@@ -158,6 +157,13 @@ public class ModulePart extends Node implements Part, Named {
 					}
 				}
 				
+				else if (parameter instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) parameter;
+					// get the first judgment, since that is the argument
+					Judgment j = jp.getJudgments().get(0);
+					parameterName = j.getName();
+				}
+				
 				else {
 					// we were not able to get the name of the parameter
 					System.out.println("Error: Could not get the name of the parameter.");
@@ -166,17 +172,16 @@ public class ModulePart extends Node implements Part, Named {
 				
 				// substitute the parameter with the argument
 
-				newModule.substitute(parameterName, argumentName);
-			
+				newModule.substitute(parameterName, argumentName, new SubstitutionData());
 			}
+			
+			// change the name of the module
+
+			newModule.moduleName = name;
 
 			// add the new module to the context
 
-			ctx.modMap.put(name, newModule);
-
-			System.out.println("New module: ");
-			System.out.println(newModule);
-
+			ctx.modMap.put(name, newModule); Context.updateVersion();
 		}
 	}
 
@@ -216,26 +221,32 @@ public class ModulePart extends Node implements Part, Named {
 		}
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}
 
-	public ModulePart clone() {
-		/*
-			private String name;
-			private QualName module;
-			private List<QualName> arguments;
-		*/
+	public ModulePart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ModulePart) cd.getCloneFor(this);
+		ModulePart clone;
 
-		ModulePart clone = (ModulePart) super.clone();
+		try {
+			clone = (ModulePart) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in ModulePart");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
 		
-		clone.module = clone.module.clone();
+		clone.module = clone.module.copy(cd);
 		
 		List<QualName> newArguments = new ArrayList<>();
 
 		for (QualName argument : arguments) {
-			newArguments.add(argument.clone());
+			newArguments.add(argument.copy(cd));
 		}
 		clone.arguments = newArguments;
 

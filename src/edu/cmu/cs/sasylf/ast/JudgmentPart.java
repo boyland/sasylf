@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -114,19 +116,35 @@ public class JudgmentPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to) {
-		System.out.println("Substituting in JudgmentPart");
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		for (Judgment j : judgments) {
-			j.substitute(from, to);
+			j.substitute(from, to, sd);
 		}
 	}
 
-	public JudgmentPart clone() {
+	public JudgmentPart copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (JudgmentPart) cd.getCloneFor(this);
+		JudgmentPart clone;
+		try {
+			clone = (JudgmentPart) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supperted in " + this.getClass());
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
 		List<Judgment> newJudgments = new ArrayList<Judgment>();
 		for (Judgment j : judgments) {
-			newJudgments.add(j.clone());
+			newJudgments.add(j.copy(cd));
 		}
-		return new JudgmentPart(newJudgments);
+		clone.judgments = newJudgments;
+		
+		return clone;
 	}
 
 	public String toString() {

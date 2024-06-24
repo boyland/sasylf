@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -103,6 +104,12 @@ public class DerivationByExchange extends DerivationWithArgs {
 			}
 		}
 		// System.out.println("  => null // hit end");
+		return null;
+	}
+
+	public DerivationByExchange copy(CloneData cd) {
+		System.out.println("DerivationByExchange.copy unimplemented");
+		System.exit(0);
 		return null;
 	}
 }

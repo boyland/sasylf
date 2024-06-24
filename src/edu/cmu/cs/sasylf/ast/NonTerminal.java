@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -57,6 +59,7 @@ public class NonTerminal extends Element {
 
 	@Override
 	public int hashCode() { return symbol.hashCode(); }
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
@@ -204,7 +207,9 @@ public class NonTerminal extends Element {
 		freeSet.add(this);
 	}
 
-	public void substitute(String from, String to) {
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 	
 		/*
 			We want to check if symbol matches from
@@ -232,11 +237,39 @@ public class NonTerminal extends Element {
 			symbol = to + filler;
 		}
 
-		
+		if (type != null) {
+			type.substitute(from, to, sd);
+		}
+
+		if (ty != null) {
+			ty.substitute(from, to, sd);
+		}
+
+
 	}
-	
-	public NonTerminal clone() {
-		NonTerminal clone = (NonTerminal) super.clone();
+
+	public NonTerminal copy(CloneData cd) {
+
+		if (cd.containsCloneFor(this)) {
+			return (NonTerminal) cd.getCloneFor(this);
+		}
+
+		
+
+		NonTerminal clone = (NonTerminal) super.copy(cd);
+		
+		/*
+			private String symbol;
+			private SyntaxDeclaration type;
+			private SyntaxDeclaration ty;
+		 */
+
+		cd.addCloneFor(this, clone);
+		
+		if (clone.type != null) {
+			clone.type = clone.type.copy(cd);
+		}
+		if (clone.ty != null) clone.ty = clone.ty.copy(cd);
 		
 		return clone;
 	}
