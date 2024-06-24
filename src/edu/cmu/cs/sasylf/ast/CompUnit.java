@@ -306,7 +306,6 @@ public class CompUnit extends Node implements Module {
 			part.collectTopLevel(things);
 		}
 		for (Part part : parts) {
-			System.out.println(part);
 			part.collectTopLevel(things);
 		}
 	}
@@ -346,7 +345,7 @@ public class CompUnit extends Node implements Module {
 	public Object getDeclaration(Context ctx, String name) {
 
 		// the bug fix is making this code always run
-		if (/*true || */cacheVersion != ctx.version()) {
+		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 

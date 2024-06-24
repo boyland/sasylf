@@ -157,6 +157,13 @@ public class ModulePart extends Node implements Part, Named {
 					}
 				}
 				
+				else if (parameter instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) parameter;
+					// get the first judgment, since that is the argument
+					Judgment j = jp.getJudgments().get(0);
+					parameterName = j.getName();
+				}
+				
 				else {
 					// we were not able to get the name of the parameter
 					System.out.println("Error: Could not get the name of the parameter.");

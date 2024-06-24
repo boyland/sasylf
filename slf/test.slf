@@ -1,0 +1,25 @@
+package slf
+
+module test
+
+provides
+
+  terminals S
+
+  syntax n ::= 0 | S n
+
+  judgment natcombine : n + n = n
+
+    ---------- natcombine-z
+    0 + n = n
+
+    n1 + n2 = n3
+    ----------------- natcombine-s
+    S n1 + n2 = S n3
+
+
+  module natfoldableset = slf.foldableset[n, natcombine]
+
+  syntax ss = natfoldableset.s
+  
+  judgment natfoldset = natfoldableset.foldset : ss -> n

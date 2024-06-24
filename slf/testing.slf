@@ -39,5 +39,5 @@ syntax sssss = test5mod.s
 
 syntax ssssss = test6mod.s
 
-judgment eq2 = test6mod.eq : ssssss = ssssss
+judgment eq2 = test2mod.eq : ss = ss
 

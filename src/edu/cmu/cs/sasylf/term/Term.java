@@ -23,7 +23,7 @@ import edu.cmu.cs.sasylf.util.Util;
  * Application, BoundVar, and FreeVar.
  */
 
-public abstract class Term {
+public abstract class Term implements Cloneable{
 	// only for free variables
 	public final Substitution freshSubstitution(Substitution s) {
 		Set<FreeVar> vars = getFreeVariables();

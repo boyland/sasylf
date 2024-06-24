@@ -297,33 +297,21 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		System.out.println("checkMatch");
 
-		System.out.println("orig: " + orig);
-		System.out.println("repl: " + repl);
-
-		NonTerminal nt1 = (NonTerminal) orig;
-		NonTerminal nt2 = (NonTerminal) repl;
-
-		SyntaxDeclaration sd1 = nt1.getType();
-		RenameSyntaxDeclaration sd2 = (RenameSyntaxDeclaration) nt2.getType();
-
-		// get the original
-
-		SyntaxDeclaration sd2Original = sd2.original;
-
-		// print them both
-
-		System.out.println("sd1: " + sd1);
-		System.out.println("sd2Original: " + sd2Original);
-
-		// print the classes
-
-		System.out.println("sd1: " + sd1.getClass());
-		System.out.println("sd2: " + sd2.getClass());
+		
 
 		Element origOriginal = findOriginal(orig);
 		Element replOriginal = findOriginal(repl);
+
+		System.out.println("Checkmatch");
+		System.out.println("orig: " + origOriginal);
+		System.out.println("repl: " + replOriginal);
+		System.out.println("orig type: " + origOriginal.getElemType());
+		System.out.println("orig type class: " + origOriginal.getElemType().getClass());
+		System.out.println("repl type class: " + replOriginal.getElemType().getClass());
+		System.out.println("repl type: " + replOriginal.getElemType());
+		System.out.println("orig class: " + origOriginal.getClass());
+		System.out.println("repl class: " + replOriginal.getClass());
 
 		Term type1 = asLFType(origOriginal.getElemType());
 		Term type2 = asLFType(replOriginal.getElemType());
@@ -364,6 +352,11 @@ public class Clause extends Element implements CanBeCase {
 	 * @param o original clause
 	 */
 	public void checkClauseMatch(Clause o) {
+
+		System.out.println("checkClauseMatch");
+		System.out.println("this: " + this);
+		System.out.println("o: " + o);
+
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
 
