@@ -371,11 +371,11 @@ public class CompUnit extends Node implements Module {
 		return result;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		for (Part part : parts) {
-			part.substitute(from, to, sd);
+			part.substitute(sd);
 		}
 	}
 

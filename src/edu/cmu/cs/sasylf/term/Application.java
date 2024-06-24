@@ -753,13 +753,13 @@ public class Application extends Term {
 		return false;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		function.substitute(from, to, sd);
+		function.substitute(sd);
 		for (Term arg: arguments) {
-			arg.substitute(from, to, sd);
+			arg.substitute(sd);
 		}
 	}
 

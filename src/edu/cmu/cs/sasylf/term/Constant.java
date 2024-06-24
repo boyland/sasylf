@@ -31,12 +31,12 @@ public class Constant extends Atom {
 			throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);
 	}
 
-	public void substitute (String from, String to, SubstitutionData sd) {
+	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 
 		if (type != null) {
-			type.substitute(from, to, sd);
+			type.substitute(sd);
 		}
 	}
 

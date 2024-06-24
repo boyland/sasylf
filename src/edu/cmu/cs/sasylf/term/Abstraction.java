@@ -397,7 +397,7 @@ public class Abstraction extends Term {
 		return body.contains(other);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
@@ -408,14 +408,14 @@ public class Abstraction extends Term {
 		*/
 	
 		if (varType != null) {
-			varType.substitute(from, to, sd);
+			varType.substitute(sd);
 		}
 
-		if (varName.equals(from)) {
-			varName = to;
+		if (varName.equals(sd.from)) {
+			varName = sd.to;
 		}
 
-		body.substitute(from, to, sd);
+		body.substitute(sd);
 	}
 
 	@Override

@@ -107,11 +107,11 @@ public class SyntaxPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		for (Syntax s : syntax) {
-			s.substitute(from, to, sd);
+			s.substitute(sd);
 		}
 	}
 

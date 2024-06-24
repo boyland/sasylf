@@ -496,14 +496,14 @@ public class Rule extends RuleLike implements CanBeCase {
 	private Judgment judgment;
 	private boolean ruleIsOk = false;
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
 		for (Clause c : premises) {
-			c.substitute(from, to, sd);
+			c.substitute(sd);
 		}
-		conclusion.substitute(from, to, sd);
+		conclusion.substitute(sd);
 	}
 
 	public Rule copy(CloneData cd) {

@@ -227,13 +227,13 @@ public class QualName extends Node {
 		source.visit(consumer);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		// TODO: I don't think we need the next line
-		// if (source != null) source.substitute(from, to, sd);
-		if (name.equals(from)) {
-			name = to;
+		// if (source != null) source.substitute(sd);
+		if (name.equals(sd.from)) {
+			name = sd.to;
 			resolution = null; // because we changed the name, it points to something else now
 		}
 	

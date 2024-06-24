@@ -716,11 +716,11 @@ public class Clause extends Element implements CanBeCase {
 		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
-	public void substitute (String from, String to, SubstitutionData sd) {
+	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		for (Element e : elements) {
-			e.substitute(from, to, sd);
+			e.substitute(sd);
 		}
 	}
 

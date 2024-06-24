@@ -36,10 +36,10 @@ public class ClauseAssumption extends SyntaxAssumption {
 		throw new UnsupportedOperationException();
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		clause.substitute(from, to, sd);
+		clause.substitute(sd);
 	}
 
 	public ClauseAssumption copy(CloneData cd) {

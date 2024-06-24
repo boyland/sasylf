@@ -49,10 +49,10 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	private NonTerminal nonTerminal;
 	private boolean isTheoremArg = false;
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		nonTerminal.substitute(from, to, sd);
+		nonTerminal.substitute(sd);
 	}
 
 	@Override

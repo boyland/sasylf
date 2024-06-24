@@ -183,18 +183,18 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		source.visit(consumer);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		super.substitute(from, to, sd);
+		super.substitute(sd);
 
 		/*
 			public QualName source;
 			public SyntaxDeclaration original;
 		*/
 
-		if (source != null) source.substitute(from, to, sd);
-		if (original != null) original.substitute(from, to, sd);
+		if (source != null) source.substitute(sd);
+		if (original != null) original.substitute(sd);
 
 	}
 

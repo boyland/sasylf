@@ -187,7 +187,7 @@ public class Binding extends Element {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// do nothing
 		// TODO: Fix this
 	}

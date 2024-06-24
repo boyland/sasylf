@@ -22,7 +22,7 @@ public class GrmNonTerminal implements NonTerminal {
 		return s instanceof GrmNonTerminal && string.equals(((GrmNonTerminal)s).string);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		

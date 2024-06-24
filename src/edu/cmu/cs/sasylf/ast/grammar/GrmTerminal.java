@@ -28,15 +28,15 @@ public class GrmTerminal implements Terminal {
 		return element;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		if (string.equals(from)) {
-			string = to;
+		if (string.equals(sd.from)) {
+			string = sd.to;
 		}
 
-		if (element != null) element.substitute(from, to, sd);
+		if (element != null) element.substitute(sd);
 	}
 
 	public GrmTerminal copy(CloneData cd) {

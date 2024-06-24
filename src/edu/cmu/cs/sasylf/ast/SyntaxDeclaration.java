@@ -570,7 +570,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
@@ -594,38 +594,38 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		*/
 
 		for (Clause c : elements) {
-			c.substitute(from, to, sd);
+			c.substitute(sd);
 		}
 
-		nonTerminal.substitute(from, to, sd);
+		nonTerminal.substitute(sd);
 
 		/*
 			For alternates, we need to remove from (if it exists) and we need to add to
 		*/
 
-		if (alternates.contains(from)) {
-			alternates.remove(from);
-			alternates.add(to);
+		if (alternates.contains(sd.from)) {
+			alternates.remove(sd.from);
+			alternates.add(sd.to);
 		}
 
 		if (variable != null) {
-			variable.substitute(from, to, sd);
+			variable.substitute(sd);
 		}
 
 		if (context != null) {
-			context.substitute(from, to, sd);
+			context.substitute(sd);
 		}
 
 		if (term != null) {
-			term.substitute(from, to, sd);
+			term.substitute(sd);
 		}
 
 		if (gnt != null) {
-			gnt.substitute(from, to, sd);
+			gnt.substitute(sd);
 		}
 
 		if (gt != null) {
-			gt.substitute(from, to, sd);
+			gt.substitute(sd);
 		}
 
 		// computed is static, so we don't need to substitute in there

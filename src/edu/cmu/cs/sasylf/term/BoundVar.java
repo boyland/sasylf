@@ -152,7 +152,7 @@ public class BoundVar extends Atom {
 		return Constant.UNKNOWN_TYPE;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		

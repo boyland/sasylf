@@ -49,7 +49,7 @@ public abstract class Fact extends Node {
 		}
 	}
 
-	public abstract void substitute(String from, String to, SubstitutionData sd);
+	public abstract void substitute(SubstitutionData sd);
 
 	public abstract Fact copy(CloneData cd);
 }

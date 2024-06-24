@@ -209,7 +209,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		/*
@@ -221,12 +221,12 @@ public class Judgment extends Node implements ClauseType, Named {
 		*/
 		
 		for (Rule r : rules) {
-			r.substitute(from, to, sd);
+			r.substitute(sd);
 		}
 
 		// We are not substituting the name
 
-		form.substitute(from, to, sd);
+		form.substitute(sd);
 
 		// TODO: I think something else might need to be done here
 

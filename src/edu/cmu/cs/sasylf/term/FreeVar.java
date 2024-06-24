@@ -293,7 +293,7 @@ public class FreeVar extends Atom {
 			return this;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return ;
 		sd.setSubstitutedFor(this);
 		
@@ -303,7 +303,7 @@ public class FreeVar extends Atom {
 		*/
 
 		if (type != null) {
-			type.substitute(from, to, sd);
+			type.substitute(sd);
 		}
 	}
 

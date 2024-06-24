@@ -207,7 +207,7 @@ public class NonTerminal extends Element {
 		freeSet.add(this);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 	
@@ -222,27 +222,27 @@ public class NonTerminal extends Element {
 
 		// First, check that from is a prefix of symbol
 
-		if (!symbol.startsWith(from)) {
+		if (!symbol.startsWith(sd.from)) {
 			return;
 		}
 
 
 		// Check that all characters after the prefix match are filler characters
 
-		int fromLength = from.length();
+		int fromLength = sd.from.length();
 
 		String filler = symbol.substring(fromLength);
 
 		if (filler.matches("^[0-9_']*$")) {
-			symbol = to + filler;
+			symbol = sd.to + filler;
 		}
 
 		if (type != null) {
-			type.substitute(from, to, sd);
+			type.substitute(sd);
 		}
 
 		if (ty != null) {
-			ty.substitute(from, to, sd);
+			ty.substitute(sd);
 		}
 
 

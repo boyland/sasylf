@@ -357,10 +357,10 @@ public abstract class Derivation extends Fact {
 		return true;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		if (clause != null) clause.substitute(from, to, sd);
+		if (clause != null) clause.substitute(sd);
 	}
 
 

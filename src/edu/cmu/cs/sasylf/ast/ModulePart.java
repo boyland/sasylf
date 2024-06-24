@@ -172,7 +172,7 @@ public class ModulePart extends Node implements Part, Named {
 				
 				// substitute the parameter with the argument
 
-				newModule.substitute(parameterName, argumentName, new SubstitutionData(parameterName, argumentName));
+				newModule.substitute(new SubstitutionData(parameterName, argumentName));
 			}
 			
 			// change the name of the module
@@ -221,7 +221,7 @@ public class ModulePart extends Node implements Part, Named {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}

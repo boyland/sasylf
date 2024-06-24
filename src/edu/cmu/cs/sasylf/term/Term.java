@@ -598,7 +598,7 @@ public abstract class Term implements Cloneable{
 		return this.equals(other) || containsProper(other);
 	}
 
-	public abstract void substitute(String from, String to, SubstitutionData sd);
+	public abstract void substitute(SubstitutionData sd);
 	
 	public abstract Term copy(CloneData cd);
 }

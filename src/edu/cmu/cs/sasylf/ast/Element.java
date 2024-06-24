@@ -148,7 +148,7 @@ public abstract class Element extends Node {
 		return term;
 	}
 
-	public abstract void substitute(String from, String to, SubstitutionData sd);
+	public abstract void substitute(SubstitutionData sd);
 
 
 	public Element copy(CloneData cd) {

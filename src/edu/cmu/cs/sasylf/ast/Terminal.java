@@ -99,7 +99,7 @@ public class Terminal extends Element implements ElemType {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
 	}
 	
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 
@@ -114,21 +114,21 @@ public class Terminal extends Element implements ElemType {
 
 		// First, check that from is a prefix of symbol
 
-		if (!symbol.startsWith(from)) {
+		if (!symbol.startsWith(sd.from)) {
 			return;
 		}
 
 
 		// Check that all characters after the prefix match are filler characters
 
-		int fromLength = from.length();
+		int fromLength = sd.from.length();
 
 		String filler = symbol.substring(fromLength);
 
 		// the filler characters are 0-9, _, and '
 
 		if (filler.matches("^[0-9_']*$")) {
-			symbol = to + filler;
+			symbol = sd.to + filler;
 		}
 	
 	}

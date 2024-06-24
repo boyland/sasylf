@@ -190,7 +190,7 @@ public class Sugar extends Syntax {
 		return gnt;
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?
 	}

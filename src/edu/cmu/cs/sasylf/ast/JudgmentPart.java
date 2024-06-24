@@ -116,11 +116,11 @@ public class JudgmentPart implements Part {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		for (Judgment j : judgments) {
-			j.substitute(from, to, sd);
+			j.substitute(sd);
 		}
 	}
 

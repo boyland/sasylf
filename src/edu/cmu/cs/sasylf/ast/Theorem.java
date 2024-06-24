@@ -369,17 +369,17 @@ public class Theorem extends RuleLike {
 		}
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
 		// substitute in foralls
 		for (Fact f : foralls) {
-			f.substitute(from, to, sd);
+			f.substitute(sd);
 		}
 
 		// substitute in exists
-		exists.substitute(from, to, sd);
+		exists.substitute(sd);
 
 		// I don't think we need to substitute in derivations
 	}

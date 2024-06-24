@@ -58,7 +58,7 @@ public class TerminalsPart implements Part {
 		// Do nothing
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
 	}

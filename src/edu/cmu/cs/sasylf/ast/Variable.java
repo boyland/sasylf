@@ -154,7 +154,7 @@ public class Variable extends Element {
 		return new BoundVar(varBindings.size()-index);
 	}
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// do nothing
 	}
 

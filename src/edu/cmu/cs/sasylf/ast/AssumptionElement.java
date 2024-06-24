@@ -148,7 +148,7 @@ public class AssumptionElement extends Element {
 	private Element context;
 	private Element base;
 
-	public void substitute(String from, String to, SubstitutionData sd) {
+	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that this is wrong
 	}
