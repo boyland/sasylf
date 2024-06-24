@@ -172,7 +172,7 @@ public class ModulePart extends Node implements Part, Named {
 				
 				// substitute the parameter with the argument
 
-				newModule.substitute(parameterName, argumentName, new SubstitutionData());
+				newModule.substitute(parameterName, argumentName, new SubstitutionData(parameterName, argumentName));
 			}
 			
 			// change the name of the module

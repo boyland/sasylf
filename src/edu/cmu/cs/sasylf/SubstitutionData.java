@@ -6,9 +6,13 @@ import java.util.Set;
 
 public class SubstitutionData {
   private final Map<Object, Boolean> set;
+  public final String from;
+  public final String to;
 
-  public SubstitutionData() {
+  public SubstitutionData(String from, String to) {
     set = new IdentityHashMap<>();
+    this.from = from;
+    this.to = to;
   }
 
   public boolean didSubstituteFor(Object o) {
