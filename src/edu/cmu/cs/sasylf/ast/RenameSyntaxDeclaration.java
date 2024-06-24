@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -110,6 +112,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		}
 		// now do what we normally do:
 		super.typecheck(ctx);
+		Context.updateVersion();
 	}
 
 	
@@ -178,6 +181,21 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
+	}
+
+	public void substitute(String from, String to, SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		super.substitute(from, to, sd);
+
+		/*
+			public QualName source;
+			public SyntaxDeclaration original;
+		*/
+
+		if (source != null) source.substitute(from, to, sd);
+		if (original != null) original.substitute(from, to, sd);
+
 	}
 
 	public RenameSyntaxDeclaration copy(CloneData cd) {

@@ -189,8 +189,8 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 				else cd = new ClauseDef(c, this);
 				//cd.checkVarUse(isInContextForm());
 				elements.set(i, cd);
-				ctx.setProduction(cd.getConstructorName(),cd);
-				ctx.parseMap.put(cd.getElemTypes(), cd);
+				ctx.setProduction(cd.getConstructorName(),cd);Context.updateVersion();
+				ctx.parseMap.put(cd.getElemTypes(), cd);Context.updateVersion();
 
 				GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);
 				ctx.ruleSet.add(r);
@@ -199,7 +199,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 					GrmRule rParens = new GrmRule(getSymbol(), new ArrayList<Symbol>(r.getRightSide()), cd);
 					rParens.getRightSide().add(0, GrmUtil.getLeftParen());
 					rParens.getRightSide().add(GrmUtil.getRightParen());					
-					ctx.ruleSet.add(rParens);
+					ctx.ruleSet.add(rParens);Context.updateVersion();
 				}
 			}
 		}
@@ -220,13 +220,14 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 		// compute a rule mapping the terminal for this Syntax to the NonTerminal for this Syntax, with and without parens
 		GrmRule termRule = new GrmRule(getSymbol(), new GrmTerminal[] { getTermSymbol() }, null);
-		ctx.ruleSet.add(termRule);
+		ctx.ruleSet.add(termRule);Context.updateVersion();
 		termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.getLeftParen(), getTermSymbol(), GrmUtil.getRightParen() }, null);
-		ctx.ruleSet.add(termRule);
+		ctx.ruleSet.add(termRule);Context.updateVersion();
 
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
 		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
-		ctx.ruleSet.add(startRule);
+		ctx.ruleSet.add(startRule);Context.updateVersion();
+
 	}
 	
 	/**

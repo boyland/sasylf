@@ -70,16 +70,7 @@ public class Clause extends Element implements CanBeCase {
 
 	public Clause copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Clause) cd.getCloneFor(this);
-		Clause clone;
-
-		try {
-			clone = (Clause) super.clone();
-		}
-		catch(CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Clause");
-			System.exit(1);
-			return null;
-		}
+		Clause clone = (Clause) super.copy(cd);
 
 		cd.addCloneFor(this, clone);
 
@@ -260,11 +251,43 @@ public class Clause extends Element implements CanBeCase {
 	}
 	
 	private static Term asLFType(ElemType t) {
-		if (t instanceof SyntaxDeclaration)
+		if (t instanceof RenameSyntaxDeclaration) {
+			RenameSyntaxDeclaration rsd = (RenameSyntaxDeclaration)t;
+			return asLFType(rsd.original);
+		}
+		if (t instanceof SyntaxDeclaration) {
 			return ((SyntaxDeclaration)t).typeTerm();
+		}
 		else if (t instanceof Judgment)
 			return ((Judgment)t).typeTerm();
 		else throw new RuntimeException("Cannot convert " + t + " to an LF type");
+	}
+	
+	private static Element findOriginal(Element e) {
+		// if it's a NonTerminal, we want to find the originally defined version of it
+
+		if (e instanceof NonTerminal) {
+			NonTerminal nt = (NonTerminal) e;
+			// get the type
+			SyntaxDeclaration declaration = nt.getType();
+			// check if it's a renamed syntax
+			// if it is, cast it, then go to the original and fetch the nonterminal
+			// call the function recursively on the nonterminal
+			if (declaration instanceof RenameSyntaxDeclaration) {
+				RenameSyntaxDeclaration renameDeclaration = (RenameSyntaxDeclaration) declaration;
+				SyntaxDeclaration originalDeclaration = renameDeclaration.original;
+
+				// get the nonterminal
+				
+				NonTerminal originalNonTerminal = originalDeclaration.getNonTerminal();
+
+				// call the function recursively on the original nonterminal
+
+				return findOriginal(originalNonTerminal);
+			}
+		}
+
+		return e;
 	}
 	
 	/**
@@ -274,14 +297,37 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		System.out.println("checkMatch: " + orig + "  |  " + repl);
-		System.out.println("orig.getElemType(): " + orig.getElemType() + "  |  repl.getElemType(): " + repl.getElemType());
-		Term type1 = asLFType(orig.getElemType());
-		Term type2 = asLFType(repl.getElemType());
-		System.out.println(orig.getElemType().getClass());
-		System.out.println("type1: " + type1);
-		System.out.println("type2: " + type2);
-		System.out.println(type1 == type2);
+		System.out.println("checkMatch");
+
+		System.out.println("orig: " + orig);
+		System.out.println("repl: " + repl);
+
+		NonTerminal nt1 = (NonTerminal) orig;
+		NonTerminal nt2 = (NonTerminal) repl;
+
+		SyntaxDeclaration sd1 = nt1.getType();
+		RenameSyntaxDeclaration sd2 = (RenameSyntaxDeclaration) nt2.getType();
+
+		// get the original
+
+		SyntaxDeclaration sd2Original = sd2.original;
+
+		// print them both
+
+		System.out.println("sd1: " + sd1);
+		System.out.println("sd2Original: " + sd2Original);
+
+		// print the classes
+
+		System.out.println("sd1: " + sd1.getClass());
+		System.out.println("sd2: " + sd2.getClass());
+
+		Element origOriginal = findOriginal(orig);
+		Element replOriginal = findOriginal(repl);
+
+		Term type1 = asLFType(origOriginal.getElemType());
+		Term type2 = asLFType(replOriginal.getElemType());
+
 		if (type1 != type2) {
 			ErrorHandler.error(Errors.RENAME_TYPE_MISMATCH, repl.getElemType().getName() + " != " + orig.getElemType().getName(), repl,
 					"SASyLF computed the LF types as " + type1 + " and " + type2);
@@ -318,9 +364,9 @@ public class Clause extends Element implements CanBeCase {
 	 * @param o original clause
 	 */
 	public void checkClauseMatch(Clause o) {
-		System.out.println("checkClauseMatch: " + this + "  |  " + o);
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
+
 		if (cf.size() != of.size()) {
 			ErrorHandler.error(Errors.RENAME_MISMATCH,"" + o, this);
 		}

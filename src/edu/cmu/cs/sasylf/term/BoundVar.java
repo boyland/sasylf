@@ -155,7 +155,7 @@ public class BoundVar extends Atom {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		// do nothing because the only attribute is its indexb
 	}
 	

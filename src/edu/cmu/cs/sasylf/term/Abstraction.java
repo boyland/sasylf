@@ -400,7 +400,7 @@ public class Abstraction extends Term {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		/*
 			public Term varType;
 			public String varName;

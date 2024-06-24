@@ -25,7 +25,7 @@ public class GrmNonTerminal implements NonTerminal {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		if (string.equals(from)) {
 			string = to;
 		}

@@ -157,6 +157,7 @@ public class Judgment extends Node implements ClauseType, Named {
 				// go on to next error
 			}
 		}
+		Context.updateVersion();
 	}
 
 	/**

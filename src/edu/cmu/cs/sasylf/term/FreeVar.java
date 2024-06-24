@@ -296,7 +296,7 @@ public class FreeVar extends Atom {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return ;
 		sd.setSubstitutedFor(this);
-
+		
 		/*
 			private int stamp;
 			private Term type;

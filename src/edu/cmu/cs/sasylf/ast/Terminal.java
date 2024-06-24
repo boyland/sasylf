@@ -137,15 +137,7 @@ public class Terminal extends Element implements ElemType {
 		if (cd.containsCloneFor(this)) return (Terminal) cd.getCloneFor(this);
 
 		// make a clone
-		Terminal clone;
-
-		try {
-			clone = (Terminal) this.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Terminal");
-			System.exit(1);
-			return null;
-		}
+		Terminal clone = (Terminal) super.copy(cd);
 		
 		cd.addCloneFor(this, clone);
 

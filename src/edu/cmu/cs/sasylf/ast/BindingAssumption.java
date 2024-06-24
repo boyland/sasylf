@@ -44,5 +44,6 @@ public class BindingAssumption extends NonTerminalAssumption {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?
+		super.substitute(from, to, sd);
 	}
 }

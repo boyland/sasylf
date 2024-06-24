@@ -756,7 +756,7 @@ public class Application extends Term {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		function.substitute(from, to, sd);
 		for (Term arg: arguments) {
 			arg.substitute(from, to, sd);

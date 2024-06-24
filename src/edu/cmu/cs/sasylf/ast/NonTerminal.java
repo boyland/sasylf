@@ -256,14 +256,7 @@ public class NonTerminal extends Element {
 
 		
 
-		NonTerminal clone;
-		try {
-			clone = (NonTerminal) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("CloneNotSupportedException in NonTerminal");
-			System.exit(1);
-			return null;
-		}
+		NonTerminal clone = (NonTerminal) super.copy(cd);
 		
 		/*
 			private String symbol;

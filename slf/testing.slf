@@ -4,7 +4,7 @@ module testing
 
 provides
 
-terminals S A B C D
+terminals S A B C D E F G H 
 
 syntax
   n ::= 0 | S n
@@ -13,15 +13,31 @@ syntax
 
   b ::= C | D
 
-module test1mod = slf.test1
+  c ::= E | F
+
+  d ::= G | H
+
+module test1mod = slf.simpleset
 
 module test2mod = slf.simpleset[a]
 
 module test3mod = slf.simpleset[n]
 
-syntax s = test2mod.s
+module test4mod = slf.simpleset[b]
 
-syntax ss = test3mod.s
+module test5mod = slf.simpleset[c]
 
-judgment eq2 = test2mod.eq : s = s
+module test6mod = slf.simpleset[d]
+
+syntax ss = test2mod.s
+
+syntax sss = test3mod.s
+
+syntax ssss = test4mod.s
+
+syntax sssss = test5mod.s
+
+syntax ssssss = test6mod.s
+
+judgment eq2 = test6mod.eq : ssssss = ssssss
 

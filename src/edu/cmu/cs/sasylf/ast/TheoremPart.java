@@ -72,7 +72,7 @@ public class TheoremPart implements Part {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		for (Theorem theorem : theorems) {
 			theorem.substitute(from, to, sd);
 		}

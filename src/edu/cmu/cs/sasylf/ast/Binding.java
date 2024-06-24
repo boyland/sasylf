@@ -195,14 +195,7 @@ public class Binding extends Element {
 	public Binding copy(CloneData cd) {
 		//return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
 		if (cd.containsCloneFor(this)) return (Binding) cd.getCloneFor(this);
-		Binding clone;
-		try {
-			clone = (Binding) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Error in Binding.copy");
-			System.exit(1);
-			return null;
-		}
+		Binding clone = (Binding) super.copy(cd);
 
 		cd.addCloneFor(this, clone);
 

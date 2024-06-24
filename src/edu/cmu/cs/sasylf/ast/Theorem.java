@@ -172,7 +172,7 @@ public class Theorem extends RuleLike {
 			if (oldCtx.ruleMap.get(getName()) != this) {
 				ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
 			}
-		} else oldCtx.ruleMap.put(getName(), this);
+		} else oldCtx.ruleMap.put(getName(), this); Context.updateVersion();
 
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
@@ -204,7 +204,7 @@ public class Theorem extends RuleLike {
       andTheorem.addToMap(ctx);
     }*/
 			ctx.recursiveTheorems = new HashMap<String, Theorem>();
-			firstInGroup.addToMap(ctx);
+			firstInGroup.addToMap(ctx); Context.updateVersion();
 
 			ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 
@@ -226,10 +226,12 @@ public class Theorem extends RuleLike {
 			ctx.currentGoalClause = exists;
 			ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 			ctx.outputVars.removeAll(ctx.inputVars);
+			Context.updateVersion();
 			
 			for (Fact f : foralls) {
 				NonTerminal root = f.getElement().getRoot();
 				ctx.addKnownContext(root);
+				Context.updateVersion();
 			}
 			if (assumes != null) {
 				boolean foundAssumption = false;
@@ -370,7 +372,7 @@ public class Theorem extends RuleLike {
 	public void substitute(String from, String to, SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-
+		
 		// substitute in foralls
 		for (Fact f : foralls) {
 			f.substitute(from, to, sd);

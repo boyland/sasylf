@@ -44,7 +44,7 @@ public class ModulePart extends Node implements Part, Named {
 	
 	/*
 	@Override
-	public void typecheck(Context ctx) {
+	public void  (Context ctx) {
 		Object resolution = module.resolve(ctx);
 		if (resolution instanceof Module) {
 			ctx.modMap.put(name, (Module)resolution);
@@ -166,12 +166,15 @@ public class ModulePart extends Node implements Part, Named {
 				// substitute the parameter with the argument
 
 				newModule.substitute(parameterName, argumentName, new SubstitutionData());
-			
 			}
+			
+			// change the name of the module
+
+			newModule.moduleName = name;
 
 			// add the new module to the context
 
-			ctx.modMap.put(name, newModule);
+			ctx.modMap.put(name, newModule); Context.updateVersion();
 		}
 	}
 
