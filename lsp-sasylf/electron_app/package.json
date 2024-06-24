@@ -30,7 +30,7 @@
 		"@types/react-dom": "^18.2.18",
 		"@typescript-eslint/eslint-plugin": "^5.62.0",
 		"@typescript-eslint/parser": "^5.62.0",
-		"@vercel/webpack-asset-relocator-loader": "^1.7.3",
+		"@vercel/webpack-asset-relocator-loader": "1.7.3",
 		"autoprefixer": "^10.4.16",
 		"css-loader": "^6.8.1",
 		"electron": "^29.1.0",
