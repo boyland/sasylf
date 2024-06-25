@@ -702,7 +702,6 @@ public class Clause extends Element implements CanBeCase {
 
 	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
-		System.out.println("Substituting in " + this);
 		sd.setSubstitutedFor(this);
 		for (int j = 0; j < getElements().size(); j++) {
 			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
@@ -721,8 +720,6 @@ public class Clause extends Element implements CanBeCase {
 					else {
 						fillerCharacters = nt.getSymbol().substring(sd.from.length());
 					}
-
-					System.out.println("fillerCharacters: " + fillerCharacters);
 
 					// create a shallow copy of the new NonTerminal
 
@@ -743,7 +740,6 @@ public class Clause extends Element implements CanBeCase {
 				c.substitute(sd);
 			}
 		}
-		System.out.println("Result: " + this);
 	}
 
 }
