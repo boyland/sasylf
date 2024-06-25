@@ -23,7 +23,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
-public class NonTerminal extends Element {
+public class NonTerminal extends Element implements Cloneable {
 	private SyntaxDeclaration ty;
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
@@ -74,7 +74,7 @@ public class NonTerminal extends Element {
 		type = t;
 	}
 
-	private String symbol;
+	public String symbol;
 	private SyntaxDeclaration type;
 
 	@Override
@@ -272,6 +272,16 @@ public class NonTerminal extends Element {
 		if (clone.ty != null) clone.ty = clone.ty.copy(cd);
 		
 		return clone;
+	}
+	
+	public NonTerminal clone() {
+		try {
+			return (NonTerminal) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in NonTerminal");
+			System.exit(1);
+			return null;
+		}
 	}
 
 }

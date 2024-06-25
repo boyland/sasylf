@@ -298,20 +298,8 @@ public class Clause extends Element implements CanBeCase {
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
 
-		
-
 		Element origOriginal = findOriginal(orig);
 		Element replOriginal = findOriginal(repl);
-
-		System.out.println("Checkmatch");
-		System.out.println("orig: " + origOriginal);
-		System.out.println("repl: " + replOriginal);
-		System.out.println("orig type: " + origOriginal.getElemType());
-		System.out.println("orig type class: " + origOriginal.getElemType().getClass());
-		System.out.println("repl type class: " + replOriginal.getElemType().getClass());
-		System.out.println("repl type: " + replOriginal.getElemType());
-		System.out.println("orig class: " + origOriginal.getClass());
-		System.out.println("repl class: " + replOriginal.getClass());
 
 		Term type1 = asLFType(origOriginal.getElemType());
 		Term type2 = asLFType(replOriginal.getElemType());
@@ -352,10 +340,6 @@ public class Clause extends Element implements CanBeCase {
 	 * @param o original clause
 	 */
 	public void checkClauseMatch(Clause o) {
-
-		System.out.println("checkClauseMatch");
-		System.out.println("this: " + this);
-		System.out.println("o: " + o);
 
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
@@ -719,8 +703,42 @@ public class Clause extends Element implements CanBeCase {
 	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		for (Element e : elements) {
-			e.substitute(sd);
+		for (int j = 0; j < getElements().size(); j++) {
+			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
+			Element e = getElements().get(j);
+			// check if it's a NonTerminal
+			if (e instanceof NonTerminal) {
+				NonTerminal nt = (NonTerminal) e;
+				// check if it has the same name as the one we are substituting for
+				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
+					// get the filler characters
+					String fillerCharacters;
+
+					if (nt.getSymbol().length() == sd.from.length()) {
+						fillerCharacters = "";
+					}
+					else {
+						fillerCharacters = nt.getSymbol().substring(sd.from.length());
+					}
+
+					// create a shallow copy of the new NonTerminal
+
+					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
+
+					// add the filler characters to the new nonterminal symbol
+
+					newNonTerminal.symbol += fillerCharacters;
+
+					// replace it in the elements list
+
+					getElements().set(j, newNonTerminal);
+
+				}
+			}
+			if (e instanceof Clause) {
+				Clause c = (Clause) e;
+				c.substitute(sd);
+			}
 		}
 	}
 

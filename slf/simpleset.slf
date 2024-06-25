@@ -18,3 +18,9 @@ judgment eq: s = s
 
   ------- eq
   s = s
+
+judgment secondeq: s1 == s2
+
+  s1 = s2
+  -------- secondeq
+  s1 == s2
