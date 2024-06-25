@@ -702,27 +702,48 @@ public class Clause extends Element implements CanBeCase {
 
 	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
+		System.out.println("Substituting in " + this);
 		sd.setSubstitutedFor(this);
 		for (int j = 0; j < getElements().size(); j++) {
 			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
-			if (getElements().get(j) instanceof NonTerminal) {
-				NonTerminal nt = (NonTerminal) getElements().get(j);
-				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
-					// replace it
-					getElements().set(j, sd.getSyntaxReplacementNonTerminal());
-				}
-			}
-		}
-
-		for (int i = 0; i < elements.size(); i++) {
-			Element e = elements.get(i);
+			Element e = getElements().get(j);
+			// check if it's a NonTerminal
 			if (e instanceof NonTerminal) {
 				NonTerminal nt = (NonTerminal) e;
+				// check if it has the same name as the one we are substituting for
 				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
-					elements.set(i, sd.getSyntaxReplacementNonTerminal());
+					// get the filler characters
+					String fillerCharacters;
+
+					if (nt.getSymbol().length() == sd.from.length()) {
+						fillerCharacters = "";
+					}
+					else {
+						fillerCharacters = nt.getSymbol().substring(sd.from.length());
+					}
+
+					System.out.println("fillerCharacters: " + fillerCharacters);
+
+					// create a shallow copy of the new NonTerminal
+
+					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
+
+					// add the filler characters to the new nonterminal symbol
+
+					newNonTerminal.symbol += fillerCharacters;
+
+					// replace it in the elements list
+
+					getElements().set(j, newNonTerminal);
+
 				}
 			}
+			if (e instanceof Clause) {
+				Clause c = (Clause) e;
+				c.substitute(sd);
+			}
 		}
+		System.out.println("Result: " + this);
 	}
 
 }

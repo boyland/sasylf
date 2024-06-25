@@ -18,6 +18,11 @@ public class SubstitutionData {
   private final Syntax newSyntax;
   private final Judgment newJudgment;
   private final Theorem newTheorem;
+  public final SubstitutionType substitutionType;
+
+  public static enum SubstitutionType {
+    SYNTAX, JUDGMENT, THEOREM
+  }
 
   public SubstitutionData(String from, String to, Syntax newSyntax) {
     set = new IdentityHashMap<>();
@@ -26,6 +31,7 @@ public class SubstitutionData {
     this.newSyntax = newSyntax;
     this.newJudgment = null;
     this.newTheorem = null;
+    substitutionType = SubstitutionType.SYNTAX;
   }
 
   public SubstitutionData(String from, String to, Judgment newJudgment) {
@@ -35,6 +41,7 @@ public class SubstitutionData {
     this.newSyntax = null;
     this.newJudgment = newJudgment;
     this.newTheorem = null;
+    substitutionType = SubstitutionType.JUDGMENT;
   }
 
   public SubstitutionData(String from, String to, Theorem newTheorem) {
@@ -44,18 +51,23 @@ public class SubstitutionData {
     this.newSyntax = null;
     this.newJudgment = null;
     this.newTheorem = newTheorem;
+    substitutionType = SubstitutionType.THEOREM;
+  }
+
+  public boolean substitutingFor(String s) {
+    return sameName(this.from, s);
   }
 
   public boolean containsSyntaxReplacementFor(String from) {
-    return this.from.equals(from) && newSyntax != null;
+    return sameName(this.from, from) && newSyntax != null;
   }
 
   public boolean containsJudgmentReplacementFor(String from) {
-    return this.from.equals(from) && newJudgment != null;
+    return sameName(this.from, from) && newJudgment != null;
   }
 
   public boolean containsTheoremReplacementFor(String from) {
-    return this.from.equals(from) && newJudgment != null;
+    return sameName(this.from, from) && newTheorem != null;
   }
 
   public Syntax getSyntaxReplacement() {
@@ -96,5 +108,20 @@ public class SubstitutionData {
 
   public void setSubstitutedFor(Object o) {
     set.put(o, true);
+  }
+  
+  public static boolean sameName(String prefix, String name) {
+    // check that prefix is a prefix of name
+    if (!name.startsWith(prefix)) {
+      return false;
+    }
+
+    // check that all characters after the prefix match are filler characters
+
+    int prefixLength = prefix.length();
+
+    String filler = name.substring(prefixLength);
+
+    return filler.matches("^[0-9_']*$");
   }
 }
