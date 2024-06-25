@@ -172,7 +172,31 @@ public class ModulePart extends Node implements Part, Named {
 				
 				// substitute the parameter with the argument
 
-				newModule.substitute(new SubstitutionData(parameterName, argumentName));
+				SubstitutionData sd;
+
+				Object argResolution = argument.resolve(ctx);
+
+				// check which class argResolution is an instance of
+
+				if (argResolution instanceof Syntax) {
+					sd = new SubstitutionData(parameterName, argumentName, (Syntax) argResolution);
+				}
+
+				else if (argResolution instanceof Judgment) {
+					sd = new SubstitutionData(parameterName, argumentName, (Judgment) argResolution);
+				}
+
+				else if (argResolution instanceof Theorem) {
+					sd = new SubstitutionData(parameterName, argumentName, (Theorem) argResolution);
+				}
+
+				else {
+					System.out.println("Error: Argument is not an instance of Syntax, Judgment, or Theorem.");
+					System.exit(1);
+					return;
+				}
+
+				newModule.substitute(sd);
 			}
 			
 			// change the name of the module
