@@ -298,20 +298,8 @@ public class Clause extends Element implements CanBeCase {
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
 
-		
-
 		Element origOriginal = findOriginal(orig);
 		Element replOriginal = findOriginal(repl);
-
-		System.out.println("Checkmatch");
-		System.out.println("orig: " + origOriginal);
-		System.out.println("repl: " + replOriginal);
-		System.out.println("orig type: " + origOriginal.getElemType());
-		System.out.println("orig type class: " + origOriginal.getElemType().getClass());
-		System.out.println("repl type class: " + replOriginal.getElemType().getClass());
-		System.out.println("repl type: " + replOriginal.getElemType());
-		System.out.println("orig class: " + origOriginal.getClass());
-		System.out.println("repl class: " + replOriginal.getClass());
 
 		Term type1 = asLFType(origOriginal.getElemType());
 		Term type2 = asLFType(replOriginal.getElemType());
@@ -352,10 +340,6 @@ public class Clause extends Element implements CanBeCase {
 	 * @param o original clause
 	 */
 	public void checkClauseMatch(Clause o) {
-
-		System.out.println("checkClauseMatch");
-		System.out.println("this: " + this);
-		System.out.println("o: " + o);
 
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
@@ -719,8 +703,25 @@ public class Clause extends Element implements CanBeCase {
 	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		for (Element e : elements) {
-			e.substitute(sd);
+		for (int j = 0; j < getElements().size(); j++) {
+			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
+			if (getElements().get(j) instanceof NonTerminal) {
+				NonTerminal nt = (NonTerminal) getElements().get(j);
+				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
+					// replace it
+					getElements().set(j, sd.getSyntaxReplacementNonTerminal());
+				}
+			}
+		}
+
+		for (int i = 0; i < elements.size(); i++) {
+			Element e = elements.get(i);
+			if (e instanceof NonTerminal) {
+				NonTerminal nt = (NonTerminal) e;
+				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
+					elements.set(i, sd.getSyntaxReplacementNonTerminal());
+				}
+			}
 		}
 	}
 

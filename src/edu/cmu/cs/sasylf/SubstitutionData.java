@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
 import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
 public class SubstitutionData {
@@ -56,25 +58,36 @@ public class SubstitutionData {
     return this.from.equals(from) && newJudgment != null;
   }
 
-  public boolean getSyntaxReplacement(String from) {
-    if (!containsSyntaxReplacementFor(from)) {
+  public Syntax getSyntaxReplacement() {
+    if (newSyntax == null) {
       throw new IllegalArgumentException("No syntax replacement for " + from);
     }
-    return set.get(newSyntax);
+    return newSyntax;
   }
 
-  public boolean getJudgmentReplacement(String from) {
-    if (!containsJudgmentReplacementFor(from)) {
+  public NonTerminal getSyntaxReplacementNonTerminal() {
+    Syntax s = getSyntaxReplacement();
+    // s should be an instance of SyntaxDeclaration
+
+    SyntaxDeclaration sd = (SyntaxDeclaration) s;
+    
+    // return the nonterminal of the syntax declaration
+    
+    return sd.getNonTerminal();
+  }
+
+  public Judgment getJudgmentReplacement() {
+    if (newJudgment == null) {
       throw new IllegalArgumentException("No judgment replacement for " + from);
     }
-    return set.get(newJudgment);
+    return newJudgment;
   }
 
-  public boolean getTheoremReplacement(String from) {
-    if (!containsTheoremReplacementFor(from)) {
+  public Theorem getTheoremReplacement() {
+    if (newTheorem == null) {
       throw new IllegalArgumentException("No theorem replacement for " + from);
     }
-    return set.get(newTheorem);
+    return newTheorem;
   }
 
   public boolean didSubstituteFor(Object o) {
@@ -82,6 +95,6 @@ public class SubstitutionData {
   }
 
   public void setSubstitutedFor(Object o) {
-    set.put(o, Boolean.TRUE);
+    set.put(o, true);
   }
 }

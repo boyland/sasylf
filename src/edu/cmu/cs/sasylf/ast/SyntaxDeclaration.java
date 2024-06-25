@@ -593,20 +593,26 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
 		*/
 
+		
 		for (Clause c : elements) {
 			c.substitute(sd);
 		}
+	
 
-		nonTerminal.substitute(sd);
+		// Don't substitute for nonTerminal, since that is the name of the syntax. We only want to change what's inside of that declaration
+		//nonTerminal.substitute(sd);
 
 		/*
 			For alternates, we need to remove from (if it exists) and we need to add to
 		*/
 
+		/* Don't modify for alternates, for the same reason as nonTerminal
 		if (alternates.contains(sd.from)) {
 			alternates.remove(sd.from);
 			alternates.add(sd.to);
-		}
+		}*/
+
+		// For the rest, we just do string substitutions
 
 		if (variable != null) {
 			variable.substitute(sd);
