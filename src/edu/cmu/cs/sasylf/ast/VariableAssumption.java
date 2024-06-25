@@ -30,22 +30,15 @@ public class VariableAssumption extends SyntaxAssumption {
 	}
 
 	@Override
-	public Fact copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Fact) cd.getCloneFor(this);
+	public VariableAssumption copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (VariableAssumption) cd.getCloneFor(this);
 
-		VariableAssumption clone;
-		try {
-			clone = (VariableAssumption) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in VariableAssumption");
-			System.exit(1);
-			return null;
-		}
+		VariableAssumption clone = (VariableAssumption) super.copy(cd);
 
 		cd.addCloneFor(this, clone);
 
 		clone.variable = clone.variable.copy(cd);
-
+		
 		return clone;
 	}
 }

@@ -56,9 +56,20 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	}
 
 	@Override
-	public Fact copy(CloneData cd) {
-		System.out.println("NonTerminalAssumption.copy unimplemented");
-		System.exit(0);
-		return null;
+	public NonTerminalAssumption copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (NonTerminalAssumption) cd.getCloneFor(this);
+		
+		NonTerminalAssumption clone = (NonTerminalAssumption) super.copy(cd);
+
+		/*
+			private NonTerminal nonTerminal;
+			private boolean isTheoremArg = false;
+		*/
+
+		cd.addCloneFor(this, clone);
+		
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+		
+		return clone;
 	}
 }

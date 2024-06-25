@@ -45,22 +45,12 @@ public class ClauseAssumption extends SyntaxAssumption {
 	public ClauseAssumption copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (ClauseAssumption) cd.getCloneFor(this);
 
-		ClauseAssumption clone;
-
-		try {
-			clone = (ClauseAssumption) this.clone();
-		}
-		catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supperted in " + this.getClass());
-			System.exit(1);
-			return null;
-		}
+		ClauseAssumption clone = (ClauseAssumption) super.copy(cd);
 
 		cd.addCloneFor(this, clone);
 		
 		clone.clause = clause.copy(cd);
 	
-		
 
 		return clone;
 
