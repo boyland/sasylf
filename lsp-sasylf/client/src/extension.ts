@@ -15,8 +15,8 @@ import {
 	TransportKind,
 } from "vscode-languageclient/node";
 
-import { readFileSync } from "fs";
-import { spawn } from "child_process";
+import { readFileSync, existsSync } from "fs";
+import { spawn, spawnSync } from "child_process";
 
 let client: LanguageClient;
 
@@ -33,12 +33,16 @@ function appHandler(_: any[]) {
 
 	if (!text) return;
 
+	process.chdir(`${__dirname}/../../electron_app`);
+
+	if (!existsSync(`node_modules`)) {
+		spawnSync("npm", ["install"]);
+	}
+
 	client.sendRequest("custom/getAST").then((ast) => {
 		var spawn_env = JSON.parse(JSON.stringify(process.env));
 		delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
 		delete spawn_env.ELECTRON_RUN_AS_NODE;
-
-		process.chdir(`${__dirname}/../../electron_app`);
 
 		spawn(
 			"npm",
