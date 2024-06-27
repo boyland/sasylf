@@ -50,19 +50,23 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		Util.debug("line: ", this.getLocation().getLine());
-
 		RuleLike ruleLike = getRule(ctx);
+
+		// the bug has something to do with the code below this
+
 		int n = getArgs().size();
 
 		List<Abstraction> addedContext = new ArrayList<Abstraction>();
 		Term subject = ruleLike.checkApplication(ctx, getArgs(), this, addedContext, this, false);
 		// form the rule term
 		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
-		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars); 
+
+		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
 		// Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
 
-		Substitution callSub;    
+		// and above this
+
+		Substitution callSub; 
 		// Now we get the substitution.
 		// Then there are complex catch clauses for failed unification.
 		// The complication only concerns what error message to generate.
@@ -100,7 +104,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
-				explanationString = tp.toString(tp.asClause(explanationTerm));
+				explanationString = tp.toString(tp.asClause(explanationTerm)); // PROBLEM LINE
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {

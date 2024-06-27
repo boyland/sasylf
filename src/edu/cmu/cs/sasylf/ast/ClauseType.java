@@ -3,6 +3,8 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
@@ -30,4 +32,6 @@ public interface ClauseType extends ElementType {
 	 * @param map updated with the case analysis
 	 */
 	public void analyze(Context ctx, Element target, Node source, Map<CanBeCase,Set<Pair<Term,Substitution>>> map);
+	public void substitute(SubstitutionData sd);
+	public ClauseType copy(CloneData cd);
 }

@@ -207,8 +207,63 @@ public class ModulePart extends Node implements Part, Named {
 
 			ctx.modMap.put(name, newModule); Context.updateVersion();
 
-			System.out.println("New module");
-			System.out.println(newModule);
+			//System.out.println("New module");
+			//System.out.println(newModule);
+
+
+			// inspect the new module for debugging purposes
+			/*
+			System.out.println("Start debugging");
+
+
+			// get the theorem part of the module
+
+			Part p = null;
+
+			for (Part part : newModule.getParts()) {
+				if (part instanceof TheoremPart) {
+					p = part;
+					break;
+				}
+			}
+
+			if (p == null) {
+				System.out.println("Error: Could not find a theorem part in the new module.");
+				System.exit(0);
+			}
+
+			TheoremPart tp = (TheoremPart) p;
+
+			// get the theorem
+
+			Theorem theorem = tp.getTheorems().get(0);
+
+			System.out.println("Theorem: " + theorem);
+
+			List<Fact> foralls = theorem.getForalls();
+
+			for (Fact f : foralls) {
+				if (f instanceof NonTerminalAssumption) {
+					NonTerminalAssumption nta = (NonTerminalAssumption) f;
+					System.out.println("NonTerminalAssumption: " + nta);
+					System.out.println("Type: " + nta.nonTerminal.getTypeTerm());
+				}
+			}
+			
+			Clause exists = theorem.getExists();
+
+			System.out.println("exists: " + exists);
+
+			for (Element e : exists.getElements()) {
+				if (e instanceof NonTerminal) {
+					NonTerminal nt = (NonTerminal) e;
+					System.out.println("NonTerminal: " + nt);
+					System.out.println("Type: " + nt.getTypeTerm());
+				}
+			}
+
+			System.out.println("End debugging");
+			*/
 		}
 	}
 

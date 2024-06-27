@@ -188,8 +188,25 @@ public class Binding extends Element {
 	}
 
 	public void substitute(SubstitutionData sd) {
-		// do nothing
-		// TODO: Fix this
+		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		/*
+			private List<Element> elements;
+			private NonTerminal nonTerminal;
+		*/
+
+		// substitute for elements
+
+		for (Element element: elements) {
+			element.substitute(sd);
+		}
+
+		// substitue for nonTerminal
+
+		nonTerminal.substitute(sd);
+
 	}
 
 	public Binding copy(CloneData cd) {

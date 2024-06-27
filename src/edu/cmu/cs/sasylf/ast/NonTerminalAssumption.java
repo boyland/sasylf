@@ -46,13 +46,39 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	@Override
 	public Element getElementBase() { return nonTerminal; }
 
-	private NonTerminal nonTerminal;
+	public NonTerminal nonTerminal; // changed to public for debugging purposes TODO: Change it back to private
 	private boolean isTheoremArg = false;
 
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		nonTerminal.substitute(sd);
+		//nonTerminal.substitute(sd); // this is the mistake
+
+		// check if we should substitute for the nonTerminal
+
+		if (sd.containsSyntaxReplacementFor(nonTerminal.getSymbol())) {
+			// make a clone of the replacing NonTerminal and update the name of it with the filler characters
+			// get the filler characters
+			String fillerCharacters;
+
+			if (nonTerminal.getSymbol().length() == sd.from.length()) {
+				fillerCharacters = "";
+			}
+			else {
+				fillerCharacters = nonTerminal.getSymbol().substring(sd.from.length());
+			}
+
+			// create a shallow copy of the new NonTerminal
+
+			NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
+
+			// add the filler characters to the new nonterminal symbol
+
+			newNonTerminal.symbol += fillerCharacters;
+			
+			nonTerminal = newNonTerminal;
+		}
+
 	}
 
 	@Override

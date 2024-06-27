@@ -50,7 +50,6 @@ public class ClauseAssumption extends SyntaxAssumption {
 		cd.addCloneFor(this, clone);
 		
 		clone.clause = clause.copy(cd);
-	
 
 		return clone;
 

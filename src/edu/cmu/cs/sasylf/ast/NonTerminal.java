@@ -208,6 +208,7 @@ public class NonTerminal extends Element implements Cloneable {
 	}
 
 	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 	
@@ -244,7 +245,6 @@ public class NonTerminal extends Element implements Cloneable {
 		if (ty != null) {
 			ty.substitute(sd);
 		}
-
 
 	}
 

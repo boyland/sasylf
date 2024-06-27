@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -88,7 +90,6 @@ public class ClauseUse extends Clause {
 	public Term getTypeTerm() { return getConstructor().asTerm(); }
 
 	private ClauseDef cons;
-
 
 	@Override
 	public Clause typecheck(Context c) {
@@ -625,6 +626,43 @@ public class ClauseUse extends Clause {
 		term = term.substitute(sub);
 		debug("after binding in free vars: ", term, " with sub ", sub);
 		return Abstraction.make(absMatchTerm.varName, absMatchTerm.varType, term);
+	}
+	
+	@Override
+	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
+		// debugging
+
+		// end debugging
+
+		/*
+			private ClauseDef cons;
+			private NonTerminal root;
+		*/
+
+		// substitute for cons and root
+
+		if (cons != null) cons.substitute(sd);
+		if (root != null) root.substitute(sd);
+
+	}
+
+	@Override
+	public ClauseUse copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ClauseUse) cd.getCloneFor(this);
+		ClauseUse clone = (ClauseUse) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		/*
+			clone cons and root
+		*/
+		if (clone.cons != null) {
+			clone.cons = clone.cons.copy(cd);
+		}
+		if (clone.root != null) {
+			clone.root = clone.root.copy(cd);
+		}
+
+		return clone;
 	}
 
 }

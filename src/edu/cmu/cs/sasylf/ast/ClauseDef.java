@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -393,6 +395,62 @@ public class ClauseDef extends Clause {
 		}
 		
 		return SingletonSet.create(new Pair<Term,Substitution>(term, checkSub));
+	}
+	
+	@Override
+	public void substitute(SubstitutionData sd) {
+		//System.out.println("Substituting ClauseDef: " + this);
+		//System.out.println("type: " + type);
+		super.substitute(sd);
+
+		/*
+			private String consName;
+			private ClauseType type;
+			public Rule assumptionRule;	
+			private int cachedAssumeIndex = -2;
+		*/
+
+		// substitute type and assumptionRule
+
+		// TODO: Do we need to do anything with consName?
+
+		if (type != null) {
+			if (type instanceof Judgment) {
+				Judgment j = (Judgment) type;
+				String name = j.getName();
+				if (sd.containsJudgmentReplacementFor(name)) {
+					type = sd.getJudgmentReplacement();
+				}
+			}
+		}
+
+		if (assumptionRule != null) {
+			assumptionRule.substitute(sd);
+		}
+
+		//System.out.println("Finished substituting ClauseDef: " + this);
+		//System.out.println("type: " + type);
+
+	}
+
+	public ClauseDef copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ClauseDef) cd.getCloneFor(this);
+		ClauseDef clone = (ClauseDef) super.copy(cd);
+
+		cd.addCloneFor(this, clone);
+		/*
+			private String consName;
+			private ClauseType type;
+			public Rule assumptionRule;	
+			private int cachedAssumeIndex = -2;
+		
+			static private int uniqueint = 0;
+		*/
+
+		clone.type = clone.type.copy(cd);
+		if (clone.assumptionRule != null) clone.assumptionRule = clone.assumptionRule.copy(cd);
+		
+		return clone;
 	}
 	
 	

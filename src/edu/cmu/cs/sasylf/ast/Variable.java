@@ -155,7 +155,19 @@ public class Variable extends Element {
 	}
 
 	public void substitute(SubstitutionData sd) {
-		// do nothing
+		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		/*
+			private String symbol;
+			private SyntaxDeclaration type;
+		*/
+
+		// substitute for type
+
+		type.substitute(sd);
+		
 	}
 
 	public Variable copy(CloneData cd) {

@@ -11,7 +11,7 @@ import edu.cmu.cs.sasylf.ast.Syntax;
 import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
-public class SubstitutionData {
+public class SubstitutionData{
   private final Map<Object, Boolean> set;
   public final String from;
   public final String to;
@@ -19,6 +19,8 @@ public class SubstitutionData {
   private final Judgment newJudgment;
   private final Theorem newTheorem;
   public final SubstitutionType substitutionType;
+
+  // TODO: Use bounded (Node) parametric polymorphism in this class
 
   public static enum SubstitutionType {
     SYNTAX, JUDGMENT, THEOREM
@@ -63,7 +65,8 @@ public class SubstitutionData {
   }
 
   public boolean containsJudgmentReplacementFor(String from) {
-    return sameName(this.from, from) && newJudgment != null;
+    boolean result = sameName(this.from, from) && newJudgment != null;
+    return result;
   }
 
   public boolean containsTheoremReplacementFor(String from) {
@@ -81,7 +84,7 @@ public class SubstitutionData {
     Syntax s = getSyntaxReplacement();
     // s should be an instance of SyntaxDeclaration
 
-    SyntaxDeclaration sd = (SyntaxDeclaration) s;
+    SyntaxDeclaration sd = (SyntaxDeclaration) s; // TODO: could be another subclass of Syntax
     
     // return the nonterminal of the syntax declaration
     
@@ -99,6 +102,7 @@ public class SubstitutionData {
     if (newTheorem == null) {
       throw new IllegalArgumentException("No theorem replacement for " + from);
     }
+
     return newTheorem;
   }
 

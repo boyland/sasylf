@@ -100,6 +100,7 @@ public class Terminal extends Element implements ElemType {
 	}
 	
 	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 

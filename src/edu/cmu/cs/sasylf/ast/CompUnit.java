@@ -147,6 +147,7 @@ public class CompUnit extends Node implements Module {
 	 * @param id identifier declared for this compilation unit, or null if no declared module name
 	 */
 	public void typecheck(Context ctx, ModuleId id) {
+
 		if (id != null) checkFilename(id);
 		for (Part part : params) {
 			try {
@@ -281,6 +282,10 @@ public class CompUnit extends Node implements Module {
 
 		System.out.println("-------------------");
 		*/
+
+
+		// get the theorem
+
 	}
 
 	private void checkFilename(ModuleId id) {

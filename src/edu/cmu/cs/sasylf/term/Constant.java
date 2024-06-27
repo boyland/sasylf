@@ -38,6 +38,7 @@ public class Constant extends Atom {
 		if (type != null) {
 			type.substitute(sd);
 		}
+
 	}
 
 

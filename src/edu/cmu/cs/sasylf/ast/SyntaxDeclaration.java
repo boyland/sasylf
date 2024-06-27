@@ -598,7 +598,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			c.substitute(sd);
 		}
 	
-
 		// Don't substitute for nonTerminal, since that is the name of the syntax. We only want to change what's inside of that declaration
 		//nonTerminal.substitute(sd);
 
@@ -623,7 +622,8 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 
 		if (term != null) {
-			term.substitute(sd);
+			term = null;
+			//term.substitute(sd);
 		}
 
 		if (gnt != null) {

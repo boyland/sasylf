@@ -124,10 +124,17 @@ public abstract class Derivation extends Fact {
 		boolean finalOK = false;
 		for (int i=0; i < n; ++i) {
 			Derivation d = derivations.get(i);
+			
+			if (d instanceof DerivationByTheorem) {
+				DerivationByTheorem dbt = (DerivationByTheorem) d;
+				// get the theorem
+			}
+
 			if (d.clause == null) {
 				// we copy over to get the right location for things
 				// TODO: Fix this
 				d.clause = ctx.currentGoalClause.clone();
+
 				d.clause.setLocation(d.getLocation());
 				d.clause.setEndLocation(d.getLocation().add(PROOF_SIZE));
 			}

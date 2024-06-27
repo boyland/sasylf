@@ -258,7 +258,6 @@ public class Theorem extends RuleLike {
 					ctx.assumedContext = assumes;
 				}
 			}
-
 			Derivation.typecheck(this, ctx, derivations);
 
 		} catch (SASyLFError e) {
@@ -370,6 +369,23 @@ public class Theorem extends RuleLike {
 	}
 
 	public void substitute(SubstitutionData sd) {
+
+		/*
+				private String kind = "theorem";
+				private String kindTitle = "Theorem";
+				NonTerminal assumes = null;
+				List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+				Clause exists; // substitution here
+				List<Derivation> derivations;
+				Theorem andTheorem;
+				Theorem firstInGroup = this;
+				private int indexInGroup = 0;
+				InductionSchema inductionScheme = InductionSchema.nullInduction;
+				private boolean interfaceChecked=false;
+				private boolean interfaceOK = false;
+				private final boolean isAbstract;
+		*/
+		
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		

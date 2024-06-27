@@ -148,7 +148,20 @@ public abstract class Element extends Node {
 		return term;
 	}
 
-	public abstract void substitute(SubstitutionData sd);
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		/*
+			Need to substitute for the following properties
+
+			protected Term term;
+			protected GrmTerminal terminal;
+		
+		*/
+
+		if (term != null) term.substitute(sd);
+		if (terminal != null) terminal.substitute(sd);
+	}
 
 
 	public Element copy(CloneData cd) {
