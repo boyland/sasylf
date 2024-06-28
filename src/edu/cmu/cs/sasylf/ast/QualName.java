@@ -103,7 +103,7 @@ public class QualName extends Node {
 	public Object resolve(Context ctx) {
 		if (ctx == null) return resolution;
 		//System.out.println("version = " + ctx.version());
-		if (version != ctx.version()) resolution = null;
+		if (true || version != ctx.version()) resolution = null; // TODO: remove the true ||, which I put for debugging purposes
 		if (resolution == null) {
 			version = ctx.version();
 			if (source == null) { // if we are resolving it from the main (top level) module

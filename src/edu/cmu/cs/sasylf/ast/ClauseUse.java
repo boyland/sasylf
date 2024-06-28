@@ -631,6 +631,8 @@ public class ClauseUse extends Clause {
 	@Override
 	public void substitute(SubstitutionData sd) {
 		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 		// debugging
 
 		// end debugging

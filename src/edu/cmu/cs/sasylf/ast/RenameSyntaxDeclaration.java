@@ -60,7 +60,9 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 	@Override
 	public void updateContext(Context ctx) {
+		// There's a bug somewhere between here
 		Object resolution = source.resolveNotPackage(ctx);
+		// and here
 		if (resolution != null) {
 			if (resolution instanceof SyntaxDeclaration) {
 				original = (SyntaxDeclaration)resolution;
@@ -195,6 +197,9 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 		if (source != null) source.substitute(sd);
 		if (original != null) original.substitute(sd);
+
+
+		System.out.println("original is now: " + original);
 
 	}
 

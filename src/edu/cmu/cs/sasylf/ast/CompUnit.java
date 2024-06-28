@@ -350,7 +350,8 @@ public class CompUnit extends Node implements Module {
 	public Object getDeclaration(Context ctx, String name) {
 
 		// the bug fix is making this code always run
-		if (cacheVersion != ctx.version()) {
+		// TODO: remove the true || part
+		if (true || cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 

@@ -403,6 +403,9 @@ public class ClauseDef extends Clause {
 		//System.out.println("type: " + type);
 		super.substitute(sd);
 
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
 		/*
 			private String consName;
 			private ClauseType type;

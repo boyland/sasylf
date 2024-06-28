@@ -297,7 +297,6 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-
 		Element origOriginal = findOriginal(orig);
 		Element replOriginal = findOriginal(repl);
 
@@ -702,8 +701,6 @@ public class Clause extends Element implements CanBeCase {
 
 	public void substitute (SubstitutionData sd) {
 		super.substitute(sd);
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
 		for (int j = 0; j < getElements().size(); j++) {
 			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
 			Element e = getElements().get(j);

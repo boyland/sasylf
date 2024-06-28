@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.List;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -59,6 +60,7 @@ public class RenameJudgment extends Judgment {
 
 	@Override
 	public void typecheck(Context ctx) {
+		System.out.println("RenameJudgment typecheck");
 		if (original != null) {
 			NonTerminal oa = original.getAssume();
 			if (oa != null) {
@@ -80,6 +82,8 @@ public class RenameJudgment extends Judgment {
 			// getForm() is the form of the judgment as the user has declared it
 			// original.getForm() is the form of the judgment as the module has declared it
 			// we want to check if they match
+
+			System.out.println("original: " + original);
 
 			getForm().checkClauseMatch(original.getForm());
 		}
@@ -109,5 +113,15 @@ public class RenameJudgment extends Judgment {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		original.substitute(sd);
+		// TODO: I don't think we need to substitute for source
 	}
 }
