@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -393,5 +394,20 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		for (Case c : cases) {
 			c.collectQualNames(consumer);
 		}
+	}
+
+	public DerivationByAnalysis copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (DerivationByAnalysis) cd.getCloneFor(this);
+		DerivationByAnalysis clone = (DerivationByAnalysis) super.copy(cd);
+		cd.addCloneFor(this, clone);
+
+		clone.cases = new ArrayList<Case>();
+		for (Case c : cases) {
+			clone.cases.add(c.copy(cd));
+		}
+
+		clone.targetDerivation = clone.targetDerivation.copy(cd);
+
+		return clone;
 	}
 }

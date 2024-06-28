@@ -42,8 +42,9 @@ public class DerivationUnproved extends Derivation {
 
 	@Override
 	public DerivationUnproved copy(CloneData cd) {
-		System.out.println("DerivationUnproved.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationUnproved) cd.getCloneFor(this);
+		DerivationUnproved clone = (DerivationUnproved) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

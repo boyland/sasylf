@@ -85,8 +85,16 @@ public class DerivationByTheorem extends DerivationByIHRule {
 
 	@Override
 	public DerivationByTheorem copy(CloneData cd) {
-		System.out.println("DerivationByTheorem.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByTheorem) cd.getCloneFor(this);
+		DerivationByTheorem clone = (DerivationByTheorem) super.copy(cd);
+		cd.addCloneFor(this, clone);
+
+		// TODO: clone StringSpan
+		//clone.theoremKind = clone.theoremKind.copy(cd);
+		clone.theoremName = clone.theoremName.copy(cd);
+		clone.theorem = clone.theorem.copy(cd);
+
+		return clone;
+
 	}
 }

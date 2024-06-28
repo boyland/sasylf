@@ -53,8 +53,11 @@ public class DerivationByRule extends DerivationByIHRule {
 
 	@Override
 	public DerivationByRule copy(CloneData cd) {
-		System.out.println("DerivationByRule.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByRule) cd.getCloneFor(this);
+		DerivationByRule clone = (DerivationByRule) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.ruleName = ruleName.copy(cd);
+		clone.rule = clone.rule.copy(cd);
+		return clone;
 	}
 }

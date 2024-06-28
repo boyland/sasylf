@@ -33,7 +33,7 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class WhereClause extends Node {
 	
-	private final List<Pair<Element,Clause>> clauses;
+	private List<Pair<Element,Clause>> clauses;
 	private Substitution computed;
 	
 	public WhereClause(Location l) {
@@ -447,9 +447,34 @@ public class WhereClause extends Node {
 
 	@Override
 	public WhereClause copy(CloneData cd) {
-		// unimplemented
-		System.out.println("WhereClause.copy not implemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (WhereClause) cd.getCloneFor(this);
+		WhereClause clone;
+		try {
+			clone = (WhereClause) clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("CloneNotSupportedException in WhereClause");
+			System.exit(1);
+			return null;
+		}
+
+		/*
+			private List<Pair<Element,Clause>> clauses;
+			private Substitution computed;
+		*/
+
+		clone.clauses = new ArrayList<Pair<Element, Clause>>();
+		for (Pair<Element, Clause> p : clauses) {
+			clone.clauses.add(new Pair<Element, Clause>(
+				p.first.copy(cd), p.second.copy(cd)
+			));
+		}
+
+		if (computed != null) {
+			System.out.println("Warning: setting computed to null in WhereClause copy");
+			clone.computed = null;
+		}
+
+		return clone;
 	}
 }

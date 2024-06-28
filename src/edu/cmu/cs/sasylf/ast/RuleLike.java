@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -527,4 +528,7 @@ public abstract class RuleLike extends Node implements Named {
 	/** Returns a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion) */
 
 	private Constant ruleAppConstant;
+
+	public abstract RuleLike copy(CloneData cd);
+
 }

@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -17,6 +18,13 @@ public class PartialCaseAnalysis extends DerivationByCaseAnalysis {
 	}
 	public PartialCaseAnalysis(Location l, Clause subject) {
 		super("_", l, null, subject);
+	}
+
+	public PartialCaseAnalysis copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (PartialCaseAnalysis) cd.getCloneFor(this);
+		PartialCaseAnalysis clone = (PartialCaseAnalysis) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 }

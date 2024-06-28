@@ -27,9 +27,10 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
 	}
 
 	public DerivationByCaseAnalysis copy(CloneData cd) {
-		System.out.println("DerivationByCaseAnalysis.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByCaseAnalysis) cd.getCloneFor(this);
+		DerivationByCaseAnalysis clone = (DerivationByCaseAnalysis) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 

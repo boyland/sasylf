@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -370,6 +371,23 @@ public abstract class Derivation extends Fact {
 		if (clause != null) clause.substitute(sd);
 	}
 
+	public Derivation copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Derivation) cd.getCloneFor(this);
+		Derivation clone;
+		try {
+			clone = (Derivation) clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Derivation.copy: CloneNotSupportedException");
+			System.exit(1);
+			return null;
+		}
 
+		cd.addCloneFor(this, clone);
+
+		clone.clause = clone.clause.copy(cd);
+
+		return clone;
+	}
 
 }

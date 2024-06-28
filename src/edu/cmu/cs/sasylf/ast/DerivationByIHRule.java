@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.Reduction;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
@@ -215,4 +216,12 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			}
 		}
 	}
+
+	public DerivationByIHRule copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (DerivationByIHRule) cd.getCloneFor(this);
+		DerivationByIHRule clone = (DerivationByIHRule) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
+	}
+
 }
