@@ -44,8 +44,9 @@ public class DerivationBySolve extends Derivation {
 
 	@Override
 	public DerivationBySolve copy(CloneData cd) {
-		System.out.println("DerivationBySolve.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationBySolve) cd.getCloneFor(this);
+		DerivationBySolve clone = (DerivationBySolve) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

@@ -17,8 +17,8 @@ import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
  * undeclared derivations.
  */
 public class DerivationPlaceholder extends Derivation {
-	private final FreeVar variable;
-	private final UpdatableErrorReport report;
+	private FreeVar variable;
+	private UpdatableErrorReport report;
 	private Term asTerm;
 	
 	/**
@@ -118,8 +118,20 @@ public class DerivationPlaceholder extends Derivation {
 
 	@Override
 	public DerivationPlaceholder copy(CloneData cd) {
-		System.out.println("DerivationByPlaceholder.copy unimplemented");
-		System.exit(0);
-		return null;
+		/*	
+			private final FreeVar variable;
+			private final UpdatableErrorReport report;
+			private Term asTerm
+		*/
+
+		if (cd.containsCloneFor(this)) return (DerivationPlaceholder) cd.getCloneFor(this);
+		DerivationPlaceholder clone = (DerivationPlaceholder) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.variable = clone.variable.copy(cd);
+		// TODO: I'm pretty sure that this is right, but I'm not 100% sure
+		clone.report = new UpdatableErrorReport(null, getName(), clone);
+		clone.asTerm = clone.asTerm.copy(cd);
+		
+		return clone;
 	}
 }

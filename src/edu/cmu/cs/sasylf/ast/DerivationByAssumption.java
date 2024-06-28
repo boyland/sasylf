@@ -14,9 +14,10 @@ public class DerivationByAssumption extends Derivation {
 
 
 	public DerivationByAssumption copy(CloneData cd) {
-		System.out.println("DerivationByAssumption.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByAssumption) cd.getCloneFor(this);
+		DerivationByAssumption clone = (DerivationByAssumption) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 

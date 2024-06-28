@@ -111,8 +111,9 @@ public class DerivationByWeakening extends DerivationWithArgs {
 
 	@Override
 	public DerivationByWeakening copy(CloneData cd) {
-		System.out.println("DerivationByWeakening.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByWeakening) cd.getCloneFor(this);
+		DerivationByWeakening clone = (DerivationByWeakening) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

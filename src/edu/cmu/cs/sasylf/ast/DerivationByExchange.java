@@ -108,8 +108,9 @@ public class DerivationByExchange extends DerivationWithArgs {
 	}
 
 	public DerivationByExchange copy(CloneData cd) {
-		System.out.println("DerivationByExchange.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByExchange) cd.getCloneFor(this);
+		DerivationByExchange clone = (DerivationByExchange) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

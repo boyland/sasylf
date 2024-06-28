@@ -51,8 +51,9 @@ public class DerivationByPrevious extends DerivationWithArgs {
 	}
 	@Override
 	public DerivationByPrevious copy(CloneData cd) {
-		System.out.println("DerivationByPrevious.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByPrevious) cd.getCloneFor(this);
+		DerivationByPrevious clone = (DerivationByPrevious) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

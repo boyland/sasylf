@@ -49,8 +49,9 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	}
 	@Override
 	public DerivationByInduction copy(CloneData cd) {
-		System.out.println("DerivationByInduction.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByInduction) cd.getCloneFor(this);
+		DerivationByInduction clone = (DerivationByInduction) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 }

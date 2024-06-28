@@ -29,9 +29,10 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
 	}
 	@Override
 	public DerivationByInductionHypothesis copy(CloneData cd) {
-		System.out.println("DerivationByInductionHypothesis.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationByInductionHypothesis) cd.getCloneFor(this);
+		DerivationByInductionHypothesis clone = (DerivationByInductionHypothesis) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 }

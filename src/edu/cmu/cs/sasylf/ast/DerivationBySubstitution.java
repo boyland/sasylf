@@ -157,9 +157,10 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 
 	@Override
 	public DerivationBySubstitution copy(CloneData cd) {
-		System.out.println("DerivationBySubstitution.copy unimplemented");
-		System.exit(0);
-		return null;
+		if (cd.containsCloneFor(this)) return (DerivationBySubstitution) cd.getCloneFor(this);
+		DerivationBySubstitution clone = (DerivationBySubstitution) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		return clone;
 	}
 
 }

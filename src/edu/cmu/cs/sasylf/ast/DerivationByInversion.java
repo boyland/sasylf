@@ -26,8 +26,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 	
 	public static final QualName OR = new QualName(new Location("",0,0), "or");
 	
-	private final QualName ruleName;
-	private final WhereClause whereClauses;
+	private QualName ruleName;
+	private WhereClause whereClauses;
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
 			QualName rule, Clause relation, WhereClause wcs) {
@@ -267,8 +267,18 @@ public class DerivationByInversion extends DerivationWithArgs {
 
 	@Override
 	public DerivationByInversion copy(CloneData cd) {
-		System.out.println("DerivationByInversion.copy unimplemented");
-		System.exit(0);
-		return null;
+		/*
+			private QualName ruleName;
+			private WhereClause whereClauses;
+		*/
+
+		if (cd.containsCloneFor(this)) return (DerivationByInversion) cd.getCloneFor(this);
+		DerivationByInversion clone = (DerivationByInversion) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.ruleName = clone.ruleName.copy(cd);
+		clone.whereClauses = clone.whereClauses.copy(cd);
+		
+		return clone;
+
 	}
 }
