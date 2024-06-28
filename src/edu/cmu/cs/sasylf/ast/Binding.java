@@ -189,8 +189,8 @@ public class Binding extends Element {
 
 	public void substitute(SubstitutionData sd) {
 		super.substitute(sd);
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
+		//if (sd.didSubstituteFor(this)) return;
+		//sd.setSubstitutedFor(this);
 
 		/*
 			private List<Element> elements;

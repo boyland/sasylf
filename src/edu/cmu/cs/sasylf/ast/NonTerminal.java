@@ -209,8 +209,8 @@ public class NonTerminal extends Element implements Cloneable {
 
 	public void substitute(SubstitutionData sd) {
 		super.substitute(sd);
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
+		//if (sd.didSubstituteFor(this)) return;
+		//sd.setSubstitutedFor(this);
 	
 		/*
 			We want to check if symbol matches from

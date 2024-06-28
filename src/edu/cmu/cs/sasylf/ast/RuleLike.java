@@ -495,7 +495,11 @@ public abstract class RuleLike extends Node implements Named {
 	protected Term getFreshAdaptedTerm(Element element, List<Term> addedTypes,
 			Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
 
+			System.out.println("element: " + element);
+
 		Term f = element.asTerm();
+			System.out.println("element class: " + element.getClass());
+		System.out.println("f: " + f);
 
 		f.freshSubstitution(freshSub);
 		f = f.substitute(freshSub);

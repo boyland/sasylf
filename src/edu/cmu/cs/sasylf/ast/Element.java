@@ -176,7 +176,10 @@ public abstract class Element extends Node {
 
 		cd.addCloneFor(this, clone);
 
-		if (clone.term != null) clone.term = clone.term.copy(cd);
+		if (clone.term != null) {
+			//clone.term = clone.term.copy(cd);
+			clone.term = null;
+		}
 		if (clone.terminal != null) clone.terminal = clone.terminal.copy(cd);
 
 		return clone;
