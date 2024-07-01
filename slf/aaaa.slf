@@ -1,0 +1,8 @@
+package slf
+
+module aaaa provides
+
+terminals S
+
+syntax n = slf.nattest.n ::= 0 | S n
+

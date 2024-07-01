@@ -107,7 +107,9 @@ public class ClauseDef extends Clause {
 	}
 
 	@Override
-	public Term getTypeTerm() { return asTerm(); }
+	public Term getTypeTerm() {
+		return asTerm();
+	}
 
 	private String consName;
 	private ClauseType type;
@@ -399,8 +401,6 @@ public class ClauseDef extends Clause {
 	
 	@Override
 	public void substitute(SubstitutionData sd) {
-		//System.out.println("Substituting ClauseDef: " + this);
-		//System.out.println("type: " + type);
 		super.substitute(sd);
 
 		//if (sd.didSubstituteFor(this)) return;
@@ -413,9 +413,9 @@ public class ClauseDef extends Clause {
 			private int cachedAssumeIndex = -2;
 		*/
 
-		// substitute type and assumptionRule
-
-		// TODO: Do we need to do anything with consName?
+		if (sd.containsJudgmentReplacementFor(consName)) {
+			consName = sd.getJudgmentReplacement().getName();
+		}
 
 		if (type != null) {
 			if (type instanceof Judgment) {
@@ -430,10 +430,6 @@ public class ClauseDef extends Clause {
 		if (assumptionRule != null) {
 			assumptionRule.substitute(sd);
 		}
-
-		//System.out.println("Finished substituting ClauseDef: " + this);
-		//System.out.println("type: " + type);
-
 	}
 
 	public ClauseDef copy(CloneData cd) {

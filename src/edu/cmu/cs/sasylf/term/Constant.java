@@ -33,12 +33,11 @@ public class Constant extends Atom {
 
 	public void substitute (SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
 		sd.setSubstitutedFor(this);
-
 		if (type != null) {
 			type.substitute(sd);
 		}
-
 	}
 
 

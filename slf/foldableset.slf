@@ -14,14 +14,29 @@ provides
 
   syntax s ::= empty | e :: s
 
+  judgment eqset: s = s
+
+    -------- eqset
+    s = s
+
   judgment foldset: s -> e
 
   ----------- fold-1 // singleton list evaluates to the element
   e :: empty -> e
-
 
   s -> e2
   e1 + e2 = e3
   ----------- fold-2 // combine the head with the result of folding the tail
   e1 :: s -> e3
 
+  theorem foldone:
+    forall e
+    exists e :: empty -> e
+    proof by rule fold-1
+  end theorem
+
+  theorem trivial:
+    forall d: e1 + e2 = e3
+    exists e1 + e2 = e3
+    proof by d
+  end theorem

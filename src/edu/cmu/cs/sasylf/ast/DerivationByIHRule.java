@@ -63,6 +63,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
 
 		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
+
 		// Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
 
 		// and above this
@@ -105,11 +106,12 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
-				explanationString = tp.toString(tp.asClause(explanationTerm)); // PROBLEM LINE
+				explanationString = tp.toString(tp.asClause(explanationTerm));
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {
 					infoString += ", but failed because " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
+					// TODO: fix term printing
 				}
 			}
 			ErrorHandler.error(errorType, explanationString, this, infoString);

@@ -11,7 +11,7 @@ import edu.cmu.cs.sasylf.ast.Syntax;
 import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
 import edu.cmu.cs.sasylf.ast.Theorem;
 
-public class SubstitutionData{
+public class SubstitutionData {
   private final Map<Object, Boolean> set;
   public final String from;
   public final String to;

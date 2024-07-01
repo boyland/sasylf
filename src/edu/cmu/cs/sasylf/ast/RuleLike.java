@@ -456,7 +456,7 @@ public abstract class RuleLike extends Node implements Named {
 
 		// freshen each premise, and start to find adaptation
 		for (int i=0; i < n; ++i) {
-			Element element = this.getPremises().get(i);     
+			Element element = this.getPremises().get(i); 
 			Term f = getFreshAdaptedTerm(element, addedTypes, freshSub, adaptSub, varFree);
 			ruleArgs.add(f);
 		}
@@ -496,12 +496,7 @@ public abstract class RuleLike extends Node implements Named {
 	protected Term getFreshAdaptedTerm(Element element, List<Term> addedTypes,
 			Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
 
-			System.out.println("element: " + element);
-
 		Term f = element.asTerm();
-			System.out.println("element class: " + element.getClass());
-		System.out.println("f: " + f);
-
 		f.freshSubstitution(freshSub);
 		f = f.substitute(freshSub);
 		if (element.getRoot() == null) {

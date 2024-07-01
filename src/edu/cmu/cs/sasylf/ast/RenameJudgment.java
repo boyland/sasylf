@@ -60,7 +60,6 @@ public class RenameJudgment extends Judgment {
 
 	@Override
 	public void typecheck(Context ctx) {
-		System.out.println("RenameJudgment typecheck");
 		if (original != null) {
 			NonTerminal oa = original.getAssume();
 			if (oa != null) {
@@ -82,8 +81,6 @@ public class RenameJudgment extends Judgment {
 			// getForm() is the form of the judgment as the user has declared it
 			// original.getForm() is the form of the judgment as the module has declared it
 			// we want to check if they match
-
-			System.out.println("original: " + original);
 
 			getForm().checkClauseMatch(original.getForm());
 		}

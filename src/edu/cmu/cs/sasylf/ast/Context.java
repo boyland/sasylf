@@ -38,7 +38,7 @@ public class Context implements Cloneable {
 	private Map<String,SyntaxDeclaration> synTypeMap = new HashMap<String,SyntaxDeclaration>();
 	private Map<String,Judgment> judgMap = new HashMap<String,Judgment>();
 	private Map<String,Judgment> judgLFMap = new HashMap<String,Judgment>();
-	private Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
+	public Map<String,ClauseDef> prodMap = new HashMap<String,ClauseDef>();
 	public Map<String,Variable> varMap = new HashMap<String, Variable>();
 	public Map<String,RuleLike> ruleMap = new HashMap<String, RuleLike>();
 	public Map<String,Module> modMap = new HashMap<String, Module>();

@@ -159,7 +159,9 @@ public abstract class Element extends Node {
 		
 		*/
 
-		if (term != null) term.substitute(sd);
+		if (term != null) {
+			term.substitute(sd);
+		};
 		if (terminal != null) terminal.substitute(sd);
 	}
 

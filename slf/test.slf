@@ -4,7 +4,7 @@ module test
 
 provides
 
-  terminals S
+  terminals S empty aaaa
 
   syntax n ::= 0 | S n
 
@@ -17,9 +17,21 @@ provides
     ----------------- natcombine-s
     S n1 + n2 = S n3
 
-
   module natfoldableset = slf.foldableset[n, natcombine]
 
-  syntax ss = natfoldableset.s
+  syntax ss = natfoldableset.s ::= aaaa | n :: ss
   
   judgment natfoldset = natfoldableset.foldset : ss -> n
+
+  theorem natfoldone:
+    forall n
+    exists n :: aaaa -> n
+    proof by theorem natfoldableset.foldone on n
+  end theorem
+
+  theorem t1:
+    forall d: n1 + n2 = n3
+    exists n1 + n2 = n3
+    proof by theorem natfoldableset.trivial on d
+  end theorem
+

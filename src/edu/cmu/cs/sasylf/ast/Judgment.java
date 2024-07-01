@@ -229,7 +229,6 @@ public class Judgment extends Node implements ClauseType, Named {
 		form.substitute(sd);
 
 		// TODO: I think something else might need to be done here
-
 	}
 
 	public Judgment copy(CloneData cd) {
