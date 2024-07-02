@@ -40,3 +40,15 @@ provides
     exists e1 + e2 = e3
     proof by d
   end theorem
+
+  theorem foldtwo:
+    forall d: e1 + e2 = e3
+    exists e1 :: e2 :: empty -> e3
+
+    // we know that e2 :: empty -> e2
+
+    d1: e2 :: empty -> e2 by rule fold-1
+    d2: e1 :: e2 :: empty -> e3 by rule fold-2 on d1, d
+
+    proof by d2
+  end theorem
