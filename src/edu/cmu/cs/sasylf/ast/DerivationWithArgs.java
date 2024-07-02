@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -226,5 +227,16 @@ public abstract class DerivationWithArgs extends Derivation {
 		Element element = getArgs().get(i).getElement();
 		Term argTerm = ctx.toTerm(element);
 		return argTerm;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		for (Fact f : args) {
+			f.substitute(sd);
+		}
+		// TODO: I don't think we need to substitute in argStrings
 	}
 }

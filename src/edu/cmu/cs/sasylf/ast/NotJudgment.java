@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -134,4 +135,17 @@ public class NotJudgment extends Judgment {
 	}
 
 	public Judgment getJudgment() { return part; }
+
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (sd.containsJudgmentReplacementFor(part.getName())) {
+			part = sd.getJudgmentReplacement();
+		}
+	}
+
 }

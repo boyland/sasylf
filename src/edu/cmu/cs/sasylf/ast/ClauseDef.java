@@ -401,10 +401,9 @@ public class ClauseDef extends Clause {
 	
 	@Override
 	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
-
-		//if (sd.didSubstituteFor(this)) return;
-		//sd.setSubstitutedFor(this);
+		sd.setSubstitutedFor(this);
 
 		/*
 			private String consName;

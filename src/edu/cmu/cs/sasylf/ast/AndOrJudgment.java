@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -202,6 +203,16 @@ public abstract class AndOrJudgment extends Judgment {
 		}
 		// System.out.println("Computed typeTerm for " + getName() + " to be " + result);
 		return result;
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		for (Judgment j : parts) {
+			j.substitute(sd);
+		}
 	}
 
 	

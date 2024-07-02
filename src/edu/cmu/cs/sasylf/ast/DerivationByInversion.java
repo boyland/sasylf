@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -263,6 +264,16 @@ public class DerivationByInversion extends DerivationWithArgs {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		if (ruleName != null) ruleName.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		ruleName.substitute(sd);
+		whereClauses.substitute(sd);
 	}
 
 	@Override

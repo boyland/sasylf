@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
@@ -55,6 +56,17 @@ public class Case extends Node {
 		for (Derivation derivation : derivations) {
 			derivation.collectQualNames(consumer);
 		}
+	}
+	
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (Derivation d : derivations) {
+			d.substitute(sd);
+		}
+
+		span.substitute(sd);
 	}
 
 	public Case copy(CloneData cd) {

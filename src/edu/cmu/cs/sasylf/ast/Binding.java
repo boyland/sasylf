@@ -188,22 +188,18 @@ public class Binding extends Element {
 	}
 
 	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
-		//if (sd.didSubstituteFor(this)) return;
-		//sd.setSubstitutedFor(this);
+		sd.setSubstitutedFor(this);
 
 		/*
 			private List<Element> elements;
 			private NonTerminal nonTerminal;
 		*/
 
-		// substitute for elements
-
 		for (Element element: elements) {
 			element.substitute(sd);
 		}
-
-		// substitue for nonTerminal
 
 		nonTerminal.substitute(sd);
 

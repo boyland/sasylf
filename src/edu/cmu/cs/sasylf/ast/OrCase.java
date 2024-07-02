@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -113,4 +114,12 @@ public class OrCase extends Case {
 	}
 
 	Derivation premise;
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		premise.substitute(sd);
+	}
 }

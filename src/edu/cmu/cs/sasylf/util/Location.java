@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf.util;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.Token;
 
@@ -77,6 +78,11 @@ public class Location implements Span {
 		cd.addCloneFor(this, clone);
 
 		return clone;
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 	}
 
 

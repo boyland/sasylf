@@ -630,7 +630,9 @@ public class ClauseUse extends Clause {
 	
 	@Override
 	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd); 
+		sd.setSubstitutedFor(this);
 
 		/*
 			private ClauseDef cons;
@@ -641,7 +643,6 @@ public class ClauseUse extends Clause {
 
 		if (cons != null) cons.substitute(sd);
 		if (root != null) root.substitute(sd);
-
 	}
 
 	@Override

@@ -43,9 +43,10 @@ public class BindingAssumption extends NonTerminalAssumption {
 	private Binding binding;
 
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: should we do something?
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		binding.substitute(sd);
 	}
 
 	public BindingAssumption copy(CloneData cd) {

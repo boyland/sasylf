@@ -149,8 +149,11 @@ public class AssumptionElement extends Element {
 	private Element base;
 
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: I'm pretty sure that this is wrong
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		context.substitute(sd);
+		base.substitute(sd);
 	}
 
 	public AssumptionElement copy(CloneData cd) {

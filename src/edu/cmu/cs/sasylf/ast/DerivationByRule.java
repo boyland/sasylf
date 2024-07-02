@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -49,6 +50,16 @@ public class DerivationByRule extends DerivationByIHRule {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		ruleName.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		ruleName.substitute(sd);
+		rule.substitute(sd);
 	}
 
 	@Override

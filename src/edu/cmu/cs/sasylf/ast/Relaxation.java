@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -345,4 +346,17 @@ public class Relaxation {
 		// We don't add the relaxation to the context
 		return relax;
 	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		for (Term t : types) {
+			t.substitute(sd);
+		}
+		for (FreeVar v : values) {
+			if (v != null) v.substitute(sd);
+		}
+		result.substitute(sd);
+	}
+
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.ContextJudgment.NoCommonPrefixException;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -135,5 +136,15 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		if (isAnd) recvr = AndClauseUse.makeEmptyAndClause(loc);
 		else recvr = OrClauseUse.makeEmptyOrClause(loc);
 		return recvr.create(loc, ctx, parts);
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		for (ClauseUse cu: clauses) {
+			cu.substitute(sd);
+		}
 	}
 }

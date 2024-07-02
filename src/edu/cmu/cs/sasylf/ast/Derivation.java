@@ -369,6 +369,7 @@ public abstract class Derivation extends Fact {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		if (clause != null) clause.substitute(sd);
+		
 	}
 
 	public Derivation copy(CloneData cd) {

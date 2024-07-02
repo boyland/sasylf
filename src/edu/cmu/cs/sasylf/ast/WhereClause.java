@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -476,5 +477,16 @@ public class WhereClause extends Node {
 		}
 
 		return clone;
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (Pair<Element, Clause> p : clauses) {
+			p.first.substitute(sd);
+			p.second.substitute(sd);
+		}
+		
 	}
 }

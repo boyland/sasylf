@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -394,6 +395,20 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		for (Case c : cases) {
 			c.collectQualNames(consumer);
 		}
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		
+		for (Case c : cases) {
+			c.substitute(sd);
+		}
+
+		targetDerivation.substitute(sd);
+		
 	}
 
 	public DerivationByAnalysis copy(CloneData cd) {

@@ -378,6 +378,13 @@ public class CompUnit extends Node implements Module {
 	}
 
 	public void substitute(SubstitutionData sd) {
+		/*
+			private PackageDeclaration packageDecl;
+			public String moduleName;
+			private List<Part> params = new ArrayList<Part>();
+			private List<Part> parts = new ArrayList<Part>();
+			private int parseReports;
+		*/
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		for (Part part : parts) {

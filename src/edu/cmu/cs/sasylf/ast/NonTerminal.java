@@ -208,16 +208,16 @@ public class NonTerminal extends Element implements Cloneable {
 	}
 
 	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
-		//if (sd.didSubstituteFor(this)) return;
-		//sd.setSubstitutedFor(this);
+		sd.setSubstitutedFor(this);
 	
 		/*
 			We want to check if symbol matches from
 
 			We need to remove these characters from the back of the string, then check if they are equal
 
-			**Match** means `from` is a prefix of `symbol`, and all charaxitters after the prefix matching are **filler characters**
+			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are **filler characters**
 		
 		*/
 
@@ -226,7 +226,6 @@ public class NonTerminal extends Element implements Cloneable {
 		if (!symbol.startsWith(sd.from)) {
 			return;
 		}
-
 
 		// Check that all characters after the prefix match are filler characters
 
@@ -253,8 +252,6 @@ public class NonTerminal extends Element implements Cloneable {
 		if (cd.containsCloneFor(this)) {
 			return (NonTerminal) cd.getCloneFor(this);
 		}
-
-		
 
 		NonTerminal clone = (NonTerminal) super.copy(cd);
 		

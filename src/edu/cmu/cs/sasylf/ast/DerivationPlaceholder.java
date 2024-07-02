@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -114,6 +115,17 @@ public class DerivationPlaceholder extends Derivation {
 		final int diff = getLocation().getLine()-foundIn.getLocation().getLine();
 		report.setExtraInformation(getName() + ": " + tp.toString(clause) + "\n" + diff);
 		return tp;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (asTerm != null) asTerm.substitute(sd);
+
+		variable.substitute(sd);
 	}
 
 	@Override

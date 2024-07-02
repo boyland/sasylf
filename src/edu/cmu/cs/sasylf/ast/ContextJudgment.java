@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -31,7 +32,7 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class ContextJudgment extends Judgment {
 
-	private final Judgment base;
+	private Judgment base;
 	private final ClauseDef context;
 	
 	private ContextJudgment(Location loc, Judgment b, ClauseUse use, ClauseDef assume, ClauseUse assumeUse) {
@@ -278,5 +279,23 @@ public class ContextJudgment extends Judgment {
 		Term output = wrappedPrem.substitute(invertSub);
 		// System.out.println("Inverted " + input + " as " + output);
 		return invertContextJudgments(ctx,output);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (base != null) {
+			if (sd.containsJudgmentReplacementFor(base.getName())) {
+				base = sd.getJudgmentReplacement();
+			}
+		}
+
+		if (context != null) {
+			context.substitute(sd);
+		}
+		
 	}
 }
