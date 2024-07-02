@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -29,10 +30,10 @@ import edu.cmu.cs.sasylf.util.Util;
 public class RuleCase extends Case {
 	
 	private Rule rule;
-	private final QualName ruleName;
-	private final List<Derivation> premises;
-	private final Derivation conclusion;
-	private final WhereClause whereClauses;
+	private QualName ruleName;
+	private List<Derivation> premises;
+	private Derivation conclusion;
+	private WhereClause whereClauses;
 	
 	public RuleCase(Location l, Location l1, Location l2,
 			QualName rn, List<Derivation> ps, Derivation c, WhereClause wcs) {
@@ -434,6 +435,36 @@ public class RuleCase extends Case {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		ruleName.visit(consumer);
 		super.collectQualNames(consumer);
+	}
+
+	@Override
+	public RuleCase copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (RuleCase) cd.getCloneFor(this);
+		RuleCase clone = (RuleCase) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		/*
+			private Rule rule;
+			private QualName ruleName;
+			private List<Derivation> premises;
+			private Derivation conclusion;
+			private WhereClause whereClauses;
+		*/
+
+		clone.rule = clone.rule.copy(cd);
+		clone.ruleName = clone.ruleName.copy(cd);
+
+		List<Derivation> newPremises = new ArrayList<Derivation>();
+
+		for (Derivation p : premises) {
+			newPremises.add(p.copy(cd));
+		}
+		clone.premises = newPremises;
+
+		clone.conclusion = clone.conclusion.copy(cd);
+
+		clone.whereClauses = clone.whereClauses.copy(cd);
+		
+		return clone;
 	}
 	
 	

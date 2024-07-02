@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.parser.Token;
 
 
@@ -26,6 +27,15 @@ public class StringSpan extends DefaultSpan {
 	@Override
 	public String toString() {
 		return builder.toString();
+	}
+
+	@Override
+	public StringSpan copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (StringSpan) cd.getCloneFor(this);
+		StringSpan clone = (StringSpan) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.builder = new StringBuilder(builder);
+		return clone;
 	}
 
 	private StringBuilder builder = new StringBuilder();

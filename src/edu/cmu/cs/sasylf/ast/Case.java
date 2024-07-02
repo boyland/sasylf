@@ -70,6 +70,7 @@ public class Case extends Node {
 	}
 
 	public Case copy(CloneData cd) {
+		// unimplemented because we don't need it
 		System.out.println("Case.copy unimplemented");
 		System.exit(0);
 		return null;

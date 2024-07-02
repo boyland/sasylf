@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -36,9 +37,9 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class Relaxation {
 
-	private final List<Term>     types;
-	private final List<FreeVar>  values;
-	private final NonTerminal    result;
+	private List<Term>     types;
+	private List<FreeVar>  values;
+	private NonTerminal    result;
 
 	public Relaxation(List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
 		types = new ArrayList<Term>();
@@ -357,6 +358,48 @@ public class Relaxation {
 			if (v != null) v.substitute(sd);
 		}
 		result.substitute(sd);
+	}
+
+	public Relaxation copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (Relaxation) cd.getCloneFor(this);
+		Relaxation clone;
+
+		try {
+			clone = (Relaxation) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			System.out.println("Clone not supported in Relaxation");
+			System.exit(1);
+			return null;
+		}
+
+		cd.addCloneFor(this, clone);
+
+		/*
+			private final List<Term>     types;
+			private final List<FreeVar>  values;
+			private final NonTerminal    result;
+		*/
+
+		List<Term> newTypes = new ArrayList<Term>();
+		for (Term t : types) {
+			newTypes.add(t.copy(cd));
+		}
+		clone.types = newTypes;
+
+		List<FreeVar> newValues = new ArrayList<FreeVar>();
+		for (FreeVar v : values) {
+			if (v == null) {
+				newValues.add(null);
+			} else {
+				newValues.add((FreeVar)v.copy(cd));
+			}
+		}
+		clone.values = newValues;
+
+		clone.result = clone.result.copy(cd);
+
+		return clone;
 	}
 
 }

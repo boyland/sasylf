@@ -49,6 +49,7 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
 		if (p != null) ctx.subderivations.put(this, p);
 	}
+	
 	@Override
 	public DerivationByPrevious copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DerivationByPrevious) cd.getCloneFor(this);

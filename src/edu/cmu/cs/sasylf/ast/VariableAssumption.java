@@ -27,6 +27,10 @@ public class VariableAssumption extends SyntaxAssumption {
 	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?
+		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		variable.substitute(sd);
 	}
 
 	@Override

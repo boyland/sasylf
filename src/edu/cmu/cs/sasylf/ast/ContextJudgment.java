@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -33,7 +34,7 @@ import edu.cmu.cs.sasylf.util.Util;
 public class ContextJudgment extends Judgment {
 
 	private Judgment base;
-	private final ClauseDef context;
+	private ClauseDef context;
 	
 	private ContextJudgment(Location loc, Judgment b, ClauseUse use, ClauseDef assume, ClauseUse assumeUse) {
 		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,use,assume,assumeUse),assume.getAssumeIndex() >= 0 ? b.getAssume() : null);
@@ -279,6 +280,18 @@ public class ContextJudgment extends Judgment {
 		Term output = wrappedPrem.substitute(invertSub);
 		// System.out.println("Inverted " + input + " as " + output);
 		return invertContextJudgments(ctx,output);
+	}
+	
+	@Override
+	public ContextJudgment copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (ContextJudgment) cd.getCloneFor(this);
+		ContextJudgment clone = (ContextJudgment) super.copy(cd);
+		cd.addCloneFor(this, clone);
+
+		clone.base = clone.base.copy(cd);
+		clone.context = clone.context.copy(cd);
+		
+		return clone;
 	}
 
 	@Override

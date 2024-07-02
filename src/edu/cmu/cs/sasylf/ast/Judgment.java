@@ -247,7 +247,6 @@ public class Judgment extends Node implements ClauseType, Named {
 		cd.addCloneFor(this, clone);
 		
 		/*
-
 			Make deep copies of the following fields:
 				private List<Rule> rules;
 				private Clause form;

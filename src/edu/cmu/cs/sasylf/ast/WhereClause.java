@@ -487,6 +487,7 @@ public class WhereClause extends Node {
 			p.first.substitute(sd);
 			p.second.substitute(sd);
 		}
+		computed = null;
 		
 	}
 }

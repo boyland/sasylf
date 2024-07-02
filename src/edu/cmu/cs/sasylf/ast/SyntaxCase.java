@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -347,5 +349,27 @@ public class SyntaxCase extends Case {
 
 	private Clause conclusion;
 	private Element assumes;
+
+	public SyntaxCase clone(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (SyntaxCase) cd.getCloneFor(this);
+		SyntaxCase clone = (SyntaxCase) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.conclusion = clone.conclusion.copy(cd);
+		if (clone.assumes != null) {
+			clone.assumes = clone.assumes.copy(cd);
+		}
+		return clone;		
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		conclusion.substitute(sd);
+		if (assumes != null) {
+			assumes.substitute(sd);
+		}
+	}
+
 }
 

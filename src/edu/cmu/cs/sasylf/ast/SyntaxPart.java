@@ -126,7 +126,9 @@ public class SyntaxPart implements Part {
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new Error("unexpected error", e);
+			System.out.println("Clone not supported in SyntaxPart");
+			System.exit(1);
+			return null;
 		}
 	}
 

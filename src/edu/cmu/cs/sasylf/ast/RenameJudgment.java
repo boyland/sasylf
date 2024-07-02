@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.List;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -120,5 +121,15 @@ public class RenameJudgment extends Judgment {
 
 		original.substitute(sd);
 		// TODO: I don't think we need to substitute for source
+	}
+
+	@Override
+	public RenameJudgment copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return  (RenameJudgment) cd.getCloneFor(this);
+		RenameJudgment clone = (RenameJudgment) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.source = source.copy(cd);
+		clone.original = original;
+		return clone;
 	}
 }

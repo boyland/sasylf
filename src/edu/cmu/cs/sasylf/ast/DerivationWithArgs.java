@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -238,5 +239,27 @@ public abstract class DerivationWithArgs extends Derivation {
 			f.substitute(sd);
 		}
 		// TODO: I don't think we need to substitute in argStrings
+	}
+
+	@Override
+	public DerivationWithArgs copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (DerivationWithArgs) cd.getCloneFor(this);
+		DerivationWithArgs clone = (DerivationWithArgs) super.copy(cd);
+		cd.addCloneFor(this, clone);
+
+		List<Clause> newArgStrings = new ArrayList<Clause>();
+		for (Clause c : argStrings) {
+			newArgStrings.add(c.copy(cd));
+		}
+		clone.argStrings = newArgStrings;
+
+		List<Fact> newArgs = new ArrayList<Fact>();
+		for (Fact f : args) {
+			newArgs.add(f.copy(cd));
+		}
+		clone.args = newArgs;
+		
+		return clone;
+
 	}
 }

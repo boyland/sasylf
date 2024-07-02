@@ -116,6 +116,19 @@ public class JudgmentPart implements Part {
 		}
 	}
 
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Judgment j : judgments) {
+			sb.append(j.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	public List<Judgment> getJudgments() {
+		return judgments;
+	}
+
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -145,19 +158,6 @@ public class JudgmentPart implements Part {
 		clone.judgments = newJudgments;
 		
 		return clone;
-	}
-
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		for (Judgment j : judgments) {
-			sb.append(j.toString());
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-
-	public List<Judgment> getJudgments() {
-		return judgments;
 	}
 
 }

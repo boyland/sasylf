@@ -3,6 +3,8 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -13,7 +15,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 
 public class SugarClauseDef extends ClauseDef {
 
-	private final Element definition;
+	private Element definition;
 	
 	/**
 	 * Create a sugar clause definition.
@@ -60,6 +62,23 @@ public class SugarClauseDef extends ClauseDef {
 		}
 		*/
 		return result;
+	}
+
+	@Override
+	public SugarClauseDef copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (SugarClauseDef) cd.getCloneFor(this);
+		SugarClauseDef clone = (SugarClauseDef) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.definition = definition.copy(cd);
+		return clone;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		definition.substitute(sd);
 	}
 
 	

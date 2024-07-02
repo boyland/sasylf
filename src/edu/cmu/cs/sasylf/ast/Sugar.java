@@ -204,8 +204,8 @@ public class Sugar extends Syntax {
 			private SyntaxDeclaration type;
 			private Element replacement;
 			private boolean typeChecked;
-		
 		*/
+		
 		if (cd.containsCloneFor(this)) return (Sugar) cd.getCloneFor(this);
 
 		Sugar clone;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -205,6 +206,7 @@ public abstract class AndOrJudgment extends Judgment {
 		return result;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
@@ -214,6 +216,20 @@ public abstract class AndOrJudgment extends Judgment {
 			j.substitute(sd);
 		}
 	}
+
+	@Override
+	public AndOrJudgment copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return  (AndOrJudgment) cd.getCloneFor(this);
+		AndOrJudgment clone = (AndOrJudgment) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		List<Judgment> newParts = new ArrayList<Judgment>();
+		for (Judgment j : parts) {
+			newParts.add(j.copy(cd));
+		}
+		clone.parts = newParts;
+		return clone;
+	}
+	
 
 	
 }

@@ -101,8 +101,7 @@ public class DerivationByTheorem extends DerivationByIHRule {
 		DerivationByTheorem clone = (DerivationByTheorem) super.copy(cd);
 		cd.addCloneFor(this, clone);
 
-		// TODO: clone StringSpan
-		//clone.theoremKind = clone.theoremKind.copy(cd);
+		clone.theoremKind = clone.theoremKind.copy(cd);
 		clone.theoremName = clone.theoremName.copy(cd);
 		clone.theorem = clone.theorem.copy(cd);
 

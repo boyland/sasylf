@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.ContextJudgment.NoCommonPrefixException;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -138,6 +139,7 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		return recvr.create(loc, ctx, parts);
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
@@ -147,4 +149,18 @@ public abstract class AndOrClauseUse extends ClauseUse {
 			cu.substitute(sd);
 		}
 	}
+
+	@Override
+	public AndOrClauseUse copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (AndOrClauseUse) cd.getCloneFor(this);
+		AndOrClauseUse clone = (AndOrClauseUse) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		List<ClauseUse> newClauses = new ArrayList<ClauseUse>();
+		for (ClauseUse cu: clauses) {
+			newClauses.add(cu.copy(cd));
+		}
+		clone.clauses = newClauses;
+		return clone;
+	}
+
 }

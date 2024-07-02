@@ -229,6 +229,7 @@ public class QualName extends Node {
 
 	@Override
 	public void substitute(SubstitutionData sd) {
+		// I'm pretty sure that nothing needs to be done when substituting in a QualName
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		// TODO: I don't think we need the next line

@@ -112,7 +112,11 @@ public abstract class SyntaxAssumption extends Fact {
 			throw new Error("Clone not supported in SyntaxAssumption");
 		}
 		cd.addCloneFor(this, clone);
-		clone.context = context == null ? null : context.copy(cd);
+
+		if (clone.context != null) {
+			clone.context = clone.context.copy(cd);
+		}
+
 		return clone;
 	}
 

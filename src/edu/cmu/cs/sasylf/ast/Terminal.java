@@ -150,7 +150,7 @@ public class Terminal extends Element implements ElemType {
 			private boolean mustQuote;
 		*/
 
-		clone.sp = sp.copy(cd);
+		clone.sp = clone.sp.copy(cd);
 
 		// the other attributes are immutable, so we don't need to clone them
 		

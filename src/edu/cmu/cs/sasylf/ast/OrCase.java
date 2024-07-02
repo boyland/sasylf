@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -121,5 +122,14 @@ public class OrCase extends Case {
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
 		premise.substitute(sd);
+	}
+
+	@Override
+	public OrCase copy(CloneData cd) {
+		if (cd.containsCloneFor(this)) return (OrCase) cd.getCloneFor(this);
+		OrCase clone = (OrCase) super.copy(cd);
+		cd.addCloneFor(this, clone);
+		clone.premise = clone.premise.copy(cd);
+		return clone;
 	}
 }

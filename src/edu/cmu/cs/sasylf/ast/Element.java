@@ -180,9 +180,12 @@ public abstract class Element extends Node {
 
 		if (clone.term != null) {
 			//clone.term = clone.term.copy(cd);
+			// we need to set clone.term to null because term is computed upon calling asTerm()
 			clone.term = null;
 		}
-		if (clone.terminal != null) clone.terminal = clone.terminal.copy(cd);
+		if (clone.terminal != null) {
+			clone.terminal = clone.terminal.copy(cd);
+		}
 
 		return clone;
 	}

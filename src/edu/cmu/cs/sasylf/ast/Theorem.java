@@ -403,7 +403,7 @@ public class Theorem extends RuleLike {
 	@Override
 	public Theorem copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Theorem) cd.getCloneFor(this);
-
+		
 		Theorem clone;
 		try {
 			clone = (Theorem) super.clone();
