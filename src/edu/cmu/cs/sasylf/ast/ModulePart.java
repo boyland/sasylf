@@ -75,7 +75,50 @@ public class ModulePart extends Node implements Part, Named {
 
 			// check that the number of parameters and arguments is the same
 
-			int numParams = functor.getParams().size();
+			// get the parameters of the functor
+			// for this, we have go through each of the parts
+
+			List<Object> params = new ArrayList<Object>();
+
+			for (Part part : functor.getParams()) {
+				if (part instanceof SyntaxPart) {
+					SyntaxPart sp = (SyntaxPart) part;
+					// go through each syntax
+					for (Syntax s : sp.getSyntax()) {
+						if (s instanceof SyntaxDeclaration) {
+							SyntaxDeclaration sd = (SyntaxDeclaration) s;
+							params.add(sd);
+						}
+						else {
+							// The syntax is not a SyntaxDeclaration, which is not allowed
+							System.out.println("Error: Syntax is not a SyntaxDeclaration in ModulePart.");
+							System.exit(1);
+						}
+					}
+				}
+				else if (part instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) part;
+					// go through each judgment
+					for (Judgment j : jp.getJudgments()) {
+						params.add(j);
+					}
+				}
+				else if (part instanceof TheoremPart) {
+					TheoremPart tp = (TheoremPart) part;
+					// go through each theorem
+					for (Theorem t : tp.getTheorems()) {
+						params.add(t);
+					}
+				}
+				else {
+					// The part is not a SyntaxPart, JudgmentPart, or TheoremPart, which is not allowed
+					System.out.println("Error: Part is not a SyntaxPart, JudgmentPart, or TheoremPart in ModulePart.");
+					System.exit(1);
+				}
+			}
+
+			int numParams = params.size();
+			
 			int numArgs = arguments.size();
 
 			if (numParams != numArgs) {
@@ -87,7 +130,7 @@ public class ModulePart extends Node implements Part, Named {
 			// Next, check that the kind of each argument matches the kind of the corresponding parameter
 
 			for (int i = 0; i < numParams; i++) {
-				Part parameter = functor.getParams().get(i);
+				Object parameter = params.get(i);
 				QualName argument = arguments.get(i);
 
 				// resolve the argument
@@ -96,13 +139,13 @@ public class ModulePart extends Node implements Part, Named {
 
 				// Use instanceof to check that argument and parameter match
 			
-				if (parameter instanceof SyntaxPart && !(argResolution instanceof Syntax)) {
+				if (parameter instanceof SyntaxDeclaration && !(argResolution instanceof Syntax)) {
 					System.out.println("Error: Argument does not match parameter in module application. Expected a syntax, but found something else.");
 				}
-				else if (parameter instanceof JudgmentPart && !(argResolution instanceof Judgment)) {
+				else if (parameter instanceof Judgment && !(argResolution instanceof Judgment)) {
 					System.out.println("Error: Argument does not match parameter in module application. Expected a judgment, but found something else.");
 				}
-				else if (parameter instanceof TheoremPart && !(argResolution instanceof Theorem)) {
+				else if (parameter instanceof Theorem && !(argResolution instanceof Theorem)) {
 					System.out.println("Error: Argument does not match parameter in module application. Expected a theorem, but found something else.");
 				}
 
@@ -130,7 +173,7 @@ public class ModulePart extends Node implements Part, Named {
 			// Substitute the parameters with the arguments in the parts of newModule
 
 			for (int i = 0; i < numParams; i++) {
-				Part parameter = functor.getParams().get(i);
+				Object parameter = params.get(i);
 				QualName argument = arguments.get(i);
 
 				// argument.source should be null. In the future, we will adjust this
@@ -146,21 +189,13 @@ public class ModulePart extends Node implements Part, Named {
 
 				String parameterName = "";
 
-				if (parameter instanceof SyntaxPart) {
-					SyntaxPart sp = (SyntaxPart) parameter;
-					// get the first syntax, since that is the argument
-					Syntax s = sp.getSyntax().get(0);
-					// it should be a SyntaxDeclaration
-					if (s instanceof SyntaxDeclaration) {
-						SyntaxDeclaration sd = (SyntaxDeclaration) s;
-						parameterName = sd.getName();
-					}
+				if (parameter instanceof SyntaxDeclaration) {
+					SyntaxDeclaration sd = (SyntaxDeclaration) parameter;
+					parameterName = sd.getName();
 				}
 				
-				else if (parameter instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) parameter;
-					// get the first judgment, since that is the argument
-					Judgment j = jp.getJudgments().get(0);
+				else if (parameter instanceof Judgment) {
+					Judgment j = (Judgment) parameter;
 					parameterName = j.getName();
 				}
 				

@@ -1,0 +1,90 @@
+package regression
+
+module good65
+
+requires
+
+  abstract syntax e
+
+provides
+
+  terminals empty head isempty in U
+
+  syntax
+
+    s ::= empty | e :: s
+
+judgment eq: s = s
+
+  ------- eq
+  s = s
+
+judgment contains: e in s
+
+  ------------ contains-1
+  e in e :: s
+
+  e1 in s
+  ------------ contains-2
+  e1 in (e2 :: s)
+
+judgment union: s U s = s
+
+  ----------------- union-empty
+  empty U s = s
+
+  s1 U s2 = s3
+  ----------------- union-cons
+  (e :: s1) U s2 = e :: s3
+
+judgment subset: s1 <= s2
+
+  ----------------- subset-empty
+  empty <= s
+
+  s1 <= s2
+  e in s2
+  ----------------- subset-cons
+  (e :: s1) <= s2
+
+
+theorem superset-contains:
+  forall d1: s1 <= s2
+  forall d2: e in s1
+  exists e in s2
+  proof by unproved
+end theorem
+
+theorem subset-transitive:
+  forall d1: s1 <= s2
+  forall d2: s2 <= s3
+  exists s1 <= s3
+  proof by induction on d1:
+    case rule
+      --------------- subset-empty
+      _: empty <= s2
+    is
+      // since s1 is empty, it holds that s1 <= s3, regardless of what s3 is
+      proof by rule subset-empty
+    end case
+
+    case rule
+      d3: s0 <= s2
+      d4: e0 in s2
+      --------------- subset-cons
+      d5: (e0 :: s0) <= s2
+      where s1 := (e0 :: s0)
+    is
+      // we want to show that (e0 :: s0) <= s3
+      // we know that s0 <= s2 and s2 <= s3
+      // therefore, by induction hypothesis, s0 <= s3
+      ih: s0 <= s3 by induction hypothesis on d3, d2
+      // we also know that e0 is in s2
+      // since e0 is in s2, and s2 <= s3, we know that e0 is in s3
+      d6: e0 in s3 by theorem superset-contains on d2, d4
+      // therefore, we can conclude that (e0 :: s0) <= s3
+      d7: (e0 :: s0) <= s3 by rule subset-cons on ih, d6
+      proof by d7
+    end case
+  end induction
+end theorem

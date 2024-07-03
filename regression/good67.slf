@@ -1,0 +1,22 @@
+package regression
+
+module good67
+
+requires
+
+  abstract syntax e
+
+  abstract judgment add: e + e = e
+
+  abstract theorem add-commutative:
+    forall d1: e1 + e2 = e3
+    exists e2 + e1 = e3
+  end theorem
+
+provides
+
+  theorem trivial:
+    forall d1: e1 + e2 = e3
+    exists e2 + e1 = e3
+    proof by theorem add-commutative on d1
+  end theorem

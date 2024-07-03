@@ -1,4 +1,4 @@
-package slf
+package regression
 
 module simplesettest
 

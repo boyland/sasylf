@@ -1,0 +1,19 @@
+package regression
+
+module good68
+
+provides
+
+terminals T F
+
+syntax b ::= T | F
+
+judgment lor: b + b = b
+
+  --------- lor-1
+  T + b = T
+
+  --------- lor-2
+  F + b = b
+
+

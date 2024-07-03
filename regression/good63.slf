@@ -1,0 +1,53 @@
+package regression
+
+module pair
+
+requires
+
+  abstract syntax one
+
+  abstract syntax two
+
+  abstract judgment combine-one: one + one = one
+  
+  abstract judgment combine-two: two + two = two
+
+provides
+
+  terminals rev
+  
+  syntax pair ::= <one, two> | <two, one>
+
+  judgment combine-pair: pair + pair = pair
+
+    one1 + one2 = one3
+    two1 + two2 = two3
+    ------------------------------------------ cp-1
+    <one1, two1> + <one2, two2> = <one3, two3>
+
+    one1 + one2 = one3
+    two1 + two2 = two3
+    ------------------------------------------ cp-2
+    <two1, one1> + <two2, one2> = <two3, one3>
+
+  judgment reverse-pair: rev pair = pair
+
+    --------------------------- rp-1
+    rev <one, two> = <two, one>
+
+    --------------------------- rp-2
+    rev <two, one> = <one, two>
+
+  judgment pair-eq: pair = pair
+
+    ----------- pair-eq-1
+    pair = pair
+
+  judgment pair-cong: pair ~ pair
+
+    ----------- pair-cong-1
+    pair ~ pair
+
+    rev pair1 = pair2
+    ----------- pair-cong-2
+    pair1 ~ pair2

@@ -61,23 +61,3 @@ provides
     d3: e :: empty +-> e by rule add-cons on d1, d2
     proof by d3
   end theorem
-
-/*
-  Suppose we then wrote
-
-  module intset = set (
-    syntax n ::= 0 | S n
-  )
-
-  This produces the following module
-
-  module intset
-
-  provides
-    terminals empty
-    syntax
-      n ::= 0 | S n
-      s ::= empty | n :: s
-*/
-
-
