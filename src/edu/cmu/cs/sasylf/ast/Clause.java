@@ -740,4 +740,76 @@ public class Clause extends Element implements CanBeCase {
 		}
 	}
 
+
+	public static void checkClauseSameStructure(
+		Clause c1, 
+		Clause c2,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment)
+	{
+
+		// ignore everything except for nonterminals
+		List<Element> c1Elements = c1.withoutTerminals();
+		List<Element> c2Elements = c2.withoutTerminals();
+
+		if (c1Elements.size() != c2Elements.size()) {
+			// failure
+			System.out.println("c1Elements.size() != c1Elements.size()");
+			System.exit(0);
+			return;
+		}
+
+		// go through each of the elements
+
+		for (int i = 0; i < c1Elements.size(); i++) {
+			Element e1 = c1Elements.get(i);
+			Element e2 = c2Elements.get(i);
+
+			if (e1 instanceof NonTerminal && e2 instanceof NonTerminal) {
+				NonTerminal nt1 = (NonTerminal) e1;
+				NonTerminal nt2 = (NonTerminal) e2;
+
+				// nt1 is the parameter, and nt2 is the argument
+
+				// check if the syntax declaration of nt1 is already mapped to something
+				if (paramToArgSyntax.containsKey(nt1.getType())) {
+					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType()) {
+						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
+						// failure
+						System.out.println("Clause same structure check failure 1");
+
+						System.out.println("Replacing " + nt1 + " with " + nt2 + ", but expected " + paramToArgSyntax.get(nt1.getType()));
+
+						System.exit(0);
+					}
+				}
+				// otherwise, add the mapping from the syntax declaration of nt1 to the syntax declaration of nt2
+				else {
+					paramToArgSyntax.put(nt1.getType(), nt2.getType());
+				}
+			}
+
+			// if they are both clauses, recursively call this function
+
+			else if (e1 instanceof Clause && e2 instanceof Clause) {
+				Clause e1c = (Clause) e1;
+				Clause e2c = (Clause) e2;
+				checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment);
+			}
+
+			// TODO: implement the other cases for the other types of elements
+
+			else {
+				System.out.println("Clause same structure check failure 2");
+
+				System.out.println("e1 class: " + e1.getClass());
+				System.out.println("e2 class: " + e2.getClass());
+				
+				System.exit(0);
+			}
+
+		}
+
+	}
+
 }

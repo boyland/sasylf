@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -172,8 +173,17 @@ public class ModulePart extends Node implements Part, Named {
 
 			// Substitute the parameters with the arguments in the parts of newModule
 
+
+			Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
+			Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
+
+			// paramToArgSyntax maps a parameter syntax to the argument syntax that is provided in the functor application
+			// paramToArgJudgment maps a parameter judgment to the argument judgment that is provided in the functor application
+
+			// At this point, we know that each argument has the same kind as the corresponding parameter
+
 			for (int i = 0; i < numParams; i++) {
-				Object parameter = params.get(i);
+				Object parameterObject = params.get(i);
 				QualName argument = arguments.get(i);
 
 				// argument.source should be null. In the future, we will adjust this
@@ -185,18 +195,21 @@ public class ModulePart extends Node implements Part, Named {
 
 				String argumentName = argument.getName();
 
-				// Get the parameter name
-
 				String parameterName = "";
 
-				if (parameter instanceof SyntaxDeclaration) {
-					SyntaxDeclaration sd = (SyntaxDeclaration) parameter;
+				if (parameterObject instanceof SyntaxDeclaration) {
+					SyntaxDeclaration sd = (SyntaxDeclaration) parameterObject;
 					parameterName = sd.getName();
 				}
 				
-				else if (parameter instanceof Judgment) {
-					Judgment j = (Judgment) parameter;
+				else if (parameterObject instanceof Judgment) {
+					Judgment j = (Judgment) parameterObject;
 					parameterName = j.getName();
+				}
+
+				else if (parameterObject instanceof Theorem) {
+					Theorem t = (Theorem) parameterObject;
+					parameterName = t.getName();
 				}
 				
 				else {
@@ -204,24 +217,68 @@ public class ModulePart extends Node implements Part, Named {
 					System.out.println("Error: Could not get the name of the parameter.");
 					System.exit(0);
 				}
-				
-				// substitute the parameter with the argument
-
 				SubstitutionData sd;
-
 				Object argResolution = argument.resolve(ctx);
 
-				// check which class argResolution is an instance of
-
 				if (argResolution instanceof Syntax) {
+					Syntax argumentSyntax = (Syntax) argResolution;
+					Syntax parameterSyntax = (Syntax) parameterObject; // it will always be an instance of Syntax
+
+					// check if parameterSyntax is already bound to argumentSyntax in the map
+
+					if (paramToArgSyntax.containsKey(argumentSyntax)) {
+						// check if the parameterSyntax is bound to the same argumentSyntax
+						if (paramToArgSyntax.get(argumentSyntax) != parameterSyntax) {
+							System.out.println("Error: The same argument syntax is bound to two different parameter syntaxes.");
+							System.exit(0);
+						}
+					}
+
+					// otherwise, bind the parameterSyntax to the argumentSyntax in the map
+
+					paramToArgSyntax.put(parameterSyntax, argumentSyntax);
+
+					// TODO: if parameterSyntax is not abstract, need to check the productions of the syntaxes
+
 					sd = new SubstitutionData(parameterName, argumentName, (Syntax) argResolution);
 				}
 
 				else if (argResolution instanceof Judgment) {
+
+					
+					Judgment argumentJudgment = (Judgment) argResolution;
+					Judgment parameterJudgment = (Judgment) parameterObject; // it will always be an instance of Judgment
+
+					// check if parameterJudgment is already bound to argumentJudgment in the map
+
+					if (paramToArgJudgment.containsKey(parameterJudgment)) {
+						// check if the parameterJudgment is bound to the same argumentJudgment
+						if (paramToArgJudgment.get(parameterJudgment) != argumentJudgment) {
+							System.out.println("Error: The same argument judgment is bound to two different parameter judgments.");
+							System.exit(0);
+						}
+					}
+
+					// otherwise, bind the parameterJudgment to the argumentJudgment in the map
+
+					// now, we need to check the forms of the judgments and make sure that they match
+
+					Clause argumentJudgmentForm = argumentJudgment.getForm();
+					Clause parameterJudgmentForm = parameterJudgment.getForm();
+					
+					// check if the forms of the judgments have the same structure
+					
+					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment);
+
+					// TODO: if parameterJudgment is not abstract, need to check the rules of the judgments
+					
 					sd = new SubstitutionData(parameterName, argumentName, (Judgment) argResolution);
 				}
 
 				else if (argResolution instanceof Theorem) {
+					// Theorem is not yet implemented
+					System.out.println("Error: Theorem is not yet implemented in module application.");
+					System.exit(0);
 					sd = new SubstitutionData(parameterName, argumentName, (Theorem) argResolution);
 				}
 
@@ -233,72 +290,10 @@ public class ModulePart extends Node implements Part, Named {
 
 				newModule.substitute(sd);
 			}
-			
-			// change the name of the module
-
 			newModule.moduleName = name;
+			ctx.modMap.put(name, newModule); 
+			Context.updateVersion();
 
-			// add the new module to the context
-
-			ctx.modMap.put(name, newModule); Context.updateVersion();
-
-			//System.out.println("New module");
-			//System.out.println(newModule);
-
-
-			// inspect the new module for debugging purposes
-			/*
-			System.out.println("Start debugging");
-
-
-			// get the theorem part of the module
-
-			Part p = null;
-
-			for (Part part : newModule.getParts()) {
-				if (part instanceof TheoremPart) {
-					p = part;
-					break;
-				}
-			}
-
-			if (p == null) {
-				System.out.println("Error: Could not find a theorem part in the new module.");
-				System.exit(0);
-			}
-
-			TheoremPart tp = (TheoremPart) p;
-
-			// get the theorem
-
-			Theorem theorem = tp.getTheorems().get(0);
-
-			System.out.println("Theorem: " + theorem);
-
-			List<Fact> foralls = theorem.getForalls();
-
-			for (Fact f : foralls) {
-				if (f instanceof NonTerminalAssumption) {
-					NonTerminalAssumption nta = (NonTerminalAssumption) f;
-					System.out.println("NonTerminalAssumption: " + nta);
-					System.out.println("Type: " + nta.nonTerminal.getTypeTerm());
-				}
-			}
-			
-			Clause exists = theorem.getExists();
-
-			System.out.println("exists: " + exists);
-
-			for (Element e : exists.getElements()) {
-				if (e instanceof NonTerminal) {
-					NonTerminal nt = (NonTerminal) e;
-					System.out.println("NonTerminal: " + nt);
-					System.out.println("Type: " + nt.getTypeTerm());
-				}
-			}
-
-			System.out.println("End debugging");
-			*/
 		}
 	}
 
