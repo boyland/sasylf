@@ -747,12 +747,6 @@ public class Clause extends Element implements CanBeCase {
 		Map<Judgment, Judgment> paramToArgJudgment)
 	{
 
-		System.out.println("Checking structure");
-		System.out.println("paramClause: " + paramClause);
-		System.out.println("argClause: " + argClause);
-		System.out.println("paramToArgSyntax: " + paramToArgSyntax);
-		System.out.println("paramToArgJudgment: " + paramToArgJudgment);
-
 		// make sure that the types of the clauses match
 
 		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
@@ -829,11 +823,8 @@ public class Clause extends Element implements CanBeCase {
 	) {
 		ClauseType ct1 = c1.getType();
 		ClauseType ct2 = c2.getType();
-		
-		System.out.println("Checking " + ct1 + " and " + ct2);
 
 		if (ct1 instanceof Syntax && ct2 instanceof Syntax) {
-			System.out.println("SYNTAX");
 			Syntax s1 = (Syntax) ct1;
 			Syntax s2 = (Syntax) ct2;
 			// check is s1 is already bound to something
@@ -850,7 +841,6 @@ public class Clause extends Element implements CanBeCase {
 		}
 
 		else if (ct1 instanceof Judgment && ct2 instanceof Judgment) {
-			System.out.println("JUDGMENT");
 			Judgment j1 = (Judgment) ct1;
 			Judgment j2 = (Judgment) ct2;
 			// check if j1 is already bound to something
