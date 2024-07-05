@@ -220,6 +220,16 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		return clone;
 	}
 
-
+	/**
+	 * This method does not just return original
+	 * @return The original syntax declaration that this declaration is renaming.
+	 */
+	public SyntaxDeclaration getOriginalDeclaration() {
+		if (original instanceof RenameSyntaxDeclaration) {
+			RenameSyntaxDeclaration originalCasted = (RenameSyntaxDeclaration) original;
+			return originalCasted.getOriginalDeclaration();
+		}
+		else return original;
+	}
 
 }

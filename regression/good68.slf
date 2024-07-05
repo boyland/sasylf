@@ -24,12 +24,12 @@ judgment lorfake: c * c = c
   C * C = C
 
 theorem lor-commutative:
-  forall d1: b1 + b2 = b3
-  exists b2 + b1 = b3
+  forall d1: b1 /\ b2 = b3
+  exists b2 /\ b1 = b3
   proof by case analysis on d1:
     case rule
       --------------- lor-1
-      d2: T + b2 = T
+      d2: T /\ b2 = T
     is
 
       proof by case analysis on b2:
@@ -41,14 +41,13 @@ theorem lor-commutative:
           proof by rule lor-2
         end case
 
-
       end case analysis
 
     end case
 
     case rule
       --------------- lor-2
-      _: F + b3 = b3
+      _: F /\ b3 = b3
     is
       proof by case analysis on b3:
         case T is
@@ -60,7 +59,6 @@ theorem lor-commutative:
         end case
       end case analysis
     end case
-
 
   end case analysis
 end theorem

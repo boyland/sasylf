@@ -1,0 +1,37 @@
+package regression
+// sorted list
+module good69
+
+requires
+
+  abstract syntax e
+
+  abstract judgment compare: e <= e
+
+  abstract theorem totalcompare:
+    forall e1
+    forall e2
+    exists e1 <= e2 or e2 <= e1
+  end theorem
+
+provides
+
+  terminals empty
+
+  syntax
+
+    l ::= empty | e :: l
+
+  judgment insert: l + e = l
+
+    ----------------- insert-empty
+    empty + e = e :: empty
+
+    
+    e2 <= e1
+    ----------------- insert-cons-1
+    e1 :: l + e2 = e2 :: e1 :: l
+
+    l1 + e2 = l2
+    ----------------- insert-cons-2
+    e1 :: l1 + e2 = e1 :: l2

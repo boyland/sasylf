@@ -1,6 +1,6 @@
 package regression
 
-module pair
+module good63
 
 requires
 
@@ -51,3 +51,4 @@ provides
     rev pair1 = pair2
     ----------- pair-cong-2
     pair1 ~ pair2
+

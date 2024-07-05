@@ -27,8 +27,10 @@ provides
   end theorem
 */
 
+/*
 theorem t1:
   forall d1: e1 + e2 = e3
   exists e2 + e1 = e3
   proof by unproved
 end theorem
+*/

@@ -84,3 +84,5 @@ provides
     d1: rev <1, T> = <T, 1> by theorem t4
     proof by rule pairinstance.pair-cong-2 on d1
   end theorem
+
+module fakemodule = regression.good63[n, b, plus, land]

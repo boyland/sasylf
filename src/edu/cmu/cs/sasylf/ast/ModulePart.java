@@ -222,7 +222,12 @@ public class ModulePart extends Node implements Part, Named {
 
 				if (argResolution instanceof Syntax) {
 					Syntax argumentSyntax = (Syntax) argResolution;
-					Syntax parameterSyntax = (Syntax) parameterObject; // it will always be an instance of Syntax
+					SyntaxDeclaration parameterSyntax = (SyntaxDeclaration) parameterObject; // it will always be an instance of SyntaxDeclaration
+
+					if (argumentSyntax instanceof RenameSyntaxDeclaration) {
+						RenameSyntaxDeclaration d = (RenameSyntaxDeclaration) argumentSyntax;
+						argumentSyntax = d.getOriginalDeclaration();
+					}
 
 					// check if parameterSyntax is already bound to argumentSyntax in the map
 
@@ -239,6 +244,29 @@ public class ModulePart extends Node implements Part, Named {
 					paramToArgSyntax.put(parameterSyntax, argumentSyntax);
 
 					// TODO: if parameterSyntax is not abstract, need to check the productions of the syntaxes
+
+					if (!parameterSyntax.isAbstract()) {
+						// check that the parameterSyntax and argumentSyntax have the same number of productions
+						List<Clause> parameterProductions = parameterSyntax.getClauses();
+						
+						SyntaxDeclaration argumentSyntaxDeclaration = (SyntaxDeclaration) argumentSyntax;
+
+						List<Clause> argumentProductions = argumentSyntaxDeclaration.getClauses();
+
+						if (parameterProductions.size() != argumentProductions.size()) {
+							System.out.println("Error: The number of productions in the parameter syntax and the argument syntax do not match.");
+							System.exit(0);
+						}
+
+						// check that each pair of productions has the same structure
+
+						for (int j = 0; j < parameterProductions.size(); j++) {
+							Clause paramClause = parameterProductions.get(j);
+							Clause argClause = argumentProductions.get(j);
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
+						}
+						
+					}
 
 					sd = new SubstitutionData(parameterName, argumentName, (Syntax) argResolution);
 				}

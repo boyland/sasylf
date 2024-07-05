@@ -740,17 +740,16 @@ public class Clause extends Element implements CanBeCase {
 		}
 	}
 
-
 	public static void checkClauseSameStructure(
-		Clause c1, 
-		Clause c2,
+		Clause paramClause, 
+		Clause argClause,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment)
 	{
 
 		// ignore everything except for nonterminals
-		List<Element> c1Elements = c1.withoutTerminals();
-		List<Element> c2Elements = c2.withoutTerminals();
+		List<Element> c1Elements = paramClause.withoutTerminals();
+		List<Element> c2Elements = argClause.withoutTerminals();
 
 		if (c1Elements.size() != c2Elements.size()) {
 			// failure
