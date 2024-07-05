@@ -52,7 +52,7 @@ theorem superset-contains:
   forall d1: s1 <= s2
   forall d2: e in s1
   exists e in s2
-  proof by unproved
+  proof by unproved //!
 end theorem
 
 theorem subset-transitive:

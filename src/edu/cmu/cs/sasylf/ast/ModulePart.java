@@ -299,6 +299,51 @@ public class ModulePart extends Node implements Part, Named {
 					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment);
 
 					// TODO: if parameterJudgment is not abstract, need to check the rules of the judgments
+
+					if (!parameterJudgment.isAbstract()) {
+						// check the rules of each judgment
+						List<Rule> parameterRules = parameterJudgment.getRules();
+						List<Rule> argumentRules = argumentJudgment.getRules();
+
+						if (parameterRules.size() != argumentRules.size()) {
+							System.out.println("Error: The number of rules in the parameter judgment and the argument judgment do not match.");
+							System.exit(0);
+						}
+
+						// check that each pair of rules has the same structure
+
+						for (int j = 0; j < parameterRules.size(); j++) {
+							Rule paramRule = parameterRules.get(j);
+							Rule argRule = argumentRules.get(j);
+
+							// check the premises
+							List<Clause> paramPremises = paramRule.getPremises();
+							List<Clause> argPremises = argRule.getPremises();
+
+							if (paramPremises.size() != argPremises.size()) {
+								System.out.println("Error: The number of premises in the parameter rule and the argument rule do not match.");
+								System.exit(0);
+							}
+
+							// check that each pair of premises has the same structure
+
+							for (int k = 0; k < paramPremises.size(); k++) {
+								Clause paramPremise = paramPremises.get(k);
+								Clause argPremise = argPremises.get(k);
+								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment);
+							}
+
+							// check the conclusion
+
+							Clause paramConclusion = paramRule.getConclusion();
+							Clause argConclusion = argRule.getConclusion();
+							
+							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment);
+
+						}
+
+
+					}
 					
 					sd = new SubstitutionData(parameterName, argumentName, (Judgment) argResolution);
 				}

@@ -24,6 +24,19 @@ judgment land: b /\ b = b
   --------- land-2
   F /\ b = F
 
+judgment lor: b \/ b = b
 
-module boolmonoid = regression.good71[boolid, boolnonid, b, land]
+  --------- lor-1
+  T \/ b = T
+
+  --------- lor-2
+  F \/ b = b
+
+judgment landconcrete: b * b = b
+
+  b /\ b = b
+  ---------------- landconcrete-1
+  b * b = b
+
+module boolmonoid = regression.good71[boolid, boolnonid, b, land, landconcrete]
 
