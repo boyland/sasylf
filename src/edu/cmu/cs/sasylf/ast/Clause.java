@@ -748,7 +748,11 @@ public class Clause extends Element implements CanBeCase {
 		Map<String, String> nonTerminalMapping
 		)
 	{
-
+		
+		System.out.println("Checking same structure");
+		System.out.println("paramClause: " + paramClause);
+		System.out.println("argClause: " + argClause);
+		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
 			System.out.println("paramClause is AndClauseUse but argClause is not");
 			System.exit(0);
@@ -788,13 +792,9 @@ public class Clause extends Element implements CanBeCase {
 
 				// check if the syntax declaration of nt1 is already mapped to something
 				if (paramToArgSyntax.containsKey(nt1.getType())) {
-					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType()) {
+					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType().getOriginalDeclaration()) {
 						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
 						// failure
-						System.out.println("Clause same structure check failure 1");
-
-						System.out.println("Replacing " + nt1 + " with " + nt2 + ", but expected " + paramToArgSyntax.get(nt1.getType()));
-
 						System.exit(0);
 					}
 				}
@@ -816,7 +816,6 @@ public class Clause extends Element implements CanBeCase {
 				else {
 					nonTerminalMapping.put(paramSymbol, argSymbol);
 				}
-				
 
 			}
 

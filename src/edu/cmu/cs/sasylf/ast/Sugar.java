@@ -190,6 +190,10 @@ public class Sugar extends Syntax {
 		return gnt;
 	}
 
+	public Sugar getOriginalDeclaration() {
+		return this;
+	}
+
 	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: should we do something?

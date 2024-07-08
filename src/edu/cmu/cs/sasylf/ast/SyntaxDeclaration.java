@@ -570,6 +570,10 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
+	public SyntaxDeclaration getOriginalDeclaration() {
+		return this;
+	}
+
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
