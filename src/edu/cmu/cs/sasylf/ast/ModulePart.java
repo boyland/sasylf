@@ -342,16 +342,68 @@ public class ModulePart extends Node implements Part, Named {
 
 						}
 
-
 					}
 					
 					sd = new SubstitutionData(parameterName, argumentName, (Judgment) argResolution);
 				}
 
 				else if (argResolution instanceof Theorem) {
-					// Theorem is not yet implemented
-					System.out.println("Error: Theorem is not yet implemented in module application.");
-					System.exit(0);
+
+					Theorem argumentTheorem = (Theorem) argResolution;
+					Theorem parameterTheorem = (Theorem) parameterObject;
+
+					// make sure that the forall clauses and the exists clauses match
+
+					List<Fact> argumentForalls = argumentTheorem.getForalls();
+
+					List<Fact> parameterForalls = parameterTheorem.getForalls();
+
+					if (argumentForalls.size() != parameterForalls.size()) {
+						System.out.println("Error: The number of forall clauses in the parameter theorem and the argument theorem do not match.");
+						System.exit(0);
+					}
+
+					// check that each pair of foralls has the same structure
+
+					for (int j = 0; j < parameterForalls.size(); j++) {
+						Fact paramForall = parameterForalls.get(j);
+						Fact argForall = argumentForalls.get(j);
+						Element paramElement = paramForall.getElement();
+						Element argElement = argForall.getElement();
+						// paramElement and argElement should either both be nonterminals or both be clauses
+
+						if (paramElement instanceof Clause && argElement instanceof Clause) {
+							Clause paramClause = (Clause) paramElement;
+							Clause argClause = (Clause) argElement;
+							// check that they have the same struture
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
+						}
+
+						else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
+							NonTerminal paramNonTerminal = (NonTerminal) paramElement;
+							NonTerminal argNonTerminal = (NonTerminal) argElement;
+							if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
+								if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
+									// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
+									// failure
+									System.out.println("Clause same structure check failure 1");
+			
+									System.out.println("Replacing " + paramNonTerminal + " with " + argNonTerminal + ", but expected " + paramToArgSyntax.get(paramNonTerminal.getType()));
+			
+									System.exit(0);
+								}
+							}
+						}
+
+						// check the the exists match
+
+						Clause paramExists = (Clause) parameterTheorem.getExists();
+						Clause argExists = (Clause) argumentTheorem.getExists();
+
+						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment);
+
+					}
+
 					sd = new SubstitutionData(parameterName, argumentName, (Theorem) argResolution);
 				}
 
