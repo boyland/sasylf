@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -263,7 +264,7 @@ public class ModulePart extends Node implements Part, Named {
 						for (int j = 0; j < parameterProductions.size(); j++) {
 							Clause paramClause = parameterProductions.get(j);
 							Clause argClause = argumentProductions.get(j);
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>());
 						}
 						
 					}
@@ -296,7 +297,7 @@ public class ModulePart extends Node implements Part, Named {
 					
 					// check if the forms of the judgments have the same structure
 					
-					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment);
+					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>());
 
 					// TODO: if parameterJudgment is not abstract, need to check the rules of the judgments
 
@@ -327,10 +328,12 @@ public class ModulePart extends Node implements Part, Named {
 
 							// check that each pair of premises has the same structure
 
+							Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+
 							for (int k = 0; k < paramPremises.size(); k++) {
 								Clause paramPremise = paramPremises.get(k);
 								Clause argPremise = argPremises.get(k);
-								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment);
+								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 							}
 
 							// check the conclusion
@@ -338,7 +341,7 @@ public class ModulePart extends Node implements Part, Named {
 							Clause paramConclusion = paramRule.getConclusion();
 							Clause argConclusion = argRule.getConclusion();
 							
-							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment);
+							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 
 						}
 
@@ -372,11 +375,13 @@ public class ModulePart extends Node implements Part, Named {
 						Element argElement = argForall.getElement();
 						// paramElement and argElement should either both be nonterminals or both be clauses
 
+						Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+
 						if (paramElement instanceof Clause && argElement instanceof Clause) {
 							Clause paramClause = (Clause) paramElement;
 							Clause argClause = (Clause) argElement;
 							// check that they have the same struture
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 						}
 
 						else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
@@ -400,7 +405,7 @@ public class ModulePart extends Node implements Part, Named {
 						Clause paramExists = (Clause) parameterTheorem.getExists();
 						Clause argExists = (Clause) argumentTheorem.getExists();
 
-						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment);
+						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 
 					}
 

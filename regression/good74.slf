@@ -38,10 +38,25 @@ theorem bool-right-id:
   proof by unproved
 end theorem
 
+theorem bool-commutative:
+  forall d: b1 \/ b2 = b3
+  exists b2 \/ b1 = b3
+  proof by unproved
+end theorem
+
+theorem bool-trivial:
+  forall d: b1 \/ b2 = b3
+  exists b1 \/ b2 = b3
+  proof by unproved
+end theorem
+
 module boolmonoid = regression.good73[boolid, 
   boolnonid,
   b,
   lor,
   bool-left-id,
-  bool-right-id
+  bool-right-id,
+  bool-commutative,
+  bool-trivial
 ]
+

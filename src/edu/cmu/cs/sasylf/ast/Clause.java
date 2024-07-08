@@ -744,9 +744,21 @@ public class Clause extends Element implements CanBeCase {
 		Clause paramClause, 
 		Clause argClause,
 		Map<Syntax, Syntax> paramToArgSyntax,
-		Map<Judgment, Judgment> paramToArgJudgment)
+		Map<Judgment, Judgment> paramToArgJudgment,
+		Map<String, String> nonTerminalMapping
+		)
 	{
 
+		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
+			System.out.println("paramClause is AndClauseUse but argClause is not");
+			System.exit(0);
+		}
+
+		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
+			System.out.println("paramClause is OrClauseUse but argClause is not");
+			System.exit(0);
+		}
+		
 		// make sure that the types of the clauses match
 
 		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
@@ -790,24 +802,38 @@ public class Clause extends Element implements CanBeCase {
 				else {
 					paramToArgSyntax.put(nt1.getType(), nt2.getType());
 				}
+
+				// make sure that the nonterminal mapping is consistent
+				
+				String paramSymbol = nt1.getSymbol();
+				String argSymbol = nt2.getSymbol();
+
+				if (nonTerminalMapping.containsKey(paramSymbol)) {
+					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
+						System.out.println("Nonterminals don't match when typechecking module. Expected " + nonTerminalMapping.get(paramSymbol) + " but got " + argSymbol);
+					}
+				}
+				else {
+					nonTerminalMapping.put(paramSymbol, argSymbol);
+				}
+				
+
 			}
 
 			// if they are both clauses, recursively call this function
 
 			else if (e1 instanceof Clause && e2 instanceof Clause) {
+
 				Clause e1c = (Clause) e1;
 				Clause e2c = (Clause) e2;
-				checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment);
+
+				checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 			}
 
 			// TODO: implement the other cases for the other types of elements
 
 			else {
 				System.out.println("Clause same structure check failure 2");
-
-				System.out.println("e1 class: " + e1.getClass());
-				System.out.println("e2 class: " + e2.getClass());
-				
 				System.exit(0);
 			}
 
