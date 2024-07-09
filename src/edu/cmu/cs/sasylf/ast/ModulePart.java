@@ -275,7 +275,7 @@ public class ModulePart extends Node implements Part, Named {
 				else if (argResolution instanceof Judgment) {
 
 					
-					Judgment argumentJudgment = (Judgment) argResolution;
+					Judgment argumentJudgment = ((Judgment) argResolution).getOriginalDeclaration();
 					Judgment parameterJudgment = (Judgment) parameterObject; // it will always be an instance of Judgment
 
 					// check if parameterJudgment is already bound to argumentJudgment in the map
@@ -347,7 +347,7 @@ public class ModulePart extends Node implements Part, Named {
 
 					}
 					
-					sd = new SubstitutionData(parameterName, argumentName, (Judgment) argResolution);
+					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment);
 				}
 
 				else if (argResolution instanceof Theorem) {

@@ -209,6 +209,10 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 	}
 
+	public Judgment getOriginalDeclaration() {
+		return this;
+	}
+
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);

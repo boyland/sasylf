@@ -118,6 +118,7 @@ public abstract class Term implements Cloneable{
 			Util.debug("Was trying to unify ",this," and ", t);
 			throw ex;
 		}
+
 		// a free variable in the input to unify() should not, in its substitution result, have any free bound variables
 		Set<FreeVar> freeVars = getFreeVariables();
 		freeVars.addAll(t.getFreeVariables());
@@ -129,6 +130,7 @@ public abstract class Term implements Cloneable{
 				throw new UnificationFailed("illegal variable binding in result: " + substituted + " for " + v + "\n" + current);
 			}
 		}
+
 		if (!unusable.isEmpty()) {
 			// restructure set as map:
 			Map<FreeVar,Set<Integer>> map = new HashMap<FreeVar,Set<Integer>>();
@@ -185,10 +187,12 @@ public abstract class Term implements Cloneable{
 	/** picks first pair and calls unifyCase
 	 */
 	static final void unifyHelper(Substitution current, Queue<Pair<Term,Term>> worklist) {
+
 		if (debugCount++ == 30)
 			debug2("in loop");
 		Pair<Term,Term> p = worklist.poll();
 		if (p != null) {
+
 			if (!typesCompatible(p.first.getType(new ArrayList<Pair<String,Term>>()), p.second.getType(new ArrayList<Pair<String,Term>>()))) {
 				debug("tried to unify ", p.first.substitute(current), " with ", p.second.substitute(current)," but types didn't match:");
 				debug("\ttypes were ", p.first.getType(new ArrayList<Pair<String,Term>>()), " and ", p.second.getType(new ArrayList<Pair<String,Term>>()));
@@ -228,10 +232,15 @@ public abstract class Term implements Cloneable{
 
 	/** true if there's hope these types might ever be unified */
 	protected static boolean typesCompatible(Term type, Term type2) {
-		if (type == Constant.UNKNOWN_TYPE || type2 == Constant.UNKNOWN_TYPE)
+
+		if (type == Constant.UNKNOWN_TYPE || type2 == Constant.UNKNOWN_TYPE) {
 			return true;
-		if (type instanceof Abstraction && type.countLambdas() == type2.countLambdas())
+		}
+			
+		if (type instanceof Abstraction && type.countLambdas() == type2.countLambdas()) {
 			return true;
+		}
+
 		return type.equals(type2);
 	}
 

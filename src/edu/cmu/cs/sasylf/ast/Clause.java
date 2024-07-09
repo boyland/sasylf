@@ -749,10 +749,6 @@ public class Clause extends Element implements CanBeCase {
 		)
 	{
 		
-		System.out.println("Checking same structure");
-		System.out.println("paramClause: " + paramClause);
-		System.out.println("argClause: " + argClause);
-		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
 			System.out.println("paramClause is AndClauseUse but argClause is not");
 			System.exit(0);

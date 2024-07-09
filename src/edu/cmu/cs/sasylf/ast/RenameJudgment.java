@@ -104,13 +104,26 @@ public class RenameJudgment extends Judgment {
 
 	@Override
 	protected Constant computeTypeTerm() {
-		if (original != null) return original.typeTerm();
+		if (original != null) {
+			return original.typeTerm();
+		}
 		return super.computeTypeTerm();
 	}
 
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
+	}
+
+	@Override
+	public Judgment getOriginalDeclaration() {
+		if (original instanceof RenameJudgment) {
+			RenameJudgment rj = (RenameJudgment) original;
+			return rj.getOriginalDeclaration();
+		}
+		else {
+			return original;
+		}
 	}
 
 	@Override
