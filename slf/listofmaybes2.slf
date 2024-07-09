@@ -1,0 +1,41 @@
+package slf
+
+module listofmaybes2
+
+provides
+
+terminals T F Nothing Just empty
+
+syntax b ::= T | F
+
+module maybe = slf.maybe[b]
+
+syntax m = maybe.m ::= Nothing | Just b
+
+judgment alt = maybe.alternative : m || m = m
+
+module fs = slf.foldableset[m, alt]
+
+syntax s = fs.s ::= empty | m :: s
+
+judgment fold = fs.fold : s --> m
+
+theorem t3:
+  exists Just T :: Just F :: empty --> Just T
+  d1 : Just F :: empty --> Just F by rule fs.fold-empty
+  d2: Just T || Just F = Just T by theorem maybe.alt-thm
+  d3 : (Just T :: (Just F :: empty)) --> Just T by rule fs.fold-nonempty on d1, d2
+  proof by d3
+end theorem
+
+theorem t1: 
+  exists Nothing :: empty --> Nothing
+  d : Nothing :: empty --> Nothing by rule fs.fold-empty
+  proof by d
+end theorem
+
+theorem t2:
+  forall m
+  exists m :: empty --> m
+  proof by rule fs.fold-empty
+end theorem

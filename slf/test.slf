@@ -4,41 +4,27 @@ module test
 
 provides
 
-  terminals S empty
 
-  syntax n ::= 0 | S n
+terminals T F
 
-  judgment natcombine : n + n = n
+syntax b ::= T | F
 
-    ---------- natcombine-z
-    0 + n = n
+judgment bleq: b <= b
 
-    n1 + n2 = n3
-    ----------------- natcombine-s
-    S n1 + n2 = S n3
+  ---- bleq-1
+  T <= T
 
-  module natfoldableset = slf.foldableset[n, natcombine]
+  ---- bleq-2
+  F <= F
 
-  syntax ss = natfoldableset.s ::= empty | n :: ss
-  
-  judgment natfoldset = natfoldableset.foldset : ss -> n
+  ---- bleq-3
+  F <= T
 
-  theorem natfoldone:
-    forall n
-    exists n :: empty -> n
-    proof by theorem natfoldableset.foldone on n
-  end theorem
+theorem total-bleq:
+  forall b1
+  forall b2
+  exists b1 <= b2 or b2 <= b1
+  proof by unproved
+end theorem
 
-  theorem natfoldtwo:
-    forall d: n1 + n2 = n3
-    exists n1 :: n2 :: empty -> n3
-
-    proof by theorem natfoldableset.foldtwo on d
-  end theorem
-
-  theorem t1:
-    forall d: n1 + n2 = n3
-    exists n1 + n2 = n3
-    proof by theorem natfoldableset.trivial on d
-  end theorem
-
+module boolpo = slf.po[b, bleq, total-bleq]

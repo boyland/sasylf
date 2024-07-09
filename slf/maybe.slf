@@ -6,28 +6,22 @@ requires
 
   abstract syntax e
 
-  abstract judgment combine: e + e = e
-
 provides
 
   terminals Nothing Just
 
-  syntax Maybe ::= Nothing | Just e
+  syntax m ::= Nothing | Just e
 
-  judgment penetrate: Maybe + Maybe = Maybe
+  judgment alternative: m || m = m
 
-    ----------------------- penetrate-Nothing-Left
-    Nothing + Maybe = Nothing
+    ------------- alternative-1
+    Nothing || m = m
 
-    ----------------------- penetrate-Nothing-Right
-    Maybe + Nothing = Nothing
-    
+    ------------- alternative-2
+    Just e || m = Just e
 
-    e1 + e2 = e3
-    ----------------------- penetrate-Just
-    Just e1 + Just e2 = Just e3
-
-  theorem nothing-both-sides:
-    exists Nothing + Nothing = Nothing
-    proof by rule penetrate-Nothing-Left
+  theorem alt-thm: 
+    forall e
+    exists Just e || m = Just e
+    proof by rule alternative-2
   end theorem
