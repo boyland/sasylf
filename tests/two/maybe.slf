@@ -1,0 +1,14 @@
+package tests.two
+
+module maybe
+
+requires
+
+abstract syntax e
+
+provides
+
+terminals None Some
+
+syntax m ::= None | Some e
+

@@ -1,0 +1,16 @@
+package tests.two
+
+module demo
+
+provides
+
+terminals T F S Left Right
+
+syntax b ::= T | F
+
+syntax n ::= 0 | S n
+
+module boolnateither = tests.two.either[b, n]
+
+syntax e = boolnateither.e ::= Left b | Right n
+

@@ -1,0 +1,22 @@
+package tests.two
+
+module maybeofeither
+
+requires
+
+abstract syntax a
+abstract syntax b
+
+provides
+
+terminals None Some Left Right
+
+module eithermodule = tests.two.either[a, b]
+
+syntax e = eithermodule.e ::= Left a | Right b
+
+module maybemodule = tests.two.maybe[e]
+
+syntax m = maybemodule.m ::= None | Some e
+
+// m is a maybe of either (a, b)
