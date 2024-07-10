@@ -708,7 +708,7 @@ public class Clause extends Element implements CanBeCase {
 			if (e instanceof NonTerminal) {
 				NonTerminal nt = (NonTerminal) e;
 				// check if it has the same name as the one we are substituting for
-				if (sd.containsSyntaxReplacementFor(nt.getSymbol())) {
+				if (sd.containsSyntaxReplacementFor(nt)) {
 					// get the filler characters
 					String fillerCharacters;
 

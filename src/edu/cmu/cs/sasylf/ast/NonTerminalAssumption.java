@@ -58,7 +58,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 
 		// check if we should substitute for the nonTerminal
 
-		if (sd.containsSyntaxReplacementFor(nonTerminal.getSymbol())) {
+		if (sd.containsSyntaxReplacementFor(nonTerminal)) {
 			// make a clone of the replacing NonTerminal and update the name of it with the filler characters
 			// get the filler characters
 			String fillerCharacters;

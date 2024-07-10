@@ -9,11 +9,11 @@ abstract syntax b
 
 provides
 
-terminals None Some Left Right
+terminals None Some Leftt Rightt
 
 module eithermodule = tests.two.either[a, b]
 
-syntax e = eithermodule.e ::= Left a | Right b
+syntax e = eithermodule.e ::= Leftt a | Rightt b
 
 module maybemodule = tests.two.maybe[e]
 

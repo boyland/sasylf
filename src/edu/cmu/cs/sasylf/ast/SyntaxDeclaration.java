@@ -65,7 +65,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	@Override
 	public boolean isAbstract() { return isAbstract; }
 
-	private List<Clause> elements; // productions
+	public List<Clause> elements; // productions
 	private NonTerminal nonTerminal;
 	private Set<String> alternates;
 	private Variable variable;
@@ -695,7 +695,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			clone.context = (ClauseDef) context.copy(cd);
 		}
 
-		clone.term = clone.term.copy(cd);
+		if (clone.term != null) clone.term = clone.term.copy(cd);
 
 		clone.gnt = clone.gnt.copy(cd);
 

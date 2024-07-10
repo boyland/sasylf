@@ -186,8 +186,6 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	}
 
 	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
 		super.substitute(sd);
 
 		/*
@@ -197,9 +195,6 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 		if (source != null) source.substitute(sd);
 		if (original != null) original.substitute(sd);
-
-
-		System.out.println("original is now: " + original);
 
 	}
 

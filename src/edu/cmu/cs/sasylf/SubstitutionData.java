@@ -18,6 +18,7 @@ public class SubstitutionData {
   private final Syntax newSyntax;
   private final Judgment newJudgment;
   private final Theorem newTheorem;
+  public final SyntaxDeclaration oldSyntax;
   public final SubstitutionType substitutionType;
 
   // TODO: Use bounded (Node) parametric polymorphism in this class
@@ -26,13 +27,14 @@ public class SubstitutionData {
     SYNTAX, JUDGMENT, THEOREM
   }
 
-  public SubstitutionData(String from, String to, Syntax newSyntax) {
+  public SubstitutionData(String from, String to, Syntax newSyntax, SyntaxDeclaration oldSyntax) {
     set = new IdentityHashMap<>();
     this.from = from;
     this.to = to;
     this.newSyntax = newSyntax;
     this.newJudgment = null;
     this.newTheorem = null;
+    this.oldSyntax = oldSyntax;
     substitutionType = SubstitutionType.SYNTAX;
   }
 
@@ -43,6 +45,7 @@ public class SubstitutionData {
     this.newSyntax = null;
     this.newJudgment = newJudgment;
     this.newTheorem = null;
+    this.oldSyntax = null;
     substitutionType = SubstitutionType.JUDGMENT;
   }
 
@@ -53,6 +56,7 @@ public class SubstitutionData {
     this.newSyntax = null;
     this.newJudgment = null;
     this.newTheorem = newTheorem;
+    this.oldSyntax = null;
     substitutionType = SubstitutionType.THEOREM;
   }
 
@@ -60,8 +64,19 @@ public class SubstitutionData {
     return sameName(this.from, s);
   }
 
-  public boolean containsSyntaxReplacementFor(String from) {
+  public boolean containsSyntaxReplacementForByString(String from) {
     return sameName(this.from, from) && newSyntax != null;
+  }
+
+  public boolean containsSyntaxReplacementFor(NonTerminal nt) {
+
+    // check that they have the "same name" that nt's type is abstract
+
+    //return sameName(this.from, nt.getSymbol()) && nt.getType().isAbstract();
+    
+    return containsSyntaxReplacementForByString(nt.getSymbol()) && nt.getType().isAbstract();
+
+    //return nt.getType().equals(oldSyntax);
   }
 
   public boolean containsJudgmentReplacementFor(String from) {

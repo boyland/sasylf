@@ -8,7 +8,11 @@ abstract syntax e
 
 provides
 
-terminals None Some
+terminals None Some ismaybe
 
 syntax m ::= None | Some e
 
+judgment ismaybe: ismaybe m
+
+  --------- ismaybe
+  ismaybe m

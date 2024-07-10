@@ -26,7 +26,7 @@ public class GrmNonTerminal implements NonTerminal {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		if (sd.containsSyntaxReplacementFor(string)) {
+		if (sd.containsSyntaxReplacementForByString(string)) {
 			string = sd.to;
 		}
 	}

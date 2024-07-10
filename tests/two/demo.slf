@@ -4,13 +4,15 @@ module demo
 
 provides
 
-terminals T F S Left Right
+terminals T F S Left Right None Some
 
 syntax b ::= T | F
 
 syntax n ::= 0 | S n
 
-module boolnateither = tests.two.either[b, n]
+module maybeofeitherboolnat = tests.two.maybeofeither[b, n]
 
-syntax e = boolnateither.e ::= Left b | Right n
+syntax e = maybeofeitherboolnat.e ::= Left b | Right n
+
+
 

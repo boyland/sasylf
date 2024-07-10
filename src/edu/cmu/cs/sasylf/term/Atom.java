@@ -54,7 +54,7 @@ public abstract class Atom extends Term implements Cloneable {
 
 		// need to substitute for name
 
-		if (sd.containsSyntaxReplacementFor(name)) {
+		if (sd.containsSyntaxReplacementForByString(name)) {
 			System.out.println("WARNING: contains syntax replacement in Atom.substitute");
 		}
 
