@@ -420,6 +420,9 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				newModule.substitute(sd);
+
+				System.out.println("After substituting " + parameterName + " with " + argumentName + ":");
+				System.out.println(newModule);
 			}
 			newModule.moduleName = name;
 			ctx.modMap.put(name, newModule); 
@@ -467,6 +470,29 @@ public class ModulePart extends Node implements Part, Named {
 	public void substitute(SubstitutionData sd) {
 		// Do nothing
 		// TODO: I'm pretty sure that nothing should be done here
+
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (QualName argument : arguments) {
+
+			/*
+				If
+					1. argument.source == null
+					2. argument.name == sd.from
+
+				that means that argument is the argument that we want to substitute for
+				Therefore, replace set argument.name to sd.to
+				Also, set argument.resolution to null because we changed the name, so it points to something else now
+			*/
+
+			if (argument.getSource() == null && argument.getName().equals(sd.from)) {
+				argument.setName(sd.to);
+				argument.nullifyResolution();
+			}
+
+		}
+
 	}
 
 	public ModulePart copy(CloneData cd) {

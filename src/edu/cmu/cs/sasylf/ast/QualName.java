@@ -28,9 +28,16 @@ public class QualName extends Node {
 	private Object resolution;
 	private int version;
 
-
 	public String getName() {
 		return name;
+	}
+
+	public void nullifyResolution() {
+		resolution = null;
+	}
+
+	public void setName(String newName) {
+		name = newName;
 	}
 	
 	/**
