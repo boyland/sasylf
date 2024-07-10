@@ -9,7 +9,7 @@ abstract syntax b
 
 provides
 
-terminals None Some Leftt Rightt
+terminals None Some Leftt Rightt ismaybe
 
 module eithermodule = tests.two.either[a, b]
 
@@ -20,3 +20,8 @@ module maybemodule = tests.two.maybe[e]
 syntax m = maybemodule.m ::= None | Some e
 
 // m is a maybe of either (a, b)
+
+judgment ismaybe: ismaybe m
+
+  ---------- ismaybe-1
+  ismaybe m
