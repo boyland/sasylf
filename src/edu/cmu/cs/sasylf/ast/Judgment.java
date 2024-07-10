@@ -231,6 +231,8 @@ public class Judgment extends Node implements ClauseType, Named {
 		// We are not substituting the name
 
 		form.substitute(sd);
+
+		term = null;
 			
 		if (assume != null) {
 			assume.substitute(sd);
@@ -266,6 +268,8 @@ public class Judgment extends Node implements ClauseType, Named {
 		clone.rules = newRules;
 		
 		clone.form = form.copy(cd);
+
+		clone.term = null;
 
 		if (clone.assume != null) {
 			clone.assume = (NonTerminal) assume.copy(cd);

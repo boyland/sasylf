@@ -12,7 +12,7 @@ provides
 terminals None Some Leftt Rightt ismaybe
 
 module eithermodule = tests.two.either[a, b]
-
+e
 syntax e = eithermodule.e ::= Leftt a | Rightt b
 
 module maybemodule = tests.two.maybe[e]

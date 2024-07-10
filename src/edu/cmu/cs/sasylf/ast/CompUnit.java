@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.NullModuleFinder;
+import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -176,62 +177,6 @@ public class CompUnit extends Node implements Module {
 			}
 		}
 
-		// debugging
-
-		/*
-		if (!moduleName.equals("listofmaybes")) return;
-
-		// get the fold judgment
-
-		Judgment altJudgment = null;
-		Judgment foldJudgment = null;
-
-		for (Part p : parts) {
-			if (p instanceof JudgmentPart) {
-				JudgmentPart jp = (JudgmentPart)p;
-				for (Judgment j : jp.getJudgments()) {
-					if (j.getName().equals("alt")) {
-						altJudgment = j;
-					}
-					if (j.getName().equals("fold")) {
-						foldJudgment = j;
-					}
-				}
-			}
-		}
-
-		if (altJudgment == null) {
-			System.out.println("altJudgment is null");
-		}
-
-		if (foldJudgment == null) {
-			System.out.println("foldJudgment is null");
-		}
-
-		// get fold-nonempty
-
-		Rule foldNonempty = null;
-
-		for (Rule r : foldJudgment.getRules()) {
-			if (r.getName().equals("fold-nonempty")) {
-				foldNonempty = r;
-				break;
-			}
-		}
-
-		// get the second premise
-
-		Clause secondPremise = foldNonempty.getPremises().get(1);
-		
-		// get the type of it
-
-		ClauseType secondPremiseType = secondPremise.getType();
-
-		System.out.println("secondPremiseType: " + secondPremiseType);
-
-		System.out.println("secondPremise.asTerm(): " + secondPremise.asTerm());
-
-		*/
 	}
 
 	private void checkFilename(ModuleId id) {

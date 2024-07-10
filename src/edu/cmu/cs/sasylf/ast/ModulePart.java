@@ -420,15 +420,13 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				newModule.substitute(sd);
-
-				System.out.println("After substituting " + parameterName + " with " + argumentName + ":");
-				System.out.println(newModule);
 			}
 			newModule.moduleName = name;
 			ctx.modMap.put(name, newModule); 
 			Context.updateVersion();
 
 		}
+
 	}
 
 	@Override
