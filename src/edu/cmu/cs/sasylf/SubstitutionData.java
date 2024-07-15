@@ -19,6 +19,7 @@ public class SubstitutionData {
   private final Judgment newJudgment;
   private final Theorem newTheorem;
   public final SyntaxDeclaration oldSyntax;
+  public final Judgment oldJudgment;
   public final SubstitutionType substitutionType;
 
   // TODO: Use bounded (Node) parametric polymorphism in this class
@@ -35,10 +36,11 @@ public class SubstitutionData {
     this.newJudgment = null;
     this.newTheorem = null;
     this.oldSyntax = oldSyntax;
+    this.oldJudgment = null;
     substitutionType = SubstitutionType.SYNTAX;
   }
 
-  public SubstitutionData(String from, String to, Judgment newJudgment) {
+  public SubstitutionData(String from, String to, Judgment newJudgment, Judgment oldJudgment) {
     set = new IdentityHashMap<>();
     this.from = from;
     this.to = to;
@@ -46,6 +48,7 @@ public class SubstitutionData {
     this.newJudgment = newJudgment;
     this.newTheorem = null;
     this.oldSyntax = null;
+    this.oldJudgment = oldJudgment;
     substitutionType = SubstitutionType.JUDGMENT;
   }
 
@@ -57,6 +60,7 @@ public class SubstitutionData {
     this.newJudgment = null;
     this.newTheorem = newTheorem;
     this.oldSyntax = null;
+    this.oldJudgment = null;
     substitutionType = SubstitutionType.THEOREM;
   }
 

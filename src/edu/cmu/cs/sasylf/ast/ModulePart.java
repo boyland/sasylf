@@ -83,93 +83,6 @@ public class ModulePart extends Node implements Part, Named {
 			// TODO: Add more checking here for casting safety
 			CompUnit functor = (CompUnit) resolution;
 
-
-
-
-
-
-			// begin debugging
-
-
-			// get the e parameter
-			/*
-			SyntaxDeclaration e = null;
-
-			for (Part p : functor.getParams()) {
-				if (p instanceof SyntaxPart) {
-					SyntaxPart sp = (SyntaxPart) p;
-					for (Syntax s : sp.getSyntax()) {
-						if (!(s instanceof SyntaxDeclaration)) continue;
-						SyntaxDeclaration sd = (SyntaxDeclaration) s;
-						if (sd.getName().equals("e")) {
-							e = sd;
-						}
-					}
-				}
-			}
-
-			// get the id constructor from the e grammar
-
-			Clause idClause = e.getClauses().get(0);
-			Element idNonTerminalFromSyntax = idClause.getElements().get(0);
-
-
-			// get the fold judgment
-
-			Judgment foldd = null;
-
-			for (Part p : functor.getParts()) {
-				if (p instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) p;
-					for (Judgment j : jp.getJudgments()) {
-						if (j.getName().equals("fold")) {
-							foldd = j;
-						}
-					}
-				}
-			}
-
-			// get the fold-leaf rule from the fold judgment
-
-			Rule foldLeaff = foldd.getRules().get(0);
-
-			// print them
-			
-			// get the id element in the conclusion of the fold-leaf rule
-
-			Clause foldLeafConclusionn = foldLeaff.getConclusion();
-
-			Element idNonTerminalFromJudgment = foldLeafConclusionn.getElements().get(4);
-			
-			// print them and their hashes
-
-			System.out.println("idNonTerminalFromSyntax: " + idNonTerminalFromSyntax);
-			System.out.println("idNonTerminalFromJudgment: " + idNonTerminalFromJudgment);
-
-			System.out.println("idNonTerminalFromSyntax hash: " + idNonTerminalFromSyntax.hashCode());
-			System.out.println("idNonTerminalFromJudgment hash: " + idNonTerminalFromJudgment.hashCode());
-			System.out.println("==: " + (idNonTerminalFromSyntax == idNonTerminalFromJudgment));
-			System.out.println("equals: " + idNonTerminalFromSyntax.equals(idNonTerminalFromJudgment));
-		
-
-
-			foldLeafConclusionn.getElements().set(4, idNonTerminalFromSyntax);
-			
-
-
-
-			*/
-			// end debugging
-
-
-
-
-
-			
-
-
-
-
 			// check that the number of parameters and arguments is the same
 
 			// get the parameters of the functor
@@ -443,7 +356,7 @@ public class ModulePart extends Node implements Part, Named {
 
 					}
 					
-					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment);
+					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment, parameterJudgment);
 				}
 
 				else if (argResolution instanceof Theorem) {

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.SubstitutionData.SubstitutionType;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -445,36 +446,48 @@ public class ClauseDef extends Clause {
 		// find the index of the ClauseDef with the same consName
 
 		
-		if (sd.substitutionType != SubstitutionData.SubstitutionType.SYNTAX) return;
+		if (sd.substitutionType == SubstitutionData.SubstitutionType.SYNTAX) {
 
-		int indexOfClauseDef = -1;
+			int indexOfClauseDef = -1;
 
-		for (int i = 0; i < sd.oldSyntax.getClauses().size(); i++) {
-			Clause c = sd.oldSyntax.getClauses().get(i);
-			if (!(c instanceof ClauseDef)) {
-				continue;
+			for (int i = 0; i < sd.oldSyntax.getClauses().size(); i++) {
+				Clause c = sd.oldSyntax.getClauses().get(i);
+				if (!(c instanceof ClauseDef)) {
+					continue;
+				}
+				ClauseDef cd = (ClauseDef) c;
+				if (cd.consName.equals(consName)) {
+					indexOfClauseDef = i;
+					break;
+				}
+
 			}
-			ClauseDef cd = (ClauseDef) c;
-			if (cd.consName.equals(consName)) {
-				indexOfClauseDef = i;
-				break;
+
+			if (indexOfClauseDef == -1) return;
+
+			// get the ClauseDef with the same index in the new Syntax
+
+			SyntaxDeclaration newSyntax = sd.getSyntaxReplacement().getOriginalDeclaration();
+			Clause newClause = newSyntax.getClauses().get(indexOfClauseDef);
+			if (!(newClause instanceof ClauseDef)) {
+				System.out.println("Error: ClauseDef not found in new syntax");
+				System.exit(1);
 			}
+			ClauseDef newClauseDef = (ClauseDef) newClause;
 
+			consName = newClauseDef.consName;
 		}
-
-		if (indexOfClauseDef == -1) return;
-
-		// get the ClauseDef with the same index in the new Syntax
-
-		SyntaxDeclaration newSyntax = sd.getSyntaxReplacement().getOriginalDeclaration();
-		Clause newClause = newSyntax.getClauses().get(indexOfClauseDef);
-		if (!(newClause instanceof ClauseDef)) {
-			System.out.println("Error: ClauseDef not found in new syntax");
-			System.exit(1);
+		
+		else if (sd.substitutionType == SubstitutionType.JUDGMENT) {
+			// get the ClauseDef from the judgment
+			Clause newClause = sd.getJudgmentReplacement().getForm();
+			if (!(newClause instanceof ClauseDef)) {
+				System.out.println("Error: ClauseDef not found in new judgment");
+				System.exit(1);
+			}
+			ClauseDef cd = (ClauseDef) newClause;
+			consName = cd.consName;
 		}
-		ClauseDef newClauseDef = (ClauseDef) newClause;
-
-		consName = newClauseDef.consName;
 
 	}
 
