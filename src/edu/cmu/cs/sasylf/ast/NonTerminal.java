@@ -109,16 +109,6 @@ public class NonTerminal extends Element implements Cloneable {
 		} else
 			out.print(symbol);
 
-
-		//out.print("(" + super.hashCode() + ")");
-		//out.print("(" + type.hashCode() + ")");
-
-		if (type == null) {
-			out.print("/*null*/");
-		} else {
-			out.print("/*" + type.hashCode() + "*/");
-		}
-
 	}
 
 	/**

@@ -119,11 +119,7 @@ public abstract class Element extends Node {
 			
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
 			if (this instanceof ClauseDef) {
-				System.out.println("Computed term for " + this + " is " + term);
-				System.out.println("j");
-				System.out.println("hash is: " + this.hashCode());
 				if (computedMap.containsKey(this)) {
-					System.out.println("Already computed term for " + this);
 				} else {
 					computedMap.put((ClauseDef)this, true);
 				}

@@ -19,5 +19,5 @@ judgment foldbool = boolbt.fold : bt --> b
 theorem t1:
   exists Leaf --> boolid
   d1: Leaf --> boolid by rule boolbt.fold-leaf
-  proof by unproved
+  proof by d1
 end theorem

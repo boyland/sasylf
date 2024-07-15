@@ -38,12 +38,6 @@ public class ClauseDef extends Clause {
 		if (cName != null) {
 			consName = cName;
 		} else {
-
-			System.out.println("Making");
-			//System.out.println("copy = " + copy);
-			System.out.println("type = " + type.getName());
-
-
 			consName = "C";
 			for (Element e : getElements()) {
 				if (e instanceof Terminal) {
@@ -53,11 +47,7 @@ public class ClauseDef extends Clause {
 					//}
 				} 
 			}
-			consName = uniqueify(consName);
-
-			System.out.println("result: " + consName);			
-
-			
+			consName = uniqueify(consName);			
 		}
 		for (Element e : getElements()) {
 			if (e instanceof Clause) {
@@ -414,6 +404,7 @@ public class ClauseDef extends Clause {
 	
 	@Override
 	public void substitute(SubstitutionData sd) {
+
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
@@ -438,7 +429,6 @@ public class ClauseDef extends Clause {
 				}
 			}
 			else if (type instanceof SyntaxDeclaration) {
-				
 				SyntaxDeclaration syntaxDeclaration = (SyntaxDeclaration) type;
 				if (sd.containsSyntaxReplacementFor(syntaxDeclaration.getNonTerminal())) {
 					type = (SyntaxDeclaration) sd.getSyntaxReplacement();
@@ -450,9 +440,46 @@ public class ClauseDef extends Clause {
 		if (assumptionRule != null) {
 			assumptionRule.substitute(sd);
 		}
+
+		// if we are substituting Syntax, substitute for consName
+		// find the index of the ClauseDef with the same consName
+
+		
+		if (sd.substitutionType != SubstitutionData.SubstitutionType.SYNTAX) return;
+
+		int indexOfClauseDef = -1;
+
+		for (int i = 0; i < sd.oldSyntax.getClauses().size(); i++) {
+			Clause c = sd.oldSyntax.getClauses().get(i);
+			if (!(c instanceof ClauseDef)) {
+				continue;
+			}
+			ClauseDef cd = (ClauseDef) c;
+			if (cd.consName.equals(consName)) {
+				indexOfClauseDef = i;
+				break;
+			}
+
+		}
+
+		if (indexOfClauseDef == -1) return;
+
+		// get the ClauseDef with the same index in the new Syntax
+
+		SyntaxDeclaration newSyntax = sd.getSyntaxReplacement().getOriginalDeclaration();
+		Clause newClause = newSyntax.getClauses().get(indexOfClauseDef);
+		if (!(newClause instanceof ClauseDef)) {
+			System.out.println("Error: ClauseDef not found in new syntax");
+			System.exit(1);
+		}
+		ClauseDef newClauseDef = (ClauseDef) newClause;
+
+		consName = newClauseDef.consName;
+
 	}
 
 	public ClauseDef copy(CloneData cd) {
+
 		if (cd.containsCloneFor(this)) return (ClauseDef) cd.getCloneFor(this);
 		ClauseDef clone = (ClauseDef) super.copy(cd);
 

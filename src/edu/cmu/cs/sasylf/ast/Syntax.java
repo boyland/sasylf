@@ -75,7 +75,7 @@ public abstract class Syntax extends Node {
 	 */
 	public void checkSubordination() {}
 
-	public abstract Syntax getOriginalDeclaration();
+	public abstract SyntaxDeclaration getOriginalDeclaration();
 
 	public abstract void substitute(SubstitutionData sd);
 

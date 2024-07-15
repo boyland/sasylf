@@ -520,46 +520,6 @@ public class ModulePart extends Node implements Part, Named {
 			ctx.modMap.put(name, newModule); 
 			Context.updateVersion();
 
-			// debugging
-
-			// get the boolid from fold-leaf
-			/*
-			Judgment fold = null;
-
-			for (Part p : newModule.getParts()) {
-				if (p instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) p;
-					for (Judgment j : jp.getJudgments()) {
-						if (j.getName().equals("fold")) {
-							fold = j;
-						}
-					}
-				}
-			}
-
-			if (fold == null) {
-				System.out.println("Error: Could not find fold-leaf judgment in module.");
-				System.exit(1);
-			}
-
-			System.out.println("fold-leaf: " + fold);
-			
-			Rule foldLeaf = fold.getRules().get(0);
-
-			System.out.println("fold-leaf rule: " + foldLeaf);
-
-			Clause foldLeafConclusion = foldLeaf.getConclusion();
-
-			Element boolidElement = foldLeafConclusion.getElements().get(4);
-
-			System.out.println("term: " + boolidElement.asTerm());
- 		*/
-
-
-		System.out.println("             [[[[New Module]]]]\n\n\n\n");
-		System.out.println(newModule);
-
-
 		}
 
 	}

@@ -52,7 +52,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 		alternates = new TreeSet<String>();
 		alternates.add(Util.stripId(nonTerminal.getSymbol()));
-	}
+	}  
 
 	public SyntaxDeclaration(Location loc, NonTerminal nt) {
 		this(loc,nt,Collections.<Clause>emptyList());
@@ -675,10 +675,11 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			private boolean isProductive;
 			private Status isProductiveStatus = Status.NOTSTARTED;
 			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
-		*/
+		*/ 
 
 		clone.elements = new ArrayList<Clause>();
 		for (Clause c : elements) {
+			// c is a ClauseDef
 			clone.elements.add(c.copy(cd));
 		}
 
