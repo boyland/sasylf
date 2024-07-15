@@ -1,4 +1,4 @@
-package tests.six
+  package tests.six
 
 module foldablebt
 
@@ -7,6 +7,7 @@ requires
 abstract syntax id
 abstract syntax nonid
 syntax e ::= id | nonid
+abstract judgment combine: e + e = e
 
 provides
 
@@ -18,3 +19,8 @@ judgment fold: bt --> e
 
   --------------- fold-leaf
   Leaf --> id
+
+theorem fold-leaf-theorem:
+  exists Leaf --> id
+  proof by rule fold-leaf
+end theorem

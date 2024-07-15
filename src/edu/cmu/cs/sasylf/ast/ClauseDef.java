@@ -448,6 +448,10 @@ public class ClauseDef extends Clause {
 		
 		if (sd.substitutionType == SubstitutionData.SubstitutionType.SYNTAX) {
 
+			if (!type.equals((ClauseType) sd.getSyntaxReplacement())) {
+				return;
+			}
+
 			int indexOfClauseDef = -1;
 
 			for (int i = 0; i < sd.oldSyntax.getClauses().size(); i++) {
@@ -479,6 +483,11 @@ public class ClauseDef extends Clause {
 		}
 		
 		else if (sd.substitutionType == SubstitutionType.JUDGMENT) {
+
+			if (!type.equals(sd.getJudgmentReplacement())) {
+				return;
+			}
+
 			// get the ClauseDef from the judgment
 			Clause newClause = sd.getJudgmentReplacement().getForm();
 			if (!(newClause instanceof ClauseDef)) {
@@ -486,6 +495,13 @@ public class ClauseDef extends Clause {
 				System.exit(1);
 			}
 			ClauseDef cd = (ClauseDef) newClause;
+
+			// debugging
+			System.out.println("old consName: " + consName);
+			System.out.println("new consName: " + cd.consName);
+			System.out.println("type: " + type);
+			// end debugging
+
 			consName = cd.consName;
 		}
 

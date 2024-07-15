@@ -10,14 +10,34 @@ syntax boolid ::= F
 syntax boolnonid ::= T
 syntax b ::= boolid | boolnonid
 
-module boolbt = tests.six.foldablebt[boolid, boolnonid, b]
+judgment lor: b /\ b = b
+
+  --------------- lor-tt
+  T /\ T = T
+
+  --------------- lor-tf
+  T /\ F = T
+
+  --------------- lor-ft
+  F /\ T = T
+
+  --------------- lor-ff
+  F /\ F = F
+
+module boolbt = tests.six.foldablebt[boolid, boolnonid, b, lor]
 
 syntax bt = boolbt.bt ::= Leaf | Node bt b bt
 
 judgment foldbool = boolbt.fold : bt --> b
 
+
 theorem t1:
   exists Leaf --> boolid
   d1: Leaf --> boolid by rule boolbt.fold-leaf
   proof by d1
+end theorem
+
+theorem t2:
+  exists Leaf --> boolid
+  proof by theorem boolbt.fold-leaf-theorem
 end theorem
