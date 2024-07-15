@@ -208,6 +208,8 @@ public class ClauseUse extends Clause {
 	@Override
 	public ElemType getElemType() {
 		ClauseType ct = getConstructor().getType();
+		System.out.println("constructor: " + getConstructor());
+		System.out.println("ct: " + ct);
 		if (ct instanceof SyntaxDeclaration)
 			return (SyntaxDeclaration) ct;
 		else
@@ -302,13 +304,14 @@ public class ClauseUse extends Clause {
 			verify(varBindings.size() == 0, "assume rule with nonempty var bindings");
 			root = getElements().get(assumeIndex).readAssumptions(varBindings, true);
 		}
-
+		
 		Term t = computeBasicTerm(varBindings, false);
 
 		if (assumeIndex != -1) {
 			t = newWrap(t,varBindings,initialBindingsSize);
 		}
 		// System.out.println("converted " + this + " to " + t);
+		
 		return t;
 	}
 

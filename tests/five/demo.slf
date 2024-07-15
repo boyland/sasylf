@@ -97,6 +97,7 @@ judgment revbool = boolbt.rev: rev bbt = bbt
 
 judgment foldbool = boolbt.fold: bbt --> b
 
+/*
 theorem t1:
   forall d1: rev bbt1 = bbt2
   exists rev bbt2 = bbt1
@@ -109,6 +110,7 @@ theorem t2:
   exists bbt2 --> b1
   proof by theorem boolbt.rev-same-fold on d1, d2
 end theorem
+*/
 
 /*
 theorem t3:

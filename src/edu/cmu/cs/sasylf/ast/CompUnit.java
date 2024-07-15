@@ -177,6 +177,15 @@ public class CompUnit extends Node implements Module {
 			}
 		}
 
+		// debugging
+
+
+		if (!getName().equals("demo")) return;
+
+		System.out.println("                 [[[[Main Module]]]]");
+		System.out.println(this);
+
+
 	}
 
 	private void checkFilename(ModuleId id) {

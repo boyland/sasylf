@@ -1,0 +1,23 @@
+package tests.six
+
+module demo
+
+provides
+
+terminals T F Leaf Node
+
+syntax boolid ::= F
+syntax boolnonid ::= T
+syntax b ::= boolid | boolnonid
+
+module boolbt = tests.six.foldablebt[boolid, boolnonid, b]
+
+syntax bt = boolbt.bt ::= Leaf | Node bt b bt
+
+judgment foldbool = boolbt.fold : bt --> b
+
+theorem t1:
+  exists Leaf --> boolid
+  d1: Leaf --> boolid by rule boolbt.fold-leaf
+  proof by unproved
+end theorem

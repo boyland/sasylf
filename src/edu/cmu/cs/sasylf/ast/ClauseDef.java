@@ -29,13 +29,21 @@ public class ClauseDef extends Clause {
 		this(copy, type, null);
 	}
 	public ClauseDef(Clause copy, ClauseType type, String cName) {
+		
 		super(copy.getLocation());
+
 		setEndLocation(copy.getEndLocation());
 		getElements().addAll(copy.getElements());
 		this.type = type;
 		if (cName != null) {
 			consName = cName;
 		} else {
+
+			System.out.println("Making");
+			//System.out.println("copy = " + copy);
+			System.out.println("type = " + type.getName());
+
+
 			consName = "C";
 			for (Element e : getElements()) {
 				if (e instanceof Terminal) {
@@ -46,6 +54,10 @@ public class ClauseDef extends Clause {
 				} 
 			}
 			consName = uniqueify(consName);
+
+			System.out.println("result: " + consName);			
+
+			
 		}
 		for (Element e : getElements()) {
 			if (e instanceof Clause) {
@@ -173,7 +185,8 @@ public class ClauseDef extends Clause {
 
 		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes, argNames);
 
-		return new Constant(consName, typeTerm);
+		Constant c = new Constant(consName, typeTerm);
+		return c;
 	}
 
 	public int getVariableIndex() {
@@ -423,6 +436,14 @@ public class ClauseDef extends Clause {
 				if (sd.containsJudgmentReplacementFor(name)) {
 					type = sd.getJudgmentReplacement();
 				}
+			}
+			else if (type instanceof SyntaxDeclaration) {
+				
+				SyntaxDeclaration syntaxDeclaration = (SyntaxDeclaration) type;
+				if (sd.containsSyntaxReplacementFor(syntaxDeclaration.getNonTerminal())) {
+					type = (SyntaxDeclaration) sd.getSyntaxReplacement();
+				}
+
 			}
 		}
 

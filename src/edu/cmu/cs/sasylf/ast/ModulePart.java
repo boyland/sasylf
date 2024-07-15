@@ -12,9 +12,17 @@ import java.util.function.Consumer;
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
+import java.util.HashSet;
+import java.util.Set;
+import java.lang.reflect.Modifier;
 
 /**
  * Using a module as a part of a compilation unit.
@@ -74,6 +82,93 @@ public class ModulePart extends Node implements Part, Named {
 			// Since Module is the only subclass of CompUnit, we know that resolution is an instance of CompUnit
 			// TODO: Add more checking here for casting safety
 			CompUnit functor = (CompUnit) resolution;
+
+
+
+
+
+
+			// begin debugging
+
+
+			// get the e parameter
+			/*
+			SyntaxDeclaration e = null;
+
+			for (Part p : functor.getParams()) {
+				if (p instanceof SyntaxPart) {
+					SyntaxPart sp = (SyntaxPart) p;
+					for (Syntax s : sp.getSyntax()) {
+						if (!(s instanceof SyntaxDeclaration)) continue;
+						SyntaxDeclaration sd = (SyntaxDeclaration) s;
+						if (sd.getName().equals("e")) {
+							e = sd;
+						}
+					}
+				}
+			}
+
+			// get the id constructor from the e grammar
+
+			Clause idClause = e.getClauses().get(0);
+			Element idNonTerminalFromSyntax = idClause.getElements().get(0);
+
+
+			// get the fold judgment
+
+			Judgment foldd = null;
+
+			for (Part p : functor.getParts()) {
+				if (p instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) p;
+					for (Judgment j : jp.getJudgments()) {
+						if (j.getName().equals("fold")) {
+							foldd = j;
+						}
+					}
+				}
+			}
+
+			// get the fold-leaf rule from the fold judgment
+
+			Rule foldLeaff = foldd.getRules().get(0);
+
+			// print them
+			
+			// get the id element in the conclusion of the fold-leaf rule
+
+			Clause foldLeafConclusionn = foldLeaff.getConclusion();
+
+			Element idNonTerminalFromJudgment = foldLeafConclusionn.getElements().get(4);
+			
+			// print them and their hashes
+
+			System.out.println("idNonTerminalFromSyntax: " + idNonTerminalFromSyntax);
+			System.out.println("idNonTerminalFromJudgment: " + idNonTerminalFromJudgment);
+
+			System.out.println("idNonTerminalFromSyntax hash: " + idNonTerminalFromSyntax.hashCode());
+			System.out.println("idNonTerminalFromJudgment hash: " + idNonTerminalFromJudgment.hashCode());
+			System.out.println("==: " + (idNonTerminalFromSyntax == idNonTerminalFromJudgment));
+			System.out.println("equals: " + idNonTerminalFromSyntax.equals(idNonTerminalFromJudgment));
+		
+
+
+			foldLeafConclusionn.getElements().set(4, idNonTerminalFromSyntax);
+			
+
+
+
+			*/
+			// end debugging
+
+
+
+
+
+			
+
+
+
 
 			// check that the number of parameters and arguments is the same
 
@@ -165,7 +260,7 @@ public class ModulePart extends Node implements Part, Named {
 			}
 
 			// The arguments and parameters match, so we can evaluate the module application
-
+			
 			CompUnit newModule = functor.clone();
 
 			// Remove all parameters from the new module
@@ -424,6 +519,46 @@ public class ModulePart extends Node implements Part, Named {
 			newModule.moduleName = name;
 			ctx.modMap.put(name, newModule); 
 			Context.updateVersion();
+
+			// debugging
+
+			// get the boolid from fold-leaf
+			/*
+			Judgment fold = null;
+
+			for (Part p : newModule.getParts()) {
+				if (p instanceof JudgmentPart) {
+					JudgmentPart jp = (JudgmentPart) p;
+					for (Judgment j : jp.getJudgments()) {
+						if (j.getName().equals("fold")) {
+							fold = j;
+						}
+					}
+				}
+			}
+
+			if (fold == null) {
+				System.out.println("Error: Could not find fold-leaf judgment in module.");
+				System.exit(1);
+			}
+
+			System.out.println("fold-leaf: " + fold);
+			
+			Rule foldLeaf = fold.getRules().get(0);
+
+			System.out.println("fold-leaf rule: " + foldLeaf);
+
+			Clause foldLeafConclusion = foldLeaf.getConclusion();
+
+			Element boolidElement = foldLeafConclusion.getElements().get(4);
+
+			System.out.println("term: " + boolidElement.asTerm());
+ 		*/
+
+
+		System.out.println("             [[[[New Module]]]]\n\n\n\n");
+		System.out.println(newModule);
+
 
 		}
 

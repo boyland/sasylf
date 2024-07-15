@@ -151,6 +151,7 @@ public class Clause extends Element implements CanBeCase {
 				out.print(')');
 			prev = e;
 		}
+		out.print("(" + asTerm() + ")");
 	}
 
 	@Override
@@ -723,6 +724,10 @@ public class Clause extends Element implements CanBeCase {
 
 					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
 
+					// TODO: maybe the new nonterminal should actually just be the original (without cloning)
+					
+					//NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal();
+
 					// add the filler characters to the new nonterminal symbol
 
 					newNonTerminal.symbol += fillerCharacters;
@@ -733,7 +738,7 @@ public class Clause extends Element implements CanBeCase {
 
 				}
 			}
-			if (e instanceof Clause) {
+			else if (e instanceof Clause) {
 				Clause c = (Clause) e;
 				c.substitute(sd);
 			}

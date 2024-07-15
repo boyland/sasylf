@@ -107,7 +107,11 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
-				explanationString = tp.toString(tp.asClause(explanationTerm));
+				
+				//explanationString = tp.toString(tp.asClause(explanationTerm));
+				explanationString = "explanation";
+				// TODO: hot fix
+
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {

@@ -1,0 +1,20 @@
+package tests.six
+
+module foldablebt
+
+requires
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= id | nonid
+
+provides
+
+terminals Leaf Node
+
+syntax bt ::= Leaf | Node bt e bt
+
+judgment fold: bt --> e
+
+  --------------- fold-leaf
+  Leaf --> id

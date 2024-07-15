@@ -36,6 +36,11 @@ judgment fold: bt --> e
   --------------- fold-leaf
   Leaf --> id
 
+
+  --------------- fold-leaf-fake
+  Leaf --> e
+
+
   bt1 --> e1
   bt2 --> e2
   e + e1 = e3

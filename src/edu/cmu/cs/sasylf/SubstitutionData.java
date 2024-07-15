@@ -73,10 +73,8 @@ public class SubstitutionData {
     // check that they have the "same name" that nt's type is abstract
 
     //return sameName(this.from, nt.getSymbol()) && nt.getType().isAbstract();
-    
-    return containsSyntaxReplacementForByString(nt.getSymbol()) && nt.getType().isAbstract();
-
-    //return nt.getType().equals(oldSyntax);
+  
+    return containsSyntaxReplacementForByString(nt.getSymbol());
   }
 
   public boolean containsJudgmentReplacementFor(String from) {

@@ -655,6 +655,7 @@ public class Application extends Term {
 			Abstraction funTypeAbs = (Abstraction) funType;
 			Term argType = t.getType(varBindings);
 			Term absType = funTypeAbs.varType;
+
 			if (!argType.typeEquals(absType) && !function.toString().contains("TERM")) {
 				verify(false, "types do not match when applying " + argType + " to arg type "+ absType + " in function " + function);
 			}

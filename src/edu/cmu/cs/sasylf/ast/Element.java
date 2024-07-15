@@ -111,9 +111,24 @@ public abstract class Element extends Node {
 		throw new UnsupportedOperationException("need to type check first before calling getRoot()");
 	}
 
+	private static final Map<ClauseDef, Boolean> computedMap = new java.util.IdentityHashMap<>();
+
 	public Term asTerm() {
-		if (term == null)
+		
+		if (term == null) {
+			
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
+			if (this instanceof ClauseDef) {
+				System.out.println("Computed term for " + this + " is " + term);
+				System.out.println("j");
+				System.out.println("hash is: " + this.hashCode());
+				if (computedMap.containsKey(this)) {
+					System.out.println("Already computed term for " + this);
+				} else {
+					computedMap.put((ClauseDef)this, true);
+				}
+			}
+		}
 		return term;
 	}
 	
@@ -160,13 +175,15 @@ public abstract class Element extends Node {
 		*/
 
 		if (term != null) {
-			term.substitute(sd);
+			//term.substitute(sd);
+			term = null;
 		};
 		if (terminal != null) terminal.substitute(sd);
 	}
 
 
 	public Element copy(CloneData cd) {
+
 		Element clone;
 		try {
 			clone = (Element) super.clone();
@@ -178,11 +195,23 @@ public abstract class Element extends Node {
 
 		cd.addCloneFor(this, clone);
 
+		/*
 		if (clone.term != null) {
 			//clone.term = clone.term.copy(cd);
 			// we need to set clone.term to null because term is computed upon calling asTerm()
 			clone.term = null;
 		}
+		*/
+
+		if (!(this instanceof Terminal)) {
+			clone.term = null;
+		}
+		
+
+		// if this is an instance of Terminal, we want to leave the terminal as is
+		
+
+
 		if (clone.terminal != null) {
 			clone.terminal = clone.terminal.copy(cd);
 		}

@@ -11,7 +11,30 @@ public class Constant extends Atom {
 	public static final Constant TYPE = new Constant();
 	public static final Constant UNKNOWN_TYPE = new Constant("UNKNOWN_TYPE", TYPE);
 
-	public Constant(String n, Term type) { super(n); this.type = type; }
+	public Constant(String n, Term type) {
+		super(n);
+		this.type = type;
+
+		// debugging
+		/*
+
+		if (n.equals("C1")) {
+			System.out.println("Made C1");
+
+			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+
+			for (StackTraceElement stackTraceElement : stackTraceElements) {
+				System.out.println(stackTraceElement);
+			}
+
+			System.exit(0);
+
+		}
+		*/
+
+		// end debugging
+
+	}
 	@Override
 	public Term getType() { return type; }
 
@@ -24,11 +47,19 @@ public class Constant extends Atom {
 	 */
 	@Override
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
+
 		// other term must be equal to me, otherwise fail
-		if (equals(other))
+		if (equals(other)) {
 			Term.unifyHelper(current, worklist);
-		else
+		}
+		else {
+			// debugging
+			System.out.println("Constants not equal: " + this + " and " + other);
+			System.exit(0);
+			// end debugging
 			throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);
+		}
+			
 	}
 
 	public void substitute (SubstitutionData sd) {
@@ -39,7 +70,6 @@ public class Constant extends Atom {
 			type.substitute(sd);
 		}
 	}
-
 
 	@Override
 	public Constant copy(CloneData cd) {
