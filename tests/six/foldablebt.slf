@@ -6,7 +6,7 @@ requires
 
 abstract syntax id
 abstract syntax nonid
-syntax e ::= !id | !nonid
+syntax e ::= !id | !!nonid
 abstract judgment combine: e + e = e
 abstract theorem combine-commutative:
   forall d1: e1 + e2 = e3

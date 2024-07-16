@@ -1,0 +1,6 @@
+package tests.nine
+
+module demo
+
+provides
+
