@@ -744,6 +744,24 @@ public class Clause extends Element implements CanBeCase {
 		}
 	}
 
+	/**
+	 * Checks if the two clauses have the same structure, and raises an exception if they don't.
+	 * 
+	 * <br/>
+	 * 
+	 * Two clauses have the same structure means their sequence of elements (ignoring Terminal objects) obey the following properties:
+	 * <br/>
+	 * 1. The sequences are the same length
+	 * <br/>
+	 * 2. It is possible to transform the first sequence into the second sequence via substitution with three bijective mappings:
+	 * 1. Syntax to Syntax, 2. Judgment to Judgment, 3. NonTerminal to NonTerminal
+	 * 
+	 * @param paramClause A clause from the parameter of a polymorphic module
+	 * @param argClause A clause from the argument of a polymorphic module
+	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
+	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
+	 * @param nonTerminalMapping A mapping from nonterminals in the parameter to nonterminals in the arguments
+	 */
 	public static void checkClauseSameStructure (
 		Clause paramClause, 
 		Clause argClause,
@@ -840,6 +858,15 @@ public class Clause extends Element implements CanBeCase {
 
 	}
 	
+	/**
+	 * Checks that <code> c1 </code> and <code> c2 </code> have corresponding types, where corresponding types means that
+	 * the syntax declarations in <code> c1 </code> are mapped to the syntax declarations in <code> c2 </code>, and the judgments
+	 * in <code> c1 </code> are mapped to the judgments in <code> c2 </code>.
+	 * @param c1 A clause from the parameter of a polymorphic module
+	 * @param c2 A clause from the argument of a polymorphic module
+	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
+	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
+	 */
 	private static void checkClausesCorrespondingTypes(
 		Clause c1,
 		Clause c2,
