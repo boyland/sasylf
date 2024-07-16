@@ -1,4 +1,4 @@
-  package tests.six
+package tests.six
 
 module foldablebt
 
@@ -6,7 +6,7 @@ requires
 
 abstract syntax id
 abstract syntax nonid
-syntax e ::= id | nonid
+syntax e ::= !id | !nonid
 abstract judgment combine: e + e = e
 
 provides
@@ -18,9 +18,16 @@ syntax bt ::= Leaf | Node bt e bt
 judgment fold: bt --> e
 
   --------------- fold-leaf
-  Leaf --> id
+  Leaf --> !id
+
+  bt1 --> e1
+  bt2 --> e2
+  e1 + e = e3
+  e3 + e2 = e4
+  --------------- fold-Node
+  Node bt1 e bt2 --> e4
 
 theorem fold-leaf-theorem:
-  exists Leaf --> id
+  exists Leaf --> !id
   proof by rule fold-leaf
 end theorem

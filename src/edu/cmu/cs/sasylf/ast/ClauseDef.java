@@ -496,12 +496,6 @@ public class ClauseDef extends Clause {
 			}
 			ClauseDef cd = (ClauseDef) newClause;
 
-			// debugging
-			System.out.println("old consName: " + consName);
-			System.out.println("new consName: " + cd.consName);
-			System.out.println("type: " + type);
-			// end debugging
-
 			consName = cd.consName;
 		}
 
