@@ -151,7 +151,6 @@ public class Clause extends Element implements CanBeCase {
 				out.print(')');
 			prev = e;
 		}
-		out.print("(" + asTerm() + ")");
 	}
 
 	@Override
