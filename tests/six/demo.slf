@@ -27,7 +27,37 @@ judgment lor: b /\ b = b
 theorem lor-commutative:
   forall d1: b1 /\ b2 = b3
   exists b2 /\ b1 = b3
-  proof by unproved
+  proof by case analysis on d1:
+    case rule
+      --------------- lor-tt
+      _: (!! T) /\ (!! T) = (!! T)
+    is
+      proof by rule lor-tt
+    end case
+
+    case rule
+      --------------- lor-tf
+      _: (!! T) /\ (! F) = (!! T)
+    is
+      proof by rule lor-ft
+    end case
+
+    case rule
+      --------------- lor-ft
+      _: (! F) /\ (!! T) = (!! T)
+    is
+      proof by rule lor-tf
+    end case
+
+    case rule
+      --------------- lor-ff
+      _: (! F) /\ (! F) = (! F)
+    is
+      proof by rule lor-ff
+    end case
+
+    
+  end case analysis
 end theorem
 
 theorem lor-associative:
@@ -36,10 +66,17 @@ theorem lor-associative:
   // (b1 /\ b2) /\ b4 = b1 /\ (b2 /\ b4)
   forall d3: b2 /\ b4 = b6
   exists b1 /\ b6 = b5
+  proof by unproved //!
+end theorem
+
+theorem lor-total:
+  forall b1
+  forall b2
+  exists b1 /\ b2 = b3
   proof by unproved
 end theorem
 
-module boolbt = tests.six.foldablebt[boolid, boolnonid, b, lor, lor-commutative, lor-associative]
+module boolbt = tests.six.foldablebt[boolid, boolnonid, b, lor, lor-commutative, lor-associative, lor-total]
 
 syntax bt = boolbt.bt ::= Leaf | Node bt b bt
 

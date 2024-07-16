@@ -19,6 +19,11 @@ abstract theorem combine-associative:
   forall d3: e2 + e4 = e6
   exists e1 + e6 = e5
 end theorem
+abstract theorem combine-total:
+  forall e1
+  forall e2
+  exists e1 + e2 = e3
+end theorem
 
 provides
 
@@ -111,9 +116,24 @@ theorem reverse-fold-thm:
           
           d9: e3 + e0 = e4 by theorem combine-commutative on d5
 
+          d10: e2 + e3 = e5 by theorem combine-total on e2, e3
+
+          d11: e3 + e2 = e5 by theorem combine-commutative on d10 
+
+          d12: e0 + e5 = e1 by theorem combine-associative on d5, d6, d11
+
+          d13: e5 + e0 = e1 by theorem combine-commutative on d12
+
+          /*
+            Now, we have that
+              e2 + e3 = e5
+              e5 + e0 = e1
+          */
+
+          d14: (Node bt5 e3 bt4) --> e1 by rule fold-Node on ih2, ih1, d10, d13
           
 
-          proof by unproved
+          proof by d14
         end case
 
 
