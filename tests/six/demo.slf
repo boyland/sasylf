@@ -3,8 +3,8 @@ package tests.six
 module demo
 
 provides
-
-terminals T F Leaf Node
+ 
+terminals T F Leaf Node rev
 
 syntax boolid ::= F
 syntax boolnonid ::= T
@@ -24,11 +24,28 @@ judgment lor: b /\ b = b
   --------------- lor-ff
   !F /\ !F = !F
 
-module boolbt = tests.six.foldablebt[boolid, boolnonid, b, lor]
+theorem lor-commutative:
+  forall d1: b1 /\ b2 = b3
+  exists b2 /\ b1 = b3
+  proof by unproved
+end theorem
+
+theorem lor-associative:
+  forall d1: b1 /\ b2 = b3
+  forall d2: b3 /\ b4 = b5
+  // (b1 /\ b2) /\ b4 = b1 /\ (b2 /\ b4)
+  forall d3: b2 /\ b4 = b6
+  exists b1 /\ b6 = b5
+  proof by unproved
+end theorem
+
+module boolbt = tests.six.foldablebt[boolid, boolnonid, b, lor, lor-commutative, lor-associative]
 
 syntax bt = boolbt.bt ::= Leaf | Node bt b bt
 
 judgment foldbool = boolbt.fold : bt --> b
+
+judgment reversebool = boolbt.reverse: rev bt = bt
 
 
 theorem t1:
@@ -116,4 +133,23 @@ theorem t7:
   d4: !!T /\ !F = !!T by rule lor-tf
   d5: Node (Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf)) !!T (Node Leaf !F Leaf) --> !!T by rule boolbt.fold-Node on d1, d2, d3, d4
   proof by d5
+end theorem
+
+theorem t8:
+  exists rev Leaf = Leaf
+  proof by rule boolbt.reverse-leaf
+end theorem
+
+theorem t9:
+  exists rev (Node Leaf !!T Leaf) = Node Leaf !!T Leaf
+  d1: rev Leaf = Leaf by rule boolbt.reverse-leaf
+  proof by rule boolbt.reverse-Node on d1, d1
+end theorem
+
+theorem t10:
+  exists rev (Node (Node Leaf !!T Leaf) !F Leaf) = Node Leaf !F (Node Leaf !!T Leaf)
+  d1: rev (Node Leaf !!T Leaf) = Node Leaf !!T Leaf by theorem t9
+  d2: rev Leaf = Leaf by rule boolbt.reverse-leaf
+  d3: rev (Node (Node Leaf !!T Leaf) !F Leaf) = Node Leaf !F (Node Leaf !!T Leaf) by rule boolbt.reverse-Node on d1, d2
+  proof by d3
 end theorem

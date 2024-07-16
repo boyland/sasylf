@@ -8,10 +8,21 @@ abstract syntax id
 abstract syntax nonid
 syntax e ::= !id | !nonid
 abstract judgment combine: e + e = e
+abstract theorem combine-commutative:
+  forall d1: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theorem
+abstract theorem combine-associative:
+  forall d1: e1 + e2 = e3
+  forall d2: e3 + e4 = e5
+  // (e1 + e2) + e4 = e1 + (e2 + e4)
+  forall d3: e2 + e4 = e6
+  exists e1 + e6 = e5
+end theorem
 
 provides
 
-terminals Leaf Node
+terminals Leaf Node rev
 
 syntax bt ::= Leaf | Node bt e bt
 
@@ -30,4 +41,85 @@ judgment fold: bt --> e
 theorem fold-leaf-theorem:
   exists Leaf --> !id
   proof by rule fold-leaf
+end theorem
+
+judgment reverse: rev bt = bt
+
+  --------------- reverse-leaf
+  rev Leaf = Leaf
+
+  rev bt1 = bt3
+  rev bt2 = bt4
+  --------------- reverse-Node
+  rev Node bt1 e bt2 = Node bt4 e bt3
+
+theorem reverse-fold-thm:
+  forall d1: rev bt1 = bt2
+  forall d2: bt1 --> e1
+  exists bt2 --> e1
+  proof by induction on d2:
+    case rule
+      --------------- fold-leaf
+      _: Leaf --> (! id0)
+    is
+
+      proof by case analysis on bt2:
+        case Leaf is
+          proof by rule fold-leaf
+        end case
+
+        case Node bt0 e0 bt3 is
+          proof by contradiction on d1
+        end case
+
+
+      end case analysis
+    end case
+
+    case rule
+      d3: bt0 --> e0
+      d4: bt3 --> e2
+      d5: e0 + e3 = e4
+      d6: e4 + e2 = e1
+      --------------- fold-Node
+      _: (Node bt0 e3 bt3) --> e1
+    is
+      proof by case analysis on d1:
+        case rule
+          d7: rev bt0 = bt4
+          d8: rev bt3 = bt5
+          --------------- reverse-Node
+          _: rev (Node bt0 e3 bt3) = (Node bt5 e3 bt4)
+        is
+
+          // we want to show that bt2 --> e1
+
+          ih1: bt4 --> e0 by induction hypothesis on d7, d3
+          ih2: bt5 --> e2 by induction hypothesis on d8, d4
+
+          // now, we know that bt4 --> e0 and bt5 --> e2
+          /*
+            We also know that
+              e0 + e3 = e4
+              e4 + e2 = e1
+            We want to show that
+              e2 + e3 = e5
+              e5 + e0 = e1
+
+            For this, we need to use commutativity and associativity
+          */
+          
+          d9: e3 + e0 = e4 by theorem combine-commutative on d5
+
+          
+
+          proof by unproved
+        end case
+
+
+      end case analysis
+    end case
+
+
+  end induction
 end theorem
