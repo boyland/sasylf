@@ -26,7 +26,7 @@ terminals T F BoolNothing Just empty S NatNothing
 
 syntax b ::= T | F
 
-module boolmaybe = tests.one.maybe[b]
+module boolmaybe = tests.one.maybe[b, b] // error here
 
 syntax bm = boolmaybe.m ::= BoolNothing | Just b
 

@@ -5,9 +5,7 @@ provides
 terminals S
 
 syntax
-
   n ::= 0 | S n
-
 judgment nat-plus: n + n = n
 
   --------- plus-zero
@@ -17,8 +15,6 @@ judgment nat-plus: n + n = n
   ---------------- plus-succ
   S n1 + n2 = S n3
 
-
-/*
 theorem right-id:
   forall n
   exists n + 0 = n
@@ -35,4 +31,7 @@ theorem right-id:
     
   end induction
 end theorem
-*/
+
+
+
+

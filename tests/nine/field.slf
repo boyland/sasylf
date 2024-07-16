@@ -54,12 +54,12 @@ end theorem
 
 abstract theorem add-identity:
   forall f1
-  exists f1 + !addid = f1 // f2 is the additive identity
+  exists f1 + !addid = f1
 end theorem
 
 abstract theorem mul-identity:
   forall f1
-  exists f1 * !!mulid = f1 // f2 is the multiplicative identity
+  exists f1 * !!mulid = f1
 end theorem
 
 abstract theorem add-inverse:
@@ -99,9 +99,8 @@ theorem unique-additive-identity:
   forall addid2
   exists !addid1 = !addid2
 
-
-
-  
+  d1: !addid1 + !addid1 = !addid1 by theorem add-identity on !addid1
+  // maybe on expects an identifier, not an expression
   
   proof by unproved
 end theorem
