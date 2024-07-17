@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.util;
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.Token;
-import edu.cmu.cs.sasylf.term.Substitution;
 
 /**
  * The span of a single token.
@@ -49,6 +48,7 @@ public class TokenSpan implements Span {
 		return clone;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);

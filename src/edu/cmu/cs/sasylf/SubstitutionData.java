@@ -36,7 +36,7 @@ public class SubstitutionData {
   private final IdentitySet<Object> set; // the set of objects that have been substituted for
   public final String from; // the name of the object being substituted for
   public final String to; // the name of the object being substituted with
-  private final Syntax newSyntax; // the syntax that is being substituted with
+  private final SyntaxDeclaration newSyntax; // the syntax that is being substituted with
   private final Judgment newJudgment; // the judgment that is being substituted with
   private final Theorem newTheorem; // the theorem that is being substituted with
   public final SyntaxDeclaration oldSyntax; // the syntax that is being substituted for
@@ -59,7 +59,7 @@ public class SubstitutionData {
     SYNTAX, JUDGMENT, THEOREM
   }
 
-  public SubstitutionData(String from, String to, Syntax newSyntax, SyntaxDeclaration oldSyntax) {
+  public SubstitutionData(String from, String to, SyntaxDeclaration newSyntax, SyntaxDeclaration oldSyntax) {
     set = new IdentitySet<Object>();
     this.from = from;
     this.to = to;

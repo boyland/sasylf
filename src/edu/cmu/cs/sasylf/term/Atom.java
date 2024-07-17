@@ -10,7 +10,7 @@ import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.Pair;
 
 
-public abstract class Atom extends Term implements Cloneable {
+public abstract class Atom extends Term {
 	protected Atom(String name) { this.name = name; }
 
 	public final String getName() { return name; }
@@ -47,7 +47,7 @@ public abstract class Atom extends Term implements Cloneable {
 
 	@Override
 	public void substitute(SubstitutionData sd) {
-		System.out.println("Atom.substitute");
+		System.out.println("Substituting in Atom");
 		if (sd.didSubstituteFor(this)) return;
 		
 		sd.setSubstitutedFor(this);
@@ -56,8 +56,9 @@ public abstract class Atom extends Term implements Cloneable {
 
 		if (sd.containsSyntaxReplacementForByString(name)) {
 			System.out.println("WARNING: contains syntax replacement in Atom.substitute");
+			// TODO: Perform a substitution here
 		}
-
+ 
 		else if (sd.containsJudgmentReplacementFor(name)) {
 			Judgment replacement = sd.getJudgmentReplacement();
 			name = replacement.getName();
@@ -70,5 +71,9 @@ public abstract class Atom extends Term implements Cloneable {
 
 	}
 	
+	/**
+	 * Create a deep copy of this Atom.
+	 * @param cd the data to use during the cloning process
+	 */
 	public abstract Atom copy(CloneData cd);
 }

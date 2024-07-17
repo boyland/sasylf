@@ -216,7 +216,7 @@ public class ModulePart extends Node implements Part, Named {
 				 */
 
 				if (argResolution instanceof Syntax) {
-					Syntax argumentSyntax = (Syntax) argResolution;
+					SyntaxDeclaration argumentSyntax = ((Syntax) argResolution).getOriginalDeclaration();
 					SyntaxDeclaration parameterSyntax = (SyntaxDeclaration) parameterObject; // it will always be an instance of SyntaxDeclaration
 					
 					if (argumentSyntax instanceof RenameSyntaxDeclaration) {
@@ -264,7 +264,7 @@ public class ModulePart extends Node implements Part, Named {
 
 					// We can cast argResolution to Syntax because we have already checked that argResolution is an instance of Syntax
 
-					sd = new SubstitutionData(parameterName, argumentName, (Syntax) argResolution, parameterSyntax);
+					sd = new SubstitutionData(parameterName, argumentName, argumentSyntax, parameterSyntax);
 				}
 
 				else if (argResolution instanceof Judgment) {

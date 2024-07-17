@@ -296,11 +296,6 @@ public class FreeVar extends Atom {
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return ;
 		sd.setSubstitutedFor(this);
-		
-		/*
-			private int stamp;
-			private Term type;
-		*/
 
 		if (type != null) {
 			type.substitute(sd);
@@ -320,11 +315,6 @@ public class FreeVar extends Atom {
 			System.exit(1);
 			return null;
 		}
-
-		/*
-			private int stamp;
-			private Term type;
-		*/
 
 		cd.addCloneFor(this, clone);
 

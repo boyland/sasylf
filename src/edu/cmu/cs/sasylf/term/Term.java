@@ -607,7 +607,16 @@ public abstract class Term implements Cloneable{
 		return this.equals(other) || containsProper(other);
 	}
 
+	/**
+	 * Check if the argument term is a subterm of this one.
+	 * @param sd substitution data to use
+	 */
 	public abstract void substitute(SubstitutionData sd);
 	
+	/**
+	 * Create a deep copy of this term
+ 	 * @param cd the data to use during the cloning process
+	 * @return a deep copy of this term
+	 */
 	public abstract Term copy(CloneData cd);
 }

@@ -152,11 +152,12 @@ public class BoundVar extends Atom {
 		return Constant.UNKNOWN_TYPE;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		// do nothing because the only attribute is its indexb
+		// do nothing because the only attribute is its index
 	}
 	
 	@Override
@@ -176,8 +177,6 @@ public class BoundVar extends Atom {
 		
 		cd.addCloneFor(this, clone);
 
-		
-		
 		return clone;
 	}
 

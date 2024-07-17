@@ -61,6 +61,7 @@ public class Location implements Span {
 		return this;
 	}
 
+	@Override
 	public Location copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Location) cd.getCloneFor(this);
 
@@ -80,7 +81,11 @@ public class Location implements Span {
 		return clone;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
+
+		// do nothing
+
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 	}

@@ -34,6 +34,7 @@ public class DefaultSpan implements Span {
 
 	private Location start, end;
 
+	@Override
 	public DefaultSpan copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DefaultSpan) cd.getCloneFor(this);
 		DefaultSpan clone;
@@ -53,6 +54,7 @@ public class DefaultSpan implements Span {
 		return clone;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
