@@ -397,15 +397,10 @@ public class Abstraction extends Term {
 		return body.contains(other);
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		
-		/*
-			public Term varType;
-			public String varName;
-			private Term body;
-		*/
 	
 		if (varType != null) {
 			varType.substitute(sd);
@@ -434,12 +429,6 @@ public class Abstraction extends Term {
 		}
 		
 		cd.addCloneFor(this, clone);
-
-		/*
-			public Term varType;
-			public String varName;
-			private Term body;
-		*/
 
 		clone.varType = clone.varType.copy(cd);
 		clone.body = clone.body.copy(cd);

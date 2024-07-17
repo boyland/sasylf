@@ -754,6 +754,7 @@ public class Application extends Term {
 		return false;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -779,11 +780,6 @@ public class Application extends Term {
 		}
 
 		cd.addCloneFor(this, clone);
-
-		/*
-			private final Atom function;
-			private final List<? extends Term> arguments;
-		*/
 
 		clone.function = clone.function.copy(cd);
 		List<Term> newArgs = new ArrayList<Term>();

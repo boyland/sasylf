@@ -459,11 +459,6 @@ public class WhereClause extends Node {
 			return null;
 		}
 
-		/*
-			private List<Pair<Element,Clause>> clauses;
-			private Substitution computed;
-		*/
-
 		clone.clauses = new ArrayList<Pair<Element, Clause>>();
 		for (Pair<Element, Clause> p : clauses) {
 			clone.clauses.add(new Pair<Element, Clause>(
@@ -471,14 +466,13 @@ public class WhereClause extends Node {
 			));
 		}
 
-		if (computed != null) {
-			System.out.println("Warning: setting computed to null in WhereClause copy");
-			clone.computed = null;
-		}
+		// set computed to null because, after substitution, it will be recomputed
+		clone.computed = null;
 
 		return clone;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -487,6 +481,8 @@ public class WhereClause extends Node {
 			p.first.substitute(sd);
 			p.second.substitute(sd);
 		}
+
+		// set computed to null because, after substitution, it will be recomputed
 		computed = null;
 		
 	}

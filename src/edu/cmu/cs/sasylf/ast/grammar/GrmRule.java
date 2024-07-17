@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.ast.ClauseDef;
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
 import edu.cmu.cs.sasylf.grammar.Rule;

@@ -154,22 +154,17 @@ public class Variable extends Element {
 		return new BoundVar(varBindings.size()-index);
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
-		//if (sd.didSubstituteFor(this)) return;
-		//sd.setSubstitutedFor(this);
-
-		/*
-			private String symbol;
-			private SyntaxDeclaration type;
-		*/
-
-		// substitute for type
+		sd.setSubstitutedFor(this);
 
 		type.substitute(sd);
 		
 	}
 
+	@Override
 	public Variable copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Variable) cd.getCloneFor(this);
 

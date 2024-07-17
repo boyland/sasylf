@@ -2,7 +2,6 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.util.Location;
 
 public class VariableAssumption extends SyntaxAssumption {
@@ -24,11 +23,10 @@ public class VariableAssumption extends SyntaxAssumption {
 
 	private Variable variable;
 	
+	@Override
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: should we do something?
-		super.substitute(sd);
 		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
 		sd.setSubstitutedFor(this);
 		variable.substitute(sd);
 	}
@@ -36,13 +34,9 @@ public class VariableAssumption extends SyntaxAssumption {
 	@Override
 	public VariableAssumption copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (VariableAssumption) cd.getCloneFor(this);
-
 		VariableAssumption clone = (VariableAssumption) super.copy(cd);
-
 		cd.addCloneFor(this, clone);
-
 		clone.variable = clone.variable.copy(cd);
-		
 		return clone;
 	}
 }
