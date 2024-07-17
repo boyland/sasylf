@@ -14,13 +14,11 @@ import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.NullModuleFinder;
-import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.Span;
 
 
 public class CompUnit extends Node implements Module {
@@ -239,10 +237,7 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
-
-		// the bug fix is making this code always run
-		// TODO: remove the true || part
-		if (true || cacheVersion != ctx.version()) {
+		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 
@@ -252,12 +247,12 @@ public class CompUnit extends Node implements Module {
 
 			for (Node n : things) {
 				if (n instanceof SyntaxDeclaration) {
-					SyntaxDeclaration sd = (SyntaxDeclaration)n; // TODO: check here
+					SyntaxDeclaration sd = (SyntaxDeclaration)n;
 					for (String s : sd.getAlternates()) {
 						declCache.put(s, sd);
 					}
 				} else if (n instanceof Judgment) {
-					Judgment jd = (Judgment)n; // TODO: check here
+					Judgment jd = (Judgment)n;
 					declCache.put(jd.getName(),jd);
 				}
 			}
@@ -270,11 +265,10 @@ public class CompUnit extends Node implements Module {
 
 	public void substitute(SubstitutionData sd) {
 		/*
-			private PackageDeclaration packageDecl;
-			public String moduleName;
+			Substitute in the following attributes:
+
 			private List<Part> params = new ArrayList<Part>();
 			private List<Part> parts = new ArrayList<Part>();
-			private int parseReports;
 		*/
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -284,17 +278,12 @@ public class CompUnit extends Node implements Module {
 	}
 
 	public CompUnit copy(CloneData cd) {
-		// unimplemented
-		System.out.println("CompUnit.copy unimplemented");
-		System.exit(0);
-		return null;
+		return clone();
 	}
 
 	@Override
 	public CompUnit clone() {
-
 		CloneData cd = new CloneData();
-
 		CompUnit clone;
 
 		try {
