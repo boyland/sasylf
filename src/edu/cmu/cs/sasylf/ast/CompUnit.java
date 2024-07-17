@@ -237,7 +237,8 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
-		if (cacheVersion != ctx.version()) {
+		// TODO: We need to figure out how to handle the cache properly
+		if (true || cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 
