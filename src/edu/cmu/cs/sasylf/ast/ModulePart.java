@@ -12,25 +12,17 @@ import java.util.function.Consumer;
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
-import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InaccessibleObjectException;
-import java.util.HashSet;
-import java.util.Set;
-import java.lang.reflect.Modifier;
 
 /**
  * Using a module as a part of a compilation unit.
  */
 public class ModulePart extends Node implements Part, Named {
 	private String name;
-	QualName module;
-	List<QualName> arguments;
+	private QualName module;
+	private List<QualName> arguments;
 	
 	public ModulePart(Location l, String name, QualName module, List<QualName> arguments, Location endl) {
 		super(l,endl);
@@ -52,23 +44,6 @@ public class ModulePart extends Node implements Part, Named {
 		return module;
 	}
 	
-	/*
-	@Override
-	public void  (Context ctx) {
-		Object resolution = module.resolve(ctx);
-		if (resolution instanceof Module) {
-			ctx.modMap.put(name, (Module)resolution);
-		} else {
-			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
-		}
-		if (!arguments.isEmpty()) {
-			ErrorHandler.error(Errors.MODULE_PARAMETERS, this);
-		} else if (((Module)resolution).isAbstract()) {
-			ErrorHandler.error(Errors.MODULE_ABSTRACT, this);
-		}
-	}
-	*/
-	
 	public void typecheck(Context ctx) {
 		Object resolution = module.resolve(ctx);
 		if (resolution instanceof Module) {
@@ -77,30 +52,32 @@ public class ModulePart extends Node implements Part, Named {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
 		}
 		if (!arguments.isEmpty()) {
-			// This is a module appliation
+			// Since there are arguments, this is a module appliation
 			// We already verified above that resolution is an instance of Module
 			// Since Module is the only subclass of CompUnit, we know that resolution is an instance of CompUnit
-			// TODO: Add more checking here for casting safety
 			CompUnit functor = (CompUnit) resolution;
 
 			// check that the number of parameters and arguments is the same
 
-			// get the parameters of the functor
-			// for this, we have go through each of the parts
-
-			List<Object> params = new ArrayList<Object>();
+			List<Object> params = new ArrayList<Object>(); // list of module parameters
 
 			for (Part part : functor.getParams()) {
 				if (part instanceof SyntaxPart) {
 					SyntaxPart sp = (SyntaxPart) part;
-					// go through each syntax
+					// go through each syntax in the SyntaxPart
 					for (Syntax s : sp.getSyntax()) {
+						/*
+						 * Since s is a module parameter, it must be an instance of SyntaxDeclaration
+						 */
 						if (s instanceof SyntaxDeclaration) {
 							SyntaxDeclaration sd = (SyntaxDeclaration) s;
 							params.add(sd);
 						}
 						else {
-							// The syntax is not a SyntaxDeclaration, which is not allowed
+							/*
+							 * In the case that s is not an instance of SyntaxDeclaration, which
+							 * should never be the case, output an error message and exit the program
+							 */
 							System.out.println("Error: Syntax is not a SyntaxDeclaration in ModulePart.");
 							System.exit(1);
 						}
@@ -108,14 +85,14 @@ public class ModulePart extends Node implements Part, Named {
 				}
 				else if (part instanceof JudgmentPart) {
 					JudgmentPart jp = (JudgmentPart) part;
-					// go through each judgment
+					// Add each of the judgments to the list of parameters
 					for (Judgment j : jp.getJudgments()) {
 						params.add(j);
 					}
 				}
 				else if (part instanceof TheoremPart) {
 					TheoremPart tp = (TheoremPart) part;
-					// go through each theorem
+					// Add each of the theorems to the list of parameters
 					for (Theorem t : tp.getTheorems()) {
 						params.add(t);
 					}
@@ -137,17 +114,18 @@ public class ModulePart extends Node implements Part, Named {
 				System.exit(0);
 			}
 
-			// Next, check that the kind of each argument matches the kind of the corresponding parameter
+			/* Next, check that the kind of each argument matches the kind of the corresponding parameter
+			 * 
+			 * Kind refers to: syntax, judgment, or theorem 
+			 */
 
 			for (int i = 0; i < numParams; i++) {
 				Object parameter = params.get(i);
 				QualName argument = arguments.get(i);
 
-				// resolve the argument
-
 				Object argResolution = argument.resolve(ctx);
 
-				// Use instanceof to check that argument and parameter match
+				// Use instanceof to check that argument and parameter have the same kind
 			
 				if (parameter instanceof SyntaxDeclaration && !(argResolution instanceof Syntax)) {
 					System.out.println("Error: Argument does not match parameter in module application. Expected a syntax, but found something else.");
@@ -181,7 +159,6 @@ public class ModulePart extends Node implements Part, Named {
 			newModule.getParams().clear();
 
 			// Substitute the parameters with the arguments in the parts of newModule
-
 
 			Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 			Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
@@ -222,12 +199,21 @@ public class ModulePart extends Node implements Part, Named {
 				}
 				
 				else {
-					// we were not able to get the name of the parameter
+					/*
+					 * This should never happen because we have already checked that the parameter is an instance of SyntaxDeclaration, Judgment, or Theorem
+					 * 
+					 * If this does happen, output an error message and exit the program
+					 */
 					System.out.println("Error: Could not get the name of the parameter.");
 					System.exit(0);
 				}
+
 				SubstitutionData sd;
 				Object argResolution = argument.resolve(ctx);
+
+				/*
+				 * Match against the kind of the argument
+				 */
 
 				if (argResolution instanceof Syntax) {
 					Syntax argumentSyntax = (Syntax) argResolution;
@@ -252,9 +238,8 @@ public class ModulePart extends Node implements Part, Named {
 
 					paramToArgSyntax.put(parameterSyntax, argumentSyntax);
 
-					// TODO: if parameterSyntax is not abstract, need to check the productions of the syntaxes
-
 					if (!parameterSyntax.isAbstract()) {
+						// This is a concrete syntax declarations, so there are productions to check
 						// check that the parameterSyntax and argumentSyntax have the same number of productions
 						List<Clause> parameterProductions = parameterSyntax.getClauses();
 						
@@ -277,13 +262,12 @@ public class ModulePart extends Node implements Part, Named {
 						
 					}
 
+					// We can cast argResolution to Syntax because we have already checked that argResolution is an instance of Syntax
 
 					sd = new SubstitutionData(parameterName, argumentName, (Syntax) argResolution, parameterSyntax);
 				}
 
 				else if (argResolution instanceof Judgment) {
-
-					
 					Judgment argumentJudgment = ((Judgment) argResolution).getOriginalDeclaration();
 					Judgment parameterJudgment = (Judgment) parameterObject; // it will always be an instance of Judgment
 
@@ -298,20 +282,20 @@ public class ModulePart extends Node implements Part, Named {
 					}
 
 					// otherwise, bind the parameterJudgment to the argumentJudgment in the map
+					
+					else {
+						paramToArgJudgment.put(parameterJudgment, argumentJudgment);
+					}
 
-					// now, we need to check the forms of the judgments and make sure that they match
+					// verify that the forms of the judgments have the same structure
 
 					Clause argumentJudgmentForm = argumentJudgment.getForm();
 					Clause parameterJudgmentForm = parameterJudgment.getForm();
-					
-					// check if the forms of the judgments have the same structure
-					
+				
 					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>());
 
-					// TODO: if parameterJudgment is not abstract, need to check the rules of the judgments
-
 					if (!parameterJudgment.isAbstract()) {
-						// check the rules of each judgment
+						// This is a concrete judgment, so there are rules to check
 						List<Rule> parameterRules = parameterJudgment.getRules();
 						List<Rule> argumentRules = argumentJudgment.getRules();
 
@@ -326,7 +310,7 @@ public class ModulePart extends Node implements Part, Named {
 							Rule paramRule = parameterRules.get(j);
 							Rule argRule = argumentRules.get(j);
 
-							// check the premises
+							// check the premises of the rules
 							List<Clause> paramPremises = paramRule.getPremises();
 							List<Clause> argPremises = argRule.getPremises();
 
@@ -345,7 +329,7 @@ public class ModulePart extends Node implements Part, Named {
 								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
 							}
 
-							// check the conclusion
+							// check the conclusions
 
 							Clause paramConclusion = paramRule.getConclusion();
 							Clause argConclusion = argRule.getConclusion();
