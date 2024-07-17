@@ -638,11 +638,11 @@ public class ClauseUse extends Clause {
 		sd.setSubstitutedFor(this);
 
 		/*
+			Substitute in the following attributes:
+
 			private ClauseDef cons;
 			private NonTerminal root;
 		*/
-
-		// substitute for cons and root
 
 		if (cons != null) cons.substitute(sd);
 		if (root != null) root.substitute(sd);
@@ -654,8 +654,11 @@ public class ClauseUse extends Clause {
 		ClauseUse clone = (ClauseUse) super.copy(cd);
 		cd.addCloneFor(this, clone);
 		/*
-			clone cons and root
-		*/
+		 * Clone the following properties:
+		 * 
+		 * private ClauseDef cons;
+		 * private NonTerminal root;
+		 */
 		if (clone.cons != null) {
 			clone.cons = clone.cons.copy(cd);
 		}
