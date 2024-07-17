@@ -13,7 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
@@ -618,5 +618,5 @@ public abstract class Term implements Cloneable{
  	 * @param cd the data to use during the cloning process
 	 * @return a deep copy of this term
 	 */
-	public abstract Term copy(CloneData cd);
+	public abstract Term copy(CopyData cd);
 }

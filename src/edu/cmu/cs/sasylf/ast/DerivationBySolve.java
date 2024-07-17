@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.prover.Proof;
 import edu.cmu.cs.sasylf.prover.ProofImpl;
 import edu.cmu.cs.sasylf.prover.Prover;
@@ -42,10 +42,10 @@ public class DerivationBySolve extends Derivation {
 	}
 
 	@Override
-	public DerivationBySolve copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationBySolve) cd.getCloneFor(this);
+	public DerivationBySolve copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationBySolve) cd.getCopyFor(this);
 		DerivationBySolve clone = (DerivationBySolve) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

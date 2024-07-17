@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -25,6 +25,12 @@ public abstract class DerivationWithArgs extends Derivation {
 	
 	public DerivationWithArgs(String n, Location l, Clause c) {
 		super(n,l,c);
+
+		System.out.println("DerivationWithArgs");
+		System.out.println("n: " + n);
+		System.out.println("l: " + l);
+		System.out.println("c: " + c);
+
 	}
 
 	/**
@@ -37,6 +43,9 @@ public abstract class DerivationWithArgs extends Derivation {
 		if (endLocation != null) {
 			setEndLocation(endLocation);
 		}
+
+		System.out.println("arg string added: " + cl);
+
 	}
 	
 	/**
@@ -242,10 +251,10 @@ public abstract class DerivationWithArgs extends Derivation {
 	}
 
 	@Override
-	public DerivationWithArgs copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationWithArgs) cd.getCloneFor(this);
+	public DerivationWithArgs copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationWithArgs) cd.getCopyFor(this);
 		DerivationWithArgs clone = (DerivationWithArgs) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		List<Clause> newArgStrings = new ArrayList<Clause>();
 		for (Clause c : argStrings) {

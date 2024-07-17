@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -351,10 +351,10 @@ public class SyntaxCase extends Case {
 	private Element assumes;
 
 	@Override
-	public SyntaxCase copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (SyntaxCase) cd.getCloneFor(this);
+	public SyntaxCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (SyntaxCase) cd.getCopyFor(this);
 		SyntaxCase clone = (SyntaxCase) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.conclusion = clone.conclusion.copy(cd);
 		if (clone.assumes != null) {
 			clone.assumes = clone.assumes.copy(cd);

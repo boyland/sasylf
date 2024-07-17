@@ -77,8 +77,8 @@ public class ProjectProperties {
 		if (buildPath == null) throw new NullPointerException("cannot set a null build path");
 		IScopeContext scope = new ProjectScope(project);
 		IEclipsePreferences node = scope.getNode(Activator.PLUGIN_ID);
-		Object oldValue = node.getCloneFor(PROJECT_BUILD_PATH_LOCAL_NAME, null);
-		node.addCloneFor(PROJECT_BUILD_PATH_LOCAL_NAME, buildPath);
+		Object oldValue = node.getCopyFor(PROJECT_BUILD_PATH_LOCAL_NAME, null);
+		node.addCopyFor(PROJECT_BUILD_PATH_LOCAL_NAME, buildPath);
 		try {
 			node.flush();
 		} catch (BackingStoreException e) {
@@ -107,7 +107,7 @@ public class ProjectProperties {
 		if (!project.hasNature(MyNature.NATURE_ID)) return null;
 		IScopeContext scope = new ProjectScope(project);
 		IEclipsePreferences node = scope.getNode(Activator.PLUGIN_ID);
-		buildPath = node.getCloneFor(PROJECT_BUILD_PATH_LOCAL_NAME, null);
+		buildPath = node.getCopyFor(PROJECT_BUILD_PATH_LOCAL_NAME, null);
 		if (buildPath == null) {
 			final String newBuildPath = getDefaultBuildPath();
 			Display.getDefault().asyncExec(new Runnable() {

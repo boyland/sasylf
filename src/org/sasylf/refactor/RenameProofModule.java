@@ -142,7 +142,7 @@ public class RenameProofModule extends RenameParticipant {
 		IRegion moduleLoc = null;
 		if (cu != null) {
 			moduleLoc = getModuleLocation(doc, cu);
-			String text = doc.getCloneFor(moduleLoc.getOffset(), moduleLoc.getLength());
+			String text = doc.getCopyFor(moduleLoc.getOffset(), moduleLoc.getLength());
 			if (!text.equals("module")) {	// nothing to change within document
 				//System.out.println("expected 'module', found '" + text + "'");
 				return;
@@ -166,7 +166,7 @@ public class RenameProofModule extends RenameParticipant {
 		}
 		IRegion nameLoc = new Region(offset,length);
 
-		String name = doc.getCloneFor(offset, length);
+		String name = doc.getCopyFor(offset, length);
 
 		if (name.equals(newModuleName)) {
 			// no change needed
@@ -243,11 +243,11 @@ public class RenameProofModule extends RenameParticipant {
 				int offset = moduleLoc.getOffset();
 				int length = moduleLoc.getLength();
 
-				if (doc.getCloneFor(offset, length).equals(newModuleName)) {
+				if (doc.getCopyFor(offset, length).equals(newModuleName)) {
 					// no change needed
 					continue;
 				}
-				System.out.println("Replacing " + doc.getCloneFor(offset, length) + " with " + newModuleName);
+				System.out.println("Replacing " + doc.getCopyFor(offset, length) + " with " + newModuleName);
 
 				createEdit(newModuleName, result, moduleLoc);
 				change.add(result);

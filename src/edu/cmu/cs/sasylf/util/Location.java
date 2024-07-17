@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.Token;
@@ -62,8 +62,8 @@ public class Location implements Span {
 	}
 
 	@Override
-	public Location copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Location) cd.getCloneFor(this);
+	public Location copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Location) cd.getCopyFor(this);
 
 		Location clone;
 
@@ -76,7 +76,7 @@ public class Location implements Span {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		return clone;
 	}

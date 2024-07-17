@@ -58,7 +58,7 @@ public class SASyLFCorrectIndentStrategy extends SASyLFIndentStrategy {
 			if (n < bounds.getLength()) break;
 		} while (true);
 
-		String line = document.getCloneFor(bounds.getOffset(), bounds.getLength()).trim();
+		String line = document.getCopyFor(bounds.getOffset(), bounds.getLength()).trim();
 		return n + getNextLineIndentDelta(line)*getIndentUnit();
 	}
 
@@ -84,7 +84,7 @@ public class SASyLFCorrectIndentStrategy extends SASyLFIndentStrategy {
 					++n;
 				}
 				if (n < len) {
-					String line = document.getCloneFor(off+n,len-n).trim();
+					String line = document.getCopyFor(off+n,len-n).trim();
 					currentSpaces += getThisLineIndentDelta(line)*indentUnit;
 					// special case: "terminals" doesn't have a good terminal
 					if (line.equals("syntax")) currentSpaces = 0;

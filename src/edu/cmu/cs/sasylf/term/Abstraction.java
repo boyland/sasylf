@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
@@ -414,8 +414,8 @@ public class Abstraction extends Term {
 	}
 
 	@Override
-	public Abstraction copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Abstraction) cd.getCloneFor(this);
+	public Abstraction copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Abstraction) cd.getCopyFor(this);
 		
 		Abstraction clone;
 
@@ -428,7 +428,7 @@ public class Abstraction extends Term {
 			return null;
 		}
 		
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.varType = clone.varType.copy(cd);
 		clone.body = clone.body.copy(cd);

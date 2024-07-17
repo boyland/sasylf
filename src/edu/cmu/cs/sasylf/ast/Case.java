@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -69,7 +69,7 @@ public class Case extends Node {
 		span.substitute(sd);
 	}
 
-	public Case copy(CloneData cd) {
+	public Case copy(CopyData cd) {
 		// unimplemented because we don't need it
 		System.out.println("Case.copy unimplemented");
 		System.exit(0);

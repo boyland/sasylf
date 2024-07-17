@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
@@ -93,5 +93,5 @@ public abstract class Syntax extends Node {
 	 * Create a deep copy of this Syntax.
 	 * @param cd clone data to use for copying
 	 */
-	public abstract Syntax copy(CloneData cd);
+	public abstract Syntax copy(CopyData cd);
 }

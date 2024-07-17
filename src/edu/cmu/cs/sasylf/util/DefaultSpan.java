@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 public class DefaultSpan implements Span {
@@ -35,8 +35,8 @@ public class DefaultSpan implements Span {
 	private Location start, end;
 
 	@Override
-	public DefaultSpan copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DefaultSpan) cd.getCloneFor(this);
+	public DefaultSpan copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DefaultSpan) cd.getCopyFor(this);
 		DefaultSpan clone;
 		try {
 			clone = (DefaultSpan) super.clone();
@@ -49,7 +49,7 @@ public class DefaultSpan implements Span {
 		clone.start = clone.start.copy(cd);
 		clone.end = clone.end.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		return clone;
 	}

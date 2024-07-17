@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -48,10 +48,10 @@ public class DerivationByInduction extends DerivationByAnalysis {
 	}
 	
 	@Override
-	public DerivationByInduction copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByInduction) cd.getCloneFor(this);
+	public DerivationByInduction copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByInduction) cd.getCopyFor(this);
 		DerivationByInduction clone = (DerivationByInduction) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

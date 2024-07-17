@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -50,10 +50,10 @@ public class DerivationByPrevious extends DerivationWithArgs {
 	}
 	
 	@Override
-	public DerivationByPrevious copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByPrevious) cd.getCloneFor(this);
+	public DerivationByPrevious copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByPrevious) cd.getCopyFor(this);
 		DerivationByPrevious clone = (DerivationByPrevious) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

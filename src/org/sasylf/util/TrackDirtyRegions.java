@@ -86,7 +86,7 @@ public class TrackDirtyRegions implements IDocumentListener {
 	@Override
 	public void documentAboutToBeChanged(DocumentEvent event) {
 		try {
-			oldText = event.fDocument.getCloneFor(event.fOffset, event.fLength);
+			oldText = event.fDocument.getCopyFor(event.fOffset, event.fLength);
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 			StringBuilder sb = new StringBuilder();

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
@@ -251,8 +251,8 @@ public class Judgment extends Node implements ClauseType, Named {
 	}
 
 	@Override
-	public Judgment copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Judgment) cd.getCloneFor(this);
+	public Judgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Judgment) cd.getCopyFor(this);
 		Judgment clone;
 
 		try {
@@ -261,7 +261,7 @@ public class Judgment extends Node implements ClauseType, Named {
 			throw new Error("Java clone() weirdness");
 		}
 		
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 	
 
 		List<Rule> newRules = new ArrayList<>();

@@ -61,10 +61,10 @@ public class SASyLFColorProvider {
 	}
 
 	public Color getColor(RGB rgb){
-		Color color = colorTable.getCloneFor(rgb);
+		Color color = colorTable.getCopyFor(rgb);
 		if(color==null){
 			color = new Color(Display.getCurrent(),rgb);
-			colorTable.addCloneFor(rgb, color);
+			colorTable.addCopyFor(rgb, color);
 		}
 		return color;
 	}

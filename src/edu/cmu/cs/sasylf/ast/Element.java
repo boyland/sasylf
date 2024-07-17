@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
@@ -166,7 +166,7 @@ public abstract class Element extends Node {
 	}
 
 	@Override
-	public Element copy(CloneData cd) {
+	public Element copy(CopyData cd) {
 		Element clone;
 		try {
 			clone = (Element) super.clone();
@@ -176,7 +176,7 @@ public abstract class Element extends Node {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		/*
 		 * Set the term to null, unless this is an instance of Terminal. If it is a

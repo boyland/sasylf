@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -508,8 +508,8 @@ public class Rule extends RuleLike implements CanBeCase {
 	}
 
 	@Override
-	public Rule copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Rule) cd.getCloneFor(this);
+	public Rule copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Rule) cd.getCopyFor(this);
 
 		Rule clone;
 
@@ -526,7 +526,7 @@ public class Rule extends RuleLike implements CanBeCase {
 			newPremises.add(c.copy(cd));
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		clone.premises = newPremises;
 

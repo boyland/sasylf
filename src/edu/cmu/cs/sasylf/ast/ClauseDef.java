@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.SubstitutionData.SubstitutionType;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -504,12 +504,12 @@ public class ClauseDef extends Clause {
 
 	}
 
-	public ClauseDef copy(CloneData cd) {
+	public ClauseDef copy(CopyData cd) {
 
-		if (cd.containsCloneFor(this)) return (ClauseDef) cd.getCloneFor(this);
+		if (cd.containsCopyFor(this)) return (ClauseDef) cd.getCopyFor(this);
 		ClauseDef clone = (ClauseDef) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		/*
 			private String consName;
 			private ClauseType type;

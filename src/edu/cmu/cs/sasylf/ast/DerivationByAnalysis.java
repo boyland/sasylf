@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -412,10 +412,10 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 	}
 
 	@Override
-	public DerivationByAnalysis copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByAnalysis) cd.getCloneFor(this);
+	public DerivationByAnalysis copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByAnalysis) cd.getCopyFor(this);
 		DerivationByAnalysis clone = (DerivationByAnalysis) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.cases = new ArrayList<Case>();
 		for (Case c : cases) {

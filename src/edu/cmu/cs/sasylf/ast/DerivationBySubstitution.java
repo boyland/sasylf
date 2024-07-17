@@ -7,7 +7,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Facade;
@@ -155,10 +155,10 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 	}
 
 	@Override
-	public DerivationBySubstitution copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationBySubstitution) cd.getCloneFor(this);
+	public DerivationBySubstitution copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationBySubstitution) cd.getCopyFor(this);
 		DerivationBySubstitution clone = (DerivationBySubstitution) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 

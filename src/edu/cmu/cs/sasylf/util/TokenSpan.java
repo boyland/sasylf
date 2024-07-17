@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.Token;
 
@@ -27,8 +27,8 @@ public class TokenSpan implements Span {
 	}
 
 	@Override
-	public Span copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (TokenSpan) cd.getCloneFor(this);
+	public Span copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (TokenSpan) cd.getCopyFor(this);
 
 		TokenSpan clone;
 
@@ -43,7 +43,7 @@ public class TokenSpan implements Span {
 		clone.starting = clone.starting.copy(cd);
 		clone.ending = clone.ending.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		return clone;
 	}

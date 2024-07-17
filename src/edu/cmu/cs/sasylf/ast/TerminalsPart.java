@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -66,12 +66,12 @@ public class TerminalsPart implements Part {
 	}
 
 	@Override
-	public TerminalsPart copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (TerminalsPart) cd.getCloneFor(this);
+	public TerminalsPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (TerminalsPart) cd.getCopyFor(this);
 
 		try {
 			TerminalsPart clone = (TerminalsPart) super.clone();
-			cd.addCloneFor(this, clone);
+			cd.addCopyFor(this, clone);
 			HashSet<String> newDeclaredTerminals = new HashSet<>();
 			newDeclaredTerminals.addAll(declaredTerminals);
 			clone.declaredTerminals = newDeclaredTerminals;

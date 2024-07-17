@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -150,10 +150,10 @@ public class NotJudgment extends Judgment {
 	}
 	
 	@Override
-	public NotJudgment copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (NotJudgment) cd.getCloneFor(this);
+	public NotJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (NotJudgment) cd.getCopyFor(this);
 		NotJudgment clone = (NotJudgment) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.part = clone.part.copy(cd);
 		return clone;
 	}

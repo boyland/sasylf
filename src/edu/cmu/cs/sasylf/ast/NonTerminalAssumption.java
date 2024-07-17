@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -82,12 +82,12 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	}
 
 	@Override
-	public NonTerminalAssumption copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (NonTerminalAssumption) cd.getCloneFor(this);
+	public NonTerminalAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (NonTerminalAssumption) cd.getCopyFor(this);
 		
 		NonTerminalAssumption clone = (NonTerminalAssumption) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		clone.nonTerminal = clone.nonTerminal.copy(cd);
 		

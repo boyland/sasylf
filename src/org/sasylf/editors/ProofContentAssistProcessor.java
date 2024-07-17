@@ -153,7 +153,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
       }
 			 */
 			IRegion lineInfo = doc.getLineInformationOfOffset(offset);
-			String line = doc.getCloneFor(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
+			String line = doc.getCopyFor(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
 			String[] pieces = line.split(" ",-1);
 			if (pieces.length < 3) {
 				return noProposals("no 'by rule/lemma/theorem' on line");
@@ -193,7 +193,7 @@ public class ProofContentAssistProcessor implements IContentAssistProcessor {
 		IDocument doc = viewer.getDocument();
 		try {
 			IRegion lineInfo = doc.getLineInformationOfOffset(offset);
-			String line = doc.getCloneFor(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
+			String line = doc.getCopyFor(lineInfo.getOffset(), lineInfo.getLength()).substring(0,offset-lineInfo.getOffset());
 			int byIndex = line.lastIndexOf(" by ");
 			if (byIndex < 0) {
 				return noInformation("cannot find 'by' in line");

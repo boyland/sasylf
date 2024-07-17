@@ -20,15 +20,15 @@ import java.util.Map;
  * 
  * The result is a deep copy of the AST, where each object (by reference) is cloned exactly once.
  */
-public class CloneData {
-  private final Map<Object, Object> cloneMap; // maps objects to their clones
+public class CopyData {
+  private final Map<Object, Object> copyMap; // maps objects to their clones
 
-  public CloneData() {
+  public CopyData() {
     /*
       We use IdentityHashMap because two objects should become the same clone
       if and only if they are the same object.
     */
-    cloneMap = new IdentityHashMap<>();
+    copyMap = new IdentityHashMap<>();
   }
 
   /**
@@ -36,8 +36,8 @@ public class CloneData {
    * @param clonedObject The object that is being cloned
    * @param theClone The clone of <code> clonedObject </code>
    */
-  public void addCloneFor(Object clonedObject, Object theClone) {
-    cloneMap.put(clonedObject, theClone);
+  public void addCopyFor(Object clonedObject, Object theClone) {
+    copyMap.put(clonedObject, theClone);
   }
 
   /**
@@ -45,8 +45,8 @@ public class CloneData {
    * @param o The object to check if a clone already exists for
    * @return Whether a clone already exists for <code> o </code>
    */
-  public boolean containsCloneFor(Object o) {
-    return cloneMap.containsKey(o);
+  public boolean containsCopyFor(Object o) {
+    return copyMap.containsKey(o);
   }
 
   /**
@@ -54,8 +54,8 @@ public class CloneData {
    * @param o
    * @return The clone for <code> o </code> if it exists, and null otherwise
    */
-  public Object getCloneFor(Object o) {
-    return cloneMap.get(o);
+  public Object getCopyFor(Object o) {
+    return copyMap.get(o);
   }
 
 }

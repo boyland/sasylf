@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Application;
@@ -248,10 +248,10 @@ public class NonTerminal extends Element {
 	}
 
 	@Override
-	public NonTerminal copy(CloneData cd) {
+	public NonTerminal copy(CopyData cd) {
 
-		if (cd.containsCloneFor(this)) {
-			return (NonTerminal) cd.getCloneFor(this);
+		if (cd.containsCopyFor(this)) {
+			return (NonTerminal) cd.getCopyFor(this);
 		}
 
 		NonTerminal clone = (NonTerminal) super.copy(cd);
@@ -264,7 +264,7 @@ public class NonTerminal extends Element {
 			private SyntaxDeclaration ty;
 		 */
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		if (clone.type != null) {
 			clone.type = clone.type.copy(cd);

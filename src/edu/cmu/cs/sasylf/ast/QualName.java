@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
@@ -245,8 +245,8 @@ public class QualName extends Node {
 	}
 
 	@Override
-	public QualName copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (QualName) cd.getCloneFor(this);
+	public QualName copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (QualName) cd.getCopyFor(this);
 
 		QualName clone;
 		try {
@@ -257,7 +257,7 @@ public class QualName extends Node {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		if (source != null) {
 			clone.source = clone.source.copy(cd);

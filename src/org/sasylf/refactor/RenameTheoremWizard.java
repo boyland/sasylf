@@ -102,7 +102,7 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 		int offset = moduleLoc.getOffset();
 		int length = moduleLoc.getLength();
 		
-		System.out.println("Replacing " + doc.getCloneFor(offset, length) + " with " + newName);
+		System.out.println("Replacing " + doc.getCopyFor(offset, length) + " with " + newName);
 		edit.addChild(new ReplaceEdit(offset, length, newName));
 
 		List<QualName> qualNames = new ArrayList<>();
@@ -126,10 +126,10 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 			offset = moduleLoc.getOffset();
 			length = moduleLoc.getLength();
 			
-			System.out.println("Replacing " + doc.getCloneFor(offset, length) + " with " + newName);
+			System.out.println("Replacing " + doc.getCopyFor(offset, length) + " with " + newName);
 			edit.addChild(new ReplaceEdit(offset, length, newName));
 		}
-		changes.addCloneFor(doc, edit);
+		changes.addCopyFor(doc, edit);
 	}
 
 	// get the change in the specified file
@@ -168,15 +168,15 @@ public class RenameTheoremWizard extends Wizard implements IWizard {
 			int offset = moduleLoc.getOffset();
 			int length = moduleLoc.getLength();
 
-			if (doc.getCloneFor(offset, length).equals(newName)) {
+			if (doc.getCopyFor(offset, length).equals(newName)) {
 				// no change needed
 				continue;
 			}
 			
-			System.out.println("Replacing " + doc.getCloneFor(offset, length) + " with " + newName + " in file " + file.getName());
+			System.out.println("Replacing " + doc.getCopyFor(offset, length) + " with " + newName + " in file " + file.getName());
 			edit.addChild(new ReplaceEdit(offset, length, newName));
 		}
-		changes.addCloneFor(doc, edit);
+		changes.addCopyFor(doc, edit);
 
 	}
 

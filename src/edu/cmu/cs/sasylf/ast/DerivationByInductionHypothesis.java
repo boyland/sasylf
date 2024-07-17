@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -28,10 +28,10 @@ public class DerivationByInductionHypothesis extends DerivationByIHRule {
 		this.checkInduction(ctx, ctx.currentTheorem, ctx.currentTheorem);
 	}
 	@Override
-	public DerivationByInductionHypothesis copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByInductionHypothesis) cd.getCloneFor(this);
+	public DerivationByInductionHypothesis copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByInductionHypothesis) cd.getCopyFor(this);
 		DerivationByInductionHypothesis clone = (DerivationByInductionHypothesis) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 

@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.Syntax;
@@ -75,5 +75,5 @@ public abstract class Atom extends Term {
 	 * Create a deep copy of this Atom.
 	 * @param cd the data to use during the cloning process
 	 */
-	public abstract Atom copy(CloneData cd);
+	public abstract Atom copy(CopyData cd);
 }

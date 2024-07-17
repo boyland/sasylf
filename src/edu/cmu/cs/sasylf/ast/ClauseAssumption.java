@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
@@ -42,12 +42,12 @@ public class ClauseAssumption extends SyntaxAssumption {
 		clause.substitute(sd);
 	}
 
-	public ClauseAssumption copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (ClauseAssumption) cd.getCloneFor(this);
+	public ClauseAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ClauseAssumption) cd.getCopyFor(this);
 
 		ClauseAssumption clone = (ClauseAssumption) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		clone.clause = clause.copy(cd);
 

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
@@ -80,8 +80,8 @@ public class TheoremPart implements Part {
 	}
 
 	@Override
-	public TheoremPart copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (TheoremPart) cd.getCloneFor(this);
+	public TheoremPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (TheoremPart) cd.getCopyFor(this);
 		TheoremPart clone;
 		try {
 			clone = (TheoremPart) super.clone();
@@ -91,7 +91,7 @@ public class TheoremPart implements Part {
 			System.exit(1);
 			return null;
 		}
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.theorems = new ArrayList<Theorem>();
 		for (Theorem theorem : theorems) {
 			clone.theorems.add(theorem.copy(cd));

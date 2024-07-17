@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
@@ -32,10 +32,10 @@ public class VariableAssumption extends SyntaxAssumption {
 	}
 
 	@Override
-	public VariableAssumption copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (VariableAssumption) cd.getCloneFor(this);
+	public VariableAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (VariableAssumption) cd.getCopyFor(this);
 		VariableAssumption clone = (VariableAssumption) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.variable = clone.variable.copy(cd);
 		return clone;
 	}

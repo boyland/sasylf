@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -68,11 +68,11 @@ public class Clause extends Element implements CanBeCase {
 		}
 	}
 
-	public Clause copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Clause) cd.getCloneFor(this);
+	public Clause copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Clause) cd.getCopyFor(this);
 		Clause clone = (Clause) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		List<Element> newElements = new ArrayList<Element>();
 

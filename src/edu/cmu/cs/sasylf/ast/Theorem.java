@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -389,8 +389,8 @@ public class Theorem extends RuleLike {
 	}
 
 	@Override
-	public Theorem copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Theorem) cd.getCloneFor(this);
+	public Theorem copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Theorem) cd.getCopyFor(this);
 		
 		Theorem clone;
 		try {
@@ -401,7 +401,7 @@ public class Theorem extends RuleLike {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		// skip kind and kindTitle
 

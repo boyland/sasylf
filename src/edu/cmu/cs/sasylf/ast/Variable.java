@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
@@ -165,12 +165,12 @@ public class Variable extends Element {
 	}
 
 	@Override
-	public Variable copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Variable) cd.getCloneFor(this);
+	public Variable copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Variable) cd.getCopyFor(this);
 
 		Variable clone = (Variable) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.type = clone.type.copy(cd);
 

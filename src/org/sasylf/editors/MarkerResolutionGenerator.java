@@ -194,7 +194,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 			line = marker.getAttribute(IMarker.LINE_NUMBER, 0);
 			if (line > 0) {
 				lineInfo = doc.getLineInformation(line-1);
-				lineText = doc.getCloneFor(lineInfo.getOffset(), lineInfo.getLength());
+				lineText = doc.getCopyFor(lineInfo.getOffset(), lineInfo.getLength());
 			}
 		} catch (CoreException e) {
 			e.printStackTrace();
@@ -456,7 +456,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 					int colon = split[0].indexOf(':');
 					int useStart = marker.getAttribute(IMarker.CHAR_START, -1);
 					int useEnd = marker.getAttribute(IMarker.CHAR_END, -1);
-					String useName = doc.getCloneFor(useStart,useEnd-useStart);
+					String useName = doc.getCopyFor(useStart,useEnd-useStart);
 					String defName;
 					if (colon >= 0) {
 						defName = split[0].substring(0,colon);
@@ -475,7 +475,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						// muffle array or number format
 					}
 					if (diff > 0) prevLineInfo = doc.getLineInformation(line-1-diff);
-					String prevLine = doc.getCloneFor(prevLineInfo.getOffset(), prevLineInfo.getLength());
+					String prevLine = doc.getCopyFor(prevLineInfo.getOffset(), prevLineInfo.getLength());
 					int prevStart;
 					for (prevStart=0; prevStart < prevLine.length(); ++prevStart) {
 						int ch = lineText.charAt(prevStart);

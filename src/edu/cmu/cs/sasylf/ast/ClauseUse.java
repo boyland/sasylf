@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Grammar;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -649,10 +649,10 @@ public class ClauseUse extends Clause {
 	}
 
 	@Override
-	public ClauseUse copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (ClauseUse) cd.getCloneFor(this);
+	public ClauseUse copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ClauseUse) cd.getCopyFor(this);
 		ClauseUse clone = (ClauseUse) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		/*
 		 * Clone the following properties:
 		 * 

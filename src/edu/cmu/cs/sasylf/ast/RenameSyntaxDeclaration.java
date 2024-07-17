@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -200,12 +200,12 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	}
 
 	@Override
-	public RenameSyntaxDeclaration copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (RenameSyntaxDeclaration) cd.getCloneFor(this);
+	public RenameSyntaxDeclaration copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (RenameSyntaxDeclaration) cd.getCopyFor(this);
 
 		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		if (clone.source != null) {
 			clone.source = clone.source.copy(cd);

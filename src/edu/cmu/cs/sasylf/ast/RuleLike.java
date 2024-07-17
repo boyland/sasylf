@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -529,6 +529,6 @@ public abstract class RuleLike extends Node implements Named {
 	 * Creates a deep copy of this RuleLike
 	 * @param cd the data to be used in the cloning process
 	 */
-	public abstract RuleLike copy(CloneData cd);
+	public abstract RuleLike copy(CopyData cd);
 
 }

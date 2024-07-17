@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -128,11 +128,11 @@ public class DerivationPlaceholder extends Derivation {
 	}
 
 	@Override
-	public DerivationPlaceholder copy(CloneData cd) {
+	public DerivationPlaceholder copy(CopyData cd) {
 
-		if (cd.containsCloneFor(this)) return (DerivationPlaceholder) cd.getCloneFor(this);
+		if (cd.containsCopyFor(this)) return (DerivationPlaceholder) cd.getCopyFor(this);
 		DerivationPlaceholder clone = (DerivationPlaceholder) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.variable = clone.variable.copy(cd);
 		clone.report = new UpdatableErrorReport(null, getName(), clone);
 		clone.asTerm = clone.asTerm.copy(cd);

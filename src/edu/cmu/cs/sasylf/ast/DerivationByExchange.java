@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -108,10 +108,10 @@ public class DerivationByExchange extends DerivationWithArgs {
 	}
 
 	@Override
-	public DerivationByExchange copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByExchange) cd.getCloneFor(this);
+	public DerivationByExchange copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByExchange) cd.getCopyFor(this);
 		DerivationByExchange clone = (DerivationByExchange) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -455,10 +455,10 @@ public class RuleCase extends Case {
 	}
 
 	@Override
-	public RuleCase copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (RuleCase) cd.getCloneFor(this);
+	public RuleCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (RuleCase) cd.getCopyFor(this);
 		RuleCase clone = (RuleCase) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		/*
 			private Rule rule;
 			private QualName ruleName;

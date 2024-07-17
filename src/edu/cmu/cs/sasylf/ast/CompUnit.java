@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -278,13 +278,13 @@ public class CompUnit extends Node implements Module {
 		}
 	}
 
-	public CompUnit copy(CloneData cd) {
+	public CompUnit copy(CopyData cd) {
 		return clone();
 	}
 
 	@Override
 	public CompUnit clone() {
-		CloneData cd = new CloneData();
+		CopyData cd = new CopyData();
 		CompUnit clone;
 
 		try {

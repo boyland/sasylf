@@ -292,7 +292,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 			Object x = it.next();
 			if (x instanceof ProjectionAnnotation) {
 				ProjectionAnnotation anno = (ProjectionAnnotation)x;
-				oldAnnos.addCloneFor(annotationModel.getPosition(anno), anno);
+				oldAnnos.addCopyFor(annotationModel.getPosition(anno), anno);
 			}
 		}
 
@@ -303,7 +303,7 @@ public class ProofEditor extends TextEditor implements ProofChecker.Listener {
 				if (oldAnnos.remove(p) == null) {
 					ProjectionAnnotation annotation = new ProjectionAnnotation();
 					doc.addPosition(PROOF_PROJECTION_CATEGORY, p);
-					newAnnos.addCloneFor(annotation, p);
+					newAnnos.addCopyFor(annotation, p);
 				}
 			}
 

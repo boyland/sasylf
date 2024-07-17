@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.Queue;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 
@@ -41,8 +41,8 @@ public class Constant extends Atom {
 	}
 
 	@Override
-	public Constant copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Constant) cd.getCloneFor(this);
+	public Constant copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Constant) cd.getCopyFor(this);
 
 		Constant clone;
 
@@ -55,7 +55,7 @@ public class Constant extends Atom {
 			return null;
 		}
 		
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		if (clone.type != null) {
 			clone.type = clone.type.copy(cd);

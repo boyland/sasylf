@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
@@ -161,8 +161,8 @@ public class BoundVar extends Atom {
 	}
 	
 	@Override
-	public BoundVar copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (BoundVar) cd.getCloneFor(this);
+	public BoundVar copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (BoundVar) cd.getCopyFor(this);
 
 		BoundVar clone;
 
@@ -175,7 +175,7 @@ public class BoundVar extends Atom {
 			return null;
 		}
 		
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		return clone;
 	}

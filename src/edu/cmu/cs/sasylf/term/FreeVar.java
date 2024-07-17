@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Relation;
@@ -303,8 +303,8 @@ public class FreeVar extends Atom {
 	}
 
 	@Override
-	public FreeVar copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (FreeVar) cd.getCloneFor(this);
+	public FreeVar copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (FreeVar) cd.getCopyFor(this);
 
 		FreeVar clone;
 
@@ -316,7 +316,7 @@ public class FreeVar extends Atom {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		if (clone.type != null) {
 			clone.type = clone.type.copy(cd);

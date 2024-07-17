@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.grammar.*;
@@ -39,8 +39,8 @@ public class GrmTerminal implements Terminal {
 		if (element != null) element.substitute(sd);
 	}
 
-	public GrmTerminal copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (GrmTerminal) cd.getCloneFor(this);
+	public GrmTerminal copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (GrmTerminal) cd.getCopyFor(this);
 		
 		GrmTerminal clone;
 		try {
@@ -52,7 +52,7 @@ public class GrmTerminal implements Terminal {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.element = clone.element.copy(cd);
 		

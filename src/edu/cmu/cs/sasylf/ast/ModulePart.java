@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -485,8 +485,8 @@ public class ModulePart extends Node implements Part, Named {
 
 	}
 
-	public ModulePart copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (ModulePart) cd.getCloneFor(this);
+	public ModulePart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ModulePart) cd.getCopyFor(this);
 		ModulePart clone;
 
 		try {
@@ -498,7 +498,7 @@ public class ModulePart extends Node implements Part, Named {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		clone.module = clone.module.copy(cd);
 		

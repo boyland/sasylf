@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.Objects;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -109,10 +109,10 @@ public class DerivationByWeakening extends DerivationWithArgs {
 	}
 
 	@Override
-	public DerivationByWeakening copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByWeakening) cd.getCloneFor(this);
+	public DerivationByWeakening copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByWeakening) cd.getCopyFor(this);
 		DerivationByWeakening clone = (DerivationByWeakening) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

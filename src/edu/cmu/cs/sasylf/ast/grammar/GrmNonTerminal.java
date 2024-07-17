@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
 
@@ -31,10 +31,10 @@ public class GrmNonTerminal implements NonTerminal {
 		}
 	}
 
-	public GrmNonTerminal copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (GrmNonTerminal) cd.getCloneFor(this);
+	public GrmNonTerminal copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (GrmNonTerminal) cd.getCopyFor(this);
 		GrmNonTerminal clone = new GrmNonTerminal(string);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 

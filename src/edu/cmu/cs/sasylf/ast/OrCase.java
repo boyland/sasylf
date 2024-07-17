@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -125,10 +125,10 @@ public class OrCase extends Case {
 	}
 
 	@Override
-	public OrCase copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (OrCase) cd.getCloneFor(this);
+	public OrCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (OrCase) cd.getCopyFor(this);
 		OrCase clone = (OrCase) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.premise = clone.premise.copy(cd);
 		return clone;
 	}

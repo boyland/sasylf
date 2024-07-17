@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Term;
@@ -135,13 +135,13 @@ public class Terminal extends Element implements ElemType {
 	}
 
 	@Override
-	public Terminal copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Terminal) cd.getCloneFor(this);
+	public Terminal copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Terminal) cd.getCopyFor(this);
 
 		// make a clone
 		Terminal clone = (Terminal) super.copy(cd);
 		
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.sp = clone.sp.copy(cd);
 

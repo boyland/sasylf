@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -95,10 +95,10 @@ public class DerivationByTheorem extends DerivationByIHRule {
 	}
 
 	@Override
-	public DerivationByTheorem copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByTheorem) cd.getCloneFor(this);
+	public DerivationByTheorem copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByTheorem) cd.getCopyFor(this);
 		DerivationByTheorem clone = (DerivationByTheorem) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.theoremKind = clone.theoremKind.copy(cd);
 		clone.theoremName = clone.theoremName.copy(cd);

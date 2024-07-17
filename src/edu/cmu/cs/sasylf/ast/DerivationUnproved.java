@@ -2,7 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -40,10 +40,10 @@ public class DerivationUnproved extends Derivation {
 	}
 
 	@Override
-	public DerivationUnproved copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationUnproved) cd.getCloneFor(this);
+	public DerivationUnproved copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationUnproved) cd.getCopyFor(this);
 		DerivationUnproved clone = (DerivationUnproved) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 }

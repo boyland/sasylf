@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -207,8 +207,8 @@ public class Sugar extends Syntax {
 	}
 
 	@Override
-	public Sugar copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Sugar) cd.getCloneFor(this);
+	public Sugar copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Sugar) cd.getCopyFor(this);
 
 		Sugar clone;
 		try {
@@ -219,7 +219,7 @@ public class Sugar extends Syntax {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		
 		clone.sugar = clone.sugar.copy(cd);
 		clone.typeName = clone.typeName.copy(cd);

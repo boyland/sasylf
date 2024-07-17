@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
@@ -367,8 +367,8 @@ public abstract class Derivation extends Fact {
 	}
 
 	@Override
-	public Derivation copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Derivation) cd.getCloneFor(this);
+	public Derivation copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Derivation) cd.getCopyFor(this);
 		Derivation clone;
 		try {
 			clone = (Derivation) clone();
@@ -379,7 +379,7 @@ public abstract class Derivation extends Fact {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.clause = clone.clause.copy(cd);
 

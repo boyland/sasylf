@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -619,9 +619,9 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	}
 
 	@Override
-	public SyntaxDeclaration copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) {
-			return (SyntaxDeclaration) cd.getCloneFor(this);
+	public SyntaxDeclaration copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) {
+			return (SyntaxDeclaration) cd.getCopyFor(this);
 		}
 
 		SyntaxDeclaration clone;
@@ -633,7 +633,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.elements = new ArrayList<Clause>();
 		for (Clause c : elements) {

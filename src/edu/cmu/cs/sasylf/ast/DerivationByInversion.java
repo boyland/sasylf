@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -276,15 +276,15 @@ public class DerivationByInversion extends DerivationWithArgs {
 	}
 
 	@Override
-	public DerivationByInversion copy(CloneData cd) {
+	public DerivationByInversion copy(CopyData cd) {
 		/*
 			private QualName ruleName;
 			private WhereClause whereClauses;
 		*/
 
-		if (cd.containsCloneFor(this)) return (DerivationByInversion) cd.getCloneFor(this);
+		if (cd.containsCopyFor(this)) return (DerivationByInversion) cd.getCopyFor(this);
 		DerivationByInversion clone = (DerivationByInversion) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.ruleName = clone.ruleName.copy(cd);
 		clone.whereClauses = clone.whereClauses.copy(cd);
 		

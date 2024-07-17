@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
@@ -766,8 +766,8 @@ public class Application extends Term {
 	}
 
 	@Override
-	public Application copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Application) cd.getCloneFor(this);
+	public Application copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Application) cd.getCopyFor(this);
 
 		Application clone;
 
@@ -779,7 +779,7 @@ public class Application extends Term {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.function = clone.function.copy(cd);
 		List<Term> newArgs = new ArrayList<Term>();

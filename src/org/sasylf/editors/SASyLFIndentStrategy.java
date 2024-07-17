@@ -69,7 +69,7 @@ public class SASyLFIndentStrategy extends DefaultIndentLineAutoEditStrategy {
 		while (start < offset && Character.isWhitespace(d.getChar(start))) {
 			++start;
 		}
-		String line = d.getCloneFor(start, offset-start);
+		String line = d.getCopyFor(start, offset-start);
 		return line;
 	}
 

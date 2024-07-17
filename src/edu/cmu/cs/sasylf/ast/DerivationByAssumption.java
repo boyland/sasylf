@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -13,10 +13,10 @@ public class DerivationByAssumption extends Derivation {
 	// verify: error if this is actually part of a derivation--it's for foralls only!
 
 	@Override
-	public DerivationByAssumption copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (DerivationByAssumption) cd.getCloneFor(this);
+	public DerivationByAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByAssumption) cd.getCopyFor(this);
 		DerivationByAssumption clone = (DerivationByAssumption) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		return clone;
 	}
 

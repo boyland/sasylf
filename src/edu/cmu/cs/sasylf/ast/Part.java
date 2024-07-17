@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -46,5 +46,5 @@ public interface Part extends Cloneable {
 	 * @param cd clone data
 	 * @return a deep copy of this Part
 	 */
-	public abstract Part copy(CloneData cd);
+	public abstract Part copy(CopyData cd);
 }

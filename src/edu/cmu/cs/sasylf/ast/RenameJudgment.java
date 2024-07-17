@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.List;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -135,10 +135,10 @@ public class RenameJudgment extends Judgment {
 	}
 
 	@Override
-	public RenameJudgment copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return  (RenameJudgment) cd.getCloneFor(this);
+	public RenameJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return  (RenameJudgment) cd.getCopyFor(this);
 		RenameJudgment clone = (RenameJudgment) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 		clone.source = source.copy(cd);
 		clone.original = original;
 		return clone;

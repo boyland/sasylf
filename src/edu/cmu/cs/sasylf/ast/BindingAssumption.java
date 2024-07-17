@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -49,12 +49,12 @@ public class BindingAssumption extends NonTerminalAssumption {
 		binding.substitute(sd);
 	}
 
-	public BindingAssumption copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (BindingAssumption) cd.getCloneFor(this);
+	public BindingAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (BindingAssumption) cd.getCopyFor(this);
 
 		BindingAssumption clone = (BindingAssumption) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.binding = clone.binding.copy(cd);
 		

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Abstraction;
@@ -205,12 +205,12 @@ public class Binding extends Element {
 
 	}
 
-	public Binding copy(CloneData cd) {
+	public Binding copy(CopyData cd) {
 		//return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
-		if (cd.containsCloneFor(this)) return (Binding) cd.getCloneFor(this);
+		if (cd.containsCopyFor(this)) return (Binding) cd.getCopyFor(this);
 		Binding clone = (Binding) super.copy(cd);
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		/*
 			private List<Element> elements;

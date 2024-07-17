@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -360,8 +360,8 @@ public class Relaxation {
 		result.substitute(sd);
 	}
 
-	public Relaxation copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (Relaxation) cd.getCloneFor(this);
+	public Relaxation copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Relaxation) cd.getCopyFor(this);
 		Relaxation clone;
 
 		try {
@@ -373,7 +373,7 @@ public class Relaxation {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		List<Term> newTypes = new ArrayList<Term>();
 		for (Term t : types) {

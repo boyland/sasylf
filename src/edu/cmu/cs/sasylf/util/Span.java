@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -15,7 +15,7 @@ public interface Span extends Cloneable {
 	 * @param cd clone data to use
 	 * @return a copy of this span
 	 */
-	public Span copy(CloneData cd);
+	public Span copy(CopyData cd);
 
 	/**
 	 * Substitute in this span using the given substitution data.

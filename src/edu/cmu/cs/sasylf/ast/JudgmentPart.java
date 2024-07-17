@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -139,8 +139,8 @@ public class JudgmentPart implements Part {
 	}
 
 	@Override
-	public JudgmentPart copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (JudgmentPart) cd.getCloneFor(this);
+	public JudgmentPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (JudgmentPart) cd.getCopyFor(this);
 		JudgmentPart clone;
 		try {
 			clone = (JudgmentPart) super.clone();
@@ -151,7 +151,7 @@ public class JudgmentPart implements Part {
 			return null;
 		}
 
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		List<Judgment> newJudgments = new ArrayList<Judgment>();
 		for (Judgment j : judgments) {

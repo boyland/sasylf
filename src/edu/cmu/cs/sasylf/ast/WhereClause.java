@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -447,8 +447,8 @@ public class WhereClause extends Node {
 	}
 
 	@Override
-	public WhereClause copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (WhereClause) cd.getCloneFor(this);
+	public WhereClause copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (WhereClause) cd.getCopyFor(this);
 		WhereClause clone;
 		try {
 			clone = (WhereClause) clone();

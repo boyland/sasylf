@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
@@ -283,10 +283,10 @@ public class ContextJudgment extends Judgment {
 	}
 	
 	@Override
-	public ContextJudgment copy(CloneData cd) {
-		if (cd.containsCloneFor(this)) return (ContextJudgment) cd.getCloneFor(this);
+	public ContextJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ContextJudgment) cd.getCopyFor(this);
 		ContextJudgment clone = (ContextJudgment) super.copy(cd);
-		cd.addCloneFor(this, clone);
+		cd.addCopyFor(this, clone);
 
 		clone.base = clone.base.copy(cd);
 		clone.context = clone.context.copy(cd);
