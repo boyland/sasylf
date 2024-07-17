@@ -75,6 +75,12 @@ public abstract class Syntax extends Node {
 	 */
 	public void checkSubordination() {}
 
+	/**
+	 * Get the original declaration of this syntax. If this syntax is a renaming,
+	 * then this method will return the original syntax that was renamed.
+	 * If this syntax is not a renaming, then this method will return this syntax.
+	 * @return the original declaration of this syntax
+	 */
 	public abstract SyntaxDeclaration getOriginalDeclaration();
 
 	public abstract void substitute(SubstitutionData sd);
