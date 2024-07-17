@@ -30,9 +30,7 @@ public class ClauseDef extends Clause {
 		this(copy, type, null);
 	}
 	public ClauseDef(Clause copy, ClauseType type, String cName) {
-		
 		super(copy.getLocation());
-
 		setEndLocation(copy.getEndLocation());
 		getElements().addAll(copy.getElements());
 		this.type = type;
@@ -48,7 +46,7 @@ public class ClauseDef extends Clause {
 					//}
 				} 
 			}
-			consName = uniqueify(consName);			
+			consName = uniqueify(consName);
 		}
 		for (Element e : getElements()) {
 			if (e instanceof Clause) {
@@ -110,9 +108,7 @@ public class ClauseDef extends Clause {
 	}
 
 	@Override
-	public Term getTypeTerm() {
-		return asTerm();
-	}
+	public Term getTypeTerm() { return asTerm(); }
 
 	private String consName;
 	private ClauseType type;
@@ -176,8 +172,7 @@ public class ClauseDef extends Clause {
 
 		typeTerm = Term.wrapWithLambdas(typeTerm, argTypes, argNames);
 
-		Constant c = new Constant(consName, typeTerm);
-		return c;
+		return new Constant(consName, typeTerm);
 	}
 
 	public int getVariableIndex() {
@@ -405,23 +400,21 @@ public class ClauseDef extends Clause {
 	
 	@Override
 	public void substitute(SubstitutionData sd) {
-
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
-
-		/*
-			private String consName;
-			private ClauseType type;
-			public Rule assumptionRule;	
-			private int cachedAssumeIndex = -2;
-		*/
 
 		if (sd.containsJudgmentReplacementFor(consName)) {
 			consName = sd.getJudgmentReplacement().getName();
 		}
 
 		if (type != null) {
+			/*
+			 * We need to substitute for type
+			 * First, we check if type is an instance of Judgment or SyntaxDeclaration
+			 * Then, we get check if sd has a replacement for the name of the Judgment or SyntaxDeclaration 
+			 */
+			
 			if (type instanceof Judgment) {
 				Judgment j = (Judgment) type;
 				String name = j.getName();
@@ -442,15 +435,22 @@ public class ClauseDef extends Clause {
 			assumptionRule.substitute(sd);
 		}
 
-		// if we are substituting Syntax, substitute for consName
-		// find the index of the ClauseDef with the same consName
 
+		/*
+		 * We need to substitute for consName
+		 * 
+		 * First, we check if the substitution is of type SYNTAX or JUDGMENT
+		 */
 		
 		if (sd.substitutionType == SubstitutionData.SubstitutionType.SYNTAX) {
 
-			if (!type.equals((ClauseType) sd.getSyntaxReplacement())) {
-				return;
-			}
+			if (!type.equals((ClauseType) sd.getSyntaxReplacement())) return;
+
+			/*
+			 * Iterate through sd.oldSyntax.getClauses() and see if it contains a
+			 * ClauseDef with the same consName as this ClauseDef. If it exists
+			 * then save its index.
+			 */
 
 			int indexOfClauseDef = -1;
 
@@ -479,21 +479,24 @@ public class ClauseDef extends Clause {
 			}
 			ClauseDef newClauseDef = (ClauseDef) newClause;
 
+			// set the consName of this ClauseDef to the consName of the new ClauseDef
+
 			consName = newClauseDef.consName;
 		}
 		
 		else if (sd.substitutionType == SubstitutionType.JUDGMENT) {
 
-			if (!type.equals(sd.getJudgmentReplacement())) {
-				return;
-			}
+			if (!type.equals(sd.getJudgmentReplacement())) return;
 
 			// get the ClauseDef from the judgment
 			Clause newClause = sd.getJudgmentReplacement().getForm();
 			if (!(newClause instanceof ClauseDef)) {
+				// this should not happen
+				// this should be an internal error
 				System.out.println("Error: ClauseDef not found in new judgment");
 				System.exit(1);
 			}
+
 			ClauseDef cd = (ClauseDef) newClause;
 
 			consName = cd.consName;
