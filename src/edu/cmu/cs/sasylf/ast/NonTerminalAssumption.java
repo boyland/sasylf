@@ -46,15 +46,13 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	@Override
 	public Element getElementBase() { return nonTerminal; }
 
-	public NonTerminal nonTerminal; // changed to public for debugging purposes TODO: Change it back to private
+	private NonTerminal nonTerminal;
 	private boolean isTheoremArg = false;
 
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
-
-		// TODO: this code is duplicated Clause.substitute
 
 		// check if we should substitute for the nonTerminal
 
@@ -88,11 +86,6 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 		if (cd.containsCloneFor(this)) return (NonTerminalAssumption) cd.getCloneFor(this);
 		
 		NonTerminalAssumption clone = (NonTerminalAssumption) super.copy(cd);
-
-		/*
-			private NonTerminal nonTerminal;
-			private boolean isTheoremArg = false;
-		*/
 
 		cd.addCloneFor(this, clone);
 		

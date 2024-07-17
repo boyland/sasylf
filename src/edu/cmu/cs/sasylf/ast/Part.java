@@ -35,6 +35,16 @@ public interface Part extends Cloneable {
 	
 	public abstract void collectQualNames(Consumer<QualName> consumer);
 
+	/**
+	 * Substitute inside of this Part according to <code> sd </code>
+	 * @param sd substitution data
+	 */
 	public abstract void substitute(SubstitutionData sd);
+	
+	/**
+	 * Creates and returns a deep copy of this Part
+	 * @param cd clone data
+	 * @return a deep copy of this Part
+	 */
 	public abstract Part copy(CloneData cd);
 }

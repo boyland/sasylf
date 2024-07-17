@@ -23,7 +23,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
-public class NonTerminal extends Element implements Cloneable {
+public class NonTerminal extends Element {
 	private SyntaxDeclaration ty;
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
@@ -108,7 +108,6 @@ public class NonTerminal extends Element implements Cloneable {
 			}
 		} else
 			out.print(symbol);
-
 	}
 
 	/**
@@ -208,18 +207,18 @@ public class NonTerminal extends Element implements Cloneable {
 		freeSet.add(this);
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
 	
 		/*
-			We want to check if symbol matches from
+			We want to check if symbol "matches" from
 
-			We need to remove these characters from the back of the string, then check if they are equal
+			We need to remove the filler characters from the back of the string, then check if they are equal
 
-			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are **filler characters**
-		
+			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are filler characters
 		*/
 
 		// First, check that from is a prefix of symbol
@@ -248,6 +247,7 @@ public class NonTerminal extends Element implements Cloneable {
 
 	}
 
+	@Override
 	public NonTerminal copy(CloneData cd) {
 
 		if (cd.containsCloneFor(this)) {
@@ -257,6 +257,8 @@ public class NonTerminal extends Element implements Cloneable {
 		NonTerminal clone = (NonTerminal) super.copy(cd);
 		
 		/*
+			Substitute in the following attributes:
+
 			private String symbol;
 			private SyntaxDeclaration type;
 			private SyntaxDeclaration ty;
@@ -272,6 +274,7 @@ public class NonTerminal extends Element implements Cloneable {
 		return clone;
 	}
 	
+	@Override
 	public NonTerminal clone() {
 		try {
 			return (NonTerminal) super.clone();

@@ -20,6 +20,7 @@ public class PartialCaseAnalysis extends DerivationByCaseAnalysis {
 		super("_", l, null, subject);
 	}
 
+	@Override
 	public PartialCaseAnalysis copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (PartialCaseAnalysis) cd.getCloneFor(this);
 		PartialCaseAnalysis clone = (PartialCaseAnalysis) super.copy(cd);

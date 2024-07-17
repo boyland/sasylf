@@ -366,6 +366,7 @@ public abstract class Derivation extends Fact {
 		
 	}
 
+	@Override
 	public Derivation copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Derivation) cd.getCloneFor(this);
 		Derivation clone;

@@ -10,7 +10,6 @@ import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * A qualified name, used in the SASyLF module system.
@@ -109,8 +108,7 @@ public class QualName extends Node {
 	 */
 	public Object resolve(Context ctx) {
 		if (ctx == null) return resolution;
-		//System.out.println("version = " + ctx.version());
-		if (true || version != ctx.version()) resolution = null; // TODO: remove the true ||, which I put for debugging purposes
+		if (version != ctx.version()) resolution = null;
 		if (resolution == null) {
 			version = ctx.version();
 			if (source == null) { // if we are resolving it from the main (top level) module
@@ -236,19 +234,17 @@ public class QualName extends Node {
 
 	@Override
 	public void substitute(SubstitutionData sd) {
-		// I'm pretty sure that nothing needs to be done when substituting in a QualName
+
+		/*
+		 * Nothing needs to be done to the QualName object itself
+		 * Just update the substitution data 
+		 */
+
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		// TODO: I don't think we need the next line
-		// if (source != null) source.substitute(sd);
-		/*
-		if (name.equals(sd.from)) {
-			name = sd.to;
-			resolution = null; // because we changed the name, it points to something else now
-		}*/
-	
 	}
 
+	@Override
 	public QualName copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (QualName) cd.getCloneFor(this);
 

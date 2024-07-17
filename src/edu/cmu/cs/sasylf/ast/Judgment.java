@@ -209,28 +209,37 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 	}
 
+	/**
+	 * Get the original declaration of this judgment. If this judgment is a renaming,
+	 * then this method will return the original judgment that was renamed.
+	 * If this judgment is not a renaming, then this method will return this judgment.
+	 * @return the original declaration of this judgment
+	 */
 	public Judgment getOriginalDeclaration() {
 		return this;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		/*
-			private List<Rule> rules;
-			private Clause form;
-			private String name;
-			private NonTerminal assume;
-			private boolean isAbstract;
-		*/
 		
 		for (Rule r : rules) {
 			r.substitute(sd);
 		}
 
-		// We are not substituting the name
+		/*
+		 * The name of the judgment is not substituted because we want the name to stay the
+		 * same within the module.
+		 */
 
 		form.substitute(sd);
+
+		/*
+		 * Since we are substituting in this Judgment, its term is no longer the same.
+		 * So, set it to null, and the next time typeTerm() is called, it will be recomputed
+		 * and cached in term.
+		 */
 
 		term = null;
 			
@@ -240,6 +249,7 @@ public class Judgment extends Node implements ClauseType, Named {
 
 	}
 
+	@Override
 	public Judgment copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Judgment) cd.getCloneFor(this);
 		Judgment clone;
@@ -251,15 +261,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 		
 		cd.addCloneFor(this, clone);
-		
-		/*
-			Make deep copies of the following fields:
-				private List<Rule> rules;
-				private Clause form;
-				private String name;
-				private NonTerminal assume;
-				private boolean isAbstract;
-		*/
+	
 
 		List<Rule> newRules = new ArrayList<>();
 		for (Rule r : rules) {

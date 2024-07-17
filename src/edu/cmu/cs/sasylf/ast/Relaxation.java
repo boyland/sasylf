@@ -375,12 +375,6 @@ public class Relaxation {
 
 		cd.addCloneFor(this, clone);
 
-		/*
-			private final List<Term>     types;
-			private final List<FreeVar>  values;
-			private final NonTerminal    result;
-		*/
-
 		List<Term> newTypes = new ArrayList<Term>();
 		for (Term t : types) {
 			newTypes.add(t.copy(cd));
