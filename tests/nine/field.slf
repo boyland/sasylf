@@ -99,7 +99,7 @@ theorem unique-additive-identity:
   forall addid2
   exists !addid1 = !addid2
 
-  d1: !addid1 + !addid1 = !addid1 by theorem add-identity on !addid1
+  d1: (!addid1) + (!addid1) = (!addid1) by theorem add-identity on !addid1
   // maybe on expects an identifier, not an expression
   
   proof by unproved

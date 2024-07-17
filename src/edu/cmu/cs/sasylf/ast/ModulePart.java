@@ -172,13 +172,6 @@ public class ModulePart extends Node implements Part, Named {
 				Object parameterObject = params.get(i);
 				QualName argument = arguments.get(i);
 
-				// argument.source should be null. In the future, we will adjust this
-
-				if (argument.getSource() != null) {
-					System.out.println("Error: Argument source is not null. This is not yet supported.");
-					System.exit(0);
-				}
-
 				String argumentName = argument.getName();
 
 				String parameterName = "";

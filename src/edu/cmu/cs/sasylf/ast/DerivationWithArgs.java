@@ -25,12 +25,6 @@ public abstract class DerivationWithArgs extends Derivation {
 	
 	public DerivationWithArgs(String n, Location l, Clause c) {
 		super(n,l,c);
-
-		System.out.println("DerivationWithArgs");
-		System.out.println("n: " + n);
-		System.out.println("l: " + l);
-		System.out.println("c: " + c);
-
 	}
 
 	/**
@@ -43,8 +37,6 @@ public abstract class DerivationWithArgs extends Derivation {
 		if (endLocation != null) {
 			setEndLocation(endLocation);
 		}
-
-		System.out.println("arg string added: " + cl);
 
 	}
 	
