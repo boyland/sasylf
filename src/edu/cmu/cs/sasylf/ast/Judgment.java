@@ -216,6 +216,7 @@ public class Judgment extends Node implements ClauseType, Named {
 	 * @return the original declaration of this judgment
 	 */
 	public Judgment getOriginalDeclaration() {
+		// This judgment is its own original declaration
 		return this;
 	}
 

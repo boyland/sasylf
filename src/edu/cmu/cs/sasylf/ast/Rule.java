@@ -496,6 +496,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	private Judgment judgment;
 	private boolean ruleIsOk = false;
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -506,13 +507,8 @@ public class Rule extends RuleLike implements CanBeCase {
 		conclusion.substitute(sd);
 	}
 
+	@Override
 	public Rule copy(CloneData cd) {
-		/*
-			private List<Clause> premises;
-			private Clause conclusion;
-			private int isAssumpt = 0;
-		*/
-
 		if (cd.containsCloneFor(this)) return (Rule) cd.getCloneFor(this);
 
 		Rule clone;

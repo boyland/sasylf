@@ -185,6 +185,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		source.visit(consumer);
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		super.substitute(sd);
 
@@ -198,6 +199,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 	}
 
+	@Override
 	public RenameSyntaxDeclaration copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (RenameSyntaxDeclaration) cd.getCloneFor(this);
 
@@ -215,11 +217,17 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		return clone;
 	}
 
-	/**
-	 * This method does not just return original
-	 * @return The original syntax declaration that this declaration is renaming.
-	 */
+	@Override
 	public SyntaxDeclaration getOriginalDeclaration() {
+
+		/*
+		 * Since this is a renamed syntax declaration, we need to find the original
+		 * declaration that was renamed.
+		 * 
+		 * Call getOriginalDeclaration() recursively on original until we find
+		 * the original syntax declaration.
+		 */
+
 		if (original instanceof RenameSyntaxDeclaration) {
 			RenameSyntaxDeclaration originalCasted = (RenameSyntaxDeclaration) original;
 			return originalCasted.getOriginalDeclaration();

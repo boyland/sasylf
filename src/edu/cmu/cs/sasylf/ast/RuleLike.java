@@ -524,6 +524,11 @@ public abstract class RuleLike extends Node implements Named {
 
 	private Constant ruleAppConstant;
 
+
+	/**
+	 * Creates a deep copy of this RuleLike
+	 * @param cd the data to be used in the cloning process
+	 */
 	public abstract RuleLike copy(CloneData cd);
 
 }

@@ -17,7 +17,6 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
-import edu.cmu.cs.sasylf.util.Span;
 
 /**
  * Syntactic sugar productions: syntax that 
@@ -190,26 +189,25 @@ public class Sugar extends Syntax {
 		return gnt;
 	}
 
-	public Sugar getOriginalDeclaration() {
-		return this;
+	public SyntaxDeclaration getOriginalDeclaration() {
+		return type;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: should we do something?
+		
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		if (sugar != null) sugar.substitute(sd);
+		if (typeName != null) typeName.substitute(sd);
+		if (type != null) type.substitute(sd);
+		if (replacement != null) replacement.substitute(sd);
+
 	}
 
 	@Override
 	public Sugar copy(CloneData cd) {
-		
-		/*
-			private Clause sugar;
-			private NonTerminal typeName;
-			private SyntaxDeclaration type;
-			private Element replacement;
-			private boolean typeChecked;
-		*/
-		
 		if (cd.containsCloneFor(this)) return (Sugar) cd.getCloneFor(this);
 
 		Sugar clone;
