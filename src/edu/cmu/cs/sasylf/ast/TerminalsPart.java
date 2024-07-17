@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
 import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.term.Substitution;
 
 /**
  * Declared terminals/
@@ -58,28 +57,15 @@ public class TerminalsPart implements Part {
 		// Do nothing
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: I'm pretty sure that nothing should be done here
+		/*
+		 * Do nothing, because there is nothing we could possibly need
+		 * to substitute inside of a terminals declaration.
+		 */
 	}
 
-	/**
-	 * @deprecated
-	 * @return a clone of this part
-	 */
-	public TerminalsPart clone() {
-		try {
-			TerminalsPart clone = (TerminalsPart) super.clone();
-			HashSet<String> newDeclaredTerminals = new HashSet<>();
-			newDeclaredTerminals.addAll(declaredTerminals);
-			clone.declaredTerminals = newDeclaredTerminals;
-			return clone;
-		}
-		catch (CloneNotSupportedException e) {
-			throw new Error("unexpected error: " + e);
-		}
-	}
-
+	@Override
 	public TerminalsPart copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (TerminalsPart) cd.getCloneFor(this);
 
@@ -92,18 +78,8 @@ public class TerminalsPart implements Part {
 			return clone;
 		}
 		catch (CloneNotSupportedException e) {
-			throw new Error("unexpected error: " + e);
+			throw new Error("Clone not supported in TerminalsPart");
 		}
-	}
-
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("terminals ");
-		for (String t : declaredTerminals) {
-			sb.append(t);
-			sb.append(" ");
-		}
-		return sb.toString();
 	}
 	
 }

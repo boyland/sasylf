@@ -570,52 +570,28 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
+	@Override
 	public SyntaxDeclaration getOriginalDeclaration() {
+		// Since this is a SyntaxDeclaration, it is its own original declaration
 		return this;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		
-		/*
-			We need to substitute in the following properties:
 
-			private List<Clause> elements; // productions
-			private NonTerminal nonTerminal;
-			private Set<String> alternates;
-			private Variable variable;
-			private ClauseDef context;
-			private boolean isAbstract;
-
-			private Constant term = null;
-			private GrmNonTerminal gnt;
-			private GrmTerminal gt;
-
-			private boolean isProductive;
-			private Status isProductiveStatus = Status.NOTSTARTED;
-			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
-		*/
-
-		
 		for (Clause c : elements) {
 			c.substitute(sd);
 		}
 	
 		// Don't substitute for nonTerminal, since that is the name of the syntax. We only want to change what's inside of that declaration
-		//nonTerminal.substitute(sd);
 
 		/*
 			For alternates, we need to remove from (if it exists) and we need to add to
 		*/
 
-		/* Don't modify for alternates, for the same reason as nonTerminal
-		if (alternates.contains(sd.from)) {
-			alternates.remove(sd.from);
-			alternates.add(sd.to);
-		}*/
-
-		// For the rest, we just do string substitutions
+		// Don't modify for alternates, for the same reason as nonTerminal
 
 		if (variable != null) {
 			variable.substitute(sd);
@@ -642,6 +618,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 	}
 
+	@Override
 	public SyntaxDeclaration copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) {
 			return (SyntaxDeclaration) cd.getCloneFor(this);
@@ -657,25 +634,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 
 		cd.addCloneFor(this, clone);
-
-		/*
-			We need to clone the following properties:
-
-			private List<Clause> elements; // productions
-			private NonTerminal nonTerminal;
-			private Set<String> alternates;
-			private Variable variable;
-			private ClauseDef context;
-			private boolean isAbstract;
-
-			private Constant term = null;
-			private GrmNonTerminal gnt;
-			private GrmTerminal gt;
-
-			private boolean isProductive;
-			private Status isProductiveStatus = Status.NOTSTARTED;
-			private static List<SyntaxDeclaration> computed = new ArrayList<SyntaxDeclaration>();
-		*/ 
 
 		clone.elements = new ArrayList<Clause>();
 		for (Clause c : elements) {
@@ -701,10 +659,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		clone.gnt = clone.gnt.copy(cd);
 
 		clone.gt = clone.gt.copy(cd);
-		
-		// the next two are enums, so we don't need to copy them
-
-		// computed is static, so we don't need to copy it
 		
 		return clone;
 	}

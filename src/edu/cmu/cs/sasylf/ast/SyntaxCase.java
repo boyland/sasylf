@@ -350,7 +350,8 @@ public class SyntaxCase extends Case {
 	private Clause conclusion;
 	private Element assumes;
 
-	public SyntaxCase clone(CloneData cd) {
+	@Override
+	public SyntaxCase copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (SyntaxCase) cd.getCloneFor(this);
 		SyntaxCase clone = (SyntaxCase) super.copy(cd);
 		cd.addCloneFor(this, clone);
@@ -361,6 +362,7 @@ public class SyntaxCase extends Case {
 		return clone;		
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		super.substitute(sd);

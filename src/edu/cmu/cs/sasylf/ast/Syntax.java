@@ -83,7 +83,15 @@ public abstract class Syntax extends Node {
 	 */
 	public abstract SyntaxDeclaration getOriginalDeclaration();
 
+	/**
+	 * Substitute inside of this Syntax according to the given substitution data.
+	 * @param sd substitution data to use
+	 */
 	public abstract void substitute(SubstitutionData sd);
 
+	/**
+	 * Create a deep copy of this Syntax.
+	 * @param cd clone data to use for copying
+	 */
 	public abstract Syntax copy(CloneData cd);
 }

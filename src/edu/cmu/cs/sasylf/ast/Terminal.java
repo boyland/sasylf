@@ -109,8 +109,8 @@ public class Terminal extends Element implements ElemType {
 
 			We need to remove these characters from the back of the string, then check if they are equal
 
-			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are **filler characters**
-		
+			Match means from is a prefix of symbol, and all 
+			characters after the prefix matching are filler characters
 		*/
 
 		// First, check that from is a prefix of symbol
@@ -118,7 +118,6 @@ public class Terminal extends Element implements ElemType {
 		if (!symbol.startsWith(sd.from)) {
 			return;
 		}
-
 
 		// Check that all characters after the prefix match are filler characters
 
@@ -129,11 +128,13 @@ public class Terminal extends Element implements ElemType {
 		// the filler characters are 0-9, _, and '
 
 		if (filler.matches("^[0-9_']*$")) {
+			// perform the substitution
 			symbol = sd.to + filler;
 		}
 	
 	}
 
+	@Override
 	public Terminal copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (Terminal) cd.getCloneFor(this);
 
@@ -141,14 +142,6 @@ public class Terminal extends Element implements ElemType {
 		Terminal clone = (Terminal) super.copy(cd);
 		
 		cd.addCloneFor(this, clone);
-
-		/*
-			We have to clone the following attributes
-
-			private Span sp;
-			private String symbol;
-			private boolean mustQuote;
-		*/
 
 		clone.sp = clone.sp.copy(cd);
 

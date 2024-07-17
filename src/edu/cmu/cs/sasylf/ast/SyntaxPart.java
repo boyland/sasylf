@@ -107,6 +107,7 @@ public class SyntaxPart implements Part {
 		}
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -115,6 +116,7 @@ public class SyntaxPart implements Part {
 		}
 	}
 
+	@Override
 	public SyntaxPart copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (SyntaxPart) cd.getCloneFor(this);
 		try {
