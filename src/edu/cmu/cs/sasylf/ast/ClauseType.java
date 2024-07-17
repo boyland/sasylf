@@ -32,6 +32,16 @@ public interface ClauseType extends ElementType {
 	 * @param map updated with the case analysis
 	 */
 	public void analyze(Context ctx, Element target, Node source, Map<CanBeCase,Set<Pair<Term,Substitution>>> map);
+	/**
+	 * Substitute inside of this ClauseType according to <code> sd </code>
+	 * @param sd
+	 */
 	public void substitute(SubstitutionData sd);
+	
+	/**
+	 * Creates and returns a deep copy of this ClauseType
+	 * @param cd
+	 * @return
+	 */
 	public ClauseType copy(CloneData cd);
 }
