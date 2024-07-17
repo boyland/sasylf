@@ -69,6 +69,7 @@ public class TheoremPart implements Part {
 		}
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -78,34 +79,24 @@ public class TheoremPart implements Part {
 		}
 	}
 
+	@Override
 	public TheoremPart copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (TheoremPart) cd.getCloneFor(this);
 		TheoremPart clone;
 		try {
 			clone = (TheoremPart) super.clone();
-			cd.addCloneFor(this, clone);
-		
-			List<Theorem> newTheorems = new ArrayList<Theorem>();
-			for (Theorem theorem : theorems) {
-				newTheorems.add(theorem.copy(cd));
-			}
-			clone.theorems = newTheorems;
-			return clone;
 		}
-		catch (CloneNotSupportedException e) {
+		catch(CloneNotSupportedException e) {
 			System.out.println("Clone not supported in TheoremPart");
 			System.exit(1);
 			return null;
 		}
-	}
-
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		for (Theorem t: theorems) {
-			sb.append(t.toString());
-			sb.append("\n");
+		cd.addCloneFor(this, clone);
+		clone.theorems = new ArrayList<Theorem>();
+		for (Theorem theorem : theorems) {
+			clone.theorems.add(theorem.copy(cd));
 		}
-		return sb.toString();
+		return clone;
 	}
 	
 }

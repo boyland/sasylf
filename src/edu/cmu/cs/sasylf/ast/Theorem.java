@@ -21,7 +21,6 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.Span;
 
 
 public class Theorem extends RuleLike {
@@ -172,7 +171,10 @@ public class Theorem extends RuleLike {
 			if (oldCtx.ruleMap.get(getName()) != this) {
 				ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
 			}
-		} else oldCtx.ruleMap.put(getName(), this); Context.updateVersion();
+		} else {
+			oldCtx.ruleMap.put(getName(), this); 
+			Context.updateVersion();
+		}
 
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
@@ -204,7 +206,8 @@ public class Theorem extends RuleLike {
       andTheorem.addToMap(ctx);
     }*/
 			ctx.recursiveTheorems = new HashMap<String, Theorem>();
-			firstInGroup.addToMap(ctx); Context.updateVersion();
+			firstInGroup.addToMap(ctx);
+			Context.updateVersion();
 
 			ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 
@@ -348,14 +351,14 @@ public class Theorem extends RuleLike {
 
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";
-	NonTerminal assumes = null;
-	List<Fact> foralls = new ArrayList<Fact>(); // substitution here
-	Clause exists; // substitution here
-	List<Derivation> derivations;
-	Theorem andTheorem;
-	Theorem firstInGroup = this;
+	private NonTerminal assumes = null;
+	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+	private Clause exists; // substitution here
+	private List<Derivation> derivations;
+	private Theorem andTheorem;
+	private Theorem firstInGroup = this;
 	private int indexInGroup = 0;
-	InductionSchema inductionScheme = InductionSchema.nullInduction;
+	private InductionSchema inductionScheme = InductionSchema.nullInduction;
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
 	private final boolean isAbstract;
@@ -368,23 +371,8 @@ public class Theorem extends RuleLike {
 		}
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
-
-		/*
-				private String kind = "theorem";
-				private String kindTitle = "Theorem";
-				NonTerminal assumes = null;
-				List<Fact> foralls = new ArrayList<Fact>(); // substitution here
-				Clause exists; // substitution here
-				List<Derivation> derivations;
-				Theorem andTheorem;
-				Theorem firstInGroup = this;
-				private int indexInGroup = 0;
-				InductionSchema inductionScheme = InductionSchema.nullInduction;
-				private boolean interfaceChecked=false;
-				private boolean interfaceOK = false;
-				private final boolean isAbstract;
-		*/
 		
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -397,7 +385,7 @@ public class Theorem extends RuleLike {
 		// substitute in exists
 		exists.substitute(sd);
 
-		// I don't think we need to substitute in derivations
+		// We are not substituting in derivations, as of now
 	}
 
 	@Override
