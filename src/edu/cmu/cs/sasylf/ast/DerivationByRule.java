@@ -7,7 +7,6 @@ import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.Span;
 
 public class DerivationByRule extends DerivationByIHRule {
 	public DerivationByRule(String n, Location l, Clause c, QualName rn) {

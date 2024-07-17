@@ -49,7 +49,13 @@ public abstract class Fact extends Node {
 		}
 	}
 
+	/**
+	 * Perform a substitution on this fact according to <code> sd </code>
+	 */
 	public abstract void substitute(SubstitutionData sd);
 
+	/**
+	 * Create a deep clone of this fact.
+	 */
 	public abstract Fact copy(CloneData cd);
 }

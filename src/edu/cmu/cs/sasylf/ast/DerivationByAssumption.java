@@ -12,6 +12,7 @@ public class DerivationByAssumption extends Derivation {
 
 	// verify: error if this is actually part of a derivation--it's for foralls only!
 
+	@Override
 	public DerivationByAssumption copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DerivationByAssumption) cd.getCloneFor(this);
 		DerivationByAssumption clone = (DerivationByAssumption) super.copy(cd);

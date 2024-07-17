@@ -22,8 +22,8 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
  */
 public abstract class Element extends Node {
 	
-	protected Term term;
-	protected GrmTerminal terminal;
+	private Term term;
+	private GrmTerminal terminal;
 
 	public Element(Location l) { super(l); }
 
@@ -111,19 +111,9 @@ public abstract class Element extends Node {
 		throw new UnsupportedOperationException("need to type check first before calling getRoot()");
 	}
 
-	private static final Map<ClauseDef, Boolean> computedMap = new java.util.IdentityHashMap<>();
-
 	public Term asTerm() {
-		
 		if (term == null) {
-			
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
-			if (this instanceof ClauseDef) {
-				if (computedMap.containsKey(this)) {
-				} else {
-					computedMap.put((ClauseDef)this, true);
-				}
-			}
 		}
 		return term;
 	}
@@ -159,27 +149,24 @@ public abstract class Element extends Node {
 		return term;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
+	
 		/*
-			Need to substitute for the following properties
+		 * Since we are substituting in this Element, its term is no longer the same.
+		 * So, set it to null, and the next time asTerm() is called, it will be recomputed
+		 * and cached in term.
+		 */
 
-			protected Term term;
-			protected GrmTerminal terminal;
-		
-		*/
+		term = null;
 
-		if (term != null) {
-			//term.substitute(sd);
-			term = null;
-		};
 		if (terminal != null) terminal.substitute(sd);
 	}
 
-
+	@Override
 	public Element copy(CloneData cd) {
-
 		Element clone;
 		try {
 			clone = (Element) super.clone();
@@ -192,21 +179,14 @@ public abstract class Element extends Node {
 		cd.addCloneFor(this, clone);
 
 		/*
-		if (clone.term != null) {
-			//clone.term = clone.term.copy(cd);
-			// we need to set clone.term to null because term is computed upon calling asTerm()
-			clone.term = null;
-		}
-		*/
-
+		 * Set the term to null, unless this is an instance of Terminal. If it is a
+		 * Terminal, we don't want to set it to null because no substitution is happening
+		 * in the terminal, so it's okay to keep the Terminal's term as is.
+		 */
+		
 		if (!(this instanceof Terminal)) {
 			clone.term = null;
 		}
-		
-
-		// if this is an instance of Terminal, we want to leave the terminal as is
-		
-
 
 		if (clone.terminal != null) {
 			clone.terminal = clone.terminal.copy(cd);

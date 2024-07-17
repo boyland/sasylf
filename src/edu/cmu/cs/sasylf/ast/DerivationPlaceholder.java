@@ -9,7 +9,6 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
-import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
@@ -130,17 +129,11 @@ public class DerivationPlaceholder extends Derivation {
 
 	@Override
 	public DerivationPlaceholder copy(CloneData cd) {
-		/*	
-			private final FreeVar variable;
-			private final UpdatableErrorReport report;
-			private Term asTerm
-		*/
 
 		if (cd.containsCloneFor(this)) return (DerivationPlaceholder) cd.getCloneFor(this);
 		DerivationPlaceholder clone = (DerivationPlaceholder) super.copy(cd);
 		cd.addCloneFor(this, clone);
 		clone.variable = clone.variable.copy(cd);
-		// TODO: I'm pretty sure that this is right, but I'm not 100% sure
 		clone.report = new UpdatableErrorReport(null, getName(), clone);
 		clone.asTerm = clone.asTerm.copy(cd);
 		

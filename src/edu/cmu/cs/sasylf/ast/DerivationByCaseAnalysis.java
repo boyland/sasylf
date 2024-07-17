@@ -26,6 +26,7 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
 		super.typecheck(ctx);
 	}
 
+	@Override
 	public DerivationByCaseAnalysis copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DerivationByCaseAnalysis) cd.getCloneFor(this);
 		DerivationByCaseAnalysis clone = (DerivationByCaseAnalysis) super.copy(cd);

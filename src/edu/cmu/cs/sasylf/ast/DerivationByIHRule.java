@@ -226,6 +226,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		}
 	}
 
+	@Override
 	public DerivationByIHRule copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DerivationByIHRule) cd.getCloneFor(this);
 		DerivationByIHRule clone = (DerivationByIHRule) super.copy(cd);

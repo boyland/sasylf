@@ -129,6 +129,7 @@ public class JudgmentPart implements Part {
 		return judgments;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -137,6 +138,7 @@ public class JudgmentPart implements Part {
 		}
 	}
 
+	@Override
 	public JudgmentPart copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (JudgmentPart) cd.getCloneFor(this);
 		JudgmentPart clone;

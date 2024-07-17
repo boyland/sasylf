@@ -6,7 +6,6 @@ import edu.cmu.cs.sasylf.reduction.StructuralInduction;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.Span;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class DerivationByInduction extends DerivationByAnalysis {
@@ -47,6 +46,7 @@ public class DerivationByInduction extends DerivationByAnalysis {
 		}
 		super.typecheck(ctx);
 	}
+	
 	@Override
 	public DerivationByInduction copy(CloneData cd) {
 		if (cd.containsCloneFor(this)) return (DerivationByInduction) cd.getCloneFor(this);
