@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CloneData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;
@@ -435,6 +436,22 @@ public class RuleCase extends Case {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		ruleName.visit(consumer);
 		super.collectQualNames(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		rule.substitute(sd);
+		ruleName.substitute(sd);
+		for (Derivation premise: premises) {
+			premise.substitute(sd);
+		}
+		conclusion.substitute(sd);
+		whereClauses.substitute(sd);
+
 	}
 
 	@Override
