@@ -258,6 +258,11 @@ public enum Errors {
 	WHERE_REBOUND ("variable bound more than once in where clause"),
 	WHERE_OCCUR ("replacement for meta-variable should not include itself"),
 	INTERNAL_ERROR("SASyLF Internal Error"), // no known instances
+	INVALID_MODULE_ARGUMENT_TYPE("invalid module argument type. Module arguments must be Syntax, Judgment, or Theorem, got: "),
+	WRONG_NUM_MODULE_ARGUMENTS("wrong number of module arguments. "),
+	MODULE_ARGUMENT_TYPE_MISMATCH("module argument does not match the expected type. "),
+	INVALID_MODULE_ARGUMENT("invalid module argument. "),
+
 	UNSPECIFIED, // do not use
 	;
 

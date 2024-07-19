@@ -474,8 +474,8 @@ public class ClauseDef extends Clause {
 			SyntaxDeclaration newSyntax = sd.getSyntaxReplacement().getOriginalDeclaration();
 			Clause newClause = newSyntax.getClauses().get(indexOfClauseDef);
 			if (!(newClause instanceof ClauseDef)) {
-				System.out.println("Error: ClauseDef not found in new syntax");
-				System.exit(1);
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "ClauseDef not found in new syntax.", this);
+				return;
 			}
 			ClauseDef newClauseDef = (ClauseDef) newClause;
 
@@ -491,10 +491,8 @@ public class ClauseDef extends Clause {
 			// get the ClauseDef from the judgment
 			Clause newClause = sd.getJudgmentReplacement().getForm();
 			if (!(newClause instanceof ClauseDef)) {
-				// this should not happen
-				// this should be an internal error
-				System.out.println("Error: ClauseDef not found in new judgment");
-				System.exit(1);
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "ClauseDef not found in new judgment.", this);
+				return;
 			}
 
 			ClauseDef cd = (ClauseDef) newClause;

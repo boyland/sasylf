@@ -45,6 +45,47 @@ public class ModulePart extends Node implements Part, Named {
 	public QualName getModule() {
 		return module;
 	}
+
+	/**
+	 * Throws an error, specifying that the module argument type does not match the module parameter type.
+	 * @param parameter the module parameter
+	 * @param argument the module argument
+	 */
+	private void throwModuleArgumentMismatch(Object parameter, Object argument) {
+
+		String parameterClass = "";
+		String argumentClass = "";
+
+		if (parameter instanceof Syntax) {
+			parameterClass = "syntax";
+		}
+		else if (parameter instanceof Judgment) {
+			parameterClass = "judgment";
+		}
+		else if (parameter instanceof Theorem) {
+			parameterClass = "theorem";
+		}
+		else {
+			parameterClass = parameter.getClass().toString();
+		}
+
+		if (argument instanceof Syntax) {
+			argumentClass = "syntax";
+		}
+		else if (argument instanceof Judgment) {
+			argumentClass = "judgment";
+		}
+		else if (argument instanceof Theorem) {
+			argumentClass = "theorem";
+		}
+		else {
+			argumentClass = argument.getClass().toString();
+		}
+
+		String errorMessage = "Expected " + parameterClass + " but got " + argumentClass + ".";
+
+		ErrorHandler.error(Errors.MODULE_ARGUMENT_TYPE_MISMATCH, errorMessage, this);
+	}
 	
 	public void typecheck(Context ctx) {
 		Object resolution = module.resolve(ctx);
@@ -54,6 +95,7 @@ public class ModulePart extends Node implements Part, Named {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
 		}
 		if (!arguments.isEmpty()) {
+
 			// Since there are arguments, this is a module appliation
 			// We already verified above that resolution is an instance of Module
 			// Since Module is the only subclass of CompUnit, we know that resolution is an instance of CompUnit
@@ -76,12 +118,7 @@ public class ModulePart extends Node implements Part, Named {
 							params.add(sd);
 						}
 						else {
-							/*
-							 * In the case that s is not an instance of SyntaxDeclaration, which
-							 * should never be the case, output an error message and exit the program
-							 */
-							System.out.println("Error: Syntax is not a SyntaxDeclaration in ModulePart.");
-							System.exit(1);
+							ErrorHandler.error(Errors.INTERNAL_ERROR, " s is not an instance of SyntaxDeclaration", this);
 						}
 					}
 				}
@@ -101,8 +138,17 @@ public class ModulePart extends Node implements Part, Named {
 				}
 				else {
 					// The part is not a SyntaxPart, JudgmentPart, or TheoremPart, which is not allowed
-					System.out.println("Error: Part is not a SyntaxPart, JudgmentPart, or TheoremPart in ModulePart.");
-					System.exit(1);
+					String argumentClass = "";
+
+					if (part instanceof TerminalsPart) {
+						argumentClass = "Terminals Part";
+					}
+					else {
+						argumentClass = "Module Part";
+					}
+					
+					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, argumentClass, this);
+					return;
 				}
 			}
 
@@ -111,9 +157,7 @@ public class ModulePart extends Node implements Part, Named {
 			int numArgs = arguments.size();
 
 			if (numParams != numArgs) {
-				// Output a detailed error message
-				System.out.println("Error: Number of parameters and arguments do not match in module application. Expected " + numParams + " arguments, but found " + numArgs + " arguments.");
-				System.exit(0);
+				ErrorHandler.error(Errors.WRONG_NUM_MODULE_ARGUMENTS, "Expected " + numParams + ", but got " + numArgs + ".", this);
 			}
 
 			/* Next, check that the kind of each argument matches the kind of the corresponding parameter
@@ -130,24 +174,27 @@ public class ModulePart extends Node implements Part, Named {
 				// Use instanceof to check that argument and parameter have the same kind
 			
 				if (parameter instanceof SyntaxDeclaration && !(argResolution instanceof Syntax)) {
-					System.out.println("Error: Argument does not match parameter in module application. Expected a syntax, but found something else.");
+					throwModuleArgumentMismatch(parameter, argResolution);
+					return;
 				}
 				else if (parameter instanceof Judgment && !(argResolution instanceof Judgment)) {
-					System.out.println("Error: Argument does not match parameter in module application. Expected a judgment, but found something else.");
+					throwModuleArgumentMismatch(parameter, argResolution);
+					return;
 				}
 				else if (parameter instanceof Theorem && !(argResolution instanceof Theorem)) {
-					System.out.println("Error: Argument does not match parameter in module application. Expected a theorem, but found something else.");
+					throwModuleArgumentMismatch(parameter, argResolution);
+					return;
 				}
 
 				// The argument should not be of type TerminalsPart or ModulePart
 
 				if (argResolution instanceof TerminalsPart) {
-					System.out.println("Error: Argument does not match parameter in module application. Expected a syntax, judgment, or theorem, but found a terminals part.");
-					System.exit(0);
+					throwModuleArgumentMismatch(parameter, argResolution);
+					return;
 				}
 				else if (argResolution instanceof ModulePart) {
-					System.out.println("Error: Argument does not match parameter in module application. Expected a syntax, judgment, or theorem, but found a module part.");
-					System.exit(0);
+					throwModuleArgumentMismatch(parameter, argResolution);
+					return;
 				}
 
 			}
@@ -197,10 +244,10 @@ public class ModulePart extends Node implements Part, Named {
 					/*
 					 * This should never happen because we have already checked that the parameter is an instance of SyntaxDeclaration, Judgment, or Theorem
 					 * 
-					 * If this does happen, output an error message and exit the program
+					 * If this does happen, raise an internal error
 					 */
-					System.out.println("Error: Could not get the name of the parameter.");
-					System.exit(0);
+					ErrorHandler.error(Errors.INTERNAL_ERROR, ". Could not get the name of the parameter.", this);
+					return;
 				}
 
 				SubstitutionData sd;
@@ -224,8 +271,11 @@ public class ModulePart extends Node implements Part, Named {
 					if (paramToArgSyntax.containsKey(argumentSyntax)) {
 						// check if the parameterSyntax is bound to the same argumentSyntax
 						if (paramToArgSyntax.get(argumentSyntax) != parameterSyntax) {
-							System.out.println("Error: The same argument syntax is bound to two different parameter syntaxes.");
-							System.exit(0);
+							String errorString = "The same argument syntax is bound to two different parameter syntaxes. ";
+
+							errorString +=  "Argument syntax " + argumentName + " is already bound to parameter syntax " + paramToArgSyntax.get(argumentSyntax) + ", but is being bound to parameter syntax " + parameterSyntax.getName() + ".";
+							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							return;
 						}
 					}
 
@@ -243,8 +293,10 @@ public class ModulePart extends Node implements Part, Named {
 						List<Clause> argumentProductions = argumentSyntaxDeclaration.getClauses();
 
 						if (parameterProductions.size() != argumentProductions.size()) {
-							System.out.println("Error: The number of productions in the parameter syntax and the argument syntax do not match.");
-							System.exit(0);
+							String errorString = "Module argument does not match the expected number of productions. Expected " + parameterProductions.size() + " productions, " + "but argument " + argumentName + " has " + argumentProductions.size() + " productions.";
+							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							return; 
+
 						}
 
 						// check that each pair of productions has the same structure
@@ -252,7 +304,7 @@ public class ModulePart extends Node implements Part, Named {
 						for (int j = 0; j < parameterProductions.size(); j++) {
 							Clause paramClause = parameterProductions.get(j);
 							Clause argClause = argumentProductions.get(j);
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>());
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>(), this);
 						}
 						
 					}
@@ -271,8 +323,11 @@ public class ModulePart extends Node implements Part, Named {
 					if (paramToArgJudgment.containsKey(parameterJudgment)) {
 						// check if the parameterJudgment is bound to the same argumentJudgment
 						if (paramToArgJudgment.get(parameterJudgment) != argumentJudgment) {
-							System.out.println("Error: The same argument judgment is bound to two different parameter judgments.");
-							System.exit(0);
+							String errorString = "The number of rules in the parameter judgment and the argument judgment do not match. ";
+
+							errorString += "Argument judgment " + argumentName + "has " + argumentJudgment.getRules().size() + " rules, but parameter judgment " + parameterJudgment.getName() + " has " + parameterJudgment.getRules().size() + " rules.";
+							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							return;
 						}
 					}
 
@@ -287,7 +342,7 @@ public class ModulePart extends Node implements Part, Named {
 					Clause argumentJudgmentForm = argumentJudgment.getForm();
 					Clause parameterJudgmentForm = parameterJudgment.getForm();
 				
-					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>());
+					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>(), this);
 
 					if (!parameterJudgment.isAbstract()) {
 						// This is a concrete judgment, so there are rules to check
@@ -295,8 +350,11 @@ public class ModulePart extends Node implements Part, Named {
 						List<Rule> argumentRules = argumentJudgment.getRules();
 
 						if (parameterRules.size() != argumentRules.size()) {
-							System.out.println("Error: The number of rules in the parameter judgment and the argument judgment do not match.");
-							System.exit(0);
+							String errorString = "The same argument judgment is bound to two different parameter judgments. ";
+
+							errorString +=  "Argument judgment " + argumentName + " is already bound to parameter judgment " + paramToArgJudgment.get(argResolution) + ", but is being bound to parameter syntax " + parameterJudgment.getName() + ".";
+							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							return;
 						}
 
 						// check that each pair of rules has the same structure
@@ -310,8 +368,9 @@ public class ModulePart extends Node implements Part, Named {
 							List<Clause> argPremises = argRule.getPremises();
 
 							if (paramPremises.size() != argPremises.size()) {
-								System.out.println("Error: The number of premises in the parameter rule and the argument rule do not match.");
-								System.exit(0);
+								String errorMessage = "The number of premises in the parameter rule and the argument rule do not match. ";
+								ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, this);
+								return;
 							}
 
 							// check that each pair of premises has the same structure
@@ -321,7 +380,7 @@ public class ModulePart extends Node implements Part, Named {
 							for (int k = 0; k < paramPremises.size(); k++) {
 								Clause paramPremise = paramPremises.get(k);
 								Clause argPremise = argPremises.get(k);
-								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
+								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
 							}
 
 							// check the conclusions
@@ -329,7 +388,7 @@ public class ModulePart extends Node implements Part, Named {
 							Clause paramConclusion = paramRule.getConclusion();
 							Clause argConclusion = argRule.getConclusion();
 							
-							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
+							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
 
 						}
 
@@ -350,8 +409,9 @@ public class ModulePart extends Node implements Part, Named {
 					List<Fact> parameterForalls = parameterTheorem.getForalls();
 
 					if (argumentForalls.size() != parameterForalls.size()) {
-						System.out.println("Error: The number of forall clauses in the parameter theorem and the argument theorem do not match.");
-						System.exit(0);
+						String errorString = "The number of forall clauses in the parameter theorem and the argument theorem do not match. ";
+						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+						return;
 					}
 
 					// check that each pair of foralls has the same structure
@@ -369,7 +429,7 @@ public class ModulePart extends Node implements Part, Named {
 							Clause paramClause = (Clause) paramElement;
 							Clause argClause = (Clause) argElement;
 							// check that they have the same struture
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
+							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
 						}
 
 						else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
@@ -377,13 +437,9 @@ public class ModulePart extends Node implements Part, Named {
 							NonTerminal argNonTerminal = (NonTerminal) argElement;
 							if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
 								if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
-									// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
-									// failure
-									System.out.println("Clause same structure check failure 1");
-			
-									System.out.println("Replacing " + paramNonTerminal + " with " + argNonTerminal + ", but expected " + paramToArgSyntax.get(paramNonTerminal.getType()));
-			
-									System.exit(0);
+									String errorMessage = "Replacing " + paramNonTerminal + " with " + argNonTerminal + ", but expected " + paramToArgSyntax.get(paramNonTerminal.getType()) + ".";
+									ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, errorMessage, this);
+									return;
 								}
 							}
 						}
@@ -393,7 +449,7 @@ public class ModulePart extends Node implements Part, Named {
 						Clause paramExists = (Clause) parameterTheorem.getExists();
 						Clause argExists = (Clause) argumentTheorem.getExists();
 
-						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
+						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
 
 					}
 
@@ -401,8 +457,8 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				else {
-					System.out.println("Error: Argument is not an instance of Syntax, Judgment, or Theorem.");
-					System.exit(1);
+					String errorMessage = "Argument is not an instance of Syntax, Judgment, or Theorem.";
+					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, errorMessage, this);
 					return;
 				}
 

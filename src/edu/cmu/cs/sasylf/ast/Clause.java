@@ -764,24 +764,35 @@ public class Clause extends Element implements CanBeCase {
 	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
 	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
 	 * @param nonTerminalMapping A mapping from nonterminals in the parameter to nonterminals in the arguments
+	 * @return true if the clauses have the same structure, false otherwise
 	 */
-	public static void checkClauseSameStructure (
+	public static boolean checkClauseSameStructure (
 		Clause paramClause, 
 		Clause argClause,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment,
-		Map<String, String> nonTerminalMapping
+		Map<String, String> nonTerminalMapping,
+		ModulePart modulePart
 		)
 	{
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
-			System.out.println("paramClause is AndClauseUse but argClause is not");
-			System.exit(0);
+			String errorMessage = "parameter contains an AndClauseUse where the argument does not.";
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			return false;
 		}
 
+		if (argClause instanceof AndClauseUse && !(paramClause instanceof AndClauseUse)) {
+			String errorMessage = "argument contains an AndClauseUse where the parameter does not.";
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			return false;
+		}
+
+
 		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
-			System.out.println("paramClause is OrClauseUse but argClause is not");
-			System.exit(0);
+			String errorMessage = "parameter contains an OrClauseUse where the argument does not.";
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			return false;
 		}
 		
 		// make sure that the types of the clauses match
@@ -793,10 +804,11 @@ public class Clause extends Element implements CanBeCase {
 		List<Element> c2Elements = argClause.withoutTerminals();
 
 		if (c1Elements.size() != c2Elements.size()) {
-			// failure
-			System.out.println("c1Elements.size() != c1Elements.size()");
-			System.exit(0);
-			return;
+			String errorString = "The number of elements in the parameter clause does not match the number of elements in the argument clause." +
+				" Parameter clause has " + c1Elements.size() + " elements, and argument clause has " + c2Elements.size() + " elements.";
+
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+			return false;
 		}
 
 		// go through each of the elements
@@ -816,7 +828,10 @@ public class Clause extends Element implements CanBeCase {
 					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType().getOriginalDeclaration()) {
 						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
 						// failure
-						System.exit(0);
+						
+						String errorString = "The syntax declaration of " + nt1.getType().getName() + " is not the same as the syntax declaration of " + nt2.getType().getName() + ".";
+						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+						return false;
 					}
 				}
 				// otherwise, add the mapping from the syntax declaration of nt1 to the syntax declaration of nt2
@@ -831,7 +846,10 @@ public class Clause extends Element implements CanBeCase {
 
 				if (nonTerminalMapping.containsKey(paramSymbol)) {
 					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
-						System.out.println("Nonterminals don't match when typechecking module. Expected " + nonTerminalMapping.get(paramSymbol) + " but got " + argSymbol);
+						String errorString = "Nonterminals don't match when typechecking module. Expected " + nonTerminalMapping.get(paramSymbol) + " but got " + argSymbol + ".";
+						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+						return false;
+
 					}
 				}
 				else {
@@ -847,17 +865,19 @@ public class Clause extends Element implements CanBeCase {
 				Clause e1c = (Clause) e1;
 				Clause e2c = (Clause) e2;
 
-				checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping);
+				boolean res = checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, modulePart);
+				if (!res) return false;
 			}
 
-			// TODO: implement the other cases for the other types of elements
-
 			else {
-				System.out.println("Clause same structure check failure 2");
-				System.exit(0);
+				String errorMessage = "The elements in the parameter clause do not match the elements in the argument clause.";
+				ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+				return false;
 			}
 
 		}
+		
+		return true;
 
 	}
 	
@@ -870,7 +890,7 @@ public class Clause extends Element implements CanBeCase {
 	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
 	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
 	 */
-	private static void checkClausesCorrespondingTypes(
+	private static boolean checkClausesCorrespondingTypes(
 		Clause c1,
 		Clause c2,
 		Map<Syntax, Syntax> paramToArgSyntax,
@@ -885,8 +905,9 @@ public class Clause extends Element implements CanBeCase {
 			// check is s1 is already bound to something
 			if (paramToArgSyntax.containsKey(s1)) {
 				if (paramToArgSyntax.get(s1) != s2) {
-					System.out.println("Clause same structure check failure 3");
-					System.exit(0);
+					String errorMessage = "The syntax declarations in the parameter clause do not match the syntax declarations in the argument clause.";
+					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+					return false;
 				}
 			}
 			else {
@@ -901,8 +922,9 @@ public class Clause extends Element implements CanBeCase {
 			// check if j1 is already bound to something
 			if (paramToArgJudgment.containsKey(j1)) {
 				if (paramToArgJudgment.get(j1) != j2) {
-					System.out.println("Clause same structure check failure 4");
-					System.exit(0);
+					String errorMessage = "The judgments in the parameter clause do not match the judgments in the argument clause.";
+					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+					return false;
 				}
 			}
 			else {
@@ -912,10 +934,12 @@ public class Clause extends Element implements CanBeCase {
 		}
 
 		else {
-			System.out.println("Clause same structure check failure 5");
-			System.exit(0);
+			String errorMessage = "The types of clauses in the module parameter and module argument do not match.";
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+			return false;
 		}
-
+		
+		return true;
 	}
 
 

@@ -176,9 +176,8 @@ public abstract class Element extends Node {
 		}
 		
 		catch (CloneNotSupportedException e) {
-			System.out.println("Error in Element.copy");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

@@ -71,6 +71,7 @@ public class Case extends Node {
 
 	public Case copy(CopyData cd) {
 		// unimplemented because we don't need it
+		// This should never be used
 		System.out.println("Case.copy unimplemented");
 		System.exit(0);
 		return null;

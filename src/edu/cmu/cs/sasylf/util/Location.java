@@ -71,9 +71,8 @@ public class Location implements Span {
 			clone = (Location) this.clone();
 		}
 		catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Location");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);
