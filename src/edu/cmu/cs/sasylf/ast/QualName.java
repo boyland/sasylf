@@ -10,6 +10,8 @@ import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
  * A qualified name, used in the SASyLF module system.
@@ -282,10 +284,11 @@ public class QualName extends Node {
 		QualName clone;
 		try {
 			clone = (QualName) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in QualName");
-			System.exit(1);
-			return null;
+		}	
+		
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

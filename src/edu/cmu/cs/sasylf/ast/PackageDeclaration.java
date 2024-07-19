@@ -8,6 +8,8 @@ import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 public class PackageDeclaration extends Node {
 	private QualName name;
@@ -63,10 +65,11 @@ public class PackageDeclaration extends Node {
 
 		try {
 			clone = (PackageDeclaration) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in PackageDeclaration");
-			System.exit(1);
-			return null;
+		}
+
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

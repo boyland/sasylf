@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -28,7 +29,7 @@ public class Judgment extends Node implements ClauseType, Named {
 	private String name;
 	public NonTerminal assume;
 	private boolean isAbstract;
-	
+
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
 		super(loc); 
 		name=n; 
@@ -258,8 +259,11 @@ public class Judgment extends Node implements ClauseType, Named {
 
 		try {
 			clone = (Judgment) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new Error("Java clone() weirdness");
+		}
+
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 		
 		cd.addCopyFor(this, clone);

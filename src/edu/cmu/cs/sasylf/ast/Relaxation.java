@@ -23,6 +23,8 @@ import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -367,10 +369,10 @@ public class Relaxation {
 		try {
 			clone = (Relaxation) super.clone();
 		}
+
 		catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Relaxation");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

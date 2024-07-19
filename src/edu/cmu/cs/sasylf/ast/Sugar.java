@@ -17,6 +17,8 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
  * Syntactic sugar productions: syntax that 
@@ -213,10 +215,11 @@ public class Sugar extends Syntax {
 		Sugar clone;
 		try {
 			clone = (Sugar) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Sugar");
-			System.exit(1);
-			return null;
+		}
+
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

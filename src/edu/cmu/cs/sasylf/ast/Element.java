@@ -13,9 +13,11 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /*
  * Concrete subclasses include Clause, Terminal, NonTerminal, Variable, and Binding
@@ -167,10 +169,13 @@ public abstract class Element extends Node {
 
 	@Override
 	public Element copy(CopyData cd) {
+	 
 		Element clone;
 		try {
 			clone = (Element) super.clone();
-		} catch (CloneNotSupportedException e) {
+		}
+		
+		catch (CloneNotSupportedException e) {
 			System.out.println("Error in Element.copy");
 			System.exit(1);
 			return null;
@@ -184,6 +189,7 @@ public abstract class Element extends Node {
 		 * in the terminal, so it's okay to keep the Terminal's term as is.
 		 */
 		
+ 
 		if (!(this instanceof Terminal)) {
 			clone.term = null;
 		}
@@ -193,6 +199,8 @@ public abstract class Element extends Node {
 		}
 
 		return clone;
+
+		
 	}
 
 }

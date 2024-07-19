@@ -32,6 +32,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Clause extends Element implements CanBeCase {
@@ -61,10 +62,10 @@ public class Clause extends Element implements CanBeCase {
 		try {
 			return (Clause) super.clone();
 		}
+ 
 		catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Clause");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 	}
 

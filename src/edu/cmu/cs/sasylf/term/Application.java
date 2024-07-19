@@ -12,7 +12,10 @@ import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class Application extends Term {
@@ -773,10 +776,11 @@ public class Application extends Term {
 
 		try {
 			clone = (Application) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Application");
-			System.exit(1);
-			return null;
+		}
+
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

@@ -21,6 +21,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 
 public class Theorem extends RuleLike {
@@ -37,7 +38,7 @@ public class Theorem extends RuleLike {
 	private boolean interfaceChecked=false;
 	private boolean interfaceOK = false;
 	private final boolean isAbstract;
-	
+
 	public Theorem(String n, Location l) { 
 		this(n,l,false);
 	}
@@ -395,10 +396,10 @@ public class Theorem extends RuleLike {
 		Theorem clone;
 		try {
 			clone = (Theorem) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in Theorem");
-			System.exit(1);
-			return null;
+		} 
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

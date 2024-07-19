@@ -9,7 +9,9 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
  * Syntax declarations that may be mutually recursive.
@@ -127,10 +129,10 @@ public class SyntaxPart implements Part {
 				clone.syntax.add(s.copy(cd));
 			}
 			return clone;
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in SyntaxPart");
-			System.exit(1);
-			return null;
+		}
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			throw new SASyLFError(report);
 		}
 	}
 

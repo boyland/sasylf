@@ -21,6 +21,8 @@ import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
@@ -303,10 +305,11 @@ public class NonTerminal extends Element {
 	public NonTerminal clone() {
 		try {
 			return (NonTerminal) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in NonTerminal");
-			System.exit(1);
-			return null;
+		}
+		
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 	}
 

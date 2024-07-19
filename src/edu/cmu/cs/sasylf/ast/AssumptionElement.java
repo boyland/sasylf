@@ -22,7 +22,9 @@ import edu.cmu.cs.sasylf.util.Util;
  * A syntax element (binding, variable or nonterminal) that is bound in a context
  */
 public class AssumptionElement extends Element {
-
+	private Element context;
+	private Element base;
+	
 	public AssumptionElement(Location l, Element e, Element assumes) {
 		super(l);
 		while (e instanceof Clause && !(e instanceof ClauseUse) && ((Clause)e).getElements().size() == 1) {
@@ -144,9 +146,6 @@ public class AssumptionElement extends Element {
 	public Element getBase() {
 		return base;
 	}
-
-	private Element context;
-	private Element base;
 
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;

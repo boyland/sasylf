@@ -34,10 +34,11 @@ public class TokenSpan implements Span {
 
 		try {
 			clone = (TokenSpan) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("CloneNotSupportedException in TokenSpan");
-			System.exit(1);
-			return null;
+		}
+		
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		clone.starting = clone.starting.copy(cd);

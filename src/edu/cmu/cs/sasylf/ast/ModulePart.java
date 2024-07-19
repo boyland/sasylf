@@ -15,6 +15,8 @@ import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
+import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
  * Using a module as a part of a compilation unit.
@@ -486,9 +488,8 @@ public class ModulePart extends Node implements Part, Named {
 			clone = (ModulePart) super.clone();
 		}
 		catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in ModulePart");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		cd.addCopyFor(this, clone);

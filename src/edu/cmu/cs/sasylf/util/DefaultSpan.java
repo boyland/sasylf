@@ -40,10 +40,11 @@ public class DefaultSpan implements Span {
 		DefaultSpan clone;
 		try {
 			clone = (DefaultSpan) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("CloneNotSupportedException in DefaultSpan");
-			System.exit(1);
-			return null;
+		}
+
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		clone.start = clone.start.copy(cd);

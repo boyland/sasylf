@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 
 public class CompUnit extends Node implements Module {
@@ -289,10 +290,11 @@ public class CompUnit extends Node implements Module {
 
 		try {
 			clone = (CompUnit) super.clone();
-		} catch (CloneNotSupportedException e) {
-			System.out.println("Clone not supported in CompUnit");
-			System.exit(1);
-			return null;
+		}
+		
+		catch (CloneNotSupportedException e) {
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 	
 		clone.packageDecl = packageDecl.copy(cd);

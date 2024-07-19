@@ -26,6 +26,7 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Span;
+import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 /** 
@@ -454,9 +455,8 @@ public class WhereClause extends Node {
 			clone = (WhereClause) clone();
 		}
 		catch (CloneNotSupportedException e) {
-			System.out.println("CloneNotSupportedException in WhereClause");
-			System.exit(1);
-			return null;
+			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			throw new SASyLFError(report);
 		}
 
 		clone.clauses = new ArrayList<Pair<Element, Clause>>();
