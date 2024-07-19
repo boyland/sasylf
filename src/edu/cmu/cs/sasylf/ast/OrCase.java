@@ -19,7 +19,8 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class OrCase extends Case {
-
+	Derivation premise;
+	
 	public OrCase(Location l, Derivation d) {
 		super(l,d.getLocation(),d.getEndLocation());
 		premise = d;
@@ -114,7 +115,6 @@ public class OrCase extends Case {
 		super.typecheck(ctx, isSubderivation);
 	}
 
-	Derivation premise;
 
 	@Override
 	public void substitute(SubstitutionData sd) {

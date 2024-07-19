@@ -1555,7 +1555,8 @@ CompUnit CompilationUnit() :
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError(Errors.REQUIRES_IN_MODULE,new Location(t)); }
     (
-      LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") )       p=Part(true) {  cu.addParameterChunk(p); }
+      LOOKAHEAD( ("abstract" | "terminals" | "syntax" | "judgment" | "theorem" | "lemma") ) 
+      p=Part(true) {  cu.addParameterChunk(p); }
   	)+
   )?
    
@@ -1615,7 +1616,8 @@ List<Theorem> Theorems(boolean abstractOK) :
 { Theorem thm, lastThm;
   List<Theorem> theorems = new ArrayList<Theorem>(); }
 {
-  (	LOOKAHEAD(2)    thm=TheoremDeclaration(abstractOK) { theorems.add(thm); lastThm = thm; }
+  (	LOOKAHEAD(2)
+    thm=TheoremDeclaration(abstractOK) { theorems.add(thm); lastThm = thm; }
     ( "and" thm = TheoremDeclaration(false)
         { theorems.add(thm);
           lastThm.setAnd(thm);
@@ -1671,7 +1673,8 @@ QualName QualName() :
 }
 {
   t=RuleName() { result = new QualName(t.getLocation(), t.toString()); }
-  (    "." t=RuleName() {  result = new QualName(result, t.getLocation(), t.toString()); }
+  (
+    "." t=RuleName() {  result = new QualName(result, t.getLocation(), t.toString()); }
   )*
   {
      return result;
@@ -1737,8 +1740,10 @@ SyntaxDeclaration BNFRule() :
 {
   t=<IDENTIFIER>
   (
-    "," { alts.add(getNonTerminal(t)); } t=<IDENTIFIER>  )*
-  (    "=" qn=QualName() [ <ASSIGN> Clauses(l) ]
+    "," { alts.add(getNonTerminal(t)); } t=<IDENTIFIER>
+  )*
+  (
+    "=" qn=QualName() [ <ASSIGN> Clauses(l) ]
   | <ASSIGN> Clauses(l)
   )
   {
@@ -1938,13 +1943,15 @@ Clause SimpleExpr() :
 	}
 	| t=<LBRACE>
 	  { c = new Clause(new Location(t)); }
-	  (	    t=<IDENTIFIER> { c.add(getNonTerminal(t)); }
+	  (
+	    t=<IDENTIFIER> { c.add(getNonTerminal(t)); }
 	  | t=<COMMA> { } // not added (unordered)
 	  | t=<LPAREN> { c2 = new Clause(new Location(t)); }
 	    (
 	  	  LOOKAHEAD(<IDENTIFIER>|<LBRACE>)
 	  	  a=SimpleExpr() {  c2.add(a); }
-	    | t2=<COMMA> { c2.add(getTerminal(t2)); } // added (ordered)	  	| t2=<OPERATOR> { c2.add(getTerminal(t2)); } // needed for ">"
+	    | t2=<COMMA> { c2.add(getTerminal(t2)); } // added (ordered)
+	  	| t2=<OPERATOR> { c2.add(getTerminal(t2)); } // needed for ">"
 	    )*
 	    t=<RPAREN> { c2.setEndLocation(new Location(t).add(1));
 	                 c.add(c2); }
@@ -2055,7 +2062,8 @@ Derivation Derivation() :
    <BY> d=Justification(t, c)
   { return d; }
 | LOOKAHEAD(<USE> <INVERSION>)
-  (    t=<USE> t2=<INVERSION> (of=<IDENTIFIER> [<RULE>] q=QualName() [<ON> c2=SimpleExpr()]
+  (
+    t=<USE> t2=<INVERSION> (of=<IDENTIFIER> [<RULE>] q=QualName() [<ON> c2=SimpleExpr()]
                         |<ON> c2=SimpleExpr())
     {
 	  Element lhs=null; Clause rhs=null;
@@ -2101,7 +2109,7 @@ Derivation Justification(Token startT, Clause c) :
     ]
     { return da; }
   | (t=<THEOREM> | t=<LEMMA>) qn=QualName() { da=new DerivationByTheorem(startT.image, new Location(startT), c, qn, new StringSpan(t)); }
-    [ <ON> cl=SimpleExpr() { da.addArgString(cl); }
+    [ <ON> cl=SimpleExpr() { da.addArgString(cl);} // here
       ( <COMMA> cl=SimpleExpr() { da.addArgString(cl); } )* 
     ]
     { return da; }
@@ -2131,7 +2139,8 @@ Derivation Justification(Token startT, Clause c) :
     { dca = new DerivationByCaseAnalysis(startT.image, new Location(startT), c, t.image); 
       dca.setEndLocation(Location.endOf(t)); return dca; }
   | LOOKAHEAD(4)
-  (	<INVERSION> [of=<IDENTIFIER>] <OR> <ON> cl=SimpleExpr()
+  (
+	<INVERSION> [of=<IDENTIFIER>] <OR> <ON> cl=SimpleExpr()
 	{
 	  Element lhs=null; Clause rhs=null;
 	  WhereClause whereClauses = null;

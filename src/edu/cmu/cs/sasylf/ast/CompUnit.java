@@ -22,6 +22,12 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class CompUnit extends Node implements Module {
+	private PackageDeclaration packageDecl;
+	public String moduleName;
+	private List<Part> params = new ArrayList<Part>();
+	private List<Part> parts = new ArrayList<Part>();
+	private int parseReports;
+
 	public CompUnit(PackageDeclaration pack, Location loc, String n) {
 		super(loc);
 		packageDecl=pack; 
@@ -66,12 +72,6 @@ public class CompUnit extends Node implements Module {
 	public boolean isAbstract() {
 		return !params.isEmpty();
 	}
-
-	private PackageDeclaration packageDecl;
-	public String moduleName;
-	private List<Part> params = new ArrayList<Part>();
-	private List<Part> parts = new ArrayList<Part>();
-	private int parseReports;
 
 	public List<Part> getParams() {
 		return params;
@@ -268,8 +268,8 @@ public class CompUnit extends Node implements Module {
 		/*
 			Substitute in the following attributes:
 
-			private List<Part> params = new ArrayList<Part>();
-			private List<Part> parts = new ArrayList<Part>();
+			private List<Part> params
+			private List<Part> parts
 		*/
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);

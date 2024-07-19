@@ -17,6 +17,9 @@ import edu.cmu.cs.sasylf.util.Span;
 
 
 public class Case extends Node {
+	private List<Derivation> derivations = new ArrayList<Derivation>();
+	private final Span span;
+	
 	public Case(Location l, Location l1, Location l2) { 
 		super(l); 
 		span = new DefaultSpan(l1,l2);
@@ -47,9 +50,6 @@ public class Case extends Node {
 	}
 
 	// verify: that last derivation is what i.h. requires
-
-	private List<Derivation> derivations = new ArrayList<Derivation>();
-	private final Span span;
 	
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {

@@ -9,7 +9,8 @@ import edu.cmu.cs.sasylf.SubstitutionData;
  * or    t[x]     (as part of a syntax case pattern such as "fn x => t[x]")
  */
 public class BindingAssumption extends NonTerminalAssumption {
-
+	private Binding binding;
+	
 	public BindingAssumption(Binding b, Element assumes) {
 		super(b.getNonTerminal(), b.getLocation(), assumes);
 		binding = b;
@@ -39,8 +40,6 @@ public class BindingAssumption extends NonTerminalAssumption {
 		}
 		super.typecheck(ctx);*/
 	}
-
-	private Binding binding;
 
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;

@@ -24,6 +24,20 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
 public class Theorem extends RuleLike {
+	private String kind = "theorem";
+	private String kindTitle = "Theorem";
+	private NonTerminal assumes = null;
+	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+	private Clause exists; // substitution here
+	private List<Derivation> derivations;
+	private Theorem andTheorem;
+	private Theorem firstInGroup = this;
+	private int indexInGroup = 0;
+	private InductionSchema inductionScheme = InductionSchema.nullInduction;
+	private boolean interfaceChecked=false;
+	private boolean interfaceOK = false;
+	private final boolean isAbstract;
+	
 	public Theorem(String n, Location l) { 
 		this(n,l,false);
 	}
@@ -348,20 +362,6 @@ public class Theorem extends RuleLike {
 		}
 		exists = c; 
 	}
-
-	private String kind = "theorem";
-	private String kindTitle = "Theorem";
-	private NonTerminal assumes = null;
-	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
-	private Clause exists; // substitution here
-	private List<Derivation> derivations;
-	private Theorem andTheorem;
-	private Theorem firstInGroup = this;
-	private int indexInGroup = 0;
-	private InductionSchema inductionScheme = InductionSchema.nullInduction;
-	private boolean interfaceChecked=false;
-	private boolean interfaceOK = false;
-	private final boolean isAbstract;
 	
 	
 	@Override

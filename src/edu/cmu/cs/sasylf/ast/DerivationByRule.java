@@ -9,6 +9,9 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 public class DerivationByRule extends DerivationByIHRule {
+	private QualName ruleName;
+	private RuleLike rule;
+	
 	public DerivationByRule(String n, Location l, Clause c, QualName rn) {
 		super(n,l,c); ruleName = rn;
 		setEndLocation(rn.getEndLocation());
@@ -42,9 +45,6 @@ public class DerivationByRule extends DerivationByIHRule {
 	public String prettyPrintByClause() {
 		return " by rule " + ruleName;
 	}
-
-	private QualName ruleName;
-	private RuleLike rule;
 	
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {

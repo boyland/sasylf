@@ -15,6 +15,8 @@ import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class NotJudgment extends Judgment {
+	private Judgment part;
+	
 	// TODO: Complete implementation of NOT.
 	public static class NotTerminal extends Terminal {
 		public NotTerminal(Span loc) {
@@ -119,7 +121,6 @@ public class NotJudgment extends Judgment {
 		return result;
 	}
 
-	private Judgment part;
 
 	@Override
 	public void defineConstructor(Context ctx) {

@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Constant;
-import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

@@ -23,6 +23,12 @@ import edu.cmu.cs.sasylf.util.Util;
 
 
 public class Judgment extends Node implements ClauseType, Named {
+	private List<Rule> rules;
+	private Clause form;
+	private String name;
+	public NonTerminal assume;
+	private boolean isAbstract;
+	
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
 		super(loc); 
 		name=n; 
@@ -55,11 +61,6 @@ public class Judgment extends Node implements ClauseType, Named {
 	@Override
 	public boolean isAbstract() { return isAbstract; }
 
-	private List<Rule> rules;
-	private Clause form;
-	private String name;
-	public NonTerminal assume;
-	private boolean isAbstract;
 
 	@Override
 	public void prettyPrint(PrintWriter out) {

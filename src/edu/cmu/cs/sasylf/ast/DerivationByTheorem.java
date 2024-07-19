@@ -75,7 +75,7 @@ public class DerivationByTheorem extends DerivationByIHRule {
 	}
 
 	private StringSpan theoremKind;
-	public QualName theoremName; // changed this to public for debugging purposes TODO: Change it back to private
+	private QualName theoremName;
 	private RuleLike theorem;
 
 	@Override
