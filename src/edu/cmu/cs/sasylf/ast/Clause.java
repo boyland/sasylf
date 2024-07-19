@@ -705,7 +705,7 @@ public class Clause extends Element implements CanBeCase {
 			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
 			Element e = getElements().get(j);
 			// check if it's a NonTerminal
-			if (e instanceof NonTerminal) {
+			if (e instanceof NonTerminal && ((NonTerminal) e).isSubstitutable()) {
 				NonTerminal nt = (NonTerminal) e;
 				// check if it has the same name as the one we are substituting for
 				if (sd.containsSyntaxReplacementFor(nt)) {
@@ -722,6 +722,8 @@ public class Clause extends Element implements CanBeCase {
 					// create a shallow copy of the new NonTerminal
 
 					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
+					
+					newNonTerminal.setUnsubstitutable(); // avoids variable capture
 
 					// TODO: maybe the new nonterminal should actually just be the original (without cloning)
 					

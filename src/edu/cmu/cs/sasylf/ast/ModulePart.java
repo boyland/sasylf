@@ -405,6 +405,7 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				newModule.substitute(sd);
+
 			}
 			newModule.moduleName = name;
 			ctx.modMap.put(name, newModule); 
@@ -451,9 +452,6 @@ public class ModulePart extends Node implements Part, Named {
 	}
 
 	public void substitute(SubstitutionData sd) {
-		// Do nothing
-		// TODO: I'm pretty sure that nothing should be done here
-
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 
@@ -463,15 +461,17 @@ public class ModulePart extends Node implements Part, Named {
 				If
 					1. argument.source == null
 					2. argument.name == sd.from
+					3. argument.isSubstitutable()
 
 				that means that argument is the argument that we want to substitute for
 				Therefore, replace set argument.name to sd.to
 				Also, set argument.resolution to null because we changed the name, so it points to something else now
 			*/
 
-			if (argument.getSource() == null && argument.getName().equals(sd.from)) {
+			if (argument.getSource() == null && argument.getName().equals(sd.from) && argument.isSubstitutable()) {
 				argument.setName(sd.to);
 				argument.nullifyResolution();
+				argument.setUnsubstitutable();
 			}
 
 		}

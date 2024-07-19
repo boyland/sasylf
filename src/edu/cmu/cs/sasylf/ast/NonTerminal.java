@@ -25,6 +25,14 @@ import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
 	private SyntaxDeclaration ty;
+
+	/*
+	 * Substitutable indicates whether this NonTerminal is allowed to be replaced during substitution.
+	 * NonTerminals can be replaced during substitution in Clause.substitute.
+	 * Substitutable is set to true by default, and should be set to false after the NonTerminal is substituted.
+	 * This is to prevent the NonTerminal from being replaced if there is a QualName module parameter with the same symbol.
+	 */
+	private boolean substitutable;
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
 		super(l);
@@ -34,6 +42,23 @@ public class NonTerminal extends Element {
 			super.setEndLocation(l.add(s.length()));
 		}
 		this.ty = ty;
+		substitutable = true;
+	}
+
+	/**
+	 * Whether this nonterminal is allowed to be replaced during substitution.
+	 * @return whether this nonterminal is allowed to be replaced during substitution
+	 */
+	public boolean isSubstitutable() {
+		return substitutable;
+	}
+
+	/**
+	 * Set this NonTerminal to be unsubstitutable.
+	 * Should be called after a NonTerminal
+	 */
+	public void setUnsubstitutable() {
+		substitutable = false;
 	}
 
 	public String getSymbol() { return symbol; }

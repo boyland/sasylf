@@ -23,6 +23,14 @@ import edu.cmu.cs.sasylf.util.Location;
 public class QualName extends Node {
 	private QualName source;
 	private String name;
+
+	/*
+	 * Substitutable indicates whether this QualName is allowed to be replaced during substitution.
+	 * Qualnames can be replaced during substitution in ModulePart.substitute.
+	 * Substitutable is set to true by default, and should be set to false after the QualName is substituted into.
+	 * This is to prevent the QualName from being replaced if there is a QualName module parameter with the same symbol.
+	 */
+	private boolean substitutable; // whether this QualName is allowed to be replaced during substitution
 	
 	private Object resolution;
 	private int version;
@@ -30,7 +38,29 @@ public class QualName extends Node {
 	public String getName() {
 		return name;
 	}
+	
+	/**
+	 * Whether this QualName is allowed to be replaced during substitution.
+	 * @return
+	 */
+	public boolean isSubstitutable() {
+		return substitutable;
+	}
 
+	/**
+	 * Set this QualName to be unsubstitutable.
+	 * Should be called after a QualName is substituted into.
+	 */
+	public void setUnsubstitutable() {
+		substitutable = false;
+	}
+
+	/**
+	 * Set the resolution of this QualName to null.
+	 * 
+	 * This is used after cloning and substitution so that the resolution is
+	 * recomputed when needed.
+	 */
 	public void nullifyResolution() {
 		resolution = null;
 	}
@@ -49,6 +79,7 @@ public class QualName extends Node {
 		super(qn == null ? loc : qn.getLocation(),loc.add(name.length()));
 		source = qn;
 		this.name = name;
+		substitutable = true;
 	}
 	
 	/** Create an UNqualified name (without a dot).
