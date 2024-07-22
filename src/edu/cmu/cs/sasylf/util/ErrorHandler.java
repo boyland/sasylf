@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import edu.cmu.cs.sasylf.ast.Clause;
 import edu.cmu.cs.sasylf.ast.Judgment;
@@ -192,9 +193,12 @@ public class ErrorHandler {
 		}
 	}
 
-	public static void modArgInvalid() {
-		// unimplemented
-		throw new RuntimeException("modArgInvalid unimplemented");
+	public static void modArgInvalid(String argType, ModulePart modulePart) {
+
+		String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
+
+		ErrorHandler.error(Errors.MOD_ARG_INVALID, errorMessage, modulePart);
+
 	}
 
 	public static void modArgMismatchSyntax(Syntax argSyntax, Syntax paramSyntax, Syntax whatParamIsBoundTo, ModulePart modulePart) {
@@ -289,13 +293,15 @@ public class ErrorHandler {
 
 	public static void modArgClauseNonterminalTypeMismatch(
 		NonTerminal argNonterminal,
-		NonTerminal paramNoterminal,
+		NonTerminal paramNonterminal,
+		Map<Syntax, Syntax> paramToArgSyntax,
 		ModulePart modulePart) {
 
-
-			// im a bit confused about this one
-			// come back later
-
+			String errorMessage = "Nonterminal " + argNonterminal + "has type " + argNonterminal.getType() + ", but is expected to have type "
+				+ paramNonterminal.getType() + " because " + paramNonterminal + " is bound to " + paramToArgSyntax.get(paramNonterminal.getType().getOriginalDeclaration()) + ".";
+			
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH, errorMessage, modulePart);
+			
 		}
 
 	public static void modArgNonTerminalMismatch(
