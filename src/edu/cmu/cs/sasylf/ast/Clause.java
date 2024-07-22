@@ -242,7 +242,7 @@ public class Clause extends Element implements CanBeCase {
 	 * @param es element list, must not be null
 	 * @return a new list including only the elements that are not terminals (noise words).
 	 */
-	protected List<Element> withoutTerminals() {
+	public List<Element> withoutTerminals() {
 		List<Element> result = new ArrayList<Element>();
 		for (Element e : elements) {
 			if (e instanceof Terminal) continue;
@@ -791,6 +791,12 @@ public class Clause extends Element implements CanBeCase {
 
 		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
 			String errorMessage = "parameter contains an OrClauseUse where the argument does not.";
+			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			return false;
+		}
+
+		if (argClause instanceof OrClauseUse && !(paramClause instanceof OrClauseUse)) {
+			String errorMessage = "argument contains an OrClauseUse where the parameter does not.";
 			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
 			return false;
 		}

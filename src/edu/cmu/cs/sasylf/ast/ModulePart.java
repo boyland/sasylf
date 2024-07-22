@@ -366,7 +366,6 @@ public class ModulePart extends Node implements Part, Named {
 							// check the premises of the rules
 							List<Clause> paramPremises = paramRule.getPremises();
 							List<Clause> argPremises = argRule.getPremises();
-
 							if (paramPremises.size() != argPremises.size()) {
 								String errorMessage = "The number of premises in the parameter rule and the argument rule do not match. ";
 								ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, this);

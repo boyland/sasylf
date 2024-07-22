@@ -3,6 +3,14 @@ package edu.cmu.cs.sasylf.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.ast.Clause;
+import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.ModulePart;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
+import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
+import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.term.FreeVar;
 
 
@@ -183,4 +191,135 @@ public class ErrorHandler {
 			return new Location(file,0,0);
 		}
 	}
+
+	public static void modArgInvalid() {
+		// unimplemented
+		throw new RuntimeException("modArgInvalid unimplemented");
+	}
+
+	public static void modArgMismatchSyntax(Syntax argSyntax, Syntax paramSyntax, Syntax whatParamIsBoundTo, ModulePart modulePart) {
+		String errorMessage = "Syntax " + argSyntax + " is being assigned to " + paramSyntax + ", but " 
+			+ paramSyntax + " is already bound to " + whatParamIsBoundTo + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_SYNTAX, errorMessage, modulePart);
+	}
+
+	public static void modArgSyntaxWrongNumProductions(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, ModulePart modulePart) {
+		int argNumProductions = argSyntax.getClauses().size();
+		int paramNumProductions = paramSyntax.getClauses().size();
+		String errorMessage = "Module syntax argument " + argSyntax + " has " + argNumProductions 
+			+ " productions, but " + paramNumProductions + " productions are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS, errorMessage, modulePart);
+
+	}
+
+	public static void modArgumentJudgmentWrongNumRules(Judgment argJudgment, Judgment paramJudgment, ModulePart modulePart) {
+		int argNumRules = argJudgment.getRules().size();
+		int paramNumRules = paramJudgment.getRules().size();
+
+		String errorMessage = "Module argument judgment " + argJudgment + " has " + argNumRules 
+			+ " rules, but " + paramNumRules + " rules are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_JUDGMENT_WRONG_NUM_RULES, errorMessage, modulePart);
+	}
+
+	public static void modArgMismatchJudgment(Judgment argJudgment, Judgment paramJudgment, Judgment whatParamIsBoundTo, ModulePart modulePart) {
+		String errorMessage = "Judgment " + argJudgment + " is being assigned to " 
+			+ paramJudgment + ", but " + paramJudgment + " is already bound to " + whatParamIsBoundTo + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_JUDGMENT, errorMessage, modulePart);
+	}
+
+	public static void modArgRuleWrongNumPremises(Rule argRule, Rule paramRule, ModulePart modulePart) {
+		int argNumPremises = argRule.getPremises().size();
+		int paramNumPremises = paramRule.getPremises().size();
+
+		String errorMessage = "Module argument rule " + argRule + " has " + argNumPremises 
+			+ ", but " + paramNumPremises + "premises are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_RULE_WRONG_NUM_PREMISES, errorMessage, modulePart);
+	}
+	
+	public static void modArgTheoremWrongNumForalls(Theorem argTheorem, Theorem paramTheorem, ModulePart modulePart) {
+		int argNumForalls = argTheorem.getForalls().size();
+		int paramNumForalls = paramTheorem.getForalls().size();
+
+		String errorMessage = "Module argument theorem " + argTheorem + " has " + argNumForalls 
+			+ " foralls, but " + paramNumForalls + " foralls are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_THEOREM_WRONG_NUM_FORALLS, errorMessage, modulePart);
+	}
+	
+	public static void modArgNonterminalMismatch(
+		NonTerminal argNonterminal, 
+		NonTerminal paramNonterminal, 
+		NonTerminal whatParamIsBoundTo, 
+		ModulePart modulePart) {
+		
+			String errorMessage = "Nonterminal " + argNonterminal + " is being assigned to " 
+				+ paramNonterminal + ", but " + paramNonterminal + " is already bound to " + whatParamIsBoundTo + ".";
+
+			ErrorHandler.error(Errors.MOD_ARG_NONTERMINAL_MISMATCH, errorMessage, modulePart);
+	}
+
+	// errors from Clause.checkClauseSameStructure
+
+	public static void modArgClauseMismatchParamIsAndClauseButArgIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the latter is an and clause, but the former isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseWrongNumNotTerminals(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart) {
+
+			int argNumNotTerminals = argClause.withoutTerminals().size();
+			int paramNumNotTerminals = paramClause.withoutTerminals().size();
+
+			String errorMessage = "Clause " + argClause + " has " + argNumNotTerminals 
+				+ " not-terminals, but " + paramNumNotTerminals + " not-terminals are expected.";
+
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_WRONG_NUM_NOT_TERMINALS, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseNonterminalTypeMismatch(
+		NonTerminal argNonterminal,
+		NonTerminal paramNoterminal,
+		ModulePart modulePart) {
+
+
+			// im a bit confused about this one
+			// come back later
+
+		}
+
+	public static void modArgNonTerminalMismatch(
+		NonTerminal argNonterminal,
+		NonTerminal paramNonterminal,
+		NonTerminal whatParamIsBoundTo,
+		ModulePart modulePart)
+		{
+			String errorMessage = "Nonterminal " + argNonterminal + " is being assigned to " 
+				+ paramNonterminal + ", but " + paramNonterminal + " is already bound to " + whatParamIsBoundTo + ".";
+
+			ErrorHandler.error(Errors.MOD_ARG_NONTERMINAL_MISMATCH, errorMessage, modulePart);
+		}
+
+	public static void modArgClauseClassMismatch(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart)
+		{
+			String errorMessage = "Argument clause " + argClause + " and parameter clause"
+				+ paramClause + " are not of the same class.";
+
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+		}
+
+
 }
