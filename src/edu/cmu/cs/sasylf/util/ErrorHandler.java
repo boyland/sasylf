@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.ast.Clause;
+import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.NonTerminal;
@@ -34,6 +35,7 @@ public class ErrorHandler {
 	 * @param throwable whether this method should throw a SASyLF error after reporting the error
 	 */
 	public static void report(Errors errorType, String msg, Span loc, String debugInfo, boolean isError, boolean throwable) {
+
 		if (errorType == null) errorType = Errors.UNSPECIFIED;
 		if (msg == null) msg = "";
 		if (loc == null) loc = lastSpan.get();
@@ -193,7 +195,16 @@ public class ErrorHandler {
 		}
 	}
 
-	public static void modArgInvalid(String argType, ModulePart modulePart) {
+	public static void modArgInvalid(Object arg, ModulePart modulePart) {
+
+		String argType = "";
+
+		if (arg instanceof CompUnit || arg instanceof ModulePart) {
+			argType = "module";
+		}
+		else {
+			argType = "terminals";
+		}
 
 		String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
 
@@ -201,9 +212,12 @@ public class ErrorHandler {
 
 	}
 
-	public static void modArgMismatchSyntax(Syntax argSyntax, Syntax paramSyntax, Syntax whatParamIsBoundTo, ModulePart modulePart) {
-		String errorMessage = "Syntax " + argSyntax + " is being assigned to " + paramSyntax + ", but " 
-			+ paramSyntax + " is already bound to " + whatParamIsBoundTo + ".";
+	public static void modArgMismatchSyntax(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, SyntaxDeclaration whatParamIsBoundTo, ModulePart modulePart) {
+		NonTerminal pnt = paramSyntax.getNonTerminal();
+		NonTerminal ant = argSyntax.getNonTerminal();
+		NonTerminal bnt = whatParamIsBoundTo.getNonTerminal();
+
+		String errorMessage = "Attempting to bind parameter syntax " + pnt + " to argument " + ant + ", but " + pnt + " is already bound to argument " + bnt + ".";
 
 		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_SYNTAX, errorMessage, modulePart);
 	}
@@ -211,7 +225,7 @@ public class ErrorHandler {
 	public static void modArgSyntaxWrongNumProductions(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, ModulePart modulePart) {
 		int argNumProductions = argSyntax.getClauses().size();
 		int paramNumProductions = paramSyntax.getClauses().size();
-		String errorMessage = "Module syntax argument " + argSyntax + " has " + argNumProductions 
+		String errorMessage = "Module syntax argument " + argSyntax.getNonTerminal() + " has " + argNumProductions 
 			+ " productions, but " + paramNumProductions + " productions are expected.";
 
 		ErrorHandler.error(Errors.MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS, errorMessage, modulePart);
@@ -229,8 +243,8 @@ public class ErrorHandler {
 	}
 
 	public static void modArgMismatchJudgment(Judgment argJudgment, Judgment paramJudgment, Judgment whatParamIsBoundTo, ModulePart modulePart) {
-		String errorMessage = "Judgment " + argJudgment + " is being assigned to " 
-			+ paramJudgment + ", but " + paramJudgment + " is already bound to " + whatParamIsBoundTo + ".";
+		String errorMessage = "Judgment parameter " + paramJudgment.getName() + " is being assigned to argument " 
+			+ argJudgment.getName() + ", but parameter " + paramJudgment.getName() + " is already bound to argument " + whatParamIsBoundTo.getName() + ".";
 
 		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_JUDGMENT, errorMessage, modulePart);
 	}
@@ -302,7 +316,7 @@ public class ErrorHandler {
 			
 			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH, errorMessage, modulePart);
 			
-		}
+	}
 
 	public static void modArgNonTerminalMismatch(
 		NonTerminal argNonterminal,
@@ -326,6 +340,40 @@ public class ErrorHandler {
 
 			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
 		}
+
+	public static void wrongNumModArgs(
+		int numArgs,
+		int numParams,
+		ModulePart modulePart) {
+
+			String errorMessage = "Module has " + numArgs + " arguments, but " + numParams + " arguments are expected.";
+
+			ErrorHandler.error(Errors.WRONG_NUM_MODULE_ARGUMENTS, errorMessage, modulePart);
+
+	}
+
+	public static void modArgTypeMismatch(
+		String argType,
+		String paramType,
+		ModulePart modulePart
+	) {
+		String errorMessage = "Expected " + paramType + ", but got " + argType + ".";
+		ErrorHandler.error(Errors.MOD_ARG_TYPE_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClausesNumElementsMismatch(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart
+	) {
+
+		String errorMessage = "Attempting to match parameter clause " + paramClause + " with argument clause " + argClause
+			+ ", but the numbers of not-terminal elements in the two clauses do not match.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CAUSE_MISMATCH, errorMessage, modulePart);
+
+	}
+
 
 
 }

@@ -1,0 +1,10 @@
+package tests.errortests.one
+
+module functor
+
+requires
+
+abstract syntax e
+
+provides
+

@@ -1,0 +1,9 @@
+package tests.errortests.one
+
+module functorfour requires
+
+abstract syntax a
+abstract syntax b
+syntax e ::= a | b
+
+provides

@@ -78,13 +78,15 @@ public class ModulePart extends Node implements Part, Named {
 		else if (argument instanceof Theorem) {
 			argumentClass = "theorem";
 		}
+		else if (argument instanceof CompUnit) {
+			argumentClass = "module";
+		}
 		else {
 			argumentClass = argument.getClass().toString();
 		}
 
-		String errorMessage = "Expected " + parameterClass + " but got " + argumentClass + ".";
-
-		ErrorHandler.error(Errors.MODULE_ARGUMENT_TYPE_MISMATCH, errorMessage, this);
+		ErrorHandler.modArgTypeMismatch(argumentClass, parameterClass, this);
+		return;
 	}
 	
 	public void typecheck(Context ctx) {
@@ -141,13 +143,12 @@ public class ModulePart extends Node implements Part, Named {
 					String argumentClass = "";
 
 					if (part instanceof TerminalsPart) {
-						argumentClass = "Terminals Part";
+						argumentClass = "terminals";
 					}
 					else {
-						argumentClass = "Module Part";
+						argumentClass = "module";
 					}
-					
-					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, argumentClass, this);
+					ErrorHandler.modArgInvalid(argumentClass, this);
 					return;
 				}
 			}
@@ -157,7 +158,7 @@ public class ModulePart extends Node implements Part, Named {
 			int numArgs = arguments.size();
 
 			if (numParams != numArgs) {
-				ErrorHandler.error(Errors.WRONG_NUM_MODULE_ARGUMENTS, "Expected " + numParams + ", but got " + numArgs + ".", this);
+				ErrorHandler.wrongNumModArgs(numArgs, numParams, this);
 			}
 
 			/* Next, check that the kind of each argument matches the kind of the corresponding parameter
@@ -172,6 +173,16 @@ public class ModulePart extends Node implements Part, Named {
 				Object argResolution = argument.resolve(ctx);
 
 				// Use instanceof to check that argument and parameter have the same kind
+
+				// make sure that the argument isn't a TerminalPart or CompUnit
+
+				if (argResolution instanceof TerminalsPart
+				|| argResolution instanceof CompUnit
+				|| argResolution instanceof ModulePart
+				) {
+					ErrorHandler.modArgInvalid(argResolution, this);
+					return;
+				}
 			
 				if (parameter instanceof SyntaxDeclaration && !(argResolution instanceof Syntax)) {
 					throwModuleArgumentMismatch(parameter, argResolution);
@@ -187,12 +198,15 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				// The argument should not be of type TerminalsPart or ModulePart
+				
 
 				if (argResolution instanceof TerminalsPart) {
 					throwModuleArgumentMismatch(parameter, argResolution);
 					return;
 				}
-				else if (argResolution instanceof ModulePart) {
+				else if (argResolution instanceof ModulePart
+				|| argResolution instanceof CompUnit
+				) {
 					throwModuleArgumentMismatch(parameter, argResolution);
 					return;
 				}
@@ -293,8 +307,11 @@ public class ModulePart extends Node implements Part, Named {
 						List<Clause> argumentProductions = argumentSyntaxDeclaration.getClauses();
 
 						if (parameterProductions.size() != argumentProductions.size()) {
-							String errorString = "Module argument does not match the expected number of productions. Expected " + parameterProductions.size() + " productions, " + "but argument " + argumentName + " has " + argumentProductions.size() + " productions.";
-							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							//String errorString = "Module argument does not match the expected number of productions. Expected " + parameterProductions.size() + " productions, " + "but argument " + argumentName + " has " + argumentProductions.size() + " productions.";
+							//ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+
+							ErrorHandler.modArgSyntaxWrongNumProductions(argumentSyntax, parameterSyntax, this);
+
 							return; 
 
 						}
@@ -456,8 +473,7 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				else {
-					String errorMessage = "Argument is not an instance of Syntax, Judgment, or Theorem.";
-					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, errorMessage, this);
+					ErrorHandler.modArgInvalid(argResolution, this);
 					return;
 				}
 

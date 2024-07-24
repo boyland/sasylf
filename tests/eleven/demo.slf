@@ -1,0 +1,24 @@
+package tests
+
+module demo provides
+
+terminals S
+
+syntax n ::= 0 | S n
+
+/*
+judgment plus: n + n = n
+
+  ----------- plus-z
+  0 + n = n
+
+  n1 + n2 = n3
+  ----------- plus-s
+  S n1 + n2 = S n3
+*/
+
+theorem t1:
+  forall d1: n1 + n2 = n3
+  exists n2 + n1 = n3
+  proof by unproved
+end theorem

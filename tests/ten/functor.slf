@@ -1,0 +1,12 @@
+package tests.ten
+
+module functor
+
+requires
+
+abstract syntax e
+
+provides
+
+
+  

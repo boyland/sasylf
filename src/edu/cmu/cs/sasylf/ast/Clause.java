@@ -777,6 +777,7 @@ public class Clause extends Element implements CanBeCase {
 	{
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
+			// clause mismatch
 			String errorMessage = "parameter contains an AndClauseUse where the argument does not.";
 			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
 			return false;
@@ -803,7 +804,7 @@ public class Clause extends Element implements CanBeCase {
 		
 		// make sure that the types of the clauses match
 
-		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment);
+		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, modulePart);
 
 		// ignore everything except for nonterminals
 		List<Element> c1Elements = paramClause.withoutTerminals();
@@ -814,6 +815,8 @@ public class Clause extends Element implements CanBeCase {
 				" Parameter clause has " + c1Elements.size() + " elements, and argument clause has " + c2Elements.size() + " elements.";
 
 			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+
+			ErrorHandler.modArgClausesNumElementsMismatch(argClause, paramClause, modulePart);
 			return false;
 		}
 
@@ -834,9 +837,13 @@ public class Clause extends Element implements CanBeCase {
 					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType().getOriginalDeclaration()) {
 						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
 						// failure
-						
-						String errorString = "The syntax declaration of " + nt1.getType().getName() + " is not the same as the syntax declaration of " + nt2.getType().getName() + ".";
-						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+
+						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
+						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
+						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType()).getOriginalDeclaration();
+
+						ErrorHandler.modArgMismatchSyntax(nt1Type, nt2Type, boundType, modulePart);
+
 						return false;
 					}
 				}
@@ -900,7 +907,8 @@ public class Clause extends Element implements CanBeCase {
 		Clause c1,
 		Clause c2,
 		Map<Syntax, Syntax> paramToArgSyntax,
-		Map<Judgment, Judgment> paramToArgJudgment
+		Map<Judgment, Judgment> paramToArgJudgment,
+		ModulePart modulePart
 	) {
 		ClauseType ct1 = c1.getType();
 		ClauseType ct2 = c2.getType();
@@ -928,8 +936,7 @@ public class Clause extends Element implements CanBeCase {
 			// check if j1 is already bound to something
 			if (paramToArgJudgment.containsKey(j1)) {
 				if (paramToArgJudgment.get(j1) != j2) {
-					String errorMessage = "The judgments in the parameter clause do not match the judgments in the argument clause.";
-					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+					ErrorHandler.modArgMismatchJudgment(j2, j1, paramToArgJudgment.get(j1), modulePart);
 					return false;
 				}
 			}

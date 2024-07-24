@@ -1,0 +1,11 @@
+package tests.errortests.one
+
+module functortwo
+
+requires
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= !id | !!nonid
+
+provides

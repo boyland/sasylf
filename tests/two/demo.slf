@@ -10,6 +10,9 @@ syntax b ::= T | F
 
 syntax n ::= 0 | S n
 
+syntax 1 := T
+syntax 0 := F
+
 module maybeofeitherboolnat = tests.two.maybeofeither[b, n]
 
 syntax e = maybeofeitherboolnat.e ::= Left b | Right n

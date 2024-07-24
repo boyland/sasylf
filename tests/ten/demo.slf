@@ -1,0 +1,10 @@
+package tests.ten
+
+module demo provides
+
+terminals S
+
+module Natural = org.sasylf.util.Natural
+
+module M = tests.ten.functor[Natural.n]
+

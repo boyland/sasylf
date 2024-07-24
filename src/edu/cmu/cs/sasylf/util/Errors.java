@@ -262,7 +262,7 @@ public enum Errors {
 	// these should be removed
 	INVALID_MODULE_ARGUMENT_TYPE("invalid module argument type. Module arguments must be Syntax, Judgment, or Theorem, got: "),
 	WRONG_NUM_MODULE_ARGUMENTS("wrong number of module arguments. "),
-	MODULE_ARGUMENT_TYPE_MISMATCH("module argument does not match the expected type. "),
+	MOD_ARG_TYPE_MISMATCH("module argument does not match the expected type. "),
 	INVALID_MODULE_ARGUMENT("invalid module argument. "),
 	
 	// these should be used
@@ -281,7 +281,7 @@ public enum Errors {
 
 	MOD_ARG_SYNTAX_TYPE_MISMATCH("Syntax type mismatch in module argument. "),
 	MOD_ARG_JUDGMENT_TYPE_MISMATCH("Judgment type mismatch in module argument."),
-	MOD_ARG_TYPE_MISMATCH("Clause type mismatch in module argument. "),
+	MOD_ARG_CLAUSE_TYPE_MISMATCH("Clause type mismatch in module argument. "),
 
 
 

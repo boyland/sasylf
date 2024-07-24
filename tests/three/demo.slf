@@ -8,7 +8,6 @@ terminals T F Nothingone Just isboolmaybe Nothingtwo isboolmaybemaybe Nothingthr
 
 syntax b ::= T | F
 
-
 /*
   boolmaybe is a module that represents a boolean maybe
   bm is the syntax for a boolean maybe
