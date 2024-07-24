@@ -777,28 +777,22 @@ public class Clause extends Element implements CanBeCase {
 	{
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
-			// clause mismatch
-			String errorMessage = "parameter contains an AndClauseUse where the argument does not.";
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, modulePart);
 			return false;
 		}
 
 		if (argClause instanceof AndClauseUse && !(paramClause instanceof AndClauseUse)) {
-			String errorMessage = "argument contains an AndClauseUse where the parameter does not.";
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			ErrorHandler.modArgClauseMismatchArgIsAndClauseButParamIsnt(argClause, paramClause, modulePart);
 			return false;
 		}
 
-
 		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
-			String errorMessage = "parameter contains an OrClauseUse where the argument does not.";
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			ErrorHandler.modArgClauseMismatchParamIsOrClauseButArgIsnt(argClause, paramClause, modulePart);
 			return false;
 		}
 
 		if (argClause instanceof OrClauseUse && !(paramClause instanceof OrClauseUse)) {
-			String errorMessage = "argument contains an OrClauseUse where the parameter does not.";
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+			ErrorHandler.modArgClauseMismatchArgIsOrClauseButParamIsnt(argClause, paramClause, modulePart);
 			return false;
 		}
 		
@@ -859,10 +853,8 @@ public class Clause extends Element implements CanBeCase {
 
 				if (nonTerminalMapping.containsKey(paramSymbol)) {
 					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
-						String errorString = "Nonterminals don't match when typechecking module. Expected " + nonTerminalMapping.get(paramSymbol) + " but got " + argSymbol + ".";
-						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
+						ErrorHandler.modArgNonTerminalMismatch(argSymbol, paramSymbol, nonTerminalMapping.get(paramSymbol), modulePart);
 						return false;
-
 					}
 				}
 				else {
@@ -883,8 +875,7 @@ public class Clause extends Element implements CanBeCase {
 			}
 
 			else {
-				String errorMessage = "The elements in the parameter clause do not match the elements in the argument clause.";
-				ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, modulePart);
+				ErrorHandler.modArgClauseClassMismatch(argClause, paramClause, modulePart);
 				return false;
 			}
 
@@ -919,8 +910,9 @@ public class Clause extends Element implements CanBeCase {
 			// check is s1 is already bound to something
 			if (paramToArgSyntax.containsKey(s1)) {
 				if (paramToArgSyntax.get(s1) != s2) {
-					String errorMessage = "The syntax declarations in the parameter clause do not match the syntax declarations in the argument clause.";
-					ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+					ErrorHandler.modArgMismatchSyntax(s1.getOriginalDeclaration(), s2.getOriginalDeclaration(),
+					paramToArgSyntax.get(s1).getOriginalDeclaration(), modulePart);
+
 					return false;
 				}
 			}
@@ -947,8 +939,7 @@ public class Clause extends Element implements CanBeCase {
 		}
 
 		else {
-			String errorMessage = "The types of clauses in the module parameter and module argument do not match.";
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, c1);
+			ErrorHandler.modArgClauseClassMismatch(c1, c2, modulePart);
 			return false;
 		}
 		

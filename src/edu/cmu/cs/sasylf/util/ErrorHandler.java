@@ -291,6 +291,27 @@ public class ErrorHandler {
 		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
 	}
 
+	public static void modArgClauseMismatchArgIsAndClauseButParamIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the former is an and clause, but the latter isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseMismatchParamIsOrClauseButArgIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the latter is an or clause, but the former isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseMismatchArgIsOrClauseButParamIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the former is an or clause, but the latter isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
 	public static void modArgClauseWrongNumNotTerminals(
 		Clause argClause,
 		Clause paramClause,
@@ -319,9 +340,9 @@ public class ErrorHandler {
 	}
 
 	public static void modArgNonTerminalMismatch(
-		NonTerminal argNonterminal,
-		NonTerminal paramNonterminal,
-		NonTerminal whatParamIsBoundTo,
+		String argNonterminal,
+		String paramNonterminal,
+		String whatParamIsBoundTo,
 		ModulePart modulePart)
 		{
 			String errorMessage = "Nonterminal " + argNonterminal + " is being assigned to " 
