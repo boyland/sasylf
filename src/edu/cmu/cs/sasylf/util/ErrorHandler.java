@@ -374,6 +374,25 @@ public class ErrorHandler {
 
 	}
 
+	public static void modArgClauseNonterminalTypesDontMatch(
+		NonTerminal argNonterminal,
+		NonTerminal paramNonterminal,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		ModulePart modulePart
+	) {
+
+		String errorMessage = "Attempting to match parameter nonterminal " + paramNonterminal + " with argument nonterminal "
+			+ argNonterminal + ", but the types of the two nonterminals do not match. " + paramNonterminal + " has type " + paramNonterminal.getType()
+			+ ", which is bound to argument syntax " + paramToArgSyntax.get(paramNonterminal.getType()) + ", but argument nonterminal "
+			+ argNonterminal + " has type " + argNonterminal.getType() + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH, errorMessage, modulePart);
+
+
+
+
+	}
+
 
 
 }

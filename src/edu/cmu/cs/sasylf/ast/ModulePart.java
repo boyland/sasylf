@@ -285,10 +285,7 @@ public class ModulePart extends Node implements Part, Named {
 					if (paramToArgSyntax.containsKey(argumentSyntax)) {
 						// check if the parameterSyntax is bound to the same argumentSyntax
 						if (paramToArgSyntax.get(argumentSyntax) != parameterSyntax) {
-							String errorString = "The same argument syntax is bound to two different parameter syntaxes. ";
-
-							errorString +=  "Argument syntax " + argumentName + " is already bound to parameter syntax " + paramToArgSyntax.get(argumentSyntax) + ", but is being bound to parameter syntax " + parameterSyntax.getName() + ".";
-							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							ErrorHandler.modArgMismatchSyntax(parameterSyntax, argumentSyntax, parameterSyntax, this);
 							return;
 						}
 					}
@@ -307,13 +304,8 @@ public class ModulePart extends Node implements Part, Named {
 						List<Clause> argumentProductions = argumentSyntaxDeclaration.getClauses();
 
 						if (parameterProductions.size() != argumentProductions.size()) {
-							//String errorString = "Module argument does not match the expected number of productions. Expected " + parameterProductions.size() + " productions, " + "but argument " + argumentName + " has " + argumentProductions.size() + " productions.";
-							//ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
-
 							ErrorHandler.modArgSyntaxWrongNumProductions(argumentSyntax, parameterSyntax, this);
-
-							return; 
-
+							return;
 						}
 
 						// check that each pair of productions has the same structure
@@ -340,10 +332,7 @@ public class ModulePart extends Node implements Part, Named {
 					if (paramToArgJudgment.containsKey(parameterJudgment)) {
 						// check if the parameterJudgment is bound to the same argumentJudgment
 						if (paramToArgJudgment.get(parameterJudgment) != argumentJudgment) {
-							String errorString = "The number of rules in the parameter judgment and the argument judgment do not match. ";
-
-							errorString += "Argument judgment " + argumentName + "has " + argumentJudgment.getRules().size() + " rules, but parameter judgment " + parameterJudgment.getName() + " has " + parameterJudgment.getRules().size() + " rules.";
-							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							ErrorHandler.modArgumentJudgmentWrongNumRules(argumentJudgment, parameterJudgment, null);
 							return;
 						}
 					}
@@ -367,10 +356,7 @@ public class ModulePart extends Node implements Part, Named {
 						List<Rule> argumentRules = argumentJudgment.getRules();
 
 						if (parameterRules.size() != argumentRules.size()) {
-							String errorString = "The same argument judgment is bound to two different parameter judgments. ";
-
-							errorString +=  "Argument judgment " + argumentName + " is already bound to parameter judgment " + paramToArgJudgment.get(argResolution) + ", but is being bound to parameter syntax " + parameterJudgment.getName() + ".";
-							ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+							ErrorHandler.modArgumentJudgmentWrongNumRules(argumentJudgment, parameterJudgment, this);
 							return;
 						}
 
@@ -384,8 +370,8 @@ public class ModulePart extends Node implements Part, Named {
 							List<Clause> paramPremises = paramRule.getPremises();
 							List<Clause> argPremises = argRule.getPremises();
 							if (paramPremises.size() != argPremises.size()) {
-								String errorMessage = "The number of premises in the parameter rule and the argument rule do not match. ";
-								ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorMessage, this);
+								ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, null);
+
 								return;
 							}
 
@@ -425,8 +411,7 @@ public class ModulePart extends Node implements Part, Named {
 					List<Fact> parameterForalls = parameterTheorem.getForalls();
 
 					if (argumentForalls.size() != parameterForalls.size()) {
-						String errorString = "The number of forall clauses in the parameter theorem and the argument theorem do not match. ";
-						ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, this);
+						ErrorHandler.modArgTheoremWrongNumForalls(argumentTheorem, parameterTheorem, this);
 						return;
 					}
 
@@ -451,10 +436,11 @@ public class ModulePart extends Node implements Part, Named {
 						else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
 							NonTerminal paramNonTerminal = (NonTerminal) paramElement;
 							NonTerminal argNonTerminal = (NonTerminal) argElement;
+							// Make sure that the types of the nonterminals match
 							if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
 								if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
-									String errorMessage = "Replacing " + paramNonTerminal + " with " + argNonTerminal + ", but expected " + paramToArgSyntax.get(paramNonTerminal.getType()) + ".";
-									ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT_TYPE, errorMessage, this);
+									ErrorHandler.modArgNonTerminalMismatch(argNonTerminal, paramNonTerminal, argNonTerminal, null);
+
 									return;
 								}
 							}

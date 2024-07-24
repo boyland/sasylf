@@ -282,6 +282,7 @@ public enum Errors {
 	MOD_ARG_SYNTAX_TYPE_MISMATCH("Syntax type mismatch in module argument. "),
 	MOD_ARG_JUDGMENT_TYPE_MISMATCH("Judgment type mismatch in module argument."),
 	MOD_ARG_CLAUSE_TYPE_MISMATCH("Clause type mismatch in module argument. "),
+	
 
 
 
