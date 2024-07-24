@@ -439,8 +439,7 @@ public class ModulePart extends Node implements Part, Named {
 							// Make sure that the types of the nonterminals match
 							if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
 								if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
-									ErrorHandler.modArgNonTerminalMismatch(argNonTerminal, paramNonTerminal, argNonTerminal, null);
-
+									ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, this);
 									return;
 								}
 							}
