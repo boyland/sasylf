@@ -1,0 +1,6 @@
+package regression.good9
+
+module demo
+
+provides
+

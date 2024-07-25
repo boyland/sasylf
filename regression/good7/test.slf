@@ -1,0 +1,24 @@
+package tests.seven
+
+module demo
+
+provides
+
+terminals T F Leaf Node
+
+syntax boolid ::= F
+syntax boolnonid ::= T
+syntax b ::= boolid | boolnonid
+
+syntax bt ::= Leaf | Node bt b bt
+
+judgment foldbool: bt --> b
+
+  --------------- fold-leaf
+  Leaf --> boolid
+
+theorem t1:
+  exists Leaf --> boolid
+  d1: Leaf --> boolid by rule fold-leaf
+  proof by unproved //!
+end theorem

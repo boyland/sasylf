@@ -1,0 +1,159 @@
+package regression.good5
+
+module foldablebt
+
+requires
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= id | nonid
+
+abstract judgment add: e + e = e
+
+abstract theorem left-id:
+  forall e
+  exists id + e = e
+end theorem
+
+abstract theorem right-id:
+  forall e
+  exists e + id = e
+end theorem
+
+abstract theorem commutative:
+  forall d: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theorem
+
+provides
+
+terminals Leaf Node rev
+
+syntax bt ::= Leaf | Node bt e bt
+
+judgment fold: bt --> e
+
+  --------------- fold-leaf
+  Leaf --> id
+
+
+  --------------- fold-leaf-fake
+  Leaf --> e
+
+
+  bt1 --> e1
+  bt2 --> e2
+  e + e1 = e3
+  e2 + e3 = e4
+  --------------- fold-node
+  Node bt1 e bt2 --> e4
+
+judgment rev: rev bt = bt
+
+  ----------------- rev-leaf
+  rev Leaf = Leaf
+
+  rev bt1 = bt11
+  rev bt2 = bt22
+  ------------------------------------- rev-node
+  rev Node bt1 e bt2 = Node bt22 e bt11
+
+theorem rev-rev-id:
+  forall d: rev bt1 = bt2
+  exists rev bt2 = bt1
+  proof by induction on d:
+    case rule
+      --------------- rev-leaf
+      d1: rev Leaf = Leaf
+    is
+      proof by d1
+    end case
+
+    case rule
+      p1: rev bt0 = bt3
+      p2: rev bt4 = bt5
+      --------------- rev-node
+      _: rev (Node bt0 e0 bt4) = (Node bt5 e0 bt3)
+    is
+
+      ih1: rev bt3 = bt0 by induction hypothesis on p1
+      ih2: rev bt5 = bt4 by induction hypothesis on p2
+
+      c: rev (Node bt5 e0 bt3) = (Node bt0 e0 bt4) by rule rev-node on ih2, ih1
+
+      proof by c
+    end case
+
+
+  end induction
+end theorem
+
+theorem rev-same-fold:
+  // two trees, one is the reversal of the other, they fold to the same value
+  forall d1: rev bt1 = bt2
+  forall d2: bt1 --> e1
+  exists bt2 --> e1
+  proof by induction on d1:
+    case rule
+      --------------- rev-leaf
+      _: rev Leaf = Leaf
+    is
+      proof by case analysis on d2:
+        case rule
+          --------------- fold-leaf
+          _: Leaf --> id0
+        is
+
+          // we know that bt1 is Leaf
+          // Therefore, bt2 is Leaf
+
+          d3: bt2 --> id0 by rule fold-leaf
+
+          proof by d3
+        end case
+
+
+      end case analysis
+    end case
+
+    case rule
+      p1: rev bt0 = bt3
+      p2: rev bt4 = bt5
+      --------------- rev-node
+      _: rev (Node bt0 e0 bt4) = (Node bt5 e0 bt3)
+    is
+
+      proof by case analysis on d2:
+        case rule
+          d3: bt0 --> e2
+          d4: bt4 --> e3
+          d5: e0 + e2 = e4
+          d6: e3 + e4 = e1
+          --------------- fold-node
+          _: (Node bt0 e0 bt4) --> e1
+        is
+
+          d7: e2 + e0 = e4 by theorem commutative on d5
+          d8: e4 + e3 = e1 by theorem commutative on d6
+
+          ih1: bt3 --> e2 by induction hypothesis on p1, d3
+          ih2: bt5 --> e3 by induction hypothesis on p2, d4
+
+          // 3rd premise must be e0 + e2 = e4
+          // 4th premise must be e3 + e4 = e1
+
+          d9: (Node bt5 e0 bt3) --> e1 by unproved
+
+          proof by d9
+        end case
+
+
+      end case analysis
+
+      proof by unproved
+    end case
+
+
+    
+  end induction
+end theorem

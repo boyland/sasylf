@@ -23,6 +23,9 @@ for root, dirs, files in os.walk("./regression"):
   for file_name in files:
     small_tests.append(os.path.join(root, file_name))
 
+small_tests.sort()
+module_tests.sort()
+
 def read_file_and_count_lines(file_path):
     lines = []
     
@@ -48,6 +51,7 @@ def get_error_lines(test: str):
 
 
 for test in module_tests:
+  print(f"{test}")
 
   # parse the test.slf file 
   error_lines = get_error_lines(test)
@@ -80,10 +84,13 @@ for test in module_tests:
   for unthrown_error in error_lines:
     # print that an error was expected
     # include the directory and the line number in the message
-    print(f"Error expected in regression/{test}/test.slf at line {unthrown_error}.")
+    print(f"     Error expected in regression/{test}/test.slf at line {unthrown_error}.")
     
 
   for unexpected_error in should_not_have_thrown:
     # print that an error was thrown when it shouldn't have been
     # include the directory and the line number in the message
-    print(f"Unexpected error in regression/{test}/test.slf at line {unexpected_error}.")
+    print(f"     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.")
+
+  if len(error_lines) == 0 and len(should_not_have_thrown) == 0:
+    print("     Passed")

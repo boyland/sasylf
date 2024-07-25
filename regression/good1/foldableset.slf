@@ -1,0 +1,25 @@
+package regression.good1
+
+module foldableset
+
+requires
+
+  abstract syntax e
+
+  abstract judgment combine: e + e = e
+
+provides
+
+  terminals empty
+
+  syntax s ::= empty | e :: s
+
+  judgment fold: s --> e
+
+    --------------- fold-empty
+    (e :: empty) --> e
+
+    s --> e2
+    e1 + e2 = e3
+    --------------- fold-nonempty
+    e1 :: s --> e3
