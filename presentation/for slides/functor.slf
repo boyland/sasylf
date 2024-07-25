@@ -1,0 +1,27 @@
+package presentation
+module functor
+requires
+abstract syntax e
+abstract syntax f
+syntax g ::= e | f
+abstract judgment plus: e + e = e
+abstract judgment times: g * g = g
+
+judgment both: g ** g = g
+
+  g1 + g2 = g3
+  g1 * g2 = g3
+  ------------- bothrule
+  g1 ** g2 = g3
+
+  g1 + g2 = g3
+  ------------- plusrule
+  g1 ** g2 = g3
+
+abstract theorem plus-commutes:
+  forall d1: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theroem
+provides
+/* Body */
+
