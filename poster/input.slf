@@ -1,0 +1,55 @@
+package poster
+
+module input provides
+
+terminals T F
+
+syntax bid ::= T
+syntax bother ::= F
+syntax b ::= bid | bother
+
+judgment land: b /\ b = b
+  
+  ----------------- land-t
+  T /\ b = b
+
+  ----------------- land-f
+  F /\ b = F
+
+theorem land-comm:
+  forall d: b1 /\ b2 = b3
+  exists b2 /\ b1 = b3
+  proof by /* proof omitted */
+end theorem
+theorem land-assoc: 
+  forall d1: b1 /\ b2 = b3
+  forall d2: b3 /\ b4 = b5
+  forall d3: b2 /\ b4 = b6
+  exists b1 /\ b6 = b5
+  proof by /* proof omitted */
+end theorem
+theorem land-total: ...
+theorem land-iden: ...
+
+/* Make a boolean linked list */
+module BFLL = foldll[
+  bid, bother, b, land, land-comm, 
+  land-assoc, land-total, land-iden
+]
+/* Extract the new declarations */
+syntax bool-ll = BFLL.ll
+judgment bool-fold = BFLL.fold
+judgment bool-rev = BFLL.rev
+theorem bool-fold-rev = BFLL.fold-rev
+
+/* Make a natural linked list */
+module NFLL = foldll[
+  nid, nother, n, plus, plus-comm,
+  plus-assoc, plus-total, plus-iden
+]
+/* Extract the new declarations */
+syntax nat-ll = NFLL.ll
+judgment nat-fold = NFLL.fold
+judgment nat-rev = NFLL.rev
+theorem nat-fold-rev = NFLL.fold-rev
+

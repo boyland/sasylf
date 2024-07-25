@@ -1,0 +1,42 @@
+package poster
+
+module foldablell requires
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= id | nonid
+
+abstract judgment combine: e + e = e
+
+abstract theorem commutative:
+  forall d: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theorem
+
+abstract theorem associative: ...
+
+abstract theorem totality: ...
+
+abstract theorem identity: ...
+
+provides
+
+syntax ll ::= empty | e :: ll
+
+judgment fold: fold ll = e
+
+  /* Implementation omitted */
+
+judgment rev : rev ll = ll
+
+  /* Implementation omitted */
+
+theorem fold-rev:
+  forall d1: fold ll1 = e1
+  forall d2: rev ll1 = ll2
+  exists fold ll2 = e1
+  proof by induction on d1:
+    /* Proof omitted */
+  end induction
+end theorem
+
