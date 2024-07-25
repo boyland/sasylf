@@ -853,6 +853,7 @@ public class Clause extends Element implements CanBeCase {
 
 				if (nonTerminalMapping.containsKey(paramSymbol)) {
 					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
+					
 						ErrorHandler.modArgNonTerminalMismatch(argSymbol, paramSymbol, nonTerminalMapping.get(paramSymbol), modulePart);
 						return false;
 					}

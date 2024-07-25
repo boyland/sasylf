@@ -400,7 +400,6 @@ public class ModulePart extends Node implements Part, Named {
 				}
 
 				else if (argResolution instanceof Theorem) {
-
 					Theorem argumentTheorem = (Theorem) argResolution;
 					Theorem parameterTheorem = (Theorem) parameterObject;
 
@@ -429,7 +428,7 @@ public class ModulePart extends Node implements Part, Named {
 						if (paramElement instanceof Clause && argElement instanceof Clause) {
 							Clause paramClause = (Clause) paramElement;
 							Clause argClause = (Clause) argElement;
-							// check that they have the same struture
+							// check that they have the same structure
 							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
 						}
 
