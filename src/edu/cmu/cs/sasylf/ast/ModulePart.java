@@ -82,7 +82,8 @@ public class ModulePart extends Node implements Part, Named {
 			argumentClass = "module";
 		}
 		else {
-			argumentClass = argument.getClass().toString();
+			//argumentClass = argument.getClass().toString();
+			argumentClass = "a nonexistant declaration";
 		}
 
 		ErrorHandler.modArgTypeMismatch(argumentClass, parameterClass, this);
