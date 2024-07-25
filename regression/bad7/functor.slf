@@ -1,0 +1,16 @@
+package regression.bad7
+
+module functor
+
+requires
+
+abstract syntax e
+
+abstract judgment combine: e + e = e
+
+abstract theorem t1:
+  forall e
+  exists e + e = e
+end theorem
+
+provides
