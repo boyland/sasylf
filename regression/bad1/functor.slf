@@ -1,0 +1,10 @@
+package tests.errortests.bad1
+
+module functor
+
+requires
+
+abstract syntax e
+
+provides
+

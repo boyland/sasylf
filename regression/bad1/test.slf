@@ -58,7 +58,7 @@ syntax zz ::= x | x
 
 
 
-module m1 = tests.errortests.one.functor[zz]
+module m1 = regression.bad1.functor[zz]
 
 // this should fail because we cannot pass a CompUnit as a module
 // should throw MOD_ARG_INVALID
@@ -69,7 +69,7 @@ This should fail because we cannot pass a CompUnit as input to a module
 throws MOD_ARG_INVALID
 
 */
-module m2 = tests.errortests.one.functor[m1]
+module m2 = regression.bad1.functor[m1] //!
 
 /*
   This should fail because functor expects a syntax as input, but
@@ -77,7 +77,7 @@ module m2 = tests.errortests.one.functor[m1]
 
   throws MOD_ARG_TYPE_MISMATCH
 */
-module m3 = tests.errortests.one.functor[add]
+module m3 = regression.bad1.functor[add] //!
 
 /*
   This should fail because functor expects a syntax as input, but
@@ -85,7 +85,7 @@ module m3 = tests.errortests.one.functor[add]
 
   throws MOD_ARG_TYPE_MISMATCH
 */
-module m4 = tests.errortests.one.functor[add-thm]
+module m4 = regression.bad1.functor[add-thm] //!
 
 /*
   This should fail because functortwo expects bool to have 2 productions,
@@ -93,7 +93,7 @@ module m4 = tests.errortests.one.functor[add-thm]
 
   throws MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS
 */
-module m5 = tests.errortests.one.functortwo[boolid, boolnonid, bool]
+module m5 = regression.bad1.functortwo[boolid, boolnonid, bool] //!
 
 /*
   This should fail because the functor expects land before lor.
@@ -101,7 +101,7 @@ module m5 = tests.errortests.one.functortwo[boolid, boolnonid, bool]
   throws MOD_ARG_MISMATCH_JUDGMENT
 
 */
-module m6 = tests.errortests.one.functorthree[b, lor, land, funny]
+module m6 = regression.bad1.functorthree[b, lor, land, funny] //!
 
 
 /*
@@ -112,7 +112,7 @@ module m6 = tests.errortests.one.functorthree[b, lor, land, funny]
 
   throws MOD_ARG_MISMATCH_SYNTAX
 */
-module m7 = tests.errortests.one.functorfour[x, y, zz]
+module m7 = regression.bad1.functorfour[x, y, zz] //!
 
 
 /*
@@ -127,4 +127,4 @@ module m7 = tests.errortests.one.functorfour[x, y, zz]
   Parameter clause has 3 elements, and argument clause has 4 elements.
 
 */
-module m8 = tests.errortests.one.functorfive[z, four-args]
+module m8 = regression.bad1.functorfive[z, four-args] //!

@@ -1,4 +1,4 @@
-package tests.errortests.one
+package regression.bad2
 
 module functor
 

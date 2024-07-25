@@ -1,4 +1,4 @@
-package tests.one.errortests
+package tests.errortests.bad1
 
 module functorfive
 
