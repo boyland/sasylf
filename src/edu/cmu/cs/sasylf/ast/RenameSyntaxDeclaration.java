@@ -59,7 +59,6 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 
 	@Override
 	public void updateContext(Context ctx) {
-		// There's a bug somewhere between here
 		Object resolution = source.resolveNotPackage(ctx);
 		// and here
 		if (resolution != null) {
