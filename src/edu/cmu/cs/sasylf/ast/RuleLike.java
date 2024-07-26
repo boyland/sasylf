@@ -215,9 +215,6 @@ public abstract class RuleLike extends Node implements Named {
 			if (input instanceof DerivationPlaceholder) continue; // don't check
 			Element actual = input.getElement();
 			if (formal.getType().typeTerm() != actual.getType().typeTerm()) {
-				System.out.println("Not equal");
-				System.out.println("formal: " + formal);
-				System.out.println("actual: " + actual);
 				ErrorHandler.error(Errors.RULE_PREMISE_MISMATCH, (i+1) + ": " + formal.getType().getName(), isPattern ? input : errorPoint);
 			}
 		}
