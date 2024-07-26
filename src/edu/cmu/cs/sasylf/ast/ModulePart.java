@@ -121,6 +121,7 @@ public class ModulePart extends Node implements Part, Named {
 						}
 						else {
 							ErrorHandler.error(Errors.INTERNAL_ERROR, " s is not an instance of SyntaxDeclaration", this);
+							return;
 						}
 					}
 				}
@@ -159,6 +160,7 @@ public class ModulePart extends Node implements Part, Named {
 
 			if (numParams != numArgs) {
 				ErrorHandler.wrongNumModArgs(numArgs, numParams, this);
+				return;
 			}
 
 			/* Next, check that the kind of each argument matches the kind of the corresponding parameter
@@ -260,7 +262,7 @@ public class ModulePart extends Node implements Part, Named {
 					 * 
 					 * If this does happen, raise an internal error
 					 */
-					ErrorHandler.error(Errors.INTERNAL_ERROR, ". Could not get the name of the parameter.", this);
+					ErrorHandler.error(Errors.INTERNAL_ERROR, ". Could not get the name of the parameter in ModulePart.typecheck.", this);
 					return;
 				}
 
@@ -284,8 +286,11 @@ public class ModulePart extends Node implements Part, Named {
 
 					if (paramToArgSyntax.containsKey(argumentSyntax)) {
 						// check if the parameterSyntax is bound to the same argumentSyntax
-						if (paramToArgSyntax.get(argumentSyntax) != parameterSyntax) {
-							ErrorHandler.modArgMismatchSyntax(parameterSyntax, argumentSyntax, parameterSyntax, this);
+
+						SyntaxDeclaration boundSyntax = paramToArgSyntax.get(argumentSyntax).getOriginalDeclaration();
+
+						if (boundSyntax != parameterSyntax) {
+							ErrorHandler.modArgMismatchSyntax(argumentSyntax, parameterSyntax, boundSyntax, this);
 							return;
 						}
 					}
@@ -370,8 +375,7 @@ public class ModulePart extends Node implements Part, Named {
 							List<Clause> paramPremises = paramRule.getPremises();
 							List<Clause> argPremises = argRule.getPremises();
 							if (paramPremises.size() != argPremises.size()) {
-								ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, null);
-
+								ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, this);
 								return;
 							}
 

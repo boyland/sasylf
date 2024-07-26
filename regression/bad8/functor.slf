@@ -1,0 +1,12 @@
+package regression.bad8
+
+module functor
+
+requires
+
+abstract syntax e
+
+abstract judgment combine: e + e = e
+
+
+provides

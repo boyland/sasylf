@@ -369,7 +369,7 @@ public class ErrorHandler {
 
 			String errorMessage = "Module has " + numArgs + " arguments, but " + numParams + " arguments are expected.";
 
-			ErrorHandler.error(Errors.WRONG_NUM_MODULE_ARGUMENTS, errorMessage, modulePart);
+			ErrorHandler.error(Errors.WRONG_NUM_MOD_ARGS, errorMessage, modulePart);
 
 	}
 

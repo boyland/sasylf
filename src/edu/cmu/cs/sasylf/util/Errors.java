@@ -259,13 +259,9 @@ public enum Errors {
 	WHERE_OCCUR ("replacement for meta-variable should not include itself"),
 	INTERNAL_ERROR("SASyLF Internal Error"), // no known instances
 	
-	// these should be removed
-	INVALID_MODULE_ARGUMENT_TYPE("invalid module argument type. Module arguments must be Syntax, Judgment, or Theorem, got: "),
-	WRONG_NUM_MODULE_ARGUMENTS("wrong number of module arguments. "),
+	WRONG_NUM_MOD_ARGS("wrong number of module arguments. "),
 	MOD_ARG_TYPE_MISMATCH("module argument does not match the expected type. "),
-	INVALID_MODULE_ARGUMENT("invalid module argument. "),
 	
-	// these should be used
 	MOD_ARG_INVALID("Invalid module argument. "),
 	MOD_ARG_MISMATCH_SYNTAX("Module argument mismatch syntax. "),
 	MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS("Module argument syntax has the wrong number of productions. "),

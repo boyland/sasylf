@@ -117,6 +117,11 @@ public class Clause extends Element implements CanBeCase {
 
 	@Override
 	public ClauseType getType() {
+
+		System.out.println("Getting the type of an unparsed clause");
+
+		System.out.println("Clause: " + this);
+
 		throw new RuntimeException("Cannot determine type of unparsed Clause");
 	}
 
@@ -805,11 +810,6 @@ public class Clause extends Element implements CanBeCase {
 		List<Element> c2Elements = argClause.withoutTerminals();
 
 		if (c1Elements.size() != c2Elements.size()) {
-			String errorString = "The number of elements in the parameter clause does not match the number of elements in the argument clause." +
-				" Parameter clause has " + c1Elements.size() + " elements, and argument clause has " + c2Elements.size() + " elements.";
-
-			ErrorHandler.error(Errors.INVALID_MODULE_ARGUMENT, errorString, modulePart);
-
 			ErrorHandler.modArgClausesNumElementsMismatch(argClause, paramClause, modulePart);
 			return false;
 		}
@@ -835,8 +835,7 @@ public class Clause extends Element implements CanBeCase {
 						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
 						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
 						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType()).getOriginalDeclaration();
-
-						ErrorHandler.modArgMismatchSyntax(nt1Type, nt2Type, boundType, modulePart);
+						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, modulePart);
 
 						return false;
 					}
@@ -908,10 +907,11 @@ public class Clause extends Element implements CanBeCase {
 		if (ct1 instanceof Syntax && ct2 instanceof Syntax) {
 			Syntax s1 = (Syntax) ct1;
 			Syntax s2 = (Syntax) ct2;
-			// check is s1 is already bound to something
+			// check if s1 is already bound to something
 			if (paramToArgSyntax.containsKey(s1)) {
 				if (paramToArgSyntax.get(s1) != s2) {
-					ErrorHandler.modArgMismatchSyntax(s1.getOriginalDeclaration(), s2.getOriginalDeclaration(),
+					System.out.println("AAAAAAAAA");
+					ErrorHandler.modArgMismatchSyntax(s2.getOriginalDeclaration(), s1.getOriginalDeclaration(),
 					paramToArgSyntax.get(s1).getOriginalDeclaration(), modulePart);
 
 					return false;
