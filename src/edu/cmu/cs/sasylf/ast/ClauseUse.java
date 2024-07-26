@@ -39,40 +39,6 @@ public class ClauseUse extends Clause {
 			super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
 		}
 	}
-	/*
-	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
-		super(copy.getLocation());
-		setEndLocation(copy.getEndLocation());
-		getElements().addAll(copy.getElements());
-
-		List<ElemType> elemTypes = new ArrayList<ElemType>();
-		for (int i = 0; i < getElements().size(); ++i) {
-			Element e = getElements().get(i);
-			if (e instanceof Clause) {
-				Clause c = (Clause) e;
-				ClauseUse cu = new ClauseUse(c, parseMap);
-				getElements().set(i, cu);
-
-				// must be an ElemType because can't be a judgment here
-				ClauseType ct = cu.getConstructor().getType();
-				if (ct instanceof Judgment) {
-					Util.verify(false,"A judgment cannot appear inside a clause");
-					// ErrorHandler.error("A judgment cannot appear inside a clause", copy);
-				}
-				ElemType et = (ElemType) ct;
-				elemTypes.add(et);
-			} else {
-				elemTypes.add(e.getElemType());
-			}
-		}
-
-		ClauseDef cd = parseMap.get(elemTypes);
-		if (cd == null)
-			ErrorHandler.error("Cannot find a syntax constructor or judgment for expression "+ copy +" with elements " + elemTypes, copy);
-		cons = cd;
-		root = computeRoot();
-	}
-	*/
 
 	@Override 
 	public boolean equals(Object x) {
