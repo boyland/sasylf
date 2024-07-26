@@ -414,6 +414,11 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		return context;
 	}
 
+	@Override
+	public String toString() {
+		return nonTerminal.toString();
+	}
+
 	private Set<SyntaxDeclaration> varTypes;
 	/**
 	 * Return the variable types that this context nonterminal can include
