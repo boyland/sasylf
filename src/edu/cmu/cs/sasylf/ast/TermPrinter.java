@@ -432,12 +432,9 @@ public class TermPrinter {
 	}
 
 	private ClauseUse appAsClause(Constant con, List<Element> args, List<Variable> vars) {
-		
 		String fname = con.getName();
 		if (fname.equals("or[]")) return OrClauseUse.makeEmptyOrClause(location);
-
 		ClauseDef cd = ctx.getProduction(con);
-
 		if (cd == null) {
 			throw new PrintException("no cd for " + fname);
 		}
