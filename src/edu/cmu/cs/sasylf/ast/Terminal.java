@@ -11,12 +11,10 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class Terminal extends Element implements ElemType {
-	private Span sp;
 	public Terminal(String s, Span sp) { 
 		super(sp.getLocation()); 
 		symbol = s; 
 		super.setEndLocation(sp.getEndLocation());
-		this.sp = sp;
 	}
 
 	@Override
@@ -142,8 +140,6 @@ public class Terminal extends Element implements ElemType {
 		Terminal clone = (Terminal) super.copy(cd);
 		
 		cd.addCopyFor(this, clone);
-
-		clone.sp = clone.sp.copy(cd);
 
 		// the other attributes are immutable, so we don't need to clone them
 		
