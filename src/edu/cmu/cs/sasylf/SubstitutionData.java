@@ -40,7 +40,6 @@ public class SubstitutionData {
   private final Judgment newJudgment; // the judgment that is being substituted with
   private final Theorem newTheorem; // the theorem that is being substituted with
   public final SyntaxDeclaration oldSyntax; // the syntax that is being substituted for
-  public final Judgment oldJudgment; // the judgment that is being substituted for
   public final SubstitutionType substitutionType; // the type of substitution being performed
 
   /*
@@ -67,11 +66,10 @@ public class SubstitutionData {
     this.newJudgment = null;
     this.newTheorem = null;
     this.oldSyntax = oldSyntax;
-    this.oldJudgment = null;
     substitutionType = SubstitutionType.SYNTAX;
   }
 
-  public SubstitutionData(String from, String to, Judgment newJudgment, Judgment oldJudgment) {
+  public SubstitutionData(String from, String to, Judgment newJudgment) {
     set = new IdentitySet<Object>();
     this.from = from;
     this.to = to;
@@ -79,7 +77,6 @@ public class SubstitutionData {
     this.newJudgment = newJudgment;
     this.newTheorem = null;
     this.oldSyntax = null;
-    this.oldJudgment = oldJudgment;
     substitutionType = SubstitutionType.JUDGMENT;
   }
 
@@ -91,7 +88,6 @@ public class SubstitutionData {
     this.newJudgment = null;
     this.newTheorem = newTheorem;
     this.oldSyntax = null;
-    this.oldJudgment = null;
     substitutionType = SubstitutionType.THEOREM;
   }
 

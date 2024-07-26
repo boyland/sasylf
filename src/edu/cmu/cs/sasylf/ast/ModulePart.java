@@ -400,7 +400,7 @@ public class ModulePart extends Node implements Part, Named {
 
 					}
 					
-					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment, parameterJudgment);
+					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment);
 				}
 
 				else if (argResolution instanceof Theorem) {
