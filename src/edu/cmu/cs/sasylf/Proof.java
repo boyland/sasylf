@@ -221,6 +221,6 @@ public class Proof {
 				ex.printStackTrace();
 				ErrorHandler.recoverableError(Errors.INTERNAL_ERROR, ex.getLocalizedMessage(), null);
 			}
-		}	
+		}
 	}
 }
