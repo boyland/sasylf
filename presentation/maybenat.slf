@@ -1,5 +1,0 @@
-package presentation
-
-module maybenat provides
-
-terminals S None Some
