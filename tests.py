@@ -2,14 +2,20 @@
 Tests structure:
   If a file is found in the tests directory, it is run as its own test.
   If a folder is found in the tests directory, there should be a file called
-  "test.slf" in that folder. That file is ran as a test
+  "test.slf" in that folder. That file is ran as a test.
   
 '''
 
 import subprocess
 import os
+import sys
 
-# walk through regression
+# whether it prints the entire error message or just the line number
+verbose = False
+
+if len(sys.argv) > 1:
+  if "-v" in sys.argv:
+    verbose = True
 
 small_tests = []
 module_tests = []
@@ -17,7 +23,7 @@ module_tests = []
 for root, dirs, files in os.walk("./regression"):
   for dir_name in dirs:
     #print(f"dir_name: {dir_name}")
-    test_file = os.path.join(root, dir_name, "test.slf")
+    test_file = os.path.join(root, dir_name, "test.slf") # TODO: maybe switch to main.slf for the main file in the test
     if os.path.exists(test_file):
       module_tests.append(dir_name)
   for file_name in files:
@@ -52,7 +58,7 @@ def get_error_lines(test: str):
 
 for test in module_tests:
   print(f"{test}")
-
+  error_messages = []
   # parse the test.slf file 
   error_lines = get_error_lines(test)
 
@@ -76,6 +82,7 @@ for test in module_tests:
       error_line = int(line.split(":")[1])
       if error_line not in error_lines:
         should_not_have_thrown.append(error_line)
+        error_messages.append(line)
       else:
         error_lines.remove(error_line)
 
@@ -86,11 +93,15 @@ for test in module_tests:
     # include the directory and the line number in the message
     print(f"     Error expected in regression/{test}/test.slf at line {unthrown_error}.")
     
+  if verbose:
+    for unexpected_error in error_messages:
+      print(f"     {unexpected_error}")
 
-  for unexpected_error in should_not_have_thrown:
-    # print that an error was thrown when it shouldn't have been
-    # include the directory and the line number in the message
-    print(f"     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.")
+  else:
+    for unexpected_error in should_not_have_thrown:
+      # print that an error was thrown when it shouldn't have been
+      # include the directory and the line number in the message
+      print(f"     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.")
 
   if len(error_lines) == 0 and len(should_not_have_thrown) == 0:
     print("     Passed")
