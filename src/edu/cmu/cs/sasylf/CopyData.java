@@ -12,7 +12,7 @@ import java.util.Map;
  * by visiting each node in the AST (really a graph), and creating a clone of each object.
  * 
  * <br/><br/>
- * Since the AST is likely a circlic graph, we keep track of which objects have already
+ * Since the AST is likely a cyclic graph, we keep track of which objects have already
  * been cloned. If an object has already been cloned, we return the clone, and if it hasn't
  * we create a new clone and add it to the mapping.
  * 
