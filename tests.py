@@ -1,11 +1,3 @@
-'''
-Tests structure:
-  If a file is found in the tests directory, it is run as its own test.
-  If a folder is found in the tests directory, there should be a file called
-  "test.slf" in that folder. That file is ran as a test.
-  
-'''
-
 import subprocess
 import os
 import sys
@@ -54,7 +46,11 @@ def get_error_lines(test: str):
 
   return error_lines
 
-
+# ANSI escape codes for colors
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
 for test in module_tests:
   print(f"{test}")
@@ -91,17 +87,17 @@ for test in module_tests:
   for unthrown_error in error_lines:
     # print that an error was expected
     # include the directory and the line number in the message
-    print(f"     Error expected in regression/{test}/test.slf at line {unthrown_error}.")
+    print(f"{RED}     Error expected in regression/{test}/test.slf at line {unthrown_error}.{RESET}")
     
   if verbose:
     for unexpected_error in error_messages:
-      print(f"     {unexpected_error}")
+      print(f"{YELLOW}     {unexpected_error}{RESET}")
 
   else:
     for unexpected_error in should_not_have_thrown:
       # print that an error was thrown when it shouldn't have been
       # include the directory and the line number in the message
-      print(f"     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.")
+      print(f"{RED}     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.{RESET}")
 
   if len(error_lines) == 0 and len(should_not_have_thrown) == 0:
-    print("     Passed")
+    print(f"{GREEN}     Passed{RESET}")
