@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-/** CloneData stores a mapping between objects and their clones, and has
+/** CopyData stores a mapping between objects and their clones, and has
  * methods for querying and updating the mapping.
  * 
  * <br/><br/>
