@@ -54,7 +54,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 		alternates = new TreeSet<String>();
 		alternates.add(Util.stripId(nonTerminal.getSymbol()));
-	}  
+	}
 
 	public SyntaxDeclaration(Location loc, NonTerminal nt) {
 		this(loc,nt,Collections.<Clause>emptyList());
