@@ -29,25 +29,25 @@ judgment lor: b \/ b = b
 theorem bool-left-id:
   forall b
   exists boolid \/ b = b
-  proof by unproved
+  proof by unproved //!
 end theorem
 
 theorem bool-right-id:
   forall b
   exists b \/ boolid = b
-  proof by unproved
+  proof by unproved //!
 end theorem
 
 theorem bool-commutative:
   forall d: b1 \/ b2 = b3
   exists b2 \/ b1 = b3
-  proof by unproved
+  proof by unproved //!
 end theorem
 
 theorem bool-trivial:
   forall d: b1 \/ b2 = b3
   exists b1 \/ b2 = b3
-  proof by unproved
+  proof by unproved //!
 end theorem
 
 module boolmonoid = regression.good73[boolid, 

@@ -38,5 +38,5 @@ provides
 
 theorem id-id:
   exists id + id = id
-  proof by unproved
+  proof by unproved //!
 end theorem
