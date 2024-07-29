@@ -2,3 +2,30 @@ package regression.test2
 
 module test provides
 
+terminals A B C D E in
+
+syntax
+  a ::= A
+  b ::= B
+  c ::= C
+  d ::= D
+  e ::= E
+
+
+module aset = regression.test2.simpleset[a]
+module bset = regression.test2.simpleset[b]
+module cset = regression.test2.simpleset[c]
+module dset = regression.test2.simpleset[d]
+module eset = regression.test2.simpleset[e]
+
+syntax as = aset.s
+syntax bs = bset.s
+syntax cs = cset.s
+syntax ds = dset.s
+syntax es = eset.s
+
+judgment acontains = aset.contains : a in as
+judgment bcontains = bset.contains : b in bs
+judgment ccontains = cset.contains : c in cs
+judgment dcontains = dset.contains : d in ds
+judgment econtains = eset.contains : e in es

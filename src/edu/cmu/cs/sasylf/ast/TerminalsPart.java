@@ -42,7 +42,6 @@ public class TerminalsPart implements Part {
 	@Override
 	public void typecheck(Context ctx) {
 		ctx.termSet.addAll(declaredTerminals);
-		Context.updateVersion();
 	}
 	
 	@Override

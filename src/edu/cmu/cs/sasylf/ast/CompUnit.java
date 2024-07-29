@@ -238,8 +238,7 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public Object getDeclaration(Context ctx, String name) {
-		// TODO: We need to figure out how to handle the cache properly
-		if (true || cacheVersion != ctx.version()) {
+		if (cacheVersion != ctx.version()) {
 			declCache.clear();
 			Collection<Node> things = new ArrayList<Node>();
 
@@ -311,6 +310,7 @@ public class CompUnit extends Node implements Module {
 		}
 		clone.parts = newParts;
 
+		clone.declCache = new HashMap<String, Object>();
 		return clone;
 	}
 }

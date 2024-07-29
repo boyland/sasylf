@@ -188,7 +188,6 @@ public class Theorem extends RuleLike {
 			}
 		} else {
 			oldCtx.ruleMap.put(getName(), this); 
-			Context.updateVersion();
 		}
 
 		int oldErrorCount = ErrorHandler.getErrorCount();
@@ -222,7 +221,6 @@ public class Theorem extends RuleLike {
     }*/
 			ctx.recursiveTheorems = new HashMap<String, Theorem>();
 			firstInGroup.addToMap(ctx);
-			Context.updateVersion();
 
 			ctx.bindingTypes = new HashMap<String, List<ElemType>>();
 
@@ -244,12 +242,10 @@ public class Theorem extends RuleLike {
 			ctx.currentGoalClause = exists;
 			ctx.outputVars.addAll(theoremTerm.getFreeVariables());
 			ctx.outputVars.removeAll(ctx.inputVars);
-			Context.updateVersion();
 			
 			for (Fact f : foralls) {
 				NonTerminal root = f.getElement().getRoot();
 				ctx.addKnownContext(root);
-				Context.updateVersion();
 			}
 			if (assumes != null) {
 				boolean foundAssumption = false;

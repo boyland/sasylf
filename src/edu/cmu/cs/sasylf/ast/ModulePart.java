@@ -469,9 +469,7 @@ public class ModulePart extends Node implements Part, Named {
 
 			}
 			newModule.moduleName = name;
-			ctx.modMap.put(name, newModule); 
-			Context.updateVersion();
-
+			ctx.modMap.put(name, newModule);
 		}
 
 	}

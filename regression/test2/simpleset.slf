@@ -1,0 +1,22 @@
+package regression.test2
+
+module simpleset
+
+requires
+
+abstract syntax e
+
+provides
+
+terminals empty in
+
+syntax s ::= empty | e :: s
+
+judgment contains: e in s
+
+  ------------ contains-1
+  e in e :: s
+  
+  e1 in s
+  ------------ contains-2
+  e1 in e2 :: s

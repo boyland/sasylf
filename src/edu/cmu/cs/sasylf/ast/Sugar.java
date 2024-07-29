@@ -130,7 +130,6 @@ public class Sugar extends Syntax {
 			}
 		}
 		typeChecked = true;
-		Context.updateVersion();
 	}
 
 	@Override

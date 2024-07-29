@@ -86,7 +86,6 @@ public class RenameJudgment extends Judgment {
 			getForm().checkClauseMatch(original.getForm());
 		}
 		// super.typecheck(ctx);
-		Context.updateVersion();
 	}
 
 	

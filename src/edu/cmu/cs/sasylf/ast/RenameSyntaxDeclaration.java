@@ -112,7 +112,6 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		}
 		// now do what we normally do:
 		super.typecheck(ctx);
-		Context.updateVersion();
 	}
 
 	
