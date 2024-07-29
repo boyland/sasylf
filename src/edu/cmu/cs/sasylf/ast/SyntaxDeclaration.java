@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmNonTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -669,6 +670,11 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		clone.gt = clone.gt.copy(cd);
 		
 		return clone;
+	}
+
+	@Override
+	public boolean matchesParam(ModuleArgument param) {
+		throw new UnsupportedOperationException("SyntaxDeclaration does not implement matchesParam");
 	}
 
 }

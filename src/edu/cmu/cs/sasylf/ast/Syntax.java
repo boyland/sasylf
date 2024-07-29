@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Location;
 
@@ -10,7 +11,7 @@ import edu.cmu.cs.sasylf.util.Location;
  * Definition of syntax.
  * These definitions affect the way SASyLF parses syntax.
  */
-public abstract class Syntax extends Node {
+public abstract class Syntax extends Node implements ModuleArgument {
 	/** Create a syntax node with a single location.
 	 * @param l location this syntax starts at
 	 */

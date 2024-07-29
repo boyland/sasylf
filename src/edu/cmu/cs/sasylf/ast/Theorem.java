@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -24,7 +25,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 
-public class Theorem extends RuleLike {
+public class Theorem extends RuleLike implements ModuleArgument {
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";
 	private NonTerminal assumes = null;
@@ -424,6 +425,12 @@ public class Theorem extends RuleLike {
 
 		return clone;
 	}
+
+	@Override
+	public boolean matchesParam(Object param) {
+		throw new UnsupportedOperationException("Theorem.matchesParam");
+	}
+	
 
 }
 
