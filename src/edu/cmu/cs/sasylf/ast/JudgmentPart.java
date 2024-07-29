@@ -11,6 +11,7 @@ import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
@@ -148,7 +149,7 @@ public class JudgmentPart implements Part {
 			clone = (JudgmentPart) super.clone();
 		}
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, "", true);
 			throw new SASyLFError(report);
 		}
 

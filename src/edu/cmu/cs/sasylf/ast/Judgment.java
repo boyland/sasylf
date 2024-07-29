@@ -15,11 +15,11 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 import edu.cmu.cs.sasylf.util.Util;
 
 
@@ -261,7 +261,7 @@ public class Judgment extends Node implements ClauseType, Named {
 		}
 
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
 			throw new SASyLFError(report);
 		}
 		

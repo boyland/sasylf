@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
@@ -176,7 +177,7 @@ public abstract class Element extends Node {
 		}
 		
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
 			throw new SASyLFError(report);
 		}
 

@@ -15,11 +15,11 @@ import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.NullModuleFinder;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 
 public class CompUnit extends Node implements Module {
@@ -292,7 +292,7 @@ public class CompUnit extends Node implements Module {
 		}
 		
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
 			throw new SASyLFError(report);
 		}
 	
