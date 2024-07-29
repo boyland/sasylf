@@ -54,7 +54,7 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
-
+print("Running module tests")
 for test in module_tests:
   print(".", end='')
   sys.stdout.flush()
@@ -105,7 +105,9 @@ for test in module_tests:
 
 
 # do the same thing but for small_tests
-    
+
+print("Running individual tests")
+
 for test in small_tests:
   print(".", end="")
   sys.stdout.flush()
