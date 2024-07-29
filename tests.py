@@ -24,6 +24,8 @@ for root, dirs, files in os.walk("./regression"):
 small_tests.sort()
 module_tests.sort()
 
+small_tests.remove("./regression/README.txt")
+
 def read_file_and_count_lines(file_path):
     lines = []
     
@@ -38,7 +40,7 @@ def get_error_lines(test: str):
 
   error_lines = []
 
-  lines = read_file_and_count_lines(f"./regression/{test}/test.slf")
+  lines = read_file_and_count_lines(test)
   
   for i, line in enumerate(lines):
     if "//!" in line:
@@ -52,11 +54,13 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+
 for test in module_tests:
-  print(f"{test}")
+  print(".", end='')
+  sys.stdout.flush()
   error_messages = []
   # parse the test.slf file 
-  error_lines = get_error_lines(test)
+  error_lines = get_error_lines(f"./regression/{test}/test.slf")
 
   result = subprocess.run(["java", "-jar", "SASyLF.jar", "--root", f"./regression/{test}/test.slf"],
                           stdout=subprocess.PIPE,
@@ -87,7 +91,7 @@ for test in module_tests:
   for unthrown_error in error_lines:
     # print that an error was expected
     # include the directory and the line number in the message
-    print(f"{RED}     Error expected in regression/{test}/test.slf at line {unthrown_error}.{RESET}")
+    print(f"\n{RED}Error expected in regression/{test}/test.slf at line {unthrown_error}.{RESET}")
     
   if verbose:
     for unexpected_error in error_messages:
@@ -97,7 +101,55 @@ for test in module_tests:
     for unexpected_error in should_not_have_thrown:
       # print that an error was thrown when it shouldn't have been
       # include the directory and the line number in the message
-      print(f"{RED}     Unexpected error in regression/{test}/test.slf at line {unexpected_error}.{RESET}")
+      print(f"\n{RED}Unexpected error in regression/{test}/test.slf at line {unexpected_error}.{RESET}")
 
-  if len(error_lines) == 0 and len(should_not_have_thrown) == 0:
-    print(f"{GREEN}     Passed{RESET}")
+
+# do the same thing but for small_tests
+    
+for test in small_tests:
+  print(".", end="")
+  sys.stdout.flush()
+  error_messages = []
+  # parse the test.slf file 
+  error_lines = get_error_lines(test)
+
+  result = subprocess.run(["java", "-jar", "SASyLF.jar", test],
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE
+                          )
+  
+  output_lines = result.stderr.decode("utf-8").split("\n")
+
+  # make sure that the errors were thrown in the right places
+
+  should_not_have_thrown = []
+
+  # for each of the output lines, check if that's an error that should be thrown
+  for i, line in enumerate(output_lines):
+    # tests/errortests/one/demo.slf:72:
+    if f"{test}" in line and line.count(":") >= 2:
+      # get the line number that the error was thrown on
+      # the error line number is inbetween the first and second :
+      error_line = int(line.split(":")[1])
+      if error_line not in error_lines:
+        should_not_have_thrown.append(error_line)
+        error_messages.append(line)
+      else:
+        error_lines.remove(error_line)
+
+  # error_lines contains the lines that should have thrown an error but didn't
+  
+  for unthrown_error in error_lines:
+    # print that an error was expected
+    # include the directory and the line number in the message
+    print(f"{RED}     Error expected in {test} at line {unthrown_error}.{RESET}")
+    
+  if verbose:
+    for unexpected_error in error_messages:
+      print(f"{YELLOW}     {unexpected_error}{RESET}")
+
+  else:
+    for unexpected_error in should_not_have_thrown:
+      # print that an error was thrown when it shouldn't have been
+      # include the directory and the line number in the message
+      print(f"{RED}     Unexpected error in {test} at line {unexpected_error}.{RESET}")
