@@ -2,6 +2,11 @@ import subprocess
 import os
 import sys
 
+
+def remove_all(l, item):
+  while item in l:
+    l.remove(item)
+
 # whether it prints the entire error message or just the line number
 verbose = False
 
@@ -24,7 +29,11 @@ for root, dirs, files in os.walk("./regression"):
 small_tests.sort()
 module_tests.sort()
 
-small_tests.remove("./regression/README.txt")
+if "./regression/README.txt" in small_tests:
+  small_tests.remove("./regression/README.txt")
+if "./regression/.DS_Store" in small_tests:
+  small_tests.remove("./regression/.DS_Store")
+
 
 def read_file_and_count_lines(file_path):
     lines = []
@@ -85,6 +94,7 @@ for test in module_tests:
         error_messages.append(line)
       else:
         error_lines.remove(error_line)
+        remove_all(error_lines, error_line)
 
   # error_lines contains the lines that should have thrown an error but didn't
   
@@ -114,6 +124,7 @@ for test in small_tests:
   error_messages = []
   # parse the test.slf file 
   error_lines = get_error_lines(test)
+  error_lines_const = error_lines.copy()
 
   result = subprocess.run(["java", "-jar", "SASyLF.jar", test],
                           stdout=subprocess.PIPE,
@@ -126,6 +137,9 @@ for test in small_tests:
 
   should_not_have_thrown = []
 
+  #print(f"test: {test}")
+  #print(f"error_lines (before): {error_lines}")
+
   # for each of the output lines, check if that's an error that should be thrown
   for i, line in enumerate(output_lines):
     # tests/errortests/one/demo.slf:72:
@@ -133,11 +147,14 @@ for test in small_tests:
       # get the line number that the error was thrown on
       # the error line number is inbetween the first and second :
       error_line = int(line.split(":")[1])
-      if error_line not in error_lines:
+      if error_line not in error_lines_const:
         should_not_have_thrown.append(error_line)
         error_messages.append(line)
       else:
-        error_lines.remove(error_line)
+        #error_lines.remove(error_line)
+        remove_all(error_lines, error_line)
+
+  #print(f"error_lines (after): {error_lines}")
 
   # error_lines contains the lines that should have thrown an error but didn't
   
