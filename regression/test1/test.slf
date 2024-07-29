@@ -1,0 +1,34 @@
+package regression.test1;
+
+module test provides
+
+module nat = org.sasylf.util.Natural
+
+syntax n = nat.n
+
+
+judgment equal = nat.equal : n = n
+judgment notequal = nat.notequal : n != n
+
+
+theorem eq-or-not-eq:
+  forall n1
+  forall n2
+  exists n1 = n2 or n1 != n2
+  proof by unproved
+end theorem
+
+
+module setb =
+regression.test1.set[n,nat.equal,nat.notequal,nat.ne-anti-reflexive,eq-or-not-eq]
+
+
+/*
+syntax s = setb.r
+
+judgment contains = setb.comntains : n in s
+
+*/
+
+
+//module m = regression.test1.functor[n, nat.eq-or-not-eq]

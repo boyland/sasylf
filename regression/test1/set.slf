@@ -1,0 +1,144 @@
+package regression.test1
+
+module set
+
+requires
+
+abstract syntax e
+
+judgment eeq: e = e
+
+  ----- eeq-1
+  e = e
+
+abstract judgment ene: e != e
+
+abstract theorem ne-anti-reflexive:
+  forall d: e != e
+  exists contradiction
+end theorem
+
+abstract theorem eq-decision:
+  forall e1
+  forall e2
+  exists e1 = e2 or e1 != e2
+end theorem
+  
+provides
+
+terminals in notin ok
+
+module repm = regression.test1.list[e,eeq]
+
+syntax r = repm.l
+  ::= 0
+   | e, r
+   
+judgment contains: e in r
+
+  --------- contains-here
+  e in (e,r)
+
+  e in r
+  ----------- contains-there
+  e in (e',r)
+
+judgment notcontains: e notin r
+
+  ---------- not-in-empty
+  e notin 0
+
+  e != e'
+  e notin r
+  ---------------- not-in-cons
+  e notin (e', r)
+
+judgment valid: r ok
+
+  ---- ok-empty
+  0 ok
+
+  e notin r
+  r ok
+  ---------- ok-cons
+  (e,r) ok
+
+judgment add: r + { e } = r
+
+  e in r
+  -------------- add-contains
+  r + { e } = r
+
+  e notin r
+  -------------- add-not-contains
+  r + {e} = (e,r)
+
+lemma contains-decision:
+	forall e
+	forall r
+	exists e in r or e notin r
+	proof by induction on r:
+		case 0 is
+	      		_: e notin 0 by rule not-in-empty
+		end case
+		case (e', r') is
+			chc: e in r' or e notin r' by induction hypothesis on e, r'
+			che: e = e' or e != e' by theorem /*eq-choice*/ eq-decision on e, e'
+			do case analysis on che:
+				case or eq: e = e' is
+					use inversion on eq where e' := e
+					_: e in (e,r) by rule contains-here
+				end case
+			end case analysis
+			do case analysis on chc:
+				case or con: e in r' is
+					_: e in (e',r') by rule contains-there on con
+				end case
+			end case analysis
+			ne: e != e' by inversion on cbe
+			nc: e notin r' by inversion on chc
+			_: e notin (e',r') by rule not-in-cons on ne, nc
+		end case
+	end induction
+end lemma
+
+theorem add-totel:
+	forall r
+	forall e
+	exists r + {e} = r'
+	chc: e in r or e notin r by lemma contains-decision
+	proof by case analysis on chc:
+		case or yc: e in r is
+	  		proof by rule add-contains on yc
+		end case
+		case or nv: e notin r is
+			proof by rule add-not-contains on nc
+		end case
+	end case analysis
+end theorem
+
+theorem add-preserves-valid:
+	forall a: r + { e } = r'
+	forall v: r ok
+	exists r' ok
+	proof by case analysis on a:
+		case rule
+			yc: e in r
+			----------------- add-contains
+			_: r + { e } = r
+			where r' := r
+		is
+			proof by v
+		end case
+		case rule
+			nc: e notin r
+			---------------- add-not-contains
+			_: r + {e} = (e,r)
+			where r' := (e,r)
+		is
+			proof by rule ok-const on nc, v
+		end case
+	end case analysis
+end theorem
+
+// lots more theorems
