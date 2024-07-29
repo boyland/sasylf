@@ -1,0 +1,118 @@
+package regression.modulebad06
+
+module demo
+
+provides
+
+terminals T F Nothingone Just isboolmaybe Nothingtwo isboolmaybemaybe Nothingthree isboolmaybemaybemaybe
+
+syntax b ::= T | F
+
+/*
+  boolmaybe is a module that represents a boolean maybe
+  bm is the syntax for a boolean maybe
+  isboolmaybe is a judgment that shows that a boolean maybe is a boolean maybe
+*/
+module boolmaybe = regression.modulebad06.maybe[b]
+
+syntax bm = boolmaybe.m ::= Nothingone | Just b
+
+judgment isboolmaybe = boolmaybe.ismaybe : isboolmaybe bm
+
+
+/*
+  boolmaybemaybe is a module that represents a boolean maybe maybe
+  bmm is the syntax for a boolean maybe maybe
+  isboolmaybemaybe is a judgment that shows that a boolean maybe maybe is a boolean maybe maybe
+*/
+
+module boolmaybemaybe = regression.modulebad06.maybe[bm]
+
+syntax bmm = boolmaybemaybe.m ::= Nothingtwo | Just bm
+
+judgment isboolmaybemaybe = boolmaybemaybe.ismaybe : isboolmaybemaybe bmm
+
+/*
+  boolmaybemaybemaybe is a module that represents a boolean maybe maybe maybe
+  bmmm is the syntax for a boolean maybe maybe maybe
+  isboolmaybemaybemaybe is a judgment that shows that a boolean maybe maybe maybe is a boolean maybe maybe maybe
+*/
+
+module boolmaybemaybemaybe = regression.modulebad06.maybe[bmm]
+
+syntax bmmm = boolmaybemaybemaybe.m ::= Nothingthree | Just bmm
+
+judgment isboolmaybemaybemaybe = boolmaybemaybemaybe.ismaybe : isboolmaybemaybemaybe bmmm
+
+/*
+  bool maybe theorems
+*/
+
+theorem t1:
+  exists isboolmaybe Nothingone
+  proof by rule boolmaybemaybe.ismaybe-1 //! should be boolmaybe.ismaybe-1
+end theorem
+
+theorem t2:
+  exists isboolmaybe (Just T)
+  proof by rule boolmaybemaybemaybe.ismaybe-1 //! should be boolmaybe.ismaybe-1
+end theorem
+
+theorem t3:
+  exists isboolmaybe (Just F)
+  proof by rule boolmaybemaybe.ismaybe-1 //! should be boolmaybe.ismaybe-1
+end theorem
+
+
+/*
+  bool maybe maybe theorems
+*/
+
+theorem t4:
+  exists isboolmaybemaybe Nothingtwo
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybe.ismaybe-1
+end theorem
+
+theorem t5:
+  exists isboolmaybemaybe (Just Nothingone)
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybe.ismaybe-1
+end theorem
+
+theorem t6:
+  exists isboolmaybemaybe (Just (Just T))
+  proof by rule boolmaybemaybemaybe.ismaybe-1 //! should be boolmaybemaybe.ismaybe-1
+end theorem
+
+theorem t7:
+  exists isboolmaybemaybe (Just (Just F))
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybe.ismaybe-1
+end theorem
+
+/*
+  bool maybe maybe maybe theorems
+*/
+
+theorem t8:
+  exists isboolmaybemaybemaybe Nothingthree
+  proof by rule boolmaybemaybe.ismaybe-1 //! should be boolmaybemaybemaybe.ismaybe-1
+end theorem
+
+theorem t9:
+  exists isboolmaybemaybemaybe (Just Nothingtwo)
+  proof by rule boolmaybemaybe.ismaybe-1 //! should be boolmaybemaybemaybe.ismaybe-1
+end theorem
+
+theorem t10:
+  exists isboolmaybemaybemaybe (Just (Just Nothingone))
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybemaybe.ismaybe-1
+end theorem
+
+theorem t11:
+  exists isboolmaybemaybemaybe (Just (Just (Just T)))
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybemaybe.ismaybe-1
+end theorem
+
+theorem t12:
+  exists isboolmaybemaybemaybe (Just (Just (Just F)))
+  proof by rule boolmaybe.ismaybe-1 //! should be boolmaybemaybemaybe.ismaybe-1
+end theorem

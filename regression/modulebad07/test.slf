@@ -1,0 +1,41 @@
+package regression.modulebad07
+
+module test provides
+
+terminals T F
+
+syntax b ::= T | F
+
+judgment lor: b \/ b = b
+
+  --------- lorrule1
+  T \/ b = T
+
+  --------- lorrule2
+  F \/ b = b
+
+judgment land: b /\ b = b
+  
+  --------- landrule1
+  T /\ b = b
+  
+  --------- landrule2
+  F /\ b = F
+
+theorem t1:
+  forall b1
+  forall b2
+  exists b1 \/ b1 = b1
+  proof by unproved //!
+end theorem
+
+theorem t2:
+  forall b1
+  exists b1 \/ b1 = b1
+  proof by unproved //!
+end theorem
+
+module m1 = regression.modulebad07.functor[b, lor, t1] //!
+module m2 = regression.modulebad07.functor[b, lor, t2] // t2 has the wrong number of foralls
+module m3 = regression.modulebad07.functor[b, land, t1] //! it should be lor
+module m4 = regression.modulebad07.functor[b, land, t2] //! it should be lor and t2 the wrong number of foralls

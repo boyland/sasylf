@@ -1,0 +1,10 @@
+package regression.modulebad08
+
+module functor2
+
+requires
+
+abstract syntax a
+abstract syntax b
+syntax e ::= a | b
+

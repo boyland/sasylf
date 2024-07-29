@@ -1,0 +1,106 @@
+package regression.modulegood09
+
+module field
+
+requires
+
+abstract syntax addid // additive identity element of the field
+abstract syntax mulid // multiplicative identity element of the field
+abstract syntax nonid // all other elements of the field
+syntax f ::= !addid | !!mulid | !!!nonid
+
+abstract judgment add: f + f = f // addition operation for the field
+abstract judgment mul: f * f = f
+judgment eq: f = f
+
+  -------------- eqrule
+  f = f
+
+abstract theorem add-closure:
+  forall f1
+  forall f2
+  exists f1 + f2 = f3
+end theorem
+
+abstract theorem mul-closure:
+  forall f1
+  forall f2
+  exists f1 * f2 = f3
+end theorem
+
+abstract theorem add-commutative:
+  forall d1: f1 + f2 = f3
+  exists f2 + f1 = f3
+end theorem
+
+abstract theorem mul-commutative:
+  forall d1: f1 * f2 = f3
+  exists f2 * f1 = f3
+end theorem
+
+abstract theorem add-associative:
+  forall d1: f1 + f2 = f3
+  forall d2: f3 + f4 = f5
+  forall d3: f2 + f4 = f6
+  exists f1 + f6 = f5
+end theorem
+
+abstract theorem mul-associative:
+  forall d1: f1 * f2 = f3
+  forall d2: f3 * f4 = f5
+  forall d3: f2 * f4 = f6
+  exists f1 * f6 = f5
+end theorem
+
+abstract theorem add-identity:
+  forall f1
+  exists f1 + !addid = f1
+end theorem
+
+abstract theorem mul-identity:
+  forall f1
+  exists f1 * !!mulid = f1
+end theorem
+
+abstract theorem add-inverse:
+  forall f1
+  exists f1 + f2 = !addid // f2 is the additive inverse of f1
+end theorem
+
+abstract theorem mul-inverse:
+  forall f1
+  exists f1 * f2 = !!mulid // f2 is the multiplicative inverse of f1
+end theorem
+
+abstract theorem distributivity:
+
+  // f1 * (f2 + f3) = f1 * f2 + f1 * f3
+
+  forall d1: f2 + f3 = f4
+  forall d2: f1 * f4 = f5 // f5 is the value of the LHS
+  forall d3: f1 * f2 = f6
+  forall d4: f1 * f3 = f7
+  exists f6 + f7 = f5
+
+end theorem
+
+provides
+
+/*
+  Using the axioms above, we can prove the following theorems:
+    - Uniqueness of additive and multiplicative identities
+    - Uniqueness of additive and multiplicative inverses
+    - Cancellation laws
+    - Zero product property
+*/
+
+theorem unique-additive-identity:
+  forall addid1
+  forall addid2
+  exists !addid1 = !addid2
+
+  d1: (!addid1) + (!addid1) = (!addid1) by theorem add-identity on !addid1
+  // maybe on expects an identifier, not an expression
+  
+  proof by unproved
+end theorem

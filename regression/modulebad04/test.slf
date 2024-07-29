@@ -1,0 +1,19 @@
+package regression.modulebad04
+
+module test provides
+
+terminals T F
+
+syntax id ::= T
+syntax nonid ::= F
+syntax boolone ::= id | nonid // valid
+syntax booltwo ::= nonid | nonid // invalid
+syntax boolthree ::= id | nonid | nonid // invalid
+syntax boolfour ::= id | id // invalid
+syntax boolfive ::= id | F
+
+module m = regression.modulebad04.functor[id, nonid, boolone]
+module m1 = regression.modulebad04.functor[id, nonid, booltwo] //!
+module m2 = regression.modulebad04.functor[id, nonid, boolthree] //!
+module m3 = regression.modulebad04.functor[id, nonid, boolfour] //!
+module m4 = regression.modulebad04.functor[id, nonid, boolfive] //!
