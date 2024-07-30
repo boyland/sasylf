@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -326,7 +327,7 @@ public class CompUnit extends Node implements Module {
 	 * @param args arguments to apply to this compilation unit
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
-	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp) {
+	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp, Context ctx) {
 
 		// if no arguments are provided and this compilation unit has no parameters, just return this compilation unit
 
@@ -334,41 +335,12 @@ public class CompUnit extends Node implements Module {
 			return Optional.of(this);
 		}
 		
-		// args.size() != or params.size() != 0 at this point
-		// make sure that they have the same size
-		
-		// flatten the param parts into ModuleArgument objects
-		
-		List<ModuleArgument> params = new ArrayList<>();
-
-		for (Part part : this.params) {
-			if (part instanceof SyntaxPart) {
-				SyntaxPart syntaxPart = (SyntaxPart) part;
-				for (Syntax syntax : syntaxPart.getSyntax()) {
-					params.add(syntax);
-				}
-			}
-
-			else if (part instanceof JudgmentPart) {
-				JudgmentPart judgmentPart = (JudgmentPart) part;
-				for (Judgment judgment : judgmentPart.getJudgments()) {
-					params.add(judgment);
-				}
-			}
-
-			else if (part instanceof TheoremPart) {
-				TheoremPart theoremPart = (TheoremPart) part;
-				for (Theorem theorem : theoremPart.getTheorems()) {
-					params.add(theorem);
-				}
-			}
-		}
-
-
 		/*
 		 * If the number of arguments and parameters are not equal, then raise
 		 * an exception and return an empty Optional
 		 */
+
+		List<ModuleArgument> params = getParamsAsModuleArguments();
 
 		int numParams = params.size();
 		int numArgs = args.size();
@@ -388,20 +360,41 @@ public class CompUnit extends Node implements Module {
 
 		newModule.params.clear();
 
+		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
+		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
+
 		for (int i = 0; i < numParams; i++) {
-			ModuleArgument param = params.get(i);
-			ModuleArgument arg = args.get(i);
+			Object parameterObject = params.get(i);
 
-			// try to match the argument with the parameter
+			SubstitutionData sd = null;
 
-			if (!arg.matchesParam(param)) {
-
+			ModuleArgument argResolution = args.get(i);
+			
+			if (argResolution instanceof ModuleArgument) {
+				ModuleArgument arg = (ModuleArgument) argResolution;
+				ModuleArgument param = (ModuleArgument) parameterObject;
+				Optional<SubstitutionData> opt = arg.matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
+				if (opt.isPresent()) {
+					sd = opt.get();
+				}
+				else {
+					return Optional.empty();
+				}
 			}
 
+			else {
+				// argResolution is not an instance of ModuleArgument
+				ErrorHandler.modArgInvalid(argResolution, mp);
+				return Optional.empty();
+			}
+
+			if (sd == null) return Optional.empty();
+			
+			newModule.substitute(sd);
 		}
-
-
-
+		
+		return Optional.of(newModule);
+		
 	}
 
 
