@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -54,6 +54,6 @@ public interface Part extends Cloneable {
 	 * Returns the components inside of this part that could be used as arguments/parameters
 	 * @return the components inside of this part that could be used as arguments/parameters
 	 */
-	public List<ModuleArgument> argsParams();
+	public List<ModuleComponent> argsParams();
 
 }

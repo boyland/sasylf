@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -104,12 +104,12 @@ public class ModulePart extends Node implements Part, Named {
 
 		// resolve each of the arguments
 
-		List<ModuleArgument> arguments = new ArrayList<>();
+		List<ModuleComponent> arguments = new ArrayList<>();
 
 		for (QualName qn : this.arguments) {
 			Object argResolution = qn.resolve(ctx);
-			if (argResolution instanceof ModuleArgument) {
-				arguments.add((ModuleArgument)argResolution);
+			if (argResolution instanceof ModuleComponent) {
+				arguments.add((ModuleComponent)argResolution);
 			}
 			else {
 				ErrorHandler.modArgInvalid(argResolution, this);
@@ -207,7 +207,7 @@ public class ModulePart extends Node implements Part, Named {
 	}
 
 	@Override
-	public List<ModuleArgument> argsParams() {
+	public List<ModuleComponent> argsParams() {
 		return new ArrayList<>();
 	}
 

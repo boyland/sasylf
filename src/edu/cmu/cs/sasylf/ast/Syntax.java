@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
@@ -16,7 +16,7 @@ import edu.cmu.cs.sasylf.util.Location;
  * Definition of syntax.
  * These definitions affect the way SASyLF parses syntax.
  */
-public abstract class Syntax extends Node implements ModuleArgument {
+public abstract class Syntax extends Node implements ModuleComponent {
 	/** Create a syntax node with a single location.
 	 * @param l location this syntax starts at
 	 */
@@ -106,7 +106,7 @@ public abstract class Syntax extends Node implements ModuleArgument {
 	}
 
 	public Optional<SubstitutionData> matchesParam(
-		ModuleArgument paramModArg,
+		ModuleComponent paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
@@ -191,9 +191,9 @@ public abstract class Syntax extends Node implements ModuleArgument {
 	
 	@Override
 	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
-		Optional<ModuleArgument> paramOpt = cu.getNextParam();
+		Optional<ModuleComponent> paramOpt = cu.getNextParam();
 		if (paramOpt.isEmpty()) return false;
-		ModuleArgument param = paramOpt.get();
+		ModuleComponent param = paramOpt.get();
 
 		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 

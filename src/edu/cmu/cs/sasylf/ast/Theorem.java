@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;
@@ -26,7 +26,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
-public class Theorem extends RuleLike implements ModuleArgument {
+public class Theorem extends RuleLike implements ModuleComponent {
 	private String kind = "theorem";
 	private String kindTitle = "Theorem";
 	private NonTerminal assumes = null;
@@ -422,7 +422,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 
 	@Override
 	public Optional<SubstitutionData> matchesParam(
-		ModuleArgument paramModArg,
+		ModuleComponent paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
@@ -514,9 +514,9 @@ public class Theorem extends RuleLike implements ModuleArgument {
 
 	@Override
 	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
-		Optional<ModuleArgument> paramOpt = cu.getNextParam();
+		Optional<ModuleComponent> paramOpt = cu.getNextParam();
 		if (paramOpt.isEmpty()) return false;
-		ModuleArgument param = paramOpt.get();
+		ModuleComponent param = paramOpt.get();
 		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 
 		if (sdOpt.isPresent()) {

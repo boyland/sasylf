@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
@@ -26,7 +26,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 
-public class Judgment extends Node implements ClauseType, Named, ModuleArgument {
+public class Judgment extends Node implements ClauseType, Named, ModuleComponent {
 	private List<Rule> rules;
 	private Clause form;
 	private String name;
@@ -282,7 +282,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 
 	@Override
 	public Optional<SubstitutionData> matchesParam(
-		ModuleArgument paramModArg,
+		ModuleComponent paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
@@ -407,9 +407,9 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
 
 		// get the next parameter of cu
-		Optional<ModuleArgument> paramOpt = cu.getNextParam();
+		Optional<ModuleComponent> paramOpt = cu.getNextParam();
 		if (paramOpt.isEmpty()) return false;
-		ModuleArgument param = paramOpt.get();
+		ModuleComponent param = paramOpt.get();
 
 		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 

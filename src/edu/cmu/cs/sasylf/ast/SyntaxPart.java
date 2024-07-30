@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -138,8 +138,8 @@ public class SyntaxPart implements Part {
 	}
 
 	@Override
-	public List<ModuleArgument> argsParams() {
-		List<ModuleArgument> result = new ArrayList<>();
+	public List<ModuleComponent> argsParams() {
+		List<ModuleComponent> result = new ArrayList<>();
 		for (Syntax s : syntax) {
 			result.add(s.getOriginalDeclaration());
 		}

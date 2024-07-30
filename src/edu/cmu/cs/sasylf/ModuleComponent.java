@@ -8,7 +8,12 @@ import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Syntax;
 
-public interface ModuleArgument {
+/**
+ * Represents an argument or parameter to a CompUnit.
+ * <br/><br/>
+ * This interface is implemented by Syntax, Judgment, and Theorem.
+ */
+public interface ModuleComponent {
 
   /**
    * Returns true if and only if this ModuleArgument object can be applied to
@@ -20,7 +25,7 @@ public interface ModuleArgument {
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
    */
   public Optional<SubstitutionData> matchesParam( // TODO: This could be removed from the interface
-    ModuleArgument paramModArg,
+    ModuleComponent paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax, 
 		Map<Judgment, Judgment> paramToArgJudgment
@@ -44,7 +49,7 @@ public interface ModuleArgument {
    * @param cd the CopyData object to be used in the copy
    * @return a copy of this ModuleArgument object
    */
-  public ModuleArgument copy(CopyData cd);
+  public ModuleComponent copy(CopyData cd);
 
   /**
    * Provides this ModuleArgument object to the given compilation unit.

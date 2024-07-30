@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -102,8 +102,8 @@ public class TheoremPart implements Part {
 	}
 
 	@Override
-	public List<ModuleArgument> argsParams() {
-		List<ModuleArgument> theorems = new ArrayList<>();
+	public List<ModuleComponent> argsParams() {
+		List<ModuleComponent> theorems = new ArrayList<>();
 
 		for (Theorem theorem : getTheorems()) {
 			theorems.add(theorem);

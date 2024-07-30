@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -31,7 +31,7 @@ public class CompUnit extends Node implements Module {
 	public String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
-	private List<ModuleArgument> moduleParams = new ArrayList<>();
+	private List<ModuleComponent> moduleParams = new ArrayList<>();
 	private int parseReports;
 
 	public CompUnit(PackageDeclaration pack, Location loc, String n) {
@@ -312,9 +312,9 @@ public class CompUnit extends Node implements Module {
 
 		clone.declCache = new HashMap<String, Object>();
 		
-		List<ModuleArgument> newModuleParams = new ArrayList<>();
+		List<ModuleComponent> newModuleParams = new ArrayList<>();
 
-		for (ModuleArgument mp : clone.moduleParams) {
+		for (ModuleComponent mp : clone.moduleParams) {
 			newModuleParams.add(mp.copy(cd));
 		}
 
@@ -334,7 +334,7 @@ public class CompUnit extends Node implements Module {
 	 * @param args arguments to apply to this compilation unit
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
-	public Optional<CompUnit> accept(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
+	public Optional<CompUnit> accept(List<ModuleComponent> args, ModulePart mp, Context ctx, String moduleName) {
 
 		/*
 		 * When no arguments are provided, we are just performing a renaming of the module.
@@ -382,14 +382,14 @@ public class CompUnit extends Node implements Module {
 	 * @param moduleName name of the module
 	 * @return true if the arguments were successfully applied, false otherwise
 	 */
-	private boolean doApplication(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
+	private boolean doApplication(List<ModuleComponent> args, ModulePart mp, Context ctx, String moduleName) {
 		// apply the given arguments to this
 
 		params.clear();
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
-		for (ModuleArgument arg: args) {
+		for (ModuleComponent arg: args) {
 			// applicationResult is true iff the argument was successfully applied to the parameter
 			boolean applicationResult = arg.provideTo(this, mp, paramToArgSyntax, paramToArgJudgment);
 			if (!applicationResult) {
@@ -403,12 +403,12 @@ public class CompUnit extends Node implements Module {
 	
 	}
 
-	public Optional<ModuleArgument> getNextParam() {
+	public Optional<ModuleComponent> getNextParam() {
 		if (moduleParams.isEmpty()) {
 			return Optional.empty();
 		}
 		else {
-			ModuleArgument param = moduleParams.remove(0);
+			ModuleComponent param = moduleParams.remove(0);
 			return Optional.of(param);
 		}
 	}

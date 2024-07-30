@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleArgument;
+import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -89,7 +89,7 @@ public class TerminalsPart implements Part {
 	}
 
 	@Override
-	public List<ModuleArgument> argsParams() {
+	public List<ModuleComponent> argsParams() {
 		return new ArrayList<>();
 	}
 	
