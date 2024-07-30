@@ -327,7 +327,7 @@ public class CompUnit extends Node implements Module {
 	 * @param args arguments to apply to this compilation unit
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
-	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp, Context ctx) {
+	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
 
 		// if no arguments are provided and this compilation unit has no parameters, just return this compilation unit
 
@@ -393,8 +393,10 @@ public class CompUnit extends Node implements Module {
 			newModule.substitute(sd);
 		}
 		
+		newModule.moduleName = moduleName;
+
 		return Optional.of(newModule);
-		
+
 	}
 
 

@@ -91,86 +91,35 @@ public class ModulePart extends Node implements Part, Named {
 	}
 	
 	public void typecheck(Context ctx) {
-
-		System.out.println("typechecking module part");
-
+		
+		// resolve the module
 		Object resolution = module.resolve(ctx);
-		if (resolution instanceof Module) {
-			ctx.modMap.put(name, (Module)resolution);
-		} else {
+
+		if (!(resolution instanceof CompUnit)) {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
+			return;
 		}
-		if (!arguments.isEmpty()) {
 
-			// Since there are arguments, this is a module appliation
-			// We already verified above that resolution is an instance of Module
-			// Since Module is the only subclass of CompUnit, we know that resolution is an instance of CompUnit
-			CompUnit functor = (CompUnit) resolution;
+		CompUnit functor = (CompUnit) resolution;
 
-			List<ModuleArgument> params = functor.getParamsAsModuleArguments();
+		// resolve each of the arguments
 
-			// check that the number of parameters and arguments is the same
+		List<ModuleArgument> arguments = new ArrayList<>();
 
-			int numParams = params.size();
-			
-			int numArgs = arguments.size();
-
-			if (numParams != numArgs) {
-				ErrorHandler.wrongNumModArgs(numArgs, numParams, this);
-				return;
+		for (QualName qn : this.arguments) {
+			Object argResolution = qn.resolve(ctx);
+			if (argResolution instanceof ModuleArgument) {
+				arguments.add((ModuleArgument)argResolution);
 			}
-
-			// The arguments and parameters match, so we can evaluate the module application
-			
-			CompUnit newModule = functor.clone();
-
-			// Remove all parameters from the new module
-
-			newModule.getParams().clear();
-
-			// Substitute the parameters with the arguments in the parts of newModule
-
-			Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
-			Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
-
-			// paramToArgSyntax maps a parameter syntax to the argument syntax that is provided in the functor application
-			// paramToArgJudgment maps a parameter judgment to the argument judgment that is provided in the functor application
-
-			// At this point, we know that each argument has the same kind as the corresponding parameter
-
-			for (int i = 0; i < numParams; i++) {
-				Object parameterObject = params.get(i);
-				QualName argument = arguments.get(i);
-
-				SubstitutionData sd = null;
-				Object argResolution = argument.resolve(ctx);
-				
-				if (argResolution instanceof ModuleArgument) {
-					ModuleArgument arg = (ModuleArgument) argResolution;
-					ModuleArgument param = (ModuleArgument) parameterObject;
-					Optional<SubstitutionData> opt = arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment);
-					if (opt.isPresent()) {
-						sd = opt.get();
-					}
-					else {
-						return;
-					}
-				}
-
-				else {
-					// argResolution is not an instance of ModuleArgument
-					ErrorHandler.modArgInvalid(argResolution, this);
-					return;
-				}
-
-				if (sd == null) return;
-				
-				newModule.substitute(sd);
-
+			else {
+				ErrorHandler.modArgInvalid(argResolution, this);
 			}
-			newModule.moduleName = name;
+		}
+
+		functor.applyTo(arguments, this, ctx, name)
+		.ifPresent(newModule -> {
 			ctx.modMap.put(name, newModule);
-		}
+		});
 
 	}
 
