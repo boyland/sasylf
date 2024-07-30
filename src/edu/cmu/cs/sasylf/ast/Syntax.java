@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
@@ -104,7 +105,7 @@ public abstract class Syntax extends Node implements ModuleArgument {
 		return getOriginalDeclaration().getName();
 	}
 
-	public boolean matchesParam(
+	public Optional<SubstitutionData> matchesParam(
 		ModuleArgument paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
@@ -126,7 +127,7 @@ public abstract class Syntax extends Node implements ModuleArgument {
 			// throw an exception
 
 			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
-			return false;
+			return Optional.empty();
 		}
 
 		// they are of the same type, so cast the parameter to a SyntaxDeclaration
@@ -142,7 +143,7 @@ public abstract class Syntax extends Node implements ModuleArgument {
 
 			if (boundSyntax != param) {
 				ErrorHandler.modArgMismatchSyntax(arg, param, boundSyntax, mp);
-				return false;
+				return Optional.empty();
 			}
 		}
 
@@ -161,7 +162,7 @@ public abstract class Syntax extends Node implements ModuleArgument {
 
 			if (paramProductions.size() != argProductions.size()) {
 				ErrorHandler.modArgSyntaxWrongNumProductions(arg, param, mp);
-				return false;
+				return Optional.empty();
 			}
 
 			// check that each pair of productions has the same structure
@@ -177,14 +178,19 @@ public abstract class Syntax extends Node implements ModuleArgument {
 					mp
 				);
 
-				if (!sameStructure) return false;
+				if (!sameStructure) return Optional.empty();
 			}
 
 		}
 
 		// they match
 
-		return true;
+		System.out.println("Making substitution data for " + param.getName() + " and " + arg.getName());
+		System.out.println("param: " + param);
+		System.out.println("arg: " + arg);
+
+		SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg, param);
+		return Optional.of(sd);
 	}
 
 }

@@ -3,13 +3,14 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
@@ -269,56 +270,29 @@ public class ModulePart extends Node implements Part, Named {
 					return;
 				}
 
-				SubstitutionData sd;
+				SubstitutionData sd = null;
 				Object argResolution = argument.resolve(ctx);
-
-				/*
-				 * Match against the kind of the argument
-				 */
-
-				if (argResolution instanceof Syntax) {					
-					SyntaxDeclaration argumentSyntax = ((Syntax) argResolution).getOriginalDeclaration();
-					SyntaxDeclaration parameterSyntax = (SyntaxDeclaration) parameterObject;
-
-					if (argumentSyntax.matchesParam(parameterSyntax, this, paramToArgSyntax, paramToArgJudgment)) {
-						sd = new SubstitutionData(parameterName, argumentName, argumentSyntax, parameterSyntax);
+				
+				if (argResolution instanceof ModuleArgument) {
+					ModuleArgument arg = (ModuleArgument) argResolution;
+					ModuleArgument param = (ModuleArgument) parameterObject;
+					Optional<SubstitutionData> opt = arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment);
+					if (opt.isPresent()) {
+						sd = opt.get();
 					}
 					else {
 						return;
 					}
-				}
-
-				else if (argResolution instanceof Judgment) {
-					Judgment param = (Judgment) parameterObject;
-					Judgment arg = (Judgment) argResolution;
-
-					if (arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment)) {
-						sd = new SubstitutionData(parameterName, argumentName, arg);
-					}
-					else {
-						return;
-					}
-					
-				}
-
-				else if (argResolution instanceof Theorem) {
-					Theorem param = (Theorem) parameterObject;
-					Theorem arg = (Theorem) argResolution;
-
-					if (arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment)) {
-						sd = new SubstitutionData(parameterName, argumentName, arg);
-					}
-					else {
-						return;
-					}
-
 				}
 
 				else {
+					// argResolution is not an instance of ModuleArgument
 					ErrorHandler.modArgInvalid(argResolution, this);
 					return;
 				}
 
+				if (sd == null) return;
+				
 				newModule.substitute(sd);
 
 			}

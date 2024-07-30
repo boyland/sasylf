@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;  
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -428,7 +429,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 	}
 
 	@Override
-	public boolean matchesParam(
+	public Optional<SubstitutionData> matchesParam(
 		ModuleArgument paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
@@ -443,7 +444,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 			// throw an exception
 
 			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
-			return false;
+			return Optional.empty();
 		}
 
 		// they are of the same type, so cast the parameter to a Theorem
@@ -460,7 +461,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 
 		if (paramForalls.size() != argForalls.size()) {
 			ErrorHandler.modArgTheoremWrongNumForalls(arg, param, mp);
-			return false;
+			return Optional.empty();
 		}
 
 		// check that each pair of foralls has the same structure
@@ -486,7 +487,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 				Clause argClause = (Clause) argElement;
 				// check that they have the same structure
 				boolean match = Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
-				if (!match) return false;
+				if (!match) return Optional.empty();
 			}
 
 			else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
@@ -496,7 +497,7 @@ public class Theorem extends RuleLike implements ModuleArgument {
 				if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
 					if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
 						ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, mp);
-						return false;
+						return Optional.empty();
 					}
 				}
 			}
@@ -509,14 +510,15 @@ public class Theorem extends RuleLike implements ModuleArgument {
 
 		boolean existsMatch = Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
 
-		if (!existsMatch) return false;
+		if (!existsMatch) return Optional.empty();
 
 		// they match
 
-		return true;
+		SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg);
+
+		return Optional.of(sd);
 
 	}
-	
 
 }
 

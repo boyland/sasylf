@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
@@ -289,7 +290,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 	}
 
 	@Override
-	public boolean matchesParam(
+	public Optional<SubstitutionData> matchesParam(
 		ModuleArgument paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
@@ -306,7 +307,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 				// throw an exception
 
 				ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
-				return false;
+				return Optional.empty();
 			}
 
 			// they are of the same type, so cast the parameter to a Judgment
@@ -322,7 +323,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 
 				if (boundJudgment != param) {
 					ErrorHandler.modArgMismatchJudgment(arg, param, boundJudgment, mp);
-					return false;
+					return Optional.empty();
 				}
 
 			}
@@ -354,7 +355,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 
 				if (paramRules.size() != argRules.size()) {
 					ErrorHandler.modArgumentJudgmentWrongNumRules(arg, param, mp);
-					return false;
+					return Optional.empty();
 				}
 
 				// check that each pair of rules has the same structure
@@ -406,7 +407,10 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 
 			// they match
 
-			return true;
+			System.out.println("Making substitution data for " + param.getName() + " and " + arg.getName());
+			
+			SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg);
+			return Optional.of(sd);
 
 	}
 

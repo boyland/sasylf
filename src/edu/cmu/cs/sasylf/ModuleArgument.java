@@ -1,6 +1,7 @@
 package edu.cmu.cs.sasylf;
 
 import java.util.Map;
+import java.util.Optional;
 
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
@@ -17,7 +18,7 @@ public interface ModuleArgument {
    * @param param
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
    */
-  public boolean matchesParam(
+  public Optional<SubstitutionData> matchesParam(
     ModuleArgument paramModArg,
 		ModulePart mp,
 		Map<Syntax, Syntax> paramToArgSyntax,
