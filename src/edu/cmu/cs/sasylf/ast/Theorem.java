@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;  
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -427,8 +428,93 @@ public class Theorem extends RuleLike implements ModuleArgument {
 	}
 
 	@Override
-	public boolean matchesParam(Object param) {
-		throw new UnsupportedOperationException("Theorem.matchesParam");
+	public boolean matchesParam(
+		ModuleArgument paramModArg,
+		ModulePart mp,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment) {
+		
+		if (!(paramModArg instanceof Theorem)) {
+			// the wrong type of argument has been provided
+
+			String argKind = this.getKind();
+			String paramKind = paramModArg.getKind();
+
+			// throw an exception
+
+			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+			return false;
+		}
+
+		// they are of the same type, so cast the parameter to a Theorem
+
+		Theorem param = (Theorem) paramModArg;
+		Theorem arg = this;
+
+		// now, we need to check if the two theorems are compatible with eachother
+
+		// verify that the forall clauses match
+
+		List<Fact> paramForalls = param.getForalls();
+		List<Fact> argForalls = this.getForalls();
+
+		if (paramForalls.size() != argForalls.size()) {
+			ErrorHandler.modArgTheoremWrongNumForalls(arg, param, mp);
+			return false;
+		}
+
+		// check that each pair of foralls has the same structure
+
+		/*
+		 * The code below could probably be abstracted into a different class
+		 */
+
+		Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+		
+		for (int i = 0; i < paramForalls.size(); i++) {
+			Fact paramForall = paramForalls.get(i);
+			Fact argForall = argForalls.get(i);
+
+			Element paramElement = paramForall.getElement();
+			Element argElement = argForall.getElement();
+
+			// paramElement and argElement should either both be nonterminals or both be clauses
+
+
+			if (paramElement instanceof Clause && argElement instanceof Clause) {
+				Clause paramClause = (Clause) paramElement;
+				Clause argClause = (Clause) argElement;
+				// check that they have the same structure
+				boolean match = Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+				if (!match) return false;
+			}
+
+			else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
+				NonTerminal paramNonTerminal = (NonTerminal) paramElement;
+				NonTerminal argNonTerminal = (NonTerminal) argElement;
+				// Make sure that the types of the nonterminals match
+				if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
+					if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
+						ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, mp);
+						return false;
+					}
+				}
+			}
+		}
+
+		// verify that the exists clauses match
+
+		Clause paramExists = param.getExists();
+		Clause argExists = this.getExists();
+
+		boolean existsMatch = Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+
+		if (!existsMatch) return false;
+
+		// they match
+
+		return true;
+
 	}
 	
 

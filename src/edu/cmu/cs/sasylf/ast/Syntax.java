@@ -1,10 +1,14 @@
 package edu.cmu.cs.sasylf.ast;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
 
 /**
@@ -95,4 +99,92 @@ public abstract class Syntax extends Node implements ModuleArgument {
 	 * @param cd clone data to use for copying
 	 */
 	public abstract Syntax copy(CopyData cd);
+
+	public String getName() {
+		return getOriginalDeclaration().getName();
+	}
+
+	public boolean matchesParam(
+		ModuleArgument paramModArg,
+		ModulePart mp,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment) {
+
+		/*
+		 * When applying a syntax as an argument, we want it to be the original syntax.
+		 * Use getOriginalDeclaration() to get the SyntaxDeclaration object.
+		 */
+
+		SyntaxDeclaration arg = getOriginalDeclaration();
+
+		if (!(paramModArg instanceof SyntaxDeclaration)) {
+			// the wrong type of argument has been provided
+
+			String argKind = this.getKind();
+			String paramKind = paramModArg.getKind();
+
+			// throw an exception
+
+			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+			return false;
+		}
+
+		// they are of the same type, so cast the parameter to a SyntaxDeclaration
+
+		SyntaxDeclaration param = (SyntaxDeclaration) paramModArg;
+
+		// now, we need to check if the two syntax declarations are compatible with eachother
+
+		if (paramToArgSyntax.containsKey(this)) {
+			// check if the parameter syntax is bound to the same argument syntax
+
+			SyntaxDeclaration boundSyntax = paramToArgSyntax.get(this).getOriginalDeclaration();
+
+			if (boundSyntax != param) {
+				ErrorHandler.modArgMismatchSyntax(arg, param, boundSyntax, mp);
+				return false;
+			}
+		}
+
+		// otherwise, bind the param to the arg in the map
+
+		paramToArgSyntax.put(param, arg);
+
+		// if the parameter is not abstract, there are other things that we have to verify
+
+		if (!param.isAbstract()) {
+			// This is a concrete syntax declaration, so there are productions to check
+			// check that param and arg have the same number of productions
+
+			List<Clause> paramProductions = param.getClauses();
+			List<Clause> argProductions = arg.getClauses();
+
+			if (paramProductions.size() != argProductions.size()) {
+				ErrorHandler.modArgSyntaxWrongNumProductions(arg, param, mp);
+				return false;
+			}
+
+			// check that each pair of productions has the same structure
+
+			for (int i = 0; i < paramProductions.size(); i++) {
+				Clause paramClause = paramProductions.get(i);
+				Clause argClause = argProductions.get(i);
+				boolean sameStructure = Clause.checkClauseSameStructure(paramClause,
+					argClause,
+					paramToArgSyntax,
+					paramToArgJudgment,
+					new HashMap<String, String>(),
+					mp
+				);
+
+				if (!sameStructure) return false;
+			}
+
+		}
+
+		// they match
+
+		return true;
+	}
+
 }

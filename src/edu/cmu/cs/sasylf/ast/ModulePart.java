@@ -90,6 +90,9 @@ public class ModulePart extends Node implements Part, Named {
 	}
 	
 	public void typecheck(Context ctx) {
+
+		System.out.println("typechecking module part");
+
 		Object resolution = module.resolve(ctx);
 		if (resolution instanceof Module) {
 			ctx.modMap.put(name, (Module)resolution);
@@ -273,191 +276,42 @@ public class ModulePart extends Node implements Part, Named {
 				 * Match against the kind of the argument
 				 */
 
-				if (argResolution instanceof Syntax) {
+				if (argResolution instanceof Syntax) {					
 					SyntaxDeclaration argumentSyntax = ((Syntax) argResolution).getOriginalDeclaration();
-					SyntaxDeclaration parameterSyntax = (SyntaxDeclaration) parameterObject; // it will always be an instance of SyntaxDeclaration
-					
-					if (argumentSyntax instanceof RenameSyntaxDeclaration) {
-						RenameSyntaxDeclaration d = (RenameSyntaxDeclaration) argumentSyntax;
-						argumentSyntax = d.getOriginalDeclaration();
+					SyntaxDeclaration parameterSyntax = (SyntaxDeclaration) parameterObject;
+
+					if (argumentSyntax.matchesParam(parameterSyntax, this, paramToArgSyntax, paramToArgJudgment)) {
+						sd = new SubstitutionData(parameterName, argumentName, argumentSyntax, parameterSyntax);
 					}
-
-					// check if parameterSyntax is already bound to argumentSyntax in the map
-
-					if (paramToArgSyntax.containsKey(argumentSyntax)) {
-						// check if the parameterSyntax is bound to the same argumentSyntax
-
-						SyntaxDeclaration boundSyntax = paramToArgSyntax.get(argumentSyntax).getOriginalDeclaration();
-
-						if (boundSyntax != parameterSyntax) {
-							ErrorHandler.modArgMismatchSyntax(argumentSyntax, parameterSyntax, boundSyntax, this);
-							return;
-						}
+					else {
+						return;
 					}
-
-					// otherwise, bind the parameterSyntax to the argumentSyntax in the map
-
-					paramToArgSyntax.put(parameterSyntax, argumentSyntax);
-
-					if (!parameterSyntax.isAbstract()) {
-						// This is a concrete syntax declarations, so there are productions to check
-						// check that the parameterSyntax and argumentSyntax have the same number of productions
-						List<Clause> parameterProductions = parameterSyntax.getClauses();
-						
-						SyntaxDeclaration argumentSyntaxDeclaration = (SyntaxDeclaration) argumentSyntax;
-
-						List<Clause> argumentProductions = argumentSyntaxDeclaration.getClauses();
-
-						if (parameterProductions.size() != argumentProductions.size()) {
-							ErrorHandler.modArgSyntaxWrongNumProductions(argumentSyntax, parameterSyntax, this);
-							return;
-						}
-
-						// check that each pair of productions has the same structure
-
-						for (int j = 0; j < parameterProductions.size(); j++) {
-							Clause paramClause = parameterProductions.get(j);
-							Clause argClause = argumentProductions.get(j);
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>(), this);
-						}
-						
-					}
-
-					// We can cast argResolution to Syntax because we have already checked that argResolution is an instance of Syntax
-
-					sd = new SubstitutionData(parameterName, argumentName, argumentSyntax, parameterSyntax);
 				}
 
 				else if (argResolution instanceof Judgment) {
-					Judgment argumentJudgment = ((Judgment) argResolution).getOriginalDeclaration();
-					Judgment parameterJudgment = (Judgment) parameterObject; // it will always be an instance of Judgment
+					Judgment param = (Judgment) parameterObject;
+					Judgment arg = (Judgment) argResolution;
 
-					// check if parameterJudgment is already bound to argumentJudgment in the map
-
-					if (paramToArgJudgment.containsKey(parameterJudgment)) {
-						// check if the parameterJudgment is bound to the same argumentJudgment
-						if (paramToArgJudgment.get(parameterJudgment) != argumentJudgment) {
-							ErrorHandler.modArgumentJudgmentWrongNumRules(argumentJudgment, parameterJudgment, null);
-							return;
-						}
+					if (arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment)) {
+						sd = new SubstitutionData(parameterName, argumentName, arg);
 					}
-
-					// otherwise, bind the parameterJudgment to the argumentJudgment in the map
-					
 					else {
-						paramToArgJudgment.put(parameterJudgment, argumentJudgment);
-					}
-
-					// verify that the forms of the judgments have the same structure
-
-					Clause argumentJudgmentForm = argumentJudgment.getForm();
-					Clause parameterJudgmentForm = parameterJudgment.getForm();
-				
-					Clause.checkClauseSameStructure(parameterJudgmentForm, argumentJudgmentForm, paramToArgSyntax, paramToArgJudgment, new HashMap<String, String>(), this);
-
-					if (!parameterJudgment.isAbstract()) {
-						// This is a concrete judgment, so there are rules to check
-						List<Rule> parameterRules = parameterJudgment.getRules();
-						List<Rule> argumentRules = argumentJudgment.getRules();
-
-						if (parameterRules.size() != argumentRules.size()) {
-							ErrorHandler.modArgumentJudgmentWrongNumRules(argumentJudgment, parameterJudgment, this);
-							return;
-						}
-
-						// check that each pair of rules has the same structure
-
-						for (int j = 0; j < parameterRules.size(); j++) {
-							Rule paramRule = parameterRules.get(j);
-							Rule argRule = argumentRules.get(j);
-
-							// check the premises of the rules
-							List<Clause> paramPremises = paramRule.getPremises();
-							List<Clause> argPremises = argRule.getPremises();
-							if (paramPremises.size() != argPremises.size()) {
-								ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, this);
-								return;
-							}
-
-							// check that each pair of premises has the same structure
-
-							Map<String, String> nonTerminalMapping = new HashMap<String, String>();
-
-							for (int k = 0; k < paramPremises.size(); k++) {
-								Clause paramPremise = paramPremises.get(k);
-								Clause argPremise = argPremises.get(k);
-								Clause.checkClauseSameStructure(paramPremise, argPremise, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
-							}
-
-							// check the conclusions
-
-							Clause paramConclusion = paramRule.getConclusion();
-							Clause argConclusion = argRule.getConclusion();
-							
-							Clause.checkClauseSameStructure(paramConclusion, argConclusion, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
-
-						}
-
+						return;
 					}
 					
-					sd = new SubstitutionData(parameterName, argumentName, argumentJudgment);
 				}
 
 				else if (argResolution instanceof Theorem) {
-					Theorem argumentTheorem = (Theorem) argResolution;
-					Theorem parameterTheorem = (Theorem) parameterObject;
+					Theorem param = (Theorem) parameterObject;
+					Theorem arg = (Theorem) argResolution;
 
-					// make sure that the forall clauses and the exists clauses match
-
-					List<Fact> argumentForalls = argumentTheorem.getForalls();
-
-					List<Fact> parameterForalls = parameterTheorem.getForalls();
-
-					if (argumentForalls.size() != parameterForalls.size()) {
-						ErrorHandler.modArgTheoremWrongNumForalls(argumentTheorem, parameterTheorem, this);
+					if (arg.matchesParam(param, this, paramToArgSyntax, paramToArgJudgment)) {
+						sd = new SubstitutionData(parameterName, argumentName, arg);
+					}
+					else {
 						return;
 					}
 
-					// check that each pair of foralls has the same structure
-
-					for (int j = 0; j < parameterForalls.size(); j++) {
-						Fact paramForall = parameterForalls.get(j);
-						Fact argForall = argumentForalls.get(j);
-						Element paramElement = paramForall.getElement();
-						Element argElement = argForall.getElement();
-						// paramElement and argElement should either both be nonterminals or both be clauses
-
-						Map<String, String> nonTerminalMapping = new HashMap<String, String>();
-
-						if (paramElement instanceof Clause && argElement instanceof Clause) {
-							Clause paramClause = (Clause) paramElement;
-							Clause argClause = (Clause) argElement;
-							// check that they have the same structure
-							Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
-						}
-
-						else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
-							NonTerminal paramNonTerminal = (NonTerminal) paramElement;
-							NonTerminal argNonTerminal = (NonTerminal) argElement;
-							// Make sure that the types of the nonterminals match
-							if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
-								if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
-									ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, this);
-									return;
-								}
-							}
-						}
-
-						// check the the exists match
-
-						Clause paramExists = (Clause) parameterTheorem.getExists();
-						Clause argExists = (Clause) argumentTheorem.getExists();
-
-						Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, this);
-
-					}
-
-					sd = new SubstitutionData(parameterName, argumentName, (Theorem) argResolution);
 				}
 
 				else {

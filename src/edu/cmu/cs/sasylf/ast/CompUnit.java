@@ -3,12 +3,15 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;
@@ -313,4 +316,98 @@ public class CompUnit extends Node implements Module {
 		clone.declCache = new HashMap<String, Object>();
 		return clone;
 	}
+	
+	/**
+	 * Apply this compilation unit to the given arguments, if possible.
+	 * <br/><br/>
+	 * If the arguments are not applicable, an exception is raised and an empty optional is returned.
+	 * <br/><br/>
+	 * Otherwise, the compilation unit is applied to the arguments and the result is returned in an optional.
+	 * @param args arguments to apply to this compilation unit
+	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
+	 */
+	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp) {
+
+		// if no arguments are provided and this compilation unit has no parameters, just return this compilation unit
+
+		if (args.isEmpty() && params.isEmpty()) {
+			return Optional.of(this);
+		}
+		
+		// args.size() != or params.size() != 0 at this point
+		// make sure that they have the same size
+		
+		// flatten the param parts into ModuleArgument objects
+		
+		List<ModuleArgument> params = new ArrayList<>();
+
+		for (Part part : this.params) {
+			if (part instanceof SyntaxPart) {
+				SyntaxPart syntaxPart = (SyntaxPart) part;
+				for (Syntax syntax : syntaxPart.getSyntax()) {
+					params.add(syntax);
+				}
+			}
+
+			else if (part instanceof JudgmentPart) {
+				JudgmentPart judgmentPart = (JudgmentPart) part;
+				for (Judgment judgment : judgmentPart.getJudgments()) {
+					params.add(judgment);
+				}
+			}
+
+			else if (part instanceof TheoremPart) {
+				TheoremPart theoremPart = (TheoremPart) part;
+				for (Theorem theorem : theoremPart.getTheorems()) {
+					params.add(theorem);
+				}
+			}
+		}
+
+
+		/*
+		 * If the number of arguments and parameters are not equal, then raise
+		 * an exception and return an empty Optional
+		 */
+
+		int numParams = params.size();
+		int numArgs = args.size();
+
+		if (numParams != numArgs) {
+			ErrorHandler.wrongNumModArgs(numArgs, numParams, mp);
+			return Optional.empty();
+		}
+
+		// the number of arguments and parameters are equal
+
+		// start applying the arguments to the parameters
+
+		CompUnit newModule = clone();
+
+		// remove the parameters from newModule
+
+		newModule.params.clear();
+
+		for (int i = 0; i < numParams; i++) {
+			ModuleArgument param = params.get(i);
+			ModuleArgument arg = args.get(i);
+
+			// try to match the argument with the parameter
+
+			if (!arg.matchesParam(param)) {
+
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+	}
+
 }

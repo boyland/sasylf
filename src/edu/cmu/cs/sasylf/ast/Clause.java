@@ -781,6 +781,12 @@ public class Clause extends Element implements CanBeCase {
 		ModulePart modulePart
 		)
 	{
+
+		System.out.println("paramClause: " + paramClause);
+		System.out.println("argClause: " + argClause);
+		System.out.println("nonTerminalMapping: " + nonTerminalMapping);
+		System.out.println();
+
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
 			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, modulePart);

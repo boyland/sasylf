@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -288,8 +289,130 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 	}
 
 	@Override
-	public boolean matchesParam(Object param) {
-		throw new UnsupportedOperationException("Judgment does not implement matchesParam");
+	public boolean matchesParam(
+		ModuleArgument paramModArg,
+		ModulePart mp,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment) {
+			
+			Judgment arg = getOriginalDeclaration();
+
+			if (!(paramModArg instanceof Judgment)) {
+				// the wrong type of argument has been provided
+
+				String argKind = this.getKind();
+				String paramKind = paramModArg.getKind();
+				
+				// throw an exception
+
+				ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+				return false;
+			}
+
+			// they are of the same type, so cast the parameter to a Judgment
+
+			Judgment param = (Judgment) paramModArg;
+
+			// now, we need to check if the two judgments are compatible with eachother
+			
+			if (paramToArgJudgment.containsKey(this)) {
+				// check if the parameter judgment is bound to the same argument judgment
+
+				Judgment boundJudgment = paramToArgJudgment.get(this).getOriginalDeclaration();
+
+				if (boundJudgment != param) {
+					ErrorHandler.modArgMismatchJudgment(arg, param, boundJudgment, mp);
+					return false;
+				}
+
+			}
+
+			// otherwise, bind the param to arg in the map
+
+			paramToArgJudgment.put(param, arg);
+
+			// verify that the forms of the judgments have the same structure
+
+			Clause argForm = arg.getForm();
+			Clause paramForm = param.getForm();
+
+			Clause.checkClauseSameStructure(
+				paramForm,
+				argForm,
+				paramToArgSyntax,
+				paramToArgJudgment,
+				new HashMap<String, String>(),
+				mp
+			);
+
+			if (!param.isAbstract()) {
+				// This is a concrete judgment declaration, so there are rules to check
+				// check that param and arg have the same number of rules
+
+				List<Rule> paramRules = param.getRules();
+				List<Rule> argRules = arg.getRules();
+
+				if (paramRules.size() != argRules.size()) {
+					ErrorHandler.modArgumentJudgmentWrongNumRules(arg, param, mp);
+					return false;
+				}
+
+				// check that each pair of rules has the same structure
+
+				for (int j = 0; j < paramRules.size(); j++) {
+					Rule paramRule = paramRules.get(j);
+					Rule argRule = argRules.get(j);
+
+					// check the premises of the rules
+					List<Clause> paramPremises = paramRule.getPremises();
+					List<Clause> argPremises = argRule.getPremises();
+					if (paramPremises.size() != argPremises.size()) {
+						ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, mp);
+					}
+
+					// check that each pair of premises has the same structure
+
+					Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+
+					for (int k = 0; k < paramPremises.size(); k++) {
+						Clause paramPremise = paramPremises.get(k);
+						Clause argPremise = argPremises.get(k);
+						Clause.checkClauseSameStructure(
+							paramPremise,
+							argPremise,
+							paramToArgSyntax,
+							paramToArgJudgment,
+							nonTerminalMapping,
+							mp
+						);
+					}
+
+					// check the conclusions
+
+					Clause paramConclusion = paramRule.getConclusion();
+					Clause argConclusion = argRule.getConclusion();
+
+					Clause.checkClauseSameStructure(
+						paramConclusion,
+						argConclusion,
+						paramToArgSyntax,
+						paramToArgJudgment,
+						nonTerminalMapping,
+						mp
+					);
+				}
+
+			}
+
+			// they match
+
+			return true;
+
+	}
+
+	@Override
+	public String getKind() {
+		return "judgment";
 	}
 
 }
