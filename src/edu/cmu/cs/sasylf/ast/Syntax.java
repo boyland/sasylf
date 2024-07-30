@@ -188,6 +188,28 @@ public abstract class Syntax extends Node implements ModuleArgument {
 		SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg, param);
 		return Optional.of(sd);
 	}
+	
+	@Override
+	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
+		System.out.println("Providing syntax " + this.getName() + " to " + cu.getName());
+		Optional<ModuleArgument> paramOpt = cu.getNextParam();
+		if (paramOpt.isEmpty()) return false;
+		ModuleArgument param = paramOpt.get();
+
+		System.out.println("param: " + param.getName());
+		System.out.println();
+
+		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
+
+		if (sdOpt.isPresent()) {
+			SubstitutionData sd = sdOpt.get();
+			cu.substitute(sd);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	@Override
 	public String getKind() {

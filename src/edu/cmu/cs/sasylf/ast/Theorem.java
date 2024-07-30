@@ -520,5 +520,22 @@ public class Theorem extends RuleLike implements ModuleArgument {
 
 	}
 
+	@Override
+	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
+		Optional<ModuleArgument> paramOpt = cu.getNextParam();
+		if (paramOpt.isEmpty()) return false;
+		ModuleArgument param = paramOpt.get();
+		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
+
+		if (sdOpt.isPresent()) {
+			SubstitutionData sd = sdOpt.get();
+			cu.substitute(sd);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 }
 

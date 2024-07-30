@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf;
 import java.util.Map;
 import java.util.Optional;
 
+import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Syntax;
@@ -37,5 +38,23 @@ public interface ModuleArgument {
    * @return the kind of this ModuleArgument object
    */
   public String getKind();
+
+  /**
+   * Creates and returns a copy of this ModuleArgument object.
+   * @param cd the CopyData object to be used in the copy
+   * @return a copy of this ModuleArgument object
+   */
+  public ModuleArgument copy(CopyData cd);
+
+  /**
+   * Provides this ModuleArgument object to the given compilation unit.
+   * Returns true if and only if this ModuleArgument object is applicable to the next parameter in the compilation unit.
+   * @param cu the compilation unit to provide this ModuleArgument object to
+   * @param mp the module part in which this application is taking place
+   * @param paramToArgSyntax the map of syntax parameters to syntax arguments
+   * @param paramToArgJudgment the map of judgment parameters to judgment arguments
+   * @return true if and only if this ModuleArgument object is applicable to the next parameter in the compilation unit
+   */
+  public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment);
 
 }

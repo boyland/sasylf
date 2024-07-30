@@ -31,6 +31,7 @@ public class CompUnit extends Node implements Module {
 	public String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
+	private List<ModuleArgument> moduleParams = new ArrayList<>();
 	private int parseReports;
 
 	public CompUnit(PackageDeclaration pack, Location loc, String n) {
@@ -53,6 +54,37 @@ public class CompUnit extends Node implements Module {
 	 */
 	public void addParameterChunk(Part c) {
 		params.add(c); 
+
+		// Add the components of c to moduleParams
+
+		List<ModuleArgument> newParams = new ArrayList<>();
+
+		if (c instanceof SyntaxPart) {
+			SyntaxPart sp = (SyntaxPart) c;
+			for (Syntax s : sp.getSyntax()) {
+				newParams.add(s);
+			}
+		}
+
+		else if (c instanceof JudgmentPart) {
+			JudgmentPart jp = (JudgmentPart) c;
+			for (Judgment j : jp.getJudgments()) {
+				newParams.add(j);
+			}
+		}
+
+		else if (c instanceof TheoremPart) {
+			TheoremPart tp = (TheoremPart) c;
+			for (Theorem t : tp.getTheorems()) {
+				newParams.add(t);
+			}
+		}
+
+		for (ModuleArgument mp : newParams) {
+			moduleParams.add(mp);
+		}
+
+
 		updateReportCount();
 	}
 
@@ -315,6 +347,15 @@ public class CompUnit extends Node implements Module {
 		clone.parts = newParts;
 
 		clone.declCache = new HashMap<String, Object>();
+		
+		List<ModuleArgument> newModuleParams = new ArrayList<>();
+
+		for (ModuleArgument mp : clone.moduleParams) {
+			newModuleParams.add(mp.copy(cd));
+		}
+
+		clone.moduleParams = newModuleParams;
+
 		return clone;
 	}
 	
@@ -328,21 +369,20 @@ public class CompUnit extends Node implements Module {
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
 	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
-
-		// if no arguments are provided and this compilation unit has no parameters, just return this compilation unit
-
-		if (args.isEmpty() && params.isEmpty()) {
+		
+		if (args.isEmpty() && moduleParams.isEmpty()) {
+			// there are no arguments to apply
+			// there are no parameters
+			// just return this compilation unit (don't clone it)
 			return Optional.of(this);
 		}
-		
+
 		/*
 		 * If the number of arguments and parameters are not equal, then raise
 		 * an exception and return an empty Optional
 		 */
 
-		List<ModuleArgument> params = getParamsAsModuleArguments();
-
-		int numParams = params.size();
+		int numParams = moduleParams.size();
 		int numArgs = args.size();
 
 		if (numParams != numArgs) {
@@ -363,71 +403,26 @@ public class CompUnit extends Node implements Module {
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
-		for (int i = 0; i < numParams; i++) {
-			Object parameterObject = params.get(i);
-
-			SubstitutionData sd = null;
-
-			ModuleArgument argResolution = args.get(i);
-			
-			if (argResolution instanceof ModuleArgument) {
-				ModuleArgument arg = (ModuleArgument) argResolution;
-				ModuleArgument param = (ModuleArgument) parameterObject;
-				Optional<SubstitutionData> opt = arg.matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
-				if (opt.isPresent()) {
-					sd = opt.get();
-				}
-				else {
-					return Optional.empty();
-				}
-			}
-
-			else {
-				// argResolution is not an instance of ModuleArgument
-				ErrorHandler.modArgInvalid(argResolution, mp);
+		for (ModuleArgument arg: args) {
+			boolean applicationResult = arg.provideTo(newModule, mp, paramToArgSyntax, paramToArgJudgment);
+			if (!applicationResult) {
 				return Optional.empty();
 			}
-
-			if (sd == null) return Optional.empty();
-			
-			newModule.substitute(sd);
 		}
 		
 		newModule.moduleName = moduleName;
 
 		return Optional.of(newModule);
-
 	}
 
-
-	public List<ModuleArgument> getParamsAsModuleArguments() {
-		List<ModuleArgument> params = new ArrayList<>();
-
-		for (Part part : this.params) {
-			if (part instanceof SyntaxPart) {
-				SyntaxPart syntaxPart = (SyntaxPart) part;
-				for (Syntax syntax : syntaxPart.getSyntax()) {
-					params.add(syntax);
-				}
-			}
-			else if (part instanceof JudgmentPart) {
-				JudgmentPart judgmentPart = (JudgmentPart) part;
-				for (Judgment judgment : judgmentPart.getJudgments()) {
-					params.add(judgment);
-				}
-			}
-			else if (part instanceof TheoremPart) {
-				TheoremPart theoremPart = (TheoremPart) part;
-				for (Theorem theorem : theoremPart.getTheorems()) {
-					params.add(theorem);
-				}
-			}
+	public Optional<ModuleArgument> getNextParam() {
+		if (moduleParams.isEmpty()) {
+			return Optional.empty();
 		}
-		
-		return params;
-
+		else {
+			ModuleArgument param = moduleParams.remove(0);
+			return Optional.of(param);
+		}
 	}
-
-
 
 }

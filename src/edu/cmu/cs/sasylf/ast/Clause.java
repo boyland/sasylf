@@ -834,14 +834,18 @@ public class Clause extends Element implements CanBeCase {
 				// nt1 is the parameter, and nt2 is the argument
 
 				// check if the syntax declaration of nt1 is already mapped to something
-				if (paramToArgSyntax.containsKey(nt1.getType())) {
-					if (paramToArgSyntax.get(nt1.getType()) != nt2.getType().getOriginalDeclaration()) {
+				if (paramToArgSyntax.containsKey(nt1.getType().getOriginalDeclaration())) {
+					if (paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()) != nt2.getType().getOriginalDeclaration()) {
 						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
 						// failure
 
 						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
 						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
-						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType()).getOriginalDeclaration();
+						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()).getOriginalDeclaration();
+						System.out.println("MISMATCH HERE");
+						System.out.println("n1: " + nt1);
+						System.out.println("n2: " + nt2);
+						System.out.println();
 						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, modulePart);
 
 						return false;
@@ -849,7 +853,7 @@ public class Clause extends Element implements CanBeCase {
 				}
 				// otherwise, add the mapping from the syntax declaration of nt1 to the syntax declaration of nt2
 				else {
-					paramToArgSyntax.put(nt1.getType(), nt2.getType());
+					paramToArgSyntax.put(nt1.getType().getOriginalDeclaration(), nt2.getType().getOriginalDeclaration());
 				}
 
 				// make sure that the nonterminal mapping is consistent
@@ -912,12 +916,11 @@ public class Clause extends Element implements CanBeCase {
 		ClauseType ct2 = c2.getType();
 
 		if (ct1 instanceof Syntax && ct2 instanceof Syntax) {
-			Syntax s1 = (Syntax) ct1;
-			Syntax s2 = (Syntax) ct2;
+			Syntax s1 = ((Syntax) ct1).getOriginalDeclaration();
+			Syntax s2 = ((Syntax) ct2).getOriginalDeclaration();
 			// check if s1 is already bound to something
 			if (paramToArgSyntax.containsKey(s1)) {
 				if (paramToArgSyntax.get(s1) != s2) {
-					System.out.println("AAAAAAAAA");
 					ErrorHandler.modArgMismatchSyntax(s2.getOriginalDeclaration(), s1.getOriginalDeclaration(),
 					paramToArgSyntax.get(s1).getOriginalDeclaration(), modulePart);
 
