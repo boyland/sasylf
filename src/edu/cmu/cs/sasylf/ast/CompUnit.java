@@ -342,11 +342,16 @@ public class CompUnit extends Node implements Module {
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
 	public Optional<CompUnit> accept(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
+
+		/*
+		 * When no arguments are provided, we are just performing a renaming of the module.
+		 * In this case, we don't need to clone the compilation unit. Just return it
+		 * This is done even if there are parameters. Renaming a functor is allowed.
+		 * 
+		 * Otherwise, we need to do other things.
+		 */
 		
-		if (args.isEmpty()/* && moduleParams.isEmpty() */) {
-			// there are no arguments to apply
-			// there are no parameters
-			// just return this compilation unit (don't clone it)
+		if (args.isEmpty()) {
 			return Optional.of(this);
 		}
 
@@ -365,6 +370,7 @@ public class CompUnit extends Node implements Module {
 
 		CompUnit newModule = clone();
 
+		// result is whether the arguments were successfully applied to newModule
 		boolean result = newModule.doApplication(args, mp, ctx, moduleName);
 
 		if (result) return Optional.of(newModule);

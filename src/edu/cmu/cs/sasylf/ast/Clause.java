@@ -781,12 +781,6 @@ public class Clause extends Element implements CanBeCase {
 		ModulePart modulePart
 		)
 	{
-
-		System.out.println("paramClause: " + paramClause);
-		System.out.println("argClause: " + argClause);
-		System.out.println("nonTerminalMapping: " + nonTerminalMapping);
-		System.out.println();
-
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
 			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, modulePart);
@@ -842,10 +836,6 @@ public class Clause extends Element implements CanBeCase {
 						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
 						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
 						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()).getOriginalDeclaration();
-						System.out.println("MISMATCH HERE");
-						System.out.println("n1: " + nt1);
-						System.out.println("n2: " + nt2);
-						System.out.println();
 						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, modulePart);
 
 						return false;

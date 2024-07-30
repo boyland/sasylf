@@ -420,8 +420,6 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 		if (paramOpt.isEmpty()) return false;
 		ModuleArgument param = paramOpt.get();
 
-		System.out.println("NEXT PARAM: " + param);
-
 		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 
 		if (sdOpt.isPresent()) {

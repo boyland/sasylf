@@ -191,13 +191,9 @@ public abstract class Syntax extends Node implements ModuleArgument {
 	
 	@Override
 	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
-		System.out.println("Providing syntax " + this.getName() + " to " + cu.getName());
 		Optional<ModuleArgument> paramOpt = cu.getNextParam();
 		if (paramOpt.isEmpty()) return false;
 		ModuleArgument param = paramOpt.get();
-
-		System.out.println("param: " + param.getName());
-		System.out.println();
 
 		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 
