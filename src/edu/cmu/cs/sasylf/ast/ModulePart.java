@@ -113,11 +113,13 @@ public class ModulePart extends Node implements Part, Named {
 			}
 			else {
 				ErrorHandler.modArgInvalid(argResolution, this);
+				return;
 			}
 		}
 
-		functor.applyTo(arguments, this, ctx, name)
+		functor.accept(arguments, this, ctx, name)
 		.ifPresent(newModule -> {
+			// If the module application succeeds, add the new module to the context
 			ctx.modMap.put(name, newModule);
 		});
 
@@ -210,6 +212,11 @@ public class ModulePart extends Node implements Part, Named {
 		clone.arguments = newArguments;
 
 		return clone;
+	}
+
+	@Override
+	public List<ModuleArgument> argsParams() {
+		return new ArrayList<>();
 	}
 
 

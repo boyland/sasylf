@@ -19,10 +19,10 @@ public interface ModuleArgument {
    * @param param
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
    */
-  public Optional<SubstitutionData> matchesParam(
+  public Optional<SubstitutionData> matchesParam( // TODO: This could be removed from the interface
     ModuleArgument paramModArg,
 		ModulePart mp,
-		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Syntax, Syntax> paramToArgSyntax, 
 		Map<Judgment, Judgment> paramToArgJudgment
   );
 

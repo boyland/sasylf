@@ -331,7 +331,9 @@ public class CompUnit extends Node implements Module {
 	}
 	
 	/**
-	 * Apply this compilation unit to the given arguments, if possible.
+	 * Apply this compilation unit to the given arguments, if possible, and returns the result in an optional.
+	 * <br/><br/>
+	 * This method does not mutate the compilation unit that the method is called on.
 	 * <br/><br/>
 	 * If the arguments are not applicable, an exception is raised and an empty optional is returned.
 	 * <br/><br/>
@@ -339,9 +341,9 @@ public class CompUnit extends Node implements Module {
 	 * @param args arguments to apply to this compilation unit
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
-	public Optional<CompUnit> applyTo(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
+	public Optional<CompUnit> accept(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
 		
-		if (args.isEmpty() && moduleParams.isEmpty()) {
+		if (args.isEmpty()/* && moduleParams.isEmpty() */) {
 			// there are no arguments to apply
 			// there are no parameters
 			// just return this compilation unit (don't clone it)
@@ -361,29 +363,45 @@ public class CompUnit extends Node implements Module {
 			return Optional.empty();
 		}
 
-		// the number of arguments and parameters are equal
-
-		// start applying the arguments to the parameters
-
 		CompUnit newModule = clone();
 
-		// remove the parameters from newModule
+		boolean result = newModule.doApplication(args, mp, ctx, moduleName);
 
-		newModule.params.clear();
+		if (result) return Optional.of(newModule);
+		
+		else return Optional.empty();
+		
+	}
 
+	/**
+	 * Apply the given arguments to this compilation unit.
+	 * <br/><br/>
+	 * This method mutates the compilation unit that the method is called on.
+	 * @param args arguments to apply to this compilation unit
+	 * @param mp module part in which this application is taking place
+	 * @param ctx context to use
+	 * @param moduleName name of the module
+	 * @return true if the arguments were successfully applied, false otherwise
+	 */
+	private boolean doApplication(List<ModuleArgument> args, ModulePart mp, Context ctx, String moduleName) {
+		// apply the given arguments to this
+
+		params.clear();
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
 		for (ModuleArgument arg: args) {
-			boolean applicationResult = arg.provideTo(newModule, mp, paramToArgSyntax, paramToArgJudgment);
+			// applicationResult is true iff the argument was successfully applied to the parameter
+			boolean applicationResult = arg.provideTo(this, mp, paramToArgSyntax, paramToArgJudgment);
 			if (!applicationResult) {
-				return Optional.empty();
+				return false;
 			}
 		}
 		
-		newModule.moduleName = moduleName;
+		this.moduleName = moduleName;
 
-		return Optional.of(newModule);
+		return true;
+	
 	}
 
 	public Optional<ModuleArgument> getNextParam() {
