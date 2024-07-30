@@ -672,9 +672,4 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		return clone;
 	}
 
-	@Override
-	public boolean matchesParam(ModuleArgument param) {
-		throw new UnsupportedOperationException("SyntaxDeclaration does not implement matchesParam");
-	}
-
 }

@@ -107,56 +107,9 @@ public class ModulePart extends Node implements Part, Named {
 			// Since Module is the only subclass of CompUnit, we know that resolution is an instance of CompUnit
 			CompUnit functor = (CompUnit) resolution;
 
+			List<ModuleArgument> params = functor.getParamsAsModuleArguments();
+
 			// check that the number of parameters and arguments is the same
-
-			List<Object> params = new ArrayList<Object>(); // list of module parameters
-
-			for (Part part : functor.getParams()) {
-				if (part instanceof SyntaxPart) {
-					SyntaxPart sp = (SyntaxPart) part;
-					// go through each syntax in the SyntaxPart
-					for (Syntax s : sp.getSyntax()) {
-						/*
-						 * Since s is a module parameter, it must be an instance of SyntaxDeclaration
-						 */
-						if (s instanceof SyntaxDeclaration) {
-							SyntaxDeclaration sd = (SyntaxDeclaration) s;
-							params.add(sd);
-						}
-						else {
-							ErrorHandler.error(Errors.INTERNAL_ERROR, " s is not an instance of SyntaxDeclaration", this);
-							return;
-						}
-					}
-				}
-				else if (part instanceof JudgmentPart) {
-					JudgmentPart jp = (JudgmentPart) part;
-					// Add each of the judgments to the list of parameters
-					for (Judgment j : jp.getJudgments()) {
-						params.add(j);
-					}
-				}
-				else if (part instanceof TheoremPart) {
-					TheoremPart tp = (TheoremPart) part;
-					// Add each of the theorems to the list of parameters
-					for (Theorem t : tp.getTheorems()) {
-						params.add(t);
-					}
-				}
-				else {
-					// The part is not a SyntaxPart, JudgmentPart, or TheoremPart, which is not allowed
-					String argumentClass = "";
-
-					if (part instanceof TerminalsPart) {
-						argumentClass = "terminals";
-					}
-					else {
-						argumentClass = "module";
-					}
-					ErrorHandler.modArgInvalid(argumentClass, this);
-					return;
-				}
-			}
 
 			int numParams = params.size();
 			
@@ -165,58 +118,6 @@ public class ModulePart extends Node implements Part, Named {
 			if (numParams != numArgs) {
 				ErrorHandler.wrongNumModArgs(numArgs, numParams, this);
 				return;
-			}
-
-			/* Next, check that the kind of each argument matches the kind of the corresponding parameter
-			 * 
-			 * Kind refers to: syntax, judgment, or theorem 
-			 */
-
-			for (int i = 0; i < numParams; i++) {
-				Object parameter = params.get(i);
-				QualName argument = arguments.get(i);
-
-				Object argResolution = argument.resolve(ctx);
-
-				// Use instanceof to check that argument and parameter have the same kind
-
-				// make sure that the argument isn't a TerminalPart or CompUnit
-
-				if (argResolution instanceof TerminalsPart
-				|| argResolution instanceof CompUnit
-				|| argResolution instanceof ModulePart
-				) {
-					ErrorHandler.modArgInvalid(argResolution, this);
-					return;
-				}
-			
-				if (parameter instanceof SyntaxDeclaration && !(argResolution instanceof Syntax)) {
-					throwModuleArgumentMismatch(parameter, argResolution);
-					return;
-				}
-				else if (parameter instanceof Judgment && !(argResolution instanceof Judgment)) {
-					throwModuleArgumentMismatch(parameter, argResolution);
-					return;
-				}
-				else if (parameter instanceof Theorem && !(argResolution instanceof Theorem)) {
-					throwModuleArgumentMismatch(parameter, argResolution);
-					return;
-				}
-
-				// The argument should not be of type TerminalsPart or ModulePart
-				
-
-				if (argResolution instanceof TerminalsPart) {
-					throwModuleArgumentMismatch(parameter, argResolution);
-					return;
-				}
-				else if (argResolution instanceof ModulePart
-				|| argResolution instanceof CompUnit
-				) {
-					throwModuleArgumentMismatch(parameter, argResolution);
-					return;
-				}
-
 			}
 
 			// The arguments and parameters match, so we can evaluate the module application
@@ -240,35 +141,6 @@ public class ModulePart extends Node implements Part, Named {
 			for (int i = 0; i < numParams; i++) {
 				Object parameterObject = params.get(i);
 				QualName argument = arguments.get(i);
-
-				String argumentName = argument.getName();
-
-				String parameterName = "";
-
-				if (parameterObject instanceof SyntaxDeclaration) {
-					SyntaxDeclaration sd = (SyntaxDeclaration) parameterObject;
-					parameterName = sd.getName();
-				}
-				
-				else if (parameterObject instanceof Judgment) {
-					Judgment j = (Judgment) parameterObject;
-					parameterName = j.getName();
-				}
-
-				else if (parameterObject instanceof Theorem) {
-					Theorem t = (Theorem) parameterObject;
-					parameterName = t.getName();
-				}
-				
-				else {
-					/*
-					 * This should never happen because we have already checked that the parameter is an instance of SyntaxDeclaration, Judgment, or Theorem
-					 * 
-					 * If this does happen, raise an internal error
-					 */
-					ErrorHandler.error(Errors.INTERNAL_ERROR, ". Could not get the name of the parameter in ModulePart.typecheck.", this);
-					return;
-				}
 
 				SubstitutionData sd = null;
 				Object argResolution = argument.resolve(ctx);

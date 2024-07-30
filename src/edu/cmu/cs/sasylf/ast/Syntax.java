@@ -185,12 +185,13 @@ public abstract class Syntax extends Node implements ModuleArgument {
 
 		// they match
 
-		System.out.println("Making substitution data for " + param.getName() + " and " + arg.getName());
-		System.out.println("param: " + param);
-		System.out.println("arg: " + arg);
-
 		SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg, param);
 		return Optional.of(sd);
+	}
+
+	@Override
+	public String getKind() {
+		return "syntax";
 	}
 
 }

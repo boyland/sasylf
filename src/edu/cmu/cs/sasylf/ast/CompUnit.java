@@ -402,12 +402,37 @@ public class CompUnit extends Node implements Module {
 
 
 
+	}
 
 
+	public List<ModuleArgument> getParamsAsModuleArguments() {
+		List<ModuleArgument> params = new ArrayList<>();
 
-
-
+		for (Part part : this.params) {
+			if (part instanceof SyntaxPart) {
+				SyntaxPart syntaxPart = (SyntaxPart) part;
+				for (Syntax syntax : syntaxPart.getSyntax()) {
+					params.add(syntax);
+				}
+			}
+			else if (part instanceof JudgmentPart) {
+				JudgmentPart judgmentPart = (JudgmentPart) part;
+				for (Judgment judgment : judgmentPart.getJudgments()) {
+					params.add(judgment);
+				}
+			}
+			else if (part instanceof TheoremPart) {
+				TheoremPart theoremPart = (TheoremPart) part;
+				for (Theorem theorem : theoremPart.getTheorems()) {
+					params.add(theorem);
+				}
+			}
+		}
+		
+		return params;
 
 	}
+
+
 
 }

@@ -406,8 +406,6 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 			}
 
 			// they match
-
-			System.out.println("Making substitution data for " + param.getName() + " and " + arg.getName());
 			
 			SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg);
 			return Optional.of(sd);
