@@ -28,7 +28,7 @@ public abstract class Span implements Cloneable {
 		try {
 			return (Span) super.clone();
 		} catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
 			throw new SASyLFError(report);
 		}
 	}

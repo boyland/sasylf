@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
  * Declared terminals/
@@ -83,7 +83,7 @@ public class TerminalsPart implements Part {
 			return clone;
 		}
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
 			throw new SASyLFError(report);
 		}
 	}

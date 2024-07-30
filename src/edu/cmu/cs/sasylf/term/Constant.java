@@ -4,11 +4,7 @@ import java.util.Queue;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
-import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
-
 
 public class Constant extends Atom {
 	public static final Constant TYPE = new Constant();

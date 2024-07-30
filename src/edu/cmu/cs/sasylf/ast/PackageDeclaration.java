@@ -8,8 +8,6 @@ import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 public class PackageDeclaration extends Node {
 	private QualName name;

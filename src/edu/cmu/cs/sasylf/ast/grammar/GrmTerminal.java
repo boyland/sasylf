@@ -4,9 +4,9 @@ import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.Element;
 import edu.cmu.cs.sasylf.grammar.*;
+import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
-import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 public class GrmTerminal implements Terminal {
 	public GrmTerminal(String s, Element e) { string = s; element = e; }
@@ -50,7 +50,7 @@ public class GrmTerminal implements Terminal {
 			clone = (GrmTerminal) super.clone();
 		}
 		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
 			throw new SASyLFError(report);
 		}
 
