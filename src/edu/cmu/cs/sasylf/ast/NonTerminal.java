@@ -303,14 +303,7 @@ public class NonTerminal extends Element {
 	
 	@Override
 	public NonTerminal clone() {
-		try {
-			return (NonTerminal) super.clone();
-		}
-		
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		return (NonTerminal) super.clone();
 	}
 
 }

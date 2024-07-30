@@ -294,14 +294,7 @@ public class CompUnit extends Node implements Module {
 		CopyData cd = new CopyData();
 		CompUnit clone;
 
-		try {
-			clone = (CompUnit) super.clone();
-		}
-		
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		clone = (CompUnit) super.clone();
 	
 		clone.packageDecl = packageDecl.copy(cd);
 

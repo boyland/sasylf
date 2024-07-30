@@ -512,16 +512,7 @@ public class Rule extends RuleLike implements CanBeCase {
 	public Rule copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Rule) cd.getCopyFor(this);
 
-		Rule clone;
-
-		try {
-			clone = (Rule) super.clone();
-		}
-		
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		Rule clone = (Rule) super.clone();
 
 		List<Clause> newPremises = new ArrayList<Clause>();
 		for (Clause c : premises) {

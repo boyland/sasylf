@@ -772,16 +772,7 @@ public class Application extends Term {
 	public Application copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Application) cd.getCopyFor(this);
 
-		Application clone;
-
-		try {
-			clone = (Application) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
-			throw new SASyLFError(report);
-		}
+		Application clone = (Application) super.clone();
 
 		cd.addCopyFor(this, clone);
 

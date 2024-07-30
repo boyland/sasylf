@@ -167,15 +167,7 @@ public class BoundVar extends Atom {
 	public BoundVar copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (BoundVar) cd.getCopyFor(this);
 
-		BoundVar clone;
-
-		try {
-			clone = (BoundVar) super.clone();
-		}
-		catch(CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
-			throw new SASyLFError(report);
-		}
+		BoundVar clone = (BoundVar) super.clone();
 		
 		cd.addCopyFor(this, clone);
 

@@ -257,16 +257,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleArgument 
 	@Override
 	public Judgment copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Judgment) cd.getCopyFor(this);
-		Judgment clone;
-
-		try {
-			clone = (Judgment) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		Judgment clone = (Judgment) super.clone();
 		
 		cd.addCopyFor(this, clone);
 	

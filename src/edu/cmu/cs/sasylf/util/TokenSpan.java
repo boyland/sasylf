@@ -7,7 +7,7 @@ import edu.cmu.cs.sasylf.parser.Token;
 /**
  * The span of a single token.
  */
-public class TokenSpan implements Span {
+public class TokenSpan extends Span {
 	private Location starting;
 	private Location ending;
 	
@@ -30,16 +30,7 @@ public class TokenSpan implements Span {
 	public Span copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (TokenSpan) cd.getCopyFor(this);
 
-		TokenSpan clone;
-
-		try {
-			clone = (TokenSpan) super.clone();
-		}
-		
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		TokenSpan clone = (TokenSpan) super.clone();
 
 		clone.starting = clone.starting.copy(cd);
 		clone.ending = clone.ending.copy(cd);

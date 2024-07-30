@@ -59,15 +59,7 @@ public class Clause extends Element implements CanBeCase {
 	protected List<Element> elements = new ArrayList<Element>();
 
 	public Clause clone() {
-		try {
-			return (Clause) super.clone();
-		}
- 
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-
-			throw new SASyLFError(report);
-		}
+		return (Clause) super.clone();
 	}
 
 	public Clause copy(CopyData cd) {

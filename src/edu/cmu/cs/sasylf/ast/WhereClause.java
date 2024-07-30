@@ -450,14 +450,7 @@ public class WhereClause extends Node {
 	@Override
 	public WhereClause copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (WhereClause) cd.getCopyFor(this);
-		WhereClause clone;
-		try {
-			clone = (WhereClause) clone();
-		}
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		WhereClause clone = (WhereClause) clone();
 
 		clone.clauses = new ArrayList<Pair<Element, Clause>>();
 		for (Pair<Element, Clause> p : clauses) {

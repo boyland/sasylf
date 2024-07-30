@@ -47,15 +47,7 @@ public class Constant extends Atom {
 	public Constant copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Constant) cd.getCopyFor(this);
 
-		Constant clone;
-
-		try {
-			clone = (Constant) super.clone();
-		}
-		catch(CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
-			throw new SASyLFError(report);
-		}
+		Constant clone = (Constant) super.clone();
 		
 		cd.addCopyFor(this, clone);
 

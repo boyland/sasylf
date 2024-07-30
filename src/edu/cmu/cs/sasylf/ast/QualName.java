@@ -281,15 +281,7 @@ public class QualName extends Node {
 	public QualName copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (QualName) cd.getCopyFor(this);
 
-		QualName clone;
-		try {
-			clone = (QualName) super.clone();
-		}	
-		
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		QualName clone = (QualName) super.clone();
 
 		cd.addCopyFor(this, clone);
 

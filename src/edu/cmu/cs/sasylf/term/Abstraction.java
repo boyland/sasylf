@@ -420,15 +420,7 @@ public class Abstraction extends Term {
 	public Abstraction copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Abstraction) cd.getCopyFor(this);
 		
-		Abstraction clone;
-
-		try {
-			clone = (Abstraction) super.clone();
-		}
-		catch(CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
-			throw new SASyLFError(report);
-		}
+		Abstraction clone = (Abstraction) super.clone();
 		
 		cd.addCopyFor(this, clone);
 

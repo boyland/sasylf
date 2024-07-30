@@ -105,12 +105,7 @@ public abstract class SyntaxAssumption extends Fact {
 
 	public SyntaxAssumption copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (SyntaxAssumption) cd.getCopyFor(this);
-		SyntaxAssumption clone;
-		try {
-			clone = (SyntaxAssumption) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new Error("Clone not supported in SyntaxAssumption");
-		}
+		SyntaxAssumption clone = (SyntaxAssumption) super.clone();
 		cd.addCopyFor(this, clone);
 
 		if (clone.context != null) {

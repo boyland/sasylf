@@ -61,16 +61,7 @@ public class PackageDeclaration extends Node {
 	public PackageDeclaration copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (PackageDeclaration) cd.getCopyFor(this);
 
-		PackageDeclaration clone;
-
-		try {
-			clone = (PackageDeclaration) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		PackageDeclaration clone  = (PackageDeclaration) super.clone();
 
 		cd.addCopyFor(this, clone);
 

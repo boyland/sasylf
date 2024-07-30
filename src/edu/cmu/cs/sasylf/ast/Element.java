@@ -171,15 +171,7 @@ public abstract class Element extends Node {
 	@Override
 	public Element copy(CopyData cd) {
 	 
-		Element clone;
-		try {
-			clone = (Element) super.clone();
-		}
-		
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		Element clone = (Element) super.clone();
 
 		cd.addCopyFor(this, clone);
 

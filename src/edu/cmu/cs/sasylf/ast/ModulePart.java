@@ -190,15 +190,7 @@ public class ModulePart extends Node implements Part, Named {
 
 	public ModulePart copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (ModulePart) cd.getCopyFor(this);
-		ModulePart clone;
-
-		try {
-			clone = (ModulePart) super.clone();
-		}
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		ModulePart clone = (ModulePart) super.clone();
 
 		cd.addCopyFor(this, clone);
 		

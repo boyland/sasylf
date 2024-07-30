@@ -211,15 +211,7 @@ public class Sugar extends Syntax {
 	public Sugar copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Sugar) cd.getCopyFor(this);
 
-		Sugar clone;
-		try {
-			clone = (Sugar) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		Sugar clone = (Sugar) super.clone();
 
 		cd.addCopyFor(this, clone);
 		

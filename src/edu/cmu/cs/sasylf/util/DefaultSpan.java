@@ -3,7 +3,7 @@ package edu.cmu.cs.sasylf.util;
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
-public class DefaultSpan implements Span {
+public class DefaultSpan extends Span {
 
 	public DefaultSpan(Location l) {
 		start = end = l;
@@ -37,15 +37,7 @@ public class DefaultSpan implements Span {
 	@Override
 	public DefaultSpan copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (DefaultSpan) cd.getCopyFor(this);
-		DefaultSpan clone;
-		try {
-			clone = (DefaultSpan) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		DefaultSpan clone = (DefaultSpan) super.clone();
 
 		clone.start = clone.start.copy(cd);
 		clone.end = clone.end.copy(cd);

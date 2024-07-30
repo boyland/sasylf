@@ -370,14 +370,7 @@ public abstract class Derivation extends Fact {
 	@Override
 	public Derivation copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Derivation) cd.getCopyFor(this);
-		Derivation clone;
-		try {
-			clone = (Derivation) clone();
-		}
-		catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this, "", true);
-			throw new SASyLFError(report);
-		}
+		Derivation clone = (Derivation) clone();
 
 		cd.addCopyFor(this, clone);
 

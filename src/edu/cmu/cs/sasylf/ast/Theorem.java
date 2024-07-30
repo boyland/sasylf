@@ -392,15 +392,8 @@ public class Theorem extends RuleLike implements ModuleArgument {
 	public Theorem copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Theorem) cd.getCopyFor(this);
 		
-		Theorem clone;
-		try {
-			clone = (Theorem) super.clone();
-		} 
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
-
+		Theorem clone = (Theorem) super.clone();
+	
 		cd.addCopyFor(this, clone);
 
 		// skip kind and kindTitle

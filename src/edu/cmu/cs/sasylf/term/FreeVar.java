@@ -309,14 +309,7 @@ public class FreeVar extends Atom {
 	public FreeVar copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (FreeVar) cd.getCopyFor(this);
 
-		FreeVar clone;
-
-		try {
-			clone = (FreeVar) super.clone();
-		} catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
-			throw new SASyLFError(report);
-		}
+		FreeVar clone = (FreeVar) super.clone();
 
 		cd.addCopyFor(this, clone);
 

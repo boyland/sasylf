@@ -632,15 +632,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			return (SyntaxDeclaration) cd.getCopyFor(this);
 		}
 
-		SyntaxDeclaration clone;
-		try {
-			clone = (SyntaxDeclaration) super.clone();
-		}
-
-		catch (CloneNotSupportedException e) {
-			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), this);
-			throw new SASyLFError(report);
-		}
+		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();
 
 		cd.addCopyFor(this, clone);
 
