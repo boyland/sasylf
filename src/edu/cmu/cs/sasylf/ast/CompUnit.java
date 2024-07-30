@@ -54,37 +54,8 @@ public class CompUnit extends Node implements Module {
 	 */
 	public void addParameterChunk(Part c) {
 		params.add(c); 
-
 		// Add the components of c to moduleParams
-
-		List<ModuleArgument> newParams = new ArrayList<>();
-
-		if (c instanceof SyntaxPart) {
-			SyntaxPart sp = (SyntaxPart) c;
-			for (Syntax s : sp.getSyntax()) {
-				newParams.add(s);
-			}
-		}
-
-		else if (c instanceof JudgmentPart) {
-			JudgmentPart jp = (JudgmentPart) c;
-			for (Judgment j : jp.getJudgments()) {
-				newParams.add(j);
-			}
-		}
-
-		else if (c instanceof TheoremPart) {
-			TheoremPart tp = (TheoremPart) c;
-			for (Theorem t : tp.getTheorems()) {
-				newParams.add(t);
-			}
-		}
-
-		for (ModuleArgument mp : newParams) {
-			moduleParams.add(mp);
-		}
-
-
+		c.argsParams().forEach(moduleParams::add);
 		updateReportCount();
 	}
 

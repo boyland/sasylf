@@ -2,10 +2,12 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
@@ -47,4 +49,11 @@ public interface Part extends Cloneable {
 	 * @return a deep copy of this Part
 	 */
 	public abstract Part copy(CopyData cd);
+
+	/**
+	 * Returns the components inside of this part that could be used as arguments/parameters
+	 * @return the components inside of this part that could be used as arguments/parameters
+	 */
+	public List<ModuleArgument> argsParams();
+
 }

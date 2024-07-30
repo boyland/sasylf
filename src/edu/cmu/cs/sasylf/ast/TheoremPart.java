@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -98,6 +99,17 @@ public class TheoremPart implements Part {
 			clone.theorems.add(theorem.copy(cd));
 		}
 		return clone;
+	}
+
+	@Override
+	public List<ModuleArgument> argsParams() {
+		List<ModuleArgument> theorems = new ArrayList<>();
+
+		for (Theorem theorem : getTheorems()) {
+			theorems.add(theorem);
+		}
+		
+		return theorems;
 	}
 	
 }

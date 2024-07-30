@@ -1,13 +1,16 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -83,6 +86,11 @@ public class TerminalsPart implements Part {
 			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
 			throw new SASyLFError(report);
 		}
+	}
+
+	@Override
+	public List<ModuleArgument> argsParams() {
+		return new ArrayList<>();
 	}
 	
 }

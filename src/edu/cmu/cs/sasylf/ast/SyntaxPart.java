@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -134,6 +135,15 @@ public class SyntaxPart implements Part {
 			UpdatableErrorReport report = new UpdatableErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null);
 			throw new SASyLFError(report);
 		}
+	}
+
+	@Override
+	public List<ModuleArgument> argsParams() {
+		List<ModuleArgument> result = new ArrayList<>();
+		for (Syntax s : syntax) {
+			result.add(s.getOriginalDeclaration());
+		}
+		return result;
 	}
 
 

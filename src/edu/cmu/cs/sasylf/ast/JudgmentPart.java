@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.ModuleArgument;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
@@ -162,6 +163,17 @@ public class JudgmentPart implements Part {
 		clone.judgments = newJudgments;
 		
 		return clone;
+	}
+
+	@Override
+	public List<ModuleArgument> argsParams() {
+		List<ModuleArgument> judgments = new ArrayList<>();
+
+		for (Judgment j : getJudgments()) {
+			judgments.add(j.getOriginalDeclaration());
+		}
+
+		return judgments;
 	}
 
 }
