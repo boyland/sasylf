@@ -81,7 +81,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 					"(was checking " + subject + " instance of " + pattern + ",\n got exception " + e);      
 			return; // tell Java we're gone.
 		} catch (UnificationFailed e1) {
-			System.out.println("Failed");
 			TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation(),false);
 			Util.debug("failure checking ",subject," instanceof ",pattern,": ",e1);
 			// try to be more helpful
@@ -108,23 +107,23 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				learnAboutErrors.avoid(ctx.inputVars);
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
 				
-				//explanationString = tp.toString(tp.asClause(explanationTerm));
-				explanationString = "explanation";
+				explanationString = tp.toString(tp.asClause(explanationTerm));
+				//explanationString = "explanation";
 				// TODO: hot fix
 
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {
 					// TODO: hot fix
-					//infoString += ", but failed because " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
-					infoString += "info";
+					infoString += ", but failed because " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
+					//infoString += "info";
 					// TODO: fix term printing
 				}
 			}
 			ErrorHandler.error(errorType, explanationString, this, infoString);
 			return; // for Java
 		}
-		// System.out.println("subject = " + subject + ", pattern = " + pattern + ", callSub = " + callSub + ", concFreeVars = " + conclusionFreeVars);
+
 
 		// We have taken care of most context discarding issues, but
 		// we still need to worry about an implicit syntactic parameter to a rule conclusion
@@ -162,7 +161,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
 				Term actual = v.substitute(callSub);
 				if (ctx.isVarFree(actual)) continue;
-				// System.out.println(actual + "(was " + v + ") is not free: " + ctx.varFreeNTmap.keySet());
 				ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED_APPL, v.getName() + " assumes " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
 			}
 		}
