@@ -76,11 +76,11 @@ public class Activator extends AbstractUIPlugin {
 	 * @author VonC @ stackoverflow
 	 */
 	public Image getImage(String path) {
-		Image image = Activator.getDefault().getImageRegistry().getCopyFor(path);
+		Image image = Activator.getDefault().getImageRegistry().get(path);
 		if (image == null) {
-			getImageRegistry().addCopyFor(path, AbstractUIPlugin.
+			getImageRegistry().put(path, AbstractUIPlugin.
 					imageDescriptorFromPlugin(PLUGIN_ID, path));
-			image = getImageRegistry().getCopyFor(path);
+			image = getImageRegistry().get(path);
 		}
 		return image;
 	}
