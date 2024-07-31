@@ -3,21 +3,16 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
  * Using a module as a part of a compilation unit.
@@ -52,43 +47,6 @@ public class ModulePart extends Node implements Part, Named {
 	 * @param parameter the module parameter
 	 * @param argument the module argument
 	 */
-	private void throwModuleArgumentMismatch(Object parameter, Object argument) {
-
-		String parameterClass = "";
-		String argumentClass = "";
-
-		if (parameter instanceof Syntax) {
-			parameterClass = "syntax";
-		}
-		else if (parameter instanceof Judgment) {
-			parameterClass = "judgment";
-		}
-		else if (parameter instanceof Theorem) {
-			parameterClass = "theorem";
-		}
-		else {
-			parameterClass = parameter.getClass().toString();
-		}
-
-		if (argument instanceof Syntax) {
-			argumentClass = "syntax";
-		}
-		else if (argument instanceof Judgment) {
-			argumentClass = "judgment";
-		}
-		else if (argument instanceof Theorem) {
-			argumentClass = "theorem";
-		}
-		else if (argument instanceof CompUnit) {
-			argumentClass = "module";
-		}
-		else {
-			argumentClass = "a nonexistant declaration";
-		}
-
-		ErrorHandler.modArgTypeMismatch(argumentClass, parameterClass, this);
-		return;
-	}
 	
 	@Override
 	public void typecheck(Context ctx) {
@@ -166,25 +124,8 @@ public class ModulePart extends Node implements Part, Named {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 
-		for (QualName argument : arguments) {
-
-			/*
-				If
-					1. argument.source == null
-					2. argument.name == sd.from
-					3. argument.isSubstitutable()
-
-				that means that argument is the argument that we want to substitute for
-				Therefore, replace set argument.name to sd.to
-				Also, set argument.resolution to null because we changed the name, so it points to something else now
-			*/
-
-			if (argument.getSource() == null && argument.getName().equals(sd.getFrom()) && argument.isSubstitutable()) {
-				argument.setName(sd.getTo());
-				argument.nullifyResolution();
-				argument.setUnsubstitutable();
-			}
-
+		for (QualName argument : arguments) {			
+			argument.substitute(sd);
 		}
 
 	}

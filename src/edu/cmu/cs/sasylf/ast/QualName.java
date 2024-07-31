@@ -64,10 +64,6 @@ public class QualName extends Node {
 	public void nullifyResolution() {
 		resolution = null;
 	}
-
-	public void setName(String newName) {
-		name = newName;
-	}
 	
 	/**
 	 * Create a qualified name attached (using ".") to a previous qualified name
@@ -273,6 +269,13 @@ public class QualName extends Node {
 
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
+
+		if (getSource() == null && getName().equals(sd.getFrom()) && isSubstitutable()) {
+			name = sd.getTo();
+			nullifyResolution();
+			setUnsubstitutable();
+		}
+
 	}
 
 	@Override
