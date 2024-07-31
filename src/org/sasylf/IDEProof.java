@@ -216,7 +216,7 @@ public class IDEProof extends Proof {
 	 * @return proof object or null
 	 */
 	public static IDEProof getProof(IAdaptable res) {
-		return proofs.getCopyFor(IProjectStorage.Adapter.adapt(res));
+		return proofs.get(IProjectStorage.Adapter.adapt(res));
 	}
 
 	public static CompUnit getCompUnit(IAdaptable res) {
