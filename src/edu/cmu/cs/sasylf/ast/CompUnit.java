@@ -76,14 +76,6 @@ public class CompUnit extends Node implements Module {
 		return !params.isEmpty();
 	}
 
-	public List<Part> getParams() {
-		return params;
-	}
-
-	public List<Part> getParts() {
-		return parts;
-	}
-
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.sasylf.ast.Module#prettyPrint(java.io.PrintWriter)
 	 */
