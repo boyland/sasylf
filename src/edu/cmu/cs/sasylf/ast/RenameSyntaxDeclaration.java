@@ -20,8 +20,8 @@ import edu.cmu.cs.sasylf.util.Location;
  * Make sure it works even when the source is hidden in a module.
  */
 public class RenameSyntaxDeclaration extends SyntaxDeclaration {
-	public QualName source;
-	public SyntaxDeclaration original;
+	private QualName source;
+	private SyntaxDeclaration original;
 	
 	/**
 	 * Rename a syntax declaration (optionally) with clauses that must match the
@@ -225,11 +225,16 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		 * the original syntax declaration.
 		 */
 
+		/*
 		if (original instanceof RenameSyntaxDeclaration) {
 			RenameSyntaxDeclaration originalCasted = (RenameSyntaxDeclaration) original;
 			return originalCasted.getOriginalDeclaration();
 		}
 		else return original;
+		*/
+
+		return original.getOriginalDeclaration();
+
 	}
 
 }

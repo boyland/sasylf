@@ -251,7 +251,7 @@ public class Clause extends Element implements CanBeCase {
 	private static Term asLFType(ElemType t) {
 		if (t instanceof RenameSyntaxDeclaration) {
 			RenameSyntaxDeclaration rsd = (RenameSyntaxDeclaration)t;
-			return asLFType(rsd.original);
+			return asLFType(rsd.getOriginalDeclaration());
 		}
 		if (t instanceof SyntaxDeclaration) {
 			return ((SyntaxDeclaration)t).typeTerm();
@@ -273,7 +273,7 @@ public class Clause extends Element implements CanBeCase {
 			// call the function recursively on the nonterminal
 			if (declaration instanceof RenameSyntaxDeclaration) {
 				RenameSyntaxDeclaration renameDeclaration = (RenameSyntaxDeclaration) declaration;
-				SyntaxDeclaration originalDeclaration = renameDeclaration.original;
+				SyntaxDeclaration originalDeclaration = renameDeclaration.getOriginalDeclaration();
 
 				// get the nonterminal
 				
