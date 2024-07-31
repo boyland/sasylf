@@ -719,17 +719,9 @@ public class Clause extends Element implements CanBeCase {
 
 					// create a shallow copy of the new NonTerminal
 
-					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
+					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().cloneWithFillerCharacters(fillerCharacters);
 					
 					newNonTerminal.setUnsubstitutable(); // avoids variable capture
-
-					// TODO: maybe the new nonterminal should actually just be the original (without cloning)
-					
-					//NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal();
-
-					// add the filler characters to the new nonterminal symbol
-
-					newNonTerminal.symbol += fillerCharacters;
 
 					// replace it in the elements list
 

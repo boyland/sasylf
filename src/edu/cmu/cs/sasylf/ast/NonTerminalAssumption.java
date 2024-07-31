@@ -68,13 +68,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 				fillerCharacters = nonTerminal.getSymbol().substring(sd.getFrom().length());
 			}
 
-			// create a shallow copy of the new NonTerminal
-
-			NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().clone();
-
-			// add the filler characters to the new nonterminal symbol
-
-			newNonTerminal.symbol += fillerCharacters;
+			NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().cloneWithFillerCharacters(fillerCharacters);
 			
 			nonTerminal = newNonTerminal;
 		}
