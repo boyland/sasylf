@@ -18,7 +18,6 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
@@ -30,7 +29,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 	private List<Rule> rules;
 	private Clause form;
 	private String name;
-	public NonTerminal assume;
+	private NonTerminal assume;
 	private boolean isAbstract;
 
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
