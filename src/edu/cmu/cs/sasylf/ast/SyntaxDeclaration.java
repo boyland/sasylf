@@ -66,7 +66,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	@Override
 	public boolean isAbstract() { return isAbstract; }
 
-	public List<Clause> elements; // productions
+	private List<Clause> elements;
 	private NonTerminal nonTerminal;
 	private Set<String> alternates;
 	private Variable variable;
