@@ -174,8 +174,6 @@ public class ClauseUse extends Clause {
 	@Override
 	public ElemType getElemType() {
 		ClauseType ct = getConstructor().getType();
-		System.out.println("constructor: " + getConstructor());
-		System.out.println("ct: " + ct);
 		if (ct instanceof SyntaxDeclaration)
 			return (SyntaxDeclaration) ct;
 		else
