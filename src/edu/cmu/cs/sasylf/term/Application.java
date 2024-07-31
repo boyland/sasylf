@@ -42,8 +42,8 @@ public class Application extends Term {
 		this(f, Arrays.asList(new Term[] { a }));
 	}
 
-	private Atom function;
-	private List<? extends Term> arguments;
+	private final Atom function;
+	private final List<? extends Term> arguments;
 
 	public Atom getFunction() { return function; }
 	public List<? extends Term> getArguments() { return arguments; }
@@ -769,18 +769,17 @@ public class Application extends Term {
 	public Application copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Application) cd.getCopyFor(this);
 
-		Application clone = (Application) super.clone();
-
-		cd.addCopyFor(this, clone);
-
-		clone.function = clone.function.copy(cd);
-		List<Term> newArgs = new ArrayList<Term>();
-		for (Term arg: clone.arguments) {
+		List<Term> newArgs = new ArrayList<>();
+		for (Term arg: arguments) {
 			newArgs.add(arg.copy(cd));
 		}
-		clone.arguments = newArgs;
+
+		Atom functionCopy = function.copy(cd);
+
+		Application clone = new Application(functionCopy, newArgs);
 
 		return clone;
+		
 	}
 
 
