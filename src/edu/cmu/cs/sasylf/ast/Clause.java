@@ -710,11 +710,11 @@ public class Clause extends Element implements CanBeCase {
 					// get the filler characters
 					String fillerCharacters;
 
-					if (nt.getSymbol().length() == sd.from.length()) {
+					if (nt.getSymbol().length() == sd.getFrom().length()) {
 						fillerCharacters = "";
 					}
 					else {
-						fillerCharacters = nt.getSymbol().substring(sd.from.length());
+						fillerCharacters = nt.getSymbol().substring(sd.getFrom().length());
 					}
 
 					// create a shallow copy of the new NonTerminal

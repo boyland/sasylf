@@ -442,7 +442,7 @@ public class ClauseDef extends Clause {
 		 * First, we check if the substitution is of type SYNTAX or JUDGMENT
 		 */
 		
-		if (sd.substitutionType == SubstitutionData.SubstitutionType.SYNTAX) {
+		if (sd.getSubstitutionType() == SubstitutionData.SubstitutionType.SYNTAX) {
 
 			if (!type.equals((ClauseType) sd.getSyntaxReplacement())) return;
 
@@ -454,8 +454,8 @@ public class ClauseDef extends Clause {
 
 			int indexOfClauseDef = -1;
 
-			for (int i = 0; i < sd.oldSyntax.getClauses().size(); i++) {
-				Clause c = sd.oldSyntax.getClauses().get(i);
+			for (int i = 0; i < sd.getOldSyntax().getClauses().size(); i++) {
+				Clause c = sd.getOldSyntax().getClauses().get(i);
 				if (!(c instanceof ClauseDef)) {
 					continue;
 				}
@@ -484,7 +484,7 @@ public class ClauseDef extends Clause {
 			consName = newClauseDef.consName;
 		}
 		
-		else if (sd.substitutionType == SubstitutionType.JUDGMENT) {
+		else if (sd.getSubstitutionType() == SubstitutionType.JUDGMENT) {
 
 			if (!type.equals(sd.getJudgmentReplacement())) return;
 

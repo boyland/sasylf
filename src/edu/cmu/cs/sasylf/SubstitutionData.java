@@ -34,13 +34,13 @@ public class SubstitutionData {
   }
 
   private final IdentitySet<Object> set; // the set of objects that have been substituted for
-  public final String from; // the name of the object being substituted for
-  public final String to; // the name of the object being substituted with
+  private final String from; // the name of the object being substituted for
+  private final String to; // the name of the object being substituted with
   private final SyntaxDeclaration newSyntax; // the syntax that is being substituted with
   private final Judgment newJudgment; // the judgment that is being substituted with
   private final Theorem newTheorem; // the theorem that is being substituted with
-  public final SyntaxDeclaration oldSyntax; // the syntax that is being substituted for
-  public final SubstitutionType substitutionType; // the type of substitution being performed
+  private final SyntaxDeclaration oldSyntax; // the syntax that is being substituted for
+  private final SubstitutionType substitutionType; // the type of substitution being performed
 
   /*
    * Invariants:
@@ -89,6 +89,38 @@ public class SubstitutionData {
     this.newTheorem = newTheorem;
     this.oldSyntax = null;
     substitutionType = SubstitutionType.THEOREM;
+  }
+
+  /**
+   * Returns the name of the object being substituted for.
+   * @return the name of the object being substituted for
+   */
+  public String getFrom() {
+    return from;
+  }
+
+  /**
+   * Returns the name of the object being substituted with.
+   * @return the name of the object being substituted with
+   */
+  public String getTo() {
+    return to;
+  }
+
+  /**
+   * Returns the syntax that is being substituted for.
+   * @return 
+   */
+  public SyntaxDeclaration getOldSyntax() {
+    return oldSyntax;
+  }
+
+  /**
+   * Returns the type of substitution being performed.
+   * @return the type of substitution being performed
+   */
+  public SubstitutionType getSubstitutionType() {
+    return substitutionType;
   }
 
   /**

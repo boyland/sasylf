@@ -406,8 +406,8 @@ public class Abstraction extends Term {
 			varType.substitute(sd);
 		}
 
-		if (varName.equals(sd.from)) {
-			varName = sd.to;
+		if (varName.equals(sd.getFrom())) {
+			varName = sd.getTo();
 		}
 
 		body.substitute(sd);

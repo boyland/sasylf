@@ -26,7 +26,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 
 public class CompUnit extends Node implements Module {
 	private PackageDeclaration packageDecl;
-	public String moduleName;
+	private String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;

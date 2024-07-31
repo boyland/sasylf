@@ -178,8 +178,8 @@ public class ModulePart extends Node implements Part, Named {
 				Also, set argument.resolution to null because we changed the name, so it points to something else now
 			*/
 
-			if (argument.getSource() == null && argument.getName().equals(sd.from) && argument.isSubstitutable()) {
-				argument.setName(sd.to);
+			if (argument.getSource() == null && argument.getName().equals(sd.getFrom()) && argument.isSubstitutable()) {
+				argument.setName(sd.getTo());
 				argument.nullifyResolution();
 				argument.setUnsubstitutable();
 			}

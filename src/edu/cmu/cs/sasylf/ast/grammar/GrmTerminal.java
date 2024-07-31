@@ -35,8 +35,8 @@ public class GrmTerminal implements Terminal {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
 		
-		if (string.equals(sd.from)) {
-			string = sd.to;
+		if (string.equals(sd.getFrom())) {
+			string = sd.getTo();
 		}
 
 		if (element != null) element.substitute(sd);

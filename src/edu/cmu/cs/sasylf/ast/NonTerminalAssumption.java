@@ -61,11 +61,11 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 			// get the filler characters
 			String fillerCharacters;
 
-			if (nonTerminal.getSymbol().length() == sd.from.length()) {
+			if (nonTerminal.getSymbol().length() == sd.getFrom().length()) {
 				fillerCharacters = "";
 			}
 			else {
-				fillerCharacters = nonTerminal.getSymbol().substring(sd.from.length());
+				fillerCharacters = nonTerminal.getSymbol().substring(sd.getFrom().length());
 			}
 
 			// create a shallow copy of the new NonTerminal

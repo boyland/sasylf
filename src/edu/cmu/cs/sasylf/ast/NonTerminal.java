@@ -250,18 +250,18 @@ public class NonTerminal extends Element {
 
 		// First, check that from is a prefix of symbol
 
-		if (!symbol.startsWith(sd.from)) {
+		if (!symbol.startsWith(sd.getFrom())) {
 			return;
 		}
 
 		// Check that all characters after the prefix match are filler characters
 
-		int fromLength = sd.from.length();
+		int fromLength = sd.getFrom().length();
 
 		String filler = symbol.substring(fromLength);
 
 		if (filler.matches("^[0-9_']*$")) {
-			symbol = sd.to + filler;
+			symbol = sd.getTo() + filler;
 		}
 
 		if (type != null) {
