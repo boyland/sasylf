@@ -128,10 +128,6 @@ public class JudgmentPart implements Part {
 		return sb.toString();
 	}
 
-	public List<Judgment> getJudgments() {
-		return judgments;
-	}
-
 	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
@@ -168,7 +164,7 @@ public class JudgmentPart implements Part {
 	public List<ModuleComponent> argsParams() {
 		List<ModuleComponent> judgments = new ArrayList<>();
 
-		for (Judgment j : getJudgments()) {
+		for (Judgment j : this.judgments) {
 			judgments.add(j.getOriginalDeclaration());
 		}
 
