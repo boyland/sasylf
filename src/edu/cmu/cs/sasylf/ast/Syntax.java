@@ -189,23 +189,6 @@ public abstract class Syntax extends Node implements ModuleComponent {
 		return Optional.of(sd);
 	}
 	
-	@Override
-	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
-		Optional<ModuleComponent> paramOpt = cu.getNextParam();
-		if (paramOpt.isEmpty()) return false;
-		ModuleComponent param = paramOpt.get();
-
-		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
-
-		if (sdOpt.isPresent()) {
-			SubstitutionData sd = sdOpt.get();
-			cu.substitute(sd);
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
 
 	@Override
 	public String getKind() {

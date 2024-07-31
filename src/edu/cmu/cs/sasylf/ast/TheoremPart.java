@@ -111,5 +111,10 @@ public class TheoremPart implements Part {
 		
 		return theorems;
 	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		theorems.forEach(things::add);
+	}
 	
 }

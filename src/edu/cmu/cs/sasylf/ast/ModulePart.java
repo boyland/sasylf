@@ -211,5 +211,10 @@ public class ModulePart extends Node implements Part, Named {
 		return new ArrayList<>();
 	}
 
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		// do nothing
+	}
+
 
 }

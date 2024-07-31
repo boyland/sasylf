@@ -403,32 +403,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 
 	}
 
-	@Override
-	public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment) {
 
-		// get the next parameter of cu
-		Optional<ModuleComponent> paramOpt = cu.getNextParam();
-		if (paramOpt.isEmpty()) return false;
-		ModuleComponent param = paramOpt.get();
-
-		Optional<SubstitutionData> sdOpt = matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
-
-		if (sdOpt.isPresent()) {
-			// the parameter matches the judgment and we can substitute
-
-			SubstitutionData sd = sdOpt.get();
-
-			// substitute the judgment
-			
-			cu.substitute(sd);
-
-			return true;
-		}
-		else {
-			return false;
-		}
-
-	}
 
 	@Override
 	public String getKind() {

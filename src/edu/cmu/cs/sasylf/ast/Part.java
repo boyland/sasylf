@@ -30,6 +30,12 @@ public interface Part extends Cloneable {
 	public abstract void collectTopLevel(Collection<? super Node> things);
 
 	/**
+	 * Export all top-level declarations in this chunk that as ModuleComponent objects
+	 * @param things collection to place in, must not be null.
+	 */
+	public abstract void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things);
+
+	/**
 	 * Export all rule-likes into a provided map
 	 * @param map destination, must not be null.
 	 */

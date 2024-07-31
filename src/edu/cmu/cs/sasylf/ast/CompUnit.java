@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -19,7 +18,6 @@ import edu.cmu.cs.sasylf.module.ModuleFinder;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.module.NullModuleFinder;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.ParseUtil;
@@ -31,7 +29,6 @@ public class CompUnit extends Node implements Module {
 	public String moduleName;
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
-	private List<ModuleComponent> moduleParams = new ArrayList<>();
 	private int parseReports;
 
 	public CompUnit(PackageDeclaration pack, Location loc, String n) {
@@ -54,8 +51,6 @@ public class CompUnit extends Node implements Module {
 	 */
 	public void addParameterChunk(Part c) {
 		params.add(c); 
-		// Add the components of c to moduleParams
-		c.argsParams().forEach(moduleParams::add);
 		updateReportCount();
 	}
 
@@ -311,14 +306,6 @@ public class CompUnit extends Node implements Module {
 		clone.parts = newParts;
 
 		clone.declCache = new HashMap<String, Object>();
-		
-		List<ModuleComponent> newModuleParams = new ArrayList<>();
-
-		for (ModuleComponent mp : clone.moduleParams) {
-			newModuleParams.add(mp.copy(cd));
-		}
-
-		clone.moduleParams = newModuleParams;
 
 		return clone;
 	}
@@ -353,6 +340,12 @@ public class CompUnit extends Node implements Module {
 		 * an exception and return an empty Optional
 		 */
 
+		List<ModuleComponent> moduleParams = new ArrayList<>();
+
+		params.forEach(param -> {
+			param.collectTopLevelAsModuleComponents(moduleParams);
+		});
+
 		int numParams = moduleParams.size();
 		int numArgs = args.size();
 
@@ -364,7 +357,7 @@ public class CompUnit extends Node implements Module {
 		CompUnit newModule = clone();
 
 		// result is whether the arguments were successfully applied to newModule
-		boolean result = newModule.doApplication(args, mp, ctx, moduleName);
+		boolean result = newModule.doApplication(args, mp, moduleParams, ctx, moduleName);
 
 		if (result) return Optional.of(newModule);
 		
@@ -382,35 +375,34 @@ public class CompUnit extends Node implements Module {
 	 * @param moduleName name of the module
 	 * @return true if the arguments were successfully applied, false otherwise
 	 */
-	private boolean doApplication(List<ModuleComponent> args, ModulePart mp, Context ctx, String moduleName) {
+	private boolean doApplication(List<ModuleComponent> args, ModulePart mp, List<ModuleComponent> moduleParams, Context ctx, String moduleName) {
 		// apply the given arguments to this
 
-		params.clear();
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
-		for (ModuleComponent arg: args) {
-			// applicationResult is true iff the argument was successfully applied to the parameter
-			boolean applicationResult = arg.provideTo(this, mp, paramToArgSyntax, paramToArgJudgment);
-			if (!applicationResult) {
+		this.params.clear();
+
+		for (int i = 0; i < args.size(); i++) {
+			ModuleComponent arg = args.get(i);
+			ModuleComponent param = moduleParams.get(i);
+
+			Optional<SubstitutionData> sdOpt = arg.matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
+
+			if (sdOpt.isPresent()) {
+				SubstitutionData sd = sdOpt.get();
+				this.substitute(sd);
+			}
+			else {
 				return false;
 			}
+
 		}
 		
 		this.moduleName = moduleName;
 
 		return true;
 	
-	}
-
-	public Optional<ModuleComponent> getNextParam() {
-		if (moduleParams.isEmpty()) {
-			return Optional.empty();
-		}
-		else {
-			ModuleComponent param = moduleParams.remove(0);
-			return Optional.of(param);
-		}
 	}
 
 }

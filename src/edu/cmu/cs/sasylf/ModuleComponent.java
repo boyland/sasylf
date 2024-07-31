@@ -27,7 +27,8 @@ public interface ModuleComponent {
   public Optional<SubstitutionData> matchesParam( // TODO: This could be removed from the interface
     ModuleComponent paramModArg,
 		ModulePart mp,
-		Map<Syntax, Syntax> paramToArgSyntax, 
+    // TODO: examine the following two maps
+		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment
   );
 
@@ -50,16 +51,5 @@ public interface ModuleComponent {
    * @return a copy of this ModuleArgument object
    */
   public ModuleComponent copy(CopyData cd);
-
-  /**
-   * Provides this ModuleArgument object to the given compilation unit.
-   * Returns true if and only if this ModuleArgument object is applicable to the next parameter in the compilation unit.
-   * @param cu the compilation unit to provide this ModuleArgument object to
-   * @param mp the module part in which this application is taking place
-   * @param paramToArgSyntax the map of syntax parameters to syntax arguments
-   * @param paramToArgJudgment the map of judgment parameters to judgment arguments
-   * @return true if and only if this ModuleArgument object is applicable to the next parameter in the compilation unit
-   */
-  public boolean provideTo(CompUnit cu, ModulePart mp, Map<Syntax, Syntax> paramToArgSyntax, Map<Judgment, Judgment> paramToArgJudgment);
 
 }

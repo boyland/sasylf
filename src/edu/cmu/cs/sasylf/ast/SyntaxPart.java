@@ -146,6 +146,11 @@ public class SyntaxPart implements Part {
 		return result;
 	}
 
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		syntax.forEach(things::add);
+	}
+
 
 
 }

@@ -92,5 +92,10 @@ public class TerminalsPart implements Part {
 	public List<ModuleComponent> argsParams() {
 		return new ArrayList<>();
 	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		// do nothing
+	}
 	
 }

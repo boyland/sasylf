@@ -175,4 +175,9 @@ public class JudgmentPart implements Part {
 		return judgments;
 	}
 
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		judgments.forEach(things::add);
+	}
+
 }
