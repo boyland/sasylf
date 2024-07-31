@@ -168,7 +168,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 						Location loc = r.getLocation();
 						Position barPos = convertLocToPos(document, loc);
 						try {
-							String barPlusName = document.getCopyFor(barPos.getOffset(), barPos.getLength()).trim();
+							String barPlusName = document.get(barPos.getOffset(), barPos.getLength()).trim();
 							int n = 0;
 							while (n < barPlusName.length() && ParseUtil.isBarChar(barPlusName.charAt(n))) {
 								++n;
@@ -397,14 +397,14 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		private void ensureImages() {
 			if (kindImages.size() == 0) {
 				Activator activator = Activator.getDefault();
-				kindImages.addCopyFor("Lemma",activator.getImage("icons/dull-green-ball.png"));
-				kindImages.addCopyFor("Theorem", activator.getImage("icons/mauve-ball.png"));
-				kindImages.addCopyFor("Rule", activator.getImage("icons/green-ball.png"));
-				kindImages.addCopyFor("Judgment", activator.getImage("icons/yellow-diamond.png"));
-				kindImages.addCopyFor("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
-				kindImages.addCopyFor("Clause", activator.getImage("icons/small-green-ball.png"));
-				kindImages.addCopyFor("Package", activator.getImage("icons/packd_obj.png"));
-				kindImages.addCopyFor("Module", activator.getImage("icons/star.png"));
+				kindImages.put("Lemma",activator.getImage("icons/dull-green-ball.png"));
+				kindImages.put("Theorem", activator.getImage("icons/mauve-ball.png"));
+				kindImages.put("Rule", activator.getImage("icons/green-ball.png"));
+				kindImages.put("Judgment", activator.getImage("icons/yellow-diamond.png"));
+				kindImages.put("Syntax", activator.getImage("icons/small-yellow-diamond.png"));
+				kindImages.put("Clause", activator.getImage("icons/small-green-ball.png"));
+				kindImages.put("Package", activator.getImage("icons/packd_obj.png"));
+				kindImages.put("Module", activator.getImage("icons/star.png"));
 			}
 		}
 
@@ -413,7 +413,7 @@ public class ProofOutline extends ContentOutlinePage implements ProofChecker.Lis
 		public Image getImage(Object element) {
 			if (element instanceof ProofElement) {
 				ensureImages();
-				return kindImages.getCopyFor(((ProofElement)element).getCategory());
+				return kindImages.get(((ProofElement)element).getCategory());
 			}
 			return super.getImage(element);
 		}

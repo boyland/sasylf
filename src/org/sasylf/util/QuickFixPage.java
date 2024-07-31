@@ -354,7 +354,7 @@ public class QuickFixPage extends WizardPage {
 				}
 
 				if (resolutions.containsKey(selected)) {
-					return ((Collection<?>) resolutions.getCopyFor(selected)).toArray();
+					return ((Collection<?>) resolutions.get(selected)).toArray();
 				}
 				return EMPTY_MARKER_ARRAY;
 			}

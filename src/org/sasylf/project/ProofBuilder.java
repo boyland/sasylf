@@ -46,7 +46,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	protected void startupOnInitialize() {
 		// System.out.println("Registering proof builder for " + this.getProject());
 		super.startupOnInitialize();
-		ProofBuilder old = builders.addCopyFor(this.getProject(), this);
+		ProofBuilder old = builders.put(this.getProject(), this);
 		if (old instanceof ProofBuilderProxy) {
 			// System.out.println("Replaced proxy for " + this.getProject());
 		} else {
@@ -68,7 +68,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 			e1.printStackTrace();
 			return;
 		}
-		ProofBuilder pb = builders.getCopyFor(project);
+		ProofBuilder pb = builders.get(project);
 		if (pb != null) return;
 		
 		// The use of proxy obviates "doWait"
@@ -122,7 +122,7 @@ public class ProofBuilder extends IncrementalProjectBuilder {
 	public static ProofBuilder getProofBuilder(IProject p) {
 		// System.out.println("getProofBuilder(" + p + ")");
 		ensureBuilding(p, true);
-		ProofBuilder pb = builders.getCopyFor(p);
+		ProofBuilder pb = builders.get(p);
 		// System.out.println("pb = " + pb);
 		return pb;
 	}

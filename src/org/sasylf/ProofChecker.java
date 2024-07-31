@@ -169,7 +169,7 @@ public class ProofChecker  {
 	 */
 	public static CompUnit analyzeSlf(IResource res, IDocument doc) {
 		if (res == null) throw new NullPointerException("resource cannot be null");
-		return analyzeSlf(null, null, res, doc, new StringReader(doc.getCopyFor()));
+		return analyzeSlf(null, null, res, doc, new StringReader(doc.get()));
 	}
 
 	/**
@@ -190,7 +190,7 @@ public class ProofChecker  {
 			Reader r;
 			try {
 				if (doc != null)
-					r = new StringReader(doc.getCopyFor());
+					r = new StringReader(doc.get());
 				else r = new InputStreamReader(f.getContents(),"UTF-8");
 			} catch (UnsupportedEncodingException e) {
 				return null;
@@ -254,7 +254,7 @@ public class ProofChecker  {
 			try {
 				if (Util.DEBUG) { // or perhaps a debug flag specifically for incrementality
 					for (IDirtyRegion dr : dirtyRegions) {
-						String newText = doc.getCopyFor(dr.getOffset(), dr.getLength());
+						String newText = doc.get(dr.getOffset(), dr.getLength());
 						System.out.println("Replacing '" + dr.getOldText() + "' with '" + newText + "'");
 					}
 				}

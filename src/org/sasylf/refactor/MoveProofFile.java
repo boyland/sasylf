@@ -158,7 +158,7 @@ public class MoveProofFile extends MoveParticipant {
 				Location loc = pd.getLocation();
 				IRegion line = doc.getLineInformation(loc.getLine()-1);
 				packageLoc = new Region(line.getOffset()+loc.getColumn()-1,7);
-				String text = doc.getCopyFor(packageLoc.getOffset(), packageLoc.getLength());
+				String text = doc.get(packageLoc.getOffset(), packageLoc.getLength());
 				if (!text.equals("package")) {
 					// System.out.println("expected 'package', found '" + text + "'");
 					status.addWarning("proof file is out of sync with build");
@@ -180,7 +180,7 @@ public class MoveProofFile extends MoveParticipant {
 				++length;
 			}
 			nameLoc = new Region(offset,length);
-			if (doc.getCopyFor(offset, length).equals(newPackage)) {
+			if (doc.get(offset, length).equals(newPackage)) {
 				// no change needed
 				return;
 			}
@@ -271,11 +271,11 @@ public class MoveProofFile extends MoveParticipant {
 				int offset = moduleLoc.getOffset();
 				int length = moduleLoc.getLength();
 
-				if (doc.getCopyFor(offset, length).equals(newPackage)) {
+				if (doc.get(offset, length).equals(newPackage)) {
 					// no change needed
 					continue;
 				}
-				System.out.println("Replacing " + doc.getCopyFor(offset, length) + " with " + newPackage);
+				System.out.println("Replacing " + doc.get(offset, length) + " with " + newPackage);
 
 				createEdit(result, moduleLoc);
 				change.add(result);

@@ -50,7 +50,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
 		@Override
 		public void documentChanged(DocumentEvent event) {
 			System.out.println("running delayed events");
-			List<DelayedEvent> events = todo.getCopyFor(event.getDocument());
+			List<DelayedEvent> events = todo.get(event.getDocument());
 			if (events == null || events.isEmpty()) return;
 			event.getDocument().removeDocumentListener(this);
 			DelayedEvent[] copy = events.toArray(empty);
@@ -85,10 +85,10 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
 		} else {
 			// System.out.println("Owner is " + l);
 		}
-		List<DelayedEvent> events = todo.getCopyFor(doc);
+		List<DelayedEvent> events = todo.get(doc);
 		if (events == null) {
 			events = new ArrayList<DelayedEvent>();
-			todo.addCopyFor(doc, events);
+			todo.put(doc, events);
 		}
 		events.add(event);
 		if (events.size() == 1) doc.addDocumentListener(listener);
@@ -114,7 +114,7 @@ public class SASyLFAutoIndentStrategy extends SASyLFIndentStrategy {
 		int in = getIndentUnit();
 		if (c.offset - st < in) return;
 		// System.out.println("comparing '" + d.get(st,in) + "' with '" + indentToSpaces(in) + "'");
-		if (d.getCopyFor(st, in).equals(indentToSpaces(in))) {
+		if (d.get(st, in).equals(indentToSpaces(in))) {
 			this.invokeReplaceLater(d, st, in, "",c.owner);
 			// System.out.println("delayed undent");
 		}
