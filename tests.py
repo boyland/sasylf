@@ -97,10 +97,28 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+
+
+# run the unit tests
+
+def run_unit_tests():
+  print(f"{YELLOW}Running unit tests...{RESET}")
+  result = subprocess.run(["make", "unit-test"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  output = result.stdout.decode("utf-8")
+  errors = result.stderr.decode("utf-8")
+  print(output)
+  print(errors)
+
+
+
+run_unit_tests()
+
+
+
+
 passed = 0
 
-# do the same thing but for small_tests
-
+print(f"{YELLOW}Running regression tests...{RESET}")
 for test in all_tests:
   if name:
     print(f"\n{test}")
