@@ -64,10 +64,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 
 		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
 
-		// Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
-
-		// and above this
-
 		Substitution callSub; 
 		// Now we get the substitution.
 		// Then there are complex catch clauses for failed unification.
