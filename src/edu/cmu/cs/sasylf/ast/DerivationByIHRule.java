@@ -74,7 +74,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		// The complication only concerns what error message to generate.
 		try {
 			callSub = subject.unify(pattern);
-		} catch (UnificationIncomplete e) {;
+		} catch (UnificationIncomplete e) {
 			TermPrinter tp = new TermPrinter(ctx,getElement().getRoot(),this.getLocation(),false);
 			String extraInfo = tp.toString(e.term1,false) + " =?= " + tp.toString(e.term2,false);
 			ErrorHandler.error(Errors.RULE_APP_UNIFICATION_INCOMPLETE, extraInfo, this,
@@ -108,16 +108,11 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
 				
 				explanationString = tp.toString(tp.asClause(explanationTerm));
-				//explanationString = "explanation";
-				// TODO: hot fix
 
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {
-					// TODO: hot fix
 					infoString += ", but failed because " + tp.toString(e2.term1,false) + " =?= " + tp.toString(e2.term2,false); 
-					//infoString += "info";
-					// TODO: fix term printing
 				}
 			}
 			ErrorHandler.error(errorType, explanationString, this, infoString);
