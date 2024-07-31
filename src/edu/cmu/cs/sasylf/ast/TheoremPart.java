@@ -19,7 +19,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
  * Theorem may be mutually recursive only as connected with 'and".
  */
 public class TheoremPart implements Part {
-	List<Theorem> theorems;
+	private List<Theorem> theorems;
 
 	public List<Theorem> getTheorems() {
 		return theorems;
