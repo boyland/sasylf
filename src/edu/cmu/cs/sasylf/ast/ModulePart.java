@@ -90,6 +90,7 @@ public class ModulePart extends Node implements Part, Named {
 		return;
 	}
 	
+	@Override
 	public void typecheck(Context ctx) {
 		
 		// resolve the module
