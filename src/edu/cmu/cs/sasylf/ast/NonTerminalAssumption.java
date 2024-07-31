@@ -37,7 +37,7 @@ public class NonTerminalAssumption extends SyntaxAssumption {
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
 		Element e = nonTerminal.typecheck(ctx);
-	if (e != nonTerminal)
+		if (e != nonTerminal)
 			ErrorHandler.error(Errors.FORALL_NOT_SYNTAX, getName(), this);
 		nonTerminal = (NonTerminal)e;
 		getElementBase().checkBindings(ctx.bindingTypes, this);
