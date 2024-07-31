@@ -1,3 +1,13 @@
+"""
+This script runs all of the tests in ./regression and checks if
+  1. Errors are thrown when they should be
+  2. Errors are not thrown when they shouldn't be
+
+Run this test with: python tests.py or python3 tests.py, depending on your system
+
+To get verbose output (the entire error message), run with the -v flag: python tests.py -v
+To print the name of the test after each execution, run with the -n flag: python tests.py -n
+"""
 
 import subprocess
 import os
