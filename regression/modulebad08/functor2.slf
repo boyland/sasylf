@@ -8,3 +8,4 @@ abstract syntax a
 abstract syntax b
 syntax e ::= a | b
 
+provides

@@ -35,7 +35,7 @@ theorem t2:
   proof by unproved //!
 end theorem
 
-module m1 = regression.modulebad07.functor[b, lor, t1] //!
-module m2 = regression.modulebad07.functor[b, lor, t2] // t2 has the wrong number of foralls
+module m1 = regression.modulebad07.functor[b, lor, t1] //! t2 has the wrong number of foralls
+module m2 = regression.modulebad07.functor[b, lor, t2] //
 module m3 = regression.modulebad07.functor[b, land, t1] //! it should be lor
 module m4 = regression.modulebad07.functor[b, land, t2] //! it should be lor and t2 the wrong number of foralls

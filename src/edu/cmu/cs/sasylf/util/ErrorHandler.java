@@ -203,7 +203,7 @@ public class ErrorHandler {
 			argType = "module";
 		}
 		else {
-			argType = "terminals";
+			argType = "an undefined identifier";
 		}
 
 		String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
