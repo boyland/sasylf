@@ -755,14 +755,11 @@ public class Application extends Term {
 	}
 
 	@Override
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-		
-		function.substitute(sd);
-		for (Term arg: arguments) {
-			arg.substitute(sd);
-		}
+	public Application substitute(String from, String to) {
+		Atom newFunction = function.substitute(from, to);
+		List<Term> newArgs = new ArrayList<>();
+		arguments.forEach(newArgs::add);
+		return new Application(newFunction, newArgs);
 	}
 
 	@Override
@@ -781,6 +778,5 @@ public class Application extends Term {
 		return clone;
 		
 	}
-
 
 }

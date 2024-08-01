@@ -122,9 +122,9 @@ public class DerivationPlaceholder extends Derivation {
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
 
-		if (asTerm != null) asTerm.substitute(sd);
+		if (asTerm != null) asTerm = asTerm.substitute(sd.getFrom(), sd.getTo());
 
-		variable.substitute(sd);
+		variable = variable.substitute(sd.getFrom(), sd.getTo());
 	}
 
 	@Override

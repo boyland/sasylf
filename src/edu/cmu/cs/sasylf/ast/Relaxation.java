@@ -353,11 +353,13 @@ public class Relaxation {
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
-		for (Term t : types) {
-			t.substitute(sd);
-		}
+		List<Term> newTypes = new ArrayList<>();
+
+		types.forEach(t -> newTypes.add(t.substitute(sd.getFrom(), sd.getTo())));
+
+		types = newTypes;
 		for (FreeVar v : values) {
-			if (v != null) v.substitute(sd);
+			if (v != null) v = v.substitute(sd.getFrom(), sd.getTo());
 		}
 		result.substitute(sd);
 	}

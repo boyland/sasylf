@@ -46,30 +46,7 @@ public abstract class Atom extends Term {
 	}
 
 	@Override
-	public void substitute(SubstitutionData sd) {
-		System.out.println("Substituting in Atom");
-		if (sd.didSubstituteFor(this)) return;
-		
-		sd.setSubstitutedFor(this);
-
-		// need to substitute for name
-
-		if (sd.containsSyntaxReplacementForByString(name)) {
-			System.out.println("WARNING: contains syntax replacement in Atom.substitute");
-			// TODO: Perform a substitution here
-		}
- 
-		else if (sd.containsJudgmentReplacementFor(name)) {
-			Judgment replacement = sd.getJudgmentReplacement();
-			name = replacement.getName();
-		}
-
-		else if (sd.containsTheoremReplacementFor(name)) {
-			Theorem theorem = sd.getTheoremReplacement();
-			name = theorem.getName();
-		}
-
-	}
+	public abstract Atom substitute(String from, String to);
 	
 	/**
 	 * Create a deep copy of this Atom.

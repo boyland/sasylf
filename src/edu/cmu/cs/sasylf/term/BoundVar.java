@@ -151,14 +151,6 @@ public class BoundVar extends Atom {
 	public Term getType() {
 		return Constant.UNKNOWN_TYPE;
 	}
-
-	@Override
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-		
-		// do nothing because the only attribute is its index
-	}
 	
 	@Override
 	public BoundVar copy(CopyData cd) {
@@ -169,6 +161,10 @@ public class BoundVar extends Atom {
 		cd.addCopyFor(this, clone);
 
 		return clone;
+	}
+	@Override
+	public BoundVar substitute(String from, String to) {
+		return this;
 	}
 
 }

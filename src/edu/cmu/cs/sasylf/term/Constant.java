@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.term;
 import java.util.Queue;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class Constant extends Atom {
@@ -29,14 +28,11 @@ public class Constant extends Atom {
 	}
 
 	@Override
-	public void substitute (SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		super.substitute(sd);
-		sd.setSubstitutedFor(this);
-
-		if (type != null) {
-			type.substitute(sd);
-		}
+	public Constant substitute(String from, String to) {
+		String name = getName();
+		String newName = name.equals(from) ? to : name;
+		if (name == newName) return this;
+		return new Constant(newName, type.substitute(from, to));
 	}
 
 	@Override

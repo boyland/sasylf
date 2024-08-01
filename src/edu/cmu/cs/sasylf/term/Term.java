@@ -611,10 +611,12 @@ public abstract class Term implements Cloneable{
 	}
 
 	/**
-	 * Check if the argument term is a subterm of this one.
-	 * @param sd substitution data to use
+	 * Replace all occurences of <code>from</code> with <code>to</code> in this term.
+ 	 * @param from the string to replace
+	 * @param to the string to replace it with
+	 * @return the term with the replacement made
 	 */
-	public abstract void substitute(SubstitutionData sd);
+	public abstract Term substitute(String from, String to);
 	
 	/**
 	 * Create a deep copy of this term

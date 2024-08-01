@@ -293,13 +293,10 @@ public class FreeVar extends Atom {
 			return this;
 	}
 
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return ;
-		sd.setSubstitutedFor(this);
-
-		if (type != null) {
-			type.substitute(sd);
-		}
+	@Override
+	public FreeVar substitute(String from, String to) {
+		if (from.equals(getName())) return new FreeVar(to, type.substitute(from, to));
+		return this;
 	}
 
 	@Override

@@ -398,19 +398,17 @@ public class Abstraction extends Term {
 	}
 
 	@Override
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-	
-		if (varType != null) {
-			varType.substitute(sd);
+	public Term substitute(String from, String to) {		
+		Term newVarType = varType.substitute(from, to);
+		String newVarName = varName.equals(from) ? to : varName;
+		Term newBody = body.substitute(from, to);
+
+		if (newVarType == varType && newVarName == varName && newBody == body) {
+			return this;
+		} else {
+			return make(newVarName, newVarType, newBody);
 		}
 
-		if (varName.equals(sd.getFrom())) {
-			varName = sd.getTo();
-		}
-
-		body.substitute(sd);
 	}
 
 	@Override
