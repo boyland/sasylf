@@ -261,33 +261,6 @@ public class Clause extends Element implements CanBeCase {
 		else throw new RuntimeException("Cannot convert " + t + " to an LF type");
 	}
 	
-	private static Element findOriginal(Element e) {
-		// if it's a NonTerminal, we want to find the originally defined version of it
-
-		if (e instanceof NonTerminal) {
-			NonTerminal nt = (NonTerminal) e;
-			// get the type
-			SyntaxDeclaration declaration = nt.getType();
-			// check if it's a renamed syntax
-			// if it is, cast it, then go to the original and fetch the nonterminal
-			// call the function recursively on the nonterminal
-			if (declaration instanceof RenameSyntaxDeclaration) {
-				RenameSyntaxDeclaration renameDeclaration = (RenameSyntaxDeclaration) declaration;
-				SyntaxDeclaration originalDeclaration = renameDeclaration.getOriginalDeclaration();
-
-				// get the nonterminal
-				
-				NonTerminal originalNonTerminal = originalDeclaration.getNonTerminal();
-
-				// call the function recursively on the original nonterminal
-
-				return findOriginal(originalNonTerminal);
-			}
-		}
-
-		return e;
-	}
-	
 	/**
 	 * Generate an error if the two elements don't match.
 	 * Neither will be a terminal or a clause.
@@ -295,11 +268,9 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		Element origOriginal = findOriginal(orig);
-		Element replOriginal = findOriginal(repl);
-
-		Term type1 = asLFType(origOriginal.getElemType());
-		Term type2 = asLFType(replOriginal.getElemType());
+		
+		Term type1 = asLFType(orig.getElemType());
+		Term type2 = asLFType(repl.getElemType());
 
 		if (type1 != type2) {
 			ErrorHandler.error(Errors.RENAME_TYPE_MISMATCH, repl.getElemType().getName() + " != " + orig.getElemType().getName(), repl,
