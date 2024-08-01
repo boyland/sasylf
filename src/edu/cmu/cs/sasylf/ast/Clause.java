@@ -247,19 +247,18 @@ public class Clause extends Element implements CanBeCase {
 		}
 		return result;
 	}
-	
+
 	private static Term asLFType(ElemType t) {
-		if (t instanceof RenameSyntaxDeclaration) {
-			RenameSyntaxDeclaration rsd = (RenameSyntaxDeclaration)t;
-			return asLFType(rsd.getOriginalDeclaration());
-		}
 		if (t instanceof SyntaxDeclaration) {
-			return ((SyntaxDeclaration)t).typeTerm();
+			SyntaxDeclaration sd = (SyntaxDeclaration) t;
+			SyntaxDeclaration original = sd.getOriginalDeclaration();
+			return original.typeTerm();
 		}
 		else if (t instanceof Judgment)
 			return ((Judgment)t).typeTerm();
 		else throw new RuntimeException("Cannot convert " + t + " to an LF type");
 	}
+
 	
 	/**
 	 * Generate an error if the two elements don't match.
@@ -268,7 +267,7 @@ public class Clause extends Element implements CanBeCase {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
-		
+
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
 

@@ -225,14 +225,6 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		 * the original syntax declaration.
 		 */
 
-		/*
-		if (original instanceof RenameSyntaxDeclaration) {
-			RenameSyntaxDeclaration originalCasted = (RenameSyntaxDeclaration) original;
-			return originalCasted.getOriginalDeclaration();
-		}
-		else return original;
-		*/
-
 		return original.getOriginalDeclaration();
 
 	}
