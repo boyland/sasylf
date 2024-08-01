@@ -15,7 +15,6 @@ def printProgressBar(iteration, total):
     fill='█'
     printEnd="\r"
 
-    #percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = GREEN + fill * filledLength + RESET + '-' * (length - filledLength)
     print(f'\rProgress: |{bar}| {iteration}/{total} Completed:', end=printEnd)
@@ -156,9 +155,8 @@ for i, test in enumerate(all_tests):
 print()
 
 for message in messages:
-    print(message)
-
-print()
+    # print to stderr
+    print(message, file=sys.stderr)
 
 print(f"{GREEN}{passed} tests passed.{RESET}")
 print(f"{RED}{len(all_tests) - passed} tests failed.{RESET}")
