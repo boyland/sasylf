@@ -239,7 +239,6 @@ public abstract class DerivationWithArgs extends Derivation {
 		for (Fact f : args) {
 			f.substitute(sd);
 		}
-		// TODO: I don't think we need to substitute in argStrings
 	}
 
 	@Override

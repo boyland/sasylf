@@ -24,7 +24,7 @@ public interface ModuleComponent {
    * @param param
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
    */
-  public Optional<SubstitutionData> matchesParam( // TODO: This could be removed from the interface
+  public Optional<SubstitutionData> matchesParam(
     ModuleComponent paramModArg,
 		ModulePart mp,
     // TODO: examine the following two maps

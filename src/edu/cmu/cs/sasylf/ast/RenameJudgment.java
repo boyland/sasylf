@@ -130,7 +130,6 @@ public class RenameJudgment extends Judgment {
 		sd.setSubstitutedFor(this);
 
 		original.substitute(sd);
-		// TODO: I don't think we need to substitute for source
 	}
 
 	@Override
