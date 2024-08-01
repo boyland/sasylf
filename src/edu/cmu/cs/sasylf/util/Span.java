@@ -21,7 +21,11 @@ public abstract class Span implements Cloneable {
 	 * Substitute in this span using the given substitution data.
 	 * @param sd substitution data to use
 	 */
-	public abstract void substitute(SubstitutionData sd);
+	public void substitute(SubstitutionData sd) {
+		// The default implementation doesn't do anything. It just marks that it has been substituted.
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+	}
 
 	@Override
 	public Span clone() {

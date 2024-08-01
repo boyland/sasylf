@@ -40,10 +40,4 @@ public class TokenSpan extends Span {
 		return clone;
 	}
 
-	@Override
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-	}
-
 }

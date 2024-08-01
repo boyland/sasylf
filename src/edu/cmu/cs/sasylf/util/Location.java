@@ -72,14 +72,5 @@ public class Location extends Span {
 		return clone;
 	}
 
-	@Override
-	public void substitute(SubstitutionData sd) {
-
-		// do nothing
-
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-	}
-
 
 }

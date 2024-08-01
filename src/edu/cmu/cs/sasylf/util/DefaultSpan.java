@@ -1,7 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 
 public class DefaultSpan extends Span {
 
@@ -45,11 +44,5 @@ public class DefaultSpan extends Span {
 		cd.addCopyFor(this, clone);
 
 		return clone;
-	}
-
-	@Override
-	public void substitute(SubstitutionData sd) {
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
 	}
 }
