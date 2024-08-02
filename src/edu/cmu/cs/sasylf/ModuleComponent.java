@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.Syntax;
@@ -16,10 +15,12 @@ import edu.cmu.cs.sasylf.ast.Syntax;
 public interface ModuleComponent {
 
   /**
-   * Returns true if and only if this ModuleArgument object can be applied to
-   * the given parameter.
+   * Returns a nonempty Optional if and only if this ModuleArgument object can be applied to
+   * the given parameter. Otherwise, returns an empty Optional.
+   * <br/><br/>
+   * If the Optional is nonempty, it contains the SubstitutionData object that should
+   * be used to apply this ModuleArgument object to the given parameter.
    * 
-   * Raises an exception and returns false if and only if the argument is not
    * applicable to the given parameter.
    * @param param
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
@@ -40,6 +41,7 @@ public interface ModuleComponent {
 
   /**
    * Returns the kind of this ModuleArgument object.
+   * <br/><br/>
    * Kind is either "syntax", "judgment", or "theorem".
    * @return the kind of this ModuleArgument object
    */
