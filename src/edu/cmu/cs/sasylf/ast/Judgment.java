@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;

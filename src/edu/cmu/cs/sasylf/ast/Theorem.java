@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;

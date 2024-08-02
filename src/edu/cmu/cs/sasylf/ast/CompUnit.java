@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.ModuleComponent;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleFinder;

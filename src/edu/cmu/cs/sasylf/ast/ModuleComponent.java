@@ -1,11 +1,10 @@
-package edu.cmu.cs.sasylf;
+package edu.cmu.cs.sasylf.ast;
 
 import java.util.Map;
 import java.util.Optional;
 
-import edu.cmu.cs.sasylf.ast.Judgment;
-import edu.cmu.cs.sasylf.ast.ModulePart;
-import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.CopyData;
+import edu.cmu.cs.sasylf.SubstitutionData;
 
 /**
  * Represents an argument or parameter to a CompUnit.

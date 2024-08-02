@@ -2,7 +2,6 @@ package edu.cmu.cs.sasylf.ast;
 
 import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
-import edu.cmu.cs.sasylf.util.Span;
 
 
 
