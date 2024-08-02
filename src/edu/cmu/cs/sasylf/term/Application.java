@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -752,31 +750,6 @@ public class Application extends Term {
 			if (arg.contains(other)) return true;
 		}
 		return false;
-	}
-
-	@Override
-	public Application substitute(String from, String to) {
-		Atom newFunction = function.substitute(from, to);
-		List<Term> newArgs = new ArrayList<>();
-		arguments.forEach(newArgs::add);
-		return new Application(newFunction, newArgs);
-	}
-
-	@Override
-	public Application copy(CopyData cd) {
-		if (cd.containsCopyFor(this)) return (Application) cd.getCopyFor(this);
-
-		List<Term> newArgs = new ArrayList<>();
-		for (Term arg: arguments) {
-			newArgs.add(arg.copy(cd));
-		}
-
-		Atom functionCopy = function.copy(cd);
-
-		Application clone = new Application(functionCopy, newArgs);
-
-		return clone;
-		
 	}
 
 }

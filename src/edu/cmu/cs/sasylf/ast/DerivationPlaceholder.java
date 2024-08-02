@@ -122,9 +122,9 @@ public class DerivationPlaceholder extends Derivation {
 		super.substitute(sd);
 		sd.setSubstitutedFor(this);
 
-		if (asTerm != null) asTerm = asTerm.substitute(sd.getFrom(), sd.getTo());
-
-		variable = variable.substitute(sd.getFrom(), sd.getTo());
+		//if (asTerm != null) asTerm = asTerm.substitute(sd.getFrom(), sd.getTo());
+		asTerm = null;
+		variable = null;
 	}
 
 	@Override
@@ -133,9 +133,9 @@ public class DerivationPlaceholder extends Derivation {
 		if (cd.containsCopyFor(this)) return (DerivationPlaceholder) cd.getCopyFor(this);
 		DerivationPlaceholder clone = (DerivationPlaceholder) super.copy(cd);
 		cd.addCopyFor(this, clone);
-		clone.variable = clone.variable.copy(cd);
 		clone.report = new UpdatableErrorReport(null, getName(), clone);
-		clone.asTerm = clone.asTerm.copy(cd);
+		clone.asTerm = null;
+		clone.variable = null;
 		
 		return clone;
 	}

@@ -2,11 +2,6 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.ast.Judgment;
-import edu.cmu.cs.sasylf.ast.Syntax;
-import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.util.Pair;
 
 
@@ -45,12 +40,4 @@ public abstract class Atom extends Term {
 		return name;
 	}
 
-	@Override
-	public abstract Atom substitute(String from, String to);
-	
-	/**
-	 * Create a deep copy of this Atom.
-	 * @param cd the data to use during the cloning process
-	 */
-	public abstract Atom copy(CopyData cd);
 }

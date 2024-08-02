@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -397,31 +395,4 @@ public class Abstraction extends Term {
 		return body.contains(other);
 	}
 
-	@Override
-	public Term substitute(String from, String to) {		
-		Term newVarType = varType.substitute(from, to);
-		String newVarName = varName.equals(from) ? to : varName;
-		Term newBody = body.substitute(from, to);
-
-		if (newVarType == varType && newVarName == varName && newBody == body) {
-			return this;
-		} else {
-			return make(newVarName, newVarType, newBody);
-		}
-
-	}
-
-	@Override
-	public Abstraction copy(CopyData cd) {
-		if (cd.containsCopyFor(this)) return (Abstraction) cd.getCopyFor(this);
-		
-		Abstraction clone = (Abstraction) super.clone();
-		
-		cd.addCopyFor(this, clone);
-
-		clone.varType = clone.varType.copy(cd);
-		clone.body = clone.body.copy(cd);
-
-		return clone;
-	}
 }

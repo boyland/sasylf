@@ -13,12 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.util.ErrorReport;
-import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -608,30 +603,6 @@ public abstract class Term implements Cloneable{
 		FreeVar fv = other.getEtaPermutedEquivFreeVar(null,null);
 		if (fv != null && fv != other) return contains(fv);
 		return this.equals(other) || containsProper(other);
-	}
-
-	/**
-	 * Replace all occurences of <code>from</code> with <code>to</code> in this term.
- 	 * @param from the string to replace
-	 * @param to the string to replace it with
-	 * @return the term with the replacement made
-	 */
-	public abstract Term substitute(String from, String to);
-	
-	/**
-	 * Create a deep copy of this term
- 	 * @param cd the data to use during the cloning process
-	 * @return a deep copy of this term
-	 */
-	public abstract Term copy(CopyData cd);
-
-	public Term clone() {
-		try {
-			return (Term) super.clone();
-		} catch (CloneNotSupportedException e) {
-			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
-			throw new SASyLFError(report);
-		}
 	}
 
 }

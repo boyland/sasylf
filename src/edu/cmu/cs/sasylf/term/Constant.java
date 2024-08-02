@@ -2,7 +2,6 @@ package edu.cmu.cs.sasylf.term;
 
 import java.util.Queue;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class Constant extends Atom {
@@ -27,26 +26,4 @@ public class Constant extends Atom {
 		else throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);	
 	}
 
-	@Override
-	public Constant substitute(String from, String to) {
-		String name = getName();
-		String newName = name.equals(from) ? to : name;
-		if (name == newName) return this;
-		return new Constant(newName, type.substitute(from, to));
-	}
-
-	@Override
-	public Constant copy(CopyData cd) {
-		if (cd.containsCopyFor(this)) return (Constant) cd.getCopyFor(this);
-
-		Constant clone = (Constant) super.clone();
-		
-		cd.addCopyFor(this, clone);
-
-		if (clone.type != null) {
-			clone.type = clone.type.copy(cd);
-		}
-
-		return clone;
-	}
 }

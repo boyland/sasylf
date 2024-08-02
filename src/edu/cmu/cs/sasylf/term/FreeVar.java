@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Relation;
 import edu.cmu.cs.sasylf.util.TransitiveRelation;
@@ -293,24 +291,4 @@ public class FreeVar extends Atom {
 			return this;
 	}
 
-	@Override
-	public FreeVar substitute(String from, String to) {
-		if (from.equals(getName())) return new FreeVar(to, type.substitute(from, to));
-		return this;
-	}
-
-	@Override
-	public FreeVar copy(CopyData cd) {
-		if (cd.containsCopyFor(this)) return (FreeVar) cd.getCopyFor(this);
-
-		FreeVar clone = (FreeVar) super.clone();
-
-		cd.addCopyFor(this, clone);
-
-		if (clone.type != null) {
-			clone.type = clone.type.copy(cd);
-		}
-
-		return clone;
-	}
 }

@@ -652,7 +652,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			clone.context = (ClauseDef) context.copy(cd);
 		}
 
-		if (clone.term != null) clone.term = clone.term.copy(cd);
+		clone.term = null;
 
 		clone.gnt = clone.gnt.copy(cd);
 
