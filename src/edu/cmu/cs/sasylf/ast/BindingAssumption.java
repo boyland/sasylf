@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.CopyData;
 
 /**

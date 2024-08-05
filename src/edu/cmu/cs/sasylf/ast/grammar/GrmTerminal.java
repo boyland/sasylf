@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.Element;
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.*;
 import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorReport;

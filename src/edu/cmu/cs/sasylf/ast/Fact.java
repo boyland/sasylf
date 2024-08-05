@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;

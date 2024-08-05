@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Atom;

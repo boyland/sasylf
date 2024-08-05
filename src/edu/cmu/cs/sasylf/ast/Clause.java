@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;

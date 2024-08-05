@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.Token;
 
 /**

@@ -8,8 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
-import edu.cmu.cs.sasylf.SubstitutionData.SubstitutionType;
+import edu.cmu.cs.sasylf.ast.SubstitutionData.SubstitutionType;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;

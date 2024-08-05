@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;

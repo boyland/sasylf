@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
 import edu.cmu.cs.sasylf.util.CopyData;

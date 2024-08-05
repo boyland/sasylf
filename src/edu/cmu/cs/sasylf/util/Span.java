@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 
 /**
  * A span of text in the input file.

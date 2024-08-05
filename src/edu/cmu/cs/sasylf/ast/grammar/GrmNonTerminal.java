@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
 import edu.cmu.cs.sasylf.util.CopyData;
 

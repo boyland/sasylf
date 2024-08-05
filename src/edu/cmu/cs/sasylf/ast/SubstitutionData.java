@@ -1,12 +1,7 @@
-package edu.cmu.cs.sasylf;
+package edu.cmu.cs.sasylf.ast;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import edu.cmu.cs.sasylf.ast.Judgment;
-import edu.cmu.cs.sasylf.ast.NonTerminal;
-import edu.cmu.cs.sasylf.ast.Syntax;
-import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
-import edu.cmu.cs.sasylf.ast.Theorem;
 
 /**
  * SubstitutionData holds information about a substitution that is being performed on a CompUnit.

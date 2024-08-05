@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.CopyData;

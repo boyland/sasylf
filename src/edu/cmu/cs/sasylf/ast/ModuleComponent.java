@@ -3,7 +3,6 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.util.CopyData;
 
 /**
