@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.Reduction;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
@@ -19,6 +18,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

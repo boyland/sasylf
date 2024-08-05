@@ -1,7 +1,5 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CopyData;
-
 public class DefaultSpan extends Span {
 
 	public DefaultSpan(Location l) {

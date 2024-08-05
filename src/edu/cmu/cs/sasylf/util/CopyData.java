@@ -1,4 +1,4 @@
-package edu.cmu.cs.sasylf;
+package edu.cmu.cs.sasylf.util;
 
 import java.util.IdentityHashMap;
 import java.util.Map;

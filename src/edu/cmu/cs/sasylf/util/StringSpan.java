@@ -1,6 +1,5 @@
 package edu.cmu.cs.sasylf.util;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.parser.Token;
 
 

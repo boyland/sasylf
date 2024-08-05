@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
@@ -27,6 +26,7 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

@@ -3,8 +3,8 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.CopyData;
 
 /**
  * Represents an argument or parameter to a CompUnit.

@@ -1,8 +1,8 @@
 package edu.cmu.cs.sasylf.ast.grammar;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.grammar.NonTerminal;
+import edu.cmu.cs.sasylf.util.CopyData;
 
 public class GrmNonTerminal implements NonTerminal {
 	public GrmNonTerminal(String s) { string = s; }

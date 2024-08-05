@@ -1,8 +1,8 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.reduction.StructuralInduction;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

@@ -3,10 +3,10 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

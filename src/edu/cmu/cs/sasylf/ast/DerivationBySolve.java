@@ -2,12 +2,12 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.prover.Proof;
 import edu.cmu.cs.sasylf.prover.ProofImpl;
 import edu.cmu.cs.sasylf.prover.Prover;
 import edu.cmu.cs.sasylf.prover.SolveReport;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;

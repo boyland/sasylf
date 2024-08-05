@@ -1,7 +1,7 @@
 package edu.cmu.cs.sasylf.ast;
 
-import edu.cmu.cs.sasylf.CopyData;
 import edu.cmu.cs.sasylf.SubstitutionData;
+import edu.cmu.cs.sasylf.util.CopyData;
 
 /**
  * A syntax assumption with a context, and maybe bindings
