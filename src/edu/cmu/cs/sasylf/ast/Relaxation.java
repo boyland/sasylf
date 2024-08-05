@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import edu.cmu.cs.sasylf.CopyData;
-import edu.cmu.cs.sasylf.SubstitutionData;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -21,10 +19,8 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
-import edu.cmu.cs.sasylf.util.ErrorReport;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
-import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 /**
@@ -39,9 +35,9 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class Relaxation {
 
-	private List<Term>     types;
-	private List<FreeVar>  values;
-	private NonTerminal    result;
+	private final List<Term>     types;
+	private final List<FreeVar>  values;
+	private final NonTerminal    result;
 
 	public Relaxation(List<Abstraction> abs, List<FreeVar> ts, NonTerminal r) {
 		types = new ArrayList<Term>();
@@ -349,5 +345,4 @@ public class Relaxation {
 		// We don't add the relaxation to the context
 		return relax;
 	}
-
 }
