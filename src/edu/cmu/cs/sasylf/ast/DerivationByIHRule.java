@@ -53,8 +53,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 		super.typecheck(ctx);
 		RuleLike ruleLike = getRule(ctx);
 
-		// the bug has something to do with the code below this
-
 		int n = getArgs().size();
 
 		List<Abstraction> addedContext = new ArrayList<Abstraction>();
