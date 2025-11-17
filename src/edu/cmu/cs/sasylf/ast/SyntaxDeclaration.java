@@ -237,6 +237,9 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	 */
 	@Override
 	public void postcheck(Context ctx) {
+		if (isInfinitelyAmbiguous()) {
+			ErrorHandler.recoverableError(Errors.SYNTAX_INFINITELY_AMBIGUOUS, this);
+		}
 		if (!isProductive()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
 		}
@@ -314,7 +317,95 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		}
 		return false;
 	}
+	
+	private Collection<SyntaxDeclaration> includes = new ArrayList<>();
+	private Status includesStatus = Status.NOTSTARTED;
+	private static List<SyntaxDeclaration> includesWorklist = new ArrayList<>(); 
 
+	public boolean isInfinitelyAmbiguous() {
+		if (isAbstract) return false; // by assumption
+		ensureIncludesDone();
+		return includes.contains(this);
+	}
+	
+	public boolean isNullable() {
+		if (isAbstract) return false; // by assumption
+		ensureIncludesDone();
+		return includes.contains(null);
+	}
+		
+	private void ensureIncludesDone() {
+		if (includesStatus == Status.DONE) return;
+		if (includesWorklist.isEmpty()) {
+			// start a new analysis
+			includesWorklist.add(this);
+			includesStatus = Status.INPROCESS;
+			boolean changed;
+			do {
+				int n = includesWorklist.size();
+				changed = false;
+				List<SyntaxDeclaration> copy = new ArrayList<SyntaxDeclaration>(includesWorklist);
+				for (SyntaxDeclaration sd : copy) {
+					if (sd.computeIncludes()) {
+						changed = true;
+					}
+				}
+				if (n != includesWorklist.size()) {
+					changed = true;
+				}
+			} while (changed);
+			for (SyntaxDeclaration sd : includesWorklist) {
+				sd.includesStatus = Status.DONE;
+			}
+			includesWorklist.clear();
+		} else if (includesStatus == Status.NOTSTARTED) {
+			includesStatus = Status.INPROCESS;
+			includes.clear();
+			includesWorklist.add(this);
+		}
+	}
+	
+	/**
+	 * Determine what nonterminals this one includes
+	 * @return whether the set of includes changed.
+	 */
+	private boolean computeIncludes() {
+		boolean result = false;
+		clauseLoop: for (Clause cl : elements) {
+			int n = cl.getElements().size();
+			int nullable = 0;
+			SyntaxDeclaration nonNullable = null;
+			for (Element e : cl.getElements()) {
+				if (e instanceof Terminal || e instanceof Variable) {
+					continue clauseLoop; // terminals mean nothing to do
+				}
+				ElementType ty = e.getType();
+				if (!(ty instanceof SyntaxDeclaration)) {
+					throw new InternalError("what is this: " + e);
+				}
+				if (((SyntaxDeclaration)ty).isNullable()) ++nullable;
+				else nonNullable = (SyntaxDeclaration)ty;
+			}
+			if (nullable < n - 1) continue; // no includes possible
+			if (nullable == n) {
+				if (!includes.contains(null)) {
+					includes.add(null);
+					result = true;
+				}
+			}
+			for (Element e : cl.getElements()) {
+				ElementType ty = e.getType();
+				if (nullable == n || nonNullable == ty) {
+					if (!includes.contains(ty)) {
+						includes.add((SyntaxDeclaration)ty);
+						result = true;
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
 	private int contextFormCode = -1;
 	private ClauseDef terminalCase = null;
 

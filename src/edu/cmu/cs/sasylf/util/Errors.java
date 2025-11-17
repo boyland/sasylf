@@ -61,6 +61,7 @@ public enum Errors {
 	SYNTAX_UNDECLARED ("no nonterminal matches this identifier; did you forget to declare it as a terminal?"),
 	SYNTAX_REDECLARED ("nonterminal already declared"),
 	SYNTAX_UNPRODUCTIVE ("this syntax is unproductive.  You need a production that can actually generate a string."),
+	SYNTAX_INFINITELY_AMBIGUOUS("this syntax is infinitely ambiguous.  Make sure that it cannot derive itself."),
 	SYNTAX_VARIABLE_MISSING ("no syntax found for variable.  Did you forget to make it a case of a BNF syntax definition?"),
 	SYNTAX_VARIABLE_TWICE ("the same variable may not appear in multiple syntax definitions"),
 	SYNTAX_SUBORDINATION_ERROR ("there is no way to use this variable in the syntax: "),
