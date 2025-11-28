@@ -1,0 +1,151 @@
+// binding later arguments wouldn't accept syntax
+package regression;
+
+terminals lambda
+
+syntax
+  t ::= \ x => t[x]
+     |  t t
+     | x
+
+  Gamma ::= *
+         | Gamma, x
+
+judgment neutral: Gamma |- ! t
+assumes Gamma
+
+   ---------------- neutral-var
+   Gamma, x |- ! x
+
+   Gamma |- ! t1
+   Gamma |- t2 -/>
+   -------------------- neutral-app
+   Gamma |- ! t1 t2
+   
+judgment normal: Gamma |- t -/>
+assumes Gamma
+
+   Gamma |- ! t
+   ---------------------- normal-neutral
+   Gamma |- t -/>
+   
+   Gamma, x |- t[x] -/>
+   ----------------------------- normal-lam
+   Gamma |- \ x => t[x] -/>
+   
+lemma uninteresting:
+    assumes Gamma
+    // all these extra parameters ae needed to avoid "unification incomplete"
+    forall t[x][x'] assumes (Gamma, x, x')
+    forall t'[x] assumes Gamma, x
+    forall t''[x'] assumes Gamma, x'
+    forall n: Gamma |- ! t[\ x => t'[x]][\ x' => t''[x']]
+    exists Gamma,x,x' |- ! t[x][x']
+    proof by induction on (t[x][x'] assumes (Gamma, x, x')):
+        case x assumes Gamma, x, x' is
+            n1: Gamma, x |- !x by rule neutral-var
+            n1': Gamma, x, x' |- !x by weakening on n1
+        end case
+        case x' assumes Gamma, x, x' is
+            n1: Gamma, x, x' |- !x' by rule neutral-var
+        end case
+        case x'' assumes Gamma', x'', x, x' is
+            n1: Gamma', x'' |- !x'' by rule neutral-var
+            n1': Gamma', x'', x, x' |- !x'' by weakening on n1
+            n1'': Gamma, x, x' |- ! t[x][x'] by n1'
+        end case
+        case \ x'' => t1[x][x'][x''] assumes Gamma, x, x' is
+            proof by contradiction on n
+        end case 
+        case t1[x][x'] t2[x][x'] assumes Gamma, x, x' is
+            proof by case analysis on n:
+                case rule
+                    n1: Gamma |- !t1[\ x=>t'[x]][\x' => t''[x']]
+                    n2: Gamma |- t2[\ x=>t'[x]][\x' => t''[x']] -/>
+                    ----------------------------------------------- neutral-app 
+                    _: Gamma |- ! (t1[\ x=>t'[x]][\x' => t''[x']]
+                                   t2[\ x=>t'[x]][\x' => t''[x']])
+                is
+                    n1': Gamma, x, x' |- !t1[x][x'] by lemma uninteresting on 
+                        (t1[x][x'] assumes Gamma, x, x'), 
+                        (t'[x] assumes Gamma, x),
+                        (t''[x'] assumes Gamma, x'),
+                        n1
+                    n2': Gamma, x, x' |- t2[x][x'] -/> by lemma uninteresting2 on 
+                        (t2[x][x'] assumes Gamma, x, x'),
+                        (t'[x] assumes Gamma, x),
+                        (t''[x'] assumes Gamma, x'),n2
+                    proof by rule neutral-app on n1', n2'
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
+and
+lemma uninteresting2:
+    assumes Gamma
+    forall t[x][x'] assumes (Gamma, x, x')
+    forall t'[x] assumes Gamma, x
+    forall t''[x'] assumes Gamma, x'
+    forall n: Gamma |- t[\ x => t'[x]][\ x' => t''[x']] -/>
+    exists Gamma,x,x' |- t[x][x'] -/>
+    proof by induction on (t[x][x'] assumes (Gamma, x, x')):
+        case x assumes Gamma, x, x' is
+            n1: Gamma, x |- !x by rule neutral-var
+            n1': Gamma, x, x' |- !x by weakening on n1
+            proof by rule normal-neutral on n1'
+        end case
+        case x' assumes Gamma, x, x' is
+            n1: Gamma, x, x' |- !x' by rule neutral-var
+            proof by rule normal-neutral on n1
+        end case
+        case x'' assumes Gamma', x'', x, x' is
+            n1: Gamma', x'' |- !x'' by rule neutral-var
+            n1': Gamma', x'', x, x' |- !x'' by weakening on n1
+            n1'': Gamma, x, x' |- ! t[x][x'] by n1'
+            proof by rule normal-neutral on n1''
+        end case
+        case \ x'' => t1[x][x'][x''] assumes Gamma, x, x' is
+            proof by case analysis on n:
+                case rule
+                    n1: Gamma |- ! \x''=>t1[\x=>t'[x]][\x'=>t''[x']][x'']
+                    --------------------------------------------------- normal-neutral
+                    _: Gamma |- \x'' => t1[\x=>t'[x]][\x'=>t''[x']][x''] -/>
+                is
+                    proof by contradiction on n1
+                end case
+                case rule
+                    n1: Gamma, x'' |- t1[\x=>t'[x]][\x'=>t''[x']][x''] -/>
+                    --------------------------------------------------- normal-lam
+                    _: Gamma |- \x'' => t1[\x=>t'[x]][\x'=>t''[x']][x''] -/>
+                is
+                    n1': Gamma, x'', x, x' |- t1[x][x'][x''] -/> by induction hypothesis on
+                      (t1[x][x'][x''] assumes Gamma, x'', x, x'),
+                      (t'[x] assumes Gamma, x'', x),
+                      (t''[x'] assumes Gamma, x'', x'), n1
+                    n1'': Gamma, x, x', x'' |- t1[x][x'][x''] -/> by exchange on n1'
+                    proof by rule normal-lam on n1''
+                end case
+            end case analysis
+        end case
+        case t1[x][x'] t2[x][x'] assumes Gamma, x, x' is
+            proof by case analysis on n:
+                case rule
+                    n': Gamma |- ! (t1[\ x=>t'[x]][\x' => t''[x']]
+                                    t2[\ x=>t'[x]][\x' => t''[x']])
+                    ----------------------------------------------- normal-neutral 
+                    _: Gamma |- (t1[\ x=>t'[x]][\x' => t''[x']]
+                                 t2[\ x=>t'[x]][\x' => t''[x']]) -/>
+                is
+                    n'': Gamma, x, x' |- !(t1[x][x'] t2[x][x']) by lemma uninteresting on 
+                      (t1[x][x'] t2[x][x'] assumes Gamma, x, x'), 
+                      (t'[x] assumes Gamma, x),
+                      (t''[x'] assumes Gamma, x'), n'
+                    proof by rule normal-neutral on n''
+                end case
+            end case analysis
+        end case
+    end induction
+end lemma
+
+

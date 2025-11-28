@@ -1806,11 +1806,10 @@ Element Term() :
 Binding Binding() :
 { Token t,u; Element e; List<Element> l = new ArrayList<Element>(); }
 {
-  t=<IDENTIFIER> "["
+  t=<IDENTIFIER> ( "["
   	(LOOKAHEAD({ isVarBindingArg() }) e=Term()
   	 | e=Expr())
-  	u="]" { l.add(e); }
-  ( "[" e=Term() { l.add(e); } u="]" )*
+  	u="]" { l.add(e); } )+
   { return new Binding(new Location(t), getNonTerminal(t), l, new Location(u).add(1)); }
 }
 
