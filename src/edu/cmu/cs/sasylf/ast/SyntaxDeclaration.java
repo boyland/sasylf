@@ -173,6 +173,10 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			}
 		}
 		
+		if (isInfinitelyAmbiguous(ctx)) {
+			ErrorHandler.error(Errors.SYNTAX_INFINITELY_AMBIGUOUS, this);
+		}
+		
 		int countVarOnly = 0;
 		for (int i = 0; i < elements.size(); ++i) {
 			Clause c = elements.get(i);
@@ -237,9 +241,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	 */
 	@Override
 	public void postcheck(Context ctx) {
-		if (isInfinitelyAmbiguous()) {
-			ErrorHandler.recoverableError(Errors.SYNTAX_INFINITELY_AMBIGUOUS, this);
-		}
 		if (!isProductive()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
 		}
@@ -322,19 +323,19 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	private Status includesStatus = Status.NOTSTARTED;
 	private static List<SyntaxDeclaration> includesWorklist = new ArrayList<>(); 
 
-	public boolean isInfinitelyAmbiguous() {
+	public boolean isInfinitelyAmbiguous(Context ctx) {
 		if (isAbstract) return false; // by assumption
-		ensureIncludesDone();
+		ensureIncludesDone(ctx);
 		return includes.contains(this);
 	}
 	
-	public boolean isNullable() {
+	public boolean isNullable(Context ctx) {
 		if (isAbstract) return false; // by assumption
-		ensureIncludesDone();
+		ensureIncludesDone(ctx);
 		return includes.contains(null);
 	}
 		
-	private void ensureIncludesDone() {
+	private void ensureIncludesDone(Context ctx) {
 		if (includesStatus == Status.DONE) return;
 		if (includesWorklist.isEmpty()) {
 			// start a new analysis
@@ -346,7 +347,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 				changed = false;
 				List<SyntaxDeclaration> copy = new ArrayList<SyntaxDeclaration>(includesWorklist);
 				for (SyntaxDeclaration sd : copy) {
-					if (sd.computeIncludes()) {
+					if (sd.computeIncludes(ctx)) {
 						changed = true;
 					}
 				}
@@ -369,7 +370,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	 * Determine what nonterminals this one includes
 	 * @return whether the set of includes changed.
 	 */
-	private boolean computeIncludes() {
+	private boolean computeIncludes(Context ctx) {
 		boolean result = false;
 		clauseLoop: for (Clause cl : elements) {
 			int n = cl.getElements().size();
@@ -380,10 +381,20 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 					continue clauseLoop; // terminals mean nothing to do
 				}
 				ElementType ty = e.getType();
-				if (!(ty instanceof SyntaxDeclaration)) {
-					throw new InternalError("what is this: " + e);
+				// unfortunately we have to handle this check being done before
+				// parsing because otherwise the grammar can be polluted.
+				// Thus we have to do basic parsing here:
+				if (e instanceof NonTerminal) {
+					String text = ((NonTerminal)e).getSymbol();
+					if (ctx.termSet.contains(text)) continue; // a terminal
+					ty = ctx.getSyntax(text);
+					if (ty != null) ((NonTerminal) e).setType((SyntaxDeclaration)ty);
 				}
-				if (((SyntaxDeclaration)ty).isNullable()) ++nullable;
+				if (!(ty instanceof SyntaxDeclaration)) {
+					// ignore this: not a potential cycle
+					continue;
+				}
+				if (((SyntaxDeclaration)ty).isNullable(ctx)) ++nullable;
 				else nonNullable = (SyntaxDeclaration)ty;
 			}
 			if (nullable < n - 1) continue; // no includes possible
@@ -395,6 +406,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			}
 			for (Element e : cl.getElements()) {
 				ElementType ty = e.getType();
+				if (ty == null) continue; 
 				if (nullable == n || nonNullable == ty) {
 					if (!includes.contains(ty)) {
 						includes.add((SyntaxDeclaration)ty);
@@ -436,6 +448,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	 */
 	private int computeContextForm() {
 		// one case must have only terminals
+		if (isInfinitelyAmbiguous(null)) return 0;
 		int terminalCaseCount = 0;
 		int contextCaseCount = 0;
 		for (Clause c : getClauses()) {

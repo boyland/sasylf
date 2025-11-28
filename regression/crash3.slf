@@ -1,0 +1,13 @@
+terminals S
+
+syntax
+
+n ::= 0  //! infinitely ambiguous
+   | S n
+   | n
+
+judgment lt: n < n
+
+   ------- lt-z
+   0 < S n //! using bad syntax
+

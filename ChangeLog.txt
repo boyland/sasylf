@@ -14,7 +14,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 RELEASE HISTORY
 
 1.5.2	Bug fixes
-    Resolved issues #114, #119, #121, #122
+    Resolved issues #114, #119, #121, #122, #123
 1.5.1	Bug fixes
 	Better error handling in syntactic sugar
 	Bug fix: "_" could be used, which was confusing.
