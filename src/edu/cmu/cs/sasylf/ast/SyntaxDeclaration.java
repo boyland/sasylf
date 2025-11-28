@@ -188,6 +188,16 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 				elements.set(i, cd);
 				ctx.setProduction(cd.getConstructorName(),cd);
 				ctx.parseMap.put(cd.getElemTypes(), cd);
+
+				GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);
+				ctx.ruleSet.add(r);
+
+				if (r.getRightSide().size() > 1 || r.getRightSide().get(0) instanceof GrmTerminal) {
+					GrmRule rParens = new GrmRule(getSymbol(), new ArrayList<Symbol>(r.getRightSide()), cd);
+					rParens.getRightSide().add(0, GrmUtil.getLeftParen());
+					rParens.getRightSide().add(GrmUtil.getRightParen());					
+					ctx.ruleSet.add(rParens);
+				}
 			}
 		}
 
@@ -205,6 +215,15 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			}
 		}
 
+		// compute a rule mapping the terminal for this Syntax to the NonTerminal for this Syntax, with and without parens
+		GrmRule termRule = new GrmRule(getSymbol(), new GrmTerminal[] { getTermSymbol() }, null);
+		ctx.ruleSet.add(termRule);
+		termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.getLeftParen(), getTermSymbol(), GrmUtil.getRightParen() }, null);
+		ctx.ruleSet.add(termRule);
+
+		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
+		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
+		ctx.ruleSet.add(startRule);
 	}
 	
 	/**
@@ -220,33 +239,6 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	public void postcheck(Context ctx) {
 		if (isInfinitelyAmbiguous()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_INFINITELY_AMBIGUOUS, this);
-		} else {
-			// don't do this unless syntax will not cause parser to loop (issue #123)
-			for (int i = 0; i < elements.size(); ++i) {
-				Clause c = elements.get(i);	
-				if (c instanceof ClauseDef) {
-					ClauseDef cd = (ClauseDef)c;
-
-					GrmRule r = new GrmRule(getSymbol(), cd.getSymbols(), cd);
-					ctx.ruleSet.add(r);
-
-					if (r.getRightSide().size() > 1 || r.getRightSide().get(0) instanceof GrmTerminal) {
-						GrmRule rParens = new GrmRule(getSymbol(), new ArrayList<Symbol>(r.getRightSide()), cd);
-						rParens.getRightSide().add(0, GrmUtil.getLeftParen());
-						rParens.getRightSide().add(GrmUtil.getRightParen());					
-						ctx.ruleSet.add(rParens);
-					}
-				}
-			}
-			// compute a rule mapping the terminal for this Syntax to the NonTerminal for this Syntax, with and without parens
-			GrmRule termRule = new GrmRule(getSymbol(), new GrmTerminal[] { getTermSymbol() }, null);
-			ctx.ruleSet.add(termRule);
-			termRule = new GrmRule(getSymbol(), new GrmTerminal[] { GrmUtil.getLeftParen(), getTermSymbol(), GrmUtil.getRightParen() }, null);
-			ctx.ruleSet.add(termRule);
-
-			// compute a rule mapping the start symbol to the NonTerminal for this Syntax
-			GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
-			ctx.ruleSet.add(startRule);
 		}
 		if (!isProductive()) {
 			ErrorHandler.recoverableError(Errors.SYNTAX_UNPRODUCTIVE, this);
