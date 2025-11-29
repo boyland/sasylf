@@ -1,0 +1,108 @@
+.proof-area {
+	justify-content: center;
+	justify-self: center;
+	position: absolute;
+	bottom: 0;
+}
+
+.node-line {
+	background-color: black;
+	height: 4px;
+	border-radius: 5px;
+	width: stretch;
+}
+
+.topdown-close {
+	position: relative;
+	bottom: 29px;
+}
+
+.proof-node {
+	font-family: "Courier New", monospace;
+	align-items: flex-end;
+}
+
+.drop-area {
+	display: flex;
+	align-items: center;
+	position: relative;
+	border: dashed;
+	border-radius: 10px;
+	bottom: 11px;
+	white-space: nowrap;
+}
+
+.drop-node-area {
+	display: flex;
+	border: dashed;
+	border-radius: 10px;
+	width: stretch;
+	text-align: center;
+	white-space: nowrap;
+	align-items: center;
+	justify-content: center;
+}
+
+.fill-width {
+	flex: 1;
+}
+
+.no-wrap {
+	white-space: nowrap;
+}
+
+.topdown-rule {
+	position: relative;
+	white-space: nowrap;
+	bottom: -3px;
+}
+
+.topdown-node {
+	align-items: flex-end;
+	font-family: "Courier New", monospace;
+}
+
+.topdown-close {
+	position: relative;
+	bottom: 29px;
+}
+
+.drop-container {
+	white-space: nowrap;
+	align-self: stretch;
+	align-items: flex-end;
+}
+
+.premises {
+	justify-content: center;
+}
+
+.premise {
+	margin-right: 30px;
+}
+
+.premise:last-child {
+	margin-right: 0;
+}
+
+.centered-text {
+	text-align: center;
+}
+
+.spacer {
+	visibility: hidden;
+}
+
+.conclusion {
+	margin: auto;
+	align-items: center;
+	width: fit-content;
+}
+
+.name-input {
+	width: 65px;
+}
+
+.root-node {
+	margin: 0 20px 10px 20px;
+}

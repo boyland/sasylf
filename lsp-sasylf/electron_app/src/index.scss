@@ -1,0 +1,15 @@
+@import "~bootstrap/scss/bootstrap";
+@import "styles/bank";
+@import "styles/proof";
+@import "styles/canvas";
+@import "styles/close";
+@import "styles/app";
+
+html,
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+		Arial, sans-serif;
+	margin: auto;
+	height: 100%;
+	padding: 1rem;
+}

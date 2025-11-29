@@ -1,0 +1,109 @@
+{
+	"name": "SASyLF",
+	"description": "A language server for SASyLF",
+	"icon": "images/sasylf.png",
+	"version": "2.0.0",
+	"publisher": "sasylf",
+	"license": "MIT",
+	"keywords": [
+		"SASyLF",
+		"theorem prover",
+		"educative"
+	],
+	"engines": {
+		"vscode": "^1.74.0"
+	},
+	"activationEvents": [
+		"onLanguage:sasylf"
+	],
+	"main": "./client/out/extension",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "sasylf",
+			"properties": {
+				"sasylf.maxNumberOfProblems": {
+					"scope": "resource",
+					"type": "number",
+					"default": 100,
+					"description": "Controls the maximum number of problems produced by the server."
+				},
+				"sasylf.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				}
+			}
+		},
+		"languages": [
+			{
+				"id": "sasylf",
+				"aliases": [
+					"SASyLF"
+				],
+				"extensions": [
+					".slf"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "sasylf",
+				"scopeName": "source.sasylf",
+				"path": "./syntaxes/sasylf.tmLanguage.json"
+			}
+		],
+		"themes": [
+			{
+				"label": "Default Theme",
+				"id": "sasylf.defaultTheme",
+				"path": "./themes/defaultTheme.json"
+			}
+		],
+		"commands": [
+			{
+				"command": "sasylf.Validate",
+				"title": "Validate Current Document"
+			},
+			{
+				"command": "sasylf.App",
+				"title": "Open App"
+			}
+		]
+	},
+	"prettier": {
+		"useTabs": true
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile && npm run esbuild-base -- --minify",
+		"esbuild-base": "esbuild ./client/src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+		"esbuild": "npm run esbuild-base -- --sourcemap",
+		"esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+		"test-compile": "tsc -p ./",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+		"postinstall": "cd client && npm install && cd ../server && npm install && cd .."
+	},
+	"devDependencies": {
+		"@types/mocha": "^9.1.0",
+		"@types/node": "^16.11.7",
+		"@typescript-eslint/eslint-plugin": "^5.42.0",
+		"@typescript-eslint/parser": "^5.42.0",
+		"electron": "^28.0.0",
+		"esbuild": "^0.19.2",
+		"eslint": "^8.26.0",
+		"mocha": "^9.2.1",
+		"typescript": "^4.9.4"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/boyland/sasylf"
+	}
+}
