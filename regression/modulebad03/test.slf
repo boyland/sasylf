@@ -1,0 +1,31 @@
+package regression.modulebad03
+
+module test provides
+
+terminals T F
+
+syntax b ::= T | F
+
+judgment lor: b \/ b = b
+
+  --------- lorrule1
+  T \/ b = T
+
+  --------- lorrule2
+  F \/ b = b
+
+theorem lor-commutative:
+  forall d1: b1 \/ b2 = b3
+  exists b2 \/ b1 = b3
+  proof by unproved //!
+end theorem
+
+theorem lor-commutative-wrong:
+  forall d1: b1 \/ b2 = b3
+  exists b1 \/ b2 = b3
+  proof by unproved //!
+end theorem
+
+module m1 = regression.modulebad03.functor[b, lor, lor-commutative]
+
+module m2 = regression.modulebad03.functor[b, lor, lor-commutative-wrong] //!

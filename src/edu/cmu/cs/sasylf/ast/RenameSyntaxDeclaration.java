@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -18,7 +19,7 @@ import edu.cmu.cs.sasylf.util.Location;
  * Make sure it works even when the source is hidden in a module.
  */
 public class RenameSyntaxDeclaration extends SyntaxDeclaration {
-	private final QualName source;
+	private QualName source;
 	private SyntaxDeclaration original;
 	
 	/**
@@ -58,6 +59,7 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	@Override
 	public void updateContext(Context ctx) {
 		Object resolution = source.resolveNotPackage(ctx);
+		// and here
 		if (resolution != null) {
 			if (resolution instanceof SyntaxDeclaration) {
 				original = (SyntaxDeclaration)resolution;
@@ -178,4 +180,52 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
+
+		/*
+			public QualName source;
+			public SyntaxDeclaration original;
+		*/
+
+		if (source != null) source.substitute(sd);
+		if (original != null) original.substitute(sd);
+
+	}
+
+	@Override
+	public RenameSyntaxDeclaration copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (RenameSyntaxDeclaration) cd.getCopyFor(this);
+
+		RenameSyntaxDeclaration clone = (RenameSyntaxDeclaration) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		if (clone.source != null) {
+			clone.source = clone.source.copy(cd);
+		}
+		
+		if (clone.original != null) {
+			clone.original = clone.original.copy(cd);
+		}
+		return clone;
+	}
+
+	@Override
+	public SyntaxDeclaration getOriginalDeclaration() {
+
+		/*
+		 * Since this is a renamed syntax declaration, we need to find the original
+		 * declaration that was renamed.
+		 * 
+		 * Call getOriginalDeclaration() recursively on original until we find
+		 * the original syntax declaration.
+		 */
+
+		return original.getOriginalDeclaration();
+
+	}
+
 }

@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.module.Module;
 import edu.cmu.cs.sasylf.module.ModuleId;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -19,11 +20,49 @@ import edu.cmu.cs.sasylf.util.Location;
  * </ul>
  */
 public class QualName extends Node {
-	private final QualName source;
-	private final String name;
+	private QualName source;
+	private String name;
+
+	/*
+	 * Substitutable indicates whether this QualName is allowed to be replaced during substitution.
+	 * Qualnames can be replaced during substitution in ModulePart.substitute.
+	 * Substitutable is set to true by default, and should be set to false after the QualName is substituted into.
+	 * This is to prevent the QualName from being replaced if there is a QualName module parameter with the same symbol.
+	 */
+	private boolean substitutable; // whether this QualName is allowed to be replaced during substitution
 	
 	private Object resolution;
 	private int version;
+
+	public String getName() {
+		return name;
+	}
+	
+	/**
+	 * Whether this QualName is allowed to be replaced during substitution.
+	 * @return
+	 */
+	public boolean isSubstitutable() {
+		return substitutable;
+	}
+
+	/**
+	 * Set this QualName to be unsubstitutable.
+	 * Should be called after a QualName is substituted into.
+	 */
+	public void setUnsubstitutable() {
+		substitutable = false;
+	}
+
+	/**
+	 * Set the resolution of this QualName to null.
+	 * 
+	 * This is used after cloning and substitution so that the resolution is
+	 * recomputed when needed.
+	 */
+	public void nullifyResolution() {
+		resolution = null;
+	}
 	
 	/**
 	 * Create a qualified name attached (using ".") to a previous qualified name
@@ -35,6 +74,7 @@ public class QualName extends Node {
 		super(qn == null ? loc : qn.getLocation(),loc.add(name.length()));
 		source = qn;
 		this.name = name;
+		substitutable = true;
 	}
 	
 	/** Create an UNqualified name (without a dot).
@@ -94,11 +134,10 @@ public class QualName extends Node {
 	 */
 	public Object resolve(Context ctx) {
 		if (ctx == null) return resolution;
-		//System.out.println("version = " + ctx.version());
 		if (version != ctx.version()) resolution = null;
 		if (resolution == null) {
 			version = ctx.version();
-			if (source == null) {
+			if (source == null) { // if we are resolving it from the main (top level) module
 				resolution = ctx.modMap.get(name);
 				if (resolution == null) resolution = ctx.getSyntax(name);
 				if (resolution == null) resolution = ctx.ruleMap.get(name);
@@ -217,5 +256,39 @@ public class QualName extends Node {
 		
 		// otherwise, visit the source and do the same thing recursively
 		source.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+
+		/*
+		 * Nothing needs to be done to the QualName object itself
+		 * Just update the substitution data 
+		 */
+
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		if (getSource() == null && getName().equals(sd.getFrom()) && isSubstitutable()) {
+			name = sd.getTo();
+			nullifyResolution();
+			setUnsubstitutable();
+		}
+
+	}
+
+	@Override
+	public QualName copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (QualName) cd.getCopyFor(this);
+
+		QualName clone = (QualName) super.clone();
+
+		cd.addCopyFor(this, clone);
+
+		if (source != null) {
+			clone.source = clone.source.copy(cd);
+		}
+
+		return clone;
 	}
 }

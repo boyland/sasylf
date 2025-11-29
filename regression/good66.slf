@@ -1,0 +1,162 @@
+package regression
+
+module good65
+
+provides
+
+terminals S empty head isa A B C nempty aempty in
+
+syntax
+
+  n ::= 0 | S n
+
+  1 := S 0
+  2 := S 1
+  3 := S 2
+  4 := S 3
+  5 := S 4
+
+  abc ::= A | B | C
+
+module natset = regression.good65[n]
+
+module abcset = regression.good65[abc]
+
+syntax ns = natset.s ::= nempty | n :: ns
+
+syntax as = abcset.s ::= aempty | abc :: as
+
+judgment eqn = natset.eq : ns = ns
+
+judgment eqa = abcset.eq : as = as
+
+judgment ncontains = natset.contains : n in ns
+
+judgment acontains = abcset.contains : abc in as
+
+judgment nsubset = natset.subset : ns <= ns
+
+theorem t1:
+  exists 0 in 0 :: nempty
+  proof by rule natset.contains-1
+end theorem
+
+theorem t2:
+  exists 0 in 0 :: 0 :: nempty
+  proof by rule natset.contains-1
+end theorem
+
+theorem t3:
+  exists 0 in 0 :: 0 :: nempty
+  d1: 0 in 0 :: nempty by rule natset.contains-1
+  d2: 0 in 0 :: 0 :: nempty by rule natset.contains-2 on d1
+  proof by d2
+end theorem
+
+theorem t4:
+  exists 1 in 0 :: 1 :: nempty
+  d1: 1 in 1 :: nempty by rule natset.contains-1
+  d2: 1 in 0 :: 1 :: nempty by rule natset.contains-2 on d1
+  proof by d2
+end theorem
+
+theorem t5:
+  exists 5 in 0 :: 1 :: 2 :: 3 :: 4 :: 5 :: nempty
+  d1: 5 in 5 :: nempty by rule natset.contains-1
+  d2: 5 in 4 :: 5 :: nempty by rule natset.contains-2 on d1
+  d3: 5 in 3 :: 4 :: 5 :: nempty by rule natset.contains-2 on d2
+  d4: 5 in 2 :: 3 :: 4 :: 5 :: nempty by rule natset.contains-2 on d3
+  d5: 5 in 1 :: 2 :: 3 :: 4 :: 5 :: nempty by rule natset.contains-2 on d4
+  d6: 5 in 0 :: 1 :: 2 :: 3 :: 4 :: 5 :: nempty by rule natset.contains-2 on d5
+  proof by d6
+end theorem
+
+theorem t6:
+  exists A in A :: aempty
+  proof by rule abcset.contains-1
+end theorem
+
+theorem t7:
+  exists A in A :: A :: aempty
+  proof by rule abcset.contains-1
+end theorem
+
+theorem t8:
+  exists A in A :: A :: aempty
+  d1: A in A :: aempty by rule abcset.contains-1
+  d2: A in A :: A :: aempty by rule abcset.contains-2 on d1
+  proof by d2
+end theorem
+
+theorem t9:
+  exists B in A :: B :: aempty
+  d1: B in B :: aempty by rule abcset.contains-1
+  d2: B in A :: B :: aempty by rule abcset.contains-2 on d1
+  proof by d2
+end theorem
+
+theorem t10:
+  exists C in A :: B :: C :: aempty
+  d1: C in C :: aempty by rule abcset.contains-1
+  d2: C in B :: C :: aempty by rule abcset.contains-2 on d1
+  d3: C in A :: B :: C :: aempty by rule abcset.contains-2 on d2
+  proof by d3
+end theorem
+
+theorem t11:
+  exists C in A :: B :: C :: aempty
+  d1: C in C :: aempty by rule abcset.contains-1
+  d2: C in B :: C :: aempty by rule abcset.contains-2 on d1
+  d3: C in A :: B :: C :: aempty by rule abcset.contains-2 on d2
+  proof by d3
+end theorem
+
+theorem t12:
+  exists nempty <= nempty
+  proof by rule natset.subset-empty
+end theorem
+
+theorem t13:
+  exists nempty <= 0 :: nempty
+  proof by rule natset.subset-empty
+end theorem
+
+theorem t14:
+  exists 0 :: nempty <= 0 :: nempty
+  d1 : nempty <= 0 :: nempty by rule natset.subset-empty
+  d2: 0 in 0 :: nempty by rule natset.contains-1
+  d3: 0 :: nempty <= 0 :: nempty by rule natset.subset-cons on d1, d2
+  proof by d3
+end theorem
+
+theorem t15:
+  forall d1: ns1 <= ns2
+  forall d2: ns2 <= ns3
+  exists ns1 <= ns3
+  proof by theorem natset.subset-transitive on d1, d2
+end theorem
+
+theorem t16:
+  forall d1: ns1 <= ns2
+  forall d2: ns2 <= ns3
+  forall d3: ns3 <= ns4
+  forall d4: ns4 <= ns5
+  exists ns1 <= ns5
+  p1: ns1 <= ns3 by theorem natset.subset-transitive on d1, d2
+  p2: ns3 <= ns5 by theorem natset.subset-transitive on d3, d4
+  p3: ns1 <= ns5 by theorem natset.subset-transitive on p1, p2
+  proof by p3
+end theorem
+
+theorem t17:
+  forall d1: ns1 <= ns2
+  forall d2: ns2 <= ns3
+  forall d3: ns3 <= ns4
+  forall d4: ns4 <= ns5
+  exists ns1 <= ns5
+  p1: ns1 <= ns3 by theorem natset.subset-transitive on d1, d2
+  p2: ns1 <= ns4 by theorem natset.subset-transitive on p1, d3
+  p3: ns1 <= ns5 by theorem natset.subset-transitive on p2, d4
+
+  proof by p3
+end theorem

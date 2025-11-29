@@ -259,6 +259,30 @@ public enum Errors {
 	WHERE_REBOUND ("variable bound more than once in where clause"),
 	WHERE_OCCUR ("replacement for meta-variable should not include itself"),
 	INTERNAL_ERROR("SASyLF Internal Error"), // no known instances
+	
+	WRONG_NUM_MOD_ARGS("wrong number of module arguments. "),
+	MOD_ARG_TYPE_MISMATCH("module argument does not match the expected type. "),
+	
+	MOD_ARG_INVALID("Invalid module argument. "),
+	MOD_ARG_MISMATCH_SYNTAX("Module argument mismatch syntax. "),
+	MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS("Module argument syntax has the wrong number of productions. "),
+	MOD_ARG_JUDGMENT_WRONG_NUM_RULES("Module argument judgment has the wrong number of rules. "),
+	MOD_ARG_MISMATCH_JUDGMENT("Module argument mismatch judgment. "),
+	MOD_ARG_RULE_WRONG_NUM_PREMISES("Module argument rule has the wrong number of premises. "),
+	MOD_ARG_THEOREM_WRONG_NUM_FORALLS("Module theorem argument ahs the wrong number of foralls. "),
+	MOD_ARG_NONTERMINAL_MISMATCH("Nonterminals do not have the right structure in module theorem argument. "),
+	MOD_ARG_CAUSE_MISMATCH("Clause mismatch in module argument. "),
+	MOD_ARG_CLAUSE_WRONG_NUM_NOT_TERMINALS("Module argument clause has the wrong number of nonterminals. "),
+	MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH("Nonterminal type mismatch in module argument. "),
+	MOD_ARG_CLAUSE_CLASS_MISMATCH("Clause class mismatch in module argument. "),
+
+	MOD_ARG_SYNTAX_TYPE_MISMATCH("Syntax type mismatch in module argument. "),
+	MOD_ARG_JUDGMENT_TYPE_MISMATCH("Judgment type mismatch in module argument."),
+	MOD_ARG_CLAUSE_TYPE_MISMATCH("Clause type mismatch in module argument. "),
+	
+
+
+
 	UNSPECIFIED, // do not use
 	;
 

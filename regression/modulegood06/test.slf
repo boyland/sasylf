@@ -1,0 +1,193 @@
+package regression.modulegood06
+
+module demo
+
+provides
+ 
+terminals T F Leaf Node rev NLeaf S
+
+syntax boolid ::= F
+syntax boolnonid ::= T
+syntax b ::= !boolid | !!boolnonid
+
+judgment lor: b \/ b = b
+
+  --------------- lor-tt
+  !!T \/ !!T = !!T
+
+  --------------- lor-tf
+  !!T \/ !F = !!T
+
+  --------------- lor-ft
+  !F \/ !!T = !!T
+
+  --------------- lor-ff
+  !F \/ !F = !F
+
+theorem lor-commutative:
+  forall d1: b1 \/ b2 = b3
+  exists b2 \/ b1 = b3
+  proof by case analysis on d1:
+    case rule
+      --------------- lor-tt
+      _: (!! T) \/ (!! T) = (!! T)
+    is
+      proof by rule lor-tt
+    end case
+
+    case rule
+      --------------- lor-tf
+      _: (!! T) \/ (! F) = (!! T)
+    is
+      proof by rule lor-ft
+    end case
+
+    case rule
+      --------------- lor-ft
+      _: (! F) \/ (!! T) = (!! T)
+    is
+      proof by rule lor-tf
+    end case
+
+    case rule
+      --------------- lor-ff
+      _: (! F) \/ (! F) = (! F)
+    is
+      proof by rule lor-ff
+    end case
+
+    
+  end case analysis
+end theorem
+
+theorem lor-associative:
+  forall d1: b1 \/ b2 = b3
+  forall d2: b3 \/ b4 = b5
+  // (b1 \/ b2) \/ b4 = b1 \/ (b2 \/ b4)
+  forall d3: b2 \/ b4 = b6
+  exists b1 \/ b6 = b5
+  proof by unproved //!
+end theorem
+
+theorem lor-total:
+  forall b1
+  forall b2
+  exists b1 \/ b2 = b3
+  proof by unproved //!
+end theorem
+
+module boolbt = regression.modulegood06.foldablebt[boolid, boolnonid, b, lor, lor-commutative, lor-associative, lor-total]
+
+syntax bt = boolbt.bt ::= Leaf | Node bt b bt
+
+judgment foldbool = boolbt.fold : bt --> b
+
+judgment reversebool = boolbt.reverse: rev bt = bt
+
+
+theorem t1:
+  exists Leaf --> !boolid
+  d1: Leaf --> !boolid by rule boolbt.fold-leaf
+  proof by d1
+end theorem
+
+theorem t2:
+  exists Leaf --> !boolid
+  proof by theorem boolbt.fold-leaf-theorem
+end theorem
+
+theorem t3:
+  exists Node Leaf !!T Leaf --> !!T
+  d1: Leaf --> !boolid1 by rule boolbt.fold-leaf
+  d2: Leaf --> !boolid2 by rule boolbt.fold-leaf
+  d3: !boolid1 \/ !!T = !!T by case analysis on boolid1:
+    case F is
+      proof by rule lor-ft
+    end case
+  end case analysis
+
+  d4: !!T \/ !boolid2 = !!T by case analysis on boolid2:
+    case F is
+      proof by rule lor-tf
+    end case
+  end case analysis
+
+  d5: Node Leaf !!T Leaf --> !!T by rule boolbt.fold-Node on d1, d2, d3, d4
+
+  proof by d5
+end theorem
+
+theorem t4:
+  exists Node Leaf !F Leaf --> !F
+  d1: Leaf --> !boolid1 by rule boolbt.fold-leaf
+  d2: Leaf --> !boolid2 by rule boolbt.fold-leaf
+  d3: !boolid1 \/ !F = !F by case analysis on boolid1:
+    case F is
+      proof by rule lor-ff
+    end case
+  end case analysis
+
+  d4: !F \/ !boolid2 = !F by case analysis on boolid2:
+    case F is
+      proof by rule lor-ff
+    end case
+  end case analysis
+
+  d5: Node Leaf !F Leaf --> !F by rule boolbt.fold-Node on d1, d2, d3, d4
+
+  proof by d5
+end theorem
+
+theorem t5:
+  exists Node (Node Leaf !!T Leaf) !F Leaf --> !!T
+  d1: Node Leaf !!T Leaf --> !!T by theorem t3
+  d2: Leaf --> !boolid by rule boolbt.fold-leaf
+  d3: !!T \/ !F = !!T by rule lor-tf
+  d4: !!T \/ !boolid = !!T by case analysis on boolid:
+    case F is
+      proof by rule lor-tf
+    end case
+  end case analysis
+  d5: Node (Node Leaf !!T Leaf) !F Leaf --> !!T by rule boolbt.fold-Node on d1, d2, d3, d4
+  proof by d5
+end theorem
+
+theorem t6:
+  exists Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf) --> !!T
+  d1: Node Leaf !F Leaf --> !F by theorem t4
+  d2: Node Leaf !!T Leaf --> !!T by theorem t3
+  d3: !F \/ !F = !F by rule lor-ff
+  d4: !F \/ !!T = !!T by rule lor-ft
+  d5: Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf) --> !!T by rule boolbt.fold-Node on d1, d2, d3, d4
+  proof by d5
+end theorem
+
+theorem t7:
+  exists Node (Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf)) !!T (Node Leaf !F Leaf) --> !!T
+  d1: Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf) --> !!T by theorem t6
+  d2: Node Leaf !F Leaf --> !F by theorem t4
+  d3: !!T \/ !!T = !!T by rule lor-tt
+  d4: !!T \/ !F = !!T by rule lor-tf
+  d5: Node (Node (Node Leaf !F Leaf) !F (Node Leaf !!T Leaf)) !!T (Node Leaf !F Leaf) --> !!T by rule boolbt.fold-Node on d1, d2, d3, d4
+  proof by d5
+end theorem
+
+theorem t8:
+  exists rev Leaf = Leaf
+  proof by rule boolbt.reverse-leaf
+end theorem
+
+theorem t9:
+  exists rev (Node Leaf !!T Leaf) = Node Leaf !!T Leaf
+  d1: rev Leaf = Leaf by rule boolbt.reverse-leaf
+  proof by rule boolbt.reverse-Node on d1, d1
+end theorem
+
+theorem t10:
+  exists rev (Node (Node Leaf !!T Leaf) !F Leaf) = Node Leaf !F (Node Leaf !!T Leaf)
+  d1: rev (Node Leaf !!T Leaf) = Node Leaf !!T Leaf by theorem t9
+  d2: rev Leaf = Leaf by rule boolbt.reverse-leaf
+  d3: rev (Node (Node Leaf !!T Leaf) !F Leaf) = Node Leaf !F (Node Leaf !!T Leaf) by rule boolbt.reverse-Node on d1, d2
+  proof by d3
+end theorem
+

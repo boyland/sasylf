@@ -1,0 +1,127 @@
+package regression.modulegood05
+
+module demo provides
+
+terminals T F Leaf Node rev
+
+syntax boolid ::= F
+syntax boolnonid ::= T
+syntax b ::= boolid | boolnonid
+
+judgment lor: b \/ b = b
+
+  ----------------- lor-1
+  F \/ F = F
+
+  ----------------- lor-2
+  T \/ F = T
+
+  ----------------- lor-3
+  F \/ T = T
+
+  ----------------- lor-4
+  T \/ T = T
+
+theorem lor-left-id:
+  forall b
+  exists boolid \/ b = b
+  proof by case analysis on b:
+    case boolid0 is
+      proof by case analysis on boolid0:
+        case F is
+          proof by rule lor-1
+        end case
+
+      end case analysis
+    end case
+
+    case boolnonid0 is
+      proof by case analysis on boolnonid0:
+
+      case T is
+        proof by rule lor-3
+      end case
+
+      end case analysis
+    end case
+
+  end case analysis
+end theorem
+
+theorem lor-right-id:
+  forall b
+  exists b \/ boolid = b
+  proof by case analysis on b:
+    case boolid0 is
+      proof by case analysis on boolid0:
+        case F is
+          proof by rule lor-1
+        end case
+
+      end case analysis
+    end case
+
+    case boolnonid0 is
+      proof by case analysis on boolnonid0:
+
+      case T is
+        proof by rule lor-2
+      end case
+
+      end case analysis
+    end case
+
+  end case analysis
+end theorem
+
+theorem lor-commutative:
+  forall d: b1 \/ b2 = b3
+  exists b2 \/ b1 = b3
+  proof by unproved //!
+end theorem
+
+module boolbt = regression.modulegood05.foldablebt
+[
+  boolid, 
+  boolnonid, 
+  b, 
+  lor, 
+  lor-left-id, 
+  lor-right-id, 
+  lor-commutative
+]
+
+syntax bbt = boolbt.bt ::= Leaf | Node bbt b bbt
+
+judgment revbool = boolbt.rev: rev bbt = bbt
+
+judgment foldbool = boolbt.fold: bbt --> b
+
+/*
+theorem t1:
+  forall d1: rev bbt1 = bbt2
+  exists rev bbt2 = bbt1
+  proof by theorem boolbt.rev-rev-id on d1
+end theorem
+
+theorem t2:
+  forall d1: rev bbt1 = bbt2
+  forall d2: bbt1 --> b1
+  exists bbt2 --> b1
+  proof by theorem boolbt.rev-same-fold on d1, d2
+end theorem
+*/
+
+/*
+theorem t3:
+  exists Node (Node Leaf T Leaf) F Leaf --> T
+  d1: Leaf --> boolid by rule boolbt.fold-leaf
+  proof by unproved
+end theorem
+*/
+
+theorem t4:
+  exists Leaf --> boolid
+  d1: Leaf --> boolid by rule boolbt.fold-leaf
+  proof by unproved //!
+end theorem

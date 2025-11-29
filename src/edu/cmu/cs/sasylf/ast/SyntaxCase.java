@@ -21,6 +21,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -347,5 +348,29 @@ public class SyntaxCase extends Case {
 
 	private Clause conclusion;
 	private Element assumes;
+
+	@Override
+	public SyntaxCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (SyntaxCase) cd.getCopyFor(this);
+		SyntaxCase clone = (SyntaxCase) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.conclusion = clone.conclusion.copy(cd);
+		if (clone.assumes != null) {
+			clone.assumes = clone.assumes.copy(cd);
+		}
+		return clone;		
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		conclusion.substitute(sd);
+		if (assumes != null) {
+			assumes.substitute(sd);
+		}
+	}
+
 }
 

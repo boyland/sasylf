@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import edu.cmu.cs.sasylf.module.Module;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -39,20 +39,47 @@ public class ModulePart extends Node implements Part, Named {
 	public QualName getModule() {
 		return module;
 	}
+
+	/**
+	 * Throws an error, specifying that the module argument type does not match the module parameter type.
+	 * @param parameter the module parameter
+	 * @param argument the module argument
+	 */
 	
 	@Override
 	public void typecheck(Context ctx) {
+		
+		// resolve the module
 		Object resolution = module.resolve(ctx);
-		if (resolution instanceof Module) {
-			ctx.modMap.put(name, (Module)resolution);
-		} else {
+
+		if (!(resolution instanceof CompUnit)) {
 			ErrorHandler.error(Errors.MODULE_NOT_FOUND, module.toString(), this);
+			return;
 		}
-		if (!arguments.isEmpty()) {
-			ErrorHandler.error(Errors.MODULE_PARAMETERS, this);
-		} else if (((Module)resolution).isAbstract()) {
-			ErrorHandler.error(Errors.MODULE_ABSTRACT, this);
+
+		CompUnit functor = (CompUnit) resolution;
+
+		// resolve each of the arguments
+
+		List<ModuleComponent> arguments = new ArrayList<>();
+
+		for (QualName qn : this.arguments) {
+			Object argResolution = qn.resolve(ctx);
+			if (argResolution instanceof ModuleComponent) {
+				arguments.add((ModuleComponent)argResolution);
+			}
+			else {
+				ErrorHandler.modArgInvalid(argResolution, this);
+				return;
+			}
 		}
+
+		functor.accept(arguments, this, ctx, name)
+		.ifPresent(newModule -> {
+			// If the module application succeeds, add the new module to the context
+			ctx.modMap.put(name, newModule);
+		});
+
 	}
 
 	@Override
@@ -90,4 +117,44 @@ public class ModulePart extends Node implements Part, Named {
 			name.visit(consumer);
 		}
 	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (QualName argument : arguments) {			
+			argument.substitute(sd);
+		}
+
+	}
+
+	public ModulePart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ModulePart) cd.getCopyFor(this);
+		ModulePart clone = (ModulePart) super.clone();
+
+		cd.addCopyFor(this, clone);
+		
+		clone.module = clone.module.copy(cd);
+		
+		List<QualName> newArguments = new ArrayList<>();
+
+		for (QualName argument : arguments) {
+			newArguments.add(argument.copy(cd));
+		}
+		clone.arguments = newArguments;
+
+		return clone;
+	}
+
+	@Override
+	public List<ModuleComponent> argsParams() {
+		return new ArrayList<>();
+	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		// do nothing
+	}
+
+
 }

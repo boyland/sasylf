@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Location;
@@ -15,6 +16,9 @@ import edu.cmu.cs.sasylf.util.Span;
 
 
 public class Case extends Node {
+	private List<Derivation> derivations = new ArrayList<Derivation>();
+	private final Span span;
+	
 	public Case(Location l, Location l1, Location l2) { 
 		super(l); 
 		span = new DefaultSpan(l1,l2);
@@ -45,15 +49,31 @@ public class Case extends Node {
 	}
 
 	// verify: that last derivation is what i.h. requires
-
-	private List<Derivation> derivations = new ArrayList<Derivation>();
-	private final Span span;
 	
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		for (Derivation derivation : derivations) {
 			derivation.collectQualNames(consumer);
 		}
+	}
+	
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (Derivation d : derivations) {
+			d.substitute(sd);
+		}
+
+		span.substitute(sd);
+	}
+
+	public Case copy(CopyData cd) {
+		// unimplemented because we don't need it
+		// This should never be used
+		System.out.println("Case.copy unimplemented");
+		System.exit(0);
+		return null;
 	}
 }
 

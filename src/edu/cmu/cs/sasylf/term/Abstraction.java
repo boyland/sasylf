@@ -394,4 +394,5 @@ public class Abstraction extends Term {
 		}
 		return body.contains(other);
 	}
+
 }

@@ -39,4 +39,5 @@ public abstract class Atom extends Term {
 	public String toString() {
 		return name;
 	}
+
 }

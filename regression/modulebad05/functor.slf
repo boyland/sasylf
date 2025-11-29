@@ -1,0 +1,11 @@
+package regression.modulebad05
+
+module functor
+
+requires
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= id | nonid
+
+provides

@@ -290,4 +290,5 @@ public class FreeVar extends Atom {
 		else
 			return this;
 	}
+
 }

@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -52,5 +53,22 @@ public class PackageDeclaration extends Node {
 			sb.append(pieces[i]);
 		}
 		return sb.toString();
+	}
+
+	public PackageDeclaration copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (PackageDeclaration) cd.getCopyFor(this);
+
+		PackageDeclaration clone  = (PackageDeclaration) super.clone();
+
+		cd.addCopyFor(this, clone);
+
+		clone.name = name.copy(cd);
+
+		return clone;
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
 	}
 }

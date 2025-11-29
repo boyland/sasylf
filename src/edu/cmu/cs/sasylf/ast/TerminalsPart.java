@@ -1,11 +1,18 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import edu.cmu.cs.sasylf.util.CopyData;
+import edu.cmu.cs.sasylf.util.ErrorReport;
+import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
  * Declared terminals/
@@ -52,4 +59,41 @@ public class TerminalsPart implements Part {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		// Do nothing
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		/*
+		 * Do nothing, because there is nothing we could possibly need
+		 * to substitute inside of a terminals declaration.
+		 */
+	}
+
+	@Override
+	public TerminalsPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (TerminalsPart) cd.getCopyFor(this);
+
+		try {
+			TerminalsPart clone = (TerminalsPart) super.clone();
+			cd.addCopyFor(this, clone);
+			HashSet<String> newDeclaredTerminals = new HashSet<>();
+			newDeclaredTerminals.addAll(declaredTerminals);
+			clone.declaredTerminals = newDeclaredTerminals;
+			return clone;
+		}
+		catch (CloneNotSupportedException e) {
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
+			throw new SASyLFError(report);
+		}
+	}
+
+	@Override
+	public List<ModuleComponent> argsParams() {
+		return new ArrayList<>();
+	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		// do nothing
+	}
+	
 }

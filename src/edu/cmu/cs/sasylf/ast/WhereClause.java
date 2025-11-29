@@ -18,6 +18,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -32,7 +33,7 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class WhereClause extends Node {
 	
-	private final List<Pair<Element,Clause>> clauses;
+	private List<Pair<Element,Clause>> clauses;
 	private Substitution computed;
 	
 	public WhereClause(Location l) {
@@ -442,5 +443,38 @@ public class WhereClause extends Node {
 	 */
 	public boolean isEmpty() {
 		return clauses.isEmpty();
+	}
+
+	@Override
+	public WhereClause copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (WhereClause) cd.getCopyFor(this);
+		WhereClause clone = (WhereClause) clone();
+
+		clone.clauses = new ArrayList<Pair<Element, Clause>>();
+		for (Pair<Element, Clause> p : clauses) {
+			clone.clauses.add(new Pair<Element, Clause>(
+				p.first.copy(cd), p.second.copy(cd)
+			));
+		}
+
+		// set computed to null because, after substitution, it will be recomputed
+		clone.computed = null;
+
+		return clone;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (Pair<Element, Clause> p : clauses) {
+			p.first.substitute(sd);
+			p.second.substitute(sd);
+		}
+
+		// set computed to null because, after substitution, it will be recomputed
+		computed = null;
+		
 	}
 }
