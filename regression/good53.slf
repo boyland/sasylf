@@ -278,5 +278,11 @@ lemma app-eq-implies-eq2:
     proof by e1, e2
 end lemma
 
-
+lemma should-be-ok:
+    assumes Gamma
+    forall v: (x:T1 in Gamma, x:T2)
+    exists T1 == T2
+    use inversion on v where T1 := T2 // internal error
+    proof by rule type-eq
+end lemma
 

@@ -173,7 +173,7 @@ public class DerivationByInversion extends DerivationWithArgs {
 						ErrorHandler.error(Errors.INVERSION_RESULT_SIZE,pieces.size() + " != " + clauses.size(), this);
 					}
 				}
-				if (rule.isAssumption()) {
+				if (rule.isAssumption() && targetTerm.countLambdas() != pair.first.countLambdas()) {
 					Relaxation relax = Relaxation.computeRelaxation(ctx, targetClause, targetElement.getRoot(),
 							targetTerm, null, pair.first /*originalCandidate*/, rule, this);
 					
