@@ -342,6 +342,13 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 						proposals.add(new MyCompletionProposal(res, newText, offset, reg.getLength()-lo, 
 								newCursor, null, "convert to case analysis with missing case(s)", null, fixInfo));
 					}
+				} else if (lineText.contains("end case analysis") && lineText.contains("by case analysis on")) {
+					int lo = lineText.indexOf("end case analysis");
+					IRegion reg = doc.getLineInformation(line-1);
+					int offset = reg.getOffset() + lo;
+					newText = nl + sb + lineIndent;
+					proposals.add(new MyCompletionProposal(res, newText, offset, 0, newCursor, 
+							null, "insert missing case(s)", null, fixInfo));
 				} else {
 					newText = sb.toString();
 					proposals.add(new MyCompletionProposal(res, newText, doc.getLineOffset(line), 0, newCursor, 
