@@ -6,6 +6,7 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -105,5 +106,13 @@ public class DerivationByWeakening extends DerivationWithArgs {
 		// Permit induction on this term if source was a subderivation
 		if (ctx.subderivations.containsKey(arg))
 			ctx.subderivations.put(this,ctx.subderivations.get(arg));
+	}
+
+	@Override
+	public DerivationByWeakening copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByWeakening) cd.getCopyFor(this);
+		DerivationByWeakening clone = (DerivationByWeakening) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
 	}
 }

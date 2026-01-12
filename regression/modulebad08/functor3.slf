@@ -1,0 +1,21 @@
+package regression.modulebad08
+
+module functor3
+
+requires
+
+abstract syntax a
+
+abstract judgment combine-1: a + a = a
+abstract judgment combine-2: a * a = a
+
+judgment combine-3: a ** a = a
+
+a1 + a2 = a3
+a1 * a2 = a3
+------------ rule1
+a1 ** a2 = a3
+
+
+provides
+

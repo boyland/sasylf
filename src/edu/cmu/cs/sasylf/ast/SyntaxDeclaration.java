@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -88,6 +89,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 	
 	@Override
 	public void prettyPrint(PrintWriter out) {
+
 		for (String alt : alternates) {
 			if (!nonTerminal.getSymbol().equals(alt)) {
 				out.print(alt);
@@ -228,6 +230,7 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 		// compute a rule mapping the start symbol to the NonTerminal for this Syntax
 		GrmRule startRule = new GrmRule(GrmUtil.getStartSymbol(), new Symbol[] { getSymbol() }, null);
 		ctx.ruleSet.add(startRule);
+
 	}
 	
 	/**
@@ -673,7 +676,92 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 			}
 		}
 
+	}
+
+	@Override
+	public SyntaxDeclaration getOriginalDeclaration() {
+		// Since this is a SyntaxDeclaration, it is its own original declaration
+		return this;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		for (Clause c : elements) {
+			c.substitute(sd);
+		}
+	
+		// Don't substitute for nonTerminal, since that is the name of the syntax. We only want to change what's inside of that declaration
+
+		/*
+			For alternates, we need to remove from (if it exists) and we need to add to
+		*/
+
+		// Don't modify for alternates, for the same reason as nonTerminal
+
+		if (variable != null) {
+			variable.substitute(sd);
+		}
+
+		if (context != null) {
+			context.substitute(sd);
+		}
+
+		if (term != null) {
+			term = null;
+			//term.substitute(sd);
+		}
+
+		if (gnt != null) {
+			gnt.substitute(sd);
+		}
+
+		if (gt != null) {
+			gt.substitute(sd);
+		}
+
+		// computed is static, so we don't need to substitute in there
 
 	}
-	
+
+	@Override
+	public SyntaxDeclaration copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) {
+			return (SyntaxDeclaration) cd.getCopyFor(this);
+		}
+
+		SyntaxDeclaration clone = (SyntaxDeclaration) super.clone();
+
+		cd.addCopyFor(this, clone);
+
+		clone.elements = new ArrayList<Clause>();
+		for (Clause c : elements) {
+			// c is a ClauseDef
+			clone.elements.add(c.copy(cd));
+		}
+
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+
+		clone.alternates = new HashSet<String>();
+		clone.alternates.addAll(alternates);
+
+		if (clone.variable != null) {
+			clone.variable = clone.variable.copy(cd);
+		}
+
+		if (clone.context != null) {
+			clone.context = (ClauseDef) context.copy(cd);
+		}
+
+		clone.term = null;
+
+		clone.gnt = clone.gnt.copy(cd);
+
+		clone.gt = clone.gt.copy(cd);
+		
+		return clone;
+	}
+
 }

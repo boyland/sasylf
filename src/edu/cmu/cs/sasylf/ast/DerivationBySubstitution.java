@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -151,6 +152,14 @@ public class DerivationBySubstitution extends DerivationWithArgs {
 		}
 		ErrorHandler.error(Errors.SUBSTITUTION_NO_HOLE, this);
 		return null;
+	}
+
+	@Override
+	public DerivationBySubstitution copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationBySubstitution) cd.getCopyFor(this);
+		DerivationBySubstitution clone = (DerivationBySubstitution) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
 	}
 
 }

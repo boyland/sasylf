@@ -10,6 +10,7 @@ import java.util.Map;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -20,7 +21,9 @@ import edu.cmu.cs.sasylf.util.Util;
  * A syntax element (binding, variable or nonterminal) that is bound in a context
  */
 public class AssumptionElement extends Element {
-
+	private Element context;
+	private Element base;
+	
 	public AssumptionElement(Location l, Element e, Element assumes) {
 		super(l);
 		while (e instanceof Clause && !(e instanceof ClauseUse) && ((Clause)e).getElements().size() == 1) {
@@ -143,6 +146,26 @@ public class AssumptionElement extends Element {
 		return base;
 	}
 
-	private Element context;
-	private Element base;
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		context.substitute(sd);
+		base.substitute(sd);
+	}
+
+	public AssumptionElement copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (AssumptionElement) cd.getCopyFor(this);
+
+		AssumptionElement clone = (AssumptionElement) super.copy(cd);
+		cd.addCopyFor(this, clone);
+
+		clone.context = context.copy(cd);
+		clone.base = base.copy(cd);
+
+		
+
+		return clone;
+	}
+
 }

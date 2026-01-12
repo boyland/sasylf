@@ -1,0 +1,3 @@
+package regression.modulegood08
+
+module demo provides

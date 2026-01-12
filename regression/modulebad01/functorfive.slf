@@ -1,0 +1,11 @@
+package regression.modulebad01
+
+module functorfive
+
+requires
+
+abstract syntax e
+
+abstract judgment three-args: e + e = e
+
+provides

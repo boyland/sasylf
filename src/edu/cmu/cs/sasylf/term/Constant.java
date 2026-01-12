@@ -4,7 +4,6 @@ import java.util.Queue;
 
 import edu.cmu.cs.sasylf.util.Pair;
 
-
 public class Constant extends Atom {
 	public static final Constant TYPE = new Constant();
 	public static final Constant UNKNOWN_TYPE = new Constant("UNKNOWN_TYPE", TYPE);
@@ -23,9 +22,8 @@ public class Constant extends Atom {
 	@Override
 	void unifyCase(Term other, Substitution current, Queue<Pair<Term,Term>> worklist) {
 		// other term must be equal to me, otherwise fail
-		if (equals(other))
-			Term.unifyHelper(current, worklist);
-		else
-			throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);
+		if (equals(other)) Term.unifyHelper(current, worklist);
+		else throw new UnificationFailed("Atoms differ: " + this + " and " + other, this, other);	
 	}
+
 }

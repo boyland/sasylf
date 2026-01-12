@@ -2,11 +2,15 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 
 public class DerivationByRule extends DerivationByIHRule {
+	private QualName ruleName;
+	private RuleLike rule;
+	
 	public DerivationByRule(String n, Location l, Clause c, QualName rn) {
 		super(n,l,c); ruleName = rn;
 		setEndLocation(rn.getEndLocation());
@@ -40,12 +44,29 @@ public class DerivationByRule extends DerivationByIHRule {
 	public String prettyPrintByClause() {
 		return " by rule " + ruleName;
 	}
-
-	private QualName ruleName;
-	private RuleLike rule;
 	
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		ruleName.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		ruleName.substitute(sd);
+		rule.substitute(sd);
+	}
+
+	@Override
+	public DerivationByRule copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByRule) cd.getCopyFor(this);
+		DerivationByRule clone = (DerivationByRule) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.ruleName = ruleName.copy(cd);
+		clone.rule = clone.rule.copy(cd);
+		return clone;
 	}
 }

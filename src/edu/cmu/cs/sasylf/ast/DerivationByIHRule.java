@@ -18,6 +18,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -50,19 +51,18 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 	@Override
 	public void typecheck(Context ctx) {
 		super.typecheck(ctx);
-		Util.debug("line: ", this.getLocation().getLine());
-
 		RuleLike ruleLike = getRule(ctx);
+
 		int n = getArgs().size();
 
 		List<Abstraction> addedContext = new ArrayList<Abstraction>();
 		Term subject = ruleLike.checkApplication(ctx, getArgs(), this, addedContext, this, false);
 		// form the rule term
 		Set<FreeVar> conclusionFreeVars = new HashSet<FreeVar>();
-		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars); 
-		// Term newSubject = Facade.App(ruleLike.getRuleAppConstant(), allArgs);
 
-		Substitution callSub;    
+		Term pattern = ruleLike.getFreshAdaptedRuleTerm(addedContext, conclusionFreeVars);
+
+		Substitution callSub; 
 		// Now we get the substitution.
 		// Then there are complex catch clauses for failed unification.
 		// The complication only concerns what error message to generate.
@@ -100,7 +100,9 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				Substitution learnAboutErrors = newSubject.unify(pattern);
 				learnAboutErrors.avoid(ctx.inputVars);
 				Term explanationTerm = learnAboutErrors.getSubstituted(concVar);
+				
 				explanationString = tp.toString(tp.asClause(explanationTerm));
+
 				errorType = Errors.RULE_APP_CONCLUSION_OTHER;
 			} catch (UnificationFailed e2) {
 				if (e2.term1 != null && e2.term2 != null) {
@@ -110,7 +112,7 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			ErrorHandler.error(errorType, explanationString, this, infoString);
 			return; // for Java
 		}
-		// System.out.println("subject = " + subject + ", pattern = " + pattern + ", callSub = " + callSub + ", concFreeVars = " + conclusionFreeVars);
+
 
 		// We have taken care of most context discarding issues, but
 		// we still need to worry about an implicit syntactic parameter to a rule conclusion
@@ -148,7 +150,6 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 				if (!ctx.assumedContext.getType().canAppearIn(v.getType())) continue;
 				Term actual = v.substitute(callSub);
 				if (ctx.isVarFree(actual)) continue;
-				// System.out.println(actual + "(was " + v + ") is not free: " + ctx.varFreeNTmap.keySet());
 				ErrorHandler.recoverableError(Errors.CONTEXT_DISCARDED_APPL, v.getName() + " assumes " + ctx.assumedContext, this, "\t(variable bound to " + actual + ")");
 			}
 		}
@@ -211,4 +212,13 @@ public abstract class DerivationByIHRule extends DerivationWithArgs {
 			}
 		}
 	}
+
+	@Override
+	public DerivationByIHRule copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByIHRule) cd.getCopyFor(this);
+		DerivationByIHRule clone = (DerivationByIHRule) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
+	}
+
 }

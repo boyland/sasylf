@@ -2,7 +2,17 @@ package edu.cmu.cs.sasylf.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import edu.cmu.cs.sasylf.ast.Clause;
+import edu.cmu.cs.sasylf.ast.CompUnit;
+import edu.cmu.cs.sasylf.ast.Judgment;
+import edu.cmu.cs.sasylf.ast.ModulePart;
+import edu.cmu.cs.sasylf.ast.NonTerminal;
+import edu.cmu.cs.sasylf.ast.Rule;
+import edu.cmu.cs.sasylf.ast.Syntax;
+import edu.cmu.cs.sasylf.ast.SyntaxDeclaration;
+import edu.cmu.cs.sasylf.ast.Theorem;
 import edu.cmu.cs.sasylf.term.FreeVar;
 
 
@@ -25,6 +35,7 @@ public class ErrorHandler {
 	 * @param throwable whether this method should throw a SASyLF error after reporting the error
 	 */
 	public static void report(Errors errorType, String msg, Span loc, String debugInfo, boolean isError, boolean throwable) {
+
 		if (errorType == null) errorType = Errors.UNSPECIFIED;
 		if (msg == null) msg = "";
 		if (loc == null) loc = lastSpan.get();
@@ -183,4 +194,226 @@ public class ErrorHandler {
 			return new Location(file,0,0);
 		}
 	}
+
+	public static void modArgInvalid(Object arg, ModulePart modulePart) {
+
+		String argType = "";
+
+		if (arg instanceof CompUnit || arg instanceof ModulePart) {
+			argType = "module";
+		}
+		else {
+			argType = "an undefined identifier";
+		}
+
+		String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
+
+		ErrorHandler.error(Errors.MOD_ARG_INVALID, errorMessage, modulePart);
+
+	}
+
+	public static void modArgMismatchSyntax(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, SyntaxDeclaration whatParamIsBoundTo, ModulePart modulePart) {
+		NonTerminal pnt = paramSyntax.getNonTerminal();
+		NonTerminal ant = argSyntax.getNonTerminal();
+		NonTerminal bnt = whatParamIsBoundTo.getNonTerminal();
+
+		String errorMessage = "Attempting to bind parameter syntax " + pnt + " to argument " + ant + ", but " + pnt + " is already bound to argument " + bnt + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_SYNTAX, errorMessage, modulePart);
+	}
+
+	public static void modArgSyntaxWrongNumProductions(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, ModulePart modulePart) {
+		int argNumProductions = argSyntax.getClauses().size();
+		int paramNumProductions = paramSyntax.getClauses().size();
+		String errorMessage = "Module syntax argument " + argSyntax.getNonTerminal() + " has " + argNumProductions 
+			+ " productions, but " + paramNumProductions + " productions are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_SYNTAX_WRONG_NUM_PRODUCTIONS, errorMessage, modulePart);
+
+	}
+
+	public static void modArgumentJudgmentWrongNumRules(Judgment argJudgment, Judgment paramJudgment, ModulePart modulePart) {
+		int argNumRules = argJudgment.getRules().size();
+		int paramNumRules = paramJudgment.getRules().size();
+
+		String errorMessage = "Module argument judgment " + argJudgment + " has " + argNumRules 
+			+ " rules, but " + paramNumRules + " rules are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_JUDGMENT_WRONG_NUM_RULES, errorMessage, modulePart);
+	}
+
+	public static void modArgMismatchJudgment(Judgment argJudgment, Judgment paramJudgment, Judgment whatParamIsBoundTo, ModulePart modulePart) {
+		String errorMessage = "Judgment parameter " + paramJudgment.getName() + " is being assigned to argument " 
+			+ argJudgment.getName() + ", but parameter " + paramJudgment.getName() + " is already bound to argument " + whatParamIsBoundTo.getName() + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_MISMATCH_JUDGMENT, errorMessage, modulePart);
+	}
+
+	public static void modArgRuleWrongNumPremises(Rule argRule, Rule paramRule, ModulePart modulePart) {
+		int argNumPremises = argRule.getPremises().size();
+		int paramNumPremises = paramRule.getPremises().size();
+
+		String errorMessage = "Module argument rule " + argRule + " has " + argNumPremises 
+			+ ", but " + paramNumPremises + "premises are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_RULE_WRONG_NUM_PREMISES, errorMessage, modulePart);
+	}
+	
+	public static void modArgTheoremWrongNumForalls(Theorem argTheorem, Theorem paramTheorem, ModulePart modulePart) {
+		int argNumForalls = argTheorem.getForalls().size();
+		int paramNumForalls = paramTheorem.getForalls().size();
+
+		String errorMessage = "Module argument theorem " + argTheorem + " has " + argNumForalls 
+			+ " foralls, but " + paramNumForalls + " foralls are expected.";
+
+		ErrorHandler.error(Errors.MOD_ARG_THEOREM_WRONG_NUM_FORALLS, errorMessage, modulePart);
+	}
+	
+	public static void modArgNonterminalMismatch(
+		NonTerminal argNonterminal, 
+		NonTerminal paramNonterminal, 
+		NonTerminal whatParamIsBoundTo, 
+		ModulePart modulePart) {
+		
+			String errorMessage = "Nonterminal " + argNonterminal + " is being assigned to " 
+				+ paramNonterminal + ", but " + paramNonterminal + " is already bound to " + whatParamIsBoundTo + ".";
+
+			ErrorHandler.error(Errors.MOD_ARG_NONTERMINAL_MISMATCH, errorMessage, modulePart);
+	}
+
+	// errors from Clause.checkClauseSameStructure
+
+	public static void modArgClauseMismatchParamIsAndClauseButArgIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the latter is an and clause, but the former isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseMismatchArgIsAndClauseButParamIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the former is an and clause, but the latter isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseMismatchParamIsOrClauseButArgIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the latter is an or clause, but the former isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseMismatchArgIsOrClauseButParamIsnt(Clause argClause, Clause paramClause, ModulePart modulePart) {
+		String errorMessage = "Clause " + argClause + " doesn't match clause " + paramClause + " because "
+			+ "the former is an or clause, but the latter isn't.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseWrongNumNotTerminals(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart) {
+
+			int argNumNotTerminals = argClause.withoutTerminals().size();
+			int paramNumNotTerminals = paramClause.withoutTerminals().size();
+
+			String errorMessage = "Clause " + argClause + " has " + argNumNotTerminals 
+				+ " not-terminals, but " + paramNumNotTerminals + " not-terminals are expected.";
+
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_WRONG_NUM_NOT_TERMINALS, errorMessage, modulePart);
+	}
+
+	public static void modArgClauseNonterminalTypeMismatch(
+		NonTerminal argNonterminal,
+		NonTerminal paramNonterminal,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		ModulePart modulePart) {
+
+			String errorMessage = "Nonterminal " + argNonterminal + "has type " + argNonterminal.getType() + ", but is expected to have type "
+				+ paramNonterminal.getType() + " because " + paramNonterminal + " is bound to " + paramToArgSyntax.get(paramNonterminal.getType().getOriginalDeclaration()) + ".";
+			
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH, errorMessage, modulePart);
+			
+	}
+
+	public static void modArgNonTerminalMismatch(
+		String argNonterminal,
+		String paramNonterminal,
+		String whatParamIsBoundTo,
+		ModulePart modulePart)
+		{
+			String errorMessage = "Nonterminal " + argNonterminal + " is being assigned to " 
+				+ paramNonterminal + ", but " + paramNonterminal + " is already bound to " + whatParamIsBoundTo + ".";
+
+			ErrorHandler.error(Errors.MOD_ARG_NONTERMINAL_MISMATCH, errorMessage, modulePart);
+		}
+
+	public static void modArgClauseClassMismatch(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart)
+		{
+			String errorMessage = "Argument clause " + argClause + " and parameter clause"
+				+ paramClause + " are not of the same class.";
+
+			ErrorHandler.error(Errors.MOD_ARG_CLAUSE_CLASS_MISMATCH, errorMessage, modulePart);
+		}
+
+	public static void wrongNumModArgs(
+		int numArgs,
+		int numParams,
+		ModulePart modulePart) {
+
+			String errorMessage = "Module has " + numArgs + " arguments, but " + numParams + " arguments are expected.";
+
+			ErrorHandler.error(Errors.WRONG_NUM_MOD_ARGS, errorMessage, modulePart);
+
+	}
+
+	public static void modArgTypeMismatch(
+		String argType,
+		String paramType,
+		ModulePart modulePart
+	) {
+		String errorMessage = "Expected " + paramType + ", but got " + argType + ".";
+		ErrorHandler.error(Errors.MOD_ARG_TYPE_MISMATCH, errorMessage, modulePart);
+	}
+
+	public static void modArgClausesNumElementsMismatch(
+		Clause argClause,
+		Clause paramClause,
+		ModulePart modulePart
+	) {
+
+		String errorMessage = "Attempting to match parameter clause " + paramClause + " with argument clause " + argClause
+			+ ", but the numbers of not-terminal elements in the two clauses do not match.";
+
+		ErrorHandler.error(Errors.MOD_ARG_CAUSE_MISMATCH, errorMessage, modulePart);
+
+	}
+
+	public static void modArgClauseNonterminalTypesDontMatch(
+		NonTerminal argNonterminal,
+		NonTerminal paramNonterminal,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		ModulePart modulePart
+	) {
+
+		String errorMessage = "Attempting to match parameter nonterminal " + paramNonterminal + " with argument nonterminal "
+			+ argNonterminal + ", but the types of the two nonterminals do not match. " + paramNonterminal + " has type " + paramNonterminal.getType()
+			+ ", which is bound to argument syntax " + paramToArgSyntax.get(paramNonterminal.getType()) + ", but argument nonterminal "
+			+ argNonterminal + " has type " + argNonterminal.getType() + ".";
+
+		ErrorHandler.error(Errors.MOD_ARG_CLAUSE_NONTERMINAL_TYPE_MISMATCH, errorMessage, modulePart);
+
+
+
+
+	}
+
+
+
 }

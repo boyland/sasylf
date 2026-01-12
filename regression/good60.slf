@@ -1,0 +1,186 @@
+package regression
+
+module maybetest
+
+provides
+
+  terminals S NatNothing NatJust true false BoolNothing BoolJust
+
+  syntax n ::= 0 | S n
+
+  1 := S 0
+  2 := S 1
+  3 := S 2
+  
+  judgment combine-nat: n + n = n
+
+    ----------- combine-0
+    0 + n = n
+
+    n1 + n2 = n3
+    ----------- combine-S
+    S n1 + n2 = S n3
+
+
+  syntax bool ::= true | false
+
+  judgment combine-bool: bool + bool = bool
+
+    ---------------- combine-true-1
+    true + bool = true
+
+    ---------------- combine-true-2
+    bool + true = true
+
+    ---------------- combine-false-1
+    false + bool = bool
+
+    ---------------- combine-false-2
+    bool + false = bool
+
+  module natMaybe = regression.good59[n, combine-nat]
+
+  syntax NatMaybe = natMaybe.Maybe ::= NatNothing | NatJust n
+
+  judgment nm-penetrate = natMaybe.penetrate : NatMaybe + NatMaybe = NatMaybe
+
+  module boolMaybe = regression.good59[bool, combine-bool]
+  
+  syntax BoolMaybe = boolMaybe.Maybe ::= BoolNothing | BoolJust bool
+
+  judgment bm-penetrate = boolMaybe.penetrate : BoolMaybe + BoolMaybe = BoolMaybe
+
+  // we want to show that NatNothing + NatNothing = NatNothing
+
+  theorem t1v1:
+    exists NatNothing + NatNothing = NatNothing
+    proof by theorem natMaybe.nothing-both-sides
+  end theorem
+
+  theorem t1v2:
+    exists NatNothing + NatNothing = NatNothing
+    proof by rule natMaybe.penetrate-Nothing-Left
+  end theorem
+
+  theorem t1v3:
+    exists NatNothing + NatNothing = NatNothing
+    proof by rule natMaybe.penetrate-Nothing-Right
+  end theorem
+
+  theorem t1v4:
+    exists NatNothing + NatNothing = NatNothing
+    proof by theorem t1v1
+  end theorem
+
+  theorem t1v5:
+    exists NatNothing + NatNothing = NatNothing
+    proof by theorem t1v2
+  end theorem
+
+  theorem t1v6:
+    exists NatNothing + NatNothing = NatNothing
+    proof by theorem t1v3
+  end theorem
+
+  theorem t1v7:
+    exists NatNothing + NatNothing = NatNothing
+    proof by theorem t1v4
+  end theorem
+  
+  ////////////////////////////////////////////////////////////////////////////
+
+  theorem t2v1:
+    exists NatJust 0 + NatJust 0 = NatJust 0
+    d1: 0 + 0 = 0 by rule combine-0
+    d2: NatJust 0 + NatJust 0 = NatJust 0 by rule natMaybe.penetrate-Just on d1
+    proof by d2
+  end theorem
+
+  theorem t2v2:
+    exists NatJust 0 + NatJust 0 = NatJust 0
+    proof by theorem t2v1
+  end theorem
+
+  theorem eval1:
+    exists 1 + 1 = 2
+    d1: 0 + 1 = 1 by rule combine-0
+    d2: 1 + 1 = 2 by rule combine-S on d1
+    proof by d2
+  end theorem
+
+  theorem t3v1:
+    exists NatJust 1 + NatJust 1 = NatJust 2
+    d1: 1 + 1 = 2 by theorem eval1
+    proof by rule natMaybe.penetrate-Just on d1
+  end theorem
+
+
+  theorem box:
+    forall d: NatJust n1 + NatJust n2 = NatJust n3
+    exists NatJust (S n1) + NatJust n2 = NatJust (S n3)
+
+    // we have that NatJust n1 + NatJust n2 = NatJust n3
+
+    d1: n1 + n2 = n3 by inversion on d
+    d2: S n1 + n2 = S n3 by rule combine-S on d1
+    d3: NatJust (S n1) + NatJust n2 = NatJust (S n3) by rule natMaybe.penetrate-Just on d2
+
+    proof by d3
+  end theorem
+  
+  ////////////////////////////////////////////////////////////////////////////
+
+  theorem t4v1:
+    exists BoolNothing + BoolNothing = BoolNothing
+    proof by theorem boolMaybe.nothing-both-sides
+  end theorem
+
+  theorem t4v2:
+    exists BoolNothing + BoolNothing = BoolNothing
+    proof by rule boolMaybe.penetrate-Nothing-Left
+  end theorem
+  
+  theorem t5v1:
+    exists BoolJust true + BoolJust true = BoolJust true
+    d1: true + true = true by rule combine-true-1
+    d2: BoolJust true + BoolJust true = BoolJust true by rule boolMaybe.penetrate-Just on d1
+    proof by d2
+  end theorem
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  theorem boolean-commutative:
+    forall d1: bool1 + bool2 = bool3
+    exists bool2 + bool1 = bool3
+
+    proof by case analysis on d1:
+      case rule
+        --------------- combine-true-1
+        _: true + bool2 = true
+      is
+        proof by rule combine-true-2
+      end case
+
+      case rule
+        --------------- combine-true-2
+        _: bool1 + true = true
+      is
+        proof by rule combine-true-1
+      end case
+
+      case rule
+        --------------- combine-false-1
+        _: false + bool3 = bool3
+      is
+        proof by rule combine-false-2
+      end case
+
+      case rule
+        --------------- combine-false-2
+        _: bool3 + false = bool3
+      is
+        proof by rule combine-false-1
+      end case
+
+    end case analysis
+  end theorem

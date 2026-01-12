@@ -1,0 +1,42 @@
+package regression.modulegood10
+
+module test provides
+
+terminals A B
+
+syntax a ::= A
+syntax b ::= B
+
+/*
+module f = regression.modulegood10.functor
+
+module g = f[a]
+
+module h = f[b]
+
+judgment a-eq = g.eq : a = a
+
+judgment b-eq = h.eq : b = b
+
+theorem t1:
+  forall a
+  exists a = a
+  proof by rule g.eq-1
+end theorem
+
+theorem t2:
+  forall b
+  exists b = b
+  proof by rule h.eq-1
+end theorem
+
+module ff = regression.modulegood10.functor2
+
+module gg = ff[a, b]
+
+module hh = ff[b, a]
+
+module gh = ff[a, a]
+
+module hg = ff[b, b]
+*/

@@ -1,0 +1,27 @@
+package regression.modulegood02
+
+module maybeofeither
+
+requires
+
+abstract syntax a
+abstract syntax b
+
+provides
+
+terminals None Some Leftt Rightt ismaybe
+
+module eithermodule = regression.modulegood02.either[a, b]
+
+syntax e = eithermodule.e ::= Leftt a | Rightt b
+
+module maybemodule = regression.modulegood02.maybe[e]
+
+syntax m = maybemodule.m ::= None | Some e
+
+// m is a maybe of either (a, b)
+
+judgment ismaybe: ismaybe m
+
+  ---------- ismaybe-1
+  ismaybe m

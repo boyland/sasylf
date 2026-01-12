@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.io.PrintWriter;
 
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -36,5 +37,13 @@ public class DerivationUnproved extends Derivation {
 			}
 		}
 		ErrorHandler.warning(Errors.DERIVATION_UNPROVED, form, this, t.toString());
+	}
+
+	@Override
+	public DerivationUnproved copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationUnproved) cd.getCopyFor(this);
+		DerivationUnproved clone = (DerivationUnproved) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
 	}
 }

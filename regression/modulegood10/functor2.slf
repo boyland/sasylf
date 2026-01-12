@@ -1,0 +1,20 @@
+package regression.modulegood10
+
+module functor2
+
+requires
+
+abstract syntax a
+abstract syntax b
+
+provides
+
+judgment eqa: a = a
+
+  --------- eqa-1
+  a = a
+
+judgment eqb: b = b
+
+  --------- eqb-1
+  b = b

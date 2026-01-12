@@ -28,5 +28,14 @@ public class StringSpan extends DefaultSpan {
 		return builder.toString();
 	}
 
+	@Override
+	public StringSpan copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (StringSpan) cd.getCopyFor(this);
+		StringSpan clone = (StringSpan) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.builder = new StringBuilder(builder);
+		return clone;
+	}
+
 	private StringBuilder builder = new StringBuilder();
 }
