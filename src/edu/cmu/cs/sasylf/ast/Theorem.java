@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
+import edu.cmu.cs.sasylf.debugger.ProofDebugger;
 
 
 public class Theorem extends RuleLike {
@@ -209,8 +210,9 @@ public class Theorem extends RuleLike {
 				ctx.assumedContext = assumes;
 			}
 			ctx.varFreeNTmap.clear();
-
-			for (Fact f : foralls) {
+			// Begin proof debugging
+			ProofDebugger.beginTheorem(getName(), getKind().toString(), foralls, exists);
+			for (Fact f : foralls) {	
 				f.typecheck(ctx);
 				f.addToDerivationMap(ctx);
 				ctx.subderivations.put(f, new Pair<Fact,Integer>(f,0));
@@ -266,6 +268,8 @@ public class Theorem extends RuleLike {
 					System.out.println("Error(s) in " + getKind() + " " + getName());					
 				}
 			}
+			// End proof debugging
+			ProofDebugger.endTheorem();
 		}
 	}
 
