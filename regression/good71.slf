@@ -1,0 +1,21 @@
+package regression
+
+module good71
+
+requires
+
+  abstract syntax id
+  abstract syntax nonid
+  syntax e ::= id | nonid
+
+  abstract judgment combine: e + e = e
+
+  judgment combineconcrete: e * e = e
+
+    e + e = e
+    -------------------- combineconcrete-1
+    e * e = e
+
+provides
+
+  terminals A

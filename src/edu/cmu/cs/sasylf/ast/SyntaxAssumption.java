@@ -2,6 +2,7 @@ package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -95,6 +96,23 @@ public abstract class SyntaxAssumption extends Fact {
 	}
 
 	private Element context;
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+	}
+
+	public SyntaxAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (SyntaxAssumption) cd.getCopyFor(this);
+		SyntaxAssumption clone = (SyntaxAssumption) super.clone();
+		cd.addCopyFor(this, clone);
+
+		if (clone.context != null) {
+			clone.context = clone.context.copy(cd);
+		}
+
+		return clone;
+	}
 
 }
 

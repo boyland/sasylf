@@ -1,9 +1,10 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.Token;
 
-public class Location implements Span {
+public class Location extends Span {
 	public Location(Token t) {
 		beginLine = t.beginLine;
 		beginColumn = t.beginColumn;
@@ -57,6 +58,17 @@ public class Location implements Span {
 	@Override
 	public Location getEndLocation() {
 		return this;
+	}
+
+	@Override
+	public Location copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Location) cd.getCopyFor(this);
+
+		Location clone = (Location) super.clone();
+
+		cd.addCopyFor(this, clone);
+
+		return clone;
 	}
 
 

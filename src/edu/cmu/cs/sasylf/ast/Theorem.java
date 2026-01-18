@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -14,6 +16,7 @@ import edu.cmu.cs.sasylf.reduction.InductionSchema;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -21,7 +24,21 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 
-public class Theorem extends RuleLike {
+public class Theorem extends RuleLike implements ModuleComponent {
+	private String kind = "theorem";
+	private String kindTitle = "Theorem";
+	private NonTerminal assumes = null;
+	private List<Fact> foralls = new ArrayList<Fact>(); // substitution here
+	private Clause exists; // substitution here
+	private List<Derivation> derivations;
+	private Theorem andTheorem;
+	private Theorem firstInGroup = this;
+	private int indexInGroup = 0;
+	private InductionSchema inductionScheme = InductionSchema.nullInduction;
+	private boolean interfaceChecked=false;
+	private boolean interfaceOK = false;
+	private final boolean isAbstract;
+
 	public Theorem(String n, Location l) { 
 		this(n,l,false);
 	}
@@ -169,7 +186,9 @@ public class Theorem extends RuleLike {
 			if (oldCtx.ruleMap.get(getName()) != this) {
 				ErrorHandler.recoverableError(Errors.RULE_LIKE_REDECLARED, this);
 			}
-		} else oldCtx.ruleMap.put(getName(), this);
+		} else {
+			oldCtx.ruleMap.put(getName(), this); 
+		}
 
 		int oldErrorCount = ErrorHandler.getErrorCount();
 		Context ctx = oldCtx.clone();
@@ -253,7 +272,6 @@ public class Theorem extends RuleLike {
 					ctx.assumedContext = assumes;
 				}
 			}
-
 			Derivation.typecheck(this, ctx, derivations);
 
 		} catch (SASyLFError e) {
@@ -341,20 +359,6 @@ public class Theorem extends RuleLike {
 		}
 		exists = c; 
 	}
-
-	private String kind = "theorem";
-	private String kindTitle = "Theorem";
-	private NonTerminal assumes = null;
-	private List<Fact> foralls = new ArrayList<Fact>();
-	private Clause exists;
-	private final List<Derivation> derivations;
-	private Theorem andTheorem;
-	private Theorem firstInGroup = this;
-	private int indexInGroup = 0;
-	private InductionSchema inductionScheme = InductionSchema.nullInduction;
-	private boolean interfaceChecked=false;
-	private boolean interfaceOK = false;
-	private final boolean isAbstract;
 	
 	
 	@Override
@@ -362,6 +366,148 @@ public class Theorem extends RuleLike {
 		for (Derivation derivation : derivations) {
 			derivation.collectQualNames(consumer);
 		}
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		// substitute in foralls
+		for (Fact f : foralls) {
+			f.substitute(sd);
+		}
+
+		// substitute in exists
+		exists.substitute(sd);
+
+		// We are not substituting in derivations, as of now
+	}
+
+	@Override
+	public Theorem copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Theorem) cd.getCopyFor(this);
+		
+		Theorem clone = (Theorem) super.clone();
+	
+		cd.addCopyFor(this, clone);
+
+		// skip kind and kindTitle
+
+		if (clone.assumes != null) {
+			clone.assumes = assumes.copy(cd);
+		}
+
+		List<Fact> newForalls = new ArrayList<Fact>();
+		for (Fact f : foralls) {
+			newForalls.add(f.copy(cd)); // fix this
+		}
+		clone.foralls = newForalls;
+
+		clone.exists = clone.exists.copy(cd);
+
+		clone.derivations = new ArrayList<>(); // don't clone the derivations
+
+		if (clone.andTheorem != null) {
+			clone.andTheorem = clone.andTheorem.copy(cd);
+		}
+
+		clone.firstInGroup = clone.firstInGroup.copy(cd);
+
+		return clone;
+	}
+
+	@Override
+	public Optional<SubstitutionData> matchesParam(
+		ModuleComponent paramModArg,
+		ModulePart mp,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment) {
+		
+		if (!(paramModArg instanceof Theorem)) {
+			// the wrong type of argument has been provided
+
+			String argKind = this.getKind();
+			String paramKind = paramModArg.getKind();
+
+			// throw an exception
+
+			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+			return Optional.empty();
+		}
+
+		// they are of the same type, so cast the parameter to a Theorem
+
+		Theorem param = (Theorem) paramModArg;
+		Theorem arg = this;
+
+		// now, we need to check if the two theorems are compatible with eachother
+
+		// verify that the forall clauses match
+
+		List<Fact> paramForalls = param.getForalls();
+		List<Fact> argForalls = this.getForalls();
+
+		if (paramForalls.size() != argForalls.size()) {
+			ErrorHandler.modArgTheoremWrongNumForalls(arg, param, mp);
+			return Optional.empty();
+		}
+
+		// check that each pair of foralls has the same structure
+
+		/*
+		 * The code below could probably be abstracted into a different class
+		 */
+
+		Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+		
+		for (int i = 0; i < paramForalls.size(); i++) {
+			Fact paramForall = paramForalls.get(i);
+			Fact argForall = argForalls.get(i);
+
+			Element paramElement = paramForall.getElement();
+			Element argElement = argForall.getElement();
+
+			// paramElement and argElement should either both be nonterminals or both be clauses
+
+
+			if (paramElement instanceof Clause && argElement instanceof Clause) {
+				Clause paramClause = (Clause) paramElement;
+				Clause argClause = (Clause) argElement;
+				// check that they have the same structure
+				boolean match = Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+				if (!match) return Optional.empty();
+			}
+
+			else if (paramElement instanceof NonTerminal && argElement instanceof NonTerminal) {
+				NonTerminal paramNonTerminal = (NonTerminal) paramElement;
+				NonTerminal argNonTerminal = (NonTerminal) argElement;
+				// Make sure that the types of the nonterminals match
+				if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
+					if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
+						ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, mp);
+						return Optional.empty();
+					}
+				}
+			}
+		}
+
+		// verify that the exists clauses match
+
+		Clause paramExists = param.getExists();
+		Clause argExists = this.getExists();
+
+		boolean existsMatch = Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+
+		if (!existsMatch) return Optional.empty();
+
+		// they match
+
+		SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg);
+
+		return Optional.of(sd);
+
 	}
 
 }

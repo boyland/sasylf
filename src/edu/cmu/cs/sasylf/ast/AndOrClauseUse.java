@@ -9,6 +9,7 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -136,4 +137,29 @@ public abstract class AndOrClauseUse extends ClauseUse {
 		else recvr = OrClauseUse.makeEmptyOrClause(loc);
 		return recvr.create(loc, ctx, parts);
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		for (ClauseUse cu: clauses) {
+			cu.substitute(sd);
+		}
+	}
+
+	@Override
+	public AndOrClauseUse copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (AndOrClauseUse) cd.getCopyFor(this);
+		AndOrClauseUse clone = (AndOrClauseUse) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		List<ClauseUse> newClauses = new ArrayList<ClauseUse>();
+		for (ClauseUse cu: clauses) {
+			newClauses.add(cu.copy(cd));
+		}
+		clone.clauses = newClauses;
+		return clone;
+	}
+
 }

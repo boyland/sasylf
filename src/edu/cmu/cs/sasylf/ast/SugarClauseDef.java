@@ -9,11 +9,12 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 public class SugarClauseDef extends ClauseDef {
 
-	private final Element definition;
+	private Element definition;
 	
 	/**
 	 * Create a sugar clause definition.
@@ -60,6 +61,23 @@ public class SugarClauseDef extends ClauseDef {
 		}
 		*/
 		return result;
+	}
+
+	@Override
+	public SugarClauseDef copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (SugarClauseDef) cd.getCopyFor(this);
+		SugarClauseDef clone = (SugarClauseDef) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.definition = definition.copy(cd);
+		return clone;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		definition.substitute(sd);
 	}
 
 	

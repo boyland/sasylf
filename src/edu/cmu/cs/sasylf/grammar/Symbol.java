@@ -3,5 +3,5 @@
  */
 
 package edu.cmu.cs.sasylf.grammar;
-public interface Symbol {
+public interface Symbol extends Cloneable {
 }

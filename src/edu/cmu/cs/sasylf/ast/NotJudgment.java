@@ -7,12 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Span;
 
 public class NotJudgment extends Judgment {
+	private Judgment part;
+	
 	// TODO: Complete implementation of NOT.
 	public static class NotTerminal extends Terminal {
 		public NotTerminal(Span loc) {
@@ -117,7 +120,6 @@ public class NotJudgment extends Judgment {
 		return result;
 	}
 
-	private Judgment part;
 
 	@Override
 	public void defineConstructor(Context ctx) {
@@ -134,4 +136,26 @@ public class NotJudgment extends Judgment {
 	}
 
 	public Judgment getJudgment() { return part; }
+
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (sd.containsJudgmentReplacementFor(part.getName())) {
+			part = sd.getJudgmentReplacement();
+		}
+	}
+	
+	@Override
+	public NotJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (NotJudgment) cd.getCopyFor(this);
+		NotJudgment clone = (NotJudgment) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.part = clone.part.copy(cd);
+		return clone;
+	}
+
 }

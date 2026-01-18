@@ -6,6 +6,7 @@ import java.util.Set;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Pair;
 
 /** Marker type for all types to which a Clause could refer.
@@ -30,4 +31,16 @@ public interface ClauseType extends ElementType {
 	 * @param map updated with the case analysis
 	 */
 	public void analyze(Context ctx, Element target, Node source, Map<CanBeCase,Set<Pair<Term,Substitution>>> map);
+	/**
+	 * Substitute inside of this ClauseType according to <code> sd </code>
+	 * @param sd
+	 */
+	public void substitute(SubstitutionData sd);
+	
+	/**
+	 * Creates and returns a deep copy of this ClauseType
+	 * @param cd
+	 * @return
+	 */
+	public ClauseType copy(CopyData cd);
 }

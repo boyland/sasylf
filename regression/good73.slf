@@ -1,0 +1,42 @@
+package regression
+
+module good73
+
+requires
+
+// monoid
+
+abstract syntax id
+abstract syntax nonid
+syntax e ::= id | nonid
+
+abstract judgment combine: e + e = e
+
+abstract theorem left-id:
+  forall e
+  exists id + e = e
+end theorem
+
+abstract theorem right-id:
+  forall e
+  exists e + id = e
+end theorem
+
+abstract theorem commutative:
+  forall d: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theorem
+
+abstract theorem trivial:
+  forall d: e1 + e2 = e3
+  exists e1 + e2 = e3
+end theorem
+
+// more theorems
+
+provides
+
+theorem id-id:
+  exists id + id = id
+  proof by unproved //!
+end theorem

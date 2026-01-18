@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.sasylf.ast.SubstitutionData.SubstitutionType;
 import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Constant;
@@ -16,6 +17,7 @@ import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Pair;
@@ -393,6 +395,131 @@ public class ClauseDef extends Clause {
 		}
 		
 		return SingletonSet.create(new Pair<Term,Substitution>(term, checkSub));
+	}
+	
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (sd.containsJudgmentReplacementFor(consName)) {
+			consName = sd.getJudgmentReplacement().getName();
+		}
+
+		if (type != null) {
+			/*
+			 * We need to substitute for type
+			 * First, we check if type is an instance of Judgment or SyntaxDeclaration
+			 * Then, we get check if sd has a replacement for the name of the Judgment or SyntaxDeclaration 
+			 */
+			
+			if (type instanceof Judgment) {
+				Judgment j = (Judgment) type;
+				String name = j.getName();
+				if (sd.containsJudgmentReplacementFor(name)) {
+					type = sd.getJudgmentReplacement();
+				}
+			}
+			else if (type instanceof SyntaxDeclaration) {
+				SyntaxDeclaration syntaxDeclaration = (SyntaxDeclaration) type;
+				if (sd.containsSyntaxReplacementFor(syntaxDeclaration.getNonTerminal())) {
+					type = (SyntaxDeclaration) sd.getSyntaxReplacement();
+				}
+
+			}
+		}
+
+		if (assumptionRule != null) {
+			assumptionRule.substitute(sd);
+		}
+
+
+		/*
+		 * We need to substitute for consName
+		 * 
+		 * First, we check if the substitution is of type SYNTAX or JUDGMENT
+		 */
+		
+		if (sd.getSubstitutionType() == SubstitutionData.SubstitutionType.SYNTAX) {
+
+			if (!type.equals((ClauseType) sd.getSyntaxReplacement())) return;
+
+			/*
+			 * Iterate through sd.oldSyntax.getClauses() and see if it contains a
+			 * ClauseDef with the same consName as this ClauseDef. If it exists
+			 * then save its index.
+			 */
+
+			int indexOfClauseDef = -1;
+
+			for (int i = 0; i < sd.getOldSyntax().getClauses().size(); i++) {
+				Clause c = sd.getOldSyntax().getClauses().get(i);
+				if (!(c instanceof ClauseDef)) {
+					continue;
+				}
+				ClauseDef cd = (ClauseDef) c;
+				if (cd.consName.equals(consName)) {
+					indexOfClauseDef = i;
+					break;
+				}
+
+			}
+
+			if (indexOfClauseDef == -1) return;
+
+			// get the ClauseDef with the same index in the new Syntax
+
+			SyntaxDeclaration newSyntax = sd.getSyntaxReplacement().getOriginalDeclaration();
+			Clause newClause = newSyntax.getClauses().get(indexOfClauseDef);
+			if (!(newClause instanceof ClauseDef)) {
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "ClauseDef not found in new syntax.", this);
+				return;
+			}
+			ClauseDef newClauseDef = (ClauseDef) newClause;
+
+			// set the consName of this ClauseDef to the consName of the new ClauseDef
+
+			consName = newClauseDef.consName;
+		}
+		
+		else if (sd.getSubstitutionType() == SubstitutionType.JUDGMENT) {
+
+			if (!type.equals(sd.getJudgmentReplacement())) return;
+
+			// get the ClauseDef from the judgment
+			Clause newClause = sd.getJudgmentReplacement().getForm();
+			if (!(newClause instanceof ClauseDef)) {
+				ErrorHandler.error(Errors.INTERNAL_ERROR, "ClauseDef not found in new judgment.", this);
+				return;
+			}
+
+			ClauseDef cd = (ClauseDef) newClause;
+
+			consName = cd.consName;
+		}
+
+	}
+
+	public ClauseDef copy(CopyData cd) {
+
+		if (cd.containsCopyFor(this)) return (ClauseDef) cd.getCopyFor(this);
+		ClauseDef clone = (ClauseDef) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+		/*
+			private String consName;
+			private ClauseType type;
+			public Rule assumptionRule;	
+			private int cachedAssumeIndex = -2;
+		
+			static private int uniqueint = 0;
+		*/
+
+		clone.type = clone.type.copy(cd);
+		if (clone.assumptionRule != null) clone.assumptionRule = clone.assumptionRule.copy(cd);
+		
+		return clone;
 	}
 	
 	

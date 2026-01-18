@@ -1,13 +1,14 @@
 package edu.cmu.cs.sasylf.util;
 
+import edu.cmu.cs.sasylf.ast.SubstitutionData;
 import edu.cmu.cs.sasylf.parser.Token;
 
 /**
  * The span of a single token.
  */
-public class TokenSpan implements Span {
-	private final Location starting;
-	private final Location ending;
+public class TokenSpan extends Span {
+	private Location starting;
+	private Location ending;
 	
 	public TokenSpan(Token t) {
 		starting = new Location(t);
@@ -22,6 +23,20 @@ public class TokenSpan implements Span {
 	@Override
 	public Location getEndLocation() {
 		return ending;
+	}
+
+	@Override
+	public Span copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (TokenSpan) cd.getCopyFor(this);
+
+		TokenSpan clone = (TokenSpan) super.clone();
+
+		clone.starting = clone.starting.copy(cd);
+		clone.ending = clone.ending.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		return clone;
 	}
 
 }

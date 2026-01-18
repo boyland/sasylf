@@ -7,6 +7,7 @@ import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
 
 /**
@@ -15,8 +16,8 @@ import edu.cmu.cs.sasylf.util.UpdatableErrorReport;
  * undeclared derivations.
  */
 public class DerivationPlaceholder extends Derivation {
-	private final FreeVar variable;
-	private final UpdatableErrorReport report;
+	private FreeVar variable;
+	private UpdatableErrorReport report;
 	private Term asTerm;
 	
 	/**
@@ -112,5 +113,29 @@ public class DerivationPlaceholder extends Derivation {
 		final int diff = getLocation().getLine()-foundIn.getLocation().getLine();
 		report.setExtraInformation(getName() + ": " + tp.toString(clause) + "\n" + diff);
 		return tp;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		//if (asTerm != null) asTerm = asTerm.substitute(sd.getFrom(), sd.getTo());
+		asTerm = null;
+		variable = null;
+	}
+
+	@Override
+	public DerivationPlaceholder copy(CopyData cd) {
+
+		if (cd.containsCopyFor(this)) return (DerivationPlaceholder) cd.getCopyFor(this);
+		DerivationPlaceholder clone = (DerivationPlaceholder) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.report = new UpdatableErrorReport(null, getName(), clone);
+		clone.asTerm = null;
+		clone.variable = null;
+		
+		return clone;
 	}
 }

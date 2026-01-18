@@ -1,0 +1,42 @@
+package regression.test1
+
+module list
+
+requires
+
+abstract syntax e
+
+judgment eeq: e = e
+
+  ----- eeq
+  e = e
+
+provides
+
+terminals nil
+syntax l ::= nil | e, l
+
+judgment append: l @ l = l
+
+  ----------- append-nil
+  nil @ l = l
+
+  l1 @ l2 = l3
+  -------------------- append-cons
+  (e,l1) @ l2 = (e, l3)
+  
+
+theorem append-total:
+	forall l1
+	forall l2
+	exists l1 @ l2 = l3
+	proof by induction on l1:
+		case nil is
+			proof by rule append-nil
+		end case
+		case (e, l1') is
+			a': l1' @ l2 = l3' by induction hypothesis on l1', l2
+			proof by rule append-cons on a'
+		end case
+	end induction
+end theorem

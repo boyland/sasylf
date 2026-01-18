@@ -3,6 +3,7 @@ package edu.cmu.cs.sasylf.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -46,5 +47,13 @@ public class DerivationByPrevious extends DerivationWithArgs {
 		Derivation.checkMatchWithImplicitCoercions(this, ctx, cl, source, "");
 		Pair<Fact,Integer> p = ctx.subderivations.get(getArgs().get(0));
 		if (p != null) ctx.subderivations.put(this, p);
+	}
+	
+	@Override
+	public DerivationByPrevious copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByPrevious) cd.getCopyFor(this);
+		DerivationByPrevious clone = (DerivationByPrevious) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
 	}
 }

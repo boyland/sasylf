@@ -11,6 +11,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -110,8 +111,9 @@ public abstract class Element extends Node {
 	}
 
 	public Term asTerm() {
-		if (term == null)
+		if (term == null) {
 			term = computeTerm(new ArrayList<Pair<String, Term>>());
+		}
 		return term;
 	}
 	
@@ -145,4 +147,48 @@ public abstract class Element extends Node {
 	public Term adaptTermTo(Term term, Term matchTerm, Substitution sub) {
 		return term;
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+	
+		/*
+		 * Since we are substituting in this Element, its term is no longer the same.
+		 * So, set it to null, and the next time asTerm() is called, it will be recomputed
+		 * and cached in term.
+		 */
+
+		term = null;
+
+		if (terminal != null) terminal.substitute(sd);
+	}
+
+	@Override
+	public Element copy(CopyData cd) {
+	 
+		Element clone = (Element) super.clone();
+
+		cd.addCopyFor(this, clone);
+
+		/*
+		 * Set the term to null, unless this is an instance of Terminal. If it is a
+		 * Terminal, we don't want to set it to null because no substitution is happening
+		 * in the terminal, so it's okay to keep the Terminal's term as is.
+		 */
+		
+ 
+		if (!(this instanceof Terminal)) {
+			clone.term = null;
+		}
+
+		if (clone.terminal != null) {
+			clone.terminal = clone.terminal.copy(cd);
+		}
+
+		return clone;
+
+		
+	}
+
 }

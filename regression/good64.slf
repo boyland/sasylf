@@ -1,0 +1,88 @@
+package regression
+
+module pairtest
+
+provides
+
+  terminals S T F rev
+
+  syntax n ::= 0 | S n
+
+  1 := S 0
+  2 := S 1
+  3 := S 2
+
+  syntax b ::= T | F
+
+  judgment plus: n + n = n
+
+    ------------------------ plus-z
+    0 + n = n
+
+    n1 + n2 = n3
+    ------------------------ plus-s
+    S n1 + n2 = S n3
+
+  judgment land: b + b = b
+
+    ------------------------ land-t
+    T + b = b
+
+    ------------------------ land-f
+    F + b = F
+
+  module pairinstance = regression.good63[n, b, plus, land]
+
+  syntax p = pairinstance.pair ::= <n, b> | <b, n>
+
+  judgment cpjudgment = pairinstance.combine-pair : p + p = p
+
+  judgment revjudgment = pairinstance.reverse-pair : rev p = p
+
+  judgment paireq = pairinstance.pair-eq : p = p
+
+  judgment paircong = pairinstance.pair-cong : p ~ p
+
+  // <1, T> + <2, F> = <3, F>
+
+  theorem t1:
+    exists 1 + 2 = 3
+    d1: 0 + 2 = 2 by rule plus-z
+    d2: 1 + 2 = 3 by rule plus-s on d1
+    proof by d2
+  end theorem
+
+  theorem t2:
+    exists T + F = F
+    proof by rule land-t
+  end theorem
+
+  theorem t3:
+    exists <1, T> + <2, F> = <3, F>
+    d1: 1 + 2 = 3 by theorem t1
+    d2: T + F = F by theorem t2
+    proof by rule pairinstance.cp-1 on d1, d2
+  end theorem
+
+  theorem t4:
+    exists rev <1, T> = <T, 1>
+    proof by rule pairinstance.rp-1
+  end theorem
+
+  theorem t5:
+    exists <1, T> = <1, T>
+    proof by rule pairinstance.pair-eq-1
+  end theorem
+
+  theorem t6:
+    exists <1, T> ~ <1, T>
+    proof by rule pairinstance.pair-cong-1
+  end theorem
+
+  theorem t7:
+    exists <1, T> ~ <T, 1>
+    d1: rev <1, T> = <T, 1> by theorem t4
+    proof by rule pairinstance.pair-cong-2 on d1
+  end theorem
+
+module fakemodule = regression.good63[n, b, plus, land]

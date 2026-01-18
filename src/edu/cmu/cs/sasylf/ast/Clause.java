@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.grammar.TerminalNode;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -32,7 +33,7 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
-public class Clause extends Element implements CanBeCase, Cloneable {
+public class Clause extends Element implements CanBeCase {
 	
 	public Clause(Location l) { super(l); verify(getLocation() != null, "location provided is null!"); }
 	public Clause(Element e) { 
@@ -55,19 +56,24 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 
 	protected List<Element> elements = new ArrayList<Element>();
 
-	@Override
 	public Clause clone() {
-		Clause result;
+		return (Clause) super.clone();
+	}
 
-		try {
-			result = (Clause) super.clone();
-		} catch (CloneNotSupportedException e) {
-			return null;
+	public Clause copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Clause) cd.getCopyFor(this);
+		Clause clone = (Clause) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		List<Element> newElements = new ArrayList<Element>();
+
+		for (Element e : elements) {
+			newElements.add(e.copy(cd));
 		}
+		clone.elements = newElements;
 
-		result.elements = new ArrayList<Element>(elements);
-
-		return result;
+		return clone;
 	}
 
 	public List<ElemType> getElemTypes() {
@@ -102,6 +108,11 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 
 	@Override
 	public ClauseType getType() {
+
+		System.out.println("Getting the type of an unparsed clause");
+
+		System.out.println("Clause: " + this);
+
 		throw new RuntimeException("Cannot determine type of unparsed Clause");
 	}
 
@@ -227,7 +238,7 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 * @param es element list, must not be null
 	 * @return a new list including only the elements that are not terminals (noise words).
 	 */
-	protected List<Element> withoutTerminals() {
+	public List<Element> withoutTerminals() {
 		List<Element> result = new ArrayList<Element>();
 		for (Element e : elements) {
 			if (e instanceof Terminal) continue;
@@ -235,14 +246,18 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		}
 		return result;
 	}
-	
+
 	private static Term asLFType(ElemType t) {
-		if (t instanceof SyntaxDeclaration)
-			return ((SyntaxDeclaration)t).typeTerm();
+		if (t instanceof SyntaxDeclaration) {
+			SyntaxDeclaration sd = (SyntaxDeclaration) t;
+			SyntaxDeclaration original = sd.getOriginalDeclaration();
+			return original.typeTerm();
+		}
 		else if (t instanceof Judgment)
 			return ((Judgment)t).typeTerm();
 		else throw new RuntimeException("Cannot convert " + t + " to an LF type");
 	}
+
 	
 	/**
 	 * Generate an error if the two elements don't match.
@@ -251,8 +266,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 * @param repl new element
 	 */
 	protected static void checkMatch(Element orig, Element repl) {
+
 		Term type1 = asLFType(orig.getElemType());
 		Term type2 = asLFType(repl.getElemType());
+
 		if (type1 != type2) {
 			ErrorHandler.error(Errors.RENAME_TYPE_MISMATCH, repl.getElemType().getName() + " != " + orig.getElemType().getName(), repl,
 					"SASyLF computed the LF types as " + type1 + " and " + type2);
@@ -289,8 +306,10 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 	 * @param o original clause
 	 */
 	public void checkClauseMatch(Clause o) {
+
 		List<Element> cf = withoutTerminals();
 		List<Element> of = o.withoutTerminals();
+
 		if (cf.size() != of.size()) {
 			ErrorHandler.error(Errors.RENAME_MISMATCH,"" + o, this);
 		}
@@ -647,4 +666,239 @@ public class Clause extends Element implements CanBeCase, Cloneable {
 		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
+	public void substitute (SubstitutionData sd) {
+		super.substitute(sd);
+		for (int j = 0; j < getElements().size(); j++) {
+			// if the element is a NonTerminal, check if it has the same name as the one we are substituting for
+			Element e = getElements().get(j);
+			// check if it's a NonTerminal
+			if (e instanceof NonTerminal && ((NonTerminal) e).isSubstitutable()) {
+				NonTerminal nt = (NonTerminal) e;
+				// check if it has the same name as the one we are substituting for
+				if (sd.containsSyntaxReplacementFor(nt)) {
+					// get the filler characters
+					String fillerCharacters;
+
+					if (nt.getSymbol().length() == sd.getFrom().length()) {
+						fillerCharacters = "";
+					}
+					else {
+						fillerCharacters = nt.getSymbol().substring(sd.getFrom().length());
+					}
+
+					// create a shallow copy of the new NonTerminal
+
+					NonTerminal newNonTerminal = sd.getSyntaxReplacementNonTerminal().cloneWithFillerCharacters(fillerCharacters);
+					
+					newNonTerminal.setUnsubstitutable(); // avoids variable capture
+
+					// replace it in the elements list
+
+					getElements().set(j, newNonTerminal);
+
+				}
+			}
+			else if (e instanceof Clause) {
+				Clause c = (Clause) e;
+				c.substitute(sd);
+			}
+		}
+	}
+
+	/**
+	 * Checks if the two clauses have the same structure, and raises an exception if they don't.
+	 * 
+	 * <br/>
+	 * 
+	 * Two clauses have the same structure means their sequence of elements (ignoring Terminal objects) obey the following properties:
+	 * <br/>
+	 * 1. The sequences are the same length
+	 * <br/>
+	 * 2. It is possible to transform the first sequence into the second sequence via substitution with three bijective mappings:
+	 * 1. Syntax to Syntax, 2. Judgment to Judgment, 3. NonTerminal to NonTerminal
+	 * 
+	 * @param paramClause A clause from the parameter of a polymorphic module
+	 * @param argClause A clause from the argument of a polymorphic module
+	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
+	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
+	 * @param nonTerminalMapping A mapping from nonterminals in the parameter to nonterminals in the arguments
+	 * @return true if the clauses have the same structure, false otherwise
+	 */
+	public static boolean checkClauseSameStructure (
+		Clause paramClause, 
+		Clause argClause,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment,
+		Map<String, String> nonTerminalMapping,
+		ModulePart modulePart
+		)
+	{
+		
+		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
+			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, modulePart);
+			return false;
+		}
+
+		if (argClause instanceof AndClauseUse && !(paramClause instanceof AndClauseUse)) {
+			ErrorHandler.modArgClauseMismatchArgIsAndClauseButParamIsnt(argClause, paramClause, modulePart);
+			return false;
+		}
+
+		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
+			ErrorHandler.modArgClauseMismatchParamIsOrClauseButArgIsnt(argClause, paramClause, modulePart);
+			return false;
+		}
+
+		if (argClause instanceof OrClauseUse && !(paramClause instanceof OrClauseUse)) {
+			ErrorHandler.modArgClauseMismatchArgIsOrClauseButParamIsnt(argClause, paramClause, modulePart);
+			return false;
+		}
+		
+		// make sure that the types of the clauses match
+
+		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, modulePart);
+
+		// ignore everything except for nonterminals
+		List<Element> c1Elements = paramClause.withoutTerminals();
+		List<Element> c2Elements = argClause.withoutTerminals();
+
+		if (c1Elements.size() != c2Elements.size()) {
+			ErrorHandler.modArgClausesNumElementsMismatch(argClause, paramClause, modulePart);
+			return false;
+		}
+
+		// go through each of the elements
+
+		for (int i = 0; i < c1Elements.size(); i++) {
+			Element e1 = c1Elements.get(i);
+			Element e2 = c2Elements.get(i);
+
+			if (e1 instanceof NonTerminal && e2 instanceof NonTerminal) {
+				NonTerminal nt1 = (NonTerminal) e1;
+				NonTerminal nt2 = (NonTerminal) e2;
+
+				// nt1 is the parameter, and nt2 is the argument
+
+				// check if the syntax declaration of nt1 is already mapped to something
+				if (paramToArgSyntax.containsKey(nt1.getType().getOriginalDeclaration())) {
+					if (paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()) != nt2.getType().getOriginalDeclaration()) {
+						// the syntax declaration of nt2 is not the syntax declaration that the syntax declaration of nt1 is mapped to
+						// failure
+
+						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
+						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
+						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()).getOriginalDeclaration();
+						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, modulePart);
+
+						return false;
+					}
+				}
+				// otherwise, add the mapping from the syntax declaration of nt1 to the syntax declaration of nt2
+				else {
+					paramToArgSyntax.put(nt1.getType().getOriginalDeclaration(), nt2.getType().getOriginalDeclaration());
+				}
+
+				// make sure that the nonterminal mapping is consistent
+				
+				String paramSymbol = nt1.getSymbol();
+				String argSymbol = nt2.getSymbol();
+
+				if (nonTerminalMapping.containsKey(paramSymbol)) {
+					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
+					
+						ErrorHandler.modArgNonTerminalMismatch(argSymbol, paramSymbol, nonTerminalMapping.get(paramSymbol), modulePart);
+						return false;
+					}
+				}
+				else {
+					nonTerminalMapping.put(paramSymbol, argSymbol);
+				}
+
+			}
+
+			// if they are both clauses, recursively call this function
+
+			else if (e1 instanceof Clause && e2 instanceof Clause) {
+
+				Clause e1c = (Clause) e1;
+				Clause e2c = (Clause) e2;
+
+				boolean res = checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, modulePart);
+				if (!res) return false;
+			}
+
+			else {
+				ErrorHandler.modArgClauseClassMismatch(argClause, paramClause, modulePart);
+				return false;
+			}
+
+		}
+		
+		return true;
+
+	}
+	
+	/**
+	 * Checks that <code> c1 </code> and <code> c2 </code> have corresponding types, where corresponding types means that
+	 * the syntax declarations in <code> c1 </code> are mapped to the syntax declarations in <code> c2 </code>, and the judgments
+	 * in <code> c1 </code> are mapped to the judgments in <code> c2 </code>.
+	 * @param c1 A clause from the parameter of a polymorphic module
+	 * @param c2 A clause from the argument of a polymorphic module
+	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
+	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
+	 */
+	private static boolean checkClausesCorrespondingTypes(
+		Clause c1,
+		Clause c2,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment,
+		ModulePart modulePart
+	) {
+		ClauseType ct1 = c1.getType();
+		ClauseType ct2 = c2.getType();
+
+		if (ct1 instanceof Syntax && ct2 instanceof Syntax) {
+			Syntax s1 = ((Syntax) ct1).getOriginalDeclaration();
+			Syntax s2 = ((Syntax) ct2).getOriginalDeclaration();
+			// check if s1 is already bound to something
+			if (paramToArgSyntax.containsKey(s1)) {
+				if (paramToArgSyntax.get(s1) != s2) {
+					ErrorHandler.modArgMismatchSyntax(s2.getOriginalDeclaration(), s1.getOriginalDeclaration(),
+					paramToArgSyntax.get(s1).getOriginalDeclaration(), modulePart);
+
+					return false;
+				}
+			}
+			else {
+				// add the mapping
+				paramToArgSyntax.put(s1, s2);
+			}
+		}
+
+		else if (ct1 instanceof Judgment && ct2 instanceof Judgment) {
+			Judgment j1 = (Judgment) ct1;
+			Judgment j2 = (Judgment) ct2;
+			// check if j1 is already bound to something
+			if (paramToArgJudgment.containsKey(j1)) {
+				if (paramToArgJudgment.get(j1) != j2) {
+					ErrorHandler.modArgMismatchJudgment(j2, j1, paramToArgJudgment.get(j1), modulePart);
+					return false;
+				}
+			}
+			else {
+				// add the mapping
+				paramToArgJudgment.put(j1, j2);
+			}
+		}
+
+		else {
+			ErrorHandler.modArgClauseClassMismatch(c1, c2, modulePart);
+			return false;
+		}
+		
+		return true;
+	}
+
+
+	
 }

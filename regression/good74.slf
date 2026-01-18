@@ -1,0 +1,62 @@
+package regression
+
+module good74
+
+provides
+
+terminals T F
+
+syntax boolid ::= F
+
+syntax boolnonid ::= T
+
+syntax b ::= boolid | boolnonid
+
+judgment lor: b \/ b = b
+
+  ----------- lor-1
+  T \/ T = T
+
+  ----------- lor-2
+  T \/ F = T
+
+  ----------- lor-3
+  F \/ T = T
+
+  ----------- lor-4
+  F \/ F = F
+
+theorem bool-left-id:
+  forall b
+  exists boolid \/ b = b
+  proof by unproved //!
+end theorem
+
+theorem bool-right-id:
+  forall b
+  exists b \/ boolid = b
+  proof by unproved //!
+end theorem
+
+theorem bool-commutative:
+  forall d: b1 \/ b2 = b3
+  exists b2 \/ b1 = b3
+  proof by unproved //!
+end theorem
+
+theorem bool-trivial:
+  forall d: b1 \/ b2 = b3
+  exists b1 \/ b2 = b3
+  proof by unproved //!
+end theorem
+
+module boolmonoid = regression.good73[boolid, 
+  boolnonid,
+  b,
+  lor,
+  bool-left-id,
+  bool-right-id,
+  bool-commutative,
+  bool-trivial
+]
+

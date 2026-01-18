@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -22,6 +23,15 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class NonTerminal extends Element {
+	private SyntaxDeclaration ty;
+
+	/*
+	 * Substitutable indicates whether this NonTerminal is allowed to be replaced during substitution.
+	 * NonTerminals can be replaced during substitution in Clause.substitute.
+	 * Substitutable is set to true by default, and should be set to false after the NonTerminal is substituted.
+	 * This is to prevent the NonTerminal from being replaced if there is a QualName module parameter with the same symbol.
+	 */
+	private boolean substitutable;
 	public NonTerminal(String s, Location l) { this(s,l,null); }
 	public NonTerminal(String s, Location l, SyntaxDeclaration ty) {
 		super(l);
@@ -30,6 +40,24 @@ public class NonTerminal extends Element {
 		if (l != null) {
 			super.setEndLocation(l.add(s.length()));
 		}
+		this.ty = ty;
+		substitutable = true;
+	}
+
+	/**
+	 * Whether this nonterminal is allowed to be replaced during substitution.
+	 * @return whether this nonterminal is allowed to be replaced during substitution
+	 */
+	public boolean isSubstitutable() {
+		return substitutable;
+	}
+
+	/**
+	 * Set this NonTerminal to be unsubstitutable.
+	 * Should be called after a NonTerminal
+	 */
+	public void setUnsubstitutable() {
+		substitutable = false;
 	}
 
 	public String getSymbol() { return symbol; }
@@ -55,6 +83,7 @@ public class NonTerminal extends Element {
 
 	@Override
 	public int hashCode() { return symbol.hashCode(); }
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
@@ -202,5 +231,82 @@ public class NonTerminal extends Element {
 		freeSet.add(this);
 	}
 
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+	
+		/*
+			We want to check if symbol "matches" from
+
+			We need to remove the filler characters from the back of the string, then check if they are equal
+
+			**Match** means `from` is a prefix of `symbol`, and all characters after the prefix matching are filler characters
+		*/
+
+		// First, check that from is a prefix of symbol
+
+		if (!symbol.startsWith(sd.getFrom())) {
+			return;
+		}
+
+		// Check that all characters after the prefix match are filler characters
+
+		int fromLength = sd.getFrom().length();
+
+		String filler = symbol.substring(fromLength);
+
+		if (filler.matches("^[0-9_']*$")) {
+			symbol = sd.getTo() + filler;
+		}
+
+		if (type != null) {
+			type.substitute(sd);
+		}
+
+		if (ty != null) {
+			ty.substitute(sd);
+		}
+
+	}
+
+	@Override
+	public NonTerminal copy(CopyData cd) {
+
+		if (cd.containsCopyFor(this)) {
+			return (NonTerminal) cd.getCopyFor(this);
+		}
+
+		NonTerminal clone = (NonTerminal) super.copy(cd);
+		
+		/*
+			Substitute in the following attributes:
+
+			private String symbol;
+			private SyntaxDeclaration type;
+			private SyntaxDeclaration ty;
+		 */
+
+		cd.addCopyFor(this, clone);
+		
+		if (clone.type != null) {
+			clone.type = clone.type.copy(cd);
+		}
+		if (clone.ty != null) clone.ty = clone.ty.copy(cd);
+		
+		return clone;
+	}
+	
+	@Override
+	public NonTerminal clone() {
+		return (NonTerminal) super.clone();
+	}
+
+	public NonTerminal cloneWithFillerCharacters(String fillerCharacters) {
+		NonTerminal clone = clone();
+		clone.symbol += fillerCharacters;
+		return clone;
+	}
 
 }

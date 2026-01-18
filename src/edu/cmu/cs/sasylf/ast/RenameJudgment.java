@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.Constant;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -36,7 +37,10 @@ public class RenameJudgment extends Judgment {
 	
 	@Override
 	public void defineConstructor(Context ctx) {
+
 		Object resolution = source.resolveNotPackage(ctx);
+
+		
 		if (resolution != null) {
 			if (resolution instanceof Judgment) {
 				original = (Judgment)resolution;
@@ -51,6 +55,7 @@ public class RenameJudgment extends Judgment {
 			super.setForm(cd);
 		}
 		super.defineConstructor(ctx);
+
 	}
 
 	@Override
@@ -73,6 +78,10 @@ public class RenameJudgment extends Judgment {
 			} else if (super.getAssume() != null) {
 				ErrorHandler.recoverableError(Errors.RENAME_ASSUME_MISMATCH, this);
 			}
+			// getForm() is the form of the judgment as the user has declared it
+			// original.getForm() is the form of the judgment as the module has declared it
+			// we want to check if they match
+
 			getForm().checkClauseMatch(original.getForm());
 		}
 		// super.typecheck(ctx);
@@ -100,5 +109,35 @@ public class RenameJudgment extends Judgment {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		source.visit(consumer);
+	}
+
+	@Override
+	public Judgment getOriginalDeclaration() {
+		if (original instanceof RenameJudgment) {
+			RenameJudgment rj = (RenameJudgment) original;
+			return rj.getOriginalDeclaration();
+		}
+		else {
+			return original;
+		}
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		original.substitute(sd);
+	}
+
+	@Override
+	public RenameJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return  (RenameJudgment) cd.getCopyFor(this);
+		RenameJudgment clone = (RenameJudgment) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.source = source.copy(cd);
+		clone.original = original;
+		return clone;
 	}
 }

@@ -20,6 +20,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -393,5 +394,35 @@ public abstract class DerivationByAnalysis extends DerivationWithArgs {
 		for (Case c : cases) {
 			c.collectQualNames(consumer);
 		}
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		
+		for (Case c : cases) {
+			c.substitute(sd);
+		}
+
+		targetDerivation.substitute(sd);
+		
+	}
+
+	@Override
+	public DerivationByAnalysis copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByAnalysis) cd.getCopyFor(this);
+		DerivationByAnalysis clone = (DerivationByAnalysis) super.copy(cd);
+		cd.addCopyFor(this, clone);
+
+		clone.cases = new ArrayList<Case>();
+		for (Case c : cases) {
+			clone.cases.add(c.copy(cd));
+		}
+
+		clone.targetDerivation = clone.targetDerivation.copy(cd);
+
+		return clone;
 	}
 }

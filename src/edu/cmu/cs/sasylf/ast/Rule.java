@@ -21,6 +21,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -493,5 +494,37 @@ public class Rule extends RuleLike implements CanBeCase {
 
 	private Judgment judgment;
 	private boolean ruleIsOk = false;
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		for (Clause c : premises) {
+			c.substitute(sd);
+		}
+		conclusion.substitute(sd);
+	}
+
+	@Override
+	public Rule copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Rule) cd.getCopyFor(this);
+
+		Rule clone = (Rule) super.clone();
+
+		List<Clause> newPremises = new ArrayList<Clause>();
+		for (Clause c : premises) {
+			newPremises.add(c.copy(cd));
+		}
+
+		cd.addCopyFor(this, clone);
+		
+		clone.premises = newPremises;
+
+		clone.conclusion = conclusion.copy(cd);
+
+		return clone;
+	}
+	
 }
 

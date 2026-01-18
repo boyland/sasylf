@@ -1,6 +1,6 @@
 package edu.cmu.cs.sasylf.util;
 
-public class DefaultSpan implements Span {
+public class DefaultSpan extends Span {
 
 	public DefaultSpan(Location l) {
 		start = end = l;
@@ -30,4 +30,17 @@ public class DefaultSpan implements Span {
 	}
 
 	private Location start, end;
+
+	@Override
+	public DefaultSpan copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DefaultSpan) cd.getCopyFor(this);
+		DefaultSpan clone = (DefaultSpan) super.clone();
+
+		clone.start = clone.start.copy(cd);
+		clone.end = clone.end.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		return clone;
+	}
 }

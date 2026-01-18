@@ -1,0 +1,33 @@
+package regression;
+
+module maybe
+
+requires
+
+  abstract syntax e
+
+  abstract judgment combine: e + e = e
+
+provides
+
+  terminals Nothing Just
+
+  syntax Maybe ::= Nothing | Just e
+
+  judgment penetrate: Maybe + Maybe = Maybe
+
+    ----------------------- penetrate-Nothing-Left
+    Nothing + Maybe = Nothing
+
+    ----------------------- penetrate-Nothing-Right
+    Maybe + Nothing = Nothing
+    
+
+    e1 + e2 = e3
+    ----------------------- penetrate-Just
+    Just e1 + Just e2 = Just e3
+
+  theorem nothing-both-sides:
+    exists Nothing + Nothing = Nothing
+    proof by rule penetrate-Nothing-Left
+  end theorem

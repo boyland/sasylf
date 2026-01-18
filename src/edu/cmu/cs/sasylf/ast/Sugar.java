@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
 import edu.cmu.cs.sasylf.ast.grammar.GrmTerminal;
 import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.grammar.Symbol;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 
@@ -184,6 +185,39 @@ public class Sugar extends Syntax {
 		if (gnt == null)
 			gnt = new GrmNonTerminal(typeName.getSymbol());
 		return gnt;
+	}
+
+	public SyntaxDeclaration getOriginalDeclaration() {
+		return type;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+
+		if (sugar != null) sugar.substitute(sd);
+		if (typeName != null) typeName.substitute(sd);
+		if (type != null) type.substitute(sd);
+		if (replacement != null) replacement.substitute(sd);
+
+	}
+
+	@Override
+	public Sugar copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Sugar) cd.getCopyFor(this);
+
+		Sugar clone = (Sugar) super.clone();
+
+		cd.addCopyFor(this, clone);
+		
+		clone.sugar = clone.sugar.copy(cd);
+		clone.typeName = clone.typeName.copy(cd);
+		clone.type = clone.type.copy(cd);
+		clone.replacement = clone.replacement.copy(cd);
+		
+		return clone;
 	}
 
 }

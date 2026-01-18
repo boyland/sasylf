@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Span;
 
@@ -93,5 +94,54 @@ public class Terminal extends Element implements ElemType {
 	@Override
 	public Term typeTerm() {
 		throw new RuntimeException("internal error: can't compute the term of a Terminal");
+	}
+	
+	public void substitute(SubstitutionData sd) {
+		super.substitute(sd);
+		//if (sd.didSubstituteFor(this)) return;
+		//sd.setSubstitutedFor(this);
+
+		/*
+			We want to check if symbol matches from
+
+			We need to remove these characters from the back of the string, then check if they are equal
+
+			Match means from is a prefix of symbol, and all 
+			characters after the prefix matching are filler characters
+		*/
+
+		// First, check that from is a prefix of symbol
+
+		if (!symbol.startsWith(sd.getFrom())) {
+			return;
+		}
+
+		// Check that all characters after the prefix match are filler characters
+
+		int fromLength = sd.getFrom().length();
+
+		String filler = symbol.substring(fromLength);
+
+		// the filler characters are 0-9, _, and '
+
+		if (filler.matches("^[0-9_']*$")) {
+			// perform the substitution
+			symbol = sd.getTo() + filler;
+		}
+	
+	}
+
+	@Override
+	public Terminal copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Terminal) cd.getCopyFor(this);
+
+		// make a clone
+		Terminal clone = (Terminal) super.copy(cd);
+		
+		cd.addCopyFor(this, clone);
+
+		// the other attributes are immutable, so we don't need to clone them
+		
+		return clone;
 	}
 }

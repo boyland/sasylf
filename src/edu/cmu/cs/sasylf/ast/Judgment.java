@@ -1,9 +1,12 @@
 package edu.cmu.cs.sasylf.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.ast.grammar.GrmRule;
@@ -11,6 +14,7 @@ import edu.cmu.cs.sasylf.ast.grammar.GrmUtil;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -19,7 +23,13 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
 
-public class Judgment extends Node implements ClauseType, Named {
+public class Judgment extends Node implements ClauseType, Named, ModuleComponent {
+	private List<Rule> rules;
+	private Clause form;
+	private String name;
+	private NonTerminal assume;
+	private boolean isAbstract;
+
 	public Judgment(Location loc, String n, List<Rule> l, Clause c, NonTerminal a) { 
 		super(loc); 
 		name=n; 
@@ -52,11 +62,6 @@ public class Judgment extends Node implements ClauseType, Named {
 	@Override
 	public boolean isAbstract() { return isAbstract; }
 
-	private List<Rule> rules;
-	private Clause form;
-	private String name;
-	private NonTerminal assume;
-	private boolean isAbstract;
 
 	@Override
 	public void prettyPrint(PrintWriter out) {
@@ -204,7 +209,203 @@ public class Judgment extends Node implements ClauseType, Named {
 			result.put(rule, caseResult);
 		}
 	}
+
+	/**
+	 * Get the original declaration of this judgment. If this judgment is a renaming,
+	 * then this method will return the original judgment that was renamed.
+	 * If this judgment is not a renaming, then this method will return this judgment.
+	 * @return the original declaration of this judgment
+	 */
+	public Judgment getOriginalDeclaration() {
+		// This judgment is its own original declaration
+		return this;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		
+		for (Rule r : rules) {
+			r.substitute(sd);
+		}
+
+		/*
+		 * The name of the judgment is not substituted because we want the name to stay the
+		 * same within the module.
+		 */
+
+		form.substitute(sd);
+
+		/*
+		 * Since we are substituting in this Judgment, its term is no longer the same.
+		 * So, set it to null, and the next time typeTerm() is called, it will be recomputed
+		 * and cached in term.
+		 */
+
+		term = null;
+			
+		if (assume != null) {
+			assume.substitute(sd);
+		}
+
+	}
+
+	@Override
+	public Judgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Judgment) cd.getCopyFor(this);
+		Judgment clone = (Judgment) super.clone();
+		
+		cd.addCopyFor(this, clone);
 	
-	
+
+		List<Rule> newRules = new ArrayList<>();
+		for (Rule r : rules) {
+			newRules.add(r.copy(cd));
+		}
+		clone.rules = newRules;
+		
+		clone.form = form.copy(cd);
+
+		clone.term = null;
+
+		if (clone.assume != null) {
+			clone.assume = (NonTerminal) assume.copy(cd);
+		}
+		
+		return clone;
+		
+	}
+
+	@Override
+	public Optional<SubstitutionData> matchesParam(
+		ModuleComponent paramModArg,
+		ModulePart mp,
+		Map<Syntax, Syntax> paramToArgSyntax,
+		Map<Judgment, Judgment> paramToArgJudgment) {
+			
+			Judgment arg = getOriginalDeclaration();
+
+			if (!(paramModArg instanceof Judgment)) {
+				// the wrong type of argument has been provided
+
+				String argKind = this.getKind();
+				String paramKind = paramModArg.getKind();
+				
+				// throw an exception
+
+				ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+				return Optional.empty();
+			}
+
+			// they are of the same type, so cast the parameter to a Judgment
+
+			Judgment param = (Judgment) paramModArg;
+
+			// now, we need to check if the two judgments are compatible with eachother
+			
+			if (paramToArgJudgment.containsKey(this)) {
+				// check if the parameter judgment is bound to the same argument judgment
+
+				Judgment boundJudgment = paramToArgJudgment.get(this).getOriginalDeclaration();
+
+				if (boundJudgment != param) {
+					ErrorHandler.modArgMismatchJudgment(arg, param, boundJudgment, mp);
+					return Optional.empty();
+				}
+
+			}
+
+			// otherwise, bind the param to arg in the map
+
+			paramToArgJudgment.put(param, arg);
+
+			// verify that the forms of the judgments have the same structure
+
+			Clause argForm = arg.getForm();
+			Clause paramForm = param.getForm();
+
+			Clause.checkClauseSameStructure(
+				paramForm,
+				argForm,
+				paramToArgSyntax,
+				paramToArgJudgment,
+				new HashMap<String, String>(),
+				mp
+			);
+
+			if (!param.isAbstract()) {
+				// This is a concrete judgment declaration, so there are rules to check
+				// check that param and arg have the same number of rules
+
+				List<Rule> paramRules = param.getRules();
+				List<Rule> argRules = arg.getRules();
+
+				if (paramRules.size() != argRules.size()) {
+					ErrorHandler.modArgumentJudgmentWrongNumRules(arg, param, mp);
+					return Optional.empty();
+				}
+
+				// check that each pair of rules has the same structure
+
+				for (int j = 0; j < paramRules.size(); j++) {
+					Rule paramRule = paramRules.get(j);
+					Rule argRule = argRules.get(j);
+
+					// check the premises of the rules
+					List<Clause> paramPremises = paramRule.getPremises();
+					List<Clause> argPremises = argRule.getPremises();
+					if (paramPremises.size() != argPremises.size()) {
+						ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, mp);
+					}
+
+					// check that each pair of premises has the same structure
+
+					Map<String, String> nonTerminalMapping = new HashMap<String, String>();
+
+					for (int k = 0; k < paramPremises.size(); k++) {
+						Clause paramPremise = paramPremises.get(k);
+						Clause argPremise = argPremises.get(k);
+						Clause.checkClauseSameStructure(
+							paramPremise,
+							argPremise,
+							paramToArgSyntax,
+							paramToArgJudgment,
+							nonTerminalMapping,
+							mp
+						);
+					}
+
+					// check the conclusions
+
+					Clause paramConclusion = paramRule.getConclusion();
+					Clause argConclusion = argRule.getConclusion();
+
+					Clause.checkClauseSameStructure(
+						paramConclusion,
+						argConclusion,
+						paramToArgSyntax,
+						paramToArgJudgment,
+						nonTerminalMapping,
+						mp
+					);
+				}
+
+			}
+
+			// they match
+			
+			SubstitutionData sd = new SubstitutionData(param.getName(), arg.getName(), arg);
+			return Optional.of(sd);
+
+	}
+
+
+
+	@Override
+	public String getKind() {
+		return "judgment";
+	}
+
 }
 

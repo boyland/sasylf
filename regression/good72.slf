@@ -1,0 +1,42 @@
+package regression
+
+module good72
+
+provides
+
+terminals T F S
+
+syntax
+
+  boolid ::= T
+
+  boolnonid ::= F
+
+  nat ::= 0 | S nat
+
+  b ::= boolid | boolnonid
+
+judgment land: b /\ b = b
+
+  --------- land-1
+  T /\ b = b
+
+  --------- land-2
+  F /\ b = F
+
+judgment lor: b \/ b = b
+
+  --------- lor-1
+  T \/ b = T
+
+  --------- lor-2
+  F \/ b = b
+
+judgment landconcrete: b * b = b
+
+  b /\ b = b
+  ---------------- landconcrete-1
+  b * b = b
+
+module boolmonoid = regression.good71[boolid, boolnonid, b, land, landconcrete]
+
