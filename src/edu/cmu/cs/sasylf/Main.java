@@ -15,6 +15,7 @@ import edu.cmu.cs.sasylf.module.PathModuleFinder;
 import edu.cmu.cs.sasylf.module.RootModuleFinder;
 import edu.cmu.cs.sasylf.parser.DSLToolkitParser;
 import edu.cmu.cs.sasylf.parser.ParseException;
+import edu.cmu.cs.sasylf.debugger.ProofDebugger;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -41,6 +42,7 @@ public class Main {
 			System.err.println("   --verbose     prints out theorem names as it checks them");
 			System.err.println("   --task        print out task comments");
 			System.err.println("   --LF          extra info about LF terms in certain error messages");
+			System.err.println("   --proof-debug export proof state as JSON for visualization");
 			System.err.println("   --path=dir... use the given directories for package/module checking.");
 			return;
 		}
@@ -67,6 +69,10 @@ public class Main {
 			}
 			if (args[i].equals("--verbose")) {
 				edu.cmu.cs.sasylf.util.Util.VERBOSE = true;
+				continue;
+			}
+			if (args[i].equals("--proof-debug")) {
+				ProofDebugger.setEnabled(true);
 				continue;
 			}
 			if (args[i].equals("--debug")) {
@@ -162,7 +168,20 @@ public class Main {
 			}
 			ps.println(" reported.");
 			if (newErrorCount > 0) exitCode = -1;
-
+			// Export proof debug information if enabled
+			if (ProofDebugger.isEnabled()) {
+				String json = ProofDebugger.exportCurrentStateToJSON();
+				if (json != null) {
+					String jsonFilename = filename.replace(".slf", "_proof.json");
+					try (java.io.PrintWriter jsonOut = new java.io.PrintWriter(jsonFilename, "UTF-8")) {
+						jsonOut.println(json);
+						System.out.println("Proof state exported to: " + jsonFilename);
+					} catch (IOException e) {
+						System.err.println("Could not write proof state to " + jsonFilename);
+					}
+				}
+				ProofDebugger.resetState();
+			}
 		}
 		System.exit(exitCode);
 	}
