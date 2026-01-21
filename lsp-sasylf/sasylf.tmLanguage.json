@@ -1,0 +1,22 @@
+{
+    "scopeName": "source.sasylf",
+    "patterns": [
+        {
+            "name": "comment.line.double-slash.sasylf",
+            "match": "//.*"
+        },
+        {
+            "name": "comment.block.sasylf",
+            "begin": "/\\*",
+            "end": "\\*/"
+        },
+        {
+            "name": "support.variable.sasylf",
+            "match": "^\\s*(-{3,}|—{3,}|―{3,}|─{3,})\\s*[a-zA-Z0-9].*$"
+        },
+        {
+            "name": "keyword.other.sasylf",
+            "match": "\\b(package|judgment|terminals|premise|syntax|theorem|lemma|forall|exists|by|rule|is|on|end|case|analysis|assumes|substitution|induction|inversion|weakening|exchange|contraction|hypothesis|unproved|solve|and|or|not|proof|contradiction|use|module|requires|provides|extends|do|abstract|where)\\b"
+        }
+    ]
+}
