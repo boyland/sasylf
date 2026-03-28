@@ -421,7 +421,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 	@Override
 	public Optional<SubstitutionData> matchesParam(
 		ModuleComponent paramModArg,
-		ModulePart mp,
+		Node errorPoint,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
 		
@@ -433,7 +433,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 
 			// throw an exception
 
-			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+			ErrorHandler.modArgTypeMismatch(argKind, paramKind, errorPoint);
 			return Optional.empty();
 		}
 
@@ -450,7 +450,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 		List<Fact> argForalls = this.getForalls();
 
 		if (paramForalls.size() != argForalls.size()) {
-			ErrorHandler.modArgTheoremWrongNumForalls(arg, param, mp);
+			ErrorHandler.modArgTheoremWrongNumForalls(arg, param, errorPoint);
 			return Optional.empty();
 		}
 
@@ -476,7 +476,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 				Clause paramClause = (Clause) paramElement;
 				Clause argClause = (Clause) argElement;
 				// check that they have the same structure
-				boolean match = Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+				boolean match = Clause.checkClauseSameStructure(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, errorPoint);
 				if (!match) return Optional.empty();
 			}
 
@@ -486,7 +486,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 				// Make sure that the types of the nonterminals match
 				if (paramToArgSyntax.containsKey(paramNonTerminal.getType())) {
 					if (paramToArgSyntax.get(paramNonTerminal.getType()) != argNonTerminal.getType()) {
-						ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, mp);
+						ErrorHandler.modArgClauseNonterminalTypeMismatch(argNonTerminal, paramNonTerminal, paramToArgSyntax, errorPoint);
 						return Optional.empty();
 					}
 				}
@@ -498,7 +498,7 @@ public class Theorem extends RuleLike implements ModuleComponent {
 		Clause paramExists = param.getExists();
 		Clause argExists = this.getExists();
 
-		boolean existsMatch = Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, mp);
+		boolean existsMatch = Clause.checkClauseSameStructure(paramExists, argExists, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, errorPoint);
 
 		if (!existsMatch) return Optional.empty();
 

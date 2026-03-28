@@ -56,10 +56,12 @@ public class Clause extends Element implements CanBeCase {
 
 	protected List<Element> elements = new ArrayList<Element>();
 
+	@Override
 	public Clause clone() {
 		return (Clause) super.clone();
 	}
 
+	@Override
 	public Clause copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (Clause) cd.getCopyFor(this);
 		Clause clone = (Clause) super.copy(cd);
@@ -666,6 +668,7 @@ public class Clause extends Element implements CanBeCase {
 		throw new RuntimeException("should only call caseAnalyze on a clause def, not " + this);
 	}
 
+	@Override
 	public void substitute (SubstitutionData sd) {
 		super.substitute(sd);
 		for (int j = 0; j < getElements().size(); j++) {
@@ -722,6 +725,7 @@ public class Clause extends Element implements CanBeCase {
 	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
 	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
 	 * @param nonTerminalMapping A mapping from nonterminals in the parameter to nonterminals in the arguments
+	 * @param errorPoint point where to indicate errors.
 	 * @return true if the clauses have the same structure, false otherwise
 	 */
 	public static boolean checkClauseSameStructure (
@@ -730,40 +734,40 @@ public class Clause extends Element implements CanBeCase {
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment,
 		Map<String, String> nonTerminalMapping,
-		ModulePart modulePart
+		Node errorPoint
 		)
 	{
 		
 		if (paramClause instanceof AndClauseUse && !(argClause instanceof AndClauseUse)) {
-			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, modulePart);
+			ErrorHandler.modArgClauseMismatchParamIsAndClauseButArgIsnt(argClause, paramClause, errorPoint);
 			return false;
 		}
 
 		if (argClause instanceof AndClauseUse && !(paramClause instanceof AndClauseUse)) {
-			ErrorHandler.modArgClauseMismatchArgIsAndClauseButParamIsnt(argClause, paramClause, modulePart);
+			ErrorHandler.modArgClauseMismatchArgIsAndClauseButParamIsnt(argClause, paramClause, errorPoint);
 			return false;
 		}
 
 		if (paramClause instanceof OrClauseUse && !(argClause instanceof OrClauseUse)) {
-			ErrorHandler.modArgClauseMismatchParamIsOrClauseButArgIsnt(argClause, paramClause, modulePart);
+			ErrorHandler.modArgClauseMismatchParamIsOrClauseButArgIsnt(argClause, paramClause, errorPoint);
 			return false;
 		}
 
 		if (argClause instanceof OrClauseUse && !(paramClause instanceof OrClauseUse)) {
-			ErrorHandler.modArgClauseMismatchArgIsOrClauseButParamIsnt(argClause, paramClause, modulePart);
+			ErrorHandler.modArgClauseMismatchArgIsOrClauseButParamIsnt(argClause, paramClause, errorPoint);
 			return false;
 		}
 		
 		// make sure that the types of the clauses match
 
-		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, modulePart);
+		checkClausesCorrespondingTypes(paramClause, argClause, paramToArgSyntax, paramToArgJudgment, errorPoint);
 
 		// ignore everything except for nonterminals
 		List<Element> c1Elements = paramClause.withoutTerminals();
 		List<Element> c2Elements = argClause.withoutTerminals();
 
 		if (c1Elements.size() != c2Elements.size()) {
-			ErrorHandler.modArgClausesNumElementsMismatch(argClause, paramClause, modulePart);
+			ErrorHandler.modArgClausesNumElementsMismatch(argClause, paramClause, errorPoint);
 			return false;
 		}
 
@@ -788,7 +792,7 @@ public class Clause extends Element implements CanBeCase {
 						SyntaxDeclaration nt1Type = nt1.getType().getOriginalDeclaration();
 						SyntaxDeclaration nt2Type = nt2.getType().getOriginalDeclaration();
 						SyntaxDeclaration boundType = paramToArgSyntax.get(nt1.getType().getOriginalDeclaration()).getOriginalDeclaration();
-						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, modulePart);
+						ErrorHandler.modArgMismatchSyntax(nt2Type, nt1Type, boundType, errorPoint);
 
 						return false;
 					}
@@ -806,7 +810,7 @@ public class Clause extends Element implements CanBeCase {
 				if (nonTerminalMapping.containsKey(paramSymbol)) {
 					if (!nonTerminalMapping.get(paramSymbol).equals(argSymbol)) {
 					
-						ErrorHandler.modArgNonTerminalMismatch(argSymbol, paramSymbol, nonTerminalMapping.get(paramSymbol), modulePart);
+						ErrorHandler.modArgNonTerminalMismatch(argSymbol, paramSymbol, nonTerminalMapping.get(paramSymbol), errorPoint);
 						return false;
 					}
 				}
@@ -823,12 +827,12 @@ public class Clause extends Element implements CanBeCase {
 				Clause e1c = (Clause) e1;
 				Clause e2c = (Clause) e2;
 
-				boolean res = checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, modulePart);
+				boolean res = checkClauseSameStructure(e1c, e2c, paramToArgSyntax, paramToArgJudgment, nonTerminalMapping, errorPoint);
 				if (!res) return false;
 			}
 
 			else {
-				ErrorHandler.modArgClauseClassMismatch(argClause, paramClause, modulePart);
+				ErrorHandler.modArgClauseClassMismatch(argClause, paramClause, errorPoint);
 				return false;
 			}
 
@@ -846,13 +850,14 @@ public class Clause extends Element implements CanBeCase {
 	 * @param c2 A clause from the argument of a polymorphic module
 	 * @param paramToArgSyntax A mapping from syntax declarations in the parameter to syntax declarations in the argument
 	 * @param paramToArgJudgment A mapping from judgments in the parameter to judgments in the argument
+	 * @param errorPoint point where to note errors
 	 */
 	private static boolean checkClausesCorrespondingTypes(
 		Clause c1,
 		Clause c2,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment,
-		ModulePart modulePart
+		Node errorPoint
 	) {
 		ClauseType ct1 = c1.getType();
 		ClauseType ct2 = c2.getType();
@@ -864,7 +869,7 @@ public class Clause extends Element implements CanBeCase {
 			if (paramToArgSyntax.containsKey(s1)) {
 				if (paramToArgSyntax.get(s1) != s2) {
 					ErrorHandler.modArgMismatchSyntax(s2.getOriginalDeclaration(), s1.getOriginalDeclaration(),
-					paramToArgSyntax.get(s1).getOriginalDeclaration(), modulePart);
+					paramToArgSyntax.get(s1).getOriginalDeclaration(), errorPoint);
 
 					return false;
 				}
@@ -881,7 +886,7 @@ public class Clause extends Element implements CanBeCase {
 			// check if j1 is already bound to something
 			if (paramToArgJudgment.containsKey(j1)) {
 				if (paramToArgJudgment.get(j1) != j2) {
-					ErrorHandler.modArgMismatchJudgment(j2, j1, paramToArgJudgment.get(j1), modulePart);
+					ErrorHandler.modArgMismatchJudgment(j2, j1, paramToArgJudgment.get(j1), errorPoint);
 					return false;
 				}
 			}
@@ -892,7 +897,7 @@ public class Clause extends Element implements CanBeCase {
 		}
 
 		else {
-			ErrorHandler.modArgClauseClassMismatch(c1, c2, modulePart);
+			ErrorHandler.modArgClauseClassMismatch(c1, c2, errorPoint);
 			return false;
 		}
 		

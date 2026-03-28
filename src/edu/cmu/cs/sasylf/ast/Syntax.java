@@ -38,7 +38,7 @@ public abstract class Syntax extends Node implements ModuleComponent {
 	
 	/**
 	 * Update the contexts syntax maps so that we know about each declared entity.
-	 * @param ctx TODO
+	 * @param ctx context to use
 	 */
 	public void updateContext(Context ctx) {}
 
@@ -91,21 +91,25 @@ public abstract class Syntax extends Node implements ModuleComponent {
 	 * Substitute inside of this Syntax according to the given substitution data.
 	 * @param sd substitution data to use
 	 */
+	@Override
 	public abstract void substitute(SubstitutionData sd);
 
 	/**
 	 * Create a deep copy of this Syntax.
 	 * @param cd clone data to use for copying
 	 */
+	@Override
 	public abstract Syntax copy(CopyData cd);
 
+	@Override
 	public String getName() {
 		return getOriginalDeclaration().getName();
 	}
 
+	@Override
 	public Optional<SubstitutionData> matchesParam(
 		ModuleComponent paramModArg,
-		ModulePart mp,
+		Node errorPoint,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
 
@@ -124,7 +128,7 @@ public abstract class Syntax extends Node implements ModuleComponent {
 
 			// throw an exception
 
-			ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+			ErrorHandler.modArgTypeMismatch(argKind, paramKind, errorPoint);
 			return Optional.empty();
 		}
 
@@ -140,7 +144,7 @@ public abstract class Syntax extends Node implements ModuleComponent {
 			SyntaxDeclaration boundSyntax = paramToArgSyntax.get(this).getOriginalDeclaration();
 
 			if (boundSyntax != param) {
-				ErrorHandler.modArgMismatchSyntax(arg, param, boundSyntax, mp);
+				ErrorHandler.modArgMismatchSyntax(arg, param, boundSyntax, errorPoint);
 				return Optional.empty();
 			}
 		}
@@ -159,7 +163,7 @@ public abstract class Syntax extends Node implements ModuleComponent {
 			List<Clause> argProductions = arg.getClauses();
 
 			if (paramProductions.size() != argProductions.size()) {
-				ErrorHandler.modArgSyntaxWrongNumProductions(arg, param, mp);
+				ErrorHandler.modArgSyntaxWrongNumProductions(arg, param, errorPoint);
 				return Optional.empty();
 			}
 
@@ -173,7 +177,7 @@ public abstract class Syntax extends Node implements ModuleComponent {
 					paramToArgSyntax,
 					paramToArgJudgment,
 					new HashMap<String, String>(),
-					mp
+					errorPoint
 				);
 
 				if (!sameStructure) return Optional.empty();

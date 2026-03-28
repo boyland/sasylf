@@ -41,6 +41,16 @@ public class ModulePart extends Node implements Part, Named {
 	}
 
 	/**
+	 * Return the argument at the given index,
+	 * presumably for error messages
+	 * @param i index, must be in range
+	 * @return argument's AST node
+	 */
+	public Node getParam(int i) {
+		return arguments.get(i);
+	}
+	
+	/**
 	 * Throws an error, specifying that the module argument type does not match the module parameter type.
 	 * @param parameter the module parameter
 	 * @param argument the module argument

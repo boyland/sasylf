@@ -280,7 +280,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 	@Override
 	public Optional<SubstitutionData> matchesParam(
 		ModuleComponent paramModArg,
-		ModulePart mp,
+		Node errorPoint,
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment) {
 			
@@ -294,7 +294,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 				
 				// throw an exception
 
-				ErrorHandler.modArgTypeMismatch(argKind, paramKind, mp);
+				ErrorHandler.modArgTypeMismatch(argKind, paramKind, errorPoint);
 				return Optional.empty();
 			}
 
@@ -310,7 +310,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 				Judgment boundJudgment = paramToArgJudgment.get(this).getOriginalDeclaration();
 
 				if (boundJudgment != param) {
-					ErrorHandler.modArgMismatchJudgment(arg, param, boundJudgment, mp);
+					ErrorHandler.modArgMismatchJudgment(arg, param, boundJudgment, errorPoint);
 					return Optional.empty();
 				}
 
@@ -331,7 +331,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 				paramToArgSyntax,
 				paramToArgJudgment,
 				new HashMap<String, String>(),
-				mp
+				errorPoint
 			);
 
 			if (!param.isAbstract()) {
@@ -342,7 +342,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 				List<Rule> argRules = arg.getRules();
 
 				if (paramRules.size() != argRules.size()) {
-					ErrorHandler.modArgumentJudgmentWrongNumRules(arg, param, mp);
+					ErrorHandler.modArgumentJudgmentWrongNumRules(arg, param, errorPoint);
 					return Optional.empty();
 				}
 
@@ -356,7 +356,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 					List<Clause> paramPremises = paramRule.getPremises();
 					List<Clause> argPremises = argRule.getPremises();
 					if (paramPremises.size() != argPremises.size()) {
-						ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, mp);
+						ErrorHandler.modArgRuleWrongNumPremises(argRule, paramRule, errorPoint);
 					}
 
 					// check that each pair of premises has the same structure
@@ -372,7 +372,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 							paramToArgSyntax,
 							paramToArgJudgment,
 							nonTerminalMapping,
-							mp
+							errorPoint
 						);
 					}
 
@@ -387,7 +387,7 @@ public class Judgment extends Node implements ClauseType, Named, ModuleComponent
 						paramToArgSyntax,
 						paramToArgJudgment,
 						nonTerminalMapping,
-						mp
+						errorPoint
 					);
 				}
 

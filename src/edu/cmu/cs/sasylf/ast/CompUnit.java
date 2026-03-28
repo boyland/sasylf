@@ -256,6 +256,7 @@ public class CompUnit extends Node implements Module {
 		return result;
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		/*
 			Substitute in the following attributes:
@@ -270,6 +271,7 @@ public class CompUnit extends Node implements Module {
 		}
 	}
 
+	@Override
 	public CompUnit copy(CopyData cd) {
 		return clone();
 	}
@@ -309,6 +311,9 @@ public class CompUnit extends Node implements Module {
 	 * <br/><br/>
 	 * Otherwise, the compilation unit is applied to the arguments and the result is returned in an optional.
 	 * @param args arguments to apply to this compilation unit
+	 * @param mp module instantiation we are checking.  Its arguments must be in the same order as their resolution in the previous "args" argument.
+	 * @param ctx context to use to check things
+	 * @param moduleName name of the resulting instantiation
 	 * @return an optional containing the result of applying this compilation unit to the arguments, or an empty optional if the arguments are not applicable
 	 */
 	public Optional<CompUnit> accept(List<ModuleComponent> args, ModulePart mp, Context ctx, String moduleName) {
@@ -360,7 +365,8 @@ public class CompUnit extends Node implements Module {
 	 * <br/><br/>
 	 * This method mutates the compilation unit that the method is called on.
 	 * @param args arguments to apply to this compilation unit
-	 * @param mp module part in which this application is taking place
+	 * @param mp module part in which this application is taking place.
+	 * Its arguments must be in the same order as their resolution in the previous "args" argument.
 	 * @param ctx context to use
 	 * @param moduleName name of the module
 	 * @return true if the arguments were successfully applied, false otherwise
@@ -376,6 +382,7 @@ public class CompUnit extends Node implements Module {
 		for (int i = 0; i < args.size(); i++) {
 			ModuleComponent arg = args.get(i);
 			ModuleComponent param = moduleParams.get(i);
+			Node errorPoint = mp.getParam(i);
 
 			Optional<SubstitutionData> sdOpt = arg.matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
 

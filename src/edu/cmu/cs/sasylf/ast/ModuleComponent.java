@@ -20,12 +20,15 @@ public interface ModuleComponent {
    * be used to apply this ModuleArgument object to the given parameter.
    * 
    * applicable to the given parameter.
-   * @param param
+   * @param paramModArg resolution of module argument (actual parameter)
+   * @param errorPoint place to mark errors
+   * @param paramToArgSyntax syntax map of parameterization
+   * @param paramToArgJudgment judgment map of parameterization
    * @return true if and only if this ModuleArgument object can be applied to, false otherwise
    */
   public Optional<SubstitutionData> matchesParam(
     ModuleComponent paramModArg,
-		ModulePart mp,
+		Node errorPoint,
     // TODO: examine the following two maps
 		Map<Syntax, Syntax> paramToArgSyntax,
 		Map<Judgment, Judgment> paramToArgJudgment
