@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.cs.sasylf.ast.Clause;
-import edu.cmu.cs.sasylf.ast.CompUnit;
 import edu.cmu.cs.sasylf.ast.Judgment;
 import edu.cmu.cs.sasylf.ast.ModulePart;
 import edu.cmu.cs.sasylf.ast.NonTerminal;
@@ -193,23 +192,6 @@ public class ErrorHandler {
 		} catch (RuntimeException e) {
 			return new Location(file,0,0);
 		}
-	}
-
-	public static void modArgInvalid(Object arg, ModulePart modulePart) {
-
-		String argType = "";
-
-		if (arg instanceof CompUnit || arg instanceof ModulePart) {
-			argType = "module";
-		}
-		else {
-			argType = "an undefined identifier";
-		}
-
-		String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
-
-		ErrorHandler.error(Errors.MOD_ARG_INVALID, errorMessage, modulePart);
-
 	}
 
 	public static void modArgMismatchSyntax(SyntaxDeclaration argSyntax, SyntaxDeclaration paramSyntax, SyntaxDeclaration whatParamIsBoundTo, ModulePart modulePart) {

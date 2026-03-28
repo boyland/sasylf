@@ -69,7 +69,19 @@ public class ModulePart extends Node implements Part, Named {
 				arguments.add((ModuleComponent)argResolution);
 			}
 			else {
-				ErrorHandler.modArgInvalid(argResolution, this);
+				String argType = "";
+				
+				if (argResolution instanceof CompUnit || argResolution instanceof ModulePart) {
+					argType = "module";
+				} else if (argResolution instanceof Rule) {
+					argType = "rule";
+				} else {
+					argType = "an undefined identifier";
+				}
+				
+				String errorMessage = "A module argument must be a syntax, judgment, rule, or theorem, but " + argType + " was provided.";
+				
+				ErrorHandler.error(Errors.MOD_ARG_INVALID, errorMessage, qn);
 				return;
 			}
 		}
@@ -118,6 +130,7 @@ public class ModulePart extends Node implements Part, Named {
 		}
 	}
 
+	@Override
 	public void substitute(SubstitutionData sd) {
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
@@ -128,6 +141,7 @@ public class ModulePart extends Node implements Part, Named {
 
 	}
 
+	@Override
 	public ModulePart copy(CopyData cd) {
 		if (cd.containsCopyFor(this)) return (ModulePart) cd.getCopyFor(this);
 		ModulePart clone = (ModulePart) super.clone();
