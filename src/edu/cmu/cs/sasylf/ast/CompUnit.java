@@ -384,7 +384,7 @@ public class CompUnit extends Node implements Module {
 			ModuleComponent param = moduleParams.get(i);
 			Node errorPoint = mp.getParam(i);
 
-			Optional<SubstitutionData> sdOpt = arg.matchesParam(param, mp, paramToArgSyntax, paramToArgJudgment);
+			Optional<SubstitutionData> sdOpt = arg.matchesParam(param, errorPoint, paramToArgSyntax, paramToArgJudgment);
 
 			if (sdOpt.isPresent()) {
 				SubstitutionData sd = sdOpt.get();
