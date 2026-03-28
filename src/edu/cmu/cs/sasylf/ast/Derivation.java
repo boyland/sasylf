@@ -16,6 +16,7 @@ import edu.cmu.cs.sasylf.term.UnificationIncomplete;
 import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
+import edu.cmu.cs.sasylf.debugger.ProofDebugger;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SASyLFError;
@@ -59,6 +60,8 @@ public abstract class Derivation extends Fact {
 	 */
 	public final boolean typecheckAndAssume(Context ctx) {
 		boolean result = true;
+		// Push derivation for debugging
+		ProofDebugger.pushDerivation(getName(), getElement().toString(), ctx, ctx.currentSub);
 		try {
 			this.typecheck(ctx);
 		} catch (SASyLFError error) {
@@ -69,6 +72,8 @@ public abstract class Derivation extends Fact {
 		// the map will cause internal errors later on.
 		// Perhaps in the future, we want to give it a special error type that will 
 		// allow later things to work, but it's probably simpler to just omit it from the context.
+		// Pop derivation for debugging
+		ProofDebugger.popDerivation();
 		if (!clauseChecked) return result;
 
 		this.addToDerivationMap(ctx);
