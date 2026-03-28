@@ -269,7 +269,7 @@ public enum Errors {
 	MOD_ARG_JUDGMENT_WRONG_NUM_RULES("Module argument judgment has the wrong number of rules. "),
 	MOD_ARG_MISMATCH_JUDGMENT("Module argument mismatch judgment. "),
 	MOD_ARG_RULE_WRONG_NUM_PREMISES("Module argument rule has the wrong number of premises. "),
-	MOD_ARG_THEOREM_WRONG_NUM_FORALLS("Module theorem argument ahs the wrong number of foralls. "),
+	MOD_ARG_THEOREM_WRONG_NUM_FORALLS("Module theorem argument has the wrong number of foralls. "),
 	MOD_ARG_NONTERMINAL_MISMATCH("Nonterminals do not have the right structure in module theorem argument. "),
 	MOD_ARG_CAUSE_MISMATCH("Clause mismatch in module argument. "),
 	MOD_ARG_CLAUSE_WRONG_NUM_NOT_TERMINALS("Module argument clause has the wrong number of nonterminals. "),
