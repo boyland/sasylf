@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -183,6 +184,51 @@ public class Binding extends Element {
 				e.getFree(freeSet, rigidOnly);
 			}
 		}
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		/*
+			private List<Element> elements;
+			private NonTerminal nonTerminal;
+		*/
+
+		for (Element element: elements) {
+			element.substitute(sd);
+		}
+
+		nonTerminal.substitute(sd);
+
+	}
+
+	public Binding copy(CopyData cd) {
+		//return new Binding(getLocation(), nonTerminal, new ArrayList<Element>(elements), getEndLocation());
+		if (cd.containsCopyFor(this)) return (Binding) cd.getCopyFor(this);
+		Binding clone = (Binding) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		/*
+			private List<Element> elements;
+			private NonTerminal nonTerminal;
+		*/
+
+		// clone the elements
+
+		List<Element> newElements = new ArrayList<Element>();
+		for (Element e: elements) {
+			newElements.add(e.copy(cd));
+		}
+		clone.elements = newElements;
+
+		// clone the nonTerminal
+
+		clone.nonTerminal = clone.nonTerminal.copy(cd);
+
+		return clone;
 	}
 
 }

@@ -1,0 +1,18 @@
+package regression.modulegood03
+
+module maybe
+
+requires
+
+abstract syntax e
+
+provides
+
+terminals None Some ismaybe
+
+syntax m ::= None | Some e
+
+judgment ismaybe: ismaybe m
+
+  -------------- ismaybe-1
+  ismaybe m

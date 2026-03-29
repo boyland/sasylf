@@ -66,7 +66,7 @@ judgment taut: !
       --------- taut
          !
          
-module AParm = regression.bad64 //! needs parameters
+module AParm = regression.bad64
 
 module Parm = regression.bad64[taut] //! parameters not supported yet
 

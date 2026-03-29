@@ -1,0 +1,10 @@
+package regression.modulebad01
+
+module functor
+
+requires
+
+abstract syntax e
+
+provides
+

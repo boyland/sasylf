@@ -1,0 +1,66 @@
+package regression
+
+module good68
+
+provides
+
+terminals T F C
+
+syntax b ::= T | F
+
+syntax c ::= C
+
+judgment lor: b /\ b = b
+
+  --------- lor-1
+  T /\ b = T
+
+  --------- lor-2
+  F /\ b = b
+
+judgment lorfake: c * c = c
+
+  --------- lorfake-1
+  C * C = C
+
+theorem lor-commutative:
+  forall d1: b1 /\ b2 = b3
+  exists b2 /\ b1 = b3
+  proof by case analysis on d1:
+    case rule
+      --------------- lor-1
+      d2: T /\ b2 = T
+    is
+
+      proof by case analysis on b2:
+        case T is
+          proof by rule lor-1
+        end case
+
+        case F is
+          proof by rule lor-2
+        end case
+
+      end case analysis
+
+    end case
+
+    case rule
+      --------------- lor-2
+      _: F /\ b3 = b3
+    is
+      proof by case analysis on b3:
+        case T is
+          proof by rule lor-1
+        end case
+
+        case F is
+          proof by rule lor-2
+        end case
+      end case analysis
+    end case
+
+  end case analysis
+end theorem
+
+module boolmonoid = regression.good67[b, lor]

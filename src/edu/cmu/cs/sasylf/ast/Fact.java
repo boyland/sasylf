@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -46,4 +47,14 @@ public abstract class Fact extends Node {
 			ctx.addVarFree(free,getLocation());
 		}
 	}
+
+	/**
+	 * Perform a substitution on this fact according to <code> sd </code>
+	 */
+	public abstract void substitute(SubstitutionData sd);
+
+	/**
+	 * Create a deep clone of this fact.
+	 */
+	public abstract Fact copy(CopyData cd);
 }

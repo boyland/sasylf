@@ -87,7 +87,7 @@ end lemma
 lemma S-Pi-inversion:
     assumes Γ
     forall st: Γ ⊢ |{x:T1} T2[x]| = S
-    exists S = S1 → S2 and Γ ⊢ |T1| = S1 and Γ, x:T1 ⊢ |T2[x]| = S2.
+    exists S = S1 → S2 and Γ ⊢ |T1| = S1 and Γ, x:T1 ⊢ |T2[x]| = S2 .
     d1: Γ ⊢ |T1| = S1 and 
     d2: Γ, x:T1 ⊢ |T2[x]| = S2 by inversion of rule S-Pi on st where S := S1 → S2
     d2': Γ, x:T1 ⊢ |T2[x]| = S2 by d2

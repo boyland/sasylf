@@ -17,6 +17,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -425,6 +426,7 @@ public abstract class RuleLike extends Node implements Named {
 	 * @return fresh adapted rule application in the given context
 	 */
 	public Application getFreshAdaptedRuleTerm(List<Abstraction> context, Set<FreeVar> concFreeVars) {
+
 		Util.verify(concFreeVars == null || concFreeVars.isEmpty(), "concFreeVars is output only");
 		Util.verify(context != null, "context must be a list");
 
@@ -451,11 +453,14 @@ public abstract class RuleLike extends Node implements Named {
 
 		// freshen each premise, and start to find adaptation
 		for (int i=0; i < n; ++i) {
-			Element element = this.getPremises().get(i);      
+			Element element = this.getPremises().get(i); 
 			Term f = getFreshAdaptedTerm(element, addedTypes, freshSub, adaptSub, varFree);
 			ruleArgs.add(f);
 		}
-		ruleArgs.add(getFreshAdaptedTerm(this.getConclusion(), addedTypes,freshSub, adaptSub, varFree));
+
+		Term adaptedConclusion = getFreshAdaptedTerm(this.getConclusion(), addedTypes,freshSub, adaptSub, varFree);
+
+		ruleArgs.add(adaptedConclusion);
 
 		// now remove any variable that should not be adapted, and then perform adaptation
 		adaptSub.removeAll(varFree);
@@ -473,7 +478,8 @@ public abstract class RuleLike extends Node implements Named {
 			ruleArgs.set(i, adapted);
 		}
 
-		return Facade.App(this.getRuleAppConstant(), ruleArgs);
+		Application a = Facade.App(this.getRuleAppConstant(), ruleArgs);
+		return a;
 	}
 
 	/**
@@ -486,6 +492,7 @@ public abstract class RuleLike extends Node implements Named {
 	 */
 	protected Term getFreshAdaptedTerm(Element element, List<Term> addedTypes,
 			Substitution freshSub, Substitution adaptSub, Set<FreeVar> varFree) {
+
 		Term f = element.asTerm();
 		f.freshSubstitution(freshSub);
 		f = f.substitute(freshSub);
@@ -513,4 +520,12 @@ public abstract class RuleLike extends Node implements Named {
 	/** Returns a term for this rule, adapting it to the variables in scope in instanceTerm (which should be related to the conclusion) */
 
 	private Constant ruleAppConstant;
+
+
+	/**
+	 * Creates a deep copy of this RuleLike
+	 * @param cd the data to be used in the cloning process
+	 */
+	public abstract RuleLike copy(CopyData cd);
+
 }

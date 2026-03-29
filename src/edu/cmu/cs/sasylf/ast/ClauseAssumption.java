@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
 
 
@@ -32,5 +33,24 @@ public class ClauseAssumption extends SyntaxAssumption {
 	@Override
 	public void addToDerivationMap(Context ctx) {
 		throw new UnsupportedOperationException();
+	}
+
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		clause.substitute(sd);
+	}
+
+	public ClauseAssumption copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ClauseAssumption) cd.getCopyFor(this);
+
+		ClauseAssumption clone = (ClauseAssumption) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+		
+		clone.clause = clause.copy(cd);
+
+		return clone;
+
 	}
 }

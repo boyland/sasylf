@@ -9,6 +9,7 @@ import edu.cmu.cs.sasylf.grammar.Symbol;
 import edu.cmu.cs.sasylf.term.BoundVar;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -150,5 +151,28 @@ public class Variable extends Element {
 		}
 
 		return new BoundVar(varBindings.size()-index);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		type.substitute(sd);
+		
+	}
+
+	@Override
+	public Variable copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Variable) cd.getCopyFor(this);
+
+		Variable clone = (Variable) super.copy(cd);
+
+		cd.addCopyFor(this, clone);
+
+		clone.type = clone.type.copy(cd);
+
+		return clone;
 	}
 }

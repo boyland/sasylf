@@ -1,0 +1,28 @@
+package regression
+
+module good70
+
+provides
+
+  terminals empty A B C D E
+
+  syntax
+
+    a ::= A | B
+
+  judgment compare: a <= a
+
+    --------- compare-refl
+    a <= a
+
+    --------- compare-2
+    A <= B
+
+  theorem totalcompare:
+    forall a1
+    forall a2
+    exists a1 <= a2 or a2 <= a1
+    proof by unproved //!
+  end theorem
+
+  module asorted = regression.good69[a, compare, totalcompare]

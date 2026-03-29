@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.cmu.cs.sasylf.util.CopyData;
+import edu.cmu.cs.sasylf.util.ErrorReport;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 
 /**
@@ -21,6 +24,10 @@ public class SyntaxPart implements Part {
 	 */
 	public SyntaxPart(List<Syntax> sdecls) {
 		syntax = new ArrayList<Syntax>(sdecls);
+	}
+
+	public List<Syntax> getSyntax() {
+		return syntax;
 	}
 	
 	/**
@@ -100,4 +107,48 @@ public class SyntaxPart implements Part {
 			syn.collectQualNames(consumer);
 		}
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		for (Syntax s : syntax) {
+			s.substitute(sd);
+		}
+	}
+
+	@Override
+	public SyntaxPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (SyntaxPart) cd.getCopyFor(this);
+		try {
+			SyntaxPart clone = (SyntaxPart) super.clone();
+			cd.addCopyFor(this, clone);
+			clone.syntax = new ArrayList<Syntax>();
+			for (Syntax s : syntax) {
+				clone.syntax.add(s.copy(cd));
+			}
+			return clone;
+		}
+		catch (CloneNotSupportedException e) {
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
+			throw new SASyLFError(report);
+		}
+	}
+
+	@Override
+	public List<ModuleComponent> argsParams() {
+		List<ModuleComponent> result = new ArrayList<>();
+		for (Syntax s : syntax) {
+			result.add(s.getOriginalDeclaration());
+		}
+		return result;
+	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		syntax.forEach(things::add);
+	}
+
+
+
 }

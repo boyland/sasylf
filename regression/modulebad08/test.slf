@@ -1,0 +1,79 @@
+package regression.modulebad08
+
+module test
+
+provides
+
+terminals A T F
+
+syntax a ::= A
+
+b ::= A
+
+syntax c ::= b | a
+
+judgment a-combine: a + a + a = a
+
+  ------------- rule1
+  a + a + a = a
+
+judgment a-combine-2: a + a = a
+
+  ------------- rule2
+  a + a = a
+
+judgment a-combine-3: a = a
+
+  ------------- rule3
+  a = a
+
+judgment b-combine-1: b + b = b
+
+  ------------- rule4
+  b + b = b
+
+
+syntax boolean ::= T | F
+
+judgment lor: boolean \/ boolean = boolean
+
+  --------- lor1
+  T \/ boolean = T
+
+  --------- lor2
+  F \/ boolean = boolean
+
+
+judgment land: boolean /\ boolean = boolean
+
+  --------- land1
+  T /\ boolean = boolean
+
+  --------- land2
+  F /\ boolean = F
+
+
+judgment special: boolean + boolean = boolean
+
+  boolean1 /\ boolean2 = boolean3
+  boolean1 \/ boolean2 = boolean3
+  --------- special1
+  boolean1 + boolean2 = boolean3
+
+judgment special-2: boolean * boolean = boolean
+
+  boolean1 \/ boolean2 = boolean3
+  boolean1 /\ boolean2 = boolean3
+  --------- special2
+  boolean1 * boolean2 = boolean3
+  
+
+module m = regression.modulebad08.functor[a, a-combine] //!
+module m2 = regression.modulebad08.functor[a, a-combine-2]
+module m3 = regression.modulebad08.functor[a, a-combine-3] //!
+module m4 = regression.modulebad08.functor[a, b-combine-1] //!
+
+module m5 = regression.modulebad08.functor2[a, b, c] //!
+
+module m6 = regression.modulebad08.functor3[boolean, lor, land, special] //!
+module m7 = regression.modulebad08.functor3[boolean, lor, land, special-2]

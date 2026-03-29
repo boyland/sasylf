@@ -1,5 +1,6 @@
 package edu.cmu.cs.sasylf.ast;
 
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -23,6 +24,14 @@ public class DerivationByCaseAnalysis extends DerivationByAnalysis {
 			ErrorHandler.recoverableError(Errors.CASE_SUBJECT_MULTIPLE, this);
 		}
 		super.typecheck(ctx);
+	}
+
+	@Override
+	public DerivationByCaseAnalysis copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationByCaseAnalysis) cd.getCopyFor(this);
+		DerivationByCaseAnalysis clone = (DerivationByCaseAnalysis) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		return clone;
 	}
 
 

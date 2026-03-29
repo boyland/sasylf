@@ -14,6 +14,7 @@ import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -24,8 +25,8 @@ public class DerivationByInversion extends DerivationWithArgs {
 	
 	public static final QualName OR = new QualName(new Location("",0,0), "or");
 	
-	private final QualName ruleName;
-	private final WhereClause whereClauses;
+	private QualName ruleName;
+	private WhereClause whereClauses;
 
 	public DerivationByInversion(String n, Location start, Location end, Clause c,
 			QualName rule, Clause relation, WhereClause wcs) {
@@ -261,5 +262,32 @@ public class DerivationByInversion extends DerivationWithArgs {
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
 		if (ruleName != null) ruleName.visit(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		ruleName.substitute(sd);
+		whereClauses.substitute(sd);
+	}
+
+	@Override
+	public DerivationByInversion copy(CopyData cd) {
+		/*
+			private QualName ruleName;
+			private WhereClause whereClauses;
+		*/
+
+		if (cd.containsCopyFor(this)) return (DerivationByInversion) cd.getCopyFor(this);
+		DerivationByInversion clone = (DerivationByInversion) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.ruleName = clone.ruleName.copy(cd);
+		clone.whereClauses = clone.whereClauses.copy(cd);
+		
+		return clone;
+
 	}
 }

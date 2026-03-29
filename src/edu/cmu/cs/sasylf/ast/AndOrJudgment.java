@@ -7,6 +7,7 @@ import java.util.List;
 
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.IdentityArrayMap;
@@ -203,6 +204,31 @@ public abstract class AndOrJudgment extends Judgment {
 		// System.out.println("Computed typeTerm for " + getName() + " to be " + result);
 		return result;
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		for (Judgment j : parts) {
+			j.substitute(sd);
+		}
+	}
+
+	@Override
+	public AndOrJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return  (AndOrJudgment) cd.getCopyFor(this);
+		AndOrJudgment clone = (AndOrJudgment) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		List<Judgment> newParts = new ArrayList<Judgment>();
+		for (Judgment j : parts) {
+			newParts.add(j.copy(cd));
+		}
+		clone.parts = newParts;
+		return clone;
+	}
+	
 
 	
 }

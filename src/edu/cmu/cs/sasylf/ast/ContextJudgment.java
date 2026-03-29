@@ -12,6 +12,7 @@ import edu.cmu.cs.sasylf.term.Atom;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.Location;
 import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.SingletonList;
@@ -31,8 +32,8 @@ import edu.cmu.cs.sasylf.util.Util;
  */
 public class ContextJudgment extends Judgment {
 
-	private final Judgment base;
-	private final ClauseDef context;
+	private Judgment base;
+	private ClauseDef context;
 	
 	private ContextJudgment(Location loc, Judgment b, ClauseUse use, ClauseDef assume, ClauseUse assumeUse) {
 		super(loc,makeName(b,assume),new ArrayList<>(),makeForm(loc,b,use,assume,assumeUse),assume.getAssumeIndex() >= 0 ? b.getAssume() : null);
@@ -278,5 +279,35 @@ public class ContextJudgment extends Judgment {
 		Term output = wrappedPrem.substitute(invertSub);
 		// System.out.println("Inverted " + input + " as " + output);
 		return invertContextJudgments(ctx,output);
+	}
+	
+	@Override
+	public ContextJudgment copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ContextJudgment) cd.getCopyFor(this);
+		ContextJudgment clone = (ContextJudgment) super.copy(cd);
+		cd.addCopyFor(this, clone);
+
+		clone.base = clone.base.copy(cd);
+		clone.context = clone.context.copy(cd);
+		
+		return clone;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		if (base != null) {
+			if (sd.containsJudgmentReplacementFor(base.getName())) {
+				base = sd.getJudgmentReplacement();
+			}
+		}
+
+		if (context != null) {
+			context.substitute(sd);
+		}
+		
 	}
 }

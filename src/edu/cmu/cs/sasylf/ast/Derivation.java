@@ -13,6 +13,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -123,6 +124,7 @@ public abstract class Derivation extends Fact {
 		boolean finalOK = false;
 		for (int i=0; i < n; ++i) {
 			Derivation d = derivations.get(i);
+			
 			if (d.clause == null) {
 				// we copy over to get the right location for things
 				d.clause = ctx.currentGoalClause.clone();
@@ -354,4 +356,25 @@ public abstract class Derivation extends Fact {
 		// can't check any more because of relaxation
 		return true;
 	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		if (clause != null) clause.substitute(sd);
+		
+	}
+
+	@Override
+	public Derivation copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (Derivation) cd.getCopyFor(this);
+		Derivation clone = (Derivation) clone();
+
+		cd.addCopyFor(this, clone);
+
+		clone.clause = clone.clause.copy(cd);
+
+		return clone;
+	}
+
 }

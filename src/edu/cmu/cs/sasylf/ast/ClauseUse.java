@@ -21,6 +21,7 @@ import edu.cmu.cs.sasylf.term.Facade;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -37,40 +38,6 @@ public class ClauseUse extends Clause {
 			super.setEndLocation(elems.get(elems.size()-1).getEndLocation());
 		}
 	}
-	/*
-	public ClauseUse(Clause copy, Map<List<ElemType>,ClauseDef> parseMap) {
-		super(copy.getLocation());
-		setEndLocation(copy.getEndLocation());
-		getElements().addAll(copy.getElements());
-
-		List<ElemType> elemTypes = new ArrayList<ElemType>();
-		for (int i = 0; i < getElements().size(); ++i) {
-			Element e = getElements().get(i);
-			if (e instanceof Clause) {
-				Clause c = (Clause) e;
-				ClauseUse cu = new ClauseUse(c, parseMap);
-				getElements().set(i, cu);
-
-				// must be an ElemType because can't be a judgment here
-				ClauseType ct = cu.getConstructor().getType();
-				if (ct instanceof Judgment) {
-					Util.verify(false,"A judgment cannot appear inside a clause");
-					// ErrorHandler.error("A judgment cannot appear inside a clause", copy);
-				}
-				ElemType et = (ElemType) ct;
-				elemTypes.add(et);
-			} else {
-				elemTypes.add(e.getElemType());
-			}
-		}
-
-		ClauseDef cd = parseMap.get(elemTypes);
-		if (cd == null)
-			ErrorHandler.error("Cannot find a syntax constructor or judgment for expression "+ copy +" with elements " + elemTypes, copy);
-		cons = cd;
-		root = computeRoot();
-	}
-	*/
 
 	@Override 
 	public boolean equals(Object x) {
@@ -88,7 +55,6 @@ public class ClauseUse extends Clause {
 	public Term getTypeTerm() { return getConstructor().asTerm(); }
 
 	private ClauseDef cons;
-
 
 	@Override
 	public Clause typecheck(Context c) {
@@ -301,13 +267,14 @@ public class ClauseUse extends Clause {
 			verify(varBindings.size() == 0, "assume rule with nonempty var bindings");
 			root = getElements().get(assumeIndex).readAssumptions(varBindings, true);
 		}
-
+		
 		Term t = computeBasicTerm(varBindings, false);
 
 		if (assumeIndex != -1) {
 			t = newWrap(t,varBindings,initialBindingsSize);
 		}
 		// System.out.println("converted " + this + " to " + t);
+		
 		return t;
 	}
 
@@ -625,6 +592,44 @@ public class ClauseUse extends Clause {
 		term = term.substitute(sub);
 		debug("after binding in free vars: ", term, " with sub ", sub);
 		return Abstraction.make(absMatchTerm.varName, absMatchTerm.varType, term);
+	}
+	
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd); 
+		sd.setSubstitutedFor(this);
+
+		/*
+			Substitute in the following attributes:
+
+			private ClauseDef cons;
+			private NonTerminal root;
+		*/
+
+		if (cons != null) cons.substitute(sd);
+		if (root != null) root.substitute(sd);
+	}
+
+	@Override
+	public ClauseUse copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (ClauseUse) cd.getCopyFor(this);
+		ClauseUse clone = (ClauseUse) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		/*
+		 * Clone the following properties:
+		 * 
+		 * private ClauseDef cons;
+		 * private NonTerminal root;
+		 */
+		if (clone.cons != null) {
+			clone.cons = clone.cons.copy(cd);
+		}
+		if (clone.root != null) {
+			clone.root = clone.root.copy(cd);
+		}
+
+		return clone;
 	}
 
 }

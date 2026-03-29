@@ -1,0 +1,180 @@
+package regression.modulegood01
+
+module demo
+
+provides
+
+terminals T F BoolNothing Just empty S NatNothing
+
+/*
+  Declare the boolean modules
+
+  b is the syntax for a boolean
+
+  boolmaybe is a module that represents a boolean maybe
+
+  bm is the syntax for a boolean maybe
+
+  boolalt is the judgment for the alternative operation on boolean maybes
+  
+  boolfoldableset is a module that represents set, such that
+    - The elements of the set are boolean maybes
+    - The set can be folded into a single boolean maybe using the boolalt operation
+
+  boolfold is the judgment for the fold operation for the above set
+*/
+
+syntax b ::= T | F
+
+module boolmaybe = regression.modulegood01.maybe[b]
+
+syntax bm = boolmaybe.m ::= BoolNothing | Just b
+
+judgment boolalt = boolmaybe.alternative : bm || bm = bm
+
+module boolfoldableset = regression.modulegood01.foldableset[bm, boolalt]
+
+syntax bs = boolfoldableset.s ::= empty | bm :: bs
+
+judgment boolfold = boolfoldableset.fold : bs --> bm
+
+theorem t1: 
+  exists BoolNothing :: empty --> BoolNothing
+  d : BoolNothing :: empty --> BoolNothing by rule boolfoldableset.fold-empty
+  proof by d
+end theorem
+
+theorem t2:
+  forall bm
+  exists bm :: empty --> bm
+  proof by rule boolfoldableset.fold-empty
+end theorem
+
+theorem t3: 
+  exists Just T :: Just F :: empty --> Just T
+  d1 : Just F :: empty --> Just F by rule boolfoldableset.fold-empty
+  d2: Just T || Just F = Just T by rule boolmaybe.alternative-2
+  d3 : (Just T :: (Just F :: empty)) --> Just T by rule boolfoldableset.fold-nonempty on d1, d2
+  proof by d3
+end theorem
+
+theorem t4:
+  exists Just T :: Just F :: Just F :: empty --> Just T
+  d1: Just F :: empty --> Just F by rule boolfoldableset.fold-empty
+  d2: Just F || Just F = Just F by rule boolmaybe.alternative-2
+  d3: Just F :: Just F :: empty --> Just F by rule boolfoldableset.fold-nonempty on d1, d2
+  d4: Just T || Just F = Just T by rule boolmaybe.alternative-2
+  d5: Just T :: Just F :: Just F :: empty --> Just T by rule boolfoldableset.fold-nonempty on d3, d4
+  proof by d5
+end theorem
+
+theorem t5:
+  exists BoolNothing :: Just T :: empty --> Just T
+  d1: Just T :: empty --> Just T by rule boolfoldableset.fold-empty
+  d2: BoolNothing || Just T = Just T by rule boolmaybe.alternative-1
+  d3: BoolNothing :: Just T :: empty --> Just T by rule boolfoldableset.fold-nonempty on d1, d2
+  proof by d3
+end theorem
+
+theorem t6:
+  exists BoolNothing :: BoolNothing :: Just T :: BoolNothing :: empty --> Just T
+  d1: BoolNothing :: empty --> BoolNothing by rule boolfoldableset.fold-empty
+  d2: Just T || BoolNothing = Just T by rule boolmaybe.alternative-2
+  d3: Just T :: BoolNothing :: empty --> Just T by rule boolfoldableset.fold-nonempty on d1, d2
+  d4: BoolNothing || Just T = Just T by rule boolmaybe.alternative-1
+  d5: BoolNothing :: Just T :: BoolNothing :: empty --> Just T by rule boolfoldableset.fold-nonempty on d3, d4
+  d6: BoolNothing || Just T = Just T by rule boolmaybe.alternative-1
+  d7: BoolNothing :: BoolNothing :: Just T :: BoolNothing :: empty --> Just T by rule boolfoldableset.fold-nonempty on d5, d6
+  proof by d7
+end theorem
+
+/*
+  Declare the natural modules
+
+  n is the syntax for a natural number
+
+  natmaybe is a module that represents a boolean maybe
+
+  nm is the syntax for a boolean maybe
+
+  natalt is the judgment for the alternative operation on boolean maybes
+  
+  natfoldableset is a module that represents set, such that
+    - The elements of the set are boolean maybes
+    - The set can be folded into a single boolean maybe using the boolalt operation
+
+  natfold is the judgment for the fold operation for the above set
+*/
+
+syntax n ::= 0 | S n
+
+1 := S 0
+2 := S 1
+3 := S 2
+4 := S 3
+5 := S 4
+
+judgment plus: n + n = n
+
+  ---------- plus-z
+  0 + n = n
+
+  n1 + n2 = n3
+  ---------- plus-s
+  S n1 + n2 = S n3
+
+module natmaybe = regression.modulegood01.maybe[n]
+
+syntax nm = natmaybe.m ::= NatNothing | Just n
+
+judgment natalt = natmaybe.alternative : nm || nm = nm
+
+judgment maybeplus: nm + nm = nm
+
+  ---------------------- maybeplus-nothing-1
+  NatNothing + nm = NatNothing
+
+  ---------------------- maybeplus-nothing-2
+  nm + NatNothing = NatNothing
+
+  n1 + n2 = n3
+  ---------------------- maybeplus-just
+  Just n1 + Just n2 = Just n3
+
+module natfoldableset = regression.modulegood01.foldableset[nm, maybeplus]
+
+syntax ns = natfoldableset.s ::= empty | nm :: ns
+
+judgment natfold = natfoldableset.fold : ns --> nm
+
+
+theorem t7:
+  exists NatNothing :: empty --> NatNothing
+  d1: NatNothing :: empty --> NatNothing by rule natfoldableset.fold-empty
+  proof by d1
+end theorem
+
+theorem t8:
+  exists Just 0 :: empty --> Just 0
+  d1: Just 0 :: empty --> Just 0 by rule natfoldableset.fold-empty
+  proof by d1
+end theorem
+
+theorem t9:
+  exists Just 0 :: Just 0 :: empty --> Just 0
+  d1: Just 0 :: empty --> Just 0 by rule natfoldableset.fold-empty
+  d2: 0 + 0 = 0 by rule plus-z
+  d3: Just 0 + Just 0 = Just 0 by rule maybeplus-just on d2
+  d4: Just 0 :: Just 0 :: empty --> Just 0 by rule natfoldableset.fold-nonempty on d1, d3
+  proof by d4
+end theorem
+
+theorem t10:
+  exists Just 1 :: Just 2 :: empty --> Just 3
+  d1: Just 2 :: empty --> Just 2 by rule natfoldableset.fold-empty
+  d2: 0 + 2 = 2 by rule plus-z
+  d3: 1 + 2 = 3 by rule plus-s on d2
+  d4: Just 1 + Just 2 = Just 3 by rule maybeplus-just on d3
+  d5: Just 1 :: Just 2 :: empty --> Just 3 by rule natfoldableset.fold-nonempty on d1, d4
+  proof by d5
+end theorem

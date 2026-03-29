@@ -7,6 +7,7 @@ import java.util.List;
 import edu.cmu.cs.sasylf.term.Constant;
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.DefaultSpan;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
@@ -35,6 +36,7 @@ public abstract class DerivationWithArgs extends Derivation {
 		if (endLocation != null) {
 			setEndLocation(endLocation);
 		}
+
 	}
 	
 	/**
@@ -226,5 +228,37 @@ public abstract class DerivationWithArgs extends Derivation {
 		Element element = getArgs().get(i).getElement();
 		Term argTerm = ctx.toTerm(element);
 		return argTerm;
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		for (Fact f : args) {
+			f.substitute(sd);
+		}
+	}
+
+	@Override
+	public DerivationWithArgs copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (DerivationWithArgs) cd.getCopyFor(this);
+		DerivationWithArgs clone = (DerivationWithArgs) super.copy(cd);
+		cd.addCopyFor(this, clone);
+
+		List<Clause> newArgStrings = new ArrayList<Clause>();
+		for (Clause c : argStrings) {
+			newArgStrings.add(c.copy(cd));
+		}
+		clone.argStrings = newArgStrings;
+
+		List<Fact> newArgs = new ArrayList<Fact>();
+		for (Fact f : args) {
+			newArgs.add(f.copy(cd));
+		}
+		clone.args = newArgs;
+		
+		return clone;
+
 	}
 }

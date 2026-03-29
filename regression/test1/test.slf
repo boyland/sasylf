@@ -1,0 +1,16 @@
+package regression.test1;
+
+module test provides
+
+module nat = org.sasylf.util.Natural
+
+syntax n = nat.n
+
+module setb =
+regression.test1.set[n,nat.equal,nat.notequal,nat.ne-anti-reflexive,nat.eq-or-ne]
+
+terminals in
+
+syntax s = setb.r
+
+judgment contains = setb.contains : n in s

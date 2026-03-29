@@ -9,6 +9,9 @@ import java.util.function.Consumer;
 
 import edu.cmu.cs.sasylf.term.FreeVar;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
+import edu.cmu.cs.sasylf.util.ErrorReport;
+import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.SASyLFError;
 import edu.cmu.cs.sasylf.util.Util;
 
@@ -112,6 +115,63 @@ public class JudgmentPart implements Part {
 		for (Judgment j : judgments) {
 			j.collectQualNames(consumer);
 		}
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Judgment j : judgments) {
+			sb.append(j.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		sd.setSubstitutedFor(this);
+		for (Judgment j : judgments) {
+			j.substitute(sd);
+		}
+	}
+
+	@Override
+	public JudgmentPart copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (JudgmentPart) cd.getCopyFor(this);
+		JudgmentPart clone;
+		try {
+			clone = (JudgmentPart) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			ErrorReport report = new ErrorReport(Errors.INTERNAL_ERROR, "Clone not supported in class: " + getClass(), null, null, true);
+			throw new SASyLFError(report);
+		}
+
+		cd.addCopyFor(this, clone);
+
+		List<Judgment> newJudgments = new ArrayList<Judgment>();
+		for (Judgment j : judgments) {
+			newJudgments.add(j.copy(cd));
+		}
+		clone.judgments = newJudgments;
+		
+		return clone;
+	}
+
+	@Override
+	public List<ModuleComponent> argsParams() {
+		List<ModuleComponent> judgments = new ArrayList<>();
+
+		for (Judgment j : this.judgments) {
+			judgments.add(j.getOriginalDeclaration());
+		}
+
+		return judgments;
+	}
+
+	@Override
+	public void collectTopLevelAsModuleComponents(Collection<ModuleComponent> things) {
+		judgments.forEach(things::add);
 	}
 
 }

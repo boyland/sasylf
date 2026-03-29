@@ -19,6 +19,7 @@ import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
 import edu.cmu.cs.sasylf.term.UnificationFailed;
 import edu.cmu.cs.sasylf.term.UnificationIncomplete;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -29,10 +30,10 @@ import edu.cmu.cs.sasylf.util.Util;
 public class RuleCase extends Case {
 	
 	private Rule rule;
-	private final QualName ruleName;
-	private final List<Derivation> premises;
-	private final Derivation conclusion;
-	private final WhereClause whereClauses;
+	private QualName ruleName;
+	private List<Derivation> premises;
+	private Derivation conclusion;
+	private WhereClause whereClauses;
 	
 	public RuleCase(Location l, Location l1, Location l2,
 			QualName rn, List<Derivation> ps, Derivation c, WhereClause wcs) {
@@ -434,6 +435,52 @@ public class RuleCase extends Case {
 	public void collectQualNames(Consumer<QualName> consumer) {
 		ruleName.visit(consumer);
 		super.collectQualNames(consumer);
+	}
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+
+		rule.substitute(sd);
+		ruleName.substitute(sd);
+		for (Derivation premise: premises) {
+			premise.substitute(sd);
+		}
+		conclusion.substitute(sd);
+		whereClauses.substitute(sd);
+
+	}
+
+	@Override
+	public RuleCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (RuleCase) cd.getCopyFor(this);
+		RuleCase clone = (RuleCase) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		/*
+			private Rule rule;
+			private QualName ruleName;
+			private List<Derivation> premises;
+			private Derivation conclusion;
+			private WhereClause whereClauses;
+		*/
+
+		clone.rule = clone.rule.copy(cd);
+		clone.ruleName = clone.ruleName.copy(cd);
+
+		List<Derivation> newPremises = new ArrayList<Derivation>();
+
+		for (Derivation p : premises) {
+			newPremises.add(p.copy(cd));
+		}
+		clone.premises = newPremises;
+
+		clone.conclusion = clone.conclusion.copy(cd);
+
+		clone.whereClauses = clone.whereClauses.copy(cd);
+		
+		return clone;
 	}
 	
 	

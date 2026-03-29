@@ -10,6 +10,7 @@ import edu.cmu.cs.sasylf.term.Abstraction;
 import edu.cmu.cs.sasylf.term.Application;
 import edu.cmu.cs.sasylf.term.Substitution;
 import edu.cmu.cs.sasylf.term.Term;
+import edu.cmu.cs.sasylf.util.CopyData;
 import edu.cmu.cs.sasylf.util.ErrorHandler;
 import edu.cmu.cs.sasylf.util.Errors;
 import edu.cmu.cs.sasylf.util.Location;
@@ -17,7 +18,8 @@ import edu.cmu.cs.sasylf.util.Pair;
 import edu.cmu.cs.sasylf.util.Util;
 
 public class OrCase extends Case {
-
+	Derivation premise;
+	
 	public OrCase(Location l, Derivation d) {
 		super(l,d.getLocation(),d.getEndLocation());
 		premise = d;
@@ -112,5 +114,21 @@ public class OrCase extends Case {
 		super.typecheck(ctx, isSubderivation);
 	}
 
-	Derivation premise;
+
+	@Override
+	public void substitute(SubstitutionData sd) {
+		if (sd.didSubstituteFor(this)) return;
+		super.substitute(sd);
+		sd.setSubstitutedFor(this);
+		premise.substitute(sd);
+	}
+
+	@Override
+	public OrCase copy(CopyData cd) {
+		if (cd.containsCopyFor(this)) return (OrCase) cd.getCopyFor(this);
+		OrCase clone = (OrCase) super.copy(cd);
+		cd.addCopyFor(this, clone);
+		clone.premise = clone.premise.copy(cd);
+		return clone;
+	}
 }

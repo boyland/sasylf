@@ -1,0 +1,17 @@
+package regression.modulebad03
+
+module functor
+
+requires
+
+abstract syntax e
+
+abstract judgment combine : e + e = e
+
+abstract theorem commutative:
+  forall d1: e1 + e2 = e3
+  exists e2 + e1 = e3
+end theorem
+
+provides
+

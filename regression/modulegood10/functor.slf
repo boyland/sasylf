@@ -1,0 +1,14 @@
+package regression.modulegood10
+
+module functor
+
+requires
+
+abstract syntax e
+
+provides
+
+judgment eq: e = e
+
+  -------- eq-1
+  e = e

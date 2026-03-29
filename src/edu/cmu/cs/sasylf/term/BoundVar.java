@@ -149,5 +149,5 @@ public class BoundVar extends Atom {
 	public Term getType() {
 		return Constant.UNKNOWN_TYPE;
 	}
-	
+
 }

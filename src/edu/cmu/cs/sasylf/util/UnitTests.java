@@ -104,8 +104,8 @@ public class UnitTests extends SimpleTestSuite {
 		Object[] key1b = new Object[] {"hell"+(hiddenTruth() ? "o" : "a")};
 		Object[] key1c = new Object[] {"hello"};
 		Object[] key1d = new Object[] {"jello"};
-		Object[] key2a = new Object[] {1, 2};
-		Object[] key2b = new Object[] {new Integer(1), new Integer(2) };
+		Object[] key2a = new Object[] {"1", "2"};
+		Object[] key2b = new Object[] {new String("1"), new String("2") };
 		
 		IdentityArrayMap<String> m = new IdentityArrayMap<String>();
 		
