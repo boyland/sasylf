@@ -348,8 +348,10 @@ public class RuleCase extends Case {
 
 				break;
 			} catch (UnificationIncomplete e) {
-				ErrorHandler.error(Errors.CASE_UNIFICATION_INCOMPLETE, this,
-						"(was checking " + candidate + " instance of " + caseTerm + ",\n got exception " + e);      
+				String hint = incompleteUnificationHint(ctx, subjectRoot, getLocation(), e);
+				ErrorHandler.error(Errors.CASE_UNIFICATION_INCOMPLETE, hint, this,
+						"(was checking " + candidate + " instance of " + caseTerm + ";\n SASyLF tried to unify "
+								+ e.term1 + " and " + e.term2 + ")");      
 				return; // tell Java we're gone.
 
 			} catch (UnificationFailed uf) {
@@ -421,6 +423,28 @@ public class RuleCase extends Case {
 	 * @param app
 	 * @return
 	 */
+	/**
+	 * Produce a short user-facing hint for {@link UnificationIncomplete} during case checking,
+	 * using the same heuristic as the first unification in {@link #typecheck(Context, Pair)}.
+	 * See <a href="https://github.com/boyland/sasylf/issues/116">issue #116</a>.
+	 */
+	static String incompleteUnificationHint(Context ctx, NonTerminal subjectRoot, Location loc, UnificationIncomplete uf) {
+		Term app = uf.term1;
+		if (app instanceof Application && !(((Application) app).getFunction() instanceof FreeVar)) {
+			app = uf.term2;
+		}
+		try {
+			TermPrinter tp = new TermPrinter(ctx, subjectRoot, loc, false);
+			String s = tp.toString(app, false);
+			if (app instanceof FreeVar && ctx.inputVars.contains(app)) {
+				return s + " (this metavariable is already fixed by an earlier premise)";
+			}
+			return s;
+		} catch (RuntimeException ex) {
+			return app.toString();
+		}
+	}
+
 	private Term canonRuleApp(Application app) {
 		if (app.getArguments().size() == 1 && app.getArguments().get(0) instanceof Abstraction) {
 			List<Abstraction> abs = new ArrayList<Abstraction>();

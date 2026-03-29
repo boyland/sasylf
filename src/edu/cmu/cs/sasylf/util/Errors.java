@@ -238,7 +238,7 @@ public enum Errors {
 	SUGAR_SYNTAX_UNKNOWN ("unknown syntax"), // infeasible
 	SUGAR_ABSTRACT ("cannot define abstract syntactic sugar on concrete syntax"), // infeasible
 	NEVER_RIGID ("using rule is likely to lead to incomplete unification because the following variables are never used outside of a binding: "), // Warning
-	CASE_UNIFICATION_INCOMPLETE("Unification incomplete for case "),
+	CASE_UNIFICATION_INCOMPLETE("Unification incomplete for case; likely problem near "),
 	SOLVE_FAILED ("unable to find proof"),
 	SOLVE_UNRELIABLE ("proof by solve is not reliable"), // Warning
 	DERIVATION_NAME_REUSED ("reusing derivation identifier"), // Warning
