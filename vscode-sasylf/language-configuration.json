@@ -1,0 +1,24 @@
+{
+  "comments": {
+    "lineComment": "//",
+    "blockComment": ["/*", "*/"]
+  },
+  "brackets": [
+    ["(", ")"],
+    ["[", "]"]
+  ],
+  "autoClosingPairs": [
+    { "open": "(", "close": ")" },
+    { "open": "[", "close": "]" },
+    { "open": "/*", "close": " */" }
+  ],
+  "surroundingPairs": [
+    ["(", ")"],
+    ["[", "]"]
+  ],
+  "wordPattern": "[a-zA-Z][a-zA-Z0-9_-]*",
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(theorem|lemma|judgment|syntax|case|proof|forall)\\b",
+    "decreaseIndentPattern": "^\\s*(end|provides)\\b"
+  }
+}
