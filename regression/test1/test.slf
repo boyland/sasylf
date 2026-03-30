@@ -7,7 +7,7 @@ module nat = org.sasylf.util.Natural
 syntax n = nat.n
 
 module setb =
-regression.test1.set[n,nat.equal,nat.notequal,nat.ne-anti-reflexive,nat.eq-or-ne]
+regression.test1.set[n,nat.notequal,nat.ne-anti-reflexive,nat.eq-or-ne]
 
 terminals in
 
