@@ -1,0 +1,8 @@
+package regression.modulebad11
+
+module nats provides
+
+terminals zero succ
+
+syntax n ::= zero | succ n
+

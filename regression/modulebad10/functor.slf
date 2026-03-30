@@ -1,0 +1,18 @@
+package regression.modulebad10
+
+module functor
+
+requires
+
+abstract syntax e
+
+judgment eq: e = e
+
+  --- eq-refl
+  e = e
+
+provides
+
+terminals nil
+
+syntax l ::= nil | e, l

@@ -204,6 +204,7 @@ public class DSLToolkitParser {
 			// || getToken(1).kind == OR
 			|| getToken(1).kind == EXTENDS
 			|| getToken(1).kind == USE
+			|| getToken(1).kind == IMPORTS
 			|| getToken(1).kind == REQUIRES
 			|| getToken(1).kind == PROVIDES
 			|| getToken(1).kind == INTEGER_LITERAL;
@@ -273,6 +274,7 @@ public class DSLToolkitParser {
 		   t.kind == MODULE ||
 		   t.kind == NOT ||
 		   t.kind == OR ||
+		   t.kind == IMPORTS ||
 		   t.kind == PROVIDES ||
 		   t.kind == REQUIRES ||
 		   t.kind == SUBSTITUTION ||
@@ -410,6 +412,7 @@ TOKEN :
 | < CONTRADICTION: "contradiction" >
 | < USE: "use" >
 | < MODULE: "module" >
+| < IMPORTS: "imports" >
 | < REQUIRES: "requires" >
 | < PROVIDES: "provides" >
 | < EXTENDS: "extends" >
@@ -1552,6 +1555,14 @@ CompUnit CompilationUnit() :
     cu = new CompUnit(pkg, firstToken != null ? new Location(firstToken) : new Location(currentFile,1,1), moduleName);
   }
   
+  (t=<IMPORTS> { if (firstToken == null) firstToken = t;
+                 if (moduleName == null) ErrorHandler.recoverableError(Errors.IMPORTS_IN_MODULE,new Location(t)); }
+    (
+      LOOKAHEAD( ("terminals" | "syntax" | "judgment" | "theorem" | "lemma") )
+      p=Part(false) {  cu.addImportChunk(p); }
+    )+
+  )?
+
   (t=<REQUIRES> { if (firstToken == null) firstToken = t;
                   if (moduleName == null) ErrorHandler.recoverableError(Errors.REQUIRES_IN_MODULE,new Location(t)); }
     (

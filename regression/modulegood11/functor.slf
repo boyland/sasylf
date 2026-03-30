@@ -1,0 +1,20 @@
+package regression.modulegood11
+
+module functor
+
+requires
+
+abstract syntax e
+
+judgment eq: e = e
+
+  --- eq-refl
+  e = e
+
+provides
+
+theorem self-equal:
+  forall e1
+  exists e1 = e1
+  proof by rule eq-refl
+end theorem

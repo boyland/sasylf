@@ -1,0 +1,18 @@
+package regression.modulegood12
+
+module functor
+
+imports
+  syntax n = regression.modulegood12.nats.n
+
+requires
+  abstract syntax e
+
+provides
+
+terminals wrap
+
+syntax w ::= wrap e
+
+judgment wrap-n: w = n
+

@@ -88,6 +88,14 @@ public abstract class Syntax extends Node implements ModuleComponent {
 	public abstract SyntaxDeclaration getOriginalDeclaration();
 
 	/**
+	 * Returns whether this syntax is abstract (has no concrete productions).
+	 * Abstract syntax requires an explicit argument during module instantiation.
+	 * @return true if this syntax is abstract, false otherwise
+	 */
+	@Override
+	public abstract boolean isAbstract();
+
+	/**
 	 * Substitute inside of this Syntax according to the given substitution data.
 	 * @param sd substitution data to use
 	 */

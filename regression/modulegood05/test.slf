@@ -82,12 +82,11 @@ end theorem
 
 module boolbt = regression.modulegood05.foldablebt
 [
-  boolid, 
-  boolnonid, 
-  b, 
-  lor, 
-  lor-left-id, 
-  lor-right-id, 
+  boolid,
+  boolnonid,
+  lor,
+  lor-left-id,
+  lor-right-id,
   lor-commutative
 ]
 

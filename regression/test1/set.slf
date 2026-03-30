@@ -28,7 +28,7 @@ provides
 
 terminals in notin ok
 
-module repm = regression.test1.list[e,elem-eq]
+module repm = regression.test1.list[e]
 
 syntax r = repm.l
   ::= 0
