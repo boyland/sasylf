@@ -1,0 +1,17 @@
+package regression.modulegood11
+
+module test provides
+
+terminals zero succ
+
+syntax n ::= zero | succ n
+
+module m = regression.modulegood11.functor[n]
+
+judgment n-eq = m.eq : n = n
+
+theorem nat-self-equal:
+  forall n1
+  exists n1 = n1
+  proof by rule m.eq-refl
+end theorem

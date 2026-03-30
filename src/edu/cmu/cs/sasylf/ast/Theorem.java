@@ -50,6 +50,8 @@ public class Theorem extends RuleLike implements ModuleComponent {
 
 	public List<Fact> getForalls() { return foralls; }
 	@Override
+	public boolean isAbstract() { return isAbstract; }
+	@Override
 	public List<Element> getPremises() {
 		List<Element> l = new ArrayList<Element>();
 		for (Fact f : foralls) {

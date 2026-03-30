@@ -47,6 +47,11 @@ public class Sugar extends Syntax {
 	}
 	
 	@Override
+	public boolean isAbstract() {
+		return false;
+	}
+
+	@Override
 	public void prettyPrint(PrintWriter out) {
 		sugar.prettyPrint(out);
 		out.print(" := ");

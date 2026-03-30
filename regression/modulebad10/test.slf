@@ -1,0 +1,14 @@
+package regression.modulebad10
+
+module test provides
+
+terminals zero succ
+
+syntax n ::= zero | succ n
+
+judgment nat-eq: n = n
+
+  --- nat-refl
+  n = n
+
+module m = regression.modulebad10.functor[n, nat-eq] //!

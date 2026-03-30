@@ -125,10 +125,8 @@ public class RenameJudgment extends Judgment {
 	@Override
 	public void substitute(SubstitutionData sd) {
 		super.substitute(sd);
-		if (sd.didSubstituteFor(this)) return;
-		sd.setSubstitutedFor(this);
-
-		original.substitute(sd);
+		// Do NOT substitute inside original — it is an externally-cached object
+		// from another module and must not be mutated by substitution.
 	}
 
 	@Override

@@ -1,0 +1,1 @@
+Main-Class: edu.cmu.cs.sasylf.lsp.SASyLFLspLauncher

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SASyLF",
+  "scopeName": "source.sasylf",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#rule-separator" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.sasylf",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.sasylf",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.sasylf",
+          "match": "\\b(module|requires|provides|imports|package|abstract|extends|use)\\b"
+        },
+        {
+          "name": "keyword.declaration.sasylf",
+          "match": "\\b(terminals|syntax|judgment|theorem|lemma|corollary|rule)\\b"
+        },
+        {
+          "name": "keyword.proof.sasylf",
+          "match": "\\b(forall|exists|proof|by|induction|on|case|analysis|end|inversion|of|substitution|weakening|exchange|contradiction|where|do)\\b"
+        },
+        {
+          "name": "keyword.logic.sasylf",
+          "match": "\\b(and|or|not)\\b"
+        }
+      ]
+    },
+    "rule-separator": {
+      "patterns": [
+        {
+          "name": "keyword.operator.rule-separator.sasylf",
+          "match": "[-\\u2500\\u2501\\u2014]{3,}.*$"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assign.sasylf",
+          "match": "::="
+        }
+      ]
+    }
+  }
+}

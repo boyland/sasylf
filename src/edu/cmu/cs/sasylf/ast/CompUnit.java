@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 public class CompUnit extends Node implements Module {
 	private PackageDeclaration packageDecl;
 	private String moduleName;
+	private List<Part> imports = new ArrayList<Part>();
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;
@@ -41,6 +42,15 @@ public class CompUnit extends Node implements Module {
 	 */
 	protected void updateReportCount() {
 		parseReports = ErrorHandler.getReports().size();
+	}
+
+	/**
+	 * Add an import chunk to this compilation unit.
+	 * @param c part to add, must not be null
+	 */
+	public void addImportChunk(Part c) {
+		imports.add(c);
+		updateReportCount();
 	}
 
 	/**
@@ -83,6 +93,13 @@ public class CompUnit extends Node implements Module {
 
 		if (moduleName != null) {
 			out.println("module " + moduleName);
+		}
+
+		if (!imports.isEmpty()) {
+			out.println("imports");
+			for (Part part : imports) {
+				part.prettyPrint(out);
+			}
 		}
 
 		if (!params.isEmpty()) {
@@ -141,14 +158,30 @@ public class CompUnit extends Node implements Module {
 	public void typecheck(Context ctx, ModuleId id) {
 
 		if (id != null) checkFilename(id);
-		for (Part part : params) {
+		// Process imports first — they are external dependencies with no args needed
+		for (Part part : imports) {
 			try {
 				part.typecheck(ctx);
-				if (part instanceof JudgmentPart) {
+			} catch (SASyLFError ex) {
+				// already reported
+			}
+		}
+		for (Part part : params) {
+			try {
+				// Check for import-style (rename) declarations in requires — they belong in imports
+				if (part instanceof SyntaxPart) {
+					for (Syntax s : ((SyntaxPart) part).getSyntax()) {
+						if (s instanceof RenameSyntaxDeclaration) {
+							ErrorHandler.recoverableError(Errors.IMPORT_IN_REQUIRES, s);
+						}
+					}
+				} else if (part instanceof JudgmentPart) {
 					List<Node> pieces = new ArrayList<>();
 					part.collectTopLevel(pieces);
 					for (Node n : pieces) {
-						if (n instanceof Judgment) {
+						if (n instanceof RenameJudgment) {
+							ErrorHandler.recoverableError(Errors.IMPORT_IN_REQUIRES, (Node)n);
+						} else if (n instanceof Judgment) {
 							Judgment j = (Judgment)n;
 							if (!j.isAbstract() && j.getRules().isEmpty()) {
 								ErrorHandler.recoverableError(Errors.ABSTRACT_REQUIRED, j);
@@ -156,6 +189,7 @@ public class CompUnit extends Node implements Module {
 						}
 					}
 				}
+				part.typecheck(ctx);
 			} catch (SASyLFError ex) {
 				// already reported
 			}
@@ -189,6 +223,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectTopLevel(Collection<? super Node> things) {
+		for (Part part : imports) {
+			part.collectTopLevel(things);
+		}
 		for (Part part : params) {
 			part.collectTopLevel(things);
 		}
@@ -202,6 +239,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
+		for (Part part : imports) {
+			part.collectRuleLike(map);
+		}
 		for (Part part : params) {
 			part.collectRuleLike(map);
 		}
@@ -216,10 +256,12 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Part part : imports) {
+			part.collectQualNames(consumer);
+		}
 		for (Part part : params) {
 			part.collectQualNames(consumer);
 		}
-		
 		for (Part part : parts) {
 			part.collectQualNames(consumer);
 		}
@@ -258,14 +300,9 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public void substitute(SubstitutionData sd) {
-		/*
-			Substitute in the following attributes:
-
-			private List<Part> params
-			private List<Part> parts
-		*/
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
+		// imports use external cached objects — do not substitute inside them
 		for (Part part : parts) {
 			part.substitute(sd);
 		}
@@ -284,6 +321,9 @@ public class CompUnit extends Node implements Module {
 		clone = (CompUnit) super.clone();
 	
 		clone.packageDecl = packageDecl.copy(cd);
+
+		// imports reference external cached objects — shallow copy only
+		clone.imports = new ArrayList<>(imports);
 
 		List<Part> newParams = new ArrayList<>();
 		for (Part p: params) {
@@ -341,6 +381,10 @@ public class CompUnit extends Node implements Module {
 			param.collectTopLevelAsModuleComponents(moduleParams);
 		});
 
+		// Only abstract components require explicit arguments;
+		// non-abstract components are included in the instantiated module automatically.
+		moduleParams.removeIf(mc -> !mc.isAbstract());
+
 		int numParams = moduleParams.size();
 		int numArgs = args.size();
 
@@ -377,6 +421,23 @@ public class CompUnit extends Node implements Module {
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
+		// Collect non-abstract syntax objects before moving (needed for derived substitution later)
+		List<Syntax> nonAbstractSyntaxes = new ArrayList<>();
+		for (Part p : this.params) {
+			if (p instanceof SyntaxPart) {
+				for (Syntax s : ((SyntaxPart) p).getSyntax()) {
+					if (!s.isAbstract()) {
+						nonAbstractSyntaxes.add(s);
+					}
+				}
+			}
+		}
+
+		// Move non-abstract Parts from requires (params) to provides (body) so they
+		// are included in the instantiated module and receive abstract-param substitutions
+		List<Part> nonAbstractParts = extractNonAbstractParts(this.params);
+		this.parts.addAll(0, nonAbstractParts);
+
 		this.params.clear();
 
 		for (int i = 0; i < args.size(); i++) {
@@ -395,11 +456,66 @@ public class CompUnit extends Node implements Module {
 			}
 
 		}
-		
+
+		// Apply derived substitutions for non-abstract syntax types that were implicitly
+		// mapped through abstract judgment form structure checking.
+		// For example, if abstract judgment "add: e + e = e" is matched against concrete
+		// "lor: b \/ b = b", the form check records e->b. We apply that substitution
+		// so the non-abstract syntax e (now in body) and all references to it use b.
+		for (Syntax nonAbstractSyntax : nonAbstractSyntaxes) {
+			String syntaxName = nonAbstractSyntax.getName();
+			for (Map.Entry<Syntax, Syntax> entry : paramToArgSyntax.entrySet()) {
+				if (!entry.getKey().isAbstract() && entry.getKey().getName().equals(syntaxName)) {
+					Syntax argSyntax = entry.getValue();
+					SubstitutionData derivedSd = new SubstitutionData(
+						syntaxName,
+						argSyntax.getName(),
+						argSyntax.getOriginalDeclaration(),
+						nonAbstractSyntax.getOriginalDeclaration()
+					);
+					this.substitute(derivedSd);
+					break;
+				}
+			}
+		}
+
 		this.moduleName = moduleName;
 
 		return true;
-	
+
+	}
+
+	/**
+	 * Extract all Parts containing non-abstract components from the given list of param Parts.
+	 * Creates new Part objects containing only the non-abstract components of each Part.
+	 * These Parts should be moved to the module body so they are included in the instantiation.
+	 * @param paramParts the list of Parts from the requires section
+	 * @return a list of new Parts containing only non-abstract components
+	 */
+	private List<Part> extractNonAbstractParts(List<Part> paramParts) {
+		List<Part> result = new ArrayList<>();
+		for (Part p : paramParts) {
+			if (p instanceof SyntaxPart) {
+				List<Syntax> nonAbstract = new ArrayList<>();
+				for (Syntax s : ((SyntaxPart) p).getSyntax()) {
+					if (!s.isAbstract()) nonAbstract.add(s);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new SyntaxPart(nonAbstract));
+			} else if (p instanceof JudgmentPart) {
+				List<Judgment> nonAbstract = new ArrayList<>();
+				for (Judgment j : ((JudgmentPart) p).judgments) {
+					if (!j.isAbstract()) nonAbstract.add(j);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new JudgmentPart(nonAbstract));
+			} else if (p instanceof TheoremPart) {
+				List<Theorem> nonAbstract = new ArrayList<>();
+				for (Theorem t : ((TheoremPart) p).getTheorems()) {
+					if (!t.isAbstract()) nonAbstract.add(t);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new TheoremPart(nonAbstract));
+			}
+		}
+		return result;
 	}
 
 }

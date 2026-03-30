@@ -1,0 +1,10 @@
+package regression.modulebad11
+
+module test
+
+requires
+
+syntax n = regression.modulebad11.nats.n //! should be in 'imports' section, not 'requires'
+
+provides
+

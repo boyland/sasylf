@@ -55,4 +55,14 @@ public interface ModuleComponent {
    */
   public ModuleComponent copy(CopyData cd);
 
+  /**
+   * Returns whether this module component is abstract (i.e., requires an explicit argument
+   * during module instantiation).
+   * <br/><br/>
+   * Non-abstract components (those with concrete definitions) are automatically included
+   * in the instantiated module without requiring an explicit argument.
+   * @return true if this component is abstract, false otherwise
+   */
+  public boolean isAbstract();
+
 }
