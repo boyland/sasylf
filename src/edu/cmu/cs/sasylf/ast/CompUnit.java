@@ -341,6 +341,10 @@ public class CompUnit extends Node implements Module {
 			param.collectTopLevelAsModuleComponents(moduleParams);
 		});
 
+		// Only abstract components require explicit arguments;
+		// non-abstract components are included in the instantiated module automatically.
+		moduleParams.removeIf(mc -> !mc.isAbstract());
+
 		int numParams = moduleParams.size();
 		int numArgs = args.size();
 
@@ -377,6 +381,23 @@ public class CompUnit extends Node implements Module {
 		Map<Syntax, Syntax> paramToArgSyntax = new IdentityHashMap<Syntax, Syntax>();
 		Map<Judgment, Judgment> paramToArgJudgment = new IdentityHashMap<Judgment, Judgment>();
 
+		// Collect non-abstract syntax objects before moving (needed for derived substitution later)
+		List<Syntax> nonAbstractSyntaxes = new ArrayList<>();
+		for (Part p : this.params) {
+			if (p instanceof SyntaxPart) {
+				for (Syntax s : ((SyntaxPart) p).getSyntax()) {
+					if (!s.isAbstract()) {
+						nonAbstractSyntaxes.add(s);
+					}
+				}
+			}
+		}
+
+		// Move non-abstract Parts from requires (params) to provides (body) so they
+		// are included in the instantiated module and receive abstract-param substitutions
+		List<Part> nonAbstractParts = extractNonAbstractParts(this.params);
+		this.parts.addAll(0, nonAbstractParts);
+
 		this.params.clear();
 
 		for (int i = 0; i < args.size(); i++) {
@@ -395,11 +416,66 @@ public class CompUnit extends Node implements Module {
 			}
 
 		}
-		
+
+		// Apply derived substitutions for non-abstract syntax types that were implicitly
+		// mapped through abstract judgment form structure checking.
+		// For example, if abstract judgment "add: e + e = e" is matched against concrete
+		// "lor: b \/ b = b", the form check records e->b. We apply that substitution
+		// so the non-abstract syntax e (now in body) and all references to it use b.
+		for (Syntax nonAbstractSyntax : nonAbstractSyntaxes) {
+			String syntaxName = nonAbstractSyntax.getName();
+			for (Map.Entry<Syntax, Syntax> entry : paramToArgSyntax.entrySet()) {
+				if (!entry.getKey().isAbstract() && entry.getKey().getName().equals(syntaxName)) {
+					Syntax argSyntax = entry.getValue();
+					SubstitutionData derivedSd = new SubstitutionData(
+						syntaxName,
+						argSyntax.getName(),
+						argSyntax.getOriginalDeclaration(),
+						nonAbstractSyntax.getOriginalDeclaration()
+					);
+					this.substitute(derivedSd);
+					break;
+				}
+			}
+		}
+
 		this.moduleName = moduleName;
 
 		return true;
-	
+
+	}
+
+	/**
+	 * Extract all Parts containing non-abstract components from the given list of param Parts.
+	 * Creates new Part objects containing only the non-abstract components of each Part.
+	 * These Parts should be moved to the module body so they are included in the instantiation.
+	 * @param paramParts the list of Parts from the requires section
+	 * @return a list of new Parts containing only non-abstract components
+	 */
+	private List<Part> extractNonAbstractParts(List<Part> paramParts) {
+		List<Part> result = new ArrayList<>();
+		for (Part p : paramParts) {
+			if (p instanceof SyntaxPart) {
+				List<Syntax> nonAbstract = new ArrayList<>();
+				for (Syntax s : ((SyntaxPart) p).getSyntax()) {
+					if (!s.isAbstract()) nonAbstract.add(s);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new SyntaxPart(nonAbstract));
+			} else if (p instanceof JudgmentPart) {
+				List<Judgment> nonAbstract = new ArrayList<>();
+				for (Judgment j : ((JudgmentPart) p).judgments) {
+					if (!j.isAbstract()) nonAbstract.add(j);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new JudgmentPart(nonAbstract));
+			} else if (p instanceof TheoremPart) {
+				List<Theorem> nonAbstract = new ArrayList<>();
+				for (Theorem t : ((TheoremPart) p).getTheorems()) {
+					if (!t.isAbstract()) nonAbstract.add(t);
+				}
+				if (!nonAbstract.isEmpty()) result.add(new TheoremPart(nonAbstract));
+			}
+		}
+		return result;
 	}
 
 }

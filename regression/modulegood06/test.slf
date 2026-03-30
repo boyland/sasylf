@@ -76,7 +76,7 @@ theorem lor-total:
   proof by unproved //!
 end theorem
 
-module boolbt = regression.modulegood06.foldablebt[boolid, boolnonid, b, lor, lor-commutative, lor-associative, lor-total]
+module boolbt = regression.modulegood06.foldablebt[boolid, boolnonid, lor, lor-commutative, lor-associative, lor-total]
 
 syntax bt = boolbt.bt ::= Leaf | Node bt b bt
 
