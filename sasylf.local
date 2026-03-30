@@ -1,4 +1,4 @@
 #!/bin/bash
 SASYLF_HOME=`dirname $0`
 cp -r $SASYLF_HOME/library/org $SASYLF_HOME/bin
-java -ea -cp $SASYLF_HOME/bin edu.cmu.cs.sasylf.Main "$@"
+java -ea -cp $SASYLF_HOME/bin:$SASYLF_HOME/lib/jackson-annotations-2.14.2.jar:$SASYLF_HOME/lib/jackson-databind-2.14.2.jar:$SASYLF_HOME/lib/jackson-core-2.14.2.jar edu.cmu.cs.sasylf.Main "$@"

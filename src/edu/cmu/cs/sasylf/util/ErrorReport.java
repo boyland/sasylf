@@ -20,6 +20,8 @@ public class ErrorReport extends Report {
 		else msg = getSpan().getLocation().toString() + ": ";
 		if (!isError())
 			msg = msg + "warning: ";
+		if (isError())
+			msg = msg + "error: ";
 		msg = msg + getMessage();
 		return msg;
 	}

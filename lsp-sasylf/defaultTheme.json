@@ -1,0 +1,55 @@
+{
+    "name": "Default Theme",
+    "tokenColors": [
+        {
+            "name": "Comment Light Theme",
+            "scope": "comment",
+            "settings": {
+                "foreground": "#008000"
+            },
+            "type": "light"
+        },
+        {
+            "name": "Comment Dark Theme",
+            "scope": "comment",
+            "settings": {
+                "foreground": "#5FAF5F"
+            },
+            "type": "dark"
+        },
+        {
+            "name": "Keyword Light Theme",
+            "scope": "keyword",
+            "settings": {
+                "foreground": "#000080",
+                "fontStyle": "bold"
+            },
+            "type": "light"
+        },
+        {
+            "name": "Keyword Dark Theme",
+            "scope": "keyword",
+            "settings": {
+                "foreground": "#7FAFE1",
+                "fontStyle": "bold"
+            },
+            "type": "dark"
+        },
+        {
+            "name": "Support Light Theme",
+            "scope": "support",
+            "settings": {
+                "foreground": "#7F0055"
+            },
+            "type": "light"
+        },
+        {
+            "name": "Support Dark Theme",
+            "scope": "support",
+            "settings": {
+                "foreground": "#AF5F7F"
+            },
+            "type": "dark"
+        }
+    ]
+}
