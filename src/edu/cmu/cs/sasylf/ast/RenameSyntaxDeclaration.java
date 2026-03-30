@@ -191,7 +191,8 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 		*/
 
 		if (source != null) source.substitute(sd);
-		if (original != null) original.substitute(sd);
+		// Do NOT substitute inside original — it is an externally-cached object
+		// from another module and must not be mutated by substitution.
 
 	}
 
@@ -207,9 +208,9 @@ public class RenameSyntaxDeclaration extends SyntaxDeclaration {
 			clone.source = clone.source.copy(cd);
 		}
 		
-		if (clone.original != null) {
-			clone.original = clone.original.copy(cd);
-		}
+		// Do NOT copy original — it is an externally-cached object and must
+		// stay as the same reference so that identity comparison works correctly
+		// during module instantiation (IdentityHashMap<Syntax,Syntax>).
 		return clone;
 	}
 

@@ -25,6 +25,7 @@ import edu.cmu.cs.sasylf.util.SASyLFError;
 public class CompUnit extends Node implements Module {
 	private PackageDeclaration packageDecl;
 	private String moduleName;
+	private List<Part> imports = new ArrayList<Part>();
 	private List<Part> params = new ArrayList<Part>();
 	private List<Part> parts = new ArrayList<Part>();
 	private int parseReports;
@@ -41,6 +42,15 @@ public class CompUnit extends Node implements Module {
 	 */
 	protected void updateReportCount() {
 		parseReports = ErrorHandler.getReports().size();
+	}
+
+	/**
+	 * Add an import chunk to this compilation unit.
+	 * @param c part to add, must not be null
+	 */
+	public void addImportChunk(Part c) {
+		imports.add(c);
+		updateReportCount();
 	}
 
 	/**
@@ -83,6 +93,13 @@ public class CompUnit extends Node implements Module {
 
 		if (moduleName != null) {
 			out.println("module " + moduleName);
+		}
+
+		if (!imports.isEmpty()) {
+			out.println("imports");
+			for (Part part : imports) {
+				part.prettyPrint(out);
+			}
 		}
 
 		if (!params.isEmpty()) {
@@ -141,14 +158,30 @@ public class CompUnit extends Node implements Module {
 	public void typecheck(Context ctx, ModuleId id) {
 
 		if (id != null) checkFilename(id);
-		for (Part part : params) {
+		// Process imports first — they are external dependencies with no args needed
+		for (Part part : imports) {
 			try {
 				part.typecheck(ctx);
-				if (part instanceof JudgmentPart) {
+			} catch (SASyLFError ex) {
+				// already reported
+			}
+		}
+		for (Part part : params) {
+			try {
+				// Check for import-style (rename) declarations in requires — they belong in imports
+				if (part instanceof SyntaxPart) {
+					for (Syntax s : ((SyntaxPart) part).getSyntax()) {
+						if (s instanceof RenameSyntaxDeclaration) {
+							ErrorHandler.recoverableError(Errors.IMPORT_IN_REQUIRES, s);
+						}
+					}
+				} else if (part instanceof JudgmentPart) {
 					List<Node> pieces = new ArrayList<>();
 					part.collectTopLevel(pieces);
 					for (Node n : pieces) {
-						if (n instanceof Judgment) {
+						if (n instanceof RenameJudgment) {
+							ErrorHandler.recoverableError(Errors.IMPORT_IN_REQUIRES, (Node)n);
+						} else if (n instanceof Judgment) {
 							Judgment j = (Judgment)n;
 							if (!j.isAbstract() && j.getRules().isEmpty()) {
 								ErrorHandler.recoverableError(Errors.ABSTRACT_REQUIRED, j);
@@ -156,6 +189,7 @@ public class CompUnit extends Node implements Module {
 						}
 					}
 				}
+				part.typecheck(ctx);
 			} catch (SASyLFError ex) {
 				// already reported
 			}
@@ -189,6 +223,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectTopLevel(Collection<? super Node> things) {
+		for (Part part : imports) {
+			part.collectTopLevel(things);
+		}
 		for (Part part : params) {
 			part.collectTopLevel(things);
 		}
@@ -202,6 +239,9 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectRuleLike(Map<String,? super RuleLike> map) {
+		for (Part part : imports) {
+			part.collectRuleLike(map);
+		}
 		for (Part part : params) {
 			part.collectRuleLike(map);
 		}
@@ -216,10 +256,12 @@ public class CompUnit extends Node implements Module {
 	 */
 	@Override
 	public void collectQualNames(Consumer<QualName> consumer) {
+		for (Part part : imports) {
+			part.collectQualNames(consumer);
+		}
 		for (Part part : params) {
 			part.collectQualNames(consumer);
 		}
-		
 		for (Part part : parts) {
 			part.collectQualNames(consumer);
 		}
@@ -258,14 +300,9 @@ public class CompUnit extends Node implements Module {
 
 	@Override
 	public void substitute(SubstitutionData sd) {
-		/*
-			Substitute in the following attributes:
-
-			private List<Part> params
-			private List<Part> parts
-		*/
 		if (sd.didSubstituteFor(this)) return;
 		sd.setSubstitutedFor(this);
+		// imports use external cached objects — do not substitute inside them
 		for (Part part : parts) {
 			part.substitute(sd);
 		}
@@ -284,6 +321,9 @@ public class CompUnit extends Node implements Module {
 		clone = (CompUnit) super.clone();
 	
 		clone.packageDecl = packageDecl.copy(cd);
+
+		// imports reference external cached objects — shallow copy only
+		clone.imports = new ArrayList<>(imports);
 
 		List<Part> newParams = new ArrayList<>();
 		for (Part p: params) {

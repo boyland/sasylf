@@ -1,0 +1,12 @@
+package regression.modulegood12
+
+module test provides
+
+terminals zero succ
+
+syntax n ::= zero | succ n
+
+module m = regression.modulegood12.functor[n]
+
+syntax mw = m.w
+

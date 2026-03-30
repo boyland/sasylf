@@ -757,9 +757,13 @@ public class SyntaxDeclaration extends Syntax implements ClauseType, ElemType, N
 
 		clone.term = null;
 
-		clone.gnt = clone.gnt.copy(cd);
+		if (clone.gnt != null) {
+			clone.gnt = clone.gnt.copy(cd);
+		}
 
-		clone.gt = clone.gt.copy(cd);
+		if (clone.gt != null) {
+			clone.gt = clone.gt.copy(cd);
+		}
 		
 		return clone;
 	}

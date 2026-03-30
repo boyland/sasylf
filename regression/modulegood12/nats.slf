@@ -1,0 +1,13 @@
+package regression.modulegood12
+
+module nats provides
+
+terminals zero succ
+
+syntax n ::= zero | succ n
+
+judgment equal: n = n
+
+  --- eq-refl
+  n = n
+
